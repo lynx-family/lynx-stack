@@ -20,6 +20,7 @@ export const {
   createElement,
   createPortal,
   createRef,
+  defineMainThreadObjectType,
   forwardRef,
   isValidElement,
   lazy,
@@ -42,6 +43,7 @@ export const {
   useLynxGlobalEventListener,
   useLayoutEffect,
   useMainThreadRef,
+  useMainThreadObject,
   useMemo,
   useReducer,
   useRef,
@@ -51,6 +53,8 @@ export const {
 
   // compat
   startTransition,
+  use,
+  useInsertionEffect,
   useTransition,
 } = target[sExportsReactCompat];
 

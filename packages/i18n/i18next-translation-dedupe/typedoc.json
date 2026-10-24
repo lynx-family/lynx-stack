@@ -1,0 +1,6 @@
+{
+  "tsconfig": "./tsconfig.build.json",
+  "intentionallyNotExported": [
+    "TranslationsByLocale"
+  ]
+}

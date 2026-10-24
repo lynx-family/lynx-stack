@@ -9,6 +9,8 @@ import { Children as PreactChildren } from 'preact/compat';
  * Type of ReactLynx children utilities.
  *
  * @public
+ *
+ * @group Types
  */
 export type ReactLynxChildren = Omit<typeof PreactChildren, 'map' | 'forEach' | 'toArray'> & {
   map<T extends ComponentChild, R>(
@@ -24,8 +26,7 @@ export type ReactLynxChildren = Omit<typeof PreactChildren, 'map' | 'forEach' | 
 type ReactLynxMap = ReactLynxChildren['map'];
 
 const mapFn: ReactLynxMap = (children, fn) => {
-  // eslint-disable-next-line unicorn/no-array-callback-reference
-  const mapped = PreactChildren.map(children, fn) as ReturnType<typeof fn>[] | null;
+  const mapped = PreactChildren.map(children, fn, undefined) as ReturnType<typeof fn>[] | null;
   return mapped == null ? null : Object.freeze(mapped);
 };
 

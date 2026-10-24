@@ -18,7 +18,12 @@ import { snapshotDestroyList } from './list.js';
 import { getListItemPlatformInfoFromIndexedValue } from './platformInfo.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
-import { setSnapshotCreatorMap, snapshotCreatorMap, snapshotCreatorRuntime } from './snapshotCreatorMap.js';
+import {
+  devOnlySentSnapshots,
+  setSnapshotCreatorMap,
+  snapshotCreatorMap,
+  snapshotCreatorRuntime,
+} from './snapshotCreatorMap.js';
 import type { SnapshotCreator } from './snapshotCreatorMap.js';
 import { snapshotInstanceManager } from './snapshotInstanceManager.js';
 import type { SerializedSnapshotInstance } from './types.js';
@@ -108,6 +113,9 @@ if (__DEV__ && __JS__) {
             // This allows the updates to be applied to main thread.
             value.toString(),
           );
+          devOnlySentSnapshots.add(prop);
+        } else {
+          devOnlySentSnapshots.delete(prop);
         }
         target[prop] = value;
         return true;
@@ -345,6 +353,12 @@ export class SnapshotInstance {
     return child.parentNode === this;
   }
 
+  // Preact 11's `removeNode` calls `node.remove()` instead of
+  // `parentNode.removeChild(node)`.
+  remove(): void {
+    this.parentNode?.removeChild(this);
+  }
+
   get childNodes(): SnapshotInstance[] {
     const nodes: SnapshotInstance[] = [];
     let node = this.__firstChild;
@@ -492,6 +506,9 @@ export class SnapshotInstance {
         )).onRemoveChild(child);
       }
 
+      // Native elements may be recycled later, but React-owned worklet refs end
+      // at the logical removal boundary.
+      unref(child, true);
       this.__removeChild(child);
       traverseSnapshotInstance(child, v => {
         clearTransientChildPropRefs(v, removedSnapshots);

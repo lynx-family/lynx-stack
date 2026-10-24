@@ -1,5 +1,62 @@
 # create-rspeedy
 
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/create-lynx@0.2.1
+
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/create-lynx@0.2.1
+
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/create-lynx@0.2.1
+
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [[`469b1d8`](https://github.com/lynx-family/lynx-stack/commit/469b1d8848d9dcba396d5e3e46ef38e519469d47), [`0cea2a3`](https://github.com/lynx-family/lynx-stack/commit/0cea2a3d34cb4dee019f0bc82ba07ef3a664ef23)]:
+  - @lynx-js/create-lynx@0.2.1
+
+## 0.17.2
+
+### Patch Changes
+
+- Add `@lynx-js/create-lynx`, which scaffolds a Lynx app or library for any of the build tools: ([#3864](https://github.com/lynx-family/lynx-stack/pull/3864))
+
+  ```bash
+  npm create @lynx-js/lynx@latest
+  ```
+
+  `rsbuild-ts` / `rsbuild-js` build an app with Rsbuild and `pluginLynx`, `rspeedy-ts` / `rspeedy-js` build one with Rspeedy, and `rslib-ts` / `rslib-js` build a ReactLynx component library with Rslib that keeps JSX in its output; the `external-bundle` tool also packs that library into a Lynx External Bundle. Every template comes with Rstest and `@lynx-js/react/testing-library` set up. It supersedes `create-rspeedy`, which now carries a deprecation notice and no longer receives updates.
+- `create-rspeedy` now delegates to `@lynx-js/create-lynx`, pinned to Rspeedy. It keeps its own templates no longer, so the two stay in step by construction. `@lynx-js/create-lynx` exports `createLynx()` for that. ([#3871](https://github.com/lynx-family/lynx-stack/pull/3871))
+- Updated dependencies [[`9c905f3`](https://github.com/lynx-family/lynx-stack/commit/9c905f38a5d6123348aab6cf8a4d7ef6313a633a), [`37a1d55`](https://github.com/lynx-family/lynx-stack/commit/37a1d551820e45ef0fe7ffc121f2c41fedd23761)]:
+  - @lynx-js/create-lynx@0.2.0
+
+## 0.17.1
+
+## 0.17.0
+
+## 0.16.5
+
+## 0.16.4
+
+## 0.16.3
+
+### Patch Changes
+
+- Replace the renamed `create-rstack` dependency with `@rstackjs/create-toolkit`. ([#3400](https://github.com/lynx-family/lynx-stack/pull/3400))
+
 ## 0.16.2
 
 ## 0.16.1

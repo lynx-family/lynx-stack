@@ -52,6 +52,8 @@ describe('Validation', () => {
       { componentsPkg: ['foo'] },
       { disableDeprecatedWarning: true },
       { disableDeprecatedWarning: false },
+      { transformLegacyEventAttributeNames: true },
+      { transformLegacyEventAttributeNames: false },
     ]
 
     cases.forEach(compat => {

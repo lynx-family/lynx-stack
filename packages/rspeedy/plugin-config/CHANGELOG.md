@@ -1,5 +1,37 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.2.5
+
+### Patch Changes
+
+- Upgrade `@lynx-js/type-config` to `4.3.0`. ([#4146](https://github.com/lynx-family/lynx-stack/pull/4146))
+
+## 0.2.4
+
+### Patch Changes
+
+- Skip `LynxConfigWebpackPlugin` when the caller is Rstest, so `withLynxConfig()` no longer fails with "No `LynxTemplatePlugin` exposed" in a config that uses `pluginLynxConfig`. The Lynx config is still exposed to the other plugins. ([#3976](https://github.com/lynx-family/lynx-stack/pull/3976))
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+
+## 0.2.3
+
+### Patch Changes
+
+- Declare the build host as an optional peer dependency. `@rsbuild/core` covers a plain Rsbuild build, and `@lynx-js/rspeedy` covers an Rspeedy one, so whichever host is installed is version-checked. ([#3678](https://github.com/lynx-family/lynx-stack/pull/3678))
+
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` `^0.17.0` in the plugins that read the build engine config through `Symbol.for('@lynx-js/rsbuild-plugin:config')`, since the engine that ships with `0.16` does not expose it. The plugins that do not touch the engine keep their existing range and add `^0.17.0` to it. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+- Updated dependency `@lynx-js/type-config` to `4.2.0`. ([#3771](https://github.com/lynx-family/lynx-stack/pull/3771))
+
+## 0.2.2
+
+### Patch Changes
+
+- Use a real exported config key (`alignMouseEventWithW3C`) in the usage ([#3385](https://github.com/lynx-family/lynx-stack/pull/3385))
+  examples, and drop the hard-coded link to the development-version config
+  reference.
+
 ## 0.2.1
 
 ### Patch Changes

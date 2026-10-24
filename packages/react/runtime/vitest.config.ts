@@ -76,6 +76,10 @@ export default defineConfig({
       { find: /^preact\/jsx-runtime$/, replacement: path.join(internalPreactRoot, 'jsx-runtime/dist/jsxRuntime.mjs') },
       { find: '@lynx-js/react/compat', replacement: path.resolve(__dirname, './compat/index.js') },
       {
+        find: '@lynx-js/react/worklet-runtime/init',
+        replacement: path.resolve(__dirname, './src/worklet-runtime/index.ts'),
+      },
+      {
         find: '@lynx-js/react/worklet-runtime/bindings',
         replacement: path.resolve(__dirname, './src/worklet-runtime/bindings/index.ts'),
       },
@@ -89,6 +93,10 @@ export default defineConfig({
         replacement: path.resolve(__dirname, './src/element-template/index.ts'),
       },
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
+      {
+        find: /^@lynx-js\/react-signals\/lepus$/,
+        replacement: path.resolve(__dirname, '../../react-signals/src/mainThread.ts'),
+      },
       { find: '@lynx-js/react/jsx-dev-runtime', replacement: path.resolve(__dirname, './jsx-dev-runtime/index.js') },
       { find: '@lynx-js/react/jsx-runtime', replacement: path.resolve(__dirname, './jsx-runtime/index.js') },
       { find: /^@lynx-js\/react\/hooks$/, replacement: path.resolve(__dirname, './src/core/hooks/react.ts') },
@@ -122,7 +130,7 @@ export default defineConfig({
         'debug',
         'jsx-runtime',
         'jsx-dev-runtime',
-        'lazy/element-template-import.js',
+        'lazy/element-template*.js',
         'lepus/jsx-dev-runtime',
         'lepus/index.d.ts',
         'vitest.config.ts',

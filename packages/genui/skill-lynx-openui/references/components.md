@@ -11,11 +11,22 @@
 - [Inputs](#inputs)
 - [Unsupported Components](#unsupported-unless-extended-by-the-host)
 
-Use the built-in component signatures exactly. Arguments are positional and
-`?` marks a schema-optional argument. Omit an optional argument only when every
-later argument is also omitted. If an optional argument precedes a required
-one, supply it so later positions do not shift. The signatures include exact
-argument types and allowed enum values.
+Treat this file as the schema reference for the default built-in catalog. Use
+the signatures exactly when those components exist in the active Library. If
+the host supplies an explicitly reduced catalog, treat only its selected names
+as available; an omitted built-in remains unavailable even though it is listed
+below. Use the host's explicit root override when present; otherwise use the
+Library's default `Stack` root.
+
+Arguments are positional and `?` marks a schema-optional argument. Omit an
+optional argument only when every later argument is also omitted. If an optional
+argument precedes a required one, supply it so later positions do not shift. The
+signatures include exact argument types and allowed enum values.
+
+Treat every enum as a closed set: use only the exact values listed for that
+argument. Do not borrow values from another component or from the broader
+upstream UI or icon library. If no value fits, use another available component
+instead of inventing a value.
 
 ## Shared Types
 
@@ -30,10 +41,10 @@ argument types and allowed enum values.
 
 ## Layout
 
-- `Stack(children: any[], direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xs" | "s" | "m" | "l" | "xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
-- `Row(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl", wrap?: boolean)`
-- `Column(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl")`
-- `List(children?: any[] | TemplateChildren, items?: any[] | TemplateChildren, direction?: "vertical" | "horizontal", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xs" | "s" | "m" | "l" | "xl", divider?: boolean)`
+- `Stack(children: any[], direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
+- `Row(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", wrap?: boolean)`
+- `Column(children: any[], justify?: "start" | "center" | "end" | "between" | "around" | "evenly" | "spaceBetween" | "spaceAround" | "spaceEvenly" | "stretch", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl")`
+- `List(children?: any[] | TemplateChildren, items?: any[] | TemplateChildren, direction?: "vertical" | "horizontal", align?: "start" | "center" | "end" | "stretch", gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", divider?: boolean)`
 - `Separator()`
 - `Divider(axis?: "horizontal" | "vertical")`
 - `Modal(trigger: any, content: any, title?: StringLike, closeOnAction?: boolean)`
@@ -46,7 +57,7 @@ currently renders a diagnostic hint rather than expanding content.
 
 ## Content
 
-- `Card(children: any[], variant?: "card" | "sunk" | "clear", direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xs" | "s" | "m" | "l" | "xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
+- `Card(children: any[], variant?: "card" | "sunk" | "clear", direction?: "row" | "column", wrap?: boolean, gap?: "none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl", align?: "start" | "center" | "end" | "stretch", justify?: "start" | "center" | "end" | "between")`
 - `CardHeader(title: string, subtitle?: string)`
 - `Text(text: StringLike, variant?: "h1" | "h2" | "h3" | "h4" | "h5" | "caption" | "body")`
 - `TextContent(text: string | number | boolean, size?: "small" | "default" | "large" | "small-heavy" | "large-heavy")`
@@ -67,6 +78,7 @@ for a button group.
 
 - `Tag(text: string)`
 - `Icon(name: "account_circle" | "add" | "arrow_back" | "arrow_forward" | "camera" | "check" | "close" | "delete" | "edit" | "error" | "favorite" | "help" | "home" | "info" | "location_on" | "lock" | "mail" | "menu" | "more_vert" | "pause" | "person" | "play_arrow" | "refresh" | "search" | "send" | "settings" | "share" | "star" | "warning", size?: "sm" | "md" | "lg", color?: "primary" | "muted" | "inherit")`
+- `Canvas(code: string | string[], width?: number, height?: number, name?: string, action?: ActionExpression)`
 - `Loading(variant?: "inline" | "block")`
 
 ## Media
@@ -102,10 +114,14 @@ Current Lynx runtime boundaries:
   action prop. Do not use it as a live `Query` filter.
 - `DateTimeInput` currently displays a date/time value; do not promise editable
   date picking.
-- Put mutations on explicit submit or confirmation buttons, not change actions.
+- Trigger mutations only from explicit submit or confirmation actions on
+  active-catalog components, not change actions. With the default catalog, use
+  buttons.
 
 ## Unsupported Unless Extended By The Host
 
-Do not emit `Form`, `Input`, `Select`, `SelectItem`, `FormControl`, tables,
-charts, or any other name absent from the signatures above unless the caller
-provides its exact custom schema.
+Do not emit any component absent from the active catalog. With the default
+catalog, this excludes `Form`, `Input`, `Select`, `SelectItem`, `FormControl`,
+tables, charts, and every other name absent from the signatures above unless the
+caller provides its exact custom schema. With a reduced catalog, listed but
+unselected built-ins are also unsupported.

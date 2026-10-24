@@ -6,7 +6,7 @@ use swc_core::{
   },
 };
 
-use swc_plugins_shared::jsx_helpers::{jsx_is_single_static_text, jsx_text_to_str};
+use swc_plugins_shared::jsx_helpers::{jsx_is_single_text, jsx_text_to_str};
 
 pub struct TextVisitor {}
 
@@ -21,22 +21,27 @@ impl VisitMut for TextVisitor {
   // />
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     n.visit_mut_children_with(self);
-    let is_single_static_text = jsx_is_single_static_text(n);
-    if is_single_static_text {
-      if let JSXElementChild::JSXText(text) = &n.children[0] {
-        let text_content = jsx_text_to_str(&text.value);
-        n.opening.attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
-          span: DUMMY_SP,
-          name: JSXAttrName::Ident(IdentName::new("text".into(), DUMMY_SP)),
-          value: Some(JSXAttrValue::Str(Str {
-            span: DUMMY_SP,
-            raw: None,
-            value: text_content.into(),
-          })),
-        }));
-        n.children = vec![];
-      }
+    if !jsx_is_single_text(n) {
+      return;
     }
+
+    let value = match &n.children[0] {
+      JSXElementChild::JSXText(text) => JSXAttrValue::Str(Str {
+        span: DUMMY_SP,
+        raw: None,
+        value: jsx_text_to_str(&text.value).into(),
+      }),
+      // Keep expressions as expressions: JSX attribute strings normalize
+      // whitespace differently from JavaScript strings and template literals.
+      JSXElementChild::JSXExprContainer(expr) => JSXAttrValue::JSXExprContainer(expr.clone()),
+      _ => unreachable!(),
+    };
+    n.opening.attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
+      span: DUMMY_SP,
+      name: JSXAttrName::Ident(IdentName::new("text".into(), DUMMY_SP)),
+      value: Some(value),
+    }));
+    n.children.clear();
   }
 }
 
@@ -49,6 +54,31 @@ mod tests {
   };
 
   use super::TextVisitor;
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |_t| visit_mut_pass(TextVisitor {}),
+    should_transform_string_expressions_to_text_attr,
+    r#"
+    <>
+      <text>{'Hello'}</text>
+      <text>{''}</text>
+      <text>{'  Hello\n\tWorld &amp;  '}</text>
+      <text>{`Hello`}</text>
+      <text>{`Hello ${name}`}</text>
+      <text>{`Hello ${getName()} ${count}`}</text>
+      <text>{`  Hello
+        ${name}\tWorld  `}</text>
+      <text class="hello">{'Hello'}</text>
+      <text {...attrs}>{`Hello ${name}`}</text>
+      <text text="old">{'Hello'}</text>
+    </>
+    "#
+  );
 
   test!(
     module,
@@ -87,6 +117,17 @@ mod tests {
         <text>ReactLynx</text>
       </text>
       <x-text>Hello, ReactLynx</x-text>
+      <x-text>{'Hello'}</x-text>
+      <x-text>{`Hello ${name}`}</x-text>
+      <text>{42}</text>
+      <text>{null}</text>
+      <text>{false}</text>
+      <text>{['Hello']}</text>
+      <text>{tag`Hello ${name}`}</text>
+      <text>{'Hello'}{name}</text>
+      <text>Hello {`World ${name}`}</text>
+      <text>{'Hello'}<text>{name}</text></text>
+      <text>{'Hello'}{/* comment */}</text>
       </>
     "#
   );

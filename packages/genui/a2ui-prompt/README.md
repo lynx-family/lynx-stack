@@ -4,7 +4,7 @@
 CLI and backend usage.
 
 The source of truth for the built-in prompt and catalog is
-`packages/genui/server/agent`. This package re-exports and bundles those server
+`packages/genui/server/agent/a2ui`. This package re-exports and bundles those server
 agent sources for publishing, so the server package stays self-contained for
 package-root deployments while CLI users can still install a standalone prompt
 package.

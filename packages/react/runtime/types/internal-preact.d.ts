@@ -59,10 +59,8 @@ declare module 'preact' {
     __v?: VNode<P> | null;
     /** _renderCallbacks */
     __h: ((this: Component<P, S>) => void)[];
-    /** _force */
-    __e?: boolean;
-    /** dirty */
-    __d?: boolean;
+    /** _bits (Preact 11: COMPONENT_FORCE = 1 << 2, COMPONENT_DIRTY = 1 << 3) */
+    __g: number;
     /** __hooks */
     __H?: ComponentHooks;
   }

@@ -4,8 +4,8 @@
 
 import { Hono } from 'hono';
 
-import { getBenchJobStore } from '../../../../../../service/a2ui-bench-store';
-import type { BenchJobEvent } from '../../../../../../service/a2ui-bench-types';
+import { getBenchJobStore } from '../../../../../../service/common/bench/store.js';
+import type { BenchJobEvent } from '../../../../../../service/common/bench/types.js';
 import {
   encodeSSE,
   encodeSseComment,
@@ -95,6 +95,10 @@ function getA2UIBenchJobEvents(req: Request, jobId: string) {
           return;
         }
       }
+      // A bounded event history may have dropped phases from earlier runs.
+      // Restore every run's latest state without resetting the SSE event cursor.
+      const snapshot = store.getSnapshot(jobId);
+      if (snapshot) enqueue(encodeSSE('job', snapshot));
     },
     cancel() {
       cleanup();

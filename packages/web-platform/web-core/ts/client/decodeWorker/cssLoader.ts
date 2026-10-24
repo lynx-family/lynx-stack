@@ -1,5 +1,6 @@
 import type { Selector } from '../../encode/encodeCSS.js';
 import type { RawStyleInfo } from '../../server/wasm.js';
+import { LYNX_TAG_TO_HTML_TAG_MAP } from '../../constants.js';
 import { wasmInstance } from '../wasm.js';
 
 interface CSSRule {
@@ -129,7 +130,8 @@ function parseAndPushSelector(selector: Selector, s: string) {
     if (tag === 'page') {
       selector.push_one_selector_section('AttributeSelector', 'part="page"');
     } else {
-      const typeName = tag.includes('-') ? tag : `x-${tag}`;
+      const typeName = LYNX_TAG_TO_HTML_TAG_MAP[tag]
+        ?? (tag.includes('-') ? tag : `x-${tag}`);
       selector.push_one_selector_section('TypeSelector', typeName);
     }
   } else if (s.startsWith('[')) {

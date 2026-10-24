@@ -4,7 +4,7 @@
 import { options as preactOptions } from 'preact';
 import type { VNode } from 'preact';
 
-import { COMPONENT, DIFF2, FORCE, ORIGINAL } from '../shared/render-constants.js';
+import { BITS, COMPONENT, COMPONENT_FORCE, DIFF2, ORIGINAL } from '../shared/render-constants.js';
 
 export interface ForceRootRenderOptions {
   getRootVNode: () => unknown;
@@ -26,6 +26,7 @@ export function runWithForceRootRender(
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldDiff = preactOptions[DIFF2];
   preactOptions[DIFF2] = (vnode: VNode, oldVNode: VNode) => {
     /* v8 ignore start */
@@ -36,7 +37,7 @@ export function runWithForceRootRender(
 
     const c = oldVNode[COMPONENT];
     if (c) {
-      c[FORCE] = true;
+      c[BITS] |= COMPONENT_FORCE;
     } else {
       // mount phase of a new Component
       // `isNew` is true, no need to set FORCE

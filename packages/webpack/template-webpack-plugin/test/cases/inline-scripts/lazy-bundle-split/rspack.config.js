@@ -5,6 +5,14 @@ export default {
   context: import.meta.dirname,
   devtool: false,
   mode: 'development',
+  experiments: { layers: true },
+  entry: {
+    main: {
+      import: './index.js',
+      layer: 'react:background',
+      filename: '.rspeedy/main/background.[contenthash:8].js',
+    },
+  },
   optimization: {
     // Enable bundle splitting so the lazy bundle's background is split
     // into more than one chunk.
@@ -22,10 +30,9 @@ export default {
   },
   plugins: [
     new LynxEncodePlugin({
-      // The production config used a regex intended to match `background.js`,
-      // but it does not match the real chunk name (e.g. `component__background.js`).
-      // The lazy bundle's background must still be inlined.
-      inlineScripts: /[\\/]background\.\w+\.js$/,
+      // A user regex that matches the entry's background but none of the
+      // lazy bundle's background chunks. They must still be inlined.
+      inlineScripts: /[\\/]main[\\/]background\.\w+\.js$/,
     }),
     new LynxTemplatePlugin({
       ...LynxTemplatePlugin.defaultOptions,

@@ -2,7 +2,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::{borrow::Cow, collections::HashSet, fmt::Debug};
 use swc_core::{
-  common::{comments::Comments, errors::HANDLER, util::take::Take, DUMMY_SP},
+  common::{comments::Comments, errors::HANDLER, util::take::Take, Spanned, DUMMY_SP},
   ecma::{
     ast::*,
     utils::{calc_literal_cost, prepend_stmt},
@@ -43,7 +43,7 @@ where
   opts: DynamicImportVisitorConfig,
   has_inner_lazy_bundle: bool,
   named_imports: HashSet<Ident>,
-  _comments: Option<C>,
+  comments: Option<C>,
 }
 
 impl<C> Default for DynamicImportVisitor<C>
@@ -62,11 +62,56 @@ where
   pub fn new(opts: DynamicImportVisitorConfig, comments: Option<C>) -> Self {
     DynamicImportVisitor {
       opts,
-      _comments: comments,
+      comments,
       has_inner_lazy_bundle: false,
       named_imports: HashSet::new(),
     }
   }
+
+  /// A `webpackChunkName` is the identity of a chunk group, so the same name in
+  /// the main-thread and the background compilation collapses both layers into
+  /// one chunk, which then carries no per-layer output. Append the layer to the
+  /// name; `@lynx-js/react-webpack-plugin` strips it again so the two groups
+  /// still make up a single lazy bundle.
+  fn suffix_webpack_chunk_name(&self, call_expr: &CallExpr) {
+    if self.opts.layer.is_empty() {
+      return;
+    }
+    let Some(comments) = &self.comments else {
+      return;
+    };
+    let pos = call_expr.args[0].expr.span_lo();
+    let Some(mut leading) = comments.take_leading(pos) else {
+      return;
+    };
+    let suffix = format!("-{}", self.opts.layer);
+    for comment in leading.iter_mut() {
+      if let Some(text) = suffix_chunk_name(comment.text.as_str(), &suffix) {
+        comment.text = text.into();
+      }
+    }
+    comments.add_leading_comments(pos, leading);
+  }
+}
+
+/// Rewrite `webpackChunkName: "foo"` into `webpackChunkName: "foo<suffix>"`,
+/// leaving anything that is not such a comment alone.
+fn suffix_chunk_name(text: &str, suffix: &str) -> Option<String> {
+  let key = text.find("webpackChunkName")?;
+  let open = text[key..].find(['"', '\''])? + key;
+  let quote = text.as_bytes()[open] as char;
+  let close = text[open + 1..].find(quote)? + open + 1;
+  let name = &text[open + 1..close];
+  if name.is_empty() || name.ends_with(suffix) {
+    return None;
+  }
+  Some(format!(
+    "{}{}{}{}",
+    &text[..close],
+    suffix,
+    quote,
+    &text[close + 1..]
+  ))
 }
 
 fn is_import_call_str_lit(call_expr: &CallExpr) -> (bool, bool, Cow<'_, str>) {
@@ -226,6 +271,7 @@ where
         return;
       }
 
+      self.suffix_webpack_chunk_name(call_expr);
       self.has_inner_lazy_bundle = true;
     } else {
       let ident: Ident = "__dynamicImport".into();
@@ -304,6 +350,38 @@ mod tests {
 
   use super::{DynamicImportVisitor, DynamicImportVisitorConfig};
 
+  use super::suffix_chunk_name;
+
+  #[test]
+  fn should_suffix_a_chunk_name() {
+    assert_eq!(
+      suffix_chunk_name(" webpackChunkName: \"comp\" ", "-test").as_deref(),
+      Some(" webpackChunkName: \"comp-test\" ")
+    );
+    assert_eq!(
+      suffix_chunk_name("webpackChunkName: 'comp'", "-test").as_deref(),
+      Some("webpackChunkName: 'comp-test'")
+    );
+  }
+
+  #[test]
+  fn should_leave_other_comments_alone() {
+    // already suffixed
+    assert_eq!(
+      suffix_chunk_name(" webpackChunkName: \"comp-test\" ", "-test"),
+      None
+    );
+    // another magic comment
+    assert_eq!(suffix_chunk_name(" webpackPrefetch: true ", "-test"), None);
+    // empty name
+    assert_eq!(suffix_chunk_name(" webpackChunkName: \"\" ", "-test"), None);
+    // no closing quote
+    assert_eq!(
+      suffix_chunk_name(" webpackChunkName: \"comp ", "-test"),
+      None
+    );
+  }
+
   test!(
     module,
     Syntax::Es(EsSyntax {
@@ -381,6 +459,30 @@ mod tests {
     r#"
     (async function () {
       await import("./index.js");
+    })();
+    "#
+  );
+
+  test!(
+    module,
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    |t| visit_mut_pass(DynamicImportVisitor::new(
+      DynamicImportVisitorConfig {
+        layer: "react__background".into(),
+        inject_lazy_bundle: Some(false),
+        ..Default::default()
+      },
+      Some(t.comments.clone())
+    )),
+    should_suffix_webpack_chunk_name,
+    r#"
+    (async function () {
+      await import(/* webpackChunkName: "comp" */ "./comp.js");
+      await import(/* webpackPrefetch: true */ "./other.js");
+      await import("./plain.js");
     })();
     "#
   );

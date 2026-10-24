@@ -97,7 +97,7 @@ export interface CreateRspeedyOptions {
  * The `createRspeedy` method can let you create a Rspeedy instance and you can customize the build or development process in Node.js Runtime.
  *
  * @param options - {@link CreateRspeedyOptions}
- * @returns - Rspeedy instance.
+ * @returns Rspeedy instance.
  *
  * @example
  *
@@ -151,7 +151,7 @@ export async function createRspeedy(
         rspeedyConfig,
         path.resolve(
           options.outputPath ?? rspeedy.context.distPath,
-          '.rsbuild/rspeedy.config.js',
+          '.rsbuild/rspeedy.config.mjs',
         ),
         options.verbose ?? false,
       )

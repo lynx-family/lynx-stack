@@ -1,7 +1,9 @@
 # Lynx OpenUI Examples
 
-Treat each block as a complete OpenUI program. Adapt component choices and
-content to the request.
+Treat each block as a complete OpenUI program for the default catalog and its
+`Stack` root. Adapt component choices and content to the request. When the host
+supplies a reduced catalog or a different root, use only its active signatures
+and ignore examples that require omitted components.
 
 ## Static Card And Conversational Action
 

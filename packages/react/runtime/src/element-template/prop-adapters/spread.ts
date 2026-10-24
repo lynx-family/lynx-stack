@@ -41,10 +41,7 @@ export function prepareSpreadAttrSlot(
       continue;
     }
 
-    const transformedKey = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
-        && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__
-      ? transformAttrName(key)
-      : key;
+    const transformedKey = transformAttrName(key);
     if (isEventPropKey(transformedKey)) {
       prepared[transformedKey] = spreadValue === null || spreadValue === undefined || spreadValue === false
         ? null

@@ -1,28 +1,15 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
 
-import { defineComponent } from '../../core/library.jsx';
-import { stringLikeSchema, stringifyValue } from '../utils.js';
+import { Image as ImageDefinition } from './definition.js';
+import type { DefinedComponent } from '../../core/library.jsx';
+import { stringifyValue } from '../utils.js';
 
 import '../../../styles/catalog/Image.css';
 
-export const Image = defineComponent({
-  name: 'Image',
-  props: z.object({
-    url: stringLikeSchema,
-    fit: z.enum(['contain', 'cover', 'fill', 'none', 'scale-down']).optional(),
-    variant: z.enum([
-      'icon',
-      'avatar',
-      'smallFeature',
-      'mediumFeature',
-      'largeFeature',
-      'header',
-    ]).optional(),
-  }),
-  description: 'Image with optional fit and variant sizing.',
+export const Image: DefinedComponent<typeof ImageDefinition.props> = {
+  ...ImageDefinition,
   component: ({ props }) => {
     const fit = props.fit ?? 'cover';
     const variant = props.variant ?? 'mediumFeature';
@@ -53,4 +40,4 @@ export const Image = defineComponent({
       />
     );
   },
-});
+};

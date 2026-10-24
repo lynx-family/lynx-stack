@@ -5,9 +5,32 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
+import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
 
+import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
+
+import type { Config } from '../../src/index.js'
 import { createStubRspeedy } from '../createStubRspeedy.js'
+
+async function getProfile(config: Config): Promise<boolean | undefined> {
+  let profile: boolean | undefined
+  const rspeedy = await createStubRspeedy({
+    ...config,
+    plugins: [{
+      name: 'test:profile',
+      setup(api: RsbuildPluginAPI) {
+        api.modifyBundlerChain(() => {
+          profile = api.useExposed<LynxConfig>(
+            Symbol.for('@lynx-js/rsbuild-plugin:config'),
+          )?.performance.profile
+        })
+      },
+    }],
+  })
+  await rspeedy.initConfigs()
+  return profile
+}
 
 interface StatsJson {
   name?: string
@@ -22,31 +45,20 @@ interface StatsJson {
 describe('stats plugin', () => {
   test('no DEBUG', async () => {
     rstest.stubEnv('DEBUG', '')
-    const rspeedy = await createStubRspeedy({})
 
-    const config = rspeedy.getRspeedyConfig()
-
-    expect(config.performance?.profile).toBeUndefined()
+    expect(await getProfile({})).toBeUndefined()
   })
 
   test('DEBUG', async () => {
     rstest.stubEnv('DEBUG', 'rspeedy')
-    const rspeedy = await createStubRspeedy({})
 
-    const config = rspeedy.getRspeedyConfig()
-
-    expect(config.performance?.profile).toBe(true)
+    expect(await getProfile({})).toBe(true)
   })
 
   test('override performance.profile', async () => {
     rstest.stubEnv('DEBUG', 'rspeedy')
-    const rspeedy = await createStubRspeedy({
-      performance: { profile: false },
-    })
 
-    const config = rspeedy.getRspeedyConfig()
-
-    expect(config.performance?.profile).toBe(false)
+    expect(await getProfile({ performance: { profile: false } })).toBe(false)
   })
 
   test('emits complete stats.json when performance.profile is enabled', async () => {

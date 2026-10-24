@@ -4,8 +4,10 @@ import type { Page } from '@playwright/test';
 const markdownInitialRenderTimeout = 5_000;
 const markdownRenderTimeout = 15_000;
 
-const goto = async (page: Page, fixtureName: string) => {
-  await page.goto(`tests/fixtures/${fixtureName}.html`, { waitUntil: 'load' });
+const goto = async (page: Page, fixtureName: string, query = '') => {
+  await page.goto(`tests/fixtures/${fixtureName}.html${query}`, {
+    waitUntil: 'load',
+  });
   await page.evaluate(() => document.fonts.ready);
 };
 
@@ -13,12 +15,6 @@ const getShadowText = async (page: Page, selector: string) =>
   page.evaluate((value) => {
     const element = document.querySelector('x-markdown');
     return element?.shadowRoot?.querySelector(value)?.textContent ?? '';
-  }, selector);
-
-const getShadowCount = async (page: Page, selector: string) =>
-  page.evaluate((value) => {
-    const element = document.querySelector('x-markdown');
-    return element?.shadowRoot?.querySelectorAll(value).length ?? 0;
   }, selector);
 
 const hasEmptyMarkdownRoot = async (page: Page) =>
@@ -520,14 +516,13 @@ test.describe('x-markdown', () => {
     expect(await isFirstChildSame(page)).toBe(false);
   });
 
-  test('should batch append by newline boundary', async ({ page }) => {
+  test('should reparse an unfinished paragraph when content is appended', async ({ page }) => {
     await goto(page, 'x-markdown/incremental');
-    expect(await getShadowCount(page, 'p')).toBe(1);
+    await expectMarkdownText(page, 'p', 'Line 1');
     await appendContent(page, 'Line 2');
-    await page.waitForTimeout(20);
-    expect(await getShadowCount(page, 'p')).toBe(1);
-    await page.waitForTimeout(80);
-    expect(await getShadowCount(page, 'p')).toBe(2);
+    await expect(page.locator('x-markdown').locator('p')).toHaveText(
+      'Line 1\nLine 2',
+    );
   });
 
   test('should render tables', async ({ page }) => {
@@ -701,6 +696,105 @@ test.describe('x-markdown', () => {
     expect(projected).toBe(true);
   });
 
+  for (const typewriter of [false, true]) {
+    test(`should inject block views via pre-set slots${typewriter ? ' in typewriter mode' : ''}`, async ({ page }) => {
+      await goto(
+        page,
+        'x-markdown/blockview',
+        typewriter ? '?typewriter' : '',
+      );
+      const markdown = page.locator('x-markdown');
+      const root = markdown.locator('#markdown-root');
+      await expect(root.locator('slot')).toHaveCount(3);
+      await expect(root.locator('p').first()).toHaveJSProperty(
+        'innerHTML',
+        'before <slot name="dil-1"></slot>\uFFFC between <slot name="dil-2"></slot> after',
+      );
+      const assignedIds = await root.locator('slot').evaluateAll((slots) =>
+        slots.map((slot) =>
+          (slot as HTMLSlotElement).assignedElements().map((node) => node.id)
+        )
+      );
+      expect(assignedIds).toEqual([['first'], ['second'], ['badge']]);
+      await expect(markdown.locator('#first')).toBeVisible();
+      await expect(markdown.locator('#second')).toBeVisible();
+      await expect(root.locator('.md-inline-view slot')).toHaveAttribute(
+        'name',
+        'badge',
+      );
+      await expect(root.locator('img')).toHaveCount(1);
+      await expect(root.locator('img')).toHaveAttribute(
+        'src',
+        '/tests/fixtures/resources/firefox-logo.png',
+      );
+
+      await markdown.evaluate((el) => {
+        const content = '![](blockview://dil-2)';
+        el.setAttribute('content', content);
+        el.setAttribute('initial-animation-step', String(content.length));
+      });
+      await expect(root.locator('slot')).toHaveCount(1);
+      await expect(root.locator('slot')).toHaveAttribute('name', 'dil-2');
+      await expect(root.locator('img')).toHaveCount(0);
+      await expect(markdown.locator('#second')).toBeVisible();
+    });
+  }
+
+  test('should preserve embedded view nodes when appending content', async ({ page }) => {
+    await goto(page, 'x-markdown/blockview');
+    const markdown = page.locator('x-markdown');
+    const root = markdown.locator('#markdown-root');
+    await expect(root.locator('slot')).toHaveCount(3);
+    const originalNodes = await root.evaluateHandle((el) => [
+      ...el.children,
+      ...el.querySelectorAll('slot'),
+    ]);
+
+    await markdown.evaluate((el) =>
+      el.setAttribute(
+        'content',
+        `${el.getAttribute('content')}\n\nAppended paragraph`,
+      )
+    );
+    await expect(root.locator('p').last()).toHaveText('Appended paragraph');
+    expect(
+      await originalNodes.evaluate((nodes) =>
+        nodes.every((node) => node.isConnected)
+      ),
+    ).toBe(true);
+    await expect(root.locator('slot')).toHaveCount(3);
+    await expect(markdown.locator('#first')).toBeVisible();
+    await expect(markdown.locator('#badge')).toBeVisible();
+    await originalNodes.dispose();
+  });
+
+  for (
+    const [protocol, id] of [['blockview', 'dil-1'], [
+      'inlineview',
+      'badge',
+    ]] as const
+  ) {
+    test(`should keep the typewriter cursor visible after an assigned ${protocol} slot`, async ({ page }) => {
+      await goto(page, 'x-markdown/blockview');
+      const markdown = page.locator('x-markdown');
+      const root = markdown.locator('#markdown-root');
+      await expect(root.locator('slot')).toHaveCount(3);
+
+      await markdown.evaluate((el, content) => {
+        el.setAttribute('content', content);
+        el.setAttribute('content-complete', 'false');
+        el.setAttribute('animation-paused', 'true');
+        el.setAttribute('initial-animation-step', String(content.length));
+        el.setAttribute('animation-type', 'typewriter');
+      }, `![](${protocol}://${id})`);
+
+      await expect(root.locator('slot')).toHaveCount(1);
+      await expect(root.locator('.md-typewriter-cursor')).toBeVisible();
+      await expect(root.locator('slot .md-typewriter-cursor')).toHaveCount(0);
+      await expect(root.locator('slot')).toHaveAttribute('name', id);
+    });
+  }
+
   test('should not create img for inline view in typewriter mode', async ({ page }) => {
     await goto(page, 'x-markdown/typewriter-inlineview');
     await page.waitForFunction(() =>
@@ -829,19 +923,9 @@ test.describe('x-markdown', () => {
 
   test('should render typewriter cursor after trailing text node', async ({ page }) => {
     await goto(page, 'x-markdown/typewriter-trailing-text');
-    await page.waitForTimeout(500);
-
-    const isCorrectParent = await page.evaluate(() => {
-      const el = document.querySelector('x-markdown')!;
-      const root = el.shadowRoot as ShadowRoot;
-      const cursor = root.querySelector('.md-typewriter-cursor');
-      if (!cursor) return false;
-
-      const parent = cursor.parentElement;
-      return parent && parent.tagName === 'P';
-    });
-
-    expect(isCorrectParent).toBe(true);
+    await expect(
+      page.locator('x-markdown').locator('p > .md-typewriter-cursor'),
+    ).toBeVisible();
   });
 
   test('should not hide cursor when content-complete is false', async ({ page }) => {

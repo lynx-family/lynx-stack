@@ -5,6 +5,7 @@ import { BackgroundElementTemplateInstance } from '../../../../../src/element-te
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
 import { root } from '../../../../../src/element-template/index.js';
 import { resetElementTemplatePatchListener } from '../../../../../src/element-template/native/patch-listener.js';
+import { resetElementTemplateRefInitValueListener } from '../../../../../src/element-template/main-thread-ref-init-value.js';
 import { __root, setRoot } from '../../../../../src/element-template/runtime/page/root-instance.js';
 import { serializeBackgroundTree } from '../../../test-utils/debug/serializer.js';
 
@@ -25,6 +26,7 @@ function setup(): void {
 
 function teardown(): void {
   resetElementTemplatePatchListener();
+  resetElementTemplateRefInitValueListener();
   resetElementTemplateHydrationListener();
   vi.unstubAllGlobals();
   (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];

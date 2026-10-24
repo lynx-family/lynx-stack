@@ -11,6 +11,11 @@ export default defineConfig({
       syntax: 'es2022',
       bundle: true,
       dts: false,
+      shims: {
+        esm: {
+          __dirname: true,
+        },
+      },
       source: {
         entry: {
           index: './src/index.ts',
@@ -19,7 +24,11 @@ export default defineConfig({
       output: {
         target: 'node',
         autoExternal: false,
-        externals: [/^@mastra\/core(?:\/.*)?$/u],
+        externals: [
+          /^@lynx-js\/genui-reactlynx$/u,
+          /^@lynx-js\/genui-reactweb$/u,
+          /^@mastra\/core(?:\/.*)?$/u,
+        ],
       },
     },
   ],

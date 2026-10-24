@@ -1,7 +1,10 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { RsbuildPlugin } from '@rsbuild/core'
+import type { AddressInfo } from 'node:net'
+import path from 'node:path'
+
+import type { RsbuildConfig, RsbuildPlugin } from '@rsbuild/core'
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core'
 
 import { createStubRsbuild } from './createStubRsbuild.js'
@@ -19,6 +22,14 @@ const hasDropPlugin = (plugins: unknown[] | undefined) =>
       typeof p === 'object' && p !== null
       && (p as { constructor?: { name?: string } }).constructor?.name
         === 'DropSourceMapAssetsPlugin',
+  )
+
+const hasCSSSourceMapPlugin = (plugins: unknown[] | undefined) =>
+  !!plugins?.some(
+    p =>
+      typeof p === 'object' && p !== null
+      && (p as { constructor?: { name?: string } }).constructor?.name
+        === 'SourceMapDevToolPlugin',
   )
 
 describe('pluginSourcemap', () => {
@@ -302,6 +313,69 @@ describe('pluginSourcemap', () => {
     })
   })
 
+  describe('output.sourceMap.css', () => {
+    test('enabled on a Lynx environment by default', async () => {
+      expect(await resolveCss([])).toBe(true)
+    })
+
+    test('left off on a non-Lynx environment', async () => {
+      expect(await resolveCss([], 'web')).toBe(false)
+    })
+
+    test('left off on an environment added by another plugin', async () => {
+      const css = await resolveCss(
+        [
+          {
+            name: 'adds-web',
+            setup(api) {
+              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+                mergeRsbuildConfig(config, { environments: { web: {} } })
+              )
+            },
+          } satisfies RsbuildPlugin,
+        ],
+        'web',
+        { lynx: {} },
+      )
+
+      expect(css).toBe(false)
+    })
+
+    test('a plugin can override it with modifyRsbuildConfig', async () => {
+      const css = await resolveCss([
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                output: { sourceMap: { css: false } },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ])
+
+      expect(css).toBe(false)
+    })
+
+    test('a plugin can override it with modifyEnvironmentConfig', async () => {
+      const css = await resolveCss([
+        {
+          name: 'test',
+          setup(api) {
+            api.modifyEnvironmentConfig((config, { mergeEnvironmentConfig }) =>
+              mergeEnvironmentConfig(config, {
+                output: { sourceMap: { css: false } },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ])
+
+      expect(css).toBe(false)
+    })
+  })
+
   describe('development', () => {
     test('defaults', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
@@ -482,6 +556,90 @@ describe('pluginSourcemap', () => {
       )
     })
 
+    test('with server.port', async () => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        server: {
+          port: 4000,
+        },
+      })
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).toBeCalled()
+      // cheap-module-source-map with publicPath applied
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          publicPath: expect.stringContaining(':4000/') as string,
+          filename: '[file].map[query]',
+          columns: false, // cheap
+          module: true, // module
+          noSources: false,
+          debugIds: false,
+        }),
+      )
+    })
+
+    test('with dev.assetPrefix contains "<port>" and port being occupied', async () => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const net = await import('node:net')
+
+      // We get a port that is occupied by the server we just created
+      const port = await (function getPort() {
+        return new Promise<number>((resolve, reject) => {
+          const server = net.createServer()
+          server.unref()
+          server.on('error', reject)
+          server.listen(0, () => {
+            resolve((server.address() as AddressInfo).port)
+          })
+        })
+      })()
+
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        source: {
+          entry: {
+            main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+          },
+        },
+        dev: {
+          assetPrefix: `http://example.com:<port>/`,
+        },
+        server: {
+          port,
+        },
+      })
+
+      await using server = await rsbuild.usingDevServer()
+
+      await server.waitDevCompileDone()
+
+      const config = await rsbuild.unwrapConfig()
+
+      expect(config.output?.publicPath).toBe(
+        `http://example.com:${server.port}/`,
+      )
+
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).toBeCalled()
+      // cheap-module-source-map with publicPath applied
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({
+          publicPath: config.output?.publicPath,
+          filename: '[file].map[query]',
+          columns: false, // cheap
+          module: true, // module
+          noSources: false,
+        }),
+      )
+    })
+
     test('with dev.assetPrefix: false', async () => {
       rstest.stubEnv('NODE_ENV', 'development')
       const { SourceMapDevToolPlugin } = await import(
@@ -565,4 +723,137 @@ describe('pluginSourcemap', () => {
       expect(hasDropPlugin(config.plugins)).toBe(false)
     })
   })
+
+  describe('css source map', () => {
+    test('enables css source map for lynx environments', async () => {
+      const rsbuild = await createStubRsbuild({})
+      await rsbuild.unwrapConfig()
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.sourceMap,
+      ).toMatchObject({ css: true })
+    })
+
+    test('does not enable css source map for other environments', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rsbuild = await createStubRsbuild({ environments: { web: {} } })
+      const config = await rsbuild.unwrapConfig({ action: 'build' })
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'web' }).output.sourceMap,
+      ).toMatchObject({ css: false })
+      expect(hasCSSSourceMapPlugin(config.plugins)).toBe(false)
+    })
+
+    test('respects output.sourceMap.css: true for other environments', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rsbuild = await createStubRsbuild({
+        environments: { web: {} },
+        output: { sourceMap: { css: true } },
+      })
+      const config = await rsbuild.unwrapConfig({ action: 'build' })
+      expect(hasCSSSourceMapPlugin(config.plugins)).toBe(true)
+    })
+
+    test('respects output.sourceMap.css: false for lynx environments', async () => {
+      const rsbuild = await createStubRsbuild({
+        output: { sourceMap: { css: false } },
+      })
+      await rsbuild.unwrapConfig()
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.sourceMap,
+      ).toMatchObject({ css: false })
+    })
+
+    test('respects environment-level output.sourceMap.css: false', async () => {
+      const rsbuild = await createStubRsbuild({
+        environments: { lynx: { output: { sourceMap: { css: false } } } },
+      })
+      await rsbuild.unwrapConfig()
+      expect(
+        rsbuild.getNormalizedConfig({ environment: 'lynx' }).output.sourceMap,
+      ).toMatchObject({ css: false })
+    })
+  })
+
+  describe('environment config', () => {
+    test('honors output.sourceMap.js: false set on an environment', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        environments: {
+          lynx: { output: { sourceMap: { js: false } } },
+        },
+      })
+      const config = await rsbuild.unwrapConfig()
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).not.toBeCalled()
+    })
+
+    test('prefers output.sourceMap.js of the environment over the root', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        output: { sourceMap: { js: false } },
+        environments: {
+          lynx: { output: { sourceMap: { js: 'source-map' } } },
+        },
+      })
+      const config = await rsbuild.unwrapConfig()
+      expect(config.devtool).toBe(false)
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({ filename: '[file].map[query]' }),
+      )
+    })
+
+    test('honors dev.assetPrefix set on an environment', async () => {
+      rstest.stubEnv('NODE_ENV', 'development')
+      const { SourceMapDevToolPlugin } = await import(
+        '../src/webpack/SourceMapDevToolPlugin.js'
+      )
+      const rsbuild = await createStubRsbuild({
+        environments: {
+          lynx: { dev: { assetPrefix: 'https://lynx.example.com/' } },
+        },
+      })
+      await rsbuild.unwrapConfig()
+      expect(SourceMapDevToolPlugin).toBeCalledWith(
+        expect.objectContaining({ publicPath: 'https://lynx.example.com/' }),
+      )
+    })
+  })
 })
+
+async function resolveCss(
+  plugins: RsbuildPlugin[],
+  environment = 'lynx',
+  environments: RsbuildConfig['environments'] = { lynx: {}, web: {} },
+): Promise<unknown> {
+  let css: unknown
+  const rsbuild = await createStubRsbuild({
+    environments,
+    plugins: [
+      ...plugins,
+      {
+        name: 'probe',
+        setup(api) {
+          api.modifyEnvironmentConfig({
+            handler: (config, { name }) => {
+              const { sourceMap } = config.output
+              if (name === environment) {
+                css = typeof sourceMap === 'object' ? sourceMap.css : sourceMap
+              }
+            },
+            order: 'post',
+          })
+        },
+      } satisfies RsbuildPlugin,
+    ],
+  })
+
+  await rsbuild.initConfigs()
+
+  return css
+}

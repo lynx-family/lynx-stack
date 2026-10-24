@@ -501,7 +501,7 @@ impl MainThreadServerContext {
               "x-viewpager-ng" => Some(Cow::Borrowed(
                 web_elements::template::TEMPLATE_X_VIEWPAGE_NG,
               )),
-              "x-web-view" => Some(Cow::Borrowed(web_elements::template::TEMPLATE_X_WEB_VIEW)),
+              "x-webview" => Some(Cow::Borrowed(web_elements::template::TEMPLATE_X_WEB_VIEW)),
               _ => None,
             };
 

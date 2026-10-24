@@ -26,14 +26,14 @@
     "src"
   ],
   "scripts": {
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rslib",
+    "dev": "rslib --watch",
     "test": "vitest run"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/types": "4.0.0",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@lynx-js/types": "4.1.0",
+    "@testing-library/jest-dom": "^7.0.0",
     "rsbuild-plugin-publint": "1.0.0"
   },
   "peerDependencies": {

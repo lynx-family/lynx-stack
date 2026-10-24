@@ -1,0 +1,68 @@
+page {
+  background-color: #f5f7fb;
+}
+
+.App {
+  min-height: 100vh;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Title {
+  color: #111827;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.Description {
+  margin-top: 12px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.CounterValueBlock {
+  width: 280px;
+  margin-top: 32px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #dbe3f0;
+  border-radius: 16px;
+  background-color: #ffffff;
+}
+
+.CounterValueLabel {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.CounterValue {
+  margin-top: 12px;
+  color: #111827;
+  font-size: 64px;
+  font-weight: 700;
+}
+
+.CounterRenderCount {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.Button {
+  margin-top: 32px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  background-color: #2563eb;
+}
+
+.ButtonText {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+}

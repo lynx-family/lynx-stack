@@ -39,6 +39,7 @@ function __injectGlobals(target) {
 
   target.lynxCoreInject = {};
   target.lynxCoreInject.tt = {};
+  target.lynx.getApp = () => target.lynxCoreInject.tt;
 
   target.__LoadStyleSheet = () => {
     return {};

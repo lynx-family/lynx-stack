@@ -14,10 +14,13 @@ import {
   previewTextFromSharedMessages,
   renameConversation,
   saveConversationMessages,
+  saveConversationMeta,
   setActiveConversationId,
 } from '../storage/conversationRepo.js';
+import { applyA2UIMessagesToSnapshot } from '../storage/conversationSnapshot.js';
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 import type {
+  ConversationGenerationSettings,
   ConversationMeta,
   ConversationProtocol,
   DataModelSnapshot,
@@ -25,10 +28,15 @@ import type {
   PreviewPayloadUrls,
   PreviewPerformanceMetrics,
 } from '../storage/types.js';
+import type { GenerationUsageRecord } from '../utils/modelPricing.js';
 
 export interface ModelChatMessage {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   previewPayloadUrls?: PreviewPayloadUrls;
   previewMetrics?: PreviewPerformanceMetrics;
 }
@@ -47,8 +55,12 @@ interface ConversationHotState {
 }
 
 export interface RecordTurnInput {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   userMessage: ModelChatMessage;
   assistantContent: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   a2uiMessages: unknown[];
   previewMessages?: unknown[];
   previewPayloadUrls?: PreviewPayloadUrls | null;
@@ -69,10 +81,14 @@ export interface UseConversationReturn {
   isPersistent: boolean;
   switchTo: (id: string) => Promise<void>;
   createNew: () => Promise<string>;
+  clearAll: () => Promise<void>;
   importShared: (doc: SharedConversationDoc) => Promise<string>;
   remove: (id: string) => Promise<void>;
   rename: (id: string, title: string) => Promise<void>;
   recordTurn: (input: RecordTurnInput) => Promise<void>;
+  recordGenerationSettings: (
+    settings: ConversationGenerationSettings,
+  ) => Promise<void>;
   updateLastAssistantPreviewMetrics: (
     metrics: PreviewPerformanceMetrics,
   ) => Promise<void>;
@@ -92,15 +108,6 @@ function cloneDataModel(
   }
 }
 
-function cloneDataValue(value: unknown): unknown {
-  if (value === null || typeof value !== 'object') return value;
-  try {
-    return JSON.parse(JSON.stringify(value)) as unknown;
-  } catch {
-    return value;
-  }
-}
-
 function clonePreviewPerformanceMetrics(
   value: PreviewPerformanceMetrics | null | undefined,
 ): PreviewPerformanceMetrics | undefined {
@@ -109,6 +116,28 @@ function clonePreviewPerformanceMetrics(
   if (typeof value.fcpMs === 'number') next.fcpMs = value.fcpMs;
   if (typeof value.fmpMs === 'number') next.fmpMs = value.fmpMs;
   if (typeof value.ttiMs === 'number') next.ttiMs = value.ttiMs;
+  for (
+    const key of [
+      'generationMs',
+      'artifactTransformMs',
+      'artifactBuildMs',
+      'artifactUploadMs',
+      'firstReasoningTokenMs',
+      'firstTextTokenMs',
+      'modelMs',
+      'searchMs',
+      'imageGenerationMs',
+    ] as const
+  ) {
+    const duration = value[key];
+    if (
+      typeof duration === 'number'
+      && Number.isFinite(duration)
+      && duration >= 0
+    ) {
+      next[key] = duration;
+    }
+  }
   if (typeof value.agentOutputMs === 'number') {
     next.agentOutputMs = value.agentOutputMs;
   }
@@ -119,7 +148,12 @@ function clonePreviewPerformanceMetrics(
 function truncateConversationHistory(
   history: ModelChatMessage[],
 ): ModelChatMessage[] {
-  const byTurns = history.slice(-MAX_CONVERSATION_TURNS * 2);
+  const byTurns = history.filter((message, index) =>
+    !message.generationError
+    && !(message.role === 'user' && history[index + 1]?.generationError)
+  ).slice(
+    -MAX_CONVERSATION_TURNS * 2,
+  );
   let totalChars = 0;
   const kept: ModelChatMessage[] = [];
 
@@ -132,79 +166,6 @@ function truncateConversationHistory(
   }
 
   return kept;
-}
-
-function applyDataModel(
-  model: Record<string, unknown>,
-  path: string,
-  value: unknown,
-): void {
-  if (!path || path === '/' || path === '') {
-    for (const key of Object.keys(model)) {
-      delete model[key];
-    }
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(model, cloneDataValue(value) as Record<string, unknown>);
-    }
-    return;
-  }
-
-  const parts = path.replace(/^\//u, '').split('/').filter(Boolean);
-  let cursor = model;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (!key) continue;
-    if (typeof cursor[key] !== 'object' || cursor[key] === null) {
-      cursor[key] = {};
-    }
-    cursor = cursor[key] as Record<string, unknown>;
-  }
-
-  const last = parts[parts.length - 1];
-  if (!last) return;
-  if (value === undefined) {
-    delete cursor[last];
-  } else {
-    cursor[last] = cloneDataValue(value);
-  }
-}
-
-function applyA2UIMessagesToSnapshot(
-  dataModel: Record<string, unknown>,
-  surfaceIds: Set<string>,
-  messages: unknown[],
-): void {
-  for (const message of messages) {
-    if (!message || typeof message !== 'object') continue;
-    const record = message as {
-      createSurface?: { surfaceId?: unknown };
-      deleteSurface?: { surfaceId?: unknown };
-      updateDataModel?: { path?: unknown; value?: unknown };
-    };
-    if (
-      record.createSurface
-      && typeof record.createSurface.surfaceId === 'string'
-    ) {
-      surfaceIds.add(record.createSurface.surfaceId);
-      continue;
-    }
-    if (
-      record.deleteSurface
-      && typeof record.deleteSurface.surfaceId === 'string'
-    ) {
-      surfaceIds.delete(record.deleteSurface.surfaceId);
-      continue;
-    }
-    if (record.updateDataModel) {
-      applyDataModel(
-        dataModel,
-        typeof record.updateDataModel.path === 'string'
-          ? record.updateDataModel.path
-          : '/',
-        record.updateDataModel.value,
-      );
-    }
-  }
 }
 
 function titleFromMessage(content: string): string {
@@ -228,6 +189,14 @@ function toPersistedMessages(
     seq: index,
     role: message.role,
     content: message.content,
+    generationUsage: message.generationUsage,
+    generationError: message.generationError,
+    ...(message.lynxXmlFragment
+      ? { lynxXmlFragment: message.lynxXmlFragment }
+      : {}),
+    ...(message.lynxXmlModelOutput
+      ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+      : {}),
     previewPayloadUrls: message.previewPayloadUrls,
     previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
     createdAt: now + index,
@@ -240,6 +209,14 @@ function fromPersistedMessages(
   return messages.map((message) => ({
     role: message.role,
     content: message.content,
+    generationUsage: message.generationUsage,
+    generationError: message.generationError,
+    ...(message.lynxXmlFragment
+      ? { lynxXmlFragment: message.lynxXmlFragment }
+      : {}),
+    ...(message.lynxXmlModelOutput
+      ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+      : {}),
     previewPayloadUrls: message.previewPayloadUrls,
     previewMetrics: clonePreviewPerformanceMetrics(message.previewMetrics),
   }));
@@ -474,6 +451,12 @@ export function useConversation(
           messages: doc.messages.map((message) => ({
             role: message.role,
             content: message.content,
+            ...(message.lynxXmlFragment
+              ? { lynxXmlFragment: message.lynxXmlFragment }
+              : {}),
+            ...(message.lynxXmlModelOutput
+              ? { lynxXmlModelOutput: message.lynxXmlModelOutput }
+              : {}),
             previewPayloadUrls: message.previewPayloadUrls,
             previewMetrics: clonePreviewPerformanceMetrics(
               message.previewMetrics,
@@ -535,6 +518,18 @@ export function useConversation(
     [conversations, createNew, protocol, switchTo],
   );
 
+  const clearAll = useCallback(async () => {
+    const ids = conversations.map((item) => item.id);
+    if (persistentRef.current) {
+      await Promise.all(ids.map((id) => deleteConversation(id, protocol)));
+    } else {
+      conversationHotStateMapRef.current.clear();
+    }
+    setConversations([]);
+    const nextId = await createNew();
+    await switchTo(nextId);
+  }, [conversations, createNew, protocol, switchTo]);
+
   const rename = useCallback(async (id: string, title: string) => {
     const trimmed = title.trim();
     if (!trimmed) return;
@@ -548,6 +543,46 @@ export function useConversation(
     );
   }, [refreshConversations]);
 
+  const recordGenerationSettings = useCallback(
+    async (settings: ConversationGenerationSettings) => {
+      const id = activeIdRef.current;
+      const meta = conversationsRef.current.find((item) => item.id === id);
+      if (!meta) return;
+      const nextMeta: ConversationMeta = {
+        ...meta,
+        generationSettings: { ...settings },
+        updatedAt: Date.now(),
+      };
+      const nextConversations = conversationsRef.current.map((item) =>
+        item.id === id ? nextMeta : item
+      );
+      conversationsRef.current = nextConversations;
+      setConversations(nextConversations);
+      if (!persistentRef.current) return;
+      try {
+        await saveConversationMeta(nextMeta);
+      } catch (err) {
+        console.warn(
+          '[a2ui] Failed to persist generation settings; continuing in memory',
+          err,
+        );
+        persistentRef.current = false;
+        setIsPersistent(false);
+        conversationHotStateMapRef.current.set(
+          meta.id,
+          cloneHotState({
+            messages: messagesRef.current,
+            dataModel: dataModelRef.current,
+            surfaceIds: surfaceIdsRef.current,
+            previewMessages: previewMessagesRef.current,
+            previewPayloadUrls: previewPayloadUrlsRef.current,
+          }),
+        );
+      }
+    },
+    [],
+  );
+
   const recordTurn = useCallback(
     async (input: RecordTurnInput) => {
       let id = activeIdRef.current;
@@ -559,6 +594,14 @@ export function useConversation(
         {
           role: 'assistant' as const,
           content: input.assistantContent,
+          generationUsage: input.generationUsage,
+          generationError: input.generationError,
+          ...(input.lynxXmlFragment
+            ? { lynxXmlFragment: input.lynxXmlFragment }
+            : {}),
+          ...(input.lynxXmlModelOutput
+            ? { lynxXmlModelOutput: input.lynxXmlModelOutput }
+            : {}),
           previewPayloadUrls: input.previewPayloadUrls ?? undefined,
           previewMetrics: clonePreviewPerformanceMetrics(input.previewMetrics),
         },
@@ -746,10 +789,12 @@ export function useConversation(
     isPersistent,
     switchTo,
     createNew,
+    clearAll,
     importShared,
     remove,
     rename,
     recordTurn,
+    recordGenerationSettings,
     updateLastAssistantPreviewMetrics,
     buildConversationContext,
   };

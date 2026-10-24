@@ -7,6 +7,7 @@ import type { CloneableObject } from './Cloneable.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './TimingAPIs.js';
 import type { II18nResource } from './I18nTypes.js';
+import type { LynxIntersectionObserverEntry } from './IntersectionObserver.js';
 
 export type LynxKernelInject = {
   init: (opt: { tt: LynxKernelInject }) => void;
@@ -82,6 +83,11 @@ export type NativeTTObject = {
     tt: NativeTTObject;
   };
   updateGlobalProps: (newData: Record<string, any>) => void;
+  onIntersectionObserverEvent(
+    observerId: number,
+    callbackId: number,
+    payload: LynxIntersectionObserverEntry,
+  ): void;
 };
 
 export type BundleInitReturnObj = {

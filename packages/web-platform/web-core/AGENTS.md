@@ -39,6 +39,8 @@ The Rust code forms the logic backbone, compiled into WASM.
 
 TypeScript bindings that load the WASM module and build the browser environment.
 
+- **`ts/animax.ts`**: Opt-in side-effect entry for `@lynx-js/web-core/animax`. It imports `@lynx-js/animax` without making it part of the default Web Core bundle graph.
+
 #### Main Thread (`ts/client/mainthread`)
 
 Handles DOM rendering and user interaction.
@@ -70,6 +72,7 @@ TypeScript bindings for Server-Side Rendering (SSR).
 Build-time utilities.
 
 - **`encodeCSS.ts`**: Uses the `encode` feature of the Wasm module to serialize CSS ASTs into binary format during the build process.
+- **`webEncoder.ts`**: Assembles the sections of a web bundle. A custom section tagged `encoding: 'CSS'` is taken out of the JSON `CustomSections` section and encoded by `encodeCSSMap` into the `CustomSectionsStyleInfo` section (label `7`): an `rkyv` `RawStyleInfoMap` (`raw_style_info_map.rs`) keyed by section name, each value a `RawStyleInfo` holding the rule list under css id `0`. The section is only written when such a custom section exists. The decoders (`decode.worker.ts`, `ts/server/decode.ts`) accept the label but do not consume it yet.
 
 ## Data Flow
 

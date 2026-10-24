@@ -138,10 +138,10 @@ describe('create-lynx-library CLI', () => {
     );
     expect(read(dir, 'package.json')).not.toContain('workspace:');
     expect(read(dir, 'lynxtron/index.cjs')).toContain(
-      '\'dist\'',
+      'require(\'../lynx.lib.json\')',
     );
-    expect(read(dir, 'lynxtron/index.cjs')).toContain(
-      '\'cli-library.node\'',
+    expect(read(dir, 'lynx.lib.json')).toContain(
+      'dist/darwin/arm64/cli-library.node',
     );
     expect(read(dir, 'shared/CMakeLists.txt')).toContain(
       '@lynx-js/lynx-library-headers',

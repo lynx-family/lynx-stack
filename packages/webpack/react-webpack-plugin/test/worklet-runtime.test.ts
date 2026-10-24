@@ -4,6 +4,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { runInNewContext } from 'node:vm';
 
 import { rspack } from '@rspack/core';
 import type { RspackOptions, Stats } from '@rspack/core';
@@ -11,14 +12,13 @@ import { describe, expect, it } from '@rstest/core';
 
 interface WorkletRuntimeCase {
   caseName: string;
-  expectedChunkNames: string[];
-  expectedInitSignatureCount: number;
+  expectedRuntimeImplementationCount: number;
   expectedRegisterIdCount: number;
 }
 
 interface BuildOutput {
   lepusChunk: Record<string, string>;
-  mainThreadSource: string;
+  jsAssets: Map<string, string>;
 }
 
 const casesRoot = path.resolve(
@@ -26,6 +26,8 @@ const casesRoot = path.resolve(
   'cases',
   'worklet-runtime',
 );
+const fixturesRoot = path.resolve(__dirname, 'fixtures', 'worklet-runtime');
+
 const distRoot = path.resolve(
   __dirname,
   'dist',
@@ -65,17 +67,86 @@ function countOccurrences(source: string, needle: string): number {
 }
 
 function extractRegisteredWorkletIds(source: string): string[] {
+  // Imported registration bindings can be renamed by the bundler. Match the
+  // call's type and id arguments, then compare them with executed registrations.
   const matches = source.matchAll(
-    /registerWorkletInternal\((?:\\"|")main-thread(?:\\"|"),\s*(?:\\"|")([^\\"]+)(?:\\"|")/g,
+    /\((?:\\"|")main-thread(?:\\"|"),\s*(?:\\"|")([^\\"]+)(?:\\"|")/g,
   );
 
-  return Array.from(matches, match => match[1]);
+  return Array.from(matches, match => match[1]!);
 }
 
-async function buildCase(caseName: string): Promise<BuildOutput> {
-  const caseDir = path.join(casesRoot, caseName);
+const noop = () => undefined;
+
+function executeStandaloneLazyArtifact(source: string): {
+  registeredWorkletIds: string[];
+  hasSelectorApis: boolean;
+} {
+  const jsContext = {
+    addEventListener: noop,
+    dispatchEvent: noop,
+  };
+  const lynx = {
+    getJSContext: () => jsContext,
+    setTimeout: noop,
+    setInterval: noop,
+    clearTimeout: noop,
+    clearInterval: noop,
+    requestAnimationFrame: noop,
+    cancelAnimationFrame: noop,
+  };
+  const host: Record<string, unknown> = {
+    console,
+    lynx,
+    SystemInfo: { lynxSdkVersion: '2.16' },
+    __DEV__: false,
+    __LEPUS__: true,
+    __MAIN_THREAD__: true,
+    __OnLifecycleEvent: noop,
+  };
+
+  const artifactFactory = runInNewContext(source, host, {
+    filename: 'standalone-lazy-main-thread.js',
+  }) as unknown;
+  if (typeof artifactFactory !== 'function') {
+    throw new TypeError(
+      'Standalone lazy artifact should evaluate to a function',
+    );
+  }
+  (artifactFactory as (schema: string) => unknown)(
+    'legacy-host://standalone-lazy',
+  );
+
+  const runtime = host['lynxWorkletImpl'];
+  if (typeof runtime !== 'object' || runtime === null) {
+    throw new TypeError(
+      'Standalone lazy artifact did not initialize the runtime',
+    );
+  }
+  const workletMap = (runtime as { _workletMap?: unknown })._workletMap;
+  if (typeof workletMap !== 'object' || workletMap === null) {
+    throw new TypeError(
+      'Standalone lazy artifact did not create a worklet map',
+    );
+  }
+
+  return {
+    registeredWorkletIds: Object.keys(workletMap),
+    hasSelectorApis:
+      typeof (lynx as Record<string, unknown>)['querySelector'] === 'function'
+      && typeof (lynx as Record<string, unknown>)['querySelectorAll']
+        === 'function',
+  };
+}
+
+async function buildCase(
+  caseDir: string,
+  mode: 'development' | 'production' = 'development',
+  minimize = false,
+): Promise<BuildOutput> {
+  const caseName = path.basename(caseDir);
   const caseConfigPath = path.join(caseDir, 'rspack.config.js');
-  const outputPath = path.join(distRoot, caseName);
+  const outputPath = path.join(distRoot, `${caseName}-${mode}`);
 
   await fs.rm(outputPath, { recursive: true, force: true });
 
@@ -85,7 +156,11 @@ async function buildCase(caseName: string): Promise<BuildOutput> {
   const baseConfig = configModule.default;
   const config: RspackOptions = {
     ...baseConfig,
-    mode: 'development' as const,
+    mode,
+    optimization: {
+      ...baseConfig.optimization,
+      minimize,
+    },
     output: {
       ...(baseConfig.output ?? {}),
       path: outputPath,
@@ -127,59 +202,74 @@ async function buildCase(caseName: string): Promise<BuildOutput> {
 
   const tasmPath = path.join(outputPath, '.rspeedy', 'tasm.json');
   const tasm = await fs.readFile(tasmPath, 'utf8');
-  const mainThreadPath = path.join(outputPath, 'main__main-thread.js');
-  const mainThreadSource = await fs.readFile(mainThreadPath, 'utf8');
-
   return {
     lepusChunk: parseLepusChunk(tasm, caseName),
-    mainThreadSource,
+    jsAssets: await collectJsAssets(outputPath),
   };
+}
+
+async function collectJsAssets(
+  rootDir: string,
+  relativeDir = '.',
+): Promise<Map<string, string>> {
+  const entries = await fs.readdir(path.join(rootDir, relativeDir), {
+    withFileTypes: true,
+  });
+  const assets = new Map<string, string>();
+
+  await Promise.all(entries.map(async (entry) => {
+    const relativePath = path.join(relativeDir, entry.name);
+    if (entry.isDirectory()) {
+      const nested = await collectJsAssets(rootDir, relativePath);
+      for (const [name, source] of nested) {
+        assets.set(name, source);
+      }
+    } else if (entry.name.endsWith('.js')) {
+      assets.set(
+        path.normalize(relativePath),
+        await fs.readFile(path.join(rootDir, relativePath), 'utf8'),
+      );
+    }
+  }));
+
+  return assets;
 }
 
 describe('worklet-runtime bundler guardrails', () => {
   it.each<WorkletRuntimeCase>([
     {
       caseName: 'chunk',
-      expectedChunkNames: ['worklet-runtime'],
-      expectedInitSignatureCount: 1,
+      expectedRuntimeImplementationCount: 1,
       expectedRegisterIdCount: 2,
     },
     {
       caseName: 'not-using',
-      expectedChunkNames: [],
-      expectedInitSignatureCount: 0,
+      expectedRuntimeImplementationCount: 0,
       expectedRegisterIdCount: 0,
     },
   ])(
     'should emit the expected worklet chunks for $caseName',
     async ({
       caseName,
-      expectedChunkNames,
-      expectedInitSignatureCount,
+      expectedRuntimeImplementationCount,
       expectedRegisterIdCount,
     }) => {
-      const { lepusChunk, mainThreadSource } = await buildCase(caseName);
-      const workletRuntimeChunks = Object.keys(lepusChunk).filter(
-        name => name === 'worklet-runtime',
+      const { lepusChunk, jsAssets } = await buildCase(
+        path.join(casesRoot, caseName),
       );
+      const mainThreadSource = jsAssets.get('main__main-thread.js');
+      expect(mainThreadSource).toBeDefined();
       const registeredWorkletIds = extractRegisteredWorkletIds(
-        mainThreadSource,
+        mainThreadSource!,
       );
 
-      expect(workletRuntimeChunks).toEqual(expectedChunkNames);
-
-      if (expectedChunkNames.length > 0) {
-        expect(lepusChunk['worklet-runtime'].length).toBeGreaterThan(0);
-        expect(
-          countOccurrences(
-            lepusChunk['worklet-runtime'],
-            'globalThis.lynxWorkletImpl = {',
-          ),
-        ).toBe(expectedInitSignatureCount);
-      } else {
-        expect(lepusChunk['worklet-runtime']).toBeUndefined();
-        expect(expectedInitSignatureCount).toBe(0);
-      }
+      expect(lepusChunk['worklet-runtime']).toBeUndefined();
+      expect(
+        countOccurrences(
+          mainThreadSource!,
+          'globalThis.lynxWorkletImpl = {',
+        ),
+      ).toBe(expectedRuntimeImplementationCount);
 
       expect(registeredWorkletIds).toHaveLength(expectedRegisterIdCount);
       expect(new Set(registeredWorkletIds).size).toBe(
@@ -187,4 +277,83 @@ describe('worklet-runtime bundler guardrails', () => {
       );
     },
   );
+
+  it.each(['development', 'production'] as const)(
+    'keeps one shared implementation while paired main and lazy assets register locally (%s)',
+    async (mode) => {
+      const { lepusChunk, jsAssets } = await buildCase(
+        path.join(fixturesRoot, 'lazy'),
+        mode,
+      );
+      const runtimeOwners = [...jsAssets.entries()].filter(([, source]) =>
+        source.includes('globalThis.lynxWorkletImpl = {')
+      );
+      const registrationOwners = [...jsAssets.entries()].filter(([, source]) =>
+        source.includes('("main-thread",')
+      );
+      const registeredWorkletIds = registrationOwners.flatMap(([, source]) =>
+        extractRegisteredWorkletIds(source)
+      );
+
+      expect(lepusChunk['worklet-runtime']).toBeUndefined();
+      expect(runtimeOwners).toHaveLength(1);
+      expect(runtimeOwners[0]![0]).toBe('main__main-thread.js');
+      expect(registrationOwners).toHaveLength(2);
+      expect(registrationOwners.map(([name]) => name)).toContain(
+        'main__main-thread.js',
+      );
+      expect(
+        registrationOwners.some(([name]) =>
+          name !== 'main__main-thread.js' && name.includes('main-thread')
+        ),
+      ).toBe(true);
+      expect(registeredWorkletIds).toHaveLength(2);
+      expect(new Set(registeredWorkletIds).size).toBe(2);
+      for (const [, source] of registrationOwners) {
+        expect(source).not.toContain('__workletRuntimeLoaded');
+      }
+    },
+  );
+
+  it.each(['development', 'production'] as const)(
+    'keeps a complete, executable runtime closure in a standalone lazy artifact (%s)',
+    async (mode) => {
+      const { lepusChunk, jsAssets } = await buildCase(
+        path.join(fixturesRoot, 'standalone-lazy'),
+        mode,
+        mode === 'production',
+      );
+      const mainThreadSource = jsAssets.get('main__main-thread.js');
+      expect(mainThreadSource).toBeDefined();
+
+      expect(lepusChunk['worklet-runtime']).toBeUndefined();
+      const execution = executeStandaloneLazyArtifact(mainThreadSource!);
+      expect(execution.hasSelectorApis).toBe(true);
+      expect(execution.registeredWorkletIds).toHaveLength(1);
+
+      if (mode === 'development') {
+        expect(
+          countOccurrences(mainThreadSource!, 'globalThis.lynxWorkletImpl = {'),
+        ).toBe(1);
+        expect(execution.registeredWorkletIds).toEqual(
+          extractRegisteredWorkletIds(mainThreadSource!),
+        );
+      }
+    },
+  );
+
+  it('applies normal production defines and dead-code elimination to the runtime', async () => {
+    const { lepusChunk, jsAssets } = await buildCase(
+      path.join(casesRoot, 'chunk'),
+      'production',
+    );
+    const mainThreadSource = jsAssets.get('main__main-thread.js');
+
+    expect(lepusChunk['worklet-runtime']).toBeUndefined();
+    expect(mainThreadSource).toContain('globalThis.lynxWorkletImpl = {');
+    expect(mainThreadSource).not.toContain(
+      '[ReactLynx][DEV] MainThread flush loop detected',
+    );
+    expect(mainThreadSource).not.toContain('MainThreadFunction id=');
+  });
 });

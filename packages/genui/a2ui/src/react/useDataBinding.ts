@@ -1,15 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { effect } from '@preact/signals';
-import type { Signal } from '@preact/signals';
-
 import {
   useCallback,
   useMemo,
   useRef,
   useSyncExternalStore,
 } from '@lynx-js/react';
+import { effect } from '@lynx-js/react-signals';
+import type { Signal } from '@lynx-js/react-signals';
 
 import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 import type { MessageProcessor } from '../store/MessageProcessor.js';

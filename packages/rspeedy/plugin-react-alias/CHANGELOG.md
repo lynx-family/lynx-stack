@@ -1,5 +1,66 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.22.0
+
+### Minor Changes
+
+- Add the experimental `experimental_reEvalJSOnReload` option. When it is enabled, `reloadTemplate` evaluates the main-thread and background entries again, so module-level state starts over while the native element tree is reused. It is disabled by default. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
+  Re-evaluating the background entry requires `reloadCard` from the Lynx client. Without it, the background keeps the existing reload behavior.
+
+## 0.21.0
+
+### Minor Changes
+
+- Deliver the main-thread runtime through named imports from its init entry, including background-only definitions that carry their registration dependencies into the main-thread graph. Runtime code participates in business defines and release processing. Every supported transform supplies semantic runtime requirements, including for definitions injected from background-only modules; watch rebuilds refresh their dependencies and metadata. ([#4066](https://github.com/lynx-family/lynx-stack/pull/4066))
+
+  Upgrade the build plugins and `@lynx-js/react` together. This release requires `@lynx-js/react@^0.128.0`; its runtime and bundled transform use the same module-delivery protocol. The refresh plugin adds support for `@lynx-js/react-webpack-plugin@^0.13.0` while retaining its existing supported versions. Older compiler output is unsupported. The prebuilt worklet-runtime chunk, its package entries, and `loadWorkletRuntime` are removed. Combined lazy chunks share their paired main runtime, and standalone lazy bundles bootstrap themselves.
+
+  The worklet init entry follows `worklet.runtimePkg`: remove a trailing `/internal`, if present, and append `/worklet-runtime/init`. Its `registerWorklet` export uses the existing host registration function when the runtime is already initialized. Default worklet options use `@lynx-js/react/internal` for helpers.
+
+  Testing-library initializes module-delivered worklets on its emulated main thread in Vitest and Rstest.
+
+### Patch Changes
+
+- Add the `@lynx-js/react/worklet-runtime/init` entry and resolve it to the published, unbundled runtime module in normal and lazy builds. The entry uses the existing runtime initialization guard, so loading it again preserves the runtime and its registrations. ([#4065](https://github.com/lynx-family/lynx-stack/pull/4065))
+
+  Existing compiler output continues to use the legacy runtime-loading path.
+- Preserve the original TypeScript sources from published React runtime source maps when bundling the runtime on both the main and background threads. Main and lazy output maps retain runtime and worklet locations alongside per-chunk release metadata. ([#4160](https://github.com/lynx-family/lynx-stack/pull/4160))
+
+## 0.20.4
+
+No changes in this release.
+
+## 0.20.3
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+
+## 0.20.2
+
+## 0.20.1
+
+## 0.20.0
+
+### Patch Changes
+
+- Declare the build host as an optional peer dependency. `@rsbuild/core` covers a plain Rsbuild build, and `@lynx-js/rspeedy` covers an Rspeedy one, so whichever host is installed is version-checked. ([#3678](https://github.com/lynx-family/lynx-stack/pull/3678))
+
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` `^0.17.0` in the plugins that read the build engine config through `Symbol.for('@lynx-js/rsbuild-plugin:config')`, since the engine that ships with `0.16` does not expose it. The plugins that do not touch the engine keep their existing range and add `^0.17.0` to it. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+## 0.19.1
+
+## 0.19.0
+
+### Patch Changes
+
+- Apply ReactLynx aliases to every generated bundler chain so repeated Rsbuild config initialization, including Rstest, retains the plugin's resolve configuration. ([#3501](https://github.com/lynx-family/lynx-stack/pull/3501))
+
+- Add `@lynx-js/react-signals`, a thread-aware Preact Signals adapter that keeps Signals dependencies out of `@lynx-js/react`. Signal reactivity runs on the background thread, while main-thread rendering uses static signal values with inactive setters, subscriptions, and effects. ([#3346](https://github.com/lynx-family/lynx-stack/pull/3346))
+
+## 0.18.3
+
 ## 0.18.2
 
 ## 0.18.1

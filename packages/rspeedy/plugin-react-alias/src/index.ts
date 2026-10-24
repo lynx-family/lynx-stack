@@ -44,9 +44,9 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         })
       })
 
-      api.modifyBundlerChain(async (chain, { isProd, environment, rspack }) => {
-        if (Object.hasOwn(environment, S_PLUGIN_REACT_ALIAS)) {
-          // This environment has already been processed
+      api.modifyBundlerChain(async (chain, { isProd, rspack }) => {
+        if (Object.hasOwn(chain, S_PLUGIN_REACT_ALIAS)) {
+          // This bundler chain has already been processed
           return
         }
         const resolve = createLazyResolver(
@@ -59,9 +59,10 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         ])
         api.expose(Symbol.for('@lynx-js/react/internal:resolve'), {
           resolve,
+          version,
         })
 
-        Object.defineProperty(environment, S_PLUGIN_REACT_ALIAS, {
+        Object.defineProperty(chain, S_PLUGIN_REACT_ALIAS, {
           value: true,
         })
         const [
@@ -125,6 +126,8 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           preact: preactHooks,
         }
 
+        const signalsMainThread = '@lynx-js/react-signals/lepus'
+
         // dprint-ignore
         chain
           .module
@@ -142,6 +145,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('preact/hooks', reactHooks.mainThread)
                   .set('@lynx-js/react/hooks', reactHooks.mainThread)
                   .set('@lynx-js/react/lepus/hooks', reactHooks.mainThread)
+                  .set('@lynx-js/react-signals$', signalsMainThread)
                 .end()
               .end()
             .end()
@@ -170,6 +174,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           'internal',
           'legacy-react-runtime',
           'runtime-components',
+          'worklet-runtime/init',
           'worklet-runtime/bindings',
         ]
 
@@ -180,6 +185,20 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             path.join(reactLynxDir, 'runtime/lazy/element-template-import.js'),
           )
         }
+        transformedEntryAliases.set(
+          'worklet-runtime/init',
+          path.join(
+            reactLynxDir,
+            'runtime/lib/worklet-runtime/index.js',
+          ),
+        )
+
+        // The published runtime carries its original TS sources in external maps.
+        chain.module.rule('react:runtime-source-map')
+          .test(/\.js$/)
+          .issuerLayer([LAYERS.MAIN_THREAD, LAYERS.BACKGROUND])
+          .set('extractSourceMap', true)
+          .include.add(path.join(reactLynxDir, 'runtime/lib') + path.sep)
 
         const resolvedTransformedEntryAliases = await Promise.all(
           transformedEntries.map(async entry => {

@@ -5,6 +5,7 @@ Pod::Spec.new do |s|
   s.homepage = 'https://github.com/lynx-family/lynx'
   s.license = { :type => 'Apache-2.0' }
   s.author = 'Lynx'
+  s.platform = :ios, '10.0'
   s.source = { :path => '..' }
   s.source_files = 'src/**/*.{h,m,mm}'
   s.dependency 'Lynx'

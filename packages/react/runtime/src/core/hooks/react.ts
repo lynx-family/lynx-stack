@@ -133,7 +133,10 @@ const useState: typeof usePreactState = (__BACKGROUND__ && isProfiling)
  * @param effect - Imperative function that can return a cleanup function
  * @param deps - If present, effect will only activate if the values in the list change (using ===).
  *
+ * @function
  * @public
+ *
+ * @group Hooks
  */
 const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BACKGROUND__ && isProfiling)
   ? useEffectProfiled
@@ -147,7 +150,10 @@ const useEffect: (effect: EffectCallback, deps?: DependencyList) => void = (__BA
  * @param effect - Imperative function that can return a cleanup function
  * @param deps - If present, effect will only activate if the values in the list change (using ===).
  *
+ * @function
  * @public
+ *
+ * @group Hooks
  *
  * @deprecated `useLayoutEffect` in the background thread cannot offer the precise timing for reading layout information and synchronously re-render, which is different from React.
  */

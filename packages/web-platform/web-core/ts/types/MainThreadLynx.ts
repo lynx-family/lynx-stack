@@ -6,10 +6,17 @@
 import type { Cloneable } from './Cloneable.js';
 import type { ExternalBundleLynxAPIs } from './ExternalBundle.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
+import type { LynxEngineContext } from './LynxEngineContext.js';
 import type { LynxPerformance } from './NativeApp.js';
 export interface MainThreadLynx extends ExternalBundleLynxAPIs {
   performance: LynxPerformance;
   getJSContext: () => LynxContextEventTarget;
+  /**
+   * The Engine context proxy. Buildless cards use it to subscribe to engine
+   * lifecycle events (`__RenderPage`, `__UpdatePage`, `__DestroyLifetime`,
+   * `__UpdateGlobalProps`) instead of exporting `globalThis.renderPage`.
+   */
+  getEngine: () => LynxEngineContext;
   requestAnimationFrame: (cb: () => void) => number;
   cancelAnimationFrame: (handler: number) => void;
   __globalProps: unknown;

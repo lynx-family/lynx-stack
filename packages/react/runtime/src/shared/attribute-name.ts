@@ -66,8 +66,7 @@ function toDashCase(name: string): string {
 }
 
 export function transformAttrName(name: string): string {
-  const config = typeof __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ !== 'undefined'
-    && __EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__;
+  const config = lynx.__runtime_configs__?.transformBuiltinAttributeNames;
 
   // A disabled config keeps every name unchanged.
   if (!config) {

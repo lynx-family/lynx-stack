@@ -5,6 +5,7 @@ export interface PageConfig {
   enableCSSSelector: 'true' | 'false';
   enableRemoveCSSScope: 'true' | 'false';
   defaultDisplayLinear: 'true' | 'false';
+  enableCSSInheritance?: 'true' | 'false';
   defaultOverflowVisible: 'true' | 'false';
   enableJSDataProcessor: 'true' | 'false';
   isLazy: 'true' | 'false';

@@ -67,7 +67,7 @@ export default {
                     },
                     {
                       "elementSlotIndex": 0,
-                      "kind": "elementSlot",
+                      "kind": "childSlot",
                       "type": "slot",
                     },
                   ],

@@ -1,0 +1,58 @@
+.App {
+  padding: 24px;
+  padding-top: 96px;
+  background-color: #0b0d12;
+  height: 100%;
+}
+
+.Title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f5f6f8;
+}
+
+.Description {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #9aa1ad;
+}
+
+.Skeleton {
+  margin-top: 24px;
+}
+
+.Skeleton__line {
+  height: 72px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background-color: #1c2029;
+}
+
+.Skeleton__line--short {
+  width: 60%;
+}
+
+.Feed {
+  margin-top: 24px;
+}
+
+.Card {
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background-color: #171b23;
+}
+
+.Card__title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #e8eaee;
+}
+
+.Card__body {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 18px;
+  color: #8b93a1;
+}

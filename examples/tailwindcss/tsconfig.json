@@ -11,11 +11,11 @@
       "@/*": ["./src/*"],
     },
   },
-  "include": ["src", "lynx.config.js", "test", "vitest.config.ts", "tailwind.config.ts"],
+  "include": ["src", "rsbuild.config.js", "test", "vitest.config.ts", "tailwind.config.ts"],
   "exclude": ["dist/"],
   "references": [
     { "path": "../../packages/react/tsconfig.json" },
-    { "path": "../../packages/rspeedy/core/tsconfig.build.json" },
+    { "path": "../../packages/rspeedy/plugin-lynx/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-qrcode/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-react/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-config/tsconfig.build.json" },

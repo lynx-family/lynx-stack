@@ -1,32 +1,20 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
 
 import { Fragment } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
-import { defineComponent } from '../../core/library.jsx';
+import { List as ListDefinition } from './definition.js';
+import type { DefinedComponent } from '../../core/library.jsx';
 import {
   GAP_CLASS,
   asArray,
   getAlignClass,
   isTemplateChildren,
-  templateChildrenSchema,
 } from '../utils.js';
 
 import '../../../styles/catalog/List.css';
-
-const listChildrenSchema = z.union([z.array(z.any()), templateChildrenSchema]);
-
-const listPropsSchema = z.object({
-  children: listChildrenSchema.optional(),
-  items: listChildrenSchema.optional(),
-  direction: z.enum(['vertical', 'horizontal']).optional(),
-  align: z.enum(['start', 'center', 'end', 'stretch']).optional(),
-  gap: z.enum(['none', 'xs', 's', 'm', 'l', 'xl']).optional(),
-  divider: z.boolean().optional(),
-});
 
 function renderTemplateHint(children: { componentId: string; path: string }) {
   return (
@@ -38,11 +26,8 @@ function renderTemplateHint(children: { componentId: string; path: string }) {
   );
 }
 
-export const List = defineComponent({
-  name: 'List',
-  props: listPropsSchema,
-  description:
-    'List container for repeated children. Supports vertical or horizontal layout.',
+export const List: DefinedComponent<typeof ListDefinition.props> = {
+  ...ListDefinition,
   component: ({ props, renderNode }) => {
     const children = props.children ?? props.items ?? [];
 
@@ -59,7 +44,7 @@ export const List = defineComponent({
     const className = [
       'OpenUIList',
       direction === 'horizontal' ? 'OpenUIStackRow' : 'OpenUIStackColumn',
-      GAP_CLASS[gap] ?? GAP_CLASS['m'],
+      GAP_CLASS[gap] ?? GAP_CLASS.m,
       getAlignClass(props.align ?? 'stretch'),
     ]
       .filter(Boolean)
@@ -78,4 +63,4 @@ export const List = defineComponent({
       </view>
     );
   },
-});
+};

@@ -1,88 +1,172 @@
-# genui-playground (packages/genui/playground)
+# GenUI Playground
 
-This package is a playground app for `@lynx-js/genui/a2ui`.
+This package provides the React DOM playground for `@lynx-js/genui`, supporting
+A2UI, OpenUI, MCP Apps, ReactLynx, ReactWeb, Lynx XML, and HTML. Keep shared UI in the Web
+shell and protocol rendering in its preview runtime. Detailed feature conventions
+live in
+[the Playground instructions](../../../.github/genui-playground.instructions.md).
 
-It supports:
+## Runtime Architecture
 
-- `web` via `@rsbuild/core` (React DOM preview)
-- `lynx` via `@lynx-js/rspeedy` (Lynx preview)
+`src/entry.tsx` starts the Web shell. `PreviewViewport` selects the preview
+surface for each protocol:
 
-## How It Works (Web Shell vs Lynx App)
+| Protocol  | Web preview                                                | Renderer source               |
+| --------- | ---------------------------------------------------------- | ----------------------------- |
+| A2UI      | `render.html` hosting `<lynx-view>`                        | `lynx-src/a2ui/`              |
+| OpenUI    | `render.html` hosting `<lynx-view>`                        | `lynx-src/openui/`            |
+| MCP Apps  | `render.html` hosting `<lynx-view>`                        | `lynx-src/mcp-apps/`          |
+| ReactLynx | `render.html` hosting `<lynx-view>`                        | Server-built ReactLynx bundle |
+| ReactWeb  | `render.html` hosting a sandboxed `HtmlView`               | Server-built React DOM HTML   |
+| Lynx XML  | Direct `LynxXmlView`; `render.html` for example/share URLs | Complete `.lynxml` source     |
+| HTML      | Sandboxed `HtmlView` iframe using `srcDoc`                 | Complete HTML source          |
 
-There are two different things in this package:
+For bundled protocols, `src/utils/renderUrl.ts` constructs the preview URL and
+payload. `src/render/index.tsx` selects the protocol implementation from
+`src/render/`. Shared query parsing, metrics, and bundled view lifecycle live
+in `query.ts`, `metrics.ts`, and `bundled.ts`; protocol modules own their data
+loading and action bridges. A2UI uses `A2UI`, a message store, and a mock agent
+for playback and action responses in `lynx-src/a2ui/App.tsx`.
 
-- A React DOM "control panel" (the UI you click in your browser)
-- A Lynx app (the thing that actually renders A2UI via ReactLynx + `A2UIRender`)
+Web and native previews share the same `lynx-src/<protocol>/` implementation.
+`lynx.config.ts` builds `www/<protocol>.web.js` and
+`www/<protocol>.lynx.js` for `a2ui`, `openui`, and `mcp-apps`.
 
-The "control panel" does not render A2UI directly. Instead it constructs an `initData`
-payload (messages + optional action mocks), then opens a preview runtime that loads
-the Lynx app and passes that `initData` to it.
+ReactLynx uses generated standalone bundles instead of a checked-in
+`lynx-src/` renderer. Current, historical, and shared previews fetch the
+published Web bundle directly from TOS. The TOS bucket must allow anonymous
+reads and CORS requests from every deployed Playground origin. The
+`render.html` ReactLynx renderer enforces the bundle size limit, creates a Blob
+URL, and loads it directly in `<lynx-view>`.
 
-## Web Preview Architecture
+## File Ownership and Outputs
 
-Web build has two entrypoints (see `rsbuild.config.ts`):
+| Location                                         | Responsibility                                  |
+| ------------------------------------------------ | ----------------------------------------------- |
+| `public/lynx-genui-stream.html`                  | Minimal standalone source and renderer preview  |
+| `src/pages/`                                     | Shared pages and protocol adapters              |
+| `src/components/PreviewViewport.tsx`             | Preview surface selection                       |
+| `src/components/LynxXmlView.tsx`, `HtmlView.tsx` | Direct source previews                          |
+| `src/utils/renderUrl.ts`, `src/render/`          | Preview URLs and protocol-specific Web runtimes |
+| `lynx-src/<protocol>/index.tsx`, `App.tsx`       | Bundled Lynx renderers                          |
+| `src/mock/lynx-xml/*.lynxml`                     | Lynx XML examples                               |
+| `rsbuild.config.ts`                              | Web entries, raw XML imports, and asset copying |
+| `lynx.config.ts`, `lynx-lazy.config.ts`          | Main and lazy Lynx bundle configuration         |
+| `turbo.json`                                     | Build dependencies and cached outputs           |
 
-- `src/entry.tsx`: the main control panel (tabs: Create / Examples / Components)
-- `src/render.tsx`: a dedicated page (`/render.html`) that hosts a `<lynx-view>`
+Rspeedy outputs bundles to `www/`. Rsbuild serves that directory during
+development and copies it into the Web output in `dist/` during builds.
+XML example sources are copied unchanged to `dist/demos/lynx-xml/`.
+Static pages in `public/` are served directly in development and copied unchanged
+to the build root. Maintain the minimal standalone preview in `public/lynx-genui-stream.html`,
+with inline styles and scripts. Keep catalogs, system prompts and agent/transport
+configuration out of this page; do not add a separate Web entry for it.
 
-`/render.html` is the important glue:
+## Lynx XML
 
-- It imports `@lynx-js/web-core/client` and `@lynx-js/web-elements/all` to register
-  the `<lynx-view>` custom element.
-- It creates `<lynx-view url="/main.web.js" ... />` (see `src/render.tsx`).
-- It passes `initData` to the element via `lynxView.initData`, then triggers a
-  reload when the init data changes.
+### Create and Preview
 
-The control panel builds a `/render.html?...` URL with base64-encoded payload
-(`src/utils/renderUrl.ts`) and embeds it in an `<iframe>`(see `PreviewViewport.tsx`).
+Lynx XML exposes Create, Examples, and the shared Bench tab at `#/bench`;
+Catalog is unavailable. Keep the hook-free Create adapter in
+`src/pages/chat/lynx-xml.ts` and stream from `/lynx-xml/stream`.
+Update the source viewer for usable partials, but preview only complete documents.
 
-## Lynx App Architecture (What Runs Inside <lynx-view>)
+Generated and edited XML uses a browser-local XML Blob URL as the LynxView
+`url` input. `PreviewViewport` mounts `LynxXmlView` directly. Example/share
+URLs use `render.html?protocol=lynx-xml`, whose XML branch also renders the
+complete artifact directly. Do not route XML through bundled protocol
+renderers, init data, global props, or global events, or add per-example
+Rspeedy builds.
 
-The Lynx app entry is `lynx-src/index.tsx`, which renders `lynx-src/App.tsx`.
+For generated XML, consume `done.preview.sourceUrl` from the server, persist it
+with the assistant turn, and use it for Web-share and native LynxExplorer links.
+Keep the current Web preview on the in-memory final source.
 
-Inside `lynx-src/App.tsx`:
+### Template Examples
 
-- It imports `@lynx-js/genui/a2ui/catalog/all` to register catalog components.
-- It reads `initData` via `useInitData()` (this is how `<lynx-view>` passes data
-  into the Lynx runtime).
-- It uses `BaseClient` + `client.processor.processMessages(...)` to replay the
-  provided messages over time (simulated streaming).
-- It renders the result via `<A2UIRender resource={resource} />`.
-- It can also mock "actions" by overriding `client.processUserAction` and replaying
-  action-specific response messages.
+Import examples as raw editor source. Keep `<template>`, styles, and an authored
+`<script thread="main">` together in the XML; the script owns lifecycle and
+interaction logic. Convert with `compileLynxXmlFragment` from
+`@lynx-js/genui/lynx-xml` at preview runtime, never during the build.
 
-## Web vs Lynx Relationship
+Show editable Original and read-only Transformed views. Template list URLs use
+`exampleId` to load and convert the registered example. Preserve the last valid
+preview on conversion errors. Never send an intermediate `<template>` to Lynx
+or expose its source file as a runnable native artifact.
 
-- The A2UI rendering logic is the same in both targets: it is always the Lynx app
-  (`lynx-src/App.tsx`) that runs `A2UIRender`.
-- The difference is which bundle is loaded:
-  - Web preview loads `www/main.web.js` via `<lynx-view url="/main.web.js" />`.
-  - Native Lynx preview (rspeedy) builds `www/main.lynx.js` and runs it in the
-    Lynx runtime (device/simulator), still using the same `lynx-src/*` sources.
+### Element Layout
 
-## Key Files
+Append the first business node directly to Page, without a generic `app`
+wrapper. Keep Page visually unstyled; the business node owns viewport sizing,
+background, and entry layout. For overflowing content, make that node a
+vertical scroll view. Explicitly set `display: flex` and the intended
+`flex-direction` in every layout container's class.
 
-- Web config: `rsbuild.config.ts`
-- Lynx config: `lynx.config.ts`
-- Web entrypoints: `src/entry.tsx`, `src/render.tsx`
-- Lynx entrypoint: `lynx-src/index.tsx`
+## ReactWeb
 
-## Common Commands
+ReactWeb exposes Create, Web preview/share, and the shared Bench tab. Keep the hook-free adapter in
+`src/pages/chat/reactweb.ts` and stream from `/reactweb/stream`. Display source
+deltas, but preview only the completed published artifact. Persist both source
+files and `artifact.webUrl` with the assistant turn; omit artifact metadata from
+follow-up model history.
 
-Run from repo root:
+Use `render.html?protocol=reactweb&sourceUrl=<artifact.webUrl>` for current,
+historical, and shared previews. Fetch the bounded document without credentials
+in the outer renderer, then use `HtmlView` with `sandbox="allow-scripts"`.
+The TOS bucket must allow public reads and CORS from the Playground origin.
+Keep Web URLs on the current Playground host. This protocol has no Lynx runtime
+or native output. Its native-profile Bench adapter compiles source to self-contained
+HTML and uses the shared browser Element Capture flow without TOS publication
+or a screenshot sidecar. See
+[ReactWeb instructions](../../../.github/genui-reactweb.instructions.md).
+
+## HTML
+
+### Create and Preview
+
+HTML exposes Create and the shared Bench tab, with no Examples, Catalog, or
+native preview. Keep the hook-free adapter in `src/pages/chat/html.ts` and
+stream from `/html/stream`. Show partials beginning with the HTML doctype in
+the source viewer, but send only complete documents to preview.
+
+Use `extractHtmlArtifact` and `isCompleteHtmlArtifact` from
+`@lynx-js/genui-html` for streaming and history restoration. Keep document
+parsing in that package and UI/transport behavior in the Playground adapter.
+
+Render through `PreviewViewport` and `HtmlView` using iframe `srcDoc`. Keep
+the sandbox at `allow-scripts` without `allow-same-origin`. Do not route HTML
+through `render.html`, `<lynx-view>`, protocol bundles, init data, or global props.
+
+### Bench Capture
+
+Use browser-native Element Capture of the sandboxed iframe. Request current-tab
+sharing directly from Start run, before asynchronous work, and validate the
+selected tab before creating a server job. HTML-only runs need no screenshot
+sidecar; mixed runs still require it for Lynx protocols. Serialize captures on
+the shared track, send only restricted pixels through the existing BMP
+transport, and release tracks and frames on every terminal path.
+
+## Development and Validation
+
+Run commands from the repository root. Follow the root `AGENTS.md` build order:
+install frozen dependencies when they may be stale, then run the full Turbo
+build before tests. Package-local builds do not replace this validation.
 
 ```bash
-# Web
-pnpm -C packages/genui/playground dev
-pnpm -C packages/genui/playground build
-pnpm -C packages/genui/playground preview
+# Dependencies, when stale
+pnpm install --frozen-lockfile
 
-# Lynx
-pnpm -C packages/genui/playground dev:lynx
-pnpm -C packages/genui/playground build:lynx
-pnpm -C packages/genui/playground preview:lynx
+# Full build, required before tests
+pnpm turbo build
+
+# Development servers (choose Web or Lynx)
+pnpm --filter genui-playground dev
+pnpm --filter genui-playground dev:lynx
+
+# Preview existing build outputs
+pnpm --filter genui-playground preview
+pnpm --filter genui-playground preview:lynx
+
+# Package tests
+pnpm --filter genui-playground test
 ```
-
-## Output
-
-- The generated assets are configured to land in `www/` (see `lynx.config.ts` `output.distPath.root`).

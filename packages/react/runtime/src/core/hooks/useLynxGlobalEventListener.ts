@@ -30,6 +30,8 @@ import { useEffect, useMemo, useRef } from '@lynx-js/react/hooks';
  * @param eventName - Event name to listen
  * @param listener - Event handler
  * @public
+ *
+ * @group Hooks
  */
 export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
   eventName: string,
@@ -37,7 +39,7 @@ export function useLynxGlobalEventListener<T extends (...args: any[]) => void>(
 ): void {
   'background only';
 
-  const previousArgsRef = useRef<[string, T]>();
+  const previousArgsRef = useRef<[string, T]>(undefined);
 
   useMemo(() => {
     if (previousArgsRef.current) {

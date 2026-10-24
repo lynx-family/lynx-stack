@@ -1711,6 +1711,88 @@ test.describe('web-elements test suite', () => {
     });
   });
   test.describe('x-image', () => {
+    for (const tagName of ['x-image', 'inline-image']) {
+      test(`${tagName} defers detached load events until connected`, async ({ page }) => {
+        await gotoWebComponentPage(page, 'x-image/basic');
+        const result = await page.evaluate(async (tagName) => {
+          const host = document.createElement(tagName);
+          const fragment = document.createDocumentFragment();
+          fragment.append(host);
+          const img = host.shadowRoot!.querySelector<HTMLImageElement>('#img')!;
+          const events: {
+            width: number;
+            height: number;
+            connected: boolean;
+            targetIsHost: boolean;
+          }[] = [];
+          host.addEventListener('load', (event) => {
+            const { width, height } = (event as CustomEvent).detail;
+            events.push({
+              width,
+              height,
+              connected: host.isConnected,
+              targetIsHost: event.target === host,
+            });
+          });
+          const load = async (width: number, height: number) => {
+            const loaded = new Promise<void>((resolve) => {
+              img.addEventListener('load', () => resolve(), { once: true });
+            });
+            host.setAttribute(
+              'src',
+              `data:image/svg+xml,${
+                encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"/>`,
+                )
+              }`,
+            );
+            await loaded;
+          };
+
+          await load(8, 6);
+          await load(12, 9);
+          const beforeConnect = events.slice();
+          document.body.append(fragment);
+          const afterConnect = events.slice();
+
+          host.remove();
+          document.body.append(host);
+          const afterReconnect = events.slice();
+
+          await load(16, 10);
+          const afterConnectedLoad = events.slice();
+          host.remove();
+          await load(20, 15);
+          const afterDetachedLoad = events.slice();
+          document.body.append(host);
+
+          return {
+            beforeConnect,
+            afterConnect,
+            afterReconnect,
+            afterConnectedLoad,
+            afterDetachedLoad,
+            afterReattach: events,
+          };
+        }, tagName);
+
+        const expectedEvents = [[8, 6], [12, 9], [16, 10], [20, 15]].map(
+          ([width, height]) => ({
+            width,
+            height,
+            connected: true,
+            targetIsHost: true,
+          }),
+        );
+        expect(result.beforeConnect).toEqual([]);
+        expect(result.afterConnect).toEqual(expectedEvents.slice(0, 2));
+        expect(result.afterReconnect).toEqual(result.afterConnect);
+        expect(result.afterConnectedLoad).toEqual(expectedEvents.slice(0, 3));
+        expect(result.afterDetachedLoad).toEqual(result.afterConnectedLoad);
+        expect(result.afterReattach).toEqual(expectedEvents);
+      });
+    }
+
     test('basic', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);
       await gotoWebComponentPage(page, title);
@@ -2258,6 +2340,60 @@ test.describe('web-elements test suite', () => {
         await expect(scrolled).toBe(4);
       },
     );
+    test('auto-scroll-follows-orientation', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-list/scroll-orientation');
+      const scrollByCalls = await page.evaluate(() => {
+        const calls: Record<string, ScrollToOptions> = {};
+        return new Promise<Record<string, ScrollToOptions>>((resolve) => {
+          for (const id of ['vertical', 'horizontal']) {
+            const list = document.querySelector(`#${id}`) as any;
+            const content = list.shadowRoot.querySelector('#content');
+            content.scrollBy = (options: ScrollToOptions) => {
+              calls[id] = options;
+              if (Object.keys(calls).length !== 2) return;
+              for (const id of ['vertical', 'horizontal']) {
+                (document.querySelector(`#${id}`) as any).autoScroll({
+                  rate: 100,
+                  start: false,
+                });
+              }
+              resolve(calls);
+            };
+            list.autoScroll({ rate: 100, start: true });
+          }
+        });
+      });
+      expect(scrollByCalls['vertical']).toEqual(expect.objectContaining({
+        left: 0,
+        top: expect.any(Number),
+      }));
+      expect(scrollByCalls['vertical']!.top).toBeGreaterThan(0);
+      expect(scrollByCalls['horizontal']).toEqual(expect.objectContaining({
+        left: expect.any(Number),
+        top: 0,
+      }));
+      expect(scrollByCalls['horizontal']!.left).toBeGreaterThan(0);
+      await page.evaluate(() =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      );
+      const changedScrollByCall = await page.evaluate(() => {
+        const list = document.querySelector('#vertical') as any;
+        list.setAttribute('scroll-orientation', 'horizontal');
+        const content = list.shadowRoot.querySelector('#content');
+        return new Promise<ScrollToOptions>((resolve) => {
+          content.scrollBy = (options: ScrollToOptions) => {
+            list.autoScroll({ rate: 100, start: false });
+            resolve(options);
+          };
+          list.autoScroll({ rate: 100, start: true });
+        });
+      });
+      expect(changedScrollByCall).toEqual(expect.objectContaining({
+        left: expect.any(Number),
+        top: 0,
+      }));
+      expect(changedScrollByCall.left).toBeGreaterThan(0);
+    });
     test(
       'get-visible-cells',
       async ({ page, browserName }, { titlePath }) => {
@@ -2320,7 +2456,7 @@ test.describe('web-elements test suite', () => {
           return (document.querySelector('x-list') as any)?.scrollWidth;
         });
         expect(
-          typeof info2 === 'object' && info2.scrollLeft === 200
+          typeof info2 === 'object' && info2.scrollLeft === 0
             && info2.scrollTop === 200 && info2.scrollHeight !== 0
             && info2.scrollWidth !== 0,
         ).toBeTruthy();
@@ -2328,6 +2464,20 @@ test.describe('web-elements test suite', () => {
         expect(scrollWidth2).toBe(info2.scrollWidth);
       },
     );
+    test('get-scroll-container-info-horizontal', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-list/scroll-orientation');
+      const info = await page.locator('#horizontal').evaluate(
+        (element: any) => {
+          const content = element.shadowRoot.querySelector('#content');
+          content.scrollLeft = 200;
+          return element.getScrollContainerInfo();
+        },
+      );
+      expect(info).toEqual(expect.objectContaining({
+        scrollLeft: 200,
+        scrollTop: 0,
+      }));
+    });
 
     test('recyclable-false', async ({ page }, { titlePath }) => {
       const title = getTitle(titlePath);

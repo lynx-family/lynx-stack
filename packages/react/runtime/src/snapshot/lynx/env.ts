@@ -6,7 +6,7 @@ import type { DataProcessorDefinition } from '../../lynx-api.js';
 
 export function setupLynxEnv(): void {
   if (!__LEPUS__) {
-    const { initData, updateData } = lynxCoreInject.tt._params;
+    const { initData, updateData } = lynx.getApp()._params;
     lynx.__initData = { ...initData, ...updateData };
     lynx.registerDataProcessors = function() {};
   }

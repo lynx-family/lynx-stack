@@ -1,9 +1,9 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
 
-import { defineComponent } from '../../core/library.jsx';
+import { Stack as StackDefinition } from './definition.js';
+import type { DefinedComponent } from '../../core/library.jsx';
 import { GAP_CLASS, asArray } from '../utils.js';
 
 import '../../../styles/catalog/Stack.css';
@@ -36,17 +36,8 @@ function getJustifyClass(
   }
 }
 
-export const Stack = defineComponent({
-  name: 'Stack',
-  props: z.object({
-    children: z.array(z.any()),
-    direction: z.enum(['row', 'column']).optional(),
-    wrap: z.boolean().optional(),
-    gap: z.enum(['none', 'xs', 's', 'm', 'l', 'xl']).optional(),
-    align: z.enum(['start', 'center', 'end', 'stretch']).optional(),
-    justify: z.enum(['start', 'center', 'end', 'between']).optional(),
-  }),
-  description: 'Flex layout container',
+export const Stack: DefinedComponent<typeof StackDefinition.props> = {
+  ...StackDefinition,
   component: ({ props, renderNode }) => {
     const direction = props.direction ?? 'column';
     const gap = props.gap ?? 'm';
@@ -57,7 +48,7 @@ export const Stack = defineComponent({
       'OpenUIStack',
       direction === 'row' ? 'OpenUIStackRow' : 'OpenUIStackColumn',
       props.wrap ? 'OpenUIStackWrap' : '',
-      GAP_CLASS[gap] ?? GAP_CLASS['m'],
+      GAP_CLASS[gap] ?? GAP_CLASS.m,
       getAlignClass(align),
       getJustifyClass(justify),
     ]
@@ -68,4 +59,4 @@ export const Stack = defineComponent({
       <view className={className}>{renderNode(asArray(props.children))}</view>
     );
   },
-});
+};

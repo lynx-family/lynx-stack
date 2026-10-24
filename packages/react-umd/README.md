@@ -2,12 +2,14 @@
 
 `@lynx-js/react-umd` ships prebuilt ReactLynx runtime bundles for external-bundle workflows.
 
-It exposes two entry points:
+It exposes these bundle entry points:
 
 - `@lynx-js/react-umd/dev`
 - `@lynx-js/react-umd/prod`
+- `@lynx-js/react-umd/dev-web`
+- `@lynx-js/react-umd/prod-web`
 
-`@lynx-js/external-bundle-rsbuild-plugin` resolves one of these entry points automatically for the built-in `reactlynx` preset, based on `NODE_ENV`.
+`@lynx-js/external-bundle-rsbuild-plugin` resolves one of these entry points automatically for the built-in `reactlynx` preset, based on `NODE_ENV` and the target environment (the `-web` bundles for web environments).
 
 ## Build
 
@@ -19,6 +21,8 @@ This generates:
 
 - `dist/react-dev.lynx.bundle`
 - `dist/react-prod.lynx.bundle`
+- `dist/react-dev.web.bundle`
+- `dist/react-prod.web.bundle`
 
 ## Recommended Usage
 
@@ -142,8 +146,8 @@ export default defineConfig({
 
 When the preset uses `bundlePath` instead of an explicit `url`, the plugin will:
 
-- resolve `@lynx-js/react-umd/dev` or `@lynx-js/react-umd/prod`
-- emit `react.lynx.bundle` into the app output
+- resolve `@lynx-js/react-umd/dev` or `@lynx-js/react-umd/prod` (`/dev-web` or `/prod-web` for web environments)
+- emit `react.lynx.bundle` (`react.web.bundle` for web environments) into the app output
 - load it through the runtime public path
 
 Consumer-side preset extension is also supported through

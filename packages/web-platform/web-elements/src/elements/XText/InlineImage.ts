@@ -10,6 +10,7 @@ import {
   registerAttributeHandler,
 } from '../../element-reactive/index.js';
 import { templateInlineImage } from '../htmlTemplates.js';
+import { ImageEvents } from '../XImage/ImageEvents.js';
 
 export class InlineImageAttributes
   implements InstanceType<AttributeReactiveClass<typeof InlineImage>>
@@ -33,7 +34,7 @@ export class InlineImageAttributes
  */
 @Component<typeof InlineImage>(
   'inline-image',
-  [InlineImageAttributes],
+  [InlineImageAttributes, ImageEvents],
   templateInlineImage({}),
 )
 export class InlineImage extends HTMLElement {}

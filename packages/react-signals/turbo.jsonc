@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_ROOT$/tsconfig.json",
+        "package.json",
+        "rslib.config.ts",
+        "src/**",
+        "tsconfig.build.json",
+      ],
+      "outputs": ["dist"],
+    },
+  },
+}

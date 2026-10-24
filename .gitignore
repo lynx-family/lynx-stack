@@ -1,5 +1,7 @@
 node_modules
 dist
+dist-rspeedy
+dist-rsbuild
 lib
 www
 playwright-report

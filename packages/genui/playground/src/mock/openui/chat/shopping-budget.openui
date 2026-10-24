@@ -1,0 +1,7 @@
+root = Card([heading, form, total, remainder])
+$budget = [500]
+$chosen = {bag:true, jacket:true, socks:true}
+heading = TextContent("**先保留背包和风衣；若严格控制在500元，可先取消袜子。** 按你给的固定价格计算，三件合计510元。")
+form = Form("shopping", Buttons([Button("按所选装备继续研究", {type:"continue_conversation", context:"按当前勾选和预算继续研究；保留已确认的用途，核对所选商品的规格与来源"})]), [FormControl("预算（元）", Slider("budget", "continuous", 100, 1000, 10, [500], "预算", null, $budget)), FormControl("购物清单", CheckBoxGroup("chosen", [CheckBoxItem("背包 · 260元", "用户提供价格", "bag", true), CheckBoxItem("风衣 · 190元", "用户提供价格", "jacket", true), CheckBoxItem("袜子 · 60元", "用户提供价格", "socks", true)], null, $chosen))])
+total = TextContent("已选合计 ¥" + (($chosen.bag ? 260 : 0) + ($chosen.jacket ? 190 : 0) + ($chosen.socks ? 60 : 0)))
+remainder = TextContent("预算差额（负数表示超支） ¥" + (@First($budget) - ($chosen.bag ? 260 : 0) - ($chosen.jacket ? 190 : 0) - ($chosen.socks ? 60 : 0)))

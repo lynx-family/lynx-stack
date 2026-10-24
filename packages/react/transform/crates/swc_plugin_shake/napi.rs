@@ -3,7 +3,7 @@ use swc_core::{ecma::ast::*, ecma::visit::VisitMut};
 
 use crate::{ShakeVisitor as CoreVisitor, ShakeVisitorConfig as CoreConfig};
 
-/// {@inheritdoc PluginReactLynxOptions.shake}
+/// {@inheritDoc PluginReactLynxOptions.shake}
 /// @public
 #[napi(object)]
 #[derive(Clone, Debug)]

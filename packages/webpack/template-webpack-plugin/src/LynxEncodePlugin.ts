@@ -86,7 +86,7 @@ export class LynxEncodePlugin {
    *   plugins: [
    *     new LynxEncodePlugin({
    *       ...LynxEncodePlugin.defaultOptions,
-   *       enableRemoveCSSScope: true,
+   *       inlineScripts: false,
    *     }),
    *   ],
    * }
@@ -476,6 +476,9 @@ export function isDebug(): boolean {
 
   const values = process.env['DEBUG'].toLocaleLowerCase().split(',');
   return [
+    'lynx',
+    'lynx:*',
+    'lynx:template',
     'rspeedy',
     '*',
     'rspeedy:*',

@@ -8,11 +8,11 @@ if (subcommand !== 'dev' && subcommand !== 'preview') {
   throw new Error(`unknown subcommand: ${subcommand ?? '(none)'}`);
 }
 
-const rspeedy = process.platform === 'win32' ? 'rspeedy.cmd' : 'rspeedy';
+const rsbuild = process.platform === 'win32' ? 'rsbuild.cmd' : 'rsbuild';
 
 const producer = spawn(
-  rspeedy,
-  [subcommand, '--config', 'lynx.config.producer.js'],
+  rsbuild,
+  [subcommand, '--config', 'rsbuild.config.producer.js'],
   { stdio: ['ignore', 'pipe', 'pipe'] },
 );
 
@@ -26,8 +26,8 @@ prefix(producer.stdout, 'producer');
 prefix(producer.stderr, 'producer');
 
 const consumer = spawn(
-  rspeedy,
-  [subcommand, '--config', 'lynx.config.consumer.js'],
+  rsbuild,
+  [subcommand, '--config', 'rsbuild.config.consumer.js'],
   { stdio: 'inherit' },
 );
 

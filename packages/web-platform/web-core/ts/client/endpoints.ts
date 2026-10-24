@@ -11,6 +11,8 @@ import type {
   ElementAnimationOptions,
   ExternalBundleResponse,
   ContextCrossThreadEvent,
+  LynxIntersectionObserverCommand,
+  LynxIntersectionObserverEntry,
   UpdateDataOptions,
   TimingEntry,
 } from '../types/index.js';
@@ -34,6 +36,20 @@ export const switchExposureServiceEndpoint = createRpcEndpoint<
   false,
   false,
 );
+
+export const intersectionObserverCommandEndpoint = createRpcEndpoint<
+  [LynxIntersectionObserverCommand],
+  void
+>('intersectionObserverCommand', false, false);
+
+export const dispatchIntersectionObserverEventEndpoint = createRpcEndpoint<
+  [
+    observerId: number,
+    callbackId: number,
+    payload: LynxIntersectionObserverEntry,
+  ],
+  void
+>('dispatchIntersectionObserverEvent', false, false);
 
 export const updateDataEndpoint = createRpcEndpoint<
   [Cloneable, UpdateDataOptions | undefined],

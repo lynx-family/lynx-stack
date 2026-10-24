@@ -14,7 +14,36 @@ export function registerDisposeHandler(
 ): void {
   rpc.registerHandler(disposeEndpoint, () => {
     const id = nativeApp.id;
-    callDestroyLifetimeFun(id);
+    // `callDestroyLifetimeFun` forwards to `tt.callDestroyLifetimeFun`, which is
+    // injected by the ReactLynx background runtime (`injectTt`). Buildless
+    // (vanilla / Lynx XML markup) cards run their own background script and
+    // never install that hook, so lynx-core throws
+    // "callDestroyLifetimeFun is not a function" for them. The framework
+    // lifetime callback is optional, but `destroyCard` — which tears the app
+    // down and drops it from `nativeGlobal.multiApps` — is not, so the throw
+    // must not be allowed to skip it.
+    try {
+      callDestroyLifetimeFun(id);
+    } catch (e) {
+      // Nothing to report when the card simply has no framework lifetime hook;
+      // a genuine failure inside a framework's callback is still surfaced.
+      if (!isMissingLifetimeHookError(e)) {
+        console.error(
+          '[lynx-web] error while calling the card destroy lifetime hook',
+          e,
+        );
+      }
+    }
     destroyCard(id);
   });
+}
+
+/**
+ * Whether `error` is lynx-core complaining that the card never installed
+ * `tt.callDestroyLifetimeFun`, as opposed to a framework lifetime callback
+ * failing on its own.
+ */
+function isMissingLifetimeHookError(error: unknown): boolean {
+  return error instanceof TypeError
+    && error.message.includes('callDestroyLifetimeFun');
 }

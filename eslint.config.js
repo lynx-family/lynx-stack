@@ -45,6 +45,7 @@ export default tseslint.config(
       'examples/*/dist-producer/**',
       'examples/*/dist-consumer/**',
       'website/doc_build/**',
+      'docs/doc_build/**',
       '.changeset/*',
       '**/CHANGELOG.md',
       '**/etc/*.md',
@@ -52,6 +53,8 @@ export default tseslint.config(
       'website/docs/zh/api/**',
       'website/docs/en/changelog/**',
       'website/docs/zh/changelog/**',
+      'docs/content/*/api/**',
+      'packages/react/docs/**',
 
       // Test snapshots
       '**/expected/**',
@@ -70,12 +73,16 @@ export default tseslint.config(
       'packages/**/vitest.config.ts',
       'packages/genui/cli/templates/**',
       'packages/react/runtime/compat/**',
+      'packages/rspeedy/create-lynx/template-*/**',
+      'packages/rspeedy/create-lynx/library/template-*/**',
       'packages/rspeedy/create-rspeedy/template-*/**',
       'packages/i18n/**/tests/fixtures/**',
       'packages/{rspeedy,webpack}/*/test/**/cases/**',
       'packages/{rspeedy,webpack}/*/test/**/hotCases/**',
       'packages/{rspeedy,webpack}/*/test/**/diagnostic/**',
       'packages/{rspeedy,webpack}/*/test/**/fixtures/**',
+      // These fixtures resolve imports against a temporary published package.
+      'packages/genui/openui/test/fixtures/chat-imports/**',
       'packages/webpack/**/runtime/**',
       'packages/webpack/css-extract-webpack-plugin/test/js/**',
       'packages/webpack/css-extract-webpack-plugin/test/rspack-js/**',
@@ -105,7 +112,7 @@ export default tseslint.config(
       'packages/react/runtime/worklet-runtime/**',
       'packages/react/runtime/src/renderToOpcodes/**',
       'packages/react/runtime/src/snapshot/renderToOpcodes/**',
-      'packages/react/runtime/src/element-template/runtime/render/render-to-opcodes.ts',
+      'packages/react/runtime/src/element-template/runtime/render/render-components.ts',
       'packages/react/runtime/types/**',
 
       // TODO: enable eslint for react-runtime
@@ -487,6 +494,14 @@ export default tseslint.config(
     rules: {
       'n/file-extension-in-import': 'off',
       'n/no-unsupported-features/node-builtins': 'off',
+    },
+  },
+  {
+    files: [
+      'docs/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'n/file-extension-in-import': 'off',
     },
   },
 );

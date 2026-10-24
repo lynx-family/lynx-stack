@@ -5,7 +5,7 @@
 import { Suspense, createElement, lazy, cloneElement as preactCloneElement } from 'preact/compat';
 import type { FC } from 'react';
 
-import './runtime-backend-marker.js';
+import './runtime-marker.js';
 import './lynx.js';
 
 import { useMemo } from './core/hooks/react.js';
@@ -20,7 +20,17 @@ import { snapshotCreateList } from './snapshot/snapshot/list.js';
 import { SnapshotInstance, snapshotCreatorMap } from './snapshot/snapshot/snapshot.js';
 import { setSnapshotCreatorRuntime } from './snapshot/snapshot/snapshotCreatorMap.js';
 
-export { CHILDREN, COMPONENT, DIFF, DIRTY, DOM, FLAGS, INDEX, PARENT } from './shared/render-constants.js';
+export {
+  BITS,
+  CHILDREN,
+  COMPONENT,
+  COMPONENT_DIRTY,
+  DIFF,
+  DOM,
+  FLAGS,
+  INDEX,
+  PARENT,
+} from './shared/render-constants.js';
 
 export { __page, __pageId, __root };
 
@@ -63,6 +73,15 @@ export type { Options } from 'preact';
 
 export { loadDynamicJS, __dynamicImport } from './core/lynx/dynamic-import.js';
 
+// Re-exported so lazy bundle shells can reach the host runtime APIs
+// via `target[sExportsReactInternal]`.
+export { registerRuntimeVersion, getRuntimeVersion } from './core/lynx/runtime-version.js';
+export {
+  RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+  RUNTIME_BACKEND_SNAPSHOT,
+  registerRuntimeBackend,
+} from './core/lynx/runtime-backend.js';
+
 export { withInitDataInState } from './core/initData.js';
 
 export { wrapWithLynxComponent } from './core/compat/lynxComponent.js';
@@ -81,7 +100,7 @@ export { loadLazyBundle } from './core/lynx/lazy-bundle.js';
 export { createBackgroundFunctionHandle as transformToWorklet } from './core/background-function/handle.js';
 export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';
 
-export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
+export { captureMainThreadObject } from './core/capture-main-thread-object.js';
 
 if (__DEV__) {
   // Dev snapshot creators take the runtime as a parameter (they are

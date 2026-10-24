@@ -1,0 +1,568 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import {
+  CHAT_PROVIDER_SETTINGS_ADAPTER,
+  getChatEndpoint,
+  parseTokenUsage,
+  toProviderRequestOptions,
+} from './shared.js';
+import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
+import type {
+  ChatArtifact,
+  ChatHydration,
+  ChatMessageModel,
+  ChatProtocolAdapter,
+  ChatStreamEmission,
+  ChatStreamStep,
+  ChatTurnPersistence,
+} from './type.js';
+import type { ModelChatMessage } from '../../hooks/useConversation.js';
+import type { PreviewPerformanceMetrics } from '../../storage/types.js';
+import { LYNX_XML_SCENARIOS } from '../demos/lynx-xml.js';
+import type { LynxXmlScenario } from '../demos/lynx-xml.js';
+
+export interface LynxXmlOutput {
+  source: string;
+  xmlFragment?: string;
+  modelOutput?: string;
+}
+
+export interface LynxXmlStreamState extends LynxXmlOutput {
+  generatedText: string;
+}
+
+const DOCTYPE = '<!doctype lynx>';
+const ROOT_END = '</lynx>';
+const MAIN_THREAD_START = '<script thread="main">';
+const LOCAL_EXAMPLE_PROMPT_PREFIX = 'Load local Lynx XML example: ';
+
+const WELCOME_MESSAGE: ChatMessageModel = {
+  kind: 'assistant',
+  text:
+    'Describe the interface you want. I will stream a complete zero-build .lynxml artifact and render it directly in Lynx Preview.',
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** Keep partial source visible as soon as the canonical document begins. */
+export function extractLynxXmlSource(value: string): string {
+  const start = value.indexOf(DOCTYPE);
+  if (start === -1) return '';
+  const end = value.lastIndexOf(ROOT_END);
+  return value.slice(
+    start,
+    end >= start ? end + ROOT_END.length : undefined,
+  ).trimEnd();
+}
+
+export function isCompleteLynxXmlSource(source: string): boolean {
+  const markup = source.replace(
+    /<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<!--[\s\S]*?-->/gu,
+    '',
+  );
+  return source.startsWith(DOCTYPE)
+    && !/<template\b/u.test(markup)
+    && source.includes('<lynx engine-version="')
+    && source.includes(MAIN_THREAD_START)
+    && source.trimEnd().endsWith(ROOT_END);
+}
+
+function readResponseText(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') return value;
+  if (isRecord(value) && typeof value.text === 'string') return value.text;
+  return fallback;
+}
+
+function normalizeError(value: unknown): string {
+  if (isRecord(value)) {
+    if (typeof value.error === 'string') return value.error;
+    if (isRecord(value.error) && typeof value.error.message === 'string') {
+      return value.error.message;
+    }
+    if (typeof value.message === 'string') return value.message;
+  }
+  return value instanceof Error
+    ? value.message
+    : (typeof value === 'string' && value
+      ? value
+      : 'Lynx XML generation failed');
+}
+
+function readPreviewSourceUrl(value: unknown): string | undefined {
+  if (!isRecord(value) || !isRecord(value.preview)) return undefined;
+  return typeof value.preview.sourceUrl === 'string'
+      && value.preview.sourceUrl.trim()
+    ? value.preview.sourceUrl
+    : undefined;
+}
+
+function requireCompleteOutput(value: unknown, fallback = ''): LynxXmlOutput {
+  const source = extractLynxXmlSource(readResponseText(value, fallback));
+  if (!isCompleteLynxXmlSource(source)) {
+    throw new Error('The agent returned an incomplete Lynx XML artifact');
+  }
+  const xmlFragment = isRecord(value) && isRecord(value.metadata)
+      && typeof value.metadata.xmlFragment === 'string'
+    ? value.metadata.xmlFragment
+    : undefined;
+  const modelOutput = isRecord(value) && isRecord(value.metadata)
+      && typeof value.metadata.modelOutput === 'string'
+    ? value.metadata.modelOutput
+    : undefined;
+  return {
+    source,
+    ...(xmlFragment ? { xmlFragment } : {}),
+    ...(modelOutput ? { modelOutput } : {}),
+  };
+}
+
+function streamStep(
+  state: LynxXmlStreamState,
+  emissions: readonly ChatStreamEmission<LynxXmlOutput>[] = [],
+): ChatStreamStep<LynxXmlStreamState, LynxXmlOutput> {
+  return { state, emissions };
+}
+
+export const LYNX_XML_STREAM = {
+  initial(): LynxXmlStreamState {
+    return { generatedText: '', source: '' };
+  },
+  reduce(
+    state: LynxXmlStreamState,
+    frame: { event: string; data: unknown },
+  ): ChatStreamStep<LynxXmlStreamState, LynxXmlOutput> {
+    if (frame.event === 'error') {
+      throw new Error(normalizeError(frame.data));
+    }
+
+    if (frame.event === 'delta') {
+      const delta = isRecord(frame.data) && typeof frame.data.text === 'string'
+        ? frame.data.text
+        : '';
+      if (!delta) return streamStep(state);
+      const generatedText = state.generatedText + delta;
+      const source = extractLynxXmlSource(generatedText);
+      const nextState = { generatedText, source };
+      const emissions: ChatStreamEmission<LynxXmlOutput>[] = [
+        { type: 'progress', text: source || generatedText },
+      ];
+      if (source) emissions.push({ type: 'partial', output: { source } });
+      return streamStep(nextState, emissions);
+    }
+
+    if (frame.event !== 'done') return streamStep(state);
+
+    const output = requireCompleteOutput(frame.data, state.generatedText);
+    const emissions: ChatStreamEmission<LynxXmlOutput>[] = [];
+    const usage = isRecord(frame.data)
+      ? parseTokenUsage(frame.data.usage)
+      : null;
+    if (usage) emissions.push({ type: 'usage', usage });
+    const sourceUrl = readPreviewSourceUrl(frame.data);
+    if (sourceUrl) {
+      emissions.push({ type: 'previewPayload', value: { sourceUrl } });
+    }
+    emissions.push({ type: 'final', output });
+    return streamStep(
+      { generatedText: output.source, ...output },
+      emissions,
+    );
+  },
+  fromJson(payload: unknown) {
+    const output = requireCompleteOutput(payload);
+    const emissions: ChatStreamEmission<LynxXmlOutput>[] = [];
+    const usage = isRecord(payload) ? parseTokenUsage(payload.usage) : null;
+    if (usage) emissions.push({ type: 'usage', usage });
+    const sourceUrl = readPreviewSourceUrl(payload);
+    if (sourceUrl) {
+      emissions.push({ type: 'previewPayload', value: { sourceUrl } });
+    }
+    emissions.push({ type: 'final', output });
+    return streamStep(
+      { generatedText: output.source, ...output },
+      emissions,
+    );
+  },
+  finish(state: LynxXmlStreamState): LynxXmlOutput | null {
+    return isCompleteLynxXmlSource(state.source)
+      ? {
+        source: state.source,
+        ...(state.xmlFragment ? { xmlFragment: state.xmlFragment } : {}),
+        ...(state.modelOutput ? { modelOutput: state.modelOutput } : {}),
+      }
+      : null;
+  },
+  error: normalizeError,
+};
+
+function generatedStatus(): ChatMessageModel {
+  return {
+    kind: 'status',
+    tone: 'success',
+    icon: 'sparkles',
+    text:
+      'Generated a complete Lynx XML artifact. Lynx Preview is rendering it now.',
+  };
+}
+
+function localExampleStatus(title: string): ChatMessageModel {
+  return {
+    kind: 'status',
+    tone: 'success',
+    icon: 'zap',
+    text: `Loaded local Lynx XML example ${title}. No API call was made.`,
+  };
+}
+
+function localExampleTitle(content: string): string | null {
+  if (!content.startsWith(LOCAL_EXAMPLE_PROMPT_PREFIX)) return null;
+  return content.slice(LOCAL_EXAMPLE_PROMPT_PREFIX.length).trim() || null;
+}
+
+function lastMetrics(
+  history: readonly ModelChatMessage[],
+): PreviewPerformanceMetrics | undefined {
+  for (let index = history.length - 1; index >= 0; index--) {
+    const metrics = history[index]?.previewMetrics;
+    if (metrics) return metrics;
+  }
+  return undefined;
+}
+
+function hydrate(
+  history: readonly ModelChatMessage[],
+): ChatHydration<LynxXmlOutput> {
+  if (history.length === 0) {
+    return { messages: [{ ...WELCOME_MESSAGE }], output: null };
+  }
+
+  const messages: ChatMessageModel[] = [{ ...WELCOME_MESSAGE }];
+  let output: LynxXmlOutput | null = null;
+  let pendingLocalTitle: string | null = null;
+  for (const message of history) {
+    if (message.role === 'user') {
+      pendingLocalTitle = localExampleTitle(message.content);
+      messages.push({ kind: 'user', text: message.content });
+      continue;
+    }
+    if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
+    const source = extractLynxXmlSource(message.content);
+    if (!isCompleteLynxXmlSource(source)) continue;
+    output = {
+      source,
+      ...(typeof message.lynxXmlFragment === 'string' && message.lynxXmlFragment
+        ? { xmlFragment: message.lynxXmlFragment }
+        : {}),
+      ...(typeof message.lynxXmlModelOutput === 'string'
+          && message.lynxXmlModelOutput
+        ? { modelOutput: message.lynxXmlModelOutput }
+        : {}),
+    };
+    messages.push(
+      {
+        ...(pendingLocalTitle
+          ? localExampleStatus(pendingLocalTitle)
+          : generatedStatus()),
+        generationUsage: message.generationUsage,
+      },
+    );
+    pendingLocalTitle = null;
+  }
+
+  const metrics = lastMetrics(history);
+  return {
+    messages,
+    output,
+    ...(metrics ? { metrics } : {}),
+  };
+}
+
+function createArtifact(output: LynxXmlOutput): ChatArtifact {
+  const hasConversion = Boolean(output.xmlFragment)
+    || Boolean(output.modelOutput && output.modelOutput !== output.source);
+  return {
+    title: 'Generated Lynx XML Artifact',
+    meta: '.lynxml',
+    views: [
+      ...(hasConversion && output.modelOutput
+        ? [{
+          id: 'model-output',
+          label: 'Original',
+          text: output.modelOutput,
+          language: 'text' as const,
+        }]
+        : []),
+      {
+        id: hasConversion ? 'transformed' : 'source',
+        label: hasConversion ? 'Transformed' : 'Source',
+        text: output.source,
+        language: 'text',
+      },
+    ],
+  };
+}
+
+function persistOutput(
+  output: LynxXmlOutput,
+  previewPayloadUrls?: ChatTurnPersistence['previewPayloadUrls'],
+): ChatTurnPersistence {
+  return {
+    assistantContent: output.source,
+    ...(output.xmlFragment ? { lynxXmlFragment: output.xmlFragment } : {}),
+    ...(output.modelOutput ? { lynxXmlModelOutput: output.modelOutput } : {}),
+    a2uiMessages: [],
+    previewMessages: [],
+    previewPayloadUrls,
+  };
+}
+
+const GENERATION_DEFAULTS = {
+  enableScriptReuse: true,
+  enableDesignGuidance: true,
+  enableHtmlFragment: true,
+  stylePreset: 'default' as const,
+};
+
+export const LYNX_XML_CHAT_ADAPTER = {
+  id: 'lynx-xml',
+  copy: {
+    description:
+      'Describe a Vanilla Lynx interface, watch its .lynxml source stream in real time, and render the complete zero-build artifact in Lynx Preview.',
+    inputAriaLabel: 'Describe the Lynx XML interface to generate',
+    inputPlaceholder:
+      'Describe the layout, data, visual style, and interactions for your Lynx XML artifact...',
+    agentLabel: 'Lynx XML Agent',
+    progressLabel: 'Streaming Lynx XML from the GenUI server...',
+    failurePrefix: 'Lynx XML generation failed',
+  },
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
+  settings: {
+    ...CHAT_PROVIDER_SETTINGS_ADAPTER,
+    initial(): ProviderSettings {
+      return {
+        ...CHAT_PROVIDER_SETTINGS_ADAPTER.initial(),
+        ...GENERATION_DEFAULTS,
+      };
+    },
+    parseStored(raw: unknown): ProviderSettings {
+      const settings = CHAT_PROVIDER_SETTINGS_ADAPTER.parseStored(raw);
+      return {
+        ...settings,
+        ...GENERATION_DEFAULTS,
+      };
+    },
+    serialize(settings: ProviderSettings) {
+      const stored = CHAT_PROVIDER_SETTINGS_ADAPTER.serialize(settings);
+      delete stored.enableDesignGuidance;
+      delete stored.enableHtmlFragment;
+      delete stored.enableScriptReuse;
+      delete stored.stylePreset;
+      return stored;
+    },
+    conversation: {
+      defaults: GENERATION_DEFAULTS,
+      snapshot(settings) {
+        return {
+          ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.snapshot(settings),
+          enableHtmlFragment: settings.enableHtmlFragment !== false,
+          enableScriptReuse: settings.enableScriptReuse !== false,
+          stylePreset: settings.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
+        };
+      },
+      restore(settings, saved) {
+        return {
+          ...CHAT_PROVIDER_SETTINGS_ADAPTER.conversation.restore(
+            settings,
+            {
+              ...saved,
+              enableDesignGuidance: saved.enableDesignGuidance ?? true,
+            },
+          ),
+          enableHtmlFragment: saved.enableHtmlFragment ?? true,
+          enableScriptReuse: saved.enableScriptReuse
+            ?? GENERATION_DEFAULTS.enableScriptReuse,
+          stylePreset: saved.stylePreset ?? GENERATION_DEFAULTS.stylePreset,
+        };
+      },
+    },
+    controls(settings: ProviderSettings) {
+      return [...CHAT_PROVIDER_SETTINGS_ADAPTER.controls(settings), {
+        id: 'enableHtmlFragment',
+        label: 'Template',
+        description: 'Convert <template> markup to Element PAPI at runtime.',
+        kind: 'checkbox' as const,
+        value: settings.enableHtmlFragment === false ? 'off' : 'on',
+      }, {
+        id: 'stylePreset',
+        label: 'StylePreset',
+        description:
+          'Reuse built-in utility styles with Template or Element PAPI.',
+        kind: 'checkbox' as const,
+        value: settings.stylePreset === false ? 'off' : 'on',
+      }, {
+        id: 'enableScriptReuse',
+        label: 'ScriptReuse',
+        description:
+          'Reuse lifecycle and event helpers to reduce generated code.',
+        kind: 'checkbox' as const,
+        value: settings.enableScriptReuse === false ? 'off' : 'on',
+      }];
+    },
+    update(settings: ProviderSettings, id: string, next: string) {
+      if (id === 'enableScriptReuse') {
+        return { ...settings, enableScriptReuse: next === 'on' };
+      }
+      if (id === 'stylePreset') {
+        return {
+          ...settings,
+          stylePreset: next === 'on'
+            ? 'default' as const
+            : false as const,
+        };
+      }
+      return id === 'enableHtmlFragment'
+        ? {
+          ...settings,
+          enableHtmlFragment: next === 'on',
+        }
+        : CHAT_PROVIDER_SETTINGS_ADAPTER.update(settings, id, next);
+    },
+  },
+  createRequest({ prompt, conversation, settings, host }) {
+    return {
+      url: getChatEndpoint('lynx-xml', host, settings),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      body: {
+        resourceId: 'lynx-xml-create',
+        enableHtmlFragment: settings.enableHtmlFragment !== false,
+        enableScriptReuse: settings.enableScriptReuse !== false,
+        ...(settings.stylePreset === false
+          ? {}
+          : { stylePreset: settings.stylePreset ?? 'default' }),
+        messages: [{ role: 'user', content: prompt }],
+        conversation: {
+          ...conversation,
+          history: conversation.history.map((
+            { role, content, lynxXmlModelOutput },
+          ) => ({
+            role,
+            content:
+              settings.enableScriptReuse !== false && role === 'assistant'
+                && lynxXmlModelOutput
+                ? lynxXmlModelOutput
+                : content,
+          })),
+        },
+        ...toProviderRequestOptions(settings),
+      },
+    };
+  },
+  stream: LYNX_XML_STREAM,
+  hydrate({ history }) {
+    return hydrate(history);
+  },
+  persist(output, context?) {
+    return persistOutput(output, context?.previewPayloadUrls);
+  },
+  transcript: {
+    pending() {
+      return {
+        kind: 'status',
+        tone: 'pending',
+        icon: 'spinner',
+        text: 'Streaming Lynx XML from the GenUI server...',
+      };
+    },
+    progress(_text: string) {
+      return {
+        kind: 'status',
+        tone: 'pending',
+        icon: 'spinner',
+        text: 'Streaming Lynx XML from the GenUI server...',
+      };
+    },
+    success(_output: LynxXmlOutput) {
+      return [generatedStatus()];
+    },
+    failure(error) {
+      return {
+        kind: 'status',
+        tone: 'error',
+        icon: 'error',
+        text: `Lynx XML generation failed: ${error}`,
+      };
+    },
+  },
+  examples: {
+    items: LYNX_XML_SCENARIOS,
+    item(scenario: LynxXmlScenario) {
+      return {
+        id: scenario.id,
+        title: scenario.title,
+        description: scenario.description,
+      };
+    },
+    load(scenario: LynxXmlScenario) {
+      const output = { source: scenario.source };
+      const userText = `${LOCAL_EXAMPLE_PROMPT_PREFIX}${scenario.title}`;
+      return {
+        userText,
+        messages: [
+          { ...WELCOME_MESSAGE },
+          { kind: 'user', text: userText },
+          localExampleStatus(scenario.title),
+        ],
+        output,
+        persistence: persistOutput(output),
+      };
+    },
+  },
+  preview: {
+    delivery: 'reload',
+    source(output, context) {
+      return output && isCompleteLynxXmlSource(output.source)
+        ? {
+          kind: 'lynx-xml',
+          source: output.source,
+          ...(context.previewPayloadUrls?.sourceUrl
+            ? { sourcePath: context.previewPayloadUrls.sourceUrl }
+            : {}),
+          theme: context.theme,
+        }
+        : undefined;
+    },
+    artifact: createArtifact,
+    merge(_current, next) {
+      return next;
+    },
+    emptyTitle: 'Send a prompt to generate Lynx XML',
+    emptySubtitle: 'The complete .lynxml artifact will render here',
+    generatingHint:
+      'The .lynxml source is streaming into the artifact panel. Preview starts as soon as the complete document arrives.',
+    emptyHint:
+      'No Lynx XML artifact yet. Send a prompt or load a local example to begin.',
+  },
+} satisfies ChatProtocolAdapter<
+  LynxXmlOutput,
+  LynxXmlStreamState,
+  ProviderSettings,
+  LynxXmlScenario
+>;

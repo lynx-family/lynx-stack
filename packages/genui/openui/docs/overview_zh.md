@@ -12,7 +12,7 @@ renderer 和内置移动端组件 Library 组合在一起。
 这个包提供：
 
 - 处理原始或预解析 OpenUI 输入的 `<OpenUiRenderer>`；
-- `createOpenUiLibrary()` 和 26 个可信组件实现；
+- `createOpenUiLibrary()` 和 26 个可信的默认组件实现；
 - 面向模型流式输出的增量解析；
 - 响应式 `$variables`、表达式求值和表单状态；
 - `Query()`、`Mutation()` 和多步骤 `Action([...])` 执行；
@@ -57,6 +57,89 @@ message = TextContent("Hello OpenUI")
 OpenUI 使用位置参数。Parser 按每个组件 Zod schema 的字段顺序，把位置参数映射为
 具名 props。它允许 forward references，所以 root 可以引用 response 后面才声明的
 statements。
+
+## 流式模型输出
+
+把累计模型文本作为 `response`，把生成状态作为 `isStreaming` 传给 renderer。
+如果业务已经有 React 状态或会话状态，直接复用即可，无需另外创建 parser。
+
+- `response` 是截至当前收到的完整文本，不是最新一个 delta。收到 delta 时追加；
+  transport 下发累计快照时，直接替换文本。
+- 整个生成期间保持 `isStreaming={true}`。UI 会逐步展示，Query 执行、mutation
+  注册和内置交互会等待生成完成。
+- 成功结束时，把最终权威文本和 `isStreaming={false}` 一起更新。该标记默认是
+  `false`，展示静态或已完成的历史 response 时可以省略。
+
+### 接入 transport
+
+把文本和生成状态放在同一个 state 对象中，确保一起更新。下面展示 transport 的
+回调接法；根据服务返回的是 delta 还是累计快照，选择对应的文本回调：
+
+```tsx
+import { createOpenUiLibrary, OpenUiRenderer } from '@lynx-js/genui/openui';
+import { useMemo, useState } from '@lynx-js/react';
+
+export function GeneratedView() {
+  const library = useMemo(() => createOpenUiLibrary(), []);
+  const [output, setOutput] = useState({
+    response: null as string | null,
+    isStreaming: false,
+  });
+
+  function onStart() {
+    setOutput({ response: '', isStreaming: true });
+  }
+
+  function onDelta(delta: string) {
+    setOutput((current) => ({
+      response: (current.response ?? '') + delta,
+      isStreaming: true,
+    }));
+  }
+
+  function onSnapshot(fullText: string) {
+    setOutput({ response: fullText, isStreaming: true });
+  }
+
+  function onDone(finalText: string) {
+    setOutput({ response: finalText, isStreaming: false });
+  }
+
+  function onFailureOrCancel() {
+    setOutput({ response: null, isStreaming: false });
+  }
+
+  // 把这些回调接到已有 transport。
+  return <OpenUiRenderer library={library} {...output} />;
+}
+```
+
+如果完成事件没有最终文本，保留累计 response，只更新标记：
+`setOutput(current => ({ ...current, isStreaming: false }))`。
+即使最终文本和最后一次增量相同，也必须切换标记，才能启用 Query、完成后的错误报告
+和交互。自定义交互组件也应遵循 `useIsStreaming()`。
+
+### 增量解析是怎么工作的
+
+只要 `library` 对象不变，renderer 就会复用同一个 streaming parser。
+虽然每次传入累计全文，parser 会识别追加的文本、缓存已完成的语句，并重新解析
+尚未完成的尾部以预览部分输出。Forward references 在目标声明到达后变为可渲染状态。
+改写或缩短之前收到的文本会重置解析缓存；用 `useMemo` 或模块常量保持 Library 稳定。
+
+这是语句级增量解析：每次文本更新仍会做预处理和结果重建，一条很长但尚未完成的语句
+也可能被反复解析。它没有提供组件级 patch 协议。文本不变、只切换 `isStreaming`
+时，不会重新解析。
+
+### 完成、取消与新会话
+
+使用 SSE 时，只有成功的 `done` 事件才代表完成，并应以其中的最终文本为准。
+连接关闭本身不代表成功。
+
+异常或取消时，用 `{ response: null, isStreaming: false }` 清空未完成文本，
+避免为半成品启用 Query 或交互。更新状态不会取消网络请求；transport 负责取消和错误
+报告。开始下一次生成前，停止旧请求、拒绝其迟到事件，再重置文本。
+清空 response 不会重置运行时表单状态；新会话需要重置这些状态时，为 renderer
+使用新的 `key`。
 
 ## 心智模型
 
@@ -132,7 +215,7 @@ input ─┼─► Transport ──prompt/action──► Agent service     │
        │      └──────────────────────────────┘             │
        │      │                                            │
        │      ▼                                            │
-       │ <OpenUiRenderer response={text}>                  │
+       │ <OpenUiRenderer response={text} ...>               │
        │      │                                            │
        │      ├─ parser ─► AST ─► evaluator ─► UI tree     │
        │      ├─ Store ($state + form state)               │
@@ -144,17 +227,17 @@ input ─┼─► Transport ──prompt/action──► Agent service     │
 
 1. 你的 transport 把用户请求发送给 Agent 服务。
 2. 服务使用由同一 client component contract 构建的 OpenUI system prompt 调用模型。
-3. Transport 把 chunks 追加到同一个累计 `response` 字符串，再传给
+3. Transport 累积文本 delta，并把 `response` 和 `isStreaming` 传给
    `<OpenUiRenderer>`。
 4. Streaming parser 校验已完成的 statements，并解析引用关系。
-5. Runtime 初始化状态、求值表达式，并通过你的 `toolProvider` 执行完整 Queries。
+5. Runtime 初始化状态并求值表达式。生成完成后，通过你的 `toolProvider` 执行 Queries。
 6. Renderer 遍历求值后的 root，挂载 Library 中可信的 ReactLynx 组件。
 7. 用户交互触发 action steps。宿主 actions 通过 `onAction` 抛出；状态和 tool
    steps 留在 runtime 内执行。
 
 ## Client 内部
 
-原始 `response` 路径会创建完整的 v0.5 runtime：
+`response` 创建完整的 v0.5 runtime；`isStreaming` 控制何时启用 Query 和交互：
 
 ```text
 response text
@@ -181,13 +264,15 @@ RenderNode ──name lookup──► library.components[name].component
   Forward references 在目标到达后变为可渲染状态。
 - **稳定的 Library。** 用 `useMemo` 或组件外常量只创建一次 Library。改变其对象
   identity 会创建新 parser，并可能丢失已有解析工作。
-- **Streaming guard。** 生成期间传入 `isStreaming`。Query/mutation 会等待输出
-  稳定，内置交互也保持禁用。
+- **Streaming guard。** 生成期间传入 `isStreaming={true}`。Query 执行和 mutation
+  注册会等待输出稳定，内置交互也保持禁用。
 - **响应式状态。** `$variables` 和 form values 位于同一个外部 Store 中。
   `onStateUpdate` 可以持久化 snapshots；`initialState` 中以 `$` 开头的值会 hydrate
   响应式 declarations。
-- **Queries 与 mutations。** Query statement 完整后执行，并在引用状态变化时重新
-  执行。Mutation 只注册定义，直到 action 调用 `@Run(mutationRef)` 才执行。
+- **Queries 与 mutations。** Response 完成流式生成后，Query 的 defaults 和预取的
+  `initialQueryResults` 会进入第一次同步渲染。如果配置了 tool provider，Query 会在
+  commit 后重新校验，并在引用状态变化时重新执行。Mutation 只注册定义，直到 action
+  调用 `@Run(mutationRef)` 才执行。
 - **顺序 actions。** `@Run`、`@Set`、`@Reset`、`@ToAssistant` 和 `@OpenUrl`
   按顺序执行。Mutation 失败会终止后续 steps。
 - **组件软失败。** Element 的 component name 未注册时不会渲染任何内容。其他
@@ -199,7 +284,7 @@ RenderNode ──name lookup──► library.components[name].component
 | 部分               | 运行位置                | 负责人               | 职责                                                                            |
 | ------------------ | ----------------------- | -------------------- | ------------------------------------------------------------------------------- |
 | Agent 服务         | Server                  | 你的应用             | 使用 system prompt 和 component/tool contract 生成原始 OpenUI Lang。            |
-| Transport adapter  | Client shell            | 你的应用             | 流式传入累计 response 文本、处理取消，并转发 conversation actions。             |
+| Transport adapter  | Client shell            | 你的应用             | 传入 delta 或快照、确认完成、处理取消，并转发 conversation actions。            |
 | `Library`          | Client + Agent contract | 双方共享             | 命名组件、固定位置参数顺序、提供 JSON Schema，并把名称映射为可信 renderer。     |
 | Parser/evaluator   | Client                  | 这个包 + `lang-core` | 解析 statements、校验 props、解析 state/data expressions，并报告结构化 errors。 |
 | Store/QueryManager | Client                  | 这个包 + `lang-core` | 管理响应式/form state，并执行工具支持的 Query/Mutation statements。             |
@@ -208,25 +293,49 @@ RenderNode ──name lookup──► library.components[name].component
 
 ## `<OpenUiRenderer>` props
 
-所有新接入都应使用原始 response 形式。
+传入累计全文 `response`，生成期间显式设置 `isStreaming={true}`。
+`isStreaming` 默认为 `false`，用于已完成的 response。
 
-| Prop            | 类型                                       | 必填 | 用途                                               |
-| --------------- | ------------------------------------------ | ---- | -------------------------------------------------- |
-| `response`      | `string \| null`                           | 是   | 累计的原始 OpenUI Lang 文本，启用 v0.5 runtime。   |
-| `library`       | `Library`                                  | 是   | 组件 schemas 和可信 ReactLynx 实现。               |
-| `isStreaming`   | `boolean`                                  | 否   | 标记模型输出仍不完整，并禁用不稳定交互/tool work。 |
-| `onAction`      | `(event: ActionEvent) => void`             | 否   | 接收需要宿主处理的 assistant 和 URL actions。      |
-| `onStateUpdate` | `(state: Record<string, unknown>) => void` | 否   | 接收响应式/form state snapshots，以便持久化。      |
-| `initialState`  | `Record<string, unknown>`                  | 否   | Hydrate `$variables` 和 form state。               |
-| `onParseResult` | `(result: ParseResult \| null) => void`    | 否   | 暴露最新原始 AST 和 parser metadata。              |
-| `toolProvider`  | function map、MCP-like client 或 `null`    | 否   | 执行 Query/Mutation statements 引用的工具。        |
-| `queryLoader`   | `ReactNode`                                | 否   | Queries 执行期间替换默认 indicator。               |
-| `onError`       | `(errors: OpenUIError[]) => void`          | 否   | Streaming 结束后接收去重的结构化 errors。          |
+| Prop                  | 类型                                       | 必填 | 用途                                               |
+| --------------------- | ------------------------------------------ | ---- | -------------------------------------------------- |
+| `response`            | `string \| null`                           | 是   | 累计的原始 OpenUI Lang 文本，启用 v0.5 runtime。   |
+| `library`             | `Library`                                  | 是   | 组件 schemas 和可信 ReactLynx 实现。               |
+| `isStreaming`         | `boolean`                                  | 否   | 标记模型输出仍不完整，并禁用不稳定交互/tool work。 |
+| `onAction`            | `(event: ActionEvent) => void`             | 否   | 接收需要宿主处理的 assistant 和 URL actions。      |
+| `onStateUpdate`       | `(state: Record<string, unknown>) => void` | 否   | 接收响应式/form state snapshots，以便持久化。      |
+| `initialState`        | `Record<string, unknown>`                  | 否   | Hydrate `$variables` 和 form state。               |
+| `initialQueryResults` | `Record<string, unknown>`                  | 否   | 为第一次同步渲染提供预取的 Query 结果。            |
+| `onParseResult`       | `(result: ParseResult \| null) => void`    | 否   | 暴露最新原始 AST 和 parser metadata。              |
+| `toolProvider`        | function map、MCP-like client 或 `null`    | 否   | 执行 Query/Mutation statements 引用的工具。        |
+| `queryLoader`         | `ReactNode`                                | 否   | Queries 执行期间替换默认 indicator。               |
+| `onError`             | `(errors: OpenUIError[]) => void`          | 否   | Streaming 结束后接收去重的结构化 errors。          |
 
 `<OpenUiRenderer result={parseResult} library={library}>` 仍为 legacy/static
 callers 保留。它可以渲染预解析 element tree 并转发简单 actions，但不会创建 v0.5
 QueryManager，也无法完整执行 `@Run`、`@Set` 和 `@Reset`。新 v0.5 接入不要使用
 这条路径。
+
+### 预取 Query 结果
+
+如果 Query 数据在 ReactLynx 首屏前已经可用，可以传入 `initialQueryResults`。每个
+key 都是 Query assignment name（statement ID），因此调用同一个 tool、但参数不同的
+Queries 也不会混淆：
+
+```text
+orders = Query("list_orders", { status: "open" }, { rows: [] })
+```
+
+```tsx
+<OpenUiRenderer
+  response={response}
+  library={library}
+  initialQueryResults={{ orders: prefetchedOrders }}
+/>;
+```
+
+预取值（包括 `null`、`false` 或 `0`）会在第一次同步渲染时优先于 Query default。
+如果传入 `toolProvider`，runtime 会在 commit 后开始正常的 Query 执行，并在请求完成后
+替换 fallback。如果预取结果是无需重新校验的不可变 snapshot，可以不传 provider。
 
 ## Tool providers
 
@@ -251,12 +360,16 @@ QueryManager，也无法完整执行 `@Run`、`@Set` 和 `@Reset`。新 v0.5 接
 
 ## Exports
 
-| 导入                                     | 你得到什么                                                                       |
-| ---------------------------------------- | -------------------------------------------------------------------------------- |
-| `@lynx-js/genui/openui`                  | Renderer、Library helpers、parser/runtime exports、hooks、内置组件和公共 types。 |
-| `@lynx-js/genui/openui/catalog`          | 内置组件 definitions 的 tree-shake-friendly 再导出。                             |
-| `@lynx-js/genui/openui/prompt`           | Headless prompt Library、prompt builder、默认 prompt 和 prompt-specific types。  |
-| `@lynx-js/genui/openui/styles/theme.css` | 可选的 light/dark CSS custom-property tokens。                                   |
+| 导入                                              | 你得到什么                                                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `@lynx-js/genui/openui`                           | Renderer、parser/runtime、hooks、公共 types，以及由默认 catalog 支持的 Library factory。 |
+| `@lynx-js/genui/openui/explicit`                  | Runtime surface，以及用于显式选择 definitions 的无 catalog Library factory。             |
+| `@lynx-js/genui/openui/catalog`                   | 所有内置 component definitions 的聚合再导出。                                            |
+| `@lynx-js/genui/openui/catalog/agent`             | 使用 null renderer 的内置定义，供 Node 服务端生成 schema 和 prompt。                     |
+| `@lynx-js/genui/openui/catalog/agent/<Component>` | 单个服务端组件定义及其 schema 依赖。                                                     |
+| `@lynx-js/genui/openui/catalog/<Component>`       | 单个内置 definition 及其组件级依赖，例如 `catalog/Stack`。                               |
+| `@lynx-js/genui/openui/prompt`                    | Headless prompt Library、prompt builder、默认 prompt 和 prompt-specific types。          |
+| `@lynx-js/genui/openui/styles/theme.css`          | 可选的 light/dark CSS custom-property tokens。                                           |
 
 组件样式、core renderer stylesheet 和 Material Icons font 都是由对应模块自动引入的
 实现细节。不要导入 `styles/catalog` 或 `dist/core` 下的私有文件。

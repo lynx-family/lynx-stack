@@ -423,6 +423,10 @@ export const initElementTree = () => {
       return ele.getAttribute(name);
     }
 
+    __GetAttributeNames(ele: LynxElement): string[] {
+      return ele.getAttributeNames();
+    }
+
     __GetComputedStyleByKey(ele: LynxElement, key: string): string {
       return lynxTestingEnv.env.window.getComputedStyle(ele)
         .getPropertyValue(key);

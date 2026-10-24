@@ -6,7 +6,7 @@ interface AppProps {
 export function App({ mainThreadRef, workletRef }: AppProps) {
   return (
     <view main-thread:ref={mainThreadRef} worklet:ref={workletRef}>
-      unsupported
+      namespaced refs
     </view>
   );
 }

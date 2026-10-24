@@ -1,5 +1,8 @@
+import { isValidElement as coreIsValidElement } from 'preact';
+import { isValidElement } from 'preact/compat';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { cloneElement, createElement } from '../../lepus';
 import { jsx } from '../../lepus/jsx-runtime';
 import { SnapshotInstance, snapshotCreatorMap } from '../../src/snapshot';
 
@@ -17,7 +20,7 @@ describe('lepus jsx-runtime createVNode', () => {
     expect(vnode).toBeInstanceOf(SnapshotInstance);
   });
 
-  it('should strip ref and apply defaultProps for function components', () => {
+  it('should keep ref and apply defaultProps for function components', () => {
     function Foo() {
       return null;
     }
@@ -25,6 +28,18 @@ describe('lepus jsx-runtime createVNode', () => {
 
     const vnode = jsx(Foo, { foo: undefined, ref: 'ref', extra: 1 });
     expect(vnode.props.foo).toBe('bar');
+    expect(vnode.props.extra).toBe(1);
+    expect(vnode.props.ref).toBe('ref');
+  });
+
+  it('should strip ref for class components', () => {
+    class Foo {
+      render() {
+        return null;
+      }
+    }
+
+    const vnode = jsx(Foo, { ref: 'ref', extra: 1 });
     expect(vnode.props.extra).toBe(1);
     expect('ref' in vnode.props).toBe(false);
   });
@@ -51,5 +66,24 @@ describe('lepus jsx-runtime createVNode', () => {
   it('should return undefined for non-string/non-function types', () => {
     const vnode = jsx(null, {});
     expect(vnode).toBeUndefined();
+  });
+
+  it('should create vnodes that isValidElement recognizes', () => {
+    function Foo() {
+      return null;
+    }
+
+    expect(isValidElement(jsx('view', {}))).toBe(true);
+    expect(isValidElement(jsx(Foo, {}))).toBe(true);
+    expect(isValidElement(createElement('view', {}))).toBe(true);
+    expect(isValidElement(createElement(Foo, {}))).toBe(true);
+    expect(isValidElement(cloneElement(jsx(Foo, {}), { foo: 1 }))).toBe(true);
+  });
+
+  it('should not make SnapshotInstance a preact vnode', () => {
+    // `renderToOpcodes` tells a preact vnode from a SnapshotInstance with
+    // preact core's `isValidElement`, which keys on `constructor` rather than
+    // `$$typeof`, so tagging the latter must not disturb it.
+    expect(coreIsValidElement(jsx('view', {}))).toBe(false);
   });
 });

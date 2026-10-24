@@ -22,10 +22,12 @@ import { COMMIT } from '../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
+import { sendMTRefInitValueToMainThread } from '../main-thread-ref-init-value.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';
 import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 
 let installed = false;
+let previousCommit: typeof options[typeof COMMIT];
 let hasHydrated = false;
 const scheduledRemovedSubtreeCleanupTimers = /*#__PURE__*/ new Set<ReturnType<typeof setTimeout>>();
 
@@ -72,37 +74,35 @@ function flushElementTemplateCommitChanges(): void {
     || !isEmptyObject(globalCommitContext.flushOptions)
     || hasDelayedRunOnMainThread;
   const removedSubtreesAwaitingTeardown = hasNativeOps ? takeRemovedSubtreesForPostDispatchTeardown() : [];
-  let didFlushRefs = false;
-  let didDispatchUpdatePayload = false;
-  let delayedRunOnMainThreadPayload: typeof delayedRunOnMainThreadData | undefined;
-  try {
-    if (hasUpdatePayload) {
-      markTimingLegacy('updateDiffVdomEnd');
-      markTiming('diffVdomEnd');
+  if (hasUpdatePayload) {
+    markTimingLegacy('updateDiffVdomEnd');
+    markTiming('diffVdomEnd');
 
-      if (__PROFILE__) {
-        profileStart('ReactLynx::commitChanges');
-      }
-      markTiming('packChangesStart');
-      if (globalPipelineOptions) {
-        globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
-      }
-      markTiming('packChangesEnd');
-      if (globalPipelineOptions) {
-        setPipeline(undefined);
-      }
-      if (__PROFILE__) {
-        profileEnd();
-      }
+    if (__PROFILE__) {
+      profileStart('ReactLynx::commitChanges');
+    }
+    markTiming('packChangesStart');
+    if (globalPipelineOptions) {
+      globalCommitContext.flushOptions.pipelineOptions = globalPipelineOptions;
+    }
+    markTiming('packChangesEnd');
+    if (globalPipelineOptions) {
+      setPipeline(undefined);
+    }
+    if (__PROFILE__) {
+      profileEnd();
+    }
 
-      if (!hasNativeOps && !hasDelayedRunOnMainThread) {
-        globalCommitContext.flushOptions.emptyPatch = true;
-      }
+    if (!hasNativeOps && !hasDelayedRunOnMainThread) {
+      globalCommitContext.flushOptions.emptyPatch = true;
+    }
 
-      delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
-        ? takeDelayedRunOnMainThreadData()
-        : undefined;
+    const delayedRunOnMainThreadPayload = hasDelayedRunOnMainThread
+      ? takeDelayedRunOnMainThreadData()
+      : undefined;
 
+    let updateEvent: ReturnType<typeof createElementTemplateUpdateEvent>;
+    try {
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
@@ -119,32 +119,33 @@ function flushElementTemplateCommitChanges(): void {
         );
       }
 
-      lynx.getCoreContext().dispatchEvent(createElementTemplateUpdateEvent({
+      updateEvent = createElementTemplateUpdateEvent({
         ops: globalCommitContext.ops,
         flushOptions: globalCommitContext.flushOptions,
         reloadVersion: getReloadVersion(),
         flowIds: globalCommitContext.flowIds,
         delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-      }));
-      didDispatchUpdatePayload = true;
-    }
-    // When native ops exist, patch first so a newly attached ref observes the
-    // committed native state. Ref-only commits still flush through this path.
-    flushPendingRefs();
-    didFlushRefs = true;
-  } finally {
-    if (delayedRunOnMainThreadPayload && !didDispatchUpdatePayload) {
-      dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-    }
-    if (!didFlushRefs) {
+      });
+    } catch (error) {
+      if (delayedRunOnMainThreadPayload) {
+        dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
+      }
       clearPendingRefs();
+      resetGlobalCommitContext();
+      scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+      throw error;
     }
-    resetGlobalCommitContext();
-    // Match Snapshot's cleanup boundary: start the delayed teardown only
-    // after the bridge dispatch attempt, so background JS objects are not
-    // torn down before main-thread detach observes the same commit.
-    scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+
+    lynx.getCoreContext().dispatchEvent(updateEvent);
   }
+  // When native ops exist, patch first so a newly attached ref observes the
+  // committed native state. Ref-only commits still flush through this path.
+  flushPendingRefs();
+  resetGlobalCommitContext();
+  // Match Snapshot's cleanup boundary: start the delayed teardown only
+  // after the bridge dispatch, so background JS objects are not torn down
+  // before main-thread detach observes the same commit.
+  scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
 }
 
 export function installElementTemplateCommitHook(): void {
@@ -152,10 +153,23 @@ export function installElementTemplateCommitHook(): void {
     return;
   }
   installed = true;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  previousCommit = options[COMMIT];
 
   hook(options, COMMIT, (originalCommit, vnode, commitQueue) => {
     if (__BACKGROUND__) {
       clearElementTemplateRenderScope();
+      try {
+        sendMTRefInitValueToMainThread();
+      } catch (error) {
+        const removedSubtreesAwaitingTeardown = takeRemovedSubtreesForPostDispatchTeardown();
+        dropFunctionCallReturnIds(takeDelayedRunOnMainThreadData().map(data => data.resolveId));
+        clearPendingRefs();
+        resetGlobalCommitContext();
+        setPipeline(undefined);
+        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+        throw error;
+      }
     }
 
     if (__BACKGROUND__ && !hasHydrated && hasPendingRefs()) {
@@ -176,4 +190,25 @@ export function installElementTemplateCommitHook(): void {
 
     originalCommit?.(vnode, commitQueue);
   });
+}
+
+/**
+ * Restores the commit option replaced by
+ * {@link installElementTemplateCommitHook} so tests can clean up the global
+ * Preact `options` object. Assumes the matching install was the most recent
+ * commit-option replacement; the snapshot and ElementTemplate runtimes are
+ * separate entrypoints and never install their commit hooks in the same
+ * context.
+ */
+export function uninstallElementTemplateCommitHookForTesting(): void {
+  if (!installed) {
+    return;
+  }
+  installed = false;
+  if (previousCommit) {
+    options[COMMIT] = previousCommit;
+    previousCommit = undefined;
+  } else {
+    delete options[COMMIT];
+  }
 }

@@ -394,6 +394,15 @@ export function App() {
       },
     );
   }, []);
+  const postRuntimeReady = useCallback(() => {
+    NativeModules.bridge?.call?.(
+      'A2UI_RUNTIME_READY',
+      {},
+      () => {
+        // jsb callback
+      },
+    );
+  }, []);
 
   const syncPlaybackAgent = useCallback(() => {
     const agent = agentRef.current;
@@ -581,6 +590,7 @@ export function App() {
         agent.stop();
         agentRef.current = null;
       }
+      postRuntimeReady();
       syncPlaybackAgent();
       // Begin streaming the demo's initial messages into the buffer.
       if (agentRef.current === agent) {
@@ -606,6 +616,7 @@ export function App() {
     isInstantPreview,
     playbackMode,
     postPlaybackSync,
+    postRuntimeReady,
     pushLiveMessagesToStore,
     replayMessagesToStore,
     streamConfig,

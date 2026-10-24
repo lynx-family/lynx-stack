@@ -15,6 +15,7 @@ export function hook<T, K extends keyof T>(
   } as T[K];
 }
 
-export const PREFIX = __REPO_FILEPATH__.split('/').slice(0, -2).join('/');
+export const PREFIX = __REPO_FILEPATH__.split('/').slice(0, -2).join('/')
+  + (__BENCHMARK_ELEMENT_TEMPLATE__ ? '/et' : '');
 
 export const isMainThread = typeof __CreatePage === 'function';

@@ -35,15 +35,15 @@ export default defineConfig({
    *
    * If you use it, you don't need to pass nativeModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
    *
-   * When enabled, nativeModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   * When enabled, nativeModules will be packaged directly into the worker chunk instead of being loaded at runtime from the URLs in the lynx-view's `nativeModulesMap`.
    */
   nativeModulesPath?: string;
   /**
-   * The absolute path of the native-modules file.
+   * The absolute path of the napi-modules file.
    *
    * If you use it, you don't need to pass napiModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
    *
-   * When enabled, napiModulesMap will be packaged directly into the worker chunk instead of being transferred through Blob.
+   * When enabled, napiModulesMap will be packaged directly into the worker chunk instead of being loaded at runtime from the URLs in the lynx-view's `napiModulesMap`.
    */
   napiModulesPath?: string;
 }

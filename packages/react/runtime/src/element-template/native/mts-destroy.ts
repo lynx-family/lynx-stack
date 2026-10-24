@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { resetElementTemplatePatchListener } from './patch-listener.js';
+import { resetElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
 import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
 import { clearMainThreadDynamicAttrState } from '../runtime/template/main-thread-dynamic-attr-state.js';
@@ -32,6 +33,8 @@ export function destroyElementTemplateMainThreadRuntime(): void {
     patchListenerResetError = error;
     didPatchListenerResetThrow = true;
   }
+
+  resetElementTemplateRefInitValueListener();
 
   // The registry is the main-thread strong-reference owner for ET refs. Clear it
   // even if listener reset fails so destroy does not leave removed pages retained.

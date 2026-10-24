@@ -8,6 +8,10 @@ import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxData } from '../../worklet-runtime/bindings/events.js';
 import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { registerBackgroundFunctionCtx } from '../background-function/run-on-background.js';
+import { isMainThreadFunction } from '../main-thread-function.js';
+import { isMtsEnabled } from '../mts-capability.js';
+import { dispatchReloadScopedEvent } from '../reload-scoped-event.js';
+import { isRuntimeDestroyed } from '../runtime-destroy.js';
 
 interface RunOnMainThreadOptions {
   shouldDispatchRunOnMainThreadDirectly: () => boolean;
@@ -37,11 +41,12 @@ export function createRunOnMainThread(
     if (__LEPUS__) {
       throw new Error('runOnMainThread can only be used on the background thread.');
     }
-    if (!isMainThreadFunctionSupported()) {
+    if (!isMtsEnabled()) {
       throw new Error('runOnMainThread requires Lynx sdk version 2.14.');
     }
     return async (...params: Parameters<Fn>): Promise<R> => {
       return new Promise((resolve) => {
+        if (isRuntimeDestroyed()) return;
         const worklet = fn as unknown as Worklet;
         prepareMainThreadFunctionCtx(worklet);
         const data = {
@@ -61,30 +66,16 @@ export function createRunOnMainThread(
   };
 }
 
-function isMainThreadFunctionSupported(): boolean {
-  return isSdkVersionGt(2, 13);
-}
-
 function isRunOnBackgroundSupported(): boolean {
   return isSdkVersionGt(2, 15);
 }
 
-function isMainThreadFunctionCtx(value: unknown): value is Worklet {
-  return value != null
-    && typeof value === 'object'
-    && !Array.isArray(value)
-    && typeof (value as { _wkltId?: unknown })._wkltId === 'string';
-}
-
 function prepareMainThreadFunctionCtx(worklet: unknown): void {
-  if (isMainThreadFunctionCtx(worklet) && isRunOnBackgroundSupported()) {
+  if (isMainThreadFunction(worklet) && isRunOnBackgroundSupported()) {
     registerBackgroundFunctionCtx(worklet);
   }
 }
 
 function dispatchRunOnMainThreadEvent(data: RunWorkletCtxData): void {
-  lynx.getCoreContext().dispatchEvent({
-    type: WorkletEvents.runWorkletCtx,
-    data: JSON.stringify(data),
-  });
+  dispatchReloadScopedEvent(lynx.getCoreContext(), { type: WorkletEvents.runWorkletCtx, data });
 }

@@ -4,17 +4,30 @@
 
 import { sExportsReactInternal, target } from './target.js';
 
+const ReactInternal = target[sExportsReactInternal];
+
+// Use the host implementation while registering the standalone bundle's
+// backend and build-time runtime version. Older hosts may not export them.
+ReactInternal.registerRuntimeBackend?.(ReactInternal.RUNTIME_BACKEND_SNAPSHOT);
+ReactInternal.registerRuntimeVersion?.(
+  /* v8 ignore next -- the build-time version is exercised in a separate module load */
+  typeof __RUNTIME_VERSION__ === 'undefined' ? undefined : __RUNTIME_VERSION__,
+);
+
 export const {
   BackgroundSnapshotInstance,
   CHILDREN,
   COMPONENT,
   Component,
+  BITS,
+  COMPONENT_DIRTY,
   DIFF,
-  DIRTY,
   DOM,
   FLAGS,
   INDEX,
   PARENT,
+  RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+  RUNTIME_BACKEND_SNAPSHOT,
   __ComponentIsPolyfill,
   __DynamicPartChildren,
   __DynamicPartChildren_0,
@@ -28,13 +41,16 @@ export const {
   __page,
   __pageId,
   __root,
+  captureMainThreadObject,
   createSnapshot,
+  getRuntimeVersion,
   loadDynamicJS,
   loadLazyBundle,
-  loadWorkletRuntime,
   options,
   preactCloneElement,
   process,
+  registerRuntimeBackend,
+  registerRuntimeVersion,
   registerWorkletOnBackground,
   snapshotCreateList,
   snapshotManager,
@@ -51,7 +67,7 @@ export const {
   updateWorkletRef,
   withInitDataInState,
   wrapWithLynxComponent,
-} = target[sExportsReactInternal];
+} = ReactInternal;
 
 /* v8 ignore start */
 if (__DEV__ && !snapshotCreatorMap) {

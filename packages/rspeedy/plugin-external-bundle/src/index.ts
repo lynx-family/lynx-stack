@@ -151,7 +151,8 @@ export interface ReactLynxExternalsPresetOptions {
    * so application bundles can reference it without requiring an extra manual
    * copy step when publishing.
    *
-   * @defaultValue `'react.lynx.bundle'`
+   * @defaultValue `'react.lynx.bundle'`, or `'react.web.bundle'` outside
+   * `lynx` / `lynx-*` environments
    */
   bundlePath?: string
 
@@ -172,8 +173,8 @@ export interface ReactLynxExternalsPresetOptions {
    * asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a
    * promise that consuming modules await before reading a subpath (otherwise
    * `React.memo` etc. are read off a pending promise and are `undefined`).
-   * Enabling this also resolves the web-encoded `@lynx-js/react-umd/{dev,prod}-web`
-   * bundle and defaults `bundlePath` to `react.web.bundle`.
+   * Only controls how the runtime is mounted; the web bundle is chosen for
+   * environments other than `lynx` / `lynx-*`.
    *
    * @defaultValue `false`
    */
@@ -781,7 +782,7 @@ function normalizePluginExternal(
  *
  * @example
  * ```ts
- * // lynx.config.ts
+ * // rsbuild.config.ts
  * import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin'
  * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
  *

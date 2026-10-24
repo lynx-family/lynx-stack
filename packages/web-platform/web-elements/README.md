@@ -37,6 +37,20 @@ document.body.innerHTML = `
 `;
 ```
 
+### Mouse-drag scrolling
+
+To make `<scroll-view>` respond to mouse dragging like a touchscreen, load
+the optional plugin before registering the elements:
+
+```javascript
+import '@lynx-js/web-elements/plugins/scroll-view-mouse-drag';
+import '@lynx-js/web-elements/all';
+import '@lynx-js/web-elements/index.css';
+```
+
+The plugin only changes `<scroll-view>` and leaves native touch scrolling
+unchanged.
+
 ## Document
 
 See our website for more information.

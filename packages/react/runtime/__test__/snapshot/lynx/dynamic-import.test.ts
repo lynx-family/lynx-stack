@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-/* global lynx, lynxCoreInject, _ReportError */
+/* global lynx, _ReportError */
 
 function restoreProperty(target, key, value) {
   if (value === undefined) {
@@ -25,14 +25,14 @@ describe('dynamic import helpers', () => {
     vi.stubGlobal('__JS__', true);
     originalQueryComponent = lynx.QueryComponent;
     originalRequireModuleAsync = lynx.requireModuleAsync;
-    originalGetDynamicComponentExports = lynxCoreInject.tt.getDynamicComponentExports;
+    originalGetDynamicComponentExports = lynx.getApp().getDynamicComponentExports;
   });
 
   afterEach(() => {
     restoreProperty(lynx, 'QueryComponent', originalQueryComponent);
     restoreProperty(lynx, 'requireModuleAsync', originalRequireModuleAsync);
     restoreProperty(
-      lynxCoreInject.tt,
+      lynx.getApp(),
       'getDynamicComponentExports',
       originalGetDynamicComponentExports,
     );
@@ -82,7 +82,7 @@ describe('dynamic import helpers', () => {
       data: schema,
     }));
     lynx.QueryComponent = QueryComponent;
-    lynxCoreInject.tt.getDynamicComponentExports = getDynamicComponentExports;
+    lynx.getApp().getDynamicComponentExports = getDynamicComponentExports;
 
     const { __dynamicImport } = await import(
       '../../../src/core/lynx/dynamic-import.js'

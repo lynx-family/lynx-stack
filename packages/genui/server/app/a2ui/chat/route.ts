@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Hono } from 'hono';
 
-import { getA2UIAgentService } from '../../../service/a2ui-agent';
+import { getA2UIAgentService } from '../../../service/a2ui/a2ui-agent.js';
 import {
   validateConversation,
   validateMessages,
@@ -12,7 +12,7 @@ import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
-import { extractUsageMetrics } from '../../common/usage';
+import { extractTokenUsage, extractUsageMetrics } from '../../common/usage';
 import { pickA2UIChatOptions } from '../_shared';
 import type { A2UIChatBody } from '../_shared';
 
@@ -59,11 +59,13 @@ async function postA2UIChat(req: Request) {
         messages,
         opts,
         validatedConversation.conversation,
+        req.signal,
       );
       return jsonWithCors(req, {
         ok: true,
         text,
         usage,
+        tokenUsage: extractTokenUsage(usage),
         cachedTokens: extractUsageMetrics(usage).cachedTokens,
         finishReason,
       });
@@ -73,13 +75,18 @@ async function postA2UIChat(req: Request) {
       messages,
       opts,
       validatedConversation.conversation,
+      undefined,
+      req.signal,
     );
     return jsonWithCors(req, {
       ...validatedResult,
+      tokenUsage: extractTokenUsage(validatedResult.usage),
       cachedTokens: extractUsageMetrics(validatedResult.usage).cachedTokens,
     });
   } catch (err: unknown) {
-    const { message, name } = errorMessage(err);
+    const { message, name } = errorMessage(err, {
+      secrets: [body.apiKey, opts.apiKey],
+    });
     return jsonWithCors(req, { ok: false, error: message, name });
   }
 }

@@ -1,0 +1,2 @@
+root = Card([answer])
+answer = TextContent("等晚风吹来，把今天的热闹慢慢收好。")

@@ -2,9 +2,52 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { OPENUI_TODO_RAW } from './todo.js';
+
+export const OPENUI_INLINE_TRIP_RAW = `## Hokkaido winter itinerary
+
+An eight-day trip works well with **Sapporo → Noboribetsu → Hakodate → Sapporo**.
+Keep the first day relaxed, then choose the stops you want to include below.
+
+\`\`\`openui id=winter-trip
+root = Card([hero], "card", "column", false, "m", "stretch", "start")
+hero = Column([CardHeader("Hokkaido · 8 days", "Snow, hot springs and city walks"), Row([Tag("Winter escape"), Tag("7 nights")], "start", "center", "s", true)], "start", "stretch", "m")
+\`\`\`
+
+### Choose your route
+
+Start with three nights in **Sapporo**, including day trips to Otaru and the zoo.
+Then head south for hot springs and Hakodate's evening views.
+
+\`\`\`openui-lang id=route
+root = Card([itinerary], "card", "column", false, "m", "stretch", "start")
+itinerary = Column([CardHeader("Your route", "A relaxed pace with two day trips"), List([Text("Days 1–3 · Sapporo, Otaru canal and Asahiyama Zoo", "body"), Text("Day 4 · Noboribetsu hot springs", "body"), Text("Days 5–6 · Hakodate market and evening views", "body"), Text("Days 7–8 · Return to Sapporo and fly home", "body")], null, "vertical", "stretch", "s", true)], "start", "stretch", "m")
+\`\`\`
+
+### Get ready for winter
+
+Use the checklist to prepare your essentials, then save the itinerary.
+Train times and hotel availability should be checked before booking.
+
+\`\`\`openui id=packing
+$saved = false
+root = Card([packing, actions], "card", "column", false, "m", "stretch", "start")
+packing = Column([CardHeader("Before you go", "Select what you have prepared"), CheckBox("Waterproof boots and warm layers", false), CheckBox("Reserve the hot spring hotel", false), CheckBox("Check train times for day trips", false)], "start", "stretch", "s")
+actions = Column([Button($saved ? "Itinerary saved" : "Save itinerary", Action([@Set($saved, true)]), "primary"), Text($saved ? "Ready to plan your winter escape." : "You can adjust the checklist before saving.", "caption")], "start", "stretch", "s")
+\`\`\`
+
+### Planning notes
+
+- Stay near Sapporo Station for easier day trips.
+- Reserve one night in Noboribetsu for the hot springs.
+- Leave room for weather changes on the return journey.
+
+The itinerary is in the preview; this explanation stays in the conversation.`;
+
 export interface OpenUIScenario {
   id: string;
   title: string;
+  inlineMode?: boolean;
   raw: string;
 }
 
@@ -14,7 +57,7 @@ hero = Card([Text("Layout Showcase", "h2"), Text("Row, Column, List and Divider 
 layoutCard = Card([CardHeader("Release Roadmap", "Row and Column primitives"), statusRow, Divider("horizontal"), milestoneColumn], "card", "column", false, "m", "stretch", "start")
 statusRow = Row([Text("Design", "h5"), Tag("In review"), Icon("arrow_forward", "sm", "muted"), Text("Build", "h5"), Tag("Active"), Icon("arrow_forward", "sm", "muted"), Text("Launch", "h5")], "between", "center", "s", true)
 milestoneColumn = Column([Text("1. API shape finalized", "body"), Text("2. Playground coverage added", "body"), Text("3. Browser verification complete", "body")], "start", "stretch", "s")
-listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
+listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], null, "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
 
 const NEW_INTERACTIVE_CONTROLS_RAW = `$status = "Draft"
 root = Column([masthead, introRule, tabs, actionRule, actionBlock], "start", "stretch", "xl")
@@ -39,13 +82,24 @@ const NEW_MEDIA_CARDS_RAW =
 header = Card([Text("Media Cards", "h2"), Text("AudioPlayer and Video provide lightweight media attachment surfaces.", "body")], "card", "column", false, "s", "start", "start")
 mediaTabs = Tabs([{ value: "audio", title: "Audio", child: audioCard }, { value: "video", title: "Video", child: videoCard }])
 audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), AudioPlayer("https://example.com/openui-weekly.mp3", "OpenUI Weekly - catalog additions"), Row([Icon("pause", "sm", "muted"), Text("12 min episode", "caption"), Tag("Transcript ready")], "start", "center", "s", true)], "card", "column", false, "m", "stretch", "start")
-videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
+videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  {
+    id: 'todo-list',
+    title: 'Todo List',
+    raw: OPENUI_TODO_RAW,
+  },
   {
     id: 'new-layout-showcase',
     title: 'New Layout Showcase',
     raw: NEW_LAYOUT_SHOWCASE_RAW,
+  },
+  {
+    id: 'inline-winter-trip',
+    title: 'Inline Winter Trip',
+    inlineMode: true,
+    raw: OPENUI_INLINE_TRIP_RAW,
   },
   {
     id: 'new-interactive-controls',
@@ -60,31 +114,31 @@ export const OPENUI_SCENARIOS: OpenUIScenario[] = [
   {
     id: 'pricing-cards',
     title: 'Pricing Cards',
-    raw: `root = Stack([header, cards], "column", "l", "center")
+    raw: `root = Stack([header, cards], "column", false, "l", "center")
 header = TextContent("Choose Your Plan", "large-heavy")
-cards = Stack([freeCard, proCard, enterpriseCard], "row", "l", "stretch")
+cards = Stack([freeCard, proCard, enterpriseCard], "row", true, "l", "stretch")
 
-freeCard = Card([freeHeader, freePrice, freeSep, freeFeatures, freeBtn], "card", "column", "stretch", "between")
+freeCard = Card([freeHeader, freePrice, freeSep, freeFeatures, freeBtn], "card", "column", false, "m", "stretch", "between")
 freeHeader = CardHeader("Free", "For individuals just getting started")
-freePrice = Stack([freePriceAmt, freePricePer], "row", "none", "baseline")
+freePrice = Stack([freePriceAmt, freePricePer], "row", false, "none", "end")
 freePriceAmt = TextContent("$0", "large-heavy")
 freePricePer = TextContent(" / month", "small")
-freeSep = Separator("horizontal", true)
-freeFeatures = Stack([ff1, ff2, ff3, ff4], "column", "s")
+freeSep = Separator()
+freeFeatures = Stack([ff1, ff2, ff3, ff4], "column", false, "s")
 ff1 = TextContent("✓  1 user")
 ff2 = TextContent("✓  5 projects")
 ff3 = TextContent("✓  2 GB storage")
 ff4 = TextContent("✗  Priority support")
 freeBtn = Buttons([Button("Get Started", Action([@ToAssistant("Get started with Free plan")]), "secondary")])
 
-proCard = Card([proHeader, proPrice, proBadge, proSep, proFeatures, proBtn], "card", "column", "stretch", "between")
+proCard = Card([proHeader, proPrice, proBadge, proSep, proFeatures, proBtn], "card", "column", false, "m", "stretch", "between")
 proHeader = CardHeader("Pro", "For growing teams and professionals")
-proPrice = Stack([proPriceAmt, proPricePer], "row", "none", "baseline")
+proPrice = Stack([proPriceAmt, proPricePer], "row", false, "none", "end")
 proPriceAmt = TextContent("$29", "large-heavy")
 proPricePer = TextContent(" / month", "small")
-proBadge = Tag("Most Popular", null, "sm", "info")
-proSep = Separator("horizontal", true)
-proFeatures = Stack([pf1, pf2, pf3, pf4, pf5], "column", "s")
+proBadge = Tag("Most Popular")
+proSep = Separator()
+proFeatures = Stack([pf1, pf2, pf3, pf4, pf5], "column", false, "s")
 pf1 = TextContent("✓  Up to 10 users")
 pf2 = TextContent("✓  Unlimited projects")
 pf3 = TextContent("✓  50 GB storage")
@@ -92,13 +146,13 @@ pf4 = TextContent("✓  Priority support")
 pf5 = TextContent("✓  Advanced analytics")
 proBtn = Buttons([Button("Start Free Trial", Action([@ToAssistant("Start free trial with Pro plan")]), "primary")])
 
-enterpriseCard = Card([entHeader, entPrice, entSep, entFeatures, entBtn], "card", "column", "stretch", "between")
+enterpriseCard = Card([entHeader, entPrice, entSep, entFeatures, entBtn], "card", "column", false, "m", "stretch", "between")
 entHeader = CardHeader("Enterprise", "For large organizations at scale")
-entPrice = Stack([entPriceAmt, entPricePer], "row", "none", "baseline")
+entPrice = Stack([entPriceAmt, entPricePer], "row", false, "none", "end")
 entPriceAmt = TextContent("$99", "large-heavy")
 entPricePer = TextContent(" / month", "small")
-entSep = Separator("horizontal", true)
-entFeatures = Stack([ef1, ef2, ef3, ef4, ef5, ef6], "column", "s")
+entSep = Separator()
+entFeatures = Stack([ef1, ef2, ef3, ef4, ef5, ef6], "column", false, "s")
 ef1 = TextContent("✓  Unlimited users")
 ef2 = TextContent("✓  Unlimited projects")
 ef3 = TextContent("✓  1 TB storage")

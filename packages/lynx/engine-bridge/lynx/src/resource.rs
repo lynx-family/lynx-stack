@@ -1,5 +1,5 @@
 use crate::sys;
-use crate::{buffer::CByteBuffer, c_str_to_string, Env, Error, Result};
+use crate::{buffer::CByteBuffer, c_str_to_string, Error, LynxEnv, Result};
 use std::collections::HashMap;
 use std::ffi::{c_void, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -106,13 +106,21 @@ fn contexts() -> &'static Mutex<HashMap<usize, Arc<ResourceFetcherContext>>> {
   CONTEXTS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+/// An owned generic resource-fetcher handle.
+///
+/// The handle may move between threads. Its Rust callback is serialized by the
+/// bridge before it is invoked.
 pub struct GenericResourceFetcher {
   sys: Arc<sys::LoadedLibrary>,
   raw: *mut sys::lynx_generic_resource_fetcher_t,
 }
 
+// SAFETY: the wrapper uniquely owns one ref-counted native fetcher handle and
+// its callback context is protected by `Mutex`. Moving ownership is safe.
+unsafe impl Send for GenericResourceFetcher {}
+
 impl GenericResourceFetcher {
-  pub fn new(fetch_env: &Env, fetcher: impl ResourceFetcher) -> Result<Self> {
+  pub fn new(fetch_env: &LynxEnv, fetcher: impl ResourceFetcher) -> Result<Self> {
     let sys = fetch_env.sys().clone();
     let context = Arc::new(ResourceFetcherContext {
       sys: sys.clone(),
@@ -146,6 +154,13 @@ impl GenericResourceFetcher {
     }
 
     Ok(Self { sys, raw })
+  }
+
+  pub(crate) unsafe fn from_owned_raw(
+    sys: Arc<sys::LoadedLibrary>,
+    raw: *mut sys::lynx_generic_resource_fetcher_t,
+  ) -> Self {
+    Self { sys, raw }
   }
 
   pub(crate) fn raw(&self) -> *mut sys::lynx_generic_resource_fetcher_t {
@@ -300,6 +315,8 @@ unsafe fn release_request_response(
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  static_assertions::assert_impl_all!(GenericResourceFetcher: Send);
 
   #[test]
   fn fetch_response_builders_are_plain_data() {

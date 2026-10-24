@@ -3,7 +3,7 @@
 Generative UI primitives for Lynx applications.
 
 `@lynx-js/genui` is the single npm package for the GenUI toolchain. It exposes
-A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, and the CLI
+A2UI rendering, OpenUI rendering, A2UI prompt/catalog utilities, Lynx XML utilities, ReactLynx generation/build utilities, and the CLI
 from one package while keeping implementation directories private to this
 monorepo.
 
@@ -36,6 +36,7 @@ The root entry point exports the stable APIs most applications and tools need:
 - OpenUI parser, library, and renderer APIs.
 - A2UI prompt builders.
 - A2UI catalog extraction utilities.
+- ReactLynx generation prompts, source validation, and Node.js compilation.
 
 Focused subpaths are also available:
 
@@ -45,7 +46,18 @@ import { createMessageStore } from '@lynx-js/genui/a2ui/store';
 import { createOpenUiLibrary } from '@lynx-js/genui/openui';
 import { buildA2UISystemPrompt } from '@lynx-js/genui/a2ui-prompt';
 import { extractCatalogComponents } from '@lynx-js/genui/a2ui-catalog-extractor';
+import { normalizeLynxXmlArtifact } from '@lynx-js/genui/lynx-xml';
+import {
+  buildReactLynx,
+  parseReactLynxSource,
+  REACTLYNX_SYSTEM_PROMPT,
+} from '@lynx-js/genui/reactlynx';
 ```
+
+`@lynx-js/genui/lynx-xml` provides system prompts,
+deterministic artifact assembly, and `normalizeLynxXmlArtifact` for document
+normalization and validation. It is headless and does not require an agent or
+renderer.
 
 Catalog manifests are exported through a single public catalog entry:
 
@@ -84,7 +96,7 @@ Use the A2UI style entry when you want the packaged component styles:
 import '@lynx-js/genui/a2ui/styles/theme.css';
 ```
 
-See [`a2ui/README.md`](./a2ui/README.md) for catalog composition and custom
+See [`a2ui/README.md`](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/a2ui/README.md) for catalog composition and custom
 component details.
 
 ## OpenUI
@@ -103,6 +115,24 @@ export function OpenUIScreen() {
 }
 ```
 
+For streamed model output, pass the full accumulated text and generation state:
+
+```tsx
+<OpenUiRenderer
+  response={accumulatedText}
+  isStreaming={isGenerating}
+  library={library}
+/>;
+```
+
+Append each delta to your application state; replace it when receiving a full
+snapshot. The renderer caches completed statements and previews the unfinished
+tail. Keep `isStreaming` true until successful completion, then apply the final
+text and set it false together, even if the text is unchanged. On failure or
+cancellation, clear the partial response. See the
+[streaming guide](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/README.md#stream-model-output) for transport handlers
+and session lifecycle.
+
 Import the optional OpenUI theme tokens once in your app:
 
 ```ts
@@ -111,8 +141,37 @@ import '@lynx-js/genui/openui/styles/theme.css';
 
 The renderer and component styles are imported by their modules.
 
-See [`openui/README.md`](./openui/README.md) for streaming and custom library
+To opt out of the default component set, use the explicit entry and import every
+built-in definition the Library still needs from its component subpath:
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+
+const library = createOpenUiLibrary({
+  includeDefaultComponents: false,
+  components: [Stack, TextContent],
+});
+```
+
+The flag controls which definitions and groups belong to the Library. The main
+`openui` entry still has a static dependency on the default catalog; use
+`openui/explicit` with individual catalog subpaths when omitted built-ins must
+stay outside the static dependency graph.
+
+See [`openui/README.md`](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/README.md) for streaming and custom library
 examples.
+
+## ReactLynx
+
+Generate complete `App.tsx` and `App.css` files with `REACTLYNX_SYSTEM_PROMPT`,
+validate the response with `parseReactLynxSource`, and compile it on Node.js with
+`buildReactLynx`. Publish all returned assets before loading the Web or Native
+bundle in your host. Keep `@lynx-js/genui/reactlynx` external in server bundles
+so its compiler worker remains beside its entry point.
+
+See the [ReactLynx guide](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/reactlynx/README.md).
 
 ## CLI
 
@@ -173,3 +232,5 @@ pnpm -C packages/genui pack --dry-run
 ## License
 
 Apache-2.0
+
+The opt-in [OpenUI Chat library](https://github.com/lynx-family/lynx-stack/blob/main/packages/genui/openui/docs/chat.md) uses the official Chat positional contracts and provides a server-safe schema entry.

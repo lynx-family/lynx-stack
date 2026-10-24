@@ -18,18 +18,23 @@ export function injectGlobals() {
   globalThis.__ENABLE_SSR__ = true;
   globalThis.__USE_ELEMENT_TEMPLATE__ = false;
   globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'immediately';
-  globalThis.__EXPERIMENTAL_TRANSFORM_BUILTIN_ATTRIBUTE_NAMES__ = false;
   globalThis.globDynamicComponentEntry = '__Card__';
   globalThis.SystemInfo = {
     lynxSdkVersion: '4.0',
   };
-  globalThis.lynxCoreInject = {};
-  globalThis.lynxCoreInject.tt = {};
+  const lynxApp = {};
 
   installPerformanceGlobals();
+  globalThis.lynx.getApp = () => lynxApp;
 
   globalThis.requestAnimationFrame = setTimeout;
   globalThis.cancelAnimationFrame = clearTimeout;
+  globalThis.lynx.setTimeout = globalThis.setTimeout;
+  globalThis.lynx.setInterval = globalThis.setInterval;
+  globalThis.lynx.clearTimeout = globalThis.clearTimeout;
+  globalThis.lynx.clearInterval = globalThis.clearInterval;
+  globalThis.lynx.requestAnimationFrame = globalThis.requestAnimationFrame;
+  globalThis.lynx.cancelAnimationFrame = globalThis.cancelAnimationFrame;
   globalThis._ReportError = vi.fn();
 
   console.alog = vi.fn();

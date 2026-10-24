@@ -7,5 +7,6 @@ module.exports = {
     global.lynxCoreInject = {
       tt: {},
     };
+    global.lynx = { ...global.lynx, getApp: () => global.lynxCoreInject.tt };
   },
 };

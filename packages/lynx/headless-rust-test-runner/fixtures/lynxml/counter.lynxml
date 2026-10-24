@@ -1,0 +1,29 @@
+<!doctype lynx>
+<lynx>
+  <script thread="main">
+    var page = __CreatePage("0", 0);
+    var root = __CreateView(0);
+    __SetID(root, "root");
+    __SetInlineStyles(root, "width:100%;height:100%;background-color:#20242c;");
+
+    var label = __CreateText(0);
+    __AddClass(label, "Counter");
+    __SetInlineStyles(label, "color:#ffffff;font-size:32px;");
+    __SetAttribute(label, "text", "idle");
+    __AppendElement(label, __CreateRawText("idle"));
+
+    var button = __CreateView(0);
+    __AddClass(button, "Increment");
+    __SetInlineStyles(button, "width:240px;height:96px;background-color:#4f7cff;");
+    __AddEvent(button, "bindEvent", "tap", function () {
+      __AddClass(label, "Counter--tapped");
+      __SetAttribute(label, "text", "tapped");
+      __FlushElementTree(page);
+    });
+
+    __AppendElement(root, label);
+    __AppendElement(root, button);
+    __AppendElement(page, root);
+    __FlushElementTree(page);
+  </script>
+</lynx>

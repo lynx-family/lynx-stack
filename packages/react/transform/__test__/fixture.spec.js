@@ -81,6 +81,47 @@ describe('transform builtin attribute names', () => {
     expect(result.code).toContain('accessibility-label');
     expect(result.code).toContain('...spread');
   });
+
+  it('should allow builtin event conversion to run without compat event conversion', async () => {
+    const result = await transformReactLynx(
+      'const node = <view onClick={() => {}} onCatchTap={() => {}} onReady={() => {}} />;',
+      {
+        mode: 'test',
+        pluginName: '',
+        filename: 'test.jsx',
+        sourcemap: false,
+        cssScope: false,
+        snapshot: false,
+        jsx: true,
+        directiveDCE: false,
+        defineDCE: false,
+        shake: false,
+        compat: {
+          target: 'MIXED',
+          componentsPkg: ['@lynx-js/react-components'],
+          oldRuntimePkg: ['@lynx-js/react-runtime'],
+          newRuntimePkg: '@lynx-js/react',
+          additionalComponentAttributes: [],
+          addComponentElement: false,
+          simplifyCtorLikeReactLynx2: false,
+          transformLegacyEventAttributeNames: false,
+          disableDeprecatedWarning: false,
+        },
+        worklet: false,
+        refresh: false,
+        experimental_transformBuiltinAttributeNames: true,
+      },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.code).toContain('bindtap');
+    expect(result.code).toContain('catchtap');
+    expect(result.code).toContain('bindready');
+    expect(result.code).not.toContain('bindcatchtap');
+    expect(result.code).not.toContain('onClick');
+    expect(result.code).not.toContain('onCatchTap');
+    expect(result.code).not.toContain('onReady');
+  });
 });
 
 describe('shake', () => {
@@ -352,32 +393,29 @@ describe('element template', () => {
     expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list-item')).toBe(true);
     expect(result.code).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "react/jsx-runtime";
-      const _et_4f796f70cdd7 = \`\${globDynamicComponentEntry}:\${"_et_4f796f70cdd7"}\`;
-      const _et_b8da8bac988e = \`\${globDynamicComponentEntry}:\${"_et_b8da8bac988e"}\`;
+      import * as ReactLynxInternal from "@lynx-js/react/internal";
+      const _et_4f796f70cdd7_bundle = globDynamicComponentEntry;
+      const _et_4f796f70cdd7 = \`\${_et_4f796f70cdd7_bundle}:\${"_et_4f796f70cdd7"}\`;
+      const _et_b8da8bac988e_bundle = globDynamicComponentEntry;
+      const _et_b8da8bac988e = \`\${_et_b8da8bac988e_bundle}:\${"_et_b8da8bac988e"}\`;
       /*#__PURE__*/ _jsx("list", {
           attributes: {
               "id": listId,
               "class": "feed"
           },
           $0: [
-              /*#__PURE__*/ _jsx(_et_4f796f70cdd7, {
-                  attributeSlots: [
-                      firstKey
-                  ],
-                  __listItemPlatformInfo: {
-                      "item-key": firstKey,
-                      "full-span": true
-                  }
-              }, "a"),
-              /*#__PURE__*/ _jsx(_et_b8da8bac988e, {
-                  attributeSlots: [
-                      secondKey
-                  ],
-                  __listItemPlatformInfo: {
-                      "item-key": secondKey,
-                      "recyclable": true
-                  }
-              }, "b")
+              /*#__PURE__*/ ReactLynxInternal.__etHost(_et_4f796f70cdd7, "_et_4f796f70cdd7", _et_4f796f70cdd7_bundle, "a", [
+                  firstKey
+              ], void 0, {
+                  "item-key": firstKey,
+                  "full-span": true
+              }),
+              /*#__PURE__*/ ReactLynxInternal.__etHost(_et_b8da8bac988e, "_et_b8da8bac988e", _et_b8da8bac988e_bundle, "b", [
+                  secondKey
+              ], void 0, {
+                  "item-key": secondKey,
+                  "recyclable": true
+              })
           ]
       });
       "
@@ -466,7 +504,12 @@ describe('jsx', () => {
           "main-thread:foo": foo
       });
       ",
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
+        "runtimeRequirements": {
+          "mainThreadProgrammability": false,
+        },
         "uiSourceMapRecords": [],
         "warnings": [],
       }
@@ -536,7 +579,44 @@ describe('jsx', () => {
           })
       });
       ",
+        "definesForSnapshot": [
+          {
+            "code": "const __snapshot_da39a_04d8c_2 = "__snapshot_da39a_04d8c_2";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_2] = (__snapshot_da39a_04d8c_2)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_2, function() {
+              const pageId = ReactLynx.__pageId;
+              const el = __CreateElement("list-item", pageId);
+              return [
+                  el
+              ];
+          }, [
+              (snapshot, index, oldValue)=>ReactLynx.updateListItemPlatformInfo(snapshot, index, oldValue, 0)
+          ], ReactLynx.__DynamicPartSlotV2_0, undefined, globDynamicComponentEntry, null, true);
+      ",
+            "id": "__snapshot_da39a_04d8c_2",
+          },
+          {
+            "code": "const __snapshot_da39a_04d8c_1 = "__snapshot_da39a_04d8c_1";
+      ReactLynx.snapshotCreatorMap[__snapshot_da39a_04d8c_1] = (__snapshot_da39a_04d8c_1)=>ReactLynx.createSnapshot(__snapshot_da39a_04d8c_1, function(snapshotInstance) {
+              const pageId = ReactLynx.__pageId;
+              const el = ReactLynx.snapshotCreateList(pageId, snapshotInstance, 0);
+              return [
+                  el
+              ];
+          }, null, [
+              [
+                  ReactLynx.__DynamicPartListSlotV2,
+                  0
+              ]
+          ], undefined, globDynamicComponentEntry, null, true);
+      ",
+            "id": "__snapshot_da39a_04d8c_1",
+          },
+        ],
+        "definesForWorklet": [],
         "errors": [],
+        "runtimeRequirements": {
+          "mainThreadProgrammability": false,
+        },
         "uiSourceMapRecords": [],
         "warnings": [],
       }
@@ -643,6 +723,9 @@ describe('errors and warnings', () => {
             "text": "Expected '</', got '<eof>'",
           },
         ],
+        "runtimeRequirements": {
+          "mainThreadProgrammability": false,
+        },
         "uiSourceMapRecords": [],
         "warnings": [],
       }
@@ -681,7 +764,12 @@ Component, View
         "code": "import { Component } from "@lynx-js/react/legacy-react-runtime";
       Component, View;
       ",
+        "definesForSnapshot": [],
+        "definesForWorklet": [],
         "errors": [],
+        "runtimeRequirements": {
+          "mainThreadProgrammability": false,
+        },
         "uiSourceMapRecords": [],
         "warnings": [
           {
@@ -1859,6 +1947,7 @@ class X extends Component {
 });
 
 describe('worklet', () => {
+  const internalWorkletRuntimePkg = '@lynx-js/react/internal';
   const lepusWorkletOptions = {
     pluginName: '',
     filename: '',
@@ -1878,7 +1967,7 @@ describe('worklet', () => {
     worklet: {
       target: 'LEPUS',
       filename: '',
-      runtimePkg: '@lynx-js/react',
+      runtimePkg: internalWorkletRuntimePkg,
     },
   };
 
@@ -1910,7 +1999,7 @@ export function bar() {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -1919,6 +2008,46 @@ export function bar() {
     expect(result.errors[0].text).toBe(
       'Invalid runtime value. Only \'shared\' is supported.',
     );
+  });
+
+  it('should error when an object Main Thread Function uses super', async () => {
+    const result = await transformReactLynx(
+      `\
+const valueType = defineMainThreadObjectType({
+  type: 'example',
+  create() {
+    "main thread";
+    return super.create();
+  },
+});
+`,
+      lepusWorkletOptions,
+    );
+
+    expect(result.errors.map((error) => error.text)).toContain(
+      '`super` is not supported in Main Thread object methods.',
+    );
+  });
+
+  it('should not reject super in a nested object method', async () => {
+    const result = await transformReactLynx(
+      `\
+const valueType = defineMainThreadObjectType({
+  type: 'example',
+  create() {
+    "main thread";
+    return {
+      nested() {
+        return super.create();
+      },
+    };
+  },
+});
+`,
+      lepusWorkletOptions,
+    );
+
+    expect(result.errors).toEqual([]);
   });
 
   it('should error on non-string runtime import attribute', async () => {
@@ -1949,7 +2078,7 @@ export function bar() {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -1988,7 +2117,7 @@ export function bar() {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
@@ -2000,7 +2129,7 @@ export function bar() {
   });
 
   it('should not inject runtime when no worklet exists', async () => {
-    const { code } = await transformReactLynx(
+    const { code, runtimeRequirements } = await transformReactLynx(
       `\
 export function getCurrentDelta(event) {
   return foo.bar.baz;
@@ -2009,14 +2138,17 @@ export function getCurrentDelta(event) {
       lepusWorkletOptions,
     );
 
-    expect(code).not.toContain('loadWorkletRuntime');
+    expect(code).not.toContain('@lynx-js/react/worklet-runtime/init');
     expect(code).not.toContain('registerWorkletInternal');
     expect(code).not.toContain('_wkltId');
+    expect(runtimeRequirements).toEqual({
+      mainThreadProgrammability: false,
+    });
   });
 
   for (const target of ['LEPUS', 'JS', 'MIXED']) {
     it('member expression', async () => {
-      const { code } = await transformReactLynx(
+      const { code, runtimeRequirements } = await transformReactLynx(
         `\
   export function getCurrentDelta(event) {
     "main thread";
@@ -2042,27 +2174,27 @@ export function getCurrentDelta(event) {
           worklet: {
             target,
             filename: '',
-            runtimePkg: '@lynx-js/react',
+            runtimePkg: internalWorkletRuntimePkg,
           },
         },
       );
 
       if (target === 'LEPUS') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init";
+          import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react/internal";
+          var captureMainThreadObject = __captureMainThreadObject;
           export let getCurrentDelta = {
               _c: {
-                  foo: {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                  foo: captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
           };
-          const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-          __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
+          __registerWorklet("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
@@ -2070,40 +2202,38 @@ export function getCurrentDelta(event) {
           });
           "
         `);
-        expect(code).toContain('loadWorkletRuntime');
-        expect(code).toContain('registerWorkletInternal("main-thread"');
       } else if (target === 'JS') {
         expect(code).toMatchInlineSnapshot(`
-          "export let getCurrentDelta = {
+          "import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react/internal";
+          var captureMainThreadObject = __captureMainThreadObject;
+          export let getCurrentDelta = {
               _c: {
-                  foo: {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                  foo: captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
           };
           "
         `);
-        expect(code).not.toContain('loadWorkletRuntime');
-        expect(code).not.toContain('registerWorkletInternal');
       } else if (target === 'MIXED') {
         expect(code).toMatchInlineSnapshot(`
-          "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-          var loadWorkletRuntime = __loadWorkletRuntime;
+          "import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init";
+          import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react/internal";
+          var captureMainThreadObject = __captureMainThreadObject;
           export let getCurrentDelta = {
               _c: {
-                  foo: {
-                      bar: {
-                          baz: foo.bar.baz
-                      }
+                  foo: captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                              baz: __mainThreadObjectSource.baz
+                          })(foo.bar)
                   }
               },
               _wkltId: "da39:75a1b:1"
           };
-          const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-          __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:75a1b:1", function(event) {
+          __registerWorklet("main-thread", "da39:75a1b:1", function(event) {
               const getCurrentDelta = lynxWorkletImpl._workletMap["da39:75a1b:1"].bind(this);
               let { foo } = this["_c"];
               "main thread";
@@ -2111,14 +2241,15 @@ export function getCurrentDelta(event) {
           });
           "
         `);
-        expect(code).toContain('loadWorkletRuntime');
-        expect(code).toContain('registerWorkletInternal("main-thread"');
       }
+      expect(runtimeRequirements).toEqual({
+        mainThreadProgrammability: target !== 'JS',
+      });
     });
   }
 
   it('member expression with multiple times', async () => {
-    const { code } = await transformReactLynx(
+    const { code, runtimeRequirements } = await transformReactLynx(
       `\
 export function foo(event) {
   "main thread";
@@ -2144,34 +2275,34 @@ export function foo(event) {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init";
+      import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react/internal";
+      var captureMainThreadObject = __captureMainThreadObject;
       export let foo = {
           _c: {
-              bar: {
-                  baz: {
-                      'qux': bar.baz['qux']
-                  },
-                  qux: {
-                      'baz': bar.qux['baz']
-                  }
+              bar: captureMainThreadObject(bar) ?? {
+                  baz: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          'qux': __mainThreadObjectSource['qux']
+                      })(bar.baz),
+                  qux: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          'baz': __mainThreadObjectSource['baz']
+                      })(bar.qux)
               },
-              qux: {
-                  bar: {
-                      baz: qux.bar.baz
-                  }
+              qux: captureMainThreadObject(qux) ?? {
+                  bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                          baz: __mainThreadObjectSource.baz
+                      })(qux.bar)
               }
           },
           _wkltId: "da39:64631:1"
       };
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:64631:1", function(event) {
+      __registerWorklet("main-thread", "da39:64631:1", function(event) {
           const foo = lynxWorkletImpl._workletMap["da39:64631:1"].bind(this);
           let { bar, qux } = this["_c"];
           "main thread";
@@ -2179,12 +2310,13 @@ export function foo(event) {
       });
       "
     `);
-    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
-    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
+    expect(runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
   });
 
   it('nested', async () => {
-    const { code } = await transformReactLynx(
+    const { code, runtimeRequirements } = await transformReactLynx(
       `\
 function foo() {
   "main thread";
@@ -2215,14 +2347,13 @@ console.log(bar)
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
+      "import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init";
       let foo = {
           _wkltId: "da39:80ef4:1"
       };
@@ -2233,13 +2364,12 @@ console.log(bar)
           _wkltId: "da39:80ef4:2"
       };
       console.log(bar);
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:80ef4:1", function() {
+      __registerWorklet("main-thread", "da39:80ef4:1", function() {
           const foo = lynxWorkletImpl._workletMap["da39:80ef4:1"].bind(this);
           "main thread";
           return null;
       });
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:80ef4:2", function() {
+      __registerWorklet("main-thread", "da39:80ef4:2", function() {
           const bar = lynxWorkletImpl._workletMap["da39:80ef4:2"].bind(this);
           let { foo } = this["_c"];
           "main thread";
@@ -2247,12 +2377,13 @@ console.log(bar)
       });
       "
     `);
-    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(2);
-    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
+    expect(runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
   });
 
   it('use multiple times', async () => {
-    const { code } = await transformReactLynx(
+    const { code, runtimeRequirements } = await transformReactLynx(
       `\
 function getCurrentDelta(event) {
   "main thread";
@@ -2281,16 +2412,14 @@ function getCurrentDelta(event) {
         worklet: {
           target: 'LEPUS',
           filename: '',
-          runtimePkg: '@lynx-js/react',
+          runtimePkg: internalWorkletRuntimePkg,
         },
       },
     );
 
     expect(code).toMatchInlineSnapshot(`
-      "import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-      var loadWorkletRuntime = __loadWorkletRuntime;
-      const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-      __workletRuntimeLoaded && registerWorkletInternal("main-thread", "da39:059d0:1", function(event) {
+      "import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init";
+      __registerWorklet("main-thread", "da39:059d0:1", function(event) {
           lynxWorkletImpl._workletMap["da39:059d0:1"].bind(this);
           let { foo, a, b } = this["_c"];
           "main thread";
@@ -2299,8 +2428,115 @@ function getCurrentDelta(event) {
       });
       "
     `);
-    expect((code.match(/registerWorkletInternal/g) ?? []).length).toBe(1);
-    expect((code.match(/const __workletRuntimeLoaded = loadWorkletRuntime/g) ?? []).length).toBe(1);
+    expect(runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
+  });
+
+  it('should use the canonical runtime init request with default worklet options', async () => {
+    const { code, runtimeRequirements } = await transformReactLynx(
+      `\
+export function foo() {
+  "main thread";
+}
+`,
+      {
+        ...lepusWorkletOptions,
+        worklet: true,
+      },
+    );
+
+    expect(
+      (code.match(/from "@lynx-js\/react\/worklet-runtime\/init"/g) ?? []).length,
+    ).toBe(1);
+    expect(code).not.toContain('NoDiff/worklet-runtime/init');
+    expect(runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
+  });
+
+  it.each([
+    ['custom-runtime', 'custom-runtime/worklet-runtime/init'],
+    ['custom-runtime/internal', 'custom-runtime/worklet-runtime/init'],
+    ['@custom/react', '@custom/react/worklet-runtime/init'],
+    ['@custom/react/internal', '@custom/react/worklet-runtime/init'],
+    ['@custom/internal-tools/internal', '@custom/internal-tools/worklet-runtime/init'],
+    ['@custom/internal', '@custom/internal/worklet-runtime/init'],
+  ])('should resolve runtime init from %s', async (customRuntimePkg, initRequest) => {
+    const { code, runtimeRequirements } = await transformReactLynx(
+      `\
+function backgroundFunction() {}
+export function foo() {
+  "main thread";
+  runOnBackground(backgroundFunction);
+}
+`,
+      {
+        ...lepusWorkletOptions,
+        worklet: {
+          target: 'MIXED',
+          filename: '',
+          runtimePkg: customRuntimePkg,
+        },
+      },
+    );
+
+    expect(code.split(`from "${initRequest}";`)).toHaveLength(2);
+    expect(code).not.toContain('@lynx-js/react');
+    expect(code).toContain(
+      `import { transformToWorklet as __transformToWorklet } from "${customRuntimePkg}"`,
+    );
+    expect(runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
+  });
+
+  it.each(['@lynx-js/react', '@custom/internal-tools'])(
+    'should not duplicate an existing runtime init import for %s',
+    async runtimePkg => {
+      const { code, runtimeRequirements } = await transformReactLynx(
+        `\
+import '${runtimePkg}/worklet-runtime/init';
+export function foo() {
+  "main thread";
+}
+`,
+        {
+          ...lepusWorkletOptions,
+          worklet: {
+            ...lepusWorkletOptions.worklet,
+            runtimePkg: `${runtimePkg}/internal`,
+          },
+        },
+      );
+
+      expect(code.split(`from "${runtimePkg}/worklet-runtime/init";`)).toHaveLength(2);
+      expect(runtimeRequirements).toEqual({
+        mainThreadProgrammability: true,
+      });
+    },
+  );
+
+  it('should reset runtime requirements between transforms', async () => {
+    const withMainThreadUnit = await transformReactLynx(
+      `\
+export function foo() {
+  "main thread";
+}
+`,
+      lepusWorkletOptions,
+    );
+    const withoutMainThreadUnit = await transformReactLynx(
+      'export function foo() {}',
+      lepusWorkletOptions,
+    );
+
+    expect(withMainThreadUnit.runtimeRequirements).toEqual({
+      mainThreadProgrammability: true,
+    });
+    expect(withoutMainThreadUnit.runtimeRequirements).toEqual({
+      mainThreadProgrammability: false,
+    });
   });
 
   it('should keep webpack runtime variables', async () => {

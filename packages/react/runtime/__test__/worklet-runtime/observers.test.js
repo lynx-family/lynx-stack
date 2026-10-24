@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { hydrateWorkletCtx as hydrateWorkletCtxFromBindings } from '../../src/worklet-runtime/bindings';
+import {
+  clearFirstScreenMainThreadRefs,
+  hydrateWorkletCtx as hydrateWorkletCtxFromBindings,
+} from '../../src/worklet-runtime/bindings';
 import { hydrateWorkletCtx, onWorkletCtxUpdate, retainWorkletCtx } from '../../src/worklet-runtime/bindings/observers';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
@@ -71,6 +74,18 @@ describe('MTFObservers', () => {
   it('exports element-free ctx hydration from the bindings entry', () => {
     expect(typeof hydrateWorkletCtxFromBindings).toBe('function');
     expect(hydrateWorkletCtxFromBindings).toBe(hydrateWorkletCtx);
+  });
+
+  it('clears only temporary first-screen MainThreadRefs', () => {
+    const firstScreenRef = { _wvid: -1, current: 'first-screen' };
+    const hydratedRef = { _wvid: 1, current: 'hydrated' };
+    globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap[-1] = firstScreenRef;
+    globalThis.lynxWorkletImpl._refImpl._workletRefMap[1] = hydratedRef;
+
+    clearFirstScreenMainThreadRefs();
+
+    expect(globalThis.lynxWorkletImpl._refImpl._firstScreenWorkletRefMap).toEqual({});
+    expect(globalThis.lynxWorkletImpl._refImpl._workletRefMap[1]).toBe(hydratedRef);
   });
 
   it('hydrates worklet ctx without replaying delayed worklet events', () => {

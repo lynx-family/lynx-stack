@@ -7,8 +7,8 @@ describe('elementTemplateRegistry (nativeRef)', () => {
   it('stores and resolves negative ids via dense array', () => {
     elementTemplateRegistry.clear();
 
-    const ref1 = { ref: 1 } as unknown as ElementRef;
-    const ref2 = { ref: 2 } as unknown as ElementRef;
+    const ref1 = { ref: 1 } as unknown as ElementTemplateHandle;
+    const ref2 = { ref: 2 } as unknown as ElementTemplateHandle;
 
     elementTemplateRegistry.set(-1, ref1);
     elementTemplateRegistry.set(-2, ref2);
@@ -22,7 +22,7 @@ describe('elementTemplateRegistry (nativeRef)', () => {
   it('stores and resolves non-negative ids via Map fallback', () => {
     elementTemplateRegistry.clear();
 
-    const ref = { ref: 7 } as unknown as ElementRef;
+    const ref = { ref: 7 } as unknown as ElementTemplateHandle;
     elementTemplateRegistry.set(7, ref);
 
     expect(elementTemplateRegistry.get(7)).toBe(ref);
@@ -32,8 +32,8 @@ describe('elementTemplateRegistry (nativeRef)', () => {
   it('deletes ids and clears all', () => {
     elementTemplateRegistry.clear();
 
-    const negRef = { ref: -1 } as unknown as ElementRef;
-    const posRef = { ref: 1 } as unknown as ElementRef;
+    const negRef = { ref: -1 } as unknown as ElementTemplateHandle;
+    const posRef = { ref: 1 } as unknown as ElementTemplateHandle;
 
     elementTemplateRegistry.set(-1, negRef);
     elementTemplateRegistry.set(1, posRef);
@@ -55,7 +55,7 @@ describe('elementTemplateRegistry (nativeRef)', () => {
   it('resolves page only through target lookup', () => {
     elementTemplateRegistry.clear();
 
-    const pageRef = { ref: 'page' } as unknown as ElementRef;
+    const pageRef = { ref: 'page' } as unknown as ElementTemplateHandle;
     setupPage(pageRef);
 
     expect(elementTemplateRegistry.get(0)).toBeUndefined();

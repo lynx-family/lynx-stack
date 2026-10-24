@@ -7,6 +7,7 @@ export const __wbg_get_eventinfo_event_name: (a: number) => [number, number];
 export const __wbg_get_eventinfo_event_type: (a: number) => [number, number];
 export const __wbg_mainthreadwasmcontext_free: (a: number, b: number) => void;
 export const __wbg_rawstyleinfo_free: (a: number, b: number) => void;
+export const __wbg_rawstyleinfomap_free: (a: number, b: number) => void;
 export const __wbg_rule_free: (a: number, b: number) => void;
 export const __wbg_ruleprelude_free: (a: number, b: number) => void;
 export const __wbg_selector_free: (a: number, b: number) => void;
@@ -19,6 +20,7 @@ export const decode_style_info: (a: any, b: number, c: number, d: number, e: num
 export const encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number];
 export const get_font_face_content: (a: any) => [number, number, number, number];
 export const get_style_content: (a: any) => [number, number, number, number];
+export const mainthreadwasmcontext_add_closure_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
 export const mainthreadwasmcontext_add_dataset: (a: number, b: number, c: any, d: any) => [number, number];
 export const mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
@@ -49,6 +51,8 @@ export const mainthreadwasmcontext_update_css_og_style: (a: number, b: number, c
 export const rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
 export const rawstyleinfo_new: () => number;
 export const rawstyleinfo_push_rule: (a: number, b: number, c: number) => void;
+export const rawstyleinfomap_insert: (a: number, b: number, c: number, d: number) => void;
+export const rawstyleinfomap_new: () => number;
 export const rule_new: (a: number, b: number) => [number, number, number];
 export const rule_push_declaration: (a: number, b: number, c: number, d: number, e: number) => void;
 export const rule_push_rule_children: (a: number, b: number) => void;

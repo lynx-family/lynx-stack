@@ -18,6 +18,15 @@ export class EventInfo {
 export class MainThreadWasmContext {
     free(): void;
     [Symbol.dispose](): void;
+    /**
+     * Registers or removes a callback bound through `__AddEventListener`.
+     *
+     * `closure` of `None` removes: a specific callback when `remove_target` is
+     * given, otherwise every callback for this event name and type. Unlike the
+     * cross-thread and worklet slots, which hold a single handler each, this one
+     * holds a list, so clearing has to know *which* callback to drop.
+     */
+    add_closure_event(unique_id: number, event_type: string, event_name: string, closure?: any | null, remove_target?: any | null): void;
     add_cross_thread_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: string | null): void;
     add_dataset(unique_id: number, key: any, value: any): void;
     add_run_worklet_event(unique_id: number, event_type: string, event_name: string, event_handler_identifier?: any | null): void;
@@ -75,6 +84,27 @@ export class RawStyleInfo {
      *
      */
     push_rule(css_id: number, rule: Rule): void;
+}
+
+/**
+ *
+ * * The style sheets carried by the custom sections of a template.
+ * * Each custom section whose encoding is `CSS` is keyed by its section name.
+ *
+ */
+export class RawStyleInfoMap {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     *
+     *   * Sets the style info of the custom section identified by `name`.
+     *   * An existing style info with the same name is replaced.
+     *   * @param name - The name of the custom section.
+     *   * @param style_info - The style info of the custom section.
+     *
+     */
+    insert(name: string, style_info: RawStyleInfo): void;
+    constructor();
 }
 
 export class Rule {
@@ -186,6 +216,7 @@ export interface InitOutput {
     readonly __wbg_get_eventinfo_event_type: (a: number, b: number) => void;
     readonly __wbg_mainthreadwasmcontext_free: (a: number, b: number) => void;
     readonly __wbg_rawstyleinfo_free: (a: number, b: number) => void;
+    readonly __wbg_rawstyleinfomap_free: (a: number, b: number) => void;
     readonly __wbg_rule_free: (a: number, b: number) => void;
     readonly __wbg_ruleprelude_free: (a: number, b: number) => void;
     readonly __wbg_selector_free: (a: number, b: number) => void;
@@ -198,6 +229,7 @@ export interface InitOutput {
     readonly encode_legacy_json_generated_raw_style_info: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly get_font_face_content: (a: number, b: number) => void;
     readonly get_style_content: (a: number, b: number) => void;
+    readonly mainthreadwasmcontext_add_closure_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_cross_thread_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
     readonly mainthreadwasmcontext_add_dataset: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly mainthreadwasmcontext_add_run_worklet_event: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
@@ -228,6 +260,8 @@ export interface InitOutput {
     readonly rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
     readonly rawstyleinfo_new: () => number;
     readonly rawstyleinfo_push_rule: (a: number, b: number, c: number) => void;
+    readonly rawstyleinfomap_insert: (a: number, b: number, c: number, d: number) => void;
+    readonly rawstyleinfomap_new: () => number;
     readonly rule_new: (a: number, b: number, c: number) => void;
     readonly rule_push_declaration: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly rule_push_rule_children: (a: number, b: number) => void;

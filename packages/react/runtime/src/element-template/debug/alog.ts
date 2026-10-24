@@ -14,18 +14,24 @@ export type FormattedElementTemplateUpdateCommand =
     templateKey: string;
     bundleUrl: string | null | undefined;
     attributeSlots: unknown;
-    elementSlots: unknown;
+    childSlots: unknown;
   }
   | {
     op: 'createTypedElement';
     handleId: number;
     type: string;
     attributes: unknown;
-    elementSlots: unknown;
+    childSlots: unknown;
     options: unknown;
   }
   | {
     op: 'setAttribute';
+    targetId: number;
+    attrSlotIndex: number;
+    value: unknown;
+  }
+  | {
+    op: 'setMainThreadEvent' | 'setMainThreadRef';
     targetId: number;
     attrSlotIndex: number;
     value: unknown;
@@ -50,14 +56,15 @@ export type FormattedElementTemplateUpdateCommand =
   | {
     op: 'insertNode';
     targetId: number;
-    elementSlotIndex: number;
+    childSlotIndex: number;
     childId: number;
     referenceId: number;
+    attachedSubtreeHandleIds: number[] | null;
   }
   | {
     op: 'removeNode';
     targetId: number;
-    elementSlotIndex: number;
+    childSlotIndex: number;
     childId: number;
     removedSubtreeHandleIds: number[];
   }
@@ -81,20 +88,33 @@ export function formatElementTemplateUpdateCommands(
     const op = stream[index++] as ElementTemplateUpdateOp;
 
     switch (op) {
-      case ElementTemplateUpdateOps.createTemplate:
+      case ElementTemplateUpdateOps.createTemplate: {
         result.push({
           op: 'createTemplate',
           handleId: stream[index++] as number,
           templateKey: stream[index++] as string,
           bundleUrl: stream[index++] as string | null | undefined,
           attributeSlots: stream[index++],
-          elementSlots: stream[index++],
+          childSlots: stream[index++],
         });
         break;
+      }
 
       case ElementTemplateUpdateOps.setAttribute:
         result.push({
           op: 'setAttribute',
+          targetId: stream[index++] as number,
+          attrSlotIndex: stream[index++] as number,
+          value: stream[index++],
+        });
+        break;
+
+      case ElementTemplateUpdateOps.setMainThreadEvent:
+      case ElementTemplateUpdateOps.setMainThreadRef:
+        result.push({
+          op: op === ElementTemplateUpdateOps.setMainThreadEvent
+            ? 'setMainThreadEvent'
+            : 'setMainThreadRef',
           targetId: stream[index++] as number,
           attrSlotIndex: stream[index++] as number,
           value: stream[index++],
@@ -107,7 +127,7 @@ export function formatElementTemplateUpdateCommands(
           handleId: stream[index++] as number,
           type: stream[index++] as string,
           attributes: stream[index++],
-          elementSlots: stream[index++],
+          childSlots: stream[index++],
           options: stream[index++],
         });
         break;
@@ -142,9 +162,10 @@ export function formatElementTemplateUpdateCommands(
         result.push({
           op: 'insertNode',
           targetId: stream[index++] as number,
-          elementSlotIndex: stream[index++] as number,
+          childSlotIndex: stream[index++] as number,
           childId: stream[index++] as number,
           referenceId: stream[index++] as number,
+          attachedSubtreeHandleIds: stream[index++] as number[] | null,
         });
         break;
 
@@ -152,7 +173,7 @@ export function formatElementTemplateUpdateCommands(
         result.push({
           op: 'removeNode',
           targetId: stream[index++] as number,
-          elementSlotIndex: stream[index++] as number,
+          childSlotIndex: stream[index++] as number,
           childId: stream[index++] as number,
           removedSubtreeHandleIds: stream[index++] as number[],
         });
@@ -198,14 +219,14 @@ function appendInstance(
     lines.push(`${indent}  attributeSlots: ${JSON.stringify(instance.attributeSlots)}`);
   }
 
-  const elementSlots = Array.isArray(instance.elementSlots) ? instance.elementSlots : [];
-  for (let slotIndex = 0; slotIndex < elementSlots.length; slotIndex += 1) {
-    const children = elementSlots[slotIndex];
+  const childSlots = Array.isArray(instance.childSlots) ? instance.childSlots : [];
+  for (let slotIndex = 0; slotIndex < childSlots.length; slotIndex += 1) {
+    const children = childSlots[slotIndex];
     if (!children || children.length === 0) {
       continue;
     }
     lines.push(
-      `${indent}  elementSlots[${slotIndex}]: [${children.map(child => child.instanceId).join(', ')}]`,
+      `${indent}  childSlots[${slotIndex}]: [${children.map(child => child.instanceId).join(', ')}]`,
     );
   }
 

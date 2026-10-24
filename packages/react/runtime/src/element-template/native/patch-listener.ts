@@ -4,6 +4,7 @@
 
 import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
 import {
+  clearFirstScreenMainThreadRefs,
   flushDelayedRunOnBackgroundFunctions,
   runRunOnMainThreadTask,
   setEomShouldFlushElementTree,
@@ -15,7 +16,6 @@ import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
-import { __page } from '../runtime/page/page.js';
 import { applyElementTemplateUpdateCommands } from '../runtime/patch.js';
 
 let listener:
@@ -27,13 +27,6 @@ export function installElementTemplatePatchListener(): void {
 
   listener = (event: Pick<ElementTemplateUpdateEvent, 'data'>) => {
     const { patchOptions } = event.data;
-    if (
-      typeof patchOptions.reloadVersion === 'number'
-      && patchOptions.reloadVersion < getReloadVersion()
-    ) {
-      return;
-    }
-
     const { flowIds, pipelineOptions } = patchOptions;
     const shouldProfilePatch = !!flowIds
       && typeof lynx.performance?.profileStart === 'function'
@@ -50,6 +43,17 @@ export function installElementTemplatePatchListener(): void {
 
     const payload = JSON.parse(event.data.payload) as ElementTemplateUpdateCommitContext;
     markTiming('parseChangesEnd');
+
+    if (
+      typeof patchOptions.reloadVersion === 'number'
+      && patchOptions.reloadVersion < getReloadVersion()
+    ) {
+      markTiming('mtsRenderEnd');
+      if (shouldProfilePatch) {
+        lynx.performance.profileEnd();
+      }
+      return;
+    }
 
     const hasOps = payload.ops.length > 0;
     const flushOptions = payload.flushOptions;
@@ -78,12 +82,14 @@ export function installElementTemplatePatchListener(): void {
         markTiming('mtsRenderEnd');
         if (isHydration) {
           flushDelayedRunOnBackgroundFunctions();
+          clearFirstScreenMainThreadRefs();
         }
       }
     } else {
       markTiming('mtsRenderEnd');
       if (isHydration) {
         flushDelayedRunOnBackgroundFunctions();
+        clearFirstScreenMainThreadRefs();
       }
     }
     if (delayedRunOnMainThreadData?.length) {
@@ -101,7 +107,7 @@ export function installElementTemplatePatchListener(): void {
       }
     }
 
-    __FlushElementTree(__page, flushOptions);
+    __FlushElementTree(undefined, flushOptions);
 
     if (shouldProfilePatch) {
       lynx.performance.profileEnd();

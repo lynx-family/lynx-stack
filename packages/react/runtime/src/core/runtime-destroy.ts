@@ -5,6 +5,17 @@
 type DestroyTask = () => void;
 
 const destroyTasks = new Set<DestroyTask>();
+let destroyed = false;
+
+// Calls from a retired entry stay pending: settling them would run its continuations.
+export function isRuntimeDestroyed(): boolean {
+  return destroyed;
+}
+
+export function destroyRuntime(): void {
+  destroyed = true;
+  runDestroyTasks();
+}
 
 export function registerDestroyTask(task: DestroyTask): () => void {
   destroyTasks.add(task);

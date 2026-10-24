@@ -44,7 +44,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
   envManager.setUseElementTemplate(true);
 
   const baseLynx = globalThis.lynx;
-  const originalGlobalEventEmitter = globalThis.lynxCoreInject.tt.GlobalEventEmitter;
+  const originalGlobalEventEmitter = globalThis.lynx.getApp().GlobalEventEmitter;
   vi.stubGlobal('lynx', {
     ...baseLynx,
     __globalProps: { theme: 'dark', stable: true },
@@ -55,7 +55,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
       return baseLynx.getJSModule?.(moduleName);
     },
   });
-  globalThis.lynxCoreInject.tt.GlobalEventEmitter = emitter as typeof lynxCoreInject.tt.GlobalEventEmitter;
+  globalThis.lynx.getApp().GlobalEventEmitter = emitter as LynxApp['GlobalEventEmitter'];
 
   const et = await import('../../../../src/element-template/index.js');
 
@@ -75,7 +75,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
       envManager.switchToBackground();
       resetElementTemplateHydrationListener();
       resetElementTemplateCommitState();
-      globalThis.lynxCoreInject.tt.GlobalEventEmitter = originalGlobalEventEmitter;
+      globalThis.lynx.getApp().GlobalEventEmitter = originalGlobalEventEmitter;
     },
   };
 }
@@ -102,7 +102,7 @@ describe('ElementTemplate background GlobalProps', () => {
       runtime.root.render(createElement(App));
       runtime.updateEvents.length = 0;
 
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitForRender();
 
       expect(lynx.__globalProps).toEqual({ theme: 'light', stable: true });
@@ -130,7 +130,7 @@ describe('ElementTemplate background GlobalProps', () => {
       runtime.updateEvents.length = 0;
 
       const previousGlobalProps = lynx.__globalProps;
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitForRender();
 
       expect(lynx.__globalProps).not.toBe(previousGlobalProps);
@@ -161,7 +161,7 @@ describe('ElementTemplate background GlobalProps', () => {
       runtime.root.render(createElement(App));
       runtime.updateEvents.length = 0;
 
-      lynxCoreInject.tt.updateGlobalProps({ theme: 'light' });
+      lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitForRender();
 
       expect(changed).toHaveBeenCalledWith(lynx.__globalProps);

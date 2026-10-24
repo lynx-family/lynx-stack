@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "tsconfig": "./tsconfig.build.json",
+  "entryPoints": [
+    "src/create.ts"
+  ],
+  "readme": "README.md",
+  "intentionallyNotExported": [
+    "Tool"
+  ]
+}

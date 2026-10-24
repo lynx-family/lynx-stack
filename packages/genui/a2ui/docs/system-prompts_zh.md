@@ -109,7 +109,7 @@ const systemPrompt = buildA2UISystemPrompt({ catalog });
 - `{ "path": "/..." }` 数据绑定和列表 children 的规则。
 - 客户端 action、event 和 function call 的规则。
 - catalog reference：组件摘要、props、必填字段、容器形态、枚举值和函数签名。
-- 硬性规则：只能输出 JSON、catalog id 必须匹配、组件树必须扁平、必须有 `root` 组件、Button 标签和 action 规则、Modal 确认流程、图片查询处理，以及 action response 的 patch 规则。
+- 硬性规则：只能输出 JSON、catalog id 必须匹配、组件树必须扁平、必须有 `root` 组件、Button 标签和 action 规则、Modal 确认流程、可加载图片资源处理，以及 action response 的 patch 规则。
 - catalog 提供的已验证示例。
 - CLI 或程序化 API 传入的可选 appendix。
 

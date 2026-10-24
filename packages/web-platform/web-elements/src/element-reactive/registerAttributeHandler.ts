@@ -12,8 +12,8 @@ export type AttributeChangeHandler = (
 ) => void;
 
 /**
- * @param attributeName
- * @param noDomMeasure  If there are any measurement operation, the handler will be invoked after connected
+ * @param key - The attribute name
+ * @param args - `[noDomMeasure]`: if there are any measurement operation, the handler will be invoked after connected
  * @returns
  */
 export const registerAttributeHandler = generateRegister<

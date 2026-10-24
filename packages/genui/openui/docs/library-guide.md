@@ -38,8 +38,54 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 
 ## Built-in components
 
-`createOpenUiLibrary()` includes the following components. Their definitions
-are also exported from `@lynx-js/genui/openui/catalog`.
+By default, `createOpenUiLibrary()` includes the following components. Their
+definitions are exported from the aggregate `@lynx-js/genui/openui/catalog`
+entry and from individual subpaths such as
+`@lynx-js/genui/openui/catalog/Stack`.
+
+For server-side schema or prompt generation, import the same definitions with
+null renderers from `@lynx-js/genui/openui/catalog/agent` (or
+`@lynx-js/genui-openui/catalog/agent`). This entry shares names, descriptions,
+schemas, and component refs with the ReactLynx catalog without importing JSX,
+CSS, ReactLynx, or Lynx UI. `createOpenUiPromptLibrary()` uses these definitions
+directly.
+
+The two factories share component order, groups, and option handling. With
+matching options and custom definitions, they produce the same `toJSONSchema()`,
+`toSpec()`, and `.prompt()` output. The runtime library supplies ReactLynx
+renderers; the prompt library supplies null renderers and can load in Node.
+
+Both accept `componentNames` to select built-ins (automatically retaining the
+selected root) and `includeDefaultComponents: false` to use only caller-provided
+components and groups. Custom components are always appended, and later
+definitions with the same name override earlier ones. When defaults are
+disabled, `componentNames` has no effect and callers must supply the root.
+Selection controls the Library vocabulary; use `openui/explicit` and individual
+component imports when you also need to exclude unselected renderer modules.
+
+```ts
+// Use the same selection on the server and client.
+const options = { componentNames: ['Stack', 'Text'] };
+const promptLibrary = createOpenUiPromptLibrary(options);
+const rendererLibrary = createOpenUiLibrary(options);
+```
+
+`buildOpenUiSystemPrompt()` additionally supplies generation rules and examples;
+it is separate from the lower-level `.prompt()` parity above. Restricted
+libraries omit default examples and rules that assume unavailable components.
+
+Use `@lynx-js/genui/openui/catalog/agent/Stack` (or
+`@lynx-js/genui-openui/catalog/agent/Stack`) to load just one definition. Each
+subpath exports the same component name as the aggregate Agent catalog, and
+loads only that definition and its schema dependencies.
+
+```ts
+import { Stack, Text } from '@lynx-js/genui/openui/catalog/agent';
+import { createLibrary } from '@openuidev/lang-core';
+
+const library = createLibrary({ root: 'Stack', components: [Stack, Text] });
+const prompt = library.prompt();
+```
 
 ### Layout
 
@@ -70,14 +116,15 @@ are also exported from `@lynx-js/genui/openui/catalog`.
 
 ### Data display and media
 
-| Component     | Purpose                                                    |
-| ------------- | ---------------------------------------------------------- |
-| `Tag`         | Compact label or status tag.                               |
-| `Image`       | Remote image with fit and semantic size variants.          |
-| `Icon`        | Bundled Material Icons glyph with size and color variants. |
-| `Video`       | Video attachment placeholder with URL and optional title.  |
-| `AudioPlayer` | Audio attachment placeholder with URL and description.     |
-| `Loading`     | Inline or block skeleton/loading feedback.                 |
+| Component     | Purpose                                                      |
+| ------------- | ------------------------------------------------------------ |
+| `Tag`         | Compact label or status tag.                                 |
+| `Image`       | Remote image with fit and semantic size variants.            |
+| `Icon`        | Bundled Material Icons glyph with size and color variants.   |
+| `Video`       | Video attachment placeholder with URL and optional title.    |
+| `AudioPlayer` | Audio attachment placeholder with URL and description.       |
+| `Loading`     | Inline or block skeleton/loading feedback.                   |
+| `Canvas`      | Web Canvas 2D drawing from a string or streamed code chunks. |
 
 ### Overlays
 
@@ -188,6 +235,38 @@ custom component uses the same name as a built-in, the later custom definition
 wins in the `components` map. Treat that as an intentional override and keep
 the prompt-side schema identical.
 
+## Choose components explicitly
+
+Set `includeDefaultComponents` to `false` when the Library should contain only
+caller-provided definitions. Import each built-in that remains part of the
+Library from the catalog and pass it through `components`:
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+
+export const library = createOpenUiLibrary({
+  includeDefaultComponents: false,
+  components: [Stack, TextContent],
+  componentGroups: [
+    { name: 'Selected', components: ['Stack', 'TextContent'] },
+  ],
+});
+```
+
+Disabling the defaults omits both the 26 built-in component definitions and
+their groups. The root still defaults to `Stack`, and Library creation fails if
+the selected components do not contain the root. Import and pass `Stack`, as in
+the example, or set `root` to another caller-provided component. Keep the Agent
+prompt and client Library restricted to the same component names.
+
+`includeDefaultComponents` controls the Library vocabulary. When the factory is
+imported from the main `openui` entry, that entry still statically references the
+default catalog. Use `openui/explicit` and individual component subpaths, as
+above, when unselected catalog modules must stay outside the static dependency
+graph.
+
 ## Render nested component values
 
 If a custom prop accepts child components, use `renderNode` from the component
@@ -247,9 +326,13 @@ const parser = createParser(library.toJSONSchema(), library.root);
 const result = parser.parse('root = Stack([TextContent("Hello")])');
 ```
 
-For streamed text, use `createStreamingParser`. Its `set(fullText)` method is
+For parsing streamed text outside the renderer, use `createStreamingParser`. Its `set(fullText)` method is
 convenient when your UI stores the accumulated response; `push(chunk)` accepts
 only the new delta.
+
+For rendering model output, pass the accumulated `response` and `isStreaming`;
+the renderer already owns its streaming parser. Do not parse the same response
+separately. See [Stream model output](./overview.md#stream-model-output).
 
 Use the renderer's `onParseResult` callback when you already render the same
 response. That avoids creating a second parser just to inspect `root`,

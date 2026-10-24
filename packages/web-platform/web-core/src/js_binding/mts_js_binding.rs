@@ -10,7 +10,7 @@ use wasm_bindgen::prelude::*;
 extern "C" {
   pub type RustMainthreadContextBinding;
 
-  #[wasm_bindgen(method, js_name = "runWorklet")]
+  #[wasm_bindgen(method, catch, js_name = "runWorklet")]
   pub fn publish_mts_event(
     this: &RustMainthreadContextBinding,
     handler_name: &wasm_bindgen::JsValue,
@@ -19,9 +19,21 @@ extern "C" {
     target_dataset: &wasm_bindgen::JsValue,
     current_target_element_unique_id: usize,
     current_target_dataset: &wasm_bindgen::JsValue,
+  ) -> Result<(), JsValue>;
+
+  /// Invokes a callback registered through `__AddEventListener`.
+  #[wasm_bindgen(method, js_name = "runElementClosure")]
+  pub fn run_element_closure(
+    this: &RustMainthreadContextBinding,
+    closure: &wasm_bindgen::JsValue,
+    event_object: &wasm_bindgen::JsValue,
+    target_element_unique_id: usize,
+    target_dataset: &wasm_bindgen::JsValue,
+    current_target_element_unique_id: usize,
+    current_target_dataset: &wasm_bindgen::JsValue,
   );
 
-  #[wasm_bindgen(method, js_name = "publishEvent")]
+  #[wasm_bindgen(method, catch, js_name = "publishEvent")]
   pub fn publish_event(
     this: &RustMainthreadContextBinding,
     handler_name: &str,
@@ -31,7 +43,7 @@ extern "C" {
     target_dataset: &wasm_bindgen::JsValue,
     current_target_element_unique_id: usize,
     current_target_dataset: &wasm_bindgen::JsValue,
-  );
+  ) -> Result<(), JsValue>;
 
   #[wasm_bindgen(method, js_name = "addEventListener")]
   pub fn add_event_listener(this: &RustMainthreadContextBinding, event_name: &str);

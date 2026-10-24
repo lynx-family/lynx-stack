@@ -1,5 +1,35 @@
 # upgrade-rspeedy
 
+## 0.18.3
+
+No changes in this release.
+
+## 0.18.2
+
+No changes in this release.
+
+## 0.18.1
+
+No changes in this release.
+
+## 0.18.0
+
+### Patch Changes
+
+- Upgrade every published `@lynx-js/` package, not just the ones a scaffolded project starts with. A project using an external bundle no longer has `@lynx-js/lynx-bundle-rslib-config` left behind while `@lynx-js/rspeedy` moves on. ([#3815](https://github.com/lynx-family/lynx-stack/pull/3815))
+
+## 0.17.2
+
+## 0.17.1
+
+## 0.17.0
+
+## 0.16.5
+
+## 0.16.4
+
+## 0.16.3
+
 ## 0.16.2
 
 ## 0.16.1

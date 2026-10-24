@@ -20,6 +20,7 @@ use swc_core::{
 mod asset;
 mod attr_name;
 mod extractor;
+mod host_lowering;
 mod lowering;
 mod template_attribute;
 mod template_definition;
@@ -98,7 +99,7 @@ fn empty_object_expr() -> Expr {
   })
 }
 
-fn typed_list_attributes_expr(attrs: Vec<JSXAttrOrSpread>) -> (Vec<JSXAttrOrSpread>, Expr) {
+fn typed_host_attributes_expr(attrs: Vec<JSXAttrOrSpread>) -> (Vec<JSXAttrOrSpread>, Expr) {
   let mut passthrough_attrs = vec![];
   let mut object_props = vec![];
 
@@ -232,6 +233,7 @@ where
   attr_plan_signatures_by_canonical_content: HashMap<String, String>,
   template_identity_collision_guard: TemplateIdentityCollisionGuard,
   current_template_defs: Vec<ModuleItem>,
+  host_identities: HashMap<Id, (String, Ident, bool)>,
   comments: Option<C>,
   css_id_value: Option<f64>,
 }
@@ -273,6 +275,7 @@ where
       attr_plan_signatures_by_canonical_content: HashMap::new(),
       template_identity_collision_guard: TemplateIdentityCollisionGuard::default(),
       current_template_defs: vec![],
+      host_identities: HashMap::new(),
       comments,
       css_id_value: None,
     }
@@ -328,7 +331,7 @@ where
 
     let span = node.span();
     let opening_span = node.opening.span;
-    let (mut rendered_attrs, attributes) = typed_list_attributes_expr(node.opening.attrs.take());
+    let (mut rendered_attrs, attributes) = typed_host_attributes_expr(node.opening.attrs.take());
     let list_children = if node.children.is_empty() {
       empty_array_expr()
     } else {
@@ -356,6 +359,33 @@ where
       closing: None,
     };
   }
+
+  fn lower_authored_page_runtime_jsx(&mut self, node: &mut JSXElement) {
+    node.visit_mut_children_with(self);
+
+    let internal_runtime_ident = match self.internal_runtime_id.clone() {
+      Expr::Ident(ident) => ident,
+      _ => unreachable!("ET internal runtime must be bound through a namespace import"),
+    };
+    let (mut rendered_attrs, attributes) = typed_host_attributes_expr(node.opening.attrs.take());
+    let page_children = if node.children.is_empty() {
+      empty_array_expr()
+    } else {
+      jsx_children_to_expr(node.children.take())
+    };
+    rendered_attrs.push(jsx_expr_attr("attributes", attributes));
+    rendered_attrs.push(jsx_expr_attr("$0", page_children));
+    let page_helper_name = JSXElementName::JSXMemberExpr(JSXMemberExpr {
+      obj: JSXObject::Ident(internal_runtime_ident),
+      prop: IdentName::new("__ElementTemplatePage".into(), DUMMY_SP),
+      span: node.opening.span,
+    });
+    node.opening.name = page_helper_name.clone();
+    node.opening.attrs = rendered_attrs;
+    if let Some(closing) = &mut node.closing {
+      closing.name = page_helper_name;
+    }
+  }
 }
 
 impl<C> VisitMut for JSXTransformer<C>
@@ -375,7 +405,11 @@ where
             self.lower_typed_list_runtime_jsx(node);
             return;
           }
-          if tag_str == "page" || tag_str == "component" {
+          if tag_str == "page" {
+            self.lower_authored_page_runtime_jsx(node);
+            return;
+          }
+          if tag_str == "component" {
             HANDLER.with(|handler| {
               handler
                 .struct_span_err(
@@ -414,6 +448,7 @@ where
       Event,
       MTEvent,
       Ref,
+      MTRef,
       Spread,
     }
 
@@ -435,6 +470,11 @@ where
           slot_index,
           ..
         } => Some((*slot_index, AttrPlanAdapter::Ref)),
+        DynamicAttributePart::Attr {
+          attr_name: AttrName::MTRef,
+          slot_index,
+          ..
+        } => Some((*slot_index, AttrPlanAdapter::MTRef)),
         DynamicAttributePart::Spread { slot_index, .. } => {
           Some((*slot_index, AttrPlanAdapter::Spread))
         }
@@ -448,6 +488,7 @@ where
           AttrPlanAdapter::Event => "event",
           AttrPlanAdapter::MTEvent => "mt-event",
           AttrPlanAdapter::Ref => "ref",
+          AttrPlanAdapter::MTRef => "mt-ref",
           AttrPlanAdapter::Spread => "spread",
         };
         format!("{slot_index}:{adapter}")
@@ -473,14 +514,14 @@ where
     }
 
     let mut dynamic_attr_slot_cursor: usize = 0;
-    let mut element_slot_index: i32 = 0;
+    let mut child_slot_index: i32 = 0;
     // Attribute slot indices come from ElementTemplateExtractor so runtime
     // values and Template Definition descriptors share one compile-time source.
     let template_expr = self.element_template_from_jsx_element(
       node,
       &dynamic_attr_slots,
       &mut dynamic_attr_slot_cursor,
-      &mut element_slot_index,
+      &mut child_slot_index,
     );
     assert_eq!(
       dynamic_attr_slot_cursor,
@@ -531,15 +572,41 @@ where
     };
     let template_uid = template_identity.template_id.clone();
 
-    // External bundles have no `globDynamicComponentEntry` in scope; use the
-    // `__Card__` entry-name literal.
-    let entry_template_uid = if matches!(self.cfg.is_external_bundle, Some(true))
+    // Capture the bundle alongside the type at the original definition point.
+    // LEPUS calls pass it separately without allocating a descriptor per template.
+    let bundle_expr = if matches!(self.cfg.is_external_bundle, Some(true))
       && !matches!(self.cfg.is_dynamic_component, Some(true))
     {
-      quote!("`__Card__:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))
+      quote!("\"__Card__\"" as Expr)
     } else {
-      quote!("`${globDynamicComponentEntry}:${$template_uid}`" as Expr, template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())))
+      quote!("globDynamicComponentEntry" as Expr)
     };
+    let bundle_expr = if target == TransformTarget::LEPUS {
+      if is_new_template {
+        let bundle_ident = private_ident!(format!("{}_bundle", template_uid));
+        self.current_template_defs.push(ModuleItem::Stmt(quote!(
+          "const $bundle_ident = $bundle_expr" as Stmt,
+          bundle_ident = bundle_ident.clone(),
+          bundle_expr: Expr = bundle_expr,
+        )));
+        self.host_identities.insert(
+          template_ident.to_id(),
+          (
+            template_uid.clone(),
+            bundle_ident,
+            attr_plan_slots.is_empty(),
+          ),
+        );
+      }
+      Expr::Ident(self.host_identities[&template_ident.to_id()].1.clone())
+    } else {
+      bundle_expr
+    };
+    let entry_template_uid = quote!(
+      "`${$bundle}:${$template_uid}`" as Expr,
+      bundle: Expr = bundle_expr,
+      template_uid: Expr = Expr::Lit(Lit::Str(template_uid.clone().into())),
+    );
 
     if is_new_template {
       let entry_template_uid_def = ModuleItem::Stmt(quote!(
@@ -568,6 +635,10 @@ where
             ),
             AttrPlanAdapter::Ref => quote!(
               "$internal_runtime_id.adaptRefAttrSlot" as Expr,
+              internal_runtime_id: Expr = internal_runtime_id.clone(),
+            ),
+            AttrPlanAdapter::MTRef => quote!(
+              "$internal_runtime_id.adaptMTRefAttrSlot" as Expr,
               internal_runtime_id: Expr = internal_runtime_id.clone(),
             ),
             AttrPlanAdapter::Spread => quote!(
@@ -646,6 +717,13 @@ where
     }
 
     n.visit_mut_children_with(self);
+    if !self.host_identities.is_empty() {
+      n.visit_mut_with(&mut host_lowering::HostLowering {
+        identities: &self.host_identities,
+        runtime: self.internal_runtime_id.clone(),
+        comments: &self.comments,
+      });
+    }
     self.ensure_builtin_element_templates();
     if let Some(Expr::Ident(runtime_id)) = Lazy::get(&self.runtime_id) {
       prepend_stmt(

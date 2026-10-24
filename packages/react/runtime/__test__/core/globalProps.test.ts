@@ -12,20 +12,20 @@ import { LynxTestEventEmitter } from '../test-utils/lynx-event-emitter.js';
 
 describe('core/globalProps', () => {
   let originalGlobalProps: typeof lynx.__globalProps;
-  let originalEmitter: typeof lynxCoreInject.tt.GlobalEventEmitter;
+  let originalEmitter: LynxApp['GlobalEventEmitter'];
   let emitter: LynxTestEventEmitter;
 
   beforeEach(() => {
     originalGlobalProps = lynx.__globalProps;
-    originalEmitter = lynxCoreInject.tt.GlobalEventEmitter;
+    originalEmitter = lynx.getApp().GlobalEventEmitter;
     emitter = new LynxTestEventEmitter();
     lynx.__globalProps = {};
-    lynxCoreInject.tt.GlobalEventEmitter = emitter as typeof lynxCoreInject.tt.GlobalEventEmitter;
+    lynx.getApp().GlobalEventEmitter = emitter as LynxApp['GlobalEventEmitter'];
   });
 
   afterEach(() => {
     lynx.__globalProps = originalGlobalProps;
-    lynxCoreInject.tt.GlobalEventEmitter = originalEmitter;
+    lynx.getApp().GlobalEventEmitter = originalEmitter;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });

@@ -20,25 +20,46 @@ import { Drawer } from 'vaul';
 import { Button } from './Button.js';
 import { CopyToast, useCopyToast } from './CopyToast.js';
 import { Maximize2, Minimize2, Smartphone } from './Icon.js';
+import { OpenUIRenderErrors } from './OpenUIRenderErrors.js';
+import { PreviewImage } from './PreviewImage.js';
+import type { PreviewImageSettings } from './PreviewImage.js';
 import { PreviewSimulationBar } from './PreviewSimulationBar.js';
 import { QrCode } from './QrCode.js';
 import { componentsByMessage } from '../demos.js';
 import { useMediaQuery } from '../hooks/useMediaQuery.js';
 import { copyToClipboard } from '../utils/clipboard.js';
 import { DEFAULT_A2UI_DEMO_URL } from '../utils/demoUrl.js';
+import {
+  buildPreviewScreenshotSource,
+  capturePreviewScreenshot,
+} from '../utils/previewScreenshot.js';
 import type { Protocol } from '../utils/protocol.js';
 import { publishOpenUIPayload } from '../utils/publishPayload.js';
+import type {
+  LocalA2UIMessagesPayload,
+  LocalA2UIMessagesPayloadCache,
+} from '../utils/renderUrl.js';
 import {
+  buildLynxXmlRenderUrl,
   buildMcpAppsRenderUrl,
   buildOpenUIRenderUrl,
   buildRenderUrl,
+  canInlineA2UIRenderUrl,
   canInlineOpenUIRenderUrl,
+  createLocalA2UIMessagesPayload,
+  createLocalA2UIMessagesPayloadCache,
+  hasExternalA2UIRenderPayload,
   hasShareableA2UIRenderPayload,
+  isPortableA2UIMessagesUrl,
 } from '../utils/renderUrl.js';
 
 declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
 
+// The Blob cache keys payloads by identity, so live sessions share this reference.
+const LIVE_PREVIEW_BOOTSTRAP_MESSAGES: readonly unknown[] = [];
+
 export type PreviewMode = 'phone' | 'full';
+type PreviewPanelMode = PreviewMode | 'image';
 
 export interface PreviewPanelPreviewModeContextValue {
   mode: PreviewMode;
@@ -50,6 +71,8 @@ export const PreviewPanelPreviewModeContext = createContext<
 >(null);
 
 export interface PreviewPanelRenderContextValue {
+  htmlSource?: string;
+  lynxXmlSource?: string;
   renderUrl: string;
 }
 
@@ -98,16 +121,44 @@ interface A2UIPreviewSource {
 
 interface OpenUIPreviewSource {
   kind: 'openui';
+  inlineMode?: boolean;
+  rawTextUrl?: string;
+  openuiLibrary?: 'stack' | 'chat';
   rawText: string;
   theme?: 'light' | 'dark';
   liveAction?: boolean;
   playbackMode?: boolean;
+  liveStream?: boolean;
 }
 
 export interface McpAppsPreviewSource {
   kind: 'mcp-apps';
   mcpAppData: unknown;
   theme?: 'light' | 'dark';
+}
+
+export interface LynxXmlPreviewSource {
+  kind: 'lynx-xml';
+  source: string;
+  sourcePath?: string;
+  theme?: 'light' | 'dark';
+}
+
+export interface HtmlPreviewSource {
+  kind: 'html';
+  source: string;
+  theme?: 'light' | 'dark';
+}
+
+export interface ReactLynxPreviewSource {
+  kind: 'reactlynx';
+  webUrl: string;
+  nativeUrl: string;
+}
+
+export interface ReactWebPreviewSource {
+  kind: 'reactweb';
+  webUrl: string;
 }
 
 interface PlaceholderPreviewSource {
@@ -119,7 +170,95 @@ export type PreviewPanelSource =
   | A2UIPreviewSource
   | OpenUIPreviewSource
   | McpAppsPreviewSource
+  | LynxXmlPreviewSource
+  | HtmlPreviewSource
+  | ReactLynxPreviewSource
+  | ReactWebPreviewSource
   | PlaceholderPreviewSource;
+
+export interface PreviewQrCard {
+  key: 'nativePreview' | 'webPreview';
+  item: PreviewQrItem;
+}
+
+export function createPreviewQrCards(
+  previewSource: PreviewPanelSource | undefined,
+  renderShareUrl: string,
+  lynxDevUrl: string,
+): PreviewQrCard[] {
+  if (!previewSource || previewSource.kind === 'placeholder') return [];
+
+  const showQrCode = previewSource.kind !== 'a2ui'
+    || hasShareableA2UIRenderPayload(previewSource);
+  const isLocalLynxXml = previewSource.kind === 'lynx-xml'
+    && !previewSource.sourcePath;
+  const cards: PreviewQrCard[] = [];
+
+  if (renderShareUrl) {
+    cards.push({
+      key: 'webPreview',
+      item: {
+        title: 'Web Preview',
+        description: 'Opens in any mobile browser via Lynx for Web.',
+        url: renderShareUrl,
+        urlTitle: renderShareUrl,
+        copyButtonTitle: 'Copy render URL',
+        showQrCode,
+      },
+    });
+  } else if (
+    previewSource.kind === 'a2ui'
+    && previewSource.liveAction === true
+  ) {
+    cards.push({
+      key: 'webPreview',
+      item: {
+        title: 'Web Preview',
+        description:
+          'This live preview stays in the current browser. Sharing requires a short published preview payload URL.',
+        placeholder: 'Share link unavailable',
+      },
+    });
+  } else if (isLocalLynxXml) {
+    cards.push({
+      key: 'webPreview',
+      item: {
+        title: 'Web Preview',
+        description:
+          'Edited Lynx XML is rendered only in the current browser. Reset to the example to restore its shareable URL.',
+        placeholder: 'QR unavailable for local edits',
+      },
+    });
+  }
+
+  if (lynxDevUrl) {
+    cards.push({
+      key: 'nativePreview',
+      item: {
+        title: 'Native Preview',
+        description: 'Opens in LynxExplorer for native rendering.',
+        url: lynxDevUrl,
+        urlTitle: lynxDevUrl,
+        copyButtonTitle: 'Copy Lynx dev bundle URL',
+        variant: 'alt',
+        showQrCode,
+      },
+    });
+  } else if (isLocalLynxXml) {
+    cards.push({
+      key: 'nativePreview',
+      item: {
+        title: 'Native Preview',
+        description:
+          'A browser-local edited source cannot be opened in LynxExplorer. Reset to the example to restore its native URL.',
+        placeholder: 'QR unavailable for local edits',
+        variant: 'alt',
+      },
+    });
+  }
+
+  return cards;
+}
 
 export type PreviewMetricName = 'fcp' | 'fmp' | 'tti' | 'render';
 
@@ -176,6 +315,7 @@ interface PreviewPanelProps {
   headerAfterTitle?: ReactNode;
   previewSource?: PreviewPanelSource;
   showPreviewModeSwitch?: boolean;
+  showImagePreview?: boolean;
   showSimulationBar?: boolean;
   /** When provided, overrides PreviewPanel's internal speed state. The
    *  parent becomes the single source of truth (e.g. a unified speed slider
@@ -193,18 +333,21 @@ interface PreviewPanelProps {
 }
 
 function PreviewModeSwitch(props: {
-  mode: PreviewMode;
-  onChange: (mode: PreviewMode) => void;
+  mode: PreviewPanelMode;
+  onChange: (mode: PreviewPanelMode) => void;
+  showImage: boolean;
 }) {
-  const { mode, onChange } = props;
+  const { mode, onChange, showImage } = props;
   return (
-    <div className='previewModeSwitch'>
+    <div className='previewModeSwitch' role='group' aria-label='Preview mode'>
       <button
         type='button'
         className={mode === 'phone'
           ? 'previewModeBtn active'
           : 'previewModeBtn'}
-        onClick={() => onChange('phone')}
+        onClick={() =>
+          onChange('phone')}
+        aria-pressed={mode === 'phone'}
         title='Phone frame'
       >
         Phone
@@ -212,11 +355,28 @@ function PreviewModeSwitch(props: {
       <button
         type='button'
         className={mode === 'full' ? 'previewModeBtn active' : 'previewModeBtn'}
-        onClick={() => onChange('full')}
+        onClick={() =>
+          onChange('full')}
+        aria-pressed={mode === 'full'}
         title='Full panel'
       >
         Full
       </button>
+      {showImage
+        ? (
+          <button
+            type='button'
+            className={mode === 'image'
+              ? 'previewModeBtn active'
+              : 'previewModeBtn'}
+            onClick={() => onChange('image')}
+            aria-pressed={mode === 'image'}
+            title='Native screenshot'
+          >
+            Image
+          </button>
+        )
+        : null}
     </div>
   );
 }
@@ -260,6 +420,26 @@ function absoluteUrl(url: string, origin: string): string {
   } catch {
     return url;
   }
+}
+
+export function buildReactLynxWebRenderUrl(
+  baseUrl: string,
+  previewSource: ReactLynxPreviewSource,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'reactlynx');
+  url.searchParams.set('bundleUrl', previewSource.webUrl);
+  return url.toString();
+}
+
+export function buildReactWebRenderUrl(
+  baseUrl: string,
+  previewSource: ReactWebPreviewSource,
+): string {
+  const url = new URL('render.html', baseUrl);
+  url.searchParams.set('protocol', 'reactweb');
+  url.searchParams.set('sourceUrl', previewSource.webUrl);
+  return url.toString();
 }
 
 function shouldUseClientPayloadStore(): boolean {
@@ -347,7 +527,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
     style,
     title,
   } = props;
-  const [mode, setMode] = useState<PreviewMode>('phone');
+  const [mode, setMode] = useState<PreviewPanelMode>('phone');
+  const [liveMode, setLiveMode] = useState<PreviewMode>('phone');
+  const [imageVisited, setImageVisited] = useState(false);
+  const [phoneSize, setPhoneSize] = useState({ width: 0, height: 0 });
+  const changeMode = useCallback((next: PreviewPanelMode) => {
+    setMode(next);
+    if (next === 'image') setImageVisited(true);
+    else setLiveMode(next);
+  }, []);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   // Mobile threshold matches the rest of the app (MobileTabBar, .brand hide,
@@ -379,6 +567,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const [liveComponents, setLiveComponents] = useState<string[]>([]);
   const liveTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const buildSeqRef = useRef(0);
+  const localMessagesPayloadCacheRef = useRef<
+    LocalA2UIMessagesPayloadCache | null
+  >(null);
+  localMessagesPayloadCacheRef.current ??= createLocalA2UIMessagesPayloadCache({
+    createPayload: (messages) =>
+      createLocalA2UIMessagesPayload(messages, window.URL),
+  });
+  const localMessagesPayloadCache = localMessagesPayloadCacheRef.current;
   const speedInputId = useId();
   const rawMetricId = useId();
   const metricId = useMemo(
@@ -456,32 +652,72 @@ export function PreviewPanel(props: PreviewPanelProps) {
   );
 
   const rspeedyDevUrl = useRspeedyDevUrl();
-  const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
-  const shareBaseUrl = useMemo(() => {
-    const u = new URL(baseUrl);
-    if (
-      (u.hostname === 'localhost' || u.hostname === '127.0.0.1')
-      && rspeedyDevUrl
-    ) {
-      try {
-        u.hostname = new URL(rspeedyDevUrl).hostname;
-      } catch {
-        // ignore hostname rewrite failures and keep the original URL
+  const supportsImage = props.showImagePreview ?? (previewSource !== undefined
+    && previewSource.kind !== 'html'
+    && previewSource.kind !== 'reactweb'
+    && previewSource.kind !== 'placeholder');
+  const imageActive = mode === 'image' && supportsImage;
+  const screenshotSource = useMemo(
+    () => buildPreviewScreenshotSource(previewSource, rspeedyDevUrl),
+    [previewSource, rspeedyDevUrl],
+  );
+  const screenshotSourceKey = JSON.stringify(screenshotSource);
+  const captureScreenshot = useCallback(
+    (settings: PreviewImageSettings, signal: AbortSignal) => {
+      if (!screenshotSource) {
+        return Promise.reject(
+          new Error('Add preview content before capturing.'),
+        );
       }
-    }
-    return u.toString();
-  }, [baseUrl, rspeedyDevUrl]);
-
+      return capturePreviewScreenshot(screenshotSource, settings, signal);
+    },
+    [screenshotSource],
+  );
+  // The parent can replace a keyed PreviewViewport without changing the mode.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Rebind the observer when the child viewport is replaced.
+  useEffect(() => {
+    if (imageActive || liveMode !== 'phone') return;
+    const screen = panelRef.current?.querySelector<HTMLElement>('.phoneScreen');
+    if (!screen) return;
+    const measure = () => {
+      const { clientWidth: width, clientHeight: height } = screen;
+      if (width <= 0 || height <= 0) return;
+      setPhoneSize(current =>
+        current.width === width && current.height === height
+          ? current
+          : { width, height }
+      );
+    };
+    measure();
+    const observer = typeof ResizeObserver === 'undefined'
+      ? undefined
+      : new ResizeObserver(measure);
+    observer?.observe(screen);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [children, imageActive, liveMode]);
+  const baseUrl = useMemo(() => window.location.href.replace(/#.*$/, ''), []);
   const renderContext = useMemo<PreviewPanelRenderContextValue>(
-    () => ({ renderUrl }),
-    [renderUrl],
+    () => ({
+      htmlSource: previewSource?.kind === 'html'
+        ? previewSource.source
+        : undefined,
+      lynxXmlSource: previewSource?.kind === 'lynx-xml'
+        ? previewSource.source
+        : undefined,
+      renderUrl,
+    }),
+    [previewSource, renderUrl],
   );
   const metricsContext = useMemo<PreviewPanelMetricsContextValue>(
     () => ({ metricId, onFrameSrcChange: handleMetricFrameSrcChange }),
     [handleMetricFrameSrcChange, metricId],
   );
   const bodyClass = bodyClassName
-    ?? (mode === 'full' || isFullscreen
+    ?? (liveMode === 'full' || isFullscreen
       ? 'previewPanelBody previewPanelBodyFull'
       : 'previewPanelBody');
   const panelStyle = isFullscreen
@@ -566,9 +802,36 @@ export function PreviewPanel(props: PreviewPanelProps) {
   }, [previewSource, speed]);
 
   useEffect(() => {
+    const handleRuntimeReady = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data === null || typeof event.data !== 'object') return;
+      const message = event.data as {
+        messagesUrl?: unknown;
+        runtimeReady?: unknown;
+        type?: unknown;
+      };
+      if (
+        message.type !== 'A2UI_RENDER_READY'
+        || message.runtimeReady !== true
+        || typeof message.messagesUrl !== 'string'
+      ) {
+        return;
+      }
+      localMessagesPayloadCache.markLoaded(message.messagesUrl);
+    };
+
+    window.addEventListener('message', handleRuntimeReady);
+    return () => {
+      window.removeEventListener('message', handleRuntimeReady);
+      localMessagesPayloadCache.dispose();
+    };
+  }, [localMessagesPayloadCache]);
+
+  useEffect(() => {
     const seq = ++buildSeqRef.current;
 
     if (!previewSource) {
+      localMessagesPayloadCache.clear();
       setRenderUrl('');
       setRenderShareUrl('');
       setLynxDevUrl('');
@@ -576,6 +839,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     }
 
     if (previewSource.kind === 'placeholder') {
+      localMessagesPayloadCache.clear();
       setRenderUrl('');
       setRenderShareUrl('');
       setLynxDevUrl('');
@@ -584,106 +848,157 @@ export function PreviewPanel(props: PreviewPanelProps) {
 
     if (previewSource.kind === 'a2ui') {
       const useClientPayloadStore = shouldUseClientPayloadStore();
-      const canSharePayload = hasShareableA2UIRenderPayload(previewSource)
+      const hasPayload = hasShareableA2UIRenderPayload(previewSource)
+        || previewSource.liveAction === true
         || useClientPayloadStore;
-      if (!canSharePayload) {
+      if (!hasPayload) {
+        localMessagesPayloadCache.clear();
         setRenderUrl('');
         setRenderShareUrl('');
         setLynxDevUrl('');
         return;
       }
 
-      const url = buildRenderUrl(
-        {
-          protocol: previewSource.protocol,
-          demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-          messagesUrl: previewSource.messagesUrl,
-          messages: previewSource.messages,
-          actionMocksUrl: previewSource.actionMocksUrl,
-          actionMocks: previewSource.actionMocks,
-          theme: previewSource.theme,
-          demoId: previewSource.demoId,
-          speed,
-          liveAction: previewSource.liveAction,
-          playbackMode: previewSource.playbackMode,
-        },
-        baseUrl,
-      );
+      const demoId = typeof previewSource.demoId === 'string'
+          && previewSource.demoId.trim().length > 0
+        ? previewSource.demoId.trim()
+        : undefined;
+      const providedMessagesUrl = typeof previewSource.messagesUrl === 'string'
+          && previewSource.messagesUrl.trim().length > 0
+        ? previewSource.messagesUrl.trim()
+        : undefined;
+      const portableMessagesUrl = isPortableA2UIMessagesUrl(
+          providedMessagesUrl,
+        )
+        ? providedMessagesUrl
+        : undefined;
+      const isLivePreview = previewSource.liveAction === true;
+      let localMessagesPayload: LocalA2UIMessagesPayload | undefined;
+      if (isLivePreview || (!demoId && !providedMessagesUrl)) {
+        try {
+          localMessagesPayload = localMessagesPayloadCache.ensure(
+            // The controller delivers live content after runtime readiness.
+            // Publishing the final/share payload must not navigate this iframe.
+            isLivePreview
+              ? LIVE_PREVIEW_BOOTSTRAP_MESSAGES
+              : previewSource.messages,
+          );
+        } catch {
+          localMessagesPayloadCache.clear();
+          setRenderUrl('');
+          setRenderShareUrl('');
+          setLynxDevUrl('');
+          return;
+        }
+      } else {
+        localMessagesPayloadCache.clear();
+      }
+
+      const renderInit = {
+        protocol: previewSource.protocol,
+        demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
+        messagesUrl: isLivePreview
+          ? localMessagesPayload?.messagesUrl
+          : providedMessagesUrl ?? localMessagesPayload?.messagesUrl,
+        messages: previewSource.messages,
+        actionMocksUrl: isLivePreview
+          ? undefined
+          : previewSource.actionMocksUrl,
+        actionMocks: isLivePreview ? undefined : previewSource.actionMocks,
+        theme: previewSource.theme,
+        demoId: isLivePreview ? undefined : demoId,
+        speed,
+        liveAction: previewSource.liveAction,
+        playbackMode: previewSource.playbackMode,
+      };
+      const hasExternalPayload = hasExternalA2UIRenderPayload(previewSource);
+      const url = buildRenderUrl(renderInit, baseUrl);
       // Shared URLs always render normally — playback is a local-only
       // visualization tool, not something a QR-scanner should land in.
       const shareUrl = buildRenderUrl(
         {
           protocol: previewSource.protocol,
           demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-          messagesUrl: previewSource.messagesUrl,
+          messagesUrl: portableMessagesUrl,
           messages: previewSource.messages,
           actionMocksUrl: previewSource.actionMocksUrl,
           actionMocks: previewSource.actionMocks,
           theme: previewSource.theme,
-          demoId: previewSource.demoId,
+          demoId,
           speed,
         },
-        shareBaseUrl,
+        baseUrl,
       );
-      setRenderUrl(url);
-      setRenderShareUrl(canSharePayload ? shareUrl : '');
+      setRenderUrl(canInlineA2UIRenderUrl(url) ? url : '');
+      setRenderShareUrl(
+        (hasExternalPayload || !isLivePreview)
+          && canInlineA2UIRenderUrl(shareUrl)
+          ? shareUrl
+          : '',
+      );
 
-      if (!canSharePayload) {
-        setLynxDevUrl('');
-        return;
-      }
-
-      if (!rspeedyDevUrl) {
-        setLynxDevUrl('');
-        return;
-      }
-
-      const uInline = new URL(rspeedyDevUrl);
-      if (speed !== 1) {
-        uInline.searchParams.set('speed', String(speed));
-      }
-      uInline.searchParams.set('theme', previewSource.theme);
-      if (previewSource.demoId) {
-        const demosBase = shareBaseUrl.endsWith('/')
-          ? shareBaseUrl
-          : `${shareBaseUrl}/`;
-        uInline.searchParams.set(
-          'messagesUrl',
-          new URL(`demos/${previewSource.demoId}.json`, demosBase).toString(),
-        );
-      } else if (previewSource.messagesUrl) {
-        uInline.searchParams.set('messagesUrl', previewSource.messagesUrl);
-        uInline.searchParams.delete('messages');
-        if (previewSource.actionMocksUrl) {
-          uInline.searchParams.set(
-            'actionMocksUrl',
-            previewSource.actionMocksUrl,
-          );
-          uInline.searchParams.delete('actionMocks');
-        } else if (previewSource.actionMocks) {
-          uInline.searchParams.set(
-            'actionMocks',
-            JSON.stringify(previewSource.actionMocks),
-          );
-          uInline.searchParams.delete('actionMocksUrl');
+      if (rspeedyDevUrl) {
+        const uInline = new URL(rspeedyDevUrl);
+        if (speed !== 1) {
+          uInline.searchParams.set('speed', String(speed));
         }
+        uInline.searchParams.set('theme', previewSource.theme);
+        let hasNativePayload = false;
+        if (demoId) {
+          const demosBase = baseUrl.endsWith('/')
+            ? baseUrl
+            : `${baseUrl}/`;
+          uInline.searchParams.set(
+            'messagesUrl',
+            new URL(
+              `demos/${demoId}.json`,
+              demosBase,
+            ).toString(),
+          );
+          hasNativePayload = true;
+        } else if (portableMessagesUrl) {
+          uInline.searchParams.set('messagesUrl', portableMessagesUrl);
+          uInline.searchParams.delete('messages');
+          if (previewSource.actionMocksUrl) {
+            uInline.searchParams.set(
+              'actionMocksUrl',
+              previewSource.actionMocksUrl,
+            );
+            uInline.searchParams.delete('actionMocks');
+          } else if (previewSource.actionMocks) {
+            uInline.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+            uInline.searchParams.delete('actionMocksUrl');
+          }
+          hasNativePayload = true;
+        } else if (!isLivePreview) {
+          uInline.searchParams.set(
+            'messages',
+            JSON.stringify(previewSource.messages),
+          );
+          if (previewSource.actionMocks) {
+            uInline.searchParams.set(
+              'actionMocks',
+              JSON.stringify(previewSource.actionMocks),
+            );
+          }
+          hasNativePayload = true;
+        }
+        const nativeUrl = uInline.toString();
+        setLynxDevUrl(
+          hasNativePayload && canInlineA2UIRenderUrl(nativeUrl)
+            ? nativeUrl
+            : '',
+        );
       } else {
-        uInline.searchParams.set(
-          'messages',
-          JSON.stringify(previewSource.messages),
-        );
-        if (previewSource.actionMocks) {
-          uInline.searchParams.set(
-            'actionMocks',
-            JSON.stringify(previewSource.actionMocks),
-          );
-        }
+        setLynxDevUrl('');
       }
-      setLynxDevUrl(uInline.toString());
 
       if (
-        previewSource.demoId
-        || previewSource.messagesUrl
+        demoId
+        || portableMessagesUrl
         || !useClientPayloadStore
       ) {
         return;
@@ -714,20 +1029,6 @@ export function PreviewPanel(props: PreviewPanelProps) {
             ? absoluteUrl(data.actionMocksUrl, payloadOrigin)
             : undefined;
 
-          const shortUrl = buildRenderUrl(
-            {
-              protocol: previewSource.protocol,
-              demoUrl: previewSource.demoUrl ?? DEFAULT_A2UI_DEMO_URL,
-              messagesUrl,
-              messages: previewSource.messages,
-              actionMocksUrl,
-              theme: previewSource.theme,
-              speed,
-              liveAction: previewSource.liveAction,
-              playbackMode: previewSource.playbackMode,
-            },
-            baseUrl,
-          );
           const shortShareUrl = buildRenderUrl(
             {
               protocol: previewSource.protocol,
@@ -738,11 +1039,13 @@ export function PreviewPanel(props: PreviewPanelProps) {
               theme: previewSource.theme,
               speed,
             },
-            shareBaseUrl,
+            baseUrl,
           );
-          setRenderUrl(shortUrl);
-          setRenderShareUrl(shortShareUrl);
+          setRenderShareUrl(
+            canInlineA2UIRenderUrl(shortShareUrl) ? shortShareUrl : '',
+          );
 
+          if (!rspeedyDevUrl) return;
           const u = new URL(rspeedyDevUrl);
           if (speed !== 1) {
             u.searchParams.set('speed', String(speed));
@@ -763,11 +1066,69 @@ export function PreviewPanel(props: PreviewPanelProps) {
             u.searchParams.delete('actionMocksUrl');
             u.searchParams.delete('actionMocks');
           }
-          setLynxDevUrl(u.toString());
+          const nativeUrl = u.toString();
+          setLynxDevUrl(
+            canInlineA2UIRenderUrl(nativeUrl) ? nativeUrl : '',
+          );
         } catch {
-          // Keep the inline URLs above if the local dev payload store is unavailable.
+          // Keep the local Blob URL or length-guarded URL selected above.
         }
       })();
+      return;
+    }
+
+    localMessagesPayloadCache.clear();
+
+    if (previewSource.kind === 'reactweb') {
+      const url = buildReactWebRenderUrl(baseUrl, previewSource);
+      setRenderUrl(url);
+      setRenderShareUrl(url);
+      setLynxDevUrl('');
+      return;
+    }
+
+    if (previewSource.kind === 'reactlynx') {
+      const url = buildReactLynxWebRenderUrl(baseUrl, previewSource);
+      setRenderUrl(url);
+      setRenderShareUrl(url);
+      setLynxDevUrl(previewSource.nativeUrl);
+      return;
+    }
+
+    if (previewSource.kind === 'html') {
+      // PreviewViewport writes source directly to a sandboxed srcDoc iframe.
+      // Keep HTML out of the Lynx render bridge and native preview URLs.
+      setRenderUrl('');
+      setRenderShareUrl('');
+      setLynxDevUrl('');
+      return;
+    }
+
+    if (previewSource.kind === 'lynx-xml') {
+      // PreviewViewport mounts a real <lynx-view> for this source. Keep the
+      // iframe render URL empty so XML never enters the A2UI/OpenUI renderer.
+      setRenderUrl('');
+      if (!previewSource.source) {
+        setRenderShareUrl('');
+        setLynxDevUrl('');
+        return;
+      }
+
+      if (!previewSource.sourcePath) {
+        setRenderShareUrl('');
+        setLynxDevUrl('');
+        return;
+      }
+
+      const shareSourceUrl = new URL(
+        previewSource.sourcePath,
+        baseUrl,
+      ).toString();
+      setRenderShareUrl(buildLynxXmlRenderUrl({
+        sourceUrl: shareSourceUrl,
+        theme: previewSource.theme,
+      }, baseUrl));
+      setLynxDevUrl(shareSourceUrl);
       return;
     }
 
@@ -779,7 +1140,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
       setRenderShareUrl(buildMcpAppsRenderUrl({
         mcpAppData: previewSource.mcpAppData,
         theme: previewSource.theme,
-      }, shareBaseUrl));
+      }, baseUrl));
 
       if (!rspeedyDevUrl) {
         setLynxDevUrl('');
@@ -801,23 +1162,33 @@ export function PreviewPanel(props: PreviewPanelProps) {
       return;
     }
 
+    const exampleRawTextUrl = previewSource.rawTextUrl
+      ? new URL(previewSource.rawTextUrl, baseUrl).href
+      : undefined;
     const inlineUrl = buildOpenUIRenderUrl({
-      rawText: previewSource.rawText,
+      openuiLibrary: previewSource.openuiLibrary,
+      rawText: previewSource.liveStream ? '' : previewSource.rawText,
+      rawTextUrl: previewSource.liveStream ? undefined : exampleRawTextUrl,
+      liveStream: previewSource.liveStream,
       theme: previewSource.theme,
+      inlineMode: previewSource.inlineMode,
       speed,
       liveAction: previewSource.liveAction,
       playbackMode: previewSource.playbackMode,
     }, baseUrl);
     const inlineShareUrl = buildOpenUIRenderUrl({
+      openuiLibrary: previewSource.openuiLibrary,
       rawText: previewSource.rawText,
+      rawTextUrl: exampleRawTextUrl,
       theme: previewSource.theme,
+      inlineMode: previewSource.inlineMode,
       speed,
-    }, shareBaseUrl);
+    }, baseUrl);
     const canInline = canInlineOpenUIRenderUrl(inlineUrl)
       && canInlineOpenUIRenderUrl(inlineShareUrl);
 
-    setRenderUrl(canInline ? inlineUrl : '');
-    setRenderShareUrl(canInline ? inlineShareUrl : '');
+    setRenderUrl(previewSource.liveStream || canInline ? inlineUrl : '');
+    setRenderShareUrl(canInline && previewSource.rawText ? inlineShareUrl : '');
 
     const setOpenUILynxDevUrl = (
       payload: { rawText: string } | { rawTextUrl: string },
@@ -828,6 +1199,14 @@ export function PreviewPanel(props: PreviewPanelProps) {
       }
       const u = new URL(rspeedyDevUrl);
       u.pathname = u.pathname.replace('a2ui.lynx', 'openui.lynx');
+      if (previewSource.inlineMode) {
+        u.searchParams.set('inlineMode', '1');
+      } else {
+        u.searchParams.delete('inlineMode');
+      }
+      if (previewSource.openuiLibrary) {
+        u.searchParams.set('openuiLibrary', previewSource.openuiLibrary);
+      }
       if (previewSource.theme) {
         u.searchParams.set('theme', previewSource.theme);
       }
@@ -845,7 +1224,15 @@ export function PreviewPanel(props: PreviewPanelProps) {
     };
 
     if (canInline) {
-      setOpenUILynxDevUrl({ rawText: previewSource.rawText });
+      setOpenUILynxDevUrl(
+        exampleRawTextUrl
+          ? {
+            rawTextUrl: previewSource.rawTextUrl && rspeedyDevUrl
+              ? new URL(previewSource.rawTextUrl, rspeedyDevUrl).href
+              : exampleRawTextUrl,
+          }
+          : { rawText: previewSource.rawText },
+      );
       return;
     }
 
@@ -870,23 +1257,35 @@ export function PreviewPanel(props: PreviewPanelProps) {
         if (seq !== buildSeqRef.current) return;
 
         setOpenUILynxDevUrl({ rawTextUrl });
-        setRenderUrl(buildOpenUIRenderUrl({
-          rawTextUrl,
-          theme: previewSource.theme,
-          speed,
-          liveAction: previewSource.liveAction,
-          playbackMode: previewSource.playbackMode,
-        }, baseUrl));
+        if (!previewSource.liveStream) {
+          setRenderUrl(buildOpenUIRenderUrl({
+            openuiLibrary: previewSource.openuiLibrary,
+            rawTextUrl,
+            theme: previewSource.theme,
+            inlineMode: previewSource.inlineMode,
+            speed,
+            liveAction: previewSource.liveAction,
+            playbackMode: previewSource.playbackMode,
+          }, baseUrl));
+        }
         setRenderShareUrl(buildOpenUIRenderUrl({
+          openuiLibrary: previewSource.openuiLibrary,
           rawTextUrl,
           theme: previewSource.theme,
+          inlineMode: previewSource.inlineMode,
           speed,
-        }, shareBaseUrl));
+        }, baseUrl));
       } catch (err) {
         console.warn('[openui] Failed to publish preview raw text', err);
       }
     })();
-  }, [baseUrl, previewSource, rspeedyDevUrl, shareBaseUrl, speed]);
+  }, [
+    baseUrl,
+    localMessagesPayloadCache,
+    previewSource,
+    rspeedyDevUrl,
+    speed,
+  ]);
 
   useEffect(() => {
     if (!previewSource || previewSource.kind === 'placeholder') {
@@ -912,43 +1311,11 @@ export function PreviewPanel(props: PreviewPanelProps) {
   }, [previewSource]);
 
   const previewQrCards = useMemo(() => {
-    if (!previewSource || previewSource.kind === 'placeholder') {
-      return [];
-    }
-
-    const showQrCode = previewSource.kind !== 'a2ui'
-      || hasShareableA2UIRenderPayload(previewSource);
-
-    const cards: Array<{ key: string; item: PreviewQrItem }> = [];
-    if (renderShareUrl) {
-      cards.push({
-        key: 'webPreview',
-        item: {
-          title: 'Web Preview',
-          description: 'Opens in any mobile browser via Lynx for Web.',
-          url: renderShareUrl,
-          urlTitle: renderShareUrl,
-          copyButtonTitle: 'Copy render URL',
-          showQrCode,
-        },
-      });
-    }
-    if (lynxDevUrl) {
-      cards.push({
-        key: 'nativePreview',
-        item: {
-          title: 'Native Preview',
-          description: 'Opens in LynxExplorer for native rendering.',
-          url: lynxDevUrl,
-          urlTitle: lynxDevUrl,
-          copyButtonTitle: 'Copy Lynx dev bundle URL',
-          variant: 'alt',
-          showQrCode,
-        },
-      });
-    }
-
-    return cards;
+    return createPreviewQrCards(
+      previewSource,
+      renderShareUrl,
+      lynxDevUrl,
+    );
   }, [lynxDevUrl, previewSource, renderShareUrl]);
 
   const handleCopyUrl = (key: string, value: string) => {
@@ -1032,31 +1399,35 @@ export function PreviewPanel(props: PreviewPanelProps) {
                       ? item.errorDescription
                       : item.description}
                   </div>
-                  <div className='previewQrUrlRow'>
-                    <div
-                      className='previewQrUrlText'
-                      title={item.urlTitle ?? item.url}
-                    >
-                      {item.urlTitle ?? item.url}
-                    </div>
-                    <button
-                      type='button'
-                      className='previewQrCopyBtn'
-                      aria-label={item.copyButtonTitle ?? 'Copy URL'}
-                      title={copied
-                        ? 'Copied'
-                        : (copyFailed
-                          ? 'Copy failed'
-                          : (item.copyButtonTitle ?? 'Copy URL'))}
-                      onClick={() => {
-                        if (item.url) {
-                          handleCopyUrl(key, item.url);
-                        }
-                      }}
-                    >
-                      {copied ? 'Copied' : (copyFailed ? 'Failed' : 'Copy')}
-                    </button>
-                  </div>
+                  {item.url
+                    ? (
+                      <div className='previewQrUrlRow'>
+                        <div
+                          className='previewQrUrlText'
+                          title={item.urlTitle ?? item.url}
+                        >
+                          {item.urlTitle ?? item.url}
+                        </div>
+                        <button
+                          type='button'
+                          className='previewQrCopyBtn'
+                          aria-label={item.copyButtonTitle ?? 'Copy URL'}
+                          title={copied
+                            ? 'Copied'
+                            : (copyFailed
+                              ? 'Copy failed'
+                              : (item.copyButtonTitle ?? 'Copy URL'))}
+                          onClick={() => {
+                            if (item.url) handleCopyUrl(key, item.url);
+                          }}
+                        >
+                          {copied
+                            ? 'Copied'
+                            : (copyFailed ? 'Failed' : 'Copy')}
+                        </button>
+                      </div>
+                    )
+                    : null}
                 </div>
                 {item.url && item.showQrCode !== false
                   ? (
@@ -1198,7 +1569,9 @@ export function PreviewPanel(props: PreviewPanelProps) {
   const hasExtras = !!liveComponentsBlock || hasQrSection || !!previewInfoHint;
 
   return (
-    <PreviewPanelPreviewModeContext.Provider value={{ mode, setMode }}>
+    <PreviewPanelPreviewModeContext.Provider
+      value={{ mode: liveMode, setMode: changeMode }}
+    >
       <PreviewPanelMetricsContext.Provider value={metricsContext}>
         <PreviewPanelRenderContext.Provider value={renderContext}>
           <div
@@ -1216,7 +1589,13 @@ export function PreviewPanel(props: PreviewPanelProps) {
               {headerAfterTitle}
               <div className='spacer' />
               {showPreviewModeSwitch
-                ? <PreviewModeSwitch mode={mode} onChange={setMode} />
+                ? (
+                  <PreviewModeSwitch
+                    mode={imageActive ? 'image' : liveMode}
+                    onChange={changeMode}
+                    showImage={supportsImage}
+                  />
+                )
                 : null}
               {hasExtras && isCompactViewport
                 ? (
@@ -1244,8 +1623,17 @@ export function PreviewPanel(props: PreviewPanelProps) {
               />
             </div>
             {beforeBody}
+            {!imageActive && previewSource?.kind === 'openui'
+              ? (
+                <OpenUIRenderErrors
+                  frameSrc={metricFrameSrc}
+                  containerRef={panelRef}
+                />
+              )
+              : null}
             {renderPreviewMetrics()}
             {showSimulationBar
+                && !imageActive
                 && previewSource
                 && previewSource.kind !== 'placeholder'
                 && previewSource.kind !== 'mcp-apps'
@@ -1268,7 +1656,22 @@ export function PreviewPanel(props: PreviewPanelProps) {
                 />
               )
               : null}
-            <div className={bodyClass}>{children}</div>
+            <div className={bodyClass} hidden={imageActive}>{children}</div>
+            {imageVisited && supportsImage
+              ? (
+                <div className='previewPanelImageBody' hidden={!imageActive}>
+                  <PreviewImage
+                    active={imageActive}
+                    sourceKey={screenshotSourceKey}
+                    phoneSize={phoneSize}
+                    capture={captureScreenshot}
+                    unavailableReason={screenshotSource
+                      ? undefined
+                      : 'Add preview content before capturing a native screenshot.'}
+                  />
+                </div>
+              )
+              : null}
             {
               /* Inline (desktop) and bottom sheet (mobile) render the same
                 live-components + QR blocks, but only one path is mounted at

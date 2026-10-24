@@ -7,7 +7,6 @@
 // @public
 export interface Artifact {
     debugSources: DebugSource[];
-    // (undocumented)
     filename: string;
     kind: 'main-thread' | 'background' | 'css';
     path: string;

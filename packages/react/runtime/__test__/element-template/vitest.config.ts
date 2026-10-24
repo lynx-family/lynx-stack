@@ -5,7 +5,7 @@ import type { Plugin, UserConfigExport } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
-const elementTemplateRuntimePkg = require.resolve('../../src/element-template/internal.ts');
+const elementTemplateRuntimePkg = require.resolve('../../src/element-template/internal.ts').split(path.sep).join('/');
 
 function transformReactLynxPlugin(): Plugin {
   return {
@@ -69,6 +69,10 @@ const config: UserConfigExport = defineConfig({
     dedupe: ['preact'],
     alias: {
       '@lynx-js/react/compat': path.resolve(__dirname, '../../compat/index.js'),
+      '@lynx-js/react/worklet-runtime/init': path.resolve(
+        __dirname,
+        '../../src/worklet-runtime/index.ts',
+      ),
       '@lynx-js/react/worklet-runtime/bindings': path.resolve(
         __dirname,
         '../../src/worklet-runtime/bindings/index.ts',
@@ -105,9 +109,10 @@ const config: UserConfigExport = defineConfig({
   },
   test: {
     name: 'react/runtime-et',
+    root: path.resolve(__dirname, '../..'),
     include: ['**/__test__/element-template/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     coverage: {
-      include: ['src/element-template/**'],
+      include: ['src/element-template/**', 'lazy/element-template*.js'],
       exclude: [
         'src/element-template/**/*.d.ts',
         'src/element-template/protocol/types.ts',

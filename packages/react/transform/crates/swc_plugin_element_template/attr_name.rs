@@ -12,7 +12,8 @@ pub enum AttrName {
   ID,
   Ref,
   TimingFlag,
-  WorkletRef,
+  UnsupportedNamespacedRef,
+  MTRef,
   Gesture,
 }
 
@@ -56,8 +57,11 @@ impl AttrName {
   pub fn from_ns(ns: Ident, name: Ident) -> Self {
     let ns_str = ns.sym.as_ref();
     let name_str = name.sym.as_ref();
+    if ns_str == "main-thread" && name_str == "ref" {
+      return AttrName::MTRef;
+    }
     if name_str == "ref" {
-      return AttrName::WorkletRef;
+      return AttrName::UnsupportedNamespacedRef;
     }
 
     if ns_str != "main-thread" {

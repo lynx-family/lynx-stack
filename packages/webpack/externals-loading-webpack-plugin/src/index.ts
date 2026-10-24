@@ -45,6 +45,8 @@ export interface ExternalsLoadingPluginOptions {
    * module.exports = {
    *  plugins: [
    *    new ExternalsLoadingPlugin({
+   *      mainThreadLayer: 'main-thread',
+   *      backgroundLayer: 'background',
    *      externals: {
    *        lodash: {
    *          url: 'http://lodash.lynx.bundle',
@@ -65,6 +67,8 @@ export interface ExternalsLoadingPluginOptions {
    * module.exports = {
    *  plugins: [
    *    new ExternalsLoadingPlugin({
+   *      mainThreadLayer: 'main-thread',
+   *      backgroundLayer: 'background',
    *      externals: {
    *        lodash: {
    *          url: 'http://lodash.lynx.bundle',
@@ -189,6 +193,7 @@ export interface ExternalValue {
    *     preact: {
    *       libraryName: ['ReactLynx', 'Preact'],
    *       url: '……',
+   *       async: false,
    *     },
    *   }
    * })
@@ -199,6 +204,15 @@ export interface ExternalValue {
    * ```js
    * externals: {
    *   preact: 'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.Preact',
+   * }
+   * ```
+   *
+   * With the default `async: true`, a `promise` external is generated instead,
+   * which picks the subpath after the library promise resolves:
+   *
+   * ```js
+   * externals: {
+   *   preact: 'promise Promise.resolve(lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["Preact"]; })',
    * }
    * ```
    *
@@ -285,8 +299,6 @@ function validateExternals(externals: Record<string, ExternalValue>): void {
  *     new ExternalsLoadingPlugin({
  *       mainThreadLayer: 'main-thread',
  *       backgroundLayer: 'background',
- *       mainThreadChunks: ['index__main-thread'],
- *       backgroundChunks: ['index'],
  *       externals: {
  *        'lodash': {
  *          url: 'http://lodash.lynx.bundle',

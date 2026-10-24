@@ -646,7 +646,7 @@ const config: UserConfig = defineConfig({
               link: '/guide/typescript',
             },
             {
-              text: 'CSS',
+              text: 'Styling',
               link: '/guide/css',
             },
             {
@@ -673,6 +673,10 @@ const config: UserConfig = defineConfig({
               text: 'Code Splitting',
               link: '/guide/code-splitting',
             },
+            {
+              text: 'External Bundle',
+              link: '/guide/external-bundle',
+            },
             // '/guide/compatibility',
             {
               text: 'Upgrade Rspeedy',
@@ -690,6 +694,10 @@ const config: UserConfig = defineConfig({
             {
               text: 'Use Rsdoctor',
               link: '/guide/use-rsdoctor',
+            },
+            {
+              text: 'Runtime Profiling',
+              link: '/guide/runtime-profiling',
             },
           ],
         },
@@ -752,6 +760,10 @@ const config: UserConfig = defineConfig({
               text: '代码拆分',
               link: '/zh/guide/code-splitting',
             },
+            {
+              text: 'External Bundle',
+              link: '/zh/guide/external-bundle',
+            },
             // '/guide/compatibility',
             {
               text: '升级 Rspeedy',
@@ -769,6 +781,10 @@ const config: UserConfig = defineConfig({
             {
               text: '使用 Rsdoctor',
               link: '/zh/guide/use-rsdoctor',
+            },
+            {
+              text: '运行时性能分析',
+              link: '/zh/guide/runtime-profiling',
             },
           ],
         },

@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runInNewContext } from 'node:vm'
 
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
@@ -13,6 +14,33 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
+
+async function collectJsAssets(
+  rootDir: string,
+  relativeDir = '.',
+): Promise<Map<string, string>> {
+  const entries = await fs.readdir(path.join(rootDir, relativeDir), {
+    withFileTypes: true,
+  })
+  const assets = new Map<string, string>()
+
+  await Promise.all(entries.map(async (entry) => {
+    const relativePath = path.join(relativeDir, entry.name)
+    if (entry.isDirectory()) {
+      const nested = await collectJsAssets(rootDir, relativePath)
+      for (const asset of nested) {
+        assets.set(...asset)
+      }
+    } else if (entry.name.endsWith('.js')) {
+      assets.set(
+        path.normalize(relativePath),
+        await fs.readFile(path.join(rootDir, relativePath), 'utf8'),
+      )
+    }
+  }))
+
+  return assets
+}
 
 // Workaround for an upstream `@rstest/coverage-istanbul` bug: it injects the
 // coverage SWC plugin by `push`-ing onto a shallow-copied (hence shared)
@@ -26,6 +54,7 @@ import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 function withLeakedCoverageCountersStubbed<T>(
   code: string,
   run: () => T,
+  counterTarget: Record<string, unknown> = globalThis,
 ): T {
   type CoverageCounterSink = () => CoverageCounterSink
   const sink: CoverageCounterSink = new Proxy(
@@ -38,8 +67,8 @@ function withLeakedCoverageCountersStubbed<T>(
   ) as unknown as CoverageCounterSink
   const added: string[] = []
   for (const name of new Set(code.match(/\bcov_\d+\b/g) ?? [])) {
-    if (!(name in globalThis)) {
-      ;(globalThis as Record<string, unknown>)[name] = () => sink
+    if (!(name in counterTarget)) {
+      counterTarget[name] = () => sink
       added.push(name)
     }
   }
@@ -47,12 +76,223 @@ function withLeakedCoverageCountersStubbed<T>(
     return run()
   } finally {
     for (const name of added) {
-      delete (globalThis as Record<string, unknown>)[name]
+      delete counterTarget[name]
     }
   }
 }
 
 describe('Lazy', () => {
+  test('unnamed lazy main-thread assets keep their runtime implementation inline', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const chunkGroupNames: (string | null | undefined)[][] = []
+    const encodedLepusChunkNames: string[][] = []
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-lazy-mtp-'),
+    )
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'production',
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-main-thread-programmability/index.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: {
+          distPath: { root: tmp },
+          minify: false,
+        },
+        performance: {
+          chunkSplit: { strategy: 'split-by-experience' },
+        },
+        plugins: [
+          pluginReactLynx(),
+          {
+            name: 'force-runtime-split-attempt',
+            pre: ['lynx:react'],
+            setup(api) {
+              api.modifyRspackConfig((config) => {
+                const splitChunks = config.optimization?.splitChunks
+                if (splitChunks && typeof splitChunks === 'object') {
+                  splitChunks.cacheGroups = {
+                    ...splitChunks.cacheGroups,
+                    forceMainThreadRuntime: {
+                      test:
+                        /packages[\\/]react[\\/]runtime[\\/]lib[\\/]worklet-runtime/,
+                      name: 'forced-main-thread-runtime',
+                      enforce: true,
+                      minSize: 0,
+                    },
+                  }
+                }
+                return config
+              })
+            },
+          } as RsbuildPlugin,
+        ],
+        tools: {
+          rspack: {
+            plugins: [
+              {
+                name: 'capture-lazy-mtp-template-input',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'capture-lazy-mtp-template-input',
+                    (compilation) => {
+                      const hooks = LynxTemplatePlugin
+                        .getLynxTemplatePluginHooks(
+                          compilation as unknown as Parameters<
+                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                          >[0],
+                        )
+                      hooks.beforeEncode.tap(
+                        'capture-lazy-mtp-template-input',
+                        (args) => {
+                          chunkGroupNames.push(
+                            args.chunkGroups.map(group => group.name),
+                          )
+                          encodedLepusChunkNames.push(
+                            args.encodeData.lepusCode.chunks.map(
+                              chunk => chunk.name,
+                            ),
+                          )
+                          return args
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+            ],
+          },
+        },
+      },
+    })
+
+    try {
+      const result = await rsbuild.build()
+      await result.close()
+
+      expect(
+        chunkGroupNames.some(names =>
+          names.length > 0 && names.every(name => name === undefined)
+        ),
+      ).toBe(true)
+      expect(encodedLepusChunkNames.flat()).not.toContain('worklet-runtime')
+
+      const assets = await collectJsAssets(tmp)
+      const runtimeOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('globalThis.lynxWorkletImpl = {')
+      )
+      const registrationOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('("main-thread",')
+      )
+
+      expect(runtimeOwners).toHaveLength(1)
+      expect(runtimeOwners[0]![0]).toContain('main-thread.js')
+      expect(runtimeOwners[0]![0]).not.toContain(
+        path.normalize('.lynx/main/main-thread.js'),
+      )
+      expect(runtimeOwners[0]![1].match(
+        /globalThis\.lynxWorkletImpl = \{/g,
+      )).toHaveLength(1)
+      expect(registrationOwners).toHaveLength(1)
+      expect(registrationOwners[0]![0]).toBe(runtimeOwners[0]![0])
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
+  test('standalone lazy bundles contain their runtime and registrations', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    const encodedLepusChunkNames: string[][] = []
+    const tmp = await fs.mkdtemp(
+      path.join(tmpdir(), 'rspeedy-react-standalone-lazy-mtp-'),
+    )
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        mode: 'production',
+        source: {
+          entry: {
+            main: fileURLToPath(
+              new URL(
+                './fixtures/lazy-main-thread-programmability/LazyComponent.tsx',
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        output: {
+          distPath: { root: tmp },
+          minify: false,
+        },
+        plugins: [
+          pluginReactLynx({ experimental_isLazyBundle: true }),
+        ],
+        tools: {
+          rspack: {
+            plugins: [
+              {
+                name: 'capture-standalone-lazy-mtp-template-input',
+                apply(compiler) {
+                  compiler.hooks.compilation.tap(
+                    'capture-standalone-lazy-mtp-template-input',
+                    (compilation) => {
+                      const hooks = LynxTemplatePlugin
+                        .getLynxTemplatePluginHooks(
+                          compilation as unknown as Parameters<
+                            typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                          >[0],
+                        )
+                      hooks.beforeEncode.tap(
+                        'capture-standalone-lazy-mtp-template-input',
+                        (args) => {
+                          encodedLepusChunkNames.push(
+                            args.encodeData.lepusCode.chunks.map(
+                              chunk => chunk.name,
+                            ),
+                          )
+                          return args
+                        },
+                      )
+                    },
+                  )
+                },
+              } as Rspack.RspackPluginInstance,
+            ],
+          },
+        },
+      },
+    })
+
+    try {
+      const result = await rsbuild.build()
+      await result.close()
+
+      expect(encodedLepusChunkNames.flat()).not.toContain('worklet-runtime')
+      const assets = await collectJsAssets(tmp)
+      const runtimeOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('globalThis.lynxWorkletImpl = {')
+      )
+      const registrationOwners = [...assets.entries()].filter(([, source]) =>
+        source.includes('("main-thread",')
+      )
+
+      expect(runtimeOwners).toHaveLength(1)
+      expect(runtimeOwners[0]![0]).toContain('main-thread.js')
+      expect(registrationOwners).toHaveLength(1)
+      expect(registrationOwners[0]![0]).toBe(runtimeOwners[0]![0])
+      expect(runtimeOwners[0]![1]).not.toContain('__workletRuntimeLoaded')
+    } finally {
+      await fs.rm(tmp, { recursive: true, force: true })
+    }
+  })
+
   test('alias for react', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -222,6 +462,254 @@ describe('Lazy', () => {
       rstest.unstubAllEnvs()
     })
   })
+  ;(['development', 'production'] as const).forEach(mode => {
+    test(`Element Template standalone lazy bundle reuses the host runtime in ${mode}`, async () => {
+      rstest.stubEnv('NODE_ENV', mode)
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const tmpRoot = fileURLToPath(
+        new URL('../../../../.tmp/', import.meta.url),
+      )
+      await fs.mkdir(tmpRoot, { recursive: true })
+      const tmp = await fs.mkdtemp(
+        path.join(tmpRoot, 'rspeedy-react-test-et-standalone-'),
+      )
+      let backgroundCode = ''
+      let mainThreadCode = ''
+
+      try {
+        const rsbuild = await createRspeedy({
+          rspeedyConfig: {
+            mode,
+            source: {
+              entry: {
+                main: fileURLToPath(
+                  new URL(
+                    './fixtures/standalone-lazy-bundle/element-template.tsx',
+                    import.meta.url,
+                  ),
+                ),
+              },
+            },
+            dev: { hmr: false, liveReload: false },
+            output: { distPath: { root: tmp } },
+            plugins: [
+              pluginReactLynx({
+                experimental_isLazyBundle: true,
+                experimental_useElementTemplate: true,
+              }),
+            ],
+            tools: {
+              rspack: {
+                plugins: [{
+                  name: 'capture-standalone-et-runtime',
+                  apply(compiler) {
+                    compiler.hooks.compilation.tap(
+                      'capture-standalone-et-runtime',
+                      compilation => {
+                        const hooks = LynxTemplatePlugin
+                          .getLynxTemplatePluginHooks(
+                            compilation as unknown as Parameters<
+                              typeof LynxTemplatePlugin.getLynxTemplatePluginHooks
+                            >[0],
+                          )
+                        hooks.beforeEmit.tap(
+                          'capture-standalone-et-runtime',
+                          args => {
+                            mainThreadCode = args.finalEncodeOptions.lepusCode
+                              ?.root ?? ''
+                            const manifest = args.finalEncodeOptions.manifest
+                            const background = Object.keys(manifest).find(
+                              name => /background.*?\.js$/.test(name),
+                            )
+                            backgroundCode = background
+                              ? manifest[background]!
+                              : ''
+                            return args
+                          },
+                        )
+                      },
+                    )
+                  },
+                } as Rspack.RspackPluginInstance],
+              },
+            },
+          },
+        })
+        await rsbuild.build()
+        expect(backgroundCode).not.toBe('')
+        expect(mainThreadCode).not.toBe('')
+
+        type BootstrapTarget =
+          & (() => unknown)
+          & Record<
+            PropertyKey,
+            unknown
+          >
+        const bootstrapTarget = new Proxy(
+          (() => undefined) as BootstrapTarget,
+          {
+            get(target, property, receiver: unknown): unknown {
+              if (
+                typeof property === 'symbol'
+                || Reflect.has(target, property)
+              ) {
+                return Reflect.get(target, property, receiver) as unknown
+              }
+              return receiver
+            },
+            apply: (_target, thisArg: unknown): unknown => thisArg,
+          },
+        )
+        for (
+          const [name, value] of Object.entries({
+            __BACKGROUND__: true,
+            __DEV__: false,
+            __ENABLE_REACT_ONLY__: false,
+            __ENABLE_SSR__: false,
+            __FIRST_SCREEN_SYNC_TIMING__: false,
+            __JS__: true,
+            __LEPUS__: false,
+            __MAIN_THREAD__: false,
+            __PROFILE__: false,
+            __USE_ELEMENT_TEMPLATE__: true,
+            lynx: bootstrapTarget,
+          })
+        ) {
+          rstest.stubGlobal(name, value)
+        }
+        const {
+          RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+          RUNTIME_BACKEND_SNAPSHOT,
+          registerRuntimeBackend,
+        } = await import('@lynx-js/react/element-template/internal')
+
+        for (const thread of ['background', 'main-thread']) {
+          const app = {
+            callDestroyLifetimeFun: rstest.fn(),
+            publishEvent: rstest.fn(),
+            publicComponentEvent: rstest.fn(),
+            updateGlobalProps: rstest.fn(),
+            updateCardData: rstest.fn(),
+            onAppReload: rstest.fn(),
+          }
+          const originalCallbacks = { ...app }
+          const vnode = {}
+          const hostReact = {
+            default: {},
+            root: { render: rstest.fn() },
+            useEffect: rstest.fn(),
+            useState: rstest.fn(),
+          }
+          const hostJSX = { jsx: rstest.fn(() => vnode) }
+          const hostJSXDev = { jsxDEV: rstest.fn(() => vnode) }
+          // The emitted module reads the real lazy ABI. A finite host makes any
+          // accidental native initialization fail instead of absorbing it.
+          const target: Record<string | symbol, unknown> = {
+            bundleSupportLoadScript: true,
+            Promise,
+            getApp: () => app,
+          }
+          const backend = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__')
+          target[backend] = RUNTIME_BACKEND_ELEMENT_TEMPLATE
+          rstest.stubGlobal('__LEPUS__', false)
+          rstest.stubGlobal('lynx', target)
+          const hostInternal = {
+            __root: {},
+            options: {},
+            RUNTIME_BACKEND_ELEMENT_TEMPLATE,
+            RUNTIME_BACKEND_SNAPSHOT,
+            registerRuntimeBackend,
+          }
+          const expectedRuntime = {
+            ...hostReact,
+            __root: hostInternal.__root,
+            options: hostInternal.options,
+            ...hostJSX,
+            ...hostJSXDev,
+          }
+          for (
+            const [entry, value] of Object.entries({
+              '@lynx-js/react': hostReact,
+              '@lynx-js/react/lepus': {},
+              '@lynx-js/react/internal': hostInternal,
+              '@lynx-js/react/jsx-runtime': hostJSX,
+              '@lynx-js/react/jsx-dev-runtime': hostJSXDev,
+            })
+          ) {
+            target[Symbol.for(`__REACT_LYNX_EXPORTS__(${entry})`)] = value
+          }
+
+          const execute = () => {
+            const lynx = target
+            const factories = new Map<string, (...args: unknown[]) => void>()
+            const tt = {
+              define: (name: string, factory: (...args: unknown[]) => void) => {
+                factories.set(name, factory)
+              },
+              require: (name: string) => {
+                const mockModule = { exports: {} }
+                const args: unknown[] = Array(18).fill(undefined)
+                args[1] = mockModule
+                args[2] = mockModule.exports
+                args[10] = console
+                args[16] = lynx
+                factories.get(name)!(...args)
+                return mockModule.exports
+              },
+            }
+            const code = thread === 'background'
+              ? backgroundCode
+              : mainThreadCode
+            return withLeakedCoverageCountersStubbed(code, () => {
+              if (thread === 'background') {
+                const bundle = runInNewContext(code, target) as {
+                  init: (context: { tt: typeof tt }) => unknown
+                }
+                return bundle.init({ tt })
+              }
+              const bundle = runInNewContext(code, target) as (
+                entry: string,
+              ) => unknown
+              return bundle('standalone-et')
+            }, target) as {
+              runtime: typeof expectedRuntime
+              default: () => unknown
+            }
+          }
+
+          const bundleExports = execute()
+          for (
+            const key of Object.keys(
+              expectedRuntime,
+            ) as (keyof typeof expectedRuntime)[]
+          ) {
+            expect(bundleExports.runtime[key]).toBe(expectedRuntime[key])
+          }
+          expect(bundleExports.default()).toBe(vnode)
+          for (const key of Object.keys(app) as (keyof typeof app)[]) {
+            expect(app[key]).toBe(originalCallbacks[key])
+            expect(app[key]).not.toHaveBeenCalled()
+          }
+
+          Object.defineProperty(target, backend, {
+            value: RUNTIME_BACKEND_SNAPSHOT,
+            configurable: true,
+          })
+          expect(execute).toThrow(
+            'Snapshot and Element Template templates cannot share lazy bundles.',
+          )
+          expect(target[backend]).toBe('Snapshot')
+          for (const key of Object.keys(app) as (keyof typeof app)[]) {
+            expect(app[key]).toBe(originalCallbacks[key])
+          }
+        }
+      } finally {
+        rstest.unstubAllEnvs()
+        rstest.unstubAllGlobals()
+        await fs.rm(tmp, { recursive: true, force: true })
+      }
+    })
+  })
 
   test('lazy bundle beforeEncode chunkGroups', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
@@ -270,7 +758,7 @@ describe('Lazy', () => {
                   // add .ts suffix to ignore-css-loader
                   // this workaround is needed because vitest
                   // runs on our ts files.
-                  rule.get('loader') as string + '.ts',
+                  rule.get('loader')! + '.ts',
                 )
               })
             },
@@ -290,7 +778,7 @@ describe('Lazy', () => {
                         (assets) => {
                           for (const key in assets) {
                             if (
-                              /\.rspeedy[\\/]main[\\/]background\.js$/.test(key)
+                              /\.lynx[\\/]main[\\/]background\.js$/.test(key)
                             ) {
                               backgroundJSContent = assets[key]!.source()
                                 .toString()!
@@ -354,7 +842,7 @@ describe('Lazy', () => {
           backgroundJSContent,
         )![1]
       expect(cssHotUpdateList).toMatchInlineSnapshot(
-        `"[["_react_background_fixtures_lazy-bundle_LazyComponent_tsx",".rspeedy/lazy-bundle/fixtures_lazy-bundle_LazyComponent.tsx/background.css.hot-update.json"],["main",".rspeedy/main/main.css.hot-update.json"]]"`,
+        `"[["_react_background_fixtures_lazy-bundle_LazyComponent_tsx",".lynx/lazy-bundle/fixtures_lazy-bundle_LazyComponent.tsx/background.css.hot-update.json"],["main",".lynx/main/main.css.hot-update.json"]]"`,
       )
     } finally {
       rstest.unstubAllEnvs()
@@ -409,7 +897,7 @@ describe('Lazy', () => {
                   // add .ts suffix to ignore-css-loader
                   // this workaround is needed because vitest
                   // runs on our ts files.
-                  rule.get('loader') as string + '.ts',
+                  rule.get('loader')! + '.ts',
                 )
               })
             },
@@ -463,7 +951,7 @@ describe('Lazy', () => {
       await rsbuild.createDevServer()
       await waitCompilationDone()
       expect(appServiceJSContent).toMatchInlineSnapshot(
-        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/lazy-bundle/fixtures_lazy-bundle_LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.lynx/lazy-bundle/fixtures_lazy-bundle_LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
       )
 
       // Modify the fixtures/lazy-bundle/LazyComponent.tsx file
@@ -476,7 +964,7 @@ describe('Lazy', () => {
       await waitCompilationDone()
 
       expect(appServiceJSContent).toMatchInlineSnapshot(
-        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.rspeedy/lazy-bundle/fixtures_lazy-bundle_LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
+        `"(function(){'use strict';function n({tt}){tt.define('/app-service.js',function(e,module,_,i,l,u,a,c,s,f,p,d,h,v,g,y,lynx){module.exports=lynx.requireModule("/.lynx/lazy-bundle/fixtures_lazy-bundle_LazyComponent.tsx/background.js",globDynamicComponentEntry?globDynamicComponentEntry:'__Card__');});return tt.require('/app-service.js');}return{init:n}})()"`,
       )
     } finally {
       if (tmpContent !== undefined) {
@@ -537,7 +1025,7 @@ describe('Lazy', () => {
                   // add .ts suffix to ignore-css-loader
                   // this workaround is needed because vitest
                   // runs on our ts files.
-                  rule.get('loader') as string + '.ts',
+                  rule.get('loader')! + '.ts',
                 )
               })
             },

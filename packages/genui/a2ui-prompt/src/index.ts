@@ -7,16 +7,16 @@ import * as path from 'node:path';
 
 import {
   createA2UICatalogFromManifests,
-} from '../../server/agent/a2ui-catalog.js';
+} from '../../server/agent/a2ui/a2ui-catalog.js';
 import type {
   A2UICatalog,
   A2UIFunctionSpec,
   JsonSchema,
-} from '../../server/agent/a2ui-catalog.js';
+} from '../../server/agent/a2ui/a2ui-catalog.js';
 
-export * from '../../server/agent/a2ui-catalog.js';
-export * from '../../server/agent/a2ui-examples.js';
-export * from '../../server/agent/a2ui-prompt.js';
+export * from '../../server/agent/a2ui/a2ui-catalog.js';
+export * from '../../server/agent/a2ui/a2ui-examples.js';
+export * from '../../server/agent/a2ui/a2ui-prompt.js';
 
 /**
  * Options for loading generated A2UI catalog artifacts from a directory.

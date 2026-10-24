@@ -19,6 +19,7 @@ export { RawText } from './RawText.js';
  *
  * Events:
  * - `layout`: Fired when text layout happens (if enabled). Detail provides line info.
+ * - `selectionchange`: Fired when the text selection changes. Detail provides start, end, and direction.
  *
  * CSS Variables:
  * - `--lynx-text-bg-color`: Inherited background color for nested text elements.

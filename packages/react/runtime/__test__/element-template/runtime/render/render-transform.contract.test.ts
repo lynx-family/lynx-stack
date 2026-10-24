@@ -20,11 +20,16 @@ import {
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
-import { renderOpcodesIntoElementTemplate } from '../../../../src/element-template/runtime/render/render-opcodes.js';
+import { renderToElementTemplate } from '../../../../src/element-template/runtime/render/render-direct.js';
+import { resetElementTemplatePatchListener } from '../../../../src/element-template/native/patch-listener.js';
+import { resetElementTemplateRefInitValueListener } from '../../../../src/element-template/main-thread-ref-init-value.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
-import type { SerializedTypedNode } from '../../../../src/element-template/protocol/types.js';
-import { renderToString } from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
+import type {
+  SerializedCompiledNode,
+  SerializedEtNode,
+  SerializedTypedListNode,
+} from '../../../../src/element-template/protocol/types.js';
 import { hydrateBackground } from '../../test-utils/debug/hydrate.js';
 import { clearTemplates, registerBuiltinRawTextTemplate, registerTemplates } from '../../test-utils/debug/registry.js';
 import { installMockNativePapi, lastMock } from '../../test-utils/mock/mockNativePapi.js';
@@ -35,9 +40,13 @@ interface CompileOptions {
 }
 
 interface RenderResult {
-  rootRef: ElementRef;
+  rootRef: ElementTemplateHandle;
   userTemplateIds: string[];
   code: string;
+}
+
+function isSerializedCompiledNode(node: SerializedEtNode): node is SerializedCompiledNode {
+  return 'templateKey' in node;
 }
 
 function findUserTemplateCreateLog(): unknown[] | undefined {
@@ -160,8 +169,7 @@ async function compileAndRender(
     };
 
     const vnode = { type: module.App, props: {}, key: null, ref: null };
-    const opcodes = renderToString(vnode, null);
-    const { rootRefs } = renderOpcodesIntoElementTemplate(opcodes);
+    const { rootRefs } = renderToElementTemplate(vnode);
 
     expect(rootRefs).toHaveLength(1);
 
@@ -173,6 +181,8 @@ async function compileAndRender(
       code: transformedCode,
     };
   } finally {
+    resetElementTemplatePatchListener();
+    resetElementTemplateRefInitValueListener();
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 }
@@ -198,7 +208,7 @@ describe('render transform contract', () => {
     resetTemplateId();
   });
 
-  it('imports only the worklet runtime loader for direct main-thread events', async () => {
+  it('imports the runtime init entry for direct main-thread events', async () => {
     const result = await compileMainThreadElementTemplate(`
       function handleTap() {
         'main thread';
@@ -210,8 +220,11 @@ describe('render transform contract', () => {
     `);
     const code = result.code ?? '';
 
-    expect(code).toContain('from "@lynx-js/react/internal"');
-    expect(code).toContain('loadWorkletRuntime');
+    expect(code).toContain(
+      'import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init"',
+    );
+    expect(code).not.toContain('loadWorkletRuntime');
+    expect(code).toContain('__registerWorklet("main-thread"');
     expect(code).toContain('adaptMTEventAttrSlot');
     expect(code).not.toContain('adaptEventAttrSlot');
     expect(code).not.toContain('registerWorkletOnBackground');
@@ -336,7 +349,7 @@ describe('render transform contract', () => {
     ]);
   });
 
-  it('creates transformed lists as typed holders with detached list item roots', async () => {
+  it('creates transformed lists as typed holders', async () => {
     const { rootRef } = await compileAndRender(`
       export function App() {
         return (
@@ -362,7 +375,7 @@ describe('render transform contract', () => {
         'enqueue-component': expect.any(Function),
       },
       __handleId: -2,
-      __elementSlots: null,
+      __childSlots: null,
       __options: {
         listChildren: [
           expect.objectContaining({
@@ -384,7 +397,7 @@ describe('render transform contract', () => {
     });
 
     const serialized = __SerializeElementTemplate(rootRef);
-    expect(serialized.elementSlots ?? []).toEqual([]);
+    expect(serialized.childSlots ?? []).toEqual([]);
     expect(serialized).toMatchObject({
       tag: 'list',
       attributes: { id: 'feed' },
@@ -414,10 +427,11 @@ describe('render transform contract', () => {
 
     expect(result.code).toContain('DeferredListItem');
     expect(result.code).toContain('unmountRecycled');
-    expect(result.code).toContain('__listItemPlatformInfo');
+    expect(result.code).toContain('__etHost');
+    expect(result.code).toContain('"item-key": "late"');
   });
 
-  it('chains transformed list create, serialize, hydrate, update, and callbacks', async () => {
+  it('chains create, serialize, update, and callbacks', async () => {
     const { rootRef } = await compileAndRender(`
       export function App() {
         return (
@@ -428,15 +442,19 @@ describe('render transform contract', () => {
         );
       }
     `);
-    const serialized = __SerializeElementTemplate(rootRef) as SerializedTypedNode;
-    const serializedChildren = serialized.options?.listChildren as
-      | Array<{
-        templateKey: string;
-        uid: number;
-      }>
-      | undefined;
+    const serialized = __SerializeElementTemplate(rootRef) as SerializedTypedListNode;
+    const serializedChildren = serialized.options?.listChildren;
     if (!serializedChildren || serializedChildren.length !== 2) {
       throw new Error('Expected first-screen typed list serialize to include two list children.');
+    }
+    const [firstSerializedChild, secondSerializedChild] = serializedChildren;
+    if (
+      !firstSerializedChild
+      || !secondSerializedChild
+      || !isSerializedCompiledNode(firstSerializedChild)
+      || !isSerializedCompiledNode(secondSerializedChild)
+    ) {
+      throw new Error('Expected first-screen typed list children to be compiled ET nodes.');
     }
 
     globalThis.__LEPUS__ = false;
@@ -446,9 +464,9 @@ describe('render transform contract', () => {
 
     const list = new BackgroundListElementTemplateInstance();
     list.setAttribute('attributes', { id: 'feed' });
-    const first = new BackgroundElementTemplateInstance(serializedChildren[0]!.templateKey);
+    const first = new BackgroundElementTemplateInstance(firstSerializedChild.templateKey);
     first.setAttribute('__listItemPlatformInfo', { 'item-key': 'first' });
-    const second = new BackgroundElementTemplateInstance(serializedChildren[1]!.templateKey);
+    const second = new BackgroundElementTemplateInstance(secondSerializedChild.templateKey);
     second.setAttribute('__listItemPlatformInfo', { 'item-key': 'second' });
     list.appendChild(first);
     list.appendChild(second);
@@ -458,16 +476,18 @@ describe('render transform contract', () => {
       ElementTemplateUpdateOps.updateTypedListItem,
       serialized.uid,
       {
-        __etHandleRef: serializedChildren[0]!.uid,
-        type: serializedChildren[0]!.templateKey,
+        __etHandleRef: firstSerializedChild.uid,
+        type: firstSerializedChild.templateKey,
         platformInfo: { 'item-key': 'first' },
+        subtreeHandleIds: [],
       },
       ElementTemplateUpdateOps.updateTypedListItem,
       serialized.uid,
       {
-        __etHandleRef: serializedChildren[1]!.uid,
-        type: serializedChildren[1]!.templateKey,
+        __etHandleRef: secondSerializedChild.uid,
+        type: secondSerializedChild.templateKey,
         platformInfo: { 'item-key': 'second' },
+        subtreeHandleIds: [],
       },
     ]);
 
@@ -502,21 +522,23 @@ describe('render transform contract', () => {
           updateAction: [],
         },
       }),
-      __elementSlots: null,
+      __childSlots: null,
     });
 
-    const attrs = rootRef.attributes as Record<string, unknown>;
+    const listHandle = rootRef as ElementTemplateHandle & { attributes: Record<string, unknown> };
+    const attrs = listHandle.attributes;
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    const secondRef = elementTemplateRegistry.get(serializedChildren[1]!.uid as number);
+    const secondRef = elementTemplateRegistry.get(secondSerializedChild.uid);
     if (!secondRef) {
       throw new Error('Expected hydrated second item handle to stay registered.');
     }
-    const listID = __GetElementUniqueID(rootRef);
-    const sign = componentAtIndex(rootRef, listID, 0, 91, false);
-    const secondNativeLabel = `<${serializedChildren[1]!.templateKey} />`;
+    const materializedList = { __mockNativeId: 1000 } as unknown as FiberElement;
+    const listID = __GetElementUniqueID(materializedList);
+    const sign = componentAtIndex(materializedList, listID, 0, 91, false);
+    const secondNativeLabel = `<${secondSerializedChild.templateKey} />`;
 
-    expect(sign).toBe(__GetElementUniqueID(secondRef));
+    expect(sign).toBe(__GetElementUniqueID(secondRef as unknown as FiberElement));
     expect(lastMock!.nativeLog).toContainEqual([
       '__InsertNodeToElementTemplate',
       '<list />',
@@ -535,7 +557,7 @@ describe('render transform contract', () => {
       },
     ]);
 
-    enqueueComponent(rootRef, listID, sign);
+    enqueueComponent(materializedList, listID, sign);
 
     expect(lastMock!.nativeLog).toContainEqual([
       '__RemoveNodeFromElementTemplate',
@@ -543,6 +565,6 @@ describe('render transform contract', () => {
       0,
       secondNativeLabel,
     ]);
-    expect(elementTemplateRegistry.get(serializedChildren[1]!.uid as number)).toBe(secondRef);
+    expect(elementTemplateRegistry.get(secondSerializedChild.uid)).toBe(secondRef);
   });
 });

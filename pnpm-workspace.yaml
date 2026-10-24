@@ -6,9 +6,9 @@ packages:
   - packages/genui/*
   - packages/i18n/*
   - packages/lynx/*
-  - packages/mcp-servers/*
   - packages/repl
   - packages/react
+  - packages/react-signals
   - packages/react/refresh
   - packages/react/runtime
   - packages/react/testing-library
@@ -27,16 +27,20 @@ packages:
   - packages/web-platform/*
   - packages/webpack/*
   - website
+  - docs
 
 # From `@pnpm/plugin-better-defaults`
 enablePrePostScripts: false
 engineStrict: true
 hoistWorkspacePackages: true
-ignorePatchFailures: false
 optimisticRepeatInstall: true
 publicHoistPattern: []
 resolutionMode: "lowest-direct"
 strictPeerDependencies: true
+
+# Treat workspace topology and filter mistakes as hard errors.
+disallowWorkspaceCycles: true
+failIfNoMatch: true
 
 # Match Renovate's npm minimum release age; pnpm also guards lockfile maintenance.
 minimumReleaseAge: 4320
@@ -45,24 +49,38 @@ minimumReleaseAge: 4320
 # would otherwise be blocked by `minimumReleaseAge`.
 minimumReleaseAgeExclude:
   - "@lynx-js/*"
+  # 4.13.1 carries the fix for the Windows page URLs we patched 4.12.0 for,
+  # published the day we take it: https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
+  - "typedoc-plugin-markdown"
   # typia-rspack-plugin uses trusted publish + staged publish
   - "typia-rspack-plugin"
-  # First-party Rspack/Rsbuild toolchain — trusted, upgraded deliberately.
+  # First-party Rstack toolchain — trusted, upgraded deliberately.
   - "@rspack/*"
   - "@rsbuild/*"
+  - "@rslib/*"
+  - "rsbuild-plugin-dts"
   - "@rstest/*"
-  # Renovate security update: turbo@2.9.14
-  - turbo@2.9.14
-  # Renovate security update: dompurify@3.4.0
-  - dompurify@3.4.0
-# npm's abbreviated metadata omits the `time` field, so a strict check hard-fails
-# (`ERR_PNPM_MISSING_TIME`) on packages it cannot date — e.g. during
-# `pnpm dedupe --check`. Run non-strict so the age check is enforced when `time`
-# is available and skipped (with a warning) when it is not.
-minimumReleaseAgeStrict: false
+  - "@rstackjs/create-toolkit"
+  # Rsdoctor packages are upgraded deliberately as a coordinated release.
+  - "@rsdoctor/core"
+  - "@rsdoctor/client"
+  - "@rsdoctor/shared"
+  # Changesets v3 packages were released as one coordinated set.
+  - "@changesets/*"
+minimumReleaseAgeExcludePrune: true
+# Some registry metadata omits the `time` field. Skip only those packages;
+# otherwise fail rather than falling back to a release younger than three days.
+minimumReleaseAgeIgnoreMissingTime: true
+minimumReleaseAgeStrict: true
 
 peerDependencyRules:
   allowedVersions:
+    # These unreleased workspace implementations still carry their previous
+    # release versions. Remove the scoped exceptions after release versioning;
+    # the published peers must continue to require React ^0.128.0.
+    "@lynx-js/react-rsbuild-plugin@0.20.4>@lynx-js/react": "0.127.0"
+    "@lynx-js/react-alias-rsbuild-plugin@0.20.4>@lynx-js/react": "0.127.0"
+    "@lynx-js/react-webpack-plugin@0.12.1>@lynx-js/react": "0.127.0"
     # `vite-plugin-babel` only calls `loadOptions`, `loadPartialConfig` and
     # `transformAsync`, which all still exist in Babel 8; its `^7.0.0` range
     # predates the release. Verified by building and testing the one package
@@ -98,16 +116,17 @@ peerDependencyRules:
 
 # Default catalogs
 catalog:
-  "@microsoft/api-extractor": "7.58.12"
+  "@microsoft/api-extractor": "7.59.4"
   typescript: &typescript-version "6.0.3"
 
 catalogs:
   # Packages vendored from the Lynx toolchain.
   lynxjs:
-    preact: "npm:@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c"
+    preact: "npm:@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a"
+    "@lynx-js/preact-devtools": "5.0.1-20260827072047-5f77e12"
 
   adb:
-    "@yume-chan/adb": ^2.6.0
+    "@yume-chan/adb": ^2.6.4
     "@yume-chan/adb-scrcpy": ^2.3.2
     "@yume-chan/adb-server-node-tcp": ^2.5.2
     "@yume-chan/async": ^4.1.3
@@ -119,24 +138,25 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.1.7"
+    "@rsbuild/core": "2.2.9"
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.0-beta.1"
+    "@rslib/core": "1.0.2"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.1.5"
-    "@rspack/core": "2.1.5"
-    "@rspack/dev-server": "2.1.0"
-    "@rspack/test-tools": "2.1.3"
+    "@rspack/cli": "2.2.7"
+    "@rspack/core": "2.2.7"
+    "@rspack/dev-server": "2.2.1"
+    "@rspack/test-tools": "2.2.7"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.11.3"
-    "@rstest/coverage-istanbul": "0.11.3"
-    "@rstest/core": "0.11.3"
+    "@rstest/adapter-rsbuild": "0.12.1"
+    "@rstest/adapter-rslib": "0.12.1"
+    "@rstest/coverage-istanbul": "0.12.1"
+    "@rstest/core": "0.12.1"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
@@ -145,10 +165,13 @@ overrides:
   # singletons, which breaks ReactLynx snapshot registration ("BackgroundSnapshot not
   # found"). Force every @lynx-js/react to the single workspace copy.
   "@lynx-js/react": "workspace:*"
-  "@rspack/core": "$@rspack/core"
-  "@rsbuild/core>@rspack/core": "$@rspack/core"
-  "@rsdoctor/rspack-plugin>@rspack/core": "$@rspack/core"
-  "@rsdoctor/types>@rspack/core": "$@rspack/core"
+  # @rspress/plugin-typedoc pins 4.12.0, whose `excludeScopesInPaths` writes
+  # Windows path separators into page URLs. 4.13.1 fixes it, and the renderer
+  # has to be the copy the plugin loads.
+  # https://github.com/typedoc2md/typedoc-plugin-markdown/issues/903
+  "typedoc-plugin-markdown": "4.13.1"
+
+  "@rspack/core": "catalog:rspack"
 
 packageExtensions:
   # Typia's internal packages import TypeScript without declaring it. Keep
@@ -171,10 +194,16 @@ strictDepBuilds: true
 
 allowBuilds:
   "@biomejs/biome": false
+  # 0.2.11 added an installation-telemetry postinstall (random install id, salted
+  # project id, versions, OS/CI metadata). The package works without it.
+  "@openuidev/lang-core": false
   "@parcel/watcher": false
   "@swc/core": false
   core-js: false
   dprint: true
   esbuild: true
   sharp: true
+  # The published package already includes its generated JS implementation.
+  # Its postinstall only rebuilds that file when it is absent.
+  tos-crc64-js: false
   unrs-resolver: false

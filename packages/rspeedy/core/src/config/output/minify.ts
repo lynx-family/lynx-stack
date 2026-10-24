@@ -5,7 +5,7 @@
 import type { Rspack } from '@rsbuild/core'
 
 /**
- * {@inheritdoc Output.minify}
+ * {@inheritDoc Output.minify}
  *
  * @public
  */
@@ -92,16 +92,9 @@ export interface Minify {
   jsOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
 
   /**
-   * {@link Minify.mainThreadOptions} is used to override
-   * {@link Minify.jsOptions} for main-thread bundles.
+   * {@inheritDoc @lynx-js/rsbuild-plugin#LynxMinify.mainThreadOptions}
    *
    * @defaultValue undefined
-   *
-   * @remarks
-   *
-   * This option is deep-merged into {@link Minify.jsOptions}.
-   * It is mainly used together with ReactLynx dual-thread outputs so that
-   * main-thread and background-thread bundles can use different compress rules.
    *
    * @example
    *
@@ -133,16 +126,9 @@ export interface Minify {
   mainThreadOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
 
   /**
-   * {@link Minify.backgroundOptions} is used to override
-   * {@link Minify.jsOptions} for background-thread bundles.
+   * {@inheritDoc @lynx-js/rsbuild-plugin#LynxMinify.backgroundOptions}
    *
    * @defaultValue undefined
-   *
-   * @remarks
-   *
-   * This option is deep-merged into {@link Minify.jsOptions}.
-   * It is mainly used together with ReactLynx dual-thread outputs so that
-   * main-thread and background-thread bundles can use different compress rules.
    */
   backgroundOptions?: Rspack.SwcJsMinimizerRspackPluginOptions | undefined
 }

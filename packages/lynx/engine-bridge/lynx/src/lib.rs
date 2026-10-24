@@ -1,8 +1,8 @@
 //! Runtime-loaded Rust bindings for headless Lynx embedding.
 //!
 //! The crate does not link against `libLynx_clay` at build time. Load a runtime
-//! with [`Env::load`] or [`Env::load_from_path`], then compose a
-//! [`WindowlessRenderer`], optional [`ResourceFetcher`], and [`HeadlessView`].
+//! with [`LynxEnv::load`] or [`LynxEnv::load_from_path`], then compose a
+//! [`WindowlessRenderer`], optional [`ResourceFetcher`], and [`LynxView`].
 //!
 //! Raw C ABI bindings are available in [`sys`] for integration code that needs
 //! to call a symbol not wrapped by the safe API yet.
@@ -16,7 +16,7 @@ mod resource;
 pub mod sys;
 mod view;
 
-pub use env::Env;
+pub use env::LynxEnv;
 pub use error::{Error, Result};
 pub use group::LynxGroup;
 pub use renderer::{
@@ -27,7 +27,7 @@ pub use renderer::{
 pub use resource::{
   FetchResponse, GenericResourceFetcher, ResourceFetcher, ResourceRequest, ResourceType,
 };
-pub use view::{HeadlessView, HeadlessViewBuilder};
+pub use view::{DevtoolTarget, HeadlessViewBuilder, LynxView, TouchEvent};
 
 pub use sys::{lynx_key_event_t as KeyEvent, lynx_pointer_event_t as PointerEvent};
 

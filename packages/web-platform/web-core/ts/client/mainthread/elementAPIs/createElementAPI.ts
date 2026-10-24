@@ -8,6 +8,7 @@ import {
   lynxDefaultDisplayLinearAttribute,
   lynxDefaultOverflowVisibleAttribute,
   lynxDisposedAttribute,
+  lynxEnableCSSInheritanceAttribute,
   lynxEntryNameAttribute,
   uniqueIdSymbol,
 } from '../../../constants.js';
@@ -25,6 +26,7 @@ import {
   __ReplaceElement,
   __ReplaceElements,
   __GetAttributes,
+  __GetAttributeNames,
   __GetAttributeByName,
   __GetComputedStyleByKey,
   __GetID,
@@ -49,6 +51,7 @@ import type {
   UpdateListInfoAttributeValue,
 } from '../../../types/index.js';
 import type { WASMJSBinding } from './WASMJSBinding.js';
+import { createElementEventListenerAPIs } from './createElementEventListenerAPIs.js';
 import { requestIdleCallbackImpl } from '../utils/requestIdleCallback.js';
 
 const {
@@ -83,6 +86,7 @@ export function createElementAPI(
   transform_vw: boolean,
   transform_vh: boolean,
   transform_rem: boolean,
+  config_enable_css_inheritance = false,
 ): ElementPAPIs {
   let wasmContext = new MainThreadWasmContext(
     rootDom,
@@ -165,7 +169,11 @@ export function createElementAPI(
       }
     }
   };
+  const { __AddEventListener, __RemoveEventListener } =
+    createElementEventListenerAPIs(mtsBinding);
   return {
+    __AddEventListener,
+    __RemoveEventListener,
     __CreateView(parentComponentUniqueId: number) {
       const dom = document.createElement('x-view') as DecoratedHTMLElement;
       dom[uniqueIdSymbol] = wasmContext.create_element_common(
@@ -292,6 +300,7 @@ export function createElementAPI(
         componentCSSID,
         componentID,
       );
+      wasmContext.set_page_element_unique_id(dom[uniqueIdSymbol]);
       if (config_default_overflow_visible) {
         dom.setAttribute(lynxDefaultOverflowVisibleAttribute, 'true');
       }
@@ -299,6 +308,9 @@ export function createElementAPI(
         dom.setAttribute(lynxDefaultDisplayLinearAttribute, 'false');
       }
       dom.setAttribute('part', 'page');
+      if (config_enable_css_inheritance) {
+        dom.setAttribute(lynxEnableCSSInheritanceAttribute, 'true');
+      }
       page = dom;
       return dom;
     },
@@ -535,6 +547,7 @@ export function createElementAPI(
     __RemoveElement,
     __ReplaceElement,
     __GetAttributes,
+    __GetAttributeNames,
     __GetAttributeByName,
     __GetComputedStyleByKey,
     __ReplaceElements,
@@ -621,6 +634,10 @@ export function createElementAPI(
     __InvokeUIMethod: mtsBinding.lynxViewInstance.invokeUIMethod,
     __QuerySelector,
     __QuerySelectorAll,
+    // Gesture recognition is not implemented on web yet. Keep these PAPIs as
+    // no-ops so ReactLynx bundles using `main-thread:gesture` can still render.
+    __SetGestureDetector: () => undefined,
+    __RemoveGestureDetector: () => undefined,
     __FlushElementTree: (_, options) => {
       const pipelineId = options?.pipelineOptions?.pipelineID;
       const backgroundThread = mtsBinding.lynxViewInstance.backgroundThread;

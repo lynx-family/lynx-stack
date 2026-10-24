@@ -9,22 +9,28 @@ it('__DISABLE_CREATE_SELECTOR_QUERY_INCOMPATIBLE_WARNING__ should be false', () 
 it('should report error when this.getNodeRef is called', () => {
   const c = new Component({});
 
-  vi.stubGlobal('lynx', {
-    reportError: vi.fn(),
-  });
+  const app = lynx.getApp();
+  try {
+    vi.stubGlobal('lynx', {
+      reportError: vi.fn(),
+      getApp: () => app,
+    });
 
-  const getNodeRef = vi.fn();
+    const getNodeRef = vi.fn();
 
-  lynxCoreInject.tt._reactLynx = {
-    ReactComponent: class {
-      getNodeRef() {
-        getNodeRef();
-      }
-    },
-  };
+    app._reactLynx = {
+      ReactComponent: class {
+        getNodeRef() {
+          getNodeRef();
+        }
+      },
+    };
 
-  c.getNodeRef();
+    c.getNodeRef();
 
-  expect(lynx.reportError).toBeCalled();
-  expect(getNodeRef).toBeCalled();
+    expect(lynx.reportError).toBeCalled();
+    expect(getNodeRef).toBeCalled();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });

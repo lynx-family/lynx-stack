@@ -6,7 +6,9 @@
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin';
 import type { LynxTemplatePlugin as LynxTemplatePlugin_2 } from '@lynx-js/template-webpack-plugin';
+import { ReactCompileResult } from '@lynx-js/react-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
+import type { Rspack } from '@rsbuild/core';
 import type { TemplateHooks } from '@lynx-js/template-webpack-plugin';
 
 // @public
@@ -19,9 +21,10 @@ export interface CompatVisitorConfig {
     addComponentElement: boolean | AddComponentElementConfig
     additionalComponentAttributes: Array<string>
     componentsPkg: Array<string>
+    // Warning: (tsdoc-missing-deprecation-message) The @deprecated block must include a deprecation message, e.g. describing the recommended alternative
     // Warning: (ae-forgotten-export) The symbol "DarkModeConfig" needs to be exported by the entry point index.d.ts
     //
-    // @deprecated (undocumented)
+    // @deprecated
     darkMode?: boolean | DarkModeConfig
     disableDeprecatedWarning: boolean
     legacySlot?: boolean
@@ -33,6 +36,7 @@ export interface CompatVisitorConfig {
     simplifyCtorLikeReactLynx2: boolean
     // @internal (undocumented)
     target: 'LEPUS' | 'JS' | 'MIXED'
+    transformLegacyEventAttributeNames?: boolean
 }
 
 // @public
@@ -80,6 +84,7 @@ export interface PluginReactLynxOptions {
     engineVersion?: string;
     // @alpha
     experimental_isLazyBundle?: boolean;
+    experimental_reEvalJSOnReload?: boolean;
     experimental_transformBuiltinAttributeNames?: boolean | TransformBuiltinAttributeNamesOptions;
     experimental_useElementTemplate?: boolean;
     extractStr?: Partial<ExtractStrConfig> | boolean;
@@ -93,6 +98,14 @@ export interface PluginReactLynxOptions {
     shake?: Partial<ShakeVisitorConfig> | undefined;
     // @deprecated
     targetSdkVersion?: string;
+}
+
+export { ReactCompileResult }
+
+// @public
+export interface ReactCompileResultExposureV1 {
+    getCompileResult(stats: Rspack.Stats | Rspack.MultiStats): ReactCompileResult | undefined;
+    version: 1;
 }
 
 // @public

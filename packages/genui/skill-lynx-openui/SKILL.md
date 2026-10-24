@@ -21,8 +21,9 @@ code.
 
 ## Workflow
 
-1. Identify the requested UI, supplied component catalog, available tool
-   schemas, media URLs, and whether the host supports full programs or
+1. Identify the requested UI, exact active component catalog, configured root
+   component, available tool schemas, host-supplied prefetched Query keys,
+   media URLs, and whether the host supports full programs or
    `mergeStatements` patches.
 2. Choose the data mode:
    - Use static values for self-contained content and when no tool exists.
@@ -30,7 +31,9 @@ code.
    - Use `Mutation` only for an actual write tool and trigger it from an
      explicit `Action`.
 3. Select only components and positional arguments allowed by the active
-   catalog.
+   catalog. Treat an explicitly reduced catalog as the complete vocabulary:
+   built-ins omitted from it are unavailable. Use the host's explicit root
+   override when present; otherwise use the Library's default `Stack` root.
 4. Write a streaming-friendly graph. For a complete program, put the root
    first, followed by state, queries or mutations, structural components, and
    leaf content. For an edit-mode patch, return only changed statements.
@@ -42,7 +45,9 @@ code.
 - Return only OpenUI Lang. Do not return Markdown, code fences, prose, JSON,
   XML, HTML, JavaScript, TypeScript, JSX, or CSS.
 - Put one assignment statement on each line.
-- For a complete program, make the first non-empty line `root = Stack(...)`.
+- For a complete program, make the first non-empty line assign `root` to a call
+  of the host's explicit root override, for example `root = Shell(...)`.
+  Otherwise use the Library's default `root = Stack(...)`.
 - Return a complete program by default. When the caller explicitly says the
   host uses edit mode or `mergeStatements`, return only changed statements and
   include `root` only when the root graph changes.
@@ -65,7 +70,7 @@ code.
   `root`, or an action reachable from `root`.
 - Use only documented operators, built-ins, components, and action steps.
 
-Correct positional layout:
+Correct positional layout using the default `Stack` root:
 
 ```text
 root = Stack([header, content], "column", false, "l", "stretch", "start")
@@ -84,13 +89,18 @@ The incorrect form passes a string into `wrap` and shifts every later prop.
 - Do not invent tool names. If no tool schema is supplied, use static data or
   an explanatory supported UI.
 - Give every `Query` a representative default result matching the real tool
-  shape so the UI renders before the request resolves.
+  shape so the UI renders in the first synchronous render after the response
+  stabilizes and before the request resolves.
+- When the host supplies prefetched Query results, preserve the corresponding
+  Query assignment names. They are statement IDs and prefetch keys, not tool
+  names. See [runtime.md](references/runtime.md#query).
 - Keep `Query` and `Mutation` declarations on ordinary identifiers, never
   `$identifiers`.
 - Use `@Each` for query-backed repeated UI. Keep its loop-dependent component
   inline inside `@Each`.
-- Put write operations on a submit or confirmation `Button`. Do not attach a
-  mutation to an input's change action.
+- Trigger write operations only from an explicit submit or confirmation action
+  on an active-catalog component. With the default catalog, use `Button`. Do not
+  attach a mutation to an input's change action.
 - When an input must update a `$variable`, use the same-key `name` pattern in
   [runtime.md](references/runtime.md). Do not invent an event-value variable.
 - Execute multi-step actions in deliberate order. Remember that a failed
@@ -103,27 +113,37 @@ The incorrect form passes a string into `wrap` and shifts every later prop.
 ## Lynx UI Rules
 
 - Prefer compact, mobile-first layouts with a shallow component tree.
-- Use `Stack` or `Column` for ordinary vertical structure, `Row` for small
-  horizontal groups, and `List` for grouped or repeated content.
-- Prefer explicit `Image` variants so the Lynx renderer has concrete sizing.
-- Keep readable text in `Text` or `TextContent`; do not emit raw Lynx elements.
-- Use `Tabs` for alternate views and `Modal` for tap-to-open details. Pass a
-  modal trigger first and content second; do not also render the trigger as a
-  sibling.
+- Apply component-specific preferences only when those components exist in the
+  active catalog; otherwise follow the supplied custom signatures.
+- With the default catalog, use `Stack` or `Column` for ordinary vertical
+  structure, `Row` for small horizontal groups, and `List` for grouped or
+  repeated content.
+- When `Image` exists, prefer explicit variants so the Lynx renderer has
+  concrete sizing.
+- With the default catalog, keep readable text in `Text` or `TextContent`; do
+  not emit raw Lynx elements.
+- When available, use `Tabs` for alternate views and `Modal` for tap-to-open
+  details. Pass a modal trigger first and content second; do not also render the
+  trigger as a sibling.
 
 ## Final Verification
 
 Before returning, verify all of the following:
 
-- A complete program starts with `root = Stack(...)`. An edit-mode patch omits
-  `root` unless the root graph changes. The response contains only OpenUI Lang.
+- A complete program assigns `root` to the host's explicit root override when
+  present, or to the Library's default `Stack` root otherwise. An edit-mode
+  patch omits `root` unless the root graph changes. The response contains only
+  OpenUI Lang.
 - Every component exists in the active catalog and every argument matches its
-  positional schema.
+  positional schema. A reduced catalog contains no implicit built-ins, and the
+  root call uses its configured root component.
 - No `Form`, `Input`, `Select`, `SelectItem`, `FormControl`, table, or chart is
   used unless the caller supplied that custom component.
 - Every reference resolves and no declaration is orphaned.
 - Every `Query` or `Mutation` uses a real supplied tool and is referenced by
   visible UI or a visible action.
+- Every intended prefetched Query uses its exact host-supplied key as the
+  assignment name, and every Query still has a shape-correct default.
 - Every `$variable` participates in visible UI, a query argument, or an action.
 - Every `@Each` loop variable stays inside its inline template expression.
 - No working dynamic list relies on `TemplateChildren` in the built-in Lynx

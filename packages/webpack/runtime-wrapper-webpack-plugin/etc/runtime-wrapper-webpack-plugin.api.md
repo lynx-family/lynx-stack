@@ -18,6 +18,7 @@ export class RuntimeWrapperWebpackPlugin {
 export interface RuntimeWrapperWebpackPluginOptions {
     bannerType: (filename: string) => 'script' | 'bundle';
     experimental_isLazyBundle?: boolean;
+    experimental_reEvalJSOnReload?: boolean;
     injectVars?: ((vars: string[]) => string[]) | string[];
     targetSdkVersion: string;
     test: Extract<BannerPluginArgument, {

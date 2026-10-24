@@ -109,7 +109,7 @@ The generated prompt includes:
 - Data binding rules for `{ "path": "/..." }` values and list children.
 - Client action rules for events and function calls.
 - A rendered catalog reference with component summaries, props, required fields, container shape, enum values, and function signatures.
-- Hard rules for JSON-only output, catalog id matching, flat component trees, `root` component requirements, button labels/actions, modal confirmation flows, image query handling, and action-response patches.
+- Hard rules for JSON-only output, catalog id matching, flat component trees, `root` component requirements, button labels/actions, modal confirmation flows, loadable image sources, and action-response patches.
 - Validated examples from the catalog, when the catalog provides examples.
 - Optional appendix text supplied by the CLI or programmatic API.
 

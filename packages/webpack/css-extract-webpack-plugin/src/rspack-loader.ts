@@ -114,7 +114,7 @@ export interface LoaderOptions {
   emit?: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule}
+   * {@inheritDoc @lynx-js/rspeedy#CssExtractRspackLoaderOptions.esModule}
    */
   esModule?: boolean | undefined;
 

@@ -34,7 +34,7 @@ interface FunctionInfo {
 }
 export interface MainThreadEntry {
   release: string;
-  /** main-thread bundle path, e.g. `.rspeedy/LazyComponent/main-thread.js`. */
+  /** main-thread bundle path, e.g. `.lynx/LazyComponent/main-thread.js`. */
   path: string;
   functions: FunctionInfo[];
   /** generated main-thread.js source, for the bytecode step's context. */

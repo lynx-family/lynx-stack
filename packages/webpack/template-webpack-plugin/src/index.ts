@@ -5,7 +5,7 @@
 /**
  * @packageDocumentation
  *
- * A webpack plugin that simplifies creation of `template.js` files to serve your bundles.
+ * A webpack plugin that simplifies creation of Lynx bundle (`.bundle`) files to serve your bundles.
  */
 
 import { Plugins } from '@lynx-js/css-serializer';
@@ -13,6 +13,7 @@ import * as CSS from '@lynx-js/css-serializer';
 
 export { LynxTemplatePlugin } from './LynxTemplatePlugin.js';
 export type {
+  CustomSectionNaming,
   LynxTemplatePluginOptions,
   TemplateHooks,
   EncodeOptions,

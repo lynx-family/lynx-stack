@@ -42,7 +42,7 @@
     "sourceFile": "index.tsx"
   },
   {
-    "templateId": "_et_3a121f15a890",
+    "templateId": "_et_b2bb4db3b1ed",
     "compiledTemplate": {
       "kind": "element",
       "type": "view",
@@ -99,7 +99,7 @@
                   ],
                   "children": [
                     {
-                      "kind": "elementSlot",
+                      "kind": "childSlot",
                       "type": "slot",
                       "elementSlotIndex": 0
                     }
@@ -221,7 +221,7 @@
                       ],
                       "children": [
                         {
-                          "kind": "elementSlot",
+                          "kind": "childSlot",
                           "type": "slot",
                           "elementSlotIndex": 1
                         }

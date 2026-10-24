@@ -2,55 +2,66 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { getAttributeSlotUpdateOp } from './attr-slots.js';
 import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from './commit-context.js';
 import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
   BackgroundListElementTemplateInstance,
+  collectMainThreadRefSubtreeHandleIds,
+  getContainingListItem,
   toUpdateTypedListItemCommand,
 } from './instance.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { isMainThreadFunction } from '../../core/main-thread-function.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
 import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   SerializableValue,
   SerializedCompiledNode,
   SerializedEtNode,
-  SerializedTypedNode,
+  SerializedTypedListNode,
 } from '../protocol/types.js';
-import { __etAttrPlanMap, adaptMTEventAttrSlot } from '../runtime/template/attr-slot-plan.js';
+import { getMainThreadDynamicAttrSlotKinds } from '../runtime/template/attr-slot-plan.js';
+import type { MainThreadDynamicAttrKind } from '../runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
+import type { MTRefNativeWrapper } from '../runtime/template/main-thread-ref-ctx.js';
 
 const MAIN_BUNDLE_URL_SENTINEL = '__Card__';
-const PAGE_ROOT_TARGET_HANDLE_ID = 0;
-const PAGE_ROOT_SLOT_ID = 0;
 const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
 const COMPONENT_AT_INDEXES_ATTR = 'component-at-indexes';
 const ENQUEUE_COMPONENT_ATTR = 'enqueue-component';
 const UPDATE_LIST_INFO_ATTR = 'update-list-info';
 
-type SerializedTypedListNode = SerializedTypedNode & { tag: 'list' };
-
 export function hydrateRootChildrenIntoContext(
   serializedChildren: SerializedEtNode[],
   root: BackgroundElementTemplateInstance,
 ): boolean {
-  return hydrateChildListIntoContext(
-    PAGE_ROOT_TARGET_HANDLE_ID,
-    PAGE_ROOT_SLOT_ID,
-    serializedChildren,
-    root.childNodes,
-  );
+  try {
+    return hydrateChildListIntoContext(
+      ELEMENT_TEMPLATE_PAGE_HANDLE_ID,
+      ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX,
+      serializedChildren,
+      root.childNodes,
+    );
+  } finally {
+    // Template identities only need caching for this synchronous hydration pass.
+    backgroundHydrateKeys.clear();
+  }
 }
 
 function isSerializedCompiledNode(serialized: SerializedEtNode): serialized is SerializedCompiledNode {
   return typeof (serialized as { templateKey?: unknown }).templateKey === 'string';
 }
 
+function isSerializedTypedListNode(serialized: SerializedEtNode): serialized is SerializedTypedListNode {
+  return !isSerializedCompiledNode(serialized) && serialized.tag === 'list';
+}
+
 interface HydrateChildListDiff {
-  hasChanges: boolean;
   // Background child at a new slot index that has no matching serialized child.
   insertions: Record<number, BackgroundElementTemplateInstance>;
   insertionCount: number;
@@ -66,7 +77,6 @@ function hydrateMatchingChildrenAndDiffSlot(
 ): HydrateChildListDiff | null {
   let lastPlacedIndex = 0;
   const result: HydrateChildListDiff = {
-    hasChanges: false,
     insertions: {},
     insertionCount: 0,
     removals: [],
@@ -86,11 +96,7 @@ function hydrateMatchingChildrenAndDiffSlot(
     // Normalize the background instance's full `${entry}:${key}` type tag to the
     // same native identity the serialized side uses (sentinel folded to the main
     // card), so main-card nodes match regardless of the `__Card__` prefix.
-    const parsedBackgroundType = parseElementTemplateType(backgroundChild.type);
-    const backgroundKey = elementTemplateIdentityKey(
-      parsedBackgroundType.templateKey,
-      parsedBackgroundType.bundleUrl,
-    );
+    const backgroundKey = getBackgroundNodeHydrateKey(backgroundChild.type);
     const serializedCandidates = serializedByNodeKey[backgroundKey];
     const candidateCursor = serializedCursorByNodeKey[backgroundKey] ?? 0;
     const matchedSerialized = serializedCandidates?.[candidateCursor];
@@ -103,14 +109,12 @@ function hydrateMatchingChildrenAndDiffSlot(
       }
       if (oldIndex < lastPlacedIndex) {
         result.moves[oldIndex] = { toIndex: i, instance: backgroundChild };
-        result.hasChanges = true;
       } else {
         lastPlacedIndex = oldIndex;
       }
     } else {
       result.insertions[i] = backgroundChild;
       result.insertionCount += 1;
-      result.hasChanges = true;
     }
   }
 
@@ -119,7 +123,6 @@ function hydrateMatchingChildrenAndDiffSlot(
     const candidateCursor = serializedCursorByNodeKey[key] ?? 0;
     for (let i = candidateCursor; i < candidates.length; i += 1) {
       result.removals.push(candidates[i]![1]);
-      result.hasChanges = true;
     }
   }
 
@@ -133,7 +136,7 @@ function hydrateInstance(
   if (isSerializedCompiledNode(serialized)) {
     return hydrateCompiledInstance(serialized, instance);
   }
-  if (__DEV__ && serialized.tag !== 'list') {
+  if (__DEV__ && !isSerializedTypedListNode(serialized)) {
     lynx.reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
@@ -149,26 +152,32 @@ function hydrateCompiledInstance(
   serialized: SerializedCompiledNode,
   instance: BackgroundElementTemplateInstance,
 ): boolean {
-  const handleId = serialized.uid as number;
+  const handleId = serialized.uid;
   if (!bindHydrationHandleId(instance, handleId, serialized.templateKey)) {
     return false;
   }
-  instance.prepareAttributeSlotsForHydration();
-  hydrateAttributeSlots(instance.type, handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
+  if (serialized.attributeSlots?.length || instance.attributeSlots.length) {
+    instance.prepareAttributeSlotsForHydration();
+    hydrateAttributeSlots(instance.type, handleId, serialized.attributeSlots ?? [], instance.attributeSlots);
+  }
 
   if (serialized.templateKey === BUILTIN_RAW_TEXT_TEMPLATE_KEY) {
     return true;
   }
 
-  const serializedElementSlots = serialized.elementSlots ?? [];
-  const backgroundElementSlots = instance.elementSlots;
+  if (!serialized.childSlots?.length && !instance.firstChild) {
+    return true;
+  }
+
+  const serializedChildSlots = serialized.childSlots ?? [];
+  const backgroundChildSlots = instance.childSlots;
   // Snapshot hydrates dynamic children through slot-filtered lists. Keeping ET
   // scoped the same way means a cross-slot candidate is a source remove plus a
   // target create/insert, while same-slot reorder can still stay move-like.
-  const slotCount = Math.max(serializedElementSlots.length, backgroundElementSlots.length);
+  const slotCount = Math.max(serializedChildSlots.length, backgroundChildSlots.length);
   for (let slotId = 0; slotId < slotCount; slotId += 1) {
-    const serializedSlot = serializedElementSlots[slotId];
-    const backgroundSlot = backgroundElementSlots[slotId];
+    const serializedSlot = serializedChildSlots[slotId];
+    const backgroundSlot = backgroundChildSlots[slotId];
     if (!serializedSlot && !backgroundSlot) {
       continue;
     }
@@ -186,6 +195,19 @@ function hydrateCompiledInstance(
   return true;
 }
 
+const backgroundHydrateKeys = new Map<string, string>();
+
+function getBackgroundNodeHydrateKey(type: string): string {
+  const cached = backgroundHydrateKeys.get(type);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const parsed = parseElementTemplateType(type);
+  const key = elementTemplateIdentityKey(parsed.templateKey, parsed.bundleUrl);
+  backgroundHydrateKeys.set(type, key);
+  return key;
+}
+
 function getSerializedNodeHydrateKey(serialized: SerializedEtNode): string {
   if (!isSerializedCompiledNode(serialized)) {
     return serialized.tag;
@@ -201,15 +223,15 @@ function normalizeSerializedBundleUrl(bundleUrl: string | undefined): string | n
 }
 
 function getSerializedTypedListChildren(serialized: SerializedTypedListNode): SerializedEtNode[] {
-  return (__DEV__ ? serialized.options?.['listChildren'] : serialized.options!['listChildren']) as SerializedEtNode[];
+  return (__DEV__ ? serialized.options?.listChildren : serialized.options!.listChildren)!;
 }
 
 function hydrateListInstance(
   serialized: SerializedTypedListNode,
   instance: BackgroundListElementTemplateInstance,
 ): boolean {
-  if (__DEV__ && (serialized.elementSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support elementSlots.'));
+  if (__DEV__ && (serialized.childSlots?.length ?? 0) > 0) {
+    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
     return false;
   }
 
@@ -220,7 +242,7 @@ function hydrateListInstance(
   }
 
   const backgroundChildren = instance.childNodes;
-  const handleId = serialized.uid as number;
+  const handleId = serialized.uid;
   if (!bindHydrationHandleId(instance, handleId, serialized.tag)) {
     return false;
   }
@@ -246,7 +268,7 @@ function hydrateListInstance(
 }
 
 function getStableSerializedListAttributes(
-  attributes: SerializedTypedNode['attributes'],
+  attributes: SerializedTypedListNode['attributes'],
 ): SerializableValue {
   if (attributes == null) {
     return null;
@@ -291,13 +313,33 @@ function hydrateChildListIntoContext(
     return true;
   }
 
+  // Preserve the full matcher’s FIFO pairing while avoiding its temporary
+  // structures when every child already occupies the matching slot position.
+  const length = serializedChildren.length;
+  if (length === backgroundChildren.length) {
+    let samePairwise = true;
+    for (let i = 0; i < length; i += 1) {
+      if (
+        getSerializedNodeHydrateKey(serializedChildren[i]!)
+          !== getBackgroundNodeHydrateKey(backgroundChildren[i]!.type)
+      ) {
+        samePairwise = false;
+        break;
+      }
+    }
+    if (samePairwise) {
+      for (let i = 0; i < length; i += 1) {
+        if (!hydrateInstance(serializedChildren[i]!, backgroundChildren[i]!)) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
   const listDiff = hydrateMatchingChildrenAndDiffSlot(serializedChildren, backgroundChildren);
   if (listDiff === null) {
     return false;
-  }
-
-  if (!listDiff.hasChanges) {
-    return true;
   }
 
   // Hydrate emits patches directly here. Replaying against serialized order
@@ -324,7 +366,7 @@ function hydrateChildListIntoContext(
       movesWaitingForInsertionPoint.set(move.toIndex, move.instance);
       insertOrMovePatchesWaitingForInsertionPoint += 1;
     } else {
-      const beforeChildId = currentSerializedChild ? currentSerializedChild.uid as number : 0;
+      const beforeChildId = currentSerializedChild ? currentSerializedChild.uid : 0;
       const movedChild = movesWaitingForInsertionPoint.get(newIndex);
       if (movedChild) {
         keepCurrentSerializedChild = true;
@@ -334,6 +376,7 @@ function hydrateChildListIntoContext(
           slotId,
           movedChild.instanceId,
           beforeChildId,
+          getContainingListItem(movedChild) ? null : collectMainThreadRefSubtreeHandleIds(movedChild),
         );
         insertOrMovePatchesWaitingForInsertionPoint -= 1;
       } else if (insertions[newIndex] !== undefined) {
@@ -346,6 +389,7 @@ function hydrateChildListIntoContext(
           slotId,
           insertedChild.instanceId,
           beforeChildId,
+          getContainingListItem(insertedChild) ? null : collectMainThreadRefSubtreeHandleIds(insertedChild),
         );
         insertOrMovePatchesWaitingForInsertionPoint -= 1;
       }
@@ -397,7 +441,7 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
   handles.push(handleId);
 
   if (isSerializedCompiledNode(serialized)) {
-    for (const slotChildren of serialized.elementSlots ?? []) {
+    for (const slotChildren of serialized.childSlots ?? []) {
       if (!slotChildren) {
         continue;
       }
@@ -410,17 +454,18 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
     return true;
   }
 
-  if (__DEV__ && serialized.tag !== 'list') {
+  if (__DEV__ && !isSerializedTypedListNode(serialized)) {
     lynx.reportError(
       new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
     );
     return false;
   }
-  if (__DEV__ && (serialized.elementSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support elementSlots.'));
+  const serializedList = serialized as SerializedTypedListNode;
+  if (__DEV__ && (serializedList.childSlots?.length ?? 0) > 0) {
+    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
     return false;
   }
-  const listChildren = getSerializedTypedListChildren(serialized as SerializedTypedListNode);
+  const listChildren = getSerializedTypedListChildren(serializedList);
   if (__DEV__ && !Array.isArray(listChildren)) {
     lynx.reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
     return false;
@@ -434,8 +479,13 @@ function collectRemovableSerializedSubtreeHandleIdsInto(
 }
 
 function getRemovableSerializedHandleId(serialized: SerializedEtNode): number | null {
-  const handleId = serialized.uid as number;
-  if (__DEV__ && (typeof handleId !== 'number' || !Number.isInteger(handleId) || handleId === 0)) {
+  const handleId = serialized.uid;
+  if (
+    __DEV__
+    && (typeof handleId !== 'number'
+      || !Number.isInteger(handleId)
+      || handleId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID)
+  ) {
     lynx.reportError(
       new Error(`ElementTemplate hydrate remove received invalid uid ${String(handleId)}.`),
     );
@@ -463,7 +513,7 @@ function emitHydrateTypedListReconciliation(
       }
       itemId = removedSubtreeHandleIds[0]!;
     } else {
-      itemId = serialized.uid as number;
+      itemId = serialized.uid;
     }
     globalCommitContext.ops.push(
       ElementTemplateUpdateOps.removeTypedListItem,
@@ -484,9 +534,7 @@ function emitHydrateTypedListReconciliation(
   for (let index = 0; index < insertedIndexes.length; index += 1) {
     const insertedIndex = insertedIndexes[index]!;
     const child = backgroundChildren[insertedIndex]!;
-    if (listDiff.insertions[insertedIndex]) {
-      emitCreateSubtree(child);
-    }
+    emitCreateSubtree(child);
     globalCommitContext.ops.push(
       ElementTemplateUpdateOps.insertTypedListItem,
       instance.instanceId,
@@ -557,47 +605,33 @@ function hydrateAttributeSlots(
   afterSlots: SerializableValue[],
 ): void {
   const slotCount = Math.max(beforeSlots.length, afterSlots.length);
+  const slotKinds = getMainThreadDynamicAttrSlotKinds(templateType);
   for (let slotIndex = 0; slotIndex < slotCount; slotIndex += 1) {
-    const beforeValue = beforeSlots[slotIndex];
-    const afterValue = afterSlots[slotIndex];
+    // Native serialization and background preparation may represent an absent slot differently.
+    const beforeValue = beforeSlots[slotIndex] ?? null;
+    const afterValue = afterSlots[slotIndex] ?? null;
     if (
-      isDirectOrDeepEqual(beforeValue, afterValue)
-      && !shouldForceMTEventHydrateSlot(templateType, slotIndex, afterValue)
+      !shouldForceMainThreadHydrateSlot(slotKinds?.get(slotIndex), afterValue)
+      && isDirectOrDeepEqual(beforeValue, afterValue)
     ) {
       continue;
     }
-    if (afterValue === undefined && beforeValue === null) {
-      // JSON serialization turns undefined array slots into null on the main-thread payload.
-      continue;
-    }
     globalCommitContext.ops.push(
-      ElementTemplateUpdateOps.setAttribute,
+      getAttributeSlotUpdateOp(templateType, slotIndex),
       handleId,
       slotIndex,
-      afterValue ?? null,
+      afterValue,
     );
   }
 }
 
-function shouldForceMTEventHydrateSlot(
-  templateType: string,
-  attrSlotIndex: number,
+function shouldForceMainThreadHydrateSlot(
+  slotKind: MainThreadDynamicAttrKind | undefined,
   value: SerializableValue | undefined,
 ): boolean {
-  if (!isMTEventNativeWrapper(value)) {
-    return false;
+  if (slotKind === 'mt-event') {
+    return isMTEventNativeWrapper(value);
   }
-  const attrPlan = __etAttrPlanMap[templateType];
-  if (!attrPlan) {
-    return false;
-  }
-  for (let planIndex = 0; planIndex < attrPlan.length; planIndex += 2) {
-    if (
-      attrPlan[planIndex] === attrSlotIndex
-      && attrPlan[planIndex + 1] === adaptMTEventAttrSlot
-    ) {
-      return true;
-    }
-  }
-  return false;
+  return slotKind === 'mt-ref'
+    && (value == null || isMainThreadFunction((value as unknown as MTRefNativeWrapper).value));
 }

@@ -25,9 +25,10 @@ it('should load the lazy bundle', async () => {
 // unavailable when `installChunk` runs synchronously and breaking the bundle.
 // All background chunks of a lazy bundle must be inlined.
 it('inlines every split background chunk of a lazy bundle', async () => {
+  // The entry is emitted into `.rspeedy/main/`, like a real build.
   const tasmJSONPath = resolve(
     __dirname,
-    '.rspeedy/lazy-bundle/component/tasm.json',
+    '../lazy-bundle/component/tasm.json',
   );
   expect(existsSync(tasmJSONPath)).toBeTruthy();
 
@@ -39,16 +40,17 @@ it('inlines every split background chunk of a lazy bundle', async () => {
   // Both split background chunks are inlined into the bundle.
   const keys = Object.keys(manifest);
   expect(keys).toContain('/app-service.js');
-  expect(keys).toContain('/shared.rspack.bundle.js');
-  expect(keys).toContain('/component:background.rspack.bundle.js');
+  const backgroundChunks = keys.filter(key =>
+    key.startsWith('/.rspeedy/lazy-bundle/component/background.')
+  );
+  expect(backgroundChunks).toHaveLength(2);
 
   // They are required synchronously, not via requireModuleAsync.
-  expect(manifest['/app-service.js']).toContain(
-    `lynx.requireModule(\"/shared.rspack.bundle.js\"`,
-  );
-  expect(manifest['/app-service.js']).toContain(
-    `lynx.requireModule(\"/component:background.rspack.bundle.js\"`,
-  );
+  for (const chunk of backgroundChunks) {
+    expect(manifest['/app-service.js']).toContain(
+      `lynx.requireModule(\"${chunk}\"`,
+    );
+  }
   expect(manifest['/app-service.js']).not.toContain('requireModuleAsync');
 
   // the inlined app-service should be valid JavaScript

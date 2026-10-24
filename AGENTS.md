@@ -82,10 +82,19 @@ pnpm run test --update
 
 ### 5. API Documentation
 
+The API reference in `docs/` (the pages synced to lynxjs.org) is generated from the exports and TSDoc comments of the public packages when the site builds; the generated pages are not committed. When you change a public API — an export, a type, an option, a default value or its TSDoc — check the documentation in the same change:
+
 ```bash
-# Update API documentation (ALWAYS commit changes)
+# Generate the pages and build the site (fails on any TypeDoc warning or dead link; ALWAYS commit docs/i18n/zh.json)
+pnpm turbo build --filter @lynx-js/lynx-stack-docs
+
+# Update the API reports (ALWAYS commit changes)
 pnpm turbo api-extractor -- --local
 ```
+
+- Write TSDoc for every public export and option: a one-sentence summary, `@defaultValue` when there is a default, and `@example` for options that need one. The pages render it as written.
+- A package is documented from `src/index.ts`; add a `typedoc.json` to the package for other entry points. Describe the package with `@packageDocumentation`.
+- See `docs/README.md` for how the pages are produced.
 
 ### 6. Changesets (for contributions)
 
@@ -114,6 +123,14 @@ rustup target add wasm32-unknown-unknown
 ```bash
 pnpm turbo api-extractor -- --local
 git add packages/**/*.api.md
+```
+
+**Issue**: "API Docs Translations Changed" error
+**Solution**: Build the API reference, translate the new strings and commit them:
+
+```bash
+pnpm turbo build --filter @lynx-js/lynx-stack-docs
+git add docs/i18n
 ```
 
 **Issue**: Tests fail with missing build artifacts
@@ -171,7 +188,7 @@ export NODE_OPTIONS="--max-old-space-size=32768"
 The CI runs these checks (replicate locally for confidence):
 
 1. **Code style**: `pnpm dprint check && pnpm biome check`
-2. **API consistency**: `pnpm turbo api-extractor`
+2. **API consistency**: `pnpm turbo api-extractor`, and `pnpm turbo build --filter @lynx-js/lynx-stack-docs` leaves no changes in `docs/i18n`
 3. **Changeset validation**: `pnpm changeset status --since=origin/main`
 4. **Linting**: `pnpm eslint .` (allow 5+ minutes)
 5. **TypeScript compilation**: Part of `pnpm turbo build`
@@ -207,7 +224,7 @@ The CI runs these checks (replicate locally for confidence):
 CI=1                          # Enables CI mode
 TURBO_TELEMETRY_DISABLED=1    # Disables telemetry
 NODE_OPTIONS="--max-old-space-size=32768"  # For large builds
-DEBUG=rspeedy                 # Enable debug logging
+DEBUG=lynx                    # Enable debug logging (DEBUG=rspeedy still works)
 ```
 
 ## Trust These Instructions
@@ -253,10 +270,10 @@ These instructions were generated through comprehensive analysis and testing of 
 ### GenUI UI Judge (`packages/genui/ui-judge/`)
 
 - UI Judge is a Rust library crate by default. The `server` feature adds the `ui-judge-server` HTTP binary; keep server code feature-gated and do not add an npm or TypeScript facade back to this directory.
-- The HTTP server must listen on IPv4 and IPv6 unspecified addresses, keep native Lynx capture on its dedicated current-thread worker, bound queued captures, score completed captures concurrently, and drain accepted work during SIGINT or SIGTERM shutdown. Keep CPU-heavy image processing on the bounded Rayon pool so it does not block Tokio workers.
-- Do not expand `lynx-headless-rust-test-runner` for UI Judge. `judge_page` accepts only `file://`, `http://`, and `https://` URLs and rejects bare paths before model or runtime initialization. It internally owns visual-correctness model creation, the headless Lynx connection, and the page lifecycle; call it sequentially on a Tokio current-thread runtime. Restrict default crate-root exports to `judge_page`, `JudgePageRequest`, `UiJudgeResult`, and `UiJudgeError`; the `server` feature may additionally expose its server module. Do not expose model, runner, prompt, fixture, dimension, or screenshot-comparison APIs.
-- Keep VLM evaluation on Agent SDK while preserving the existing `MIDSCENE_MODEL_*`, `MIDSCENE_MODEL_INIT_CONFIG_JSON`, and legacy `MIDSCENE_OPENAI_INIT_CONFIG_JSON` configuration names. Those names are compatibility inputs only; do not add Midscene, Playwright, Kitten-Lynx, Android, or ADB dependencies to the crate.
-- Keep UI Judge unit tests deterministic with the mock-response hook. Its runtime-backed `headless_e2e` integration test must instead reject mock-response variables and call the real model supplied through the injected environment; it runs on both Linux and macOS. Tests must not require browsers, emulators, or physical devices. Do not add UI Judge PR-comment publishing code or workflow jobs.
+- The HTTP server must honor `LYNX_USE_HOST` when set and otherwise listen on IPv4 and IPv6 unspecified addresses, keep native Lynx capture on its dedicated current-thread worker, bound queued captures, compare images concurrently, and drain accepted work during SIGINT or SIGTERM shutdown. Keep CPU-heavy image processing on the bounded Rayon pool so it does not block Tokio workers.
+- Keep UI Judge limited to screenshots and deterministic image comparison. Export `capture_page`, `CapturePageRequest`, `CapturePageError`, `compare_images`, `ReferenceImageComparison`, `VisualEvaluationError`, and `VisualEvaluationErrorCode`; gate its HTTP adapter behind `server`. Use the unchanged headless runner and reject bare paths before runtime initialization.
+- GenUI Server owns model evaluation and agent behavior, using its existing provider and selected model configuration. Do not add model clients, model environment variables, or interaction planning to UI Judge. Its screenshot routes accept only capture inputs, upload the raw BMP to TOS using the same `TOS_*` environment variables as GenUI Server (plus the optional `TOS_SCREENSHOT_STORAGE_PREFIX`), and return `{"url": ...}`; consumers fetch the BMP from that URL and GenUI converts it to PNG before scoring.
+- Keep Rust tests deterministic and model-free. Its runtime-backed `headless_e2e` test captures and compares the real React fixture on Linux and macOS without credentials. Do not add browsers, emulators, devices, or PR-comment publishing jobs. Test evaluation and cancellation in GenUI Server with deterministic model mocks.
 
 Remember: This is a complex, multi-language monorepo. Always allow extra time for builds and tests, and follow the exact command sequences provided.
 

@@ -232,7 +232,7 @@ fn should_emit_direct_event_attr_plan_for_lepus_target() {
     "direct event slots should register a sparse ET attr plan",
   );
   assert!(
-    code.contains("attributeSlots={[1,1]}"),
+    code.contains(",void0,[1,1],void0,void0)"),
     "LEPUS target should keep event markers in attributeSlots before runtime preparation, got: {code}"
   );
 }
@@ -258,6 +258,73 @@ fn should_emit_spread_attr_plan_with_ref_adapter() {
   assert!(
     !code.contains("adaptEventAttrSlot"),
     "ref, spread, and ordinary attrs must not enter the event adapter plan, got: {code}"
+  );
+}
+
+#[test]
+fn should_emit_direct_main_thread_ref_attr_plan_for_js_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view main-thread:ref={mainThreadRef} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::JS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert_attr_plan_assignment(
+    &code,
+    "0,ReactLynxInternal.adaptMTRefAttrSlot",
+    "direct main-thread ref slots should register an ET MTRef attr plan",
+  );
+  assert!(
+    code.contains("attributeSlots={[mainThreadRef]}"),
+    "JS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
+  );
+}
+
+#[test]
+fn should_emit_direct_main_thread_ref_attr_plan_for_lepus_target() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"
+      <view main-thread:ref={mainThreadRef} />
+    "#,
+    JSXTransformerConfig {
+      target: swc_plugins_shared::target::TransformTarget::LEPUS,
+      ..element_template_config()
+    },
+  );
+  let code = without_whitespace(&code);
+
+  assert_attr_plan_assignment(
+    &code,
+    "0,ReactLynxInternal.adaptMTRefAttrSlot",
+    "direct main-thread ref slots should register an ET MTRef attr plan",
+  );
+  assert!(
+    code.contains(",void0,[mainThreadRef],void0,void0)"),
+    "LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
+  );
+}
+
+#[test]
+fn should_disable_flatten_for_direct_main_thread_ref_targets() {
+  let template = first_user_template_json(
+    r#"
+      <view main-thread:ref={mainThreadRef} />
+    "#,
+  );
+
+  let attrs = template["attributesArray"]
+    .as_array()
+    .expect("attributesArray");
+  assert!(
+    attrs.iter().any(|attr| {
+      attr["kind"] == "static" && attr["key"] == "flatten" && attr["value"] == false
+    }),
+    "main-thread:ref target should carry create-time flatten=false descriptor, got: {template:?}",
   );
 }
 
@@ -541,7 +608,7 @@ fn should_keep_static_attribute_values_out_of_et_attribute_slots() {
   assert_eq!(attr_by_key("class")["attrSlotIndex"].as_f64(), Some(1.0));
   let code = without_whitespace(&code);
   assert!(
-    code.contains("attributeSlots={[1e400,cls]}"),
+    code.contains(",void0,[1e400,cls],void0,void0,true)"),
     "overflowed numeric literals should stay observable via ET attribute slots, got: {code}"
   );
 }
@@ -575,11 +642,11 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
   assert_eq!(recyclable["value"].as_bool(), Some(true));
   let code = without_whitespace(&code);
   assert!(
-    code.contains("attributeSlots={[itemKey]}"),
+    code.contains(",void0,[itemKey],void0,"),
     "legacy list platform info must not consume ET attribute slots, got: {code}"
   );
   assert!(
-    code.contains("__listItemPlatformInfo={{\"item-key\":itemKey,\"recyclable\":true}}"),
+    code.contains(",{\"item-key\":itemKey,\"recyclable\":true})"),
     "list item platform info should be available as an ET runtime-only carrier, got: {code}"
   );
 }
@@ -621,8 +688,8 @@ fn should_lower_exact_list_as_typed_runtime_host() {
     "ET list output should expose exact list, attributes, and $0 logical children, got: {code}"
   );
   assert!(
-    code.contains("__listItemPlatformInfo={{\"item-key\":firstKey,\"full-span\":true}}")
-      && code.contains("__listItemPlatformInfo={{\"item-key\":secondKey,\"recyclable\":true}}"),
+    code.contains(",{\"item-key\":firstKey,\"full-span\":true})")
+      && code.contains(",{\"item-key\":secondKey,\"recyclable\":true})"),
     "list item roots should carry platform info beside compiled ET roots, got: {code}"
   );
 }
@@ -664,7 +731,7 @@ fn should_keep_slot_descriptor_order_for_dynamic_attr_spread_event_and_ref() {
 }
 
 #[test]
-fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
+fn should_keep_main_thread_attr_descriptor_keys_for_namespaced_attrs() {
   let (code, template) = first_user_template_json_with_code(
     r#"
       <view main-thread:bindtap={handleTap} main-thread:ref={viewRef} />
@@ -685,14 +752,18 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
     "main-thread:ref must not be lowered as an ordinary ET ref adapter, got: {code}"
   );
   assert!(
-    !code.contains("viewRef"),
-    "unsupported namespaced ref must not leak the raw ref value, got: {code}"
+    code.contains("adaptMTRefAttrSlot"),
+    "main-thread:ref must use the ET MTRef adapter, got: {code}"
+  );
+  assert!(
+    code.contains(",void0,[handleTap,viewRef],void0,"),
+    "default LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
   );
 
   let attrs = template["attributesArray"]
     .as_array()
     .expect("attributesArray");
-  assert_eq!(attrs.len(), 2);
+  assert_eq!(attrs.len(), 3);
 
   assert_eq!(attrs[0]["kind"], "slot");
   assert_eq!(attrs[0]["key"], "main-thread:bindtap");
@@ -701,6 +772,10 @@ fn should_keep_worklet_attr_descriptor_keys_for_namespaced_attrs() {
   assert_eq!(attrs[1]["kind"], "slot");
   assert_eq!(attrs[1]["key"], "main-thread:ref");
   assert_eq!(attrs[1]["attrSlotIndex"].as_f64(), Some(1.0));
+
+  assert_eq!(attrs[2]["kind"], "static");
+  assert_eq!(attrs[2]["key"], "flatten");
+  assert_eq!(attrs[2]["value"], false);
 }
 
 #[test]
@@ -776,7 +851,7 @@ fn should_skip_lynx_part_id_without_reserving_attr_slot() {
 }
 
 #[test]
-fn should_keep_element_slot_indices_stable_for_mixed_dynamic_children() {
+fn should_keep_child_slot_indices_stable_for_mixed_dynamic_children() {
   let template = first_user_template_json(
     r#"
       <view>
@@ -791,18 +866,18 @@ fn should_keep_element_slot_indices_stable_for_mixed_dynamic_children() {
   let children = template["children"].as_array().expect("children array");
   assert_eq!(children[0]["kind"], "element");
   assert_eq!(children[0]["type"], "text");
-  assert_eq!(children[1]["kind"], "elementSlot");
+  assert_eq!(children[1]["kind"], "childSlot");
   assert_eq!(children[1]["elementSlotIndex"].as_f64(), Some(0.0));
   assert_eq!(children[1]["type"], "slot");
   assert_eq!(children[2]["kind"], "element");
   assert_eq!(children[2]["type"], "image");
-  assert_eq!(children[3]["kind"], "elementSlot");
+  assert_eq!(children[3]["kind"], "childSlot");
   assert_eq!(children[3]["elementSlotIndex"].as_f64(), Some(1.0));
   assert_eq!(children[3]["type"], "slot");
 }
 
 #[test]
-fn should_extract_dynamic_key_child_as_element_slot() {
+fn should_extract_dynamic_key_child_as_child_slot() {
   let templates = transform_to_templates(
     r#"
       <view>
@@ -821,7 +896,7 @@ fn should_extract_dynamic_key_child_as_element_slot() {
 
   let children = template["children"].as_array().expect("children array");
   assert_eq!(children.len(), 1);
-  assert_eq!(children[0]["kind"], "elementSlot");
+  assert_eq!(children[0]["kind"], "childSlot");
   assert_eq!(children[0]["elementSlotIndex"].as_f64(), Some(0.0));
   assert_eq!(children[0]["type"], "slot");
 }
@@ -850,6 +925,92 @@ fn should_preserve_user_wrapper_elements_as_template_nodes() {
   assert_eq!(wrapper_attrs[0]["kind"], "static");
   assert_eq!(wrapper_attrs[0]["value"], "user-wrapper");
 
-  assert_eq!(children[1]["kind"], "elementSlot");
+  assert_eq!(children[1]["kind"], "childSlot");
   assert_eq!(children[1]["elementSlotIndex"].as_f64(), Some(0.0));
+}
+
+#[test]
+fn ordered_child_slots_are_lepus_only_and_preserve_template_identity() {
+  use swc_plugins_shared::target::TransformTarget;
+
+  let input = r#"<view key={key()} id={attr()}><view>{first()}</view><text>static</text><view>{second()}</view></view>"#;
+  let mut expected_templates = None;
+  for target in [
+    TransformTarget::LEPUS,
+    TransformTarget::JS,
+    TransformTarget::MIXED,
+  ] {
+    let (templates, code) = transform_fixture(
+      input,
+      JSXTransformerConfig {
+        target,
+        ..element_template_config()
+      },
+    );
+    let templates = templates
+      .into_iter()
+      .map(|template| {
+        (
+          template.template_id,
+          serde_json::to_value(template.compiled_template).unwrap(),
+        )
+      })
+      .collect::<Vec<_>>();
+    if let Some(expected) = &expected_templates {
+      assert_eq!(&templates, expected);
+    } else {
+      expected_templates = Some(templates);
+    }
+    let code = without_whitespace(&code);
+    if target == TransformTarget::LEPUS {
+      assert!(code.contains(",[first(),second()],void0,true)"), "{code}");
+      assert!(!code.contains("$0="), "{code}");
+    } else {
+      assert!(code.contains("$0={first()}$1={second()}"), "{code}");
+      assert!(!code.contains("slotChildren="), "{code}");
+      assert!(!code.contains(".__etHost("), "{code}");
+    }
+    let positions = ["key()", "attr()", "first()", "second()"].map(|expr| {
+      assert_eq!(code.matches(expr).count(), 1, "{code}");
+      code.find(expr).unwrap()
+    });
+    assert!(positions.windows(2).all(|pair| pair[0] < pair[1]), "{code}");
+  }
+}
+
+#[test]
+fn should_specialize_only_adapter_free_lepus_hosts_without_list_item_metadata() {
+  use swc_plugins_shared::target::TransformTarget;
+  for (input, plain) in [
+    ("<view id={id} />", true),
+    ("<view><Child /></view>", true),
+    ("<view bindtap={onTap} />", false),
+    ("<view ref={ref} />", false),
+    ("<view main-thread:ref={ref} />", false),
+    ("<view main-thread:bindtap={onTap} />", false),
+    ("<view {...props} />", false),
+    ("<list-item item-key={key} />", false),
+  ] {
+    for target in [
+      TransformTarget::LEPUS,
+      TransformTarget::JS,
+      TransformTarget::MIXED,
+    ] {
+      let (_, code) = transform_fixture(
+        input,
+        JSXTransformerConfig {
+          target,
+          ..element_template_config()
+        },
+      );
+      assert_eq!(
+        without_whitespace(&code).contains(",void0,true)"),
+        plain && target == TransformTarget::LEPUS,
+        "{input}: {code}"
+      );
+      if target == TransformTarget::LEPUS && !plain {
+        assert!(code.contains(".__etHost("), "{input}: {code}");
+      }
+    }
+  }
 }

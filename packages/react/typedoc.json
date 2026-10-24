@@ -1,0 +1,15 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@lynx-js/react",
+  "entryPoints": [
+    "types/react.docs.d.ts"
+  ],
+  "externalSymbolLinkMappings": {
+    "@types/react": {
+      "React.StaticLifecycle.getDerivedStateFromProps": "https://react.dev/reference/react/Component#static-getderivedstatefromprops",
+      "React.Context": "https://react.dev/reference/react/createContext#context-provider",
+      "React.Provider": "https://react.dev/reference/react/createContext#provider",
+      "React.ForwardRefRenderFunction": "https://react.dev/reference/react/forwardRef#render-function"
+    }
+  }
+}

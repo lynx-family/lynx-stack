@@ -49,6 +49,8 @@ jobs:
         run: |
           pnpm --filter genui-playground build:lynx
       - name: Build GenUI Playground
+        env:
+          GENUI_SERVER_URL: ${{ vars.GENUI_SERVER_URL }}
         run: |
           BASE_PATH='${{ steps.pages.outputs.base_path }}'
           export ASSET_PREFIX="${BASE_PATH%/}/genui/"

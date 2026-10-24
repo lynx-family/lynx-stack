@@ -1,0 +1,51 @@
+.historyItemMenu {
+  position: fixed;
+  z-index: 1200;
+  box-sizing: border-box;
+  width: 190px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--geist-border);
+  border-radius: 8px;
+  background: var(--geist-background);
+  box-shadow: 0 8px 24px
+    color-mix(in srgb, var(--geist-foreground) 14%, transparent);
+}
+
+.historyItemMenu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--geist-foreground);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+
+.historyItemMenu button:hover:not(:disabled),
+.historyItemMenu button:focus-visible {
+  outline: none;
+  background: var(--geist-surface);
+}
+
+.historyItemMenu button[data-danger="true"] {
+  color: var(--geist-error);
+}
+
+.historyItemMenu button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.historyItemMenu svg {
+  flex-shrink: 0;
+}

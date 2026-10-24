@@ -25,6 +25,20 @@ import {
   useErrorBoundary,
   useContext,
 } from '../../../src/core/hooks/mainThread';
+import {
+  action,
+  batch,
+  computed,
+  createModel,
+  effect,
+  Signal,
+  signal,
+  untracked,
+  useComputed,
+  useModel,
+  useSignal,
+  useSignalEffect,
+} from '@lynx-js/react-signals/lepus';
 import { options, createContext } from 'preact';
 import { DIFF, HOOK } from '../../../src/shared/render-constants.js';
 
@@ -188,5 +202,78 @@ describe('mainThread hooks', () => {
       setCount(1);
       expect(console.error).toBeCalledWith('Cannot update state in main thread!');
     }
+  });
+
+  it('should keep signals static and effects inactive', () => {
+    const signalEffect = vi.fn();
+    const subscriber = vi.fn();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const count = signal(1, { name: 'count' });
+    const doubled = computed(() => count.value * 2, { name: 'doubled' });
+    const unsubscribe = count.subscribe(subscriber);
+    const unsubscribeComputed = doubled.subscribe(subscriber);
+    const dispose = effect(signalEffect);
+
+    const batchResult = batch(() => {
+      count.value = 2;
+      return 'batch-result';
+    });
+
+    expect(batchResult).toBe('batch-result');
+    expect(count.name).toBe('count');
+    expect(count.value).toBe(1);
+    expect(count.peek()).toBe(1);
+    expect(count.valueOf()).toBe(1);
+    expect(count.toString()).toBe('1');
+    expect(count.toJSON()).toBe(1);
+    expect(doubled.name).toBe('doubled');
+    expect(doubled.value).toBe(2);
+    expect(doubled.peek()).toBe(2);
+    expect(doubled.valueOf()).toBe(2);
+    expect(doubled.toString()).toBe('2');
+    expect(doubled.toJSON()).toBe(2);
+    expect(untracked(() => count.value)).toBe(1);
+    expect(new Signal(5).value).toBe(5);
+    expect(signal().value).toBeUndefined();
+    expect(signalEffect).not.toHaveBeenCalled();
+    expect(subscriber).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(
+      'Cannot update signal in main thread!',
+    );
+
+    dispose();
+    unsubscribe();
+    unsubscribeComputed();
+
+    let localSignal;
+    let localComputed;
+    let emptySignal;
+    let localModel;
+    const hookEffect = vi.fn();
+    const increment = action((value: number) => value + 1);
+    const Counter = createModel(() => ({ count: signal(7) }));
+
+    function App() {
+      localSignal = useSignal(3, { name: 'local' });
+      localComputed = useComputed(() => localSignal.value * 2);
+      emptySignal = useSignal();
+      localModel = useModel(Counter);
+      useSignalEffect(hookEffect);
+
+      return <text>{localSignal.value}-{localComputed.value}</text>;
+    }
+
+    __root.__jsx = <App />;
+    renderPage();
+
+    expect(localSignal.value).toBe(3);
+    expect(localComputed.value).toBe(6);
+    expect(emptySignal.value).toBeUndefined();
+    expect(localModel.count.value).toBe(7);
+    expect(increment(1)).toBe(2);
+    expect(hookEffect).not.toHaveBeenCalled();
+
+    localSignal.value = 4;
+    expect(localSignal.value).toBe(3);
   });
 });

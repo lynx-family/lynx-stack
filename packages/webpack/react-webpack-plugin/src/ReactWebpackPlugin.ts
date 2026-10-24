@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 
 import type { Chunk, Compilation, Compiler } from '@rspack/core';
@@ -15,8 +14,13 @@ import type {
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
+import { applyDefinesInjection } from './DefinesInjection.js';
 import { LAYERS } from './layer.js';
-import { ELEMENT_TEMPLATE_BUILD_INFO } from './loaders/main-thread.js';
+import {
+  ELEMENT_TEMPLATE_BUILD_INFO,
+  REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
+} from './loaders/main-thread.js';
+import type { ReactRuntimeRequirementsBuildInfo } from './loaders/main-thread.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 
 const require = createRequire(import.meta.url);
@@ -24,6 +28,98 @@ const require = createRequire(import.meta.url);
 interface ElementTemplateBuildInfo {
   templateId: string;
   compiledTemplate: Record<string, unknown>;
+}
+
+/**
+ * Semantic runtime requirements collected from the final emitted React chunks.
+ *
+ * @public
+ */
+export interface ReactCompileResult {
+  /** The compilation-result protocol version. */
+  version: 1;
+  /** Capabilities required by the compiled output. */
+  runtimeRequirements: {
+    /** Whether the output requires main-thread programmability. */
+    mainThreadProgrammability: boolean;
+  };
+}
+
+export interface ModuleWithReactRuntimeRequirementsBuildInfo {
+  buildInfo?: Record<string, unknown>;
+  modules?: Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>;
+}
+
+const REACT_COMPILATION_RESULT = Symbol.for(
+  '@lynx-js/react/internal:compilation-result',
+);
+
+/**
+ * Aggregate semantic runtime requirements from modules that belong to final
+ * chunks. A transformed module outside these chunks (for example after tree
+ * shaking) cannot affect the result.
+ *
+ * @internal
+ */
+export function collectReactCompileResult<TChunk>(
+  chunks: Iterable<TChunk>,
+  getChunkModules: (
+    chunk: TChunk,
+  ) => Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>,
+): ReactCompileResult | undefined {
+  const visited = new Set<ModuleWithReactRuntimeRequirementsBuildInfo>();
+  let hasSemanticProducer = false;
+  let mainThreadProgrammability = false;
+
+  const collectFromModule = (
+    module: ModuleWithReactRuntimeRequirementsBuildInfo,
+  ): void => {
+    if (visited.has(module)) {
+      return;
+    }
+    visited.add(module);
+    const runtimeRequirements = module.buildInfo?.[
+      REACT_RUNTIME_REQUIREMENTS_BUILD_INFO
+    ] as ReactRuntimeRequirementsBuildInfo | undefined;
+    if (runtimeRequirements !== undefined) {
+      hasSemanticProducer = true;
+      mainThreadProgrammability ||=
+        runtimeRequirements.mainThreadProgrammability === true;
+    }
+
+    if (module.modules) {
+      for (const nestedModule of module.modules) {
+        collectFromModule(nestedModule);
+      }
+    }
+  };
+
+  for (const chunk of chunks) {
+    for (const module of getChunkModules(chunk)) {
+      collectFromModule(module);
+    }
+  }
+
+  if (!hasSemanticProducer) {
+    return undefined;
+  }
+
+  return {
+    version: 1,
+    runtimeRequirements: { mainThreadProgrammability },
+  };
+}
+
+function collectReactCompileResultFromCompilation(
+  compilation: Compilation,
+): ReactCompileResult | undefined {
+  return collectReactCompileResult(
+    compilation.chunks,
+    chunk =>
+      compilation.chunkGraph.getChunkModulesIterable(
+        chunk,
+      ) as Iterable<ModuleWithReactRuntimeRequirementsBuildInfo>,
+  );
 }
 
 export interface ModuleWithElementTemplateBuildInfo {
@@ -148,13 +244,35 @@ export function collectElementTemplatesForEntries<TChunk>(
     chunk: TChunk,
   ) => Iterable<ModuleWithElementTemplateBuildInfo>,
 ): Record<string, Record<string, unknown>> {
-  const elementTemplates: Record<string, Record<string, unknown>> = {};
-  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  const chunkGroups: { chunks: Iterable<TChunk> }[] = [];
   for (const entryName of entryNames) {
     const chunkGroup = getChunkGroup(entryName);
-    if (chunkGroup === undefined) {
-      continue;
+    if (chunkGroup !== undefined) {
+      chunkGroups.push(chunkGroup);
     }
+  }
+  return collectElementTemplatesForChunkGroups(chunkGroups, getChunkModules);
+}
+
+/**
+ * Collect element templates for the chunk groups an encoded bundle covers.
+ *
+ * A lazy bundle's chunk groups come from dynamic imports and have no name, so
+ * they have to be walked directly rather than looked up in
+ * `compilation.namedChunkGroups`; otherwise the lazy bundle is encoded without
+ * its templates and the main thread cannot create them.
+ *
+ * @internal
+ */
+export function collectElementTemplatesForChunkGroups<TChunk>(
+  chunkGroups: Iterable<{ chunks: Iterable<TChunk> }>,
+  getChunkModules: (
+    chunk: TChunk,
+  ) => Iterable<ModuleWithElementTemplateBuildInfo>,
+): Record<string, Record<string, unknown>> {
+  const elementTemplates: Record<string, Record<string, unknown>> = {};
+  const visited = new Set<ModuleWithElementTemplateBuildInfo>();
+  for (const chunkGroup of chunkGroups) {
     for (const chunk of chunkGroup.chunks) {
       for (const module of getChunkModules(chunk)) {
         if (visited.has(module)) {
@@ -175,22 +293,22 @@ export function collectElementTemplatesForEntries<TChunk>(
  */
 interface ReactWebpackPluginOptions {
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.compat.disableCreateSelectorQueryIncompatibleWarning}
+   * Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
    */
   disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.firstScreenSyncTiming}
    */
   firstScreenSyncTiming?: 'immediately' | 'jsReady' | 'manual';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.globalPropsMode}
    */
   globalPropsMode?: 'reactive' | 'event';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableSSR}
    */
   enableSSR?: boolean;
 
@@ -198,6 +316,12 @@ interface ReactWebpackPluginOptions {
    * The chunk names to be considered as main thread chunks.
    */
   mainThreadChunks?: string[] | undefined;
+
+  /**
+   * The main-thread and background entry pairs to merge the main-thread
+   * definitions across.
+   */
+  entryPairs?: Array<{ mainThread: string; background: string }>;
 
   /**
    * Merge same string literals in JS and Lepus to reduce output bundle size.
@@ -220,11 +344,6 @@ interface ReactWebpackPluginOptions {
    * @defaultValue `false` when production, `true` when development
    */
   profile?: boolean | undefined;
-
-  /**
-   * The file path of `@lynx-js/react/worklet-runtime`.
-   */
-  workletRuntimePath: string;
 
   /**
    * Whether to enable Element Template compilation.
@@ -251,6 +370,22 @@ interface ReactWebpackPluginOptions {
    * @public
    */
   lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
+
+  /**
+   * The `@lynx-js/react` runtime version the app being compiled depends on.
+   * Stamped into the bundle as `__RUNTIME_VERSION__` so a lazy bundle can be
+   * checked at runtime against the host's runtime version. Resolved by the
+   * caller (e.g. `pluginReactLynx`) against the app root; left `undefined` when
+   * it cannot be determined.
+   *
+   * @public
+   */
+  runtimeVersion?: string | undefined;
+
+  /**
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_reEvalJSOnReload}
+   */
+  experimental_reEvalJSOnReload?: boolean;
 }
 
 /**
@@ -272,9 +407,8 @@ class ReactWebpackPlugin {
    * The loaders for ReactLynx.
    *
    * @remarks
-   * Note that this loader will only transform JSX/TSX to valid JavaScript.
-   * For `.tsx` files, the type annotations would not be eliminated.
-   * You should use `babel-loader` or `swc-loader` to load TypeScript files.
+   * Note that this loader transforms JSX/TSX to valid JavaScript.
+   * For `.ts` and `.tsx` files, the TypeScript types are stripped as well.
    *
    * @example
    * ```js
@@ -323,13 +457,15 @@ class ReactWebpackPlugin {
       globalPropsMode: 'reactive',
       enableSSR: false,
       mainThreadChunks: [],
+      entryPairs: [],
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
-      workletRuntimePath: '',
       experimental_useElementTemplate: false,
       experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
+      runtimeVersion: undefined,
+      experimental_reEvalJSOnReload: false,
     });
 
   /**
@@ -348,9 +484,31 @@ class ReactWebpackPlugin {
       new BannerPlugin({
         // TODO: handle cases that do not have `'use strict'`
         banner:
-          `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`,
+          `'use strict';var globDynamicComponentEntry=globDynamicComponentEntry||'__Card__';`
+          + (options.experimental_reEvalJSOnReload
+            ? `lynx[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] = true;`
+            : ''),
         raw: true,
         test: options.mainThreadChunks!,
+      }).apply(compiler);
+    }
+
+    if (
+      options.experimental_reEvalJSOnReload
+      && !options.experimental_isLazyBundle
+    ) {
+      const reloader =
+        `lynx[Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__')]`;
+      new BannerPlugin({
+        banner: `${reloader} = () => {`,
+        raw: true,
+        test: options.mainThreadChunks!,
+      }).apply(compiler);
+      new BannerPlugin({
+        banner: `\n};\n${reloader}();\n`,
+        raw: true,
+        test: options.mainThreadChunks!,
+        footer: true,
       }).apply(compiler);
     }
 
@@ -402,10 +560,31 @@ class ReactWebpackPlugin {
         options.experimental_transformBuiltinAttributeNames,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
+      __RUNTIME_VERSION__: JSON.stringify(options.runtimeVersion),
+      __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: JSON.stringify(
+        options.experimental_reEvalJSOnReload,
+      ),
     }).apply(compiler);
+
+    const entryPairs = options.entryPairs ?? [];
+    if (entryPairs.length > 0) {
+      applyDefinesInjection(compiler, entryPairs, this.constructor.name);
+    }
 
     compiler.hooks.thisCompilation.tap(this.constructor.name, compilation => {
       const onceForChunkSet = new WeakSet<Chunk>();
+
+      compilation.hooks.afterSeal.tap(
+        `${this.constructor.name}.CompileResult`,
+        () => {
+          const result = collectReactCompileResultFromCompilation(compilation);
+          if (result !== undefined) {
+            (compilation as unknown as Record<symbol, unknown>)[
+              REACT_COMPILATION_RESULT
+            ] = result;
+          }
+        },
+      );
 
       compilation.hooks.runtimeRequirementInTree.for(
         compiler.webpack.RuntimeGlobals.ensureChunkHandlers,
@@ -466,30 +645,16 @@ class ReactWebpackPlugin {
 
       const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
 
-      const { RawSource, ConcatSource } = compiler.webpack.sources;
-      hooks.beforeEncode.tap(
+      // The transform appends `-react__<layer>` to a `webpackChunkName` so the
+      // two layers keep their own chunk. Strip it again here: the resulting
+      // chunk groups still make up a single lazy bundle.
+      hooks.asyncChunkName.tap(
         this.constructor.name,
-        (args) => {
-          const lepusCode = args.encodeData.lepusCode;
-          if (
-            lepusCode.root?.source.source().toString()?.includes(
-              'registerWorkletInternal',
-            )
-          ) {
-            lepusCode.chunks.push({
-              name: 'worklet-runtime',
-              source: new RawSource(fs.readFileSync(
-                options.workletRuntimePath,
-                'utf8',
-              )),
-              info: {
-                ['lynx:main-thread']: true,
-              },
-            });
-          }
-          return args;
-        },
+        (chunkName) =>
+          chunkName.replace(/-react__(?:background|main-thread)$/, ''),
       );
+
+      const { ConcatSource } = compiler.webpack.sources;
 
       if (
         compiler.options.plugins.some(
@@ -573,12 +738,9 @@ class ReactWebpackPlugin {
           `${this.constructor.name}.ElementTemplate`,
           (args) => {
             const { chunkGraph } = compilation;
-            const elementTemplates = collectElementTemplatesForEntries(
-              args.chunkGroups.flatMap(cg =>
-                cg.name === null || cg.name === undefined ? [] : [cg.name]
-              ),
-              (name) => compilation.namedChunkGroups.get(name),
-              (chunk) =>
+            const elementTemplates = collectElementTemplatesForChunkGroups(
+              args.chunkGroups,
+              (chunk: Chunk) =>
                 chunkGraph.getChunkModules(
                   chunk,
                 ) as ModuleWithElementTemplateBuildInfo[],

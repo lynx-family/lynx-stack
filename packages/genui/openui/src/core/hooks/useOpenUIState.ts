@@ -22,7 +22,6 @@ import type {
   Store,
   ToolProvider,
 } from '@openuidev/lang-core';
-import type React from 'react';
 
 import {
   useCallback,
@@ -31,8 +30,11 @@ import {
   useRef,
   useSyncExternalStore,
 } from '@lynx-js/react';
+import type { ReactNode } from '@lynx-js/react';
 
 import type { LegacyActionConfig } from '../../catalog/Action/index.jsx';
+import type { InitialQueryResults } from '../../data-tools/types.js';
+import { registerOpenUIBuiltins } from '../../shared/builtins.js';
 import type { OpenUIContextValue } from '../context.jsx';
 import type { Library } from '../library.jsx';
 
@@ -47,6 +49,13 @@ function unwrapFieldValue(v: unknown): unknown {
     return (v as Record<string, unknown>)['value'];
   }
   return v;
+}
+
+function hasOwn(
+  record: Readonly<Record<string, unknown>>,
+  key: string,
+): boolean {
+  return Object.prototype.hasOwnProperty.call(record, key);
 }
 
 function evaluateString(
@@ -79,9 +88,9 @@ function evaluateRecord(
     : {};
 }
 
-/**
- * Inputs used to parse OpenUI text and build renderer state.
- */
+export type { InitialQueryResults } from '../../data-tools/types.js';
+
+/** Inputs used to parse OpenUI text and build renderer state. */
 export interface UseOpenUIStateOptions {
   response: string | null;
   library: Library;
@@ -89,6 +98,12 @@ export interface UseOpenUIStateOptions {
   onAction?: (event: ActionEvent) => void;
   onStateUpdate?: (state: Record<string, unknown>) => void;
   initialState?: Record<string, unknown>;
+  /**
+   * Prefetched Query results keyed by the Query assignment name (statement ID).
+   * They are available during the initial render and act as fallbacks while an
+   * optional tool provider revalidates them after commit.
+   */
+  initialQueryResults?: InitialQueryResults;
   /** ToolProvider for Query data fetching — MCP, REST, GraphQL, or any backend. */
   toolProvider?: ToolProvider | null;
   /** Callback for structured, LLM-friendly errors. See OpenUIError type. */
@@ -123,11 +138,13 @@ export function useOpenUIState(
     onAction,
     onStateUpdate,
     initialState,
+    initialQueryResults,
     toolProvider,
     onError,
   }: UseOpenUIStateOptions,
-  renderDeep: (value: unknown) => React.ReactNode,
+  renderDeep: (value: unknown) => ReactNode,
 ): OpenUIState {
+  registerOpenUIBuiltins();
   // ─── Streaming parser (incremental — caches completed statements) ───
   const sp = useMemo(
     () => createStreamingParser(library.toJSONSchema(), library.root),
@@ -157,9 +174,12 @@ export function useOpenUIState(
   const store = useMemo<Store>(() => createStore(), []);
 
   // ─── QueryManager ───
+  // Query results belong to one parsed response. A new response may reuse the
+  // same statement IDs for different tools or arguments, so keeping the old
+  // manager would expose stale data until the next request settles.
   const queryManager = useMemo<QueryManager>(
     () => createQueryManager(toolProvider ?? null),
-    [toolProvider],
+    [toolProvider, response, library],
   );
 
   useEffect(() => {
@@ -219,17 +239,87 @@ export function useOpenUIState(
     () => queryManager.getSnapshot(),
   );
 
-  // ─── Build EvaluationContext ───
-  const evaluationContext = useMemo<EvaluationContext>(
+  // ─── First-render state fallbacks ───
+  // Store initialization happens in an effect so it can preserve user state
+  // across streaming updates. Main-thread first-screen rendering does not run
+  // effects, so expressions also need a pure view of declaration defaults and
+  // initialState until the Store has been initialized.
+  const stateFallbacks = useMemo<Record<string, unknown>>(
     () => ({
-      getState: (name: string) => unwrapFieldValue(store.get(name)),
+      ...(result?.stateDeclarations ?? {}),
+      ...(initialState ?? {}),
+    }),
+    [result?.stateDeclarations, initialState],
+  );
+
+  // Query argument/default evaluation deliberately cannot resolve the Query
+  // fallbacks built below. This keeps Query submission independent from its own
+  // QueryManager snapshot and avoids render-time tool execution.
+  const baseEvaluationContext = useMemo<EvaluationContext>(
+    () => ({
+      getState: (name: string) => {
+        const value = hasOwn(storeSnapshot, name)
+          ? storeSnapshot[name]
+          : stateFallbacks[name];
+        return unwrapFieldValue(value);
+      },
       resolveRef: (name: string) => {
         const mutResult = queryManager.getMutationResult(name);
         if (mutResult) return mutResult;
         return queryManager.getResult(name);
       },
     }),
-    [store, queryManager],
+    [storeSnapshot, stateFallbacks, queryManager],
+  );
+
+  // ─── Query fallbacks for the first synchronous render ───
+  // QueryManager registration stays in useEffect because it can start tools,
+  // timers, and subscriptions. Computing a fallback is pure and lets Query
+  // defaults or prefetched data participate in ReactLynx first-screen layout.
+  const queryFallbacks = useMemo<Record<string, unknown>>(() => {
+    if (isStreaming) return {};
+
+    const fallbacks: Record<string, unknown> = {};
+    for (const query of result?.queryStatements ?? []) {
+      if (!query.complete) continue;
+
+      if (
+        initialQueryResults && hasOwn(initialQueryResults, query.statementId)
+      ) {
+        fallbacks[query.statementId] = initialQueryResults[query.statementId];
+        continue;
+      }
+
+      fallbacks[query.statementId] = query.defaultsAST
+        ? evaluate(query.defaultsAST, baseEvaluationContext)
+        : null;
+    }
+    return fallbacks;
+  }, [
+    isStreaming,
+    result?.queryStatements,
+    initialQueryResults,
+    baseEvaluationContext,
+  ]);
+
+  // ─── Build render/action EvaluationContext ───
+  const evaluationContext = useMemo<EvaluationContext>(
+    () => ({
+      getState: (name: string) => baseEvaluationContext.getState(name),
+      resolveRef: (name: string) => {
+        const mutResult = queryManager.getMutationResult(name);
+        if (mutResult) return mutResult;
+
+        // QuerySnapshot includes a statement key as soon as QueryManager has
+        // registered it. hasOwn preserves valid null/false/0 results.
+        if (hasOwn(queryManager.getSnapshot(), name)) {
+          return queryManager.getResult(name);
+        }
+        if (hasOwn(queryFallbacks, name)) return queryFallbacks[name];
+        return null;
+      },
+    }),
+    [baseEvaluationContext, queryManager, queryFallbacks],
   );
 
   // ─── Evaluate and submit queries ───
@@ -241,7 +331,7 @@ export function useOpenUIState(
       const relevantDeps: Record<string, unknown> = {};
       if (qn.deps) {
         for (const ref of qn.deps) {
-          relevantDeps[ref] = storeSnapshot[ref];
+          relevantDeps[ref] = baseEvaluationContext.getState(ref);
         }
       }
       const node: {
@@ -255,17 +345,19 @@ export function useOpenUIState(
       } = {
         statementId: qn.statementId,
         toolName: qn.toolAST
-          ? evaluateString(qn.toolAST, evaluationContext)
+          ? evaluateString(qn.toolAST, baseEvaluationContext)
           : '',
-        args: qn.argsAST ? evaluate(qn.argsAST, evaluationContext) : null,
-        defaults: qn.defaultsAST
-          ? evaluate(qn.defaultsAST, evaluationContext)
+        args: qn.argsAST
+          ? evaluate(qn.argsAST, baseEvaluationContext)
+          : null,
+        defaults: hasOwn(queryFallbacks, qn.statementId)
+          ? queryFallbacks[qn.statementId]
           : null,
         deps: Object.keys(relevantDeps).length > 0 ? relevantDeps : undefined,
         complete: qn.complete,
       };
       if (qn.refreshAST) {
-        const interval = evaluateNumber(qn.refreshAST, evaluationContext);
+        const interval = evaluateNumber(qn.refreshAST, baseEvaluationContext);
         if (interval !== undefined) {
           node.refreshInterval = interval;
         }
@@ -278,8 +370,9 @@ export function useOpenUIState(
   }, [
     isStreaming,
     result?.queryStatements,
-    evaluationContext,
+    baseEvaluationContext,
     queryManager,
+    queryFallbacks,
     storeSnapshot,
   ]);
 
@@ -290,14 +383,16 @@ export function useOpenUIState(
     const mutStmts = result?.mutationStatements ?? [];
     const nodes = mutStmts.map((mn) => ({
       statementId: mn.statementId,
-      toolName: mn.toolAST ? evaluateString(mn.toolAST, evaluationContext) : '',
+      toolName: mn.toolAST
+        ? evaluateString(mn.toolAST, baseEvaluationContext)
+        : '',
     }));
     // Always call — empty array clears removed mutations and their errors
     queryManager.registerMutations(nodes);
   }, [
     isStreaming,
     result?.mutationStatements,
-    evaluationContext,
+    baseEvaluationContext,
     queryManager,
   ]);
 
@@ -410,6 +505,17 @@ export function useOpenUIState(
       // ActionPlan path (v0.5) — sequential steps with halt-on-mutation-failure
       const actionPlan = action;
       if (actionPlan?.steps) {
+        // Actions may follow a field update or another Set in the same turn.
+        // Render snapshots do not include those writes until the next render.
+        const actionContext: EvaluationContext = {
+          ...evaluationContext,
+          getState: name => {
+            const snapshot = store.getSnapshot();
+            return hasOwn(snapshot, name)
+              ? unwrapFieldValue(snapshot[name])
+              : evaluationContext.getState(name);
+          },
+        };
         for (const step of actionPlan.steps) {
           switch (step.type) {
             case ACTION_STEPS.Run: {
@@ -418,7 +524,7 @@ export function useOpenUIState(
                   (m) => m.statementId === step.statementId,
                 );
                 const evaluatedArgs = mn?.argsAST
-                  ? evaluateRecord(mn.argsAST, evaluationContext)
+                  ? evaluateRecord(mn.argsAST, actionContext)
                   : {};
                 const ok = await queryManager.fireMutation(
                   step.statementId,
@@ -445,7 +551,7 @@ export function useOpenUIState(
               ));
               break;
             case ACTION_STEPS.Set: {
-              const value = evaluate(step.valueAST, evaluationContext);
+              const value = evaluate(step.valueAST, actionContext);
               store.set(step.target, value);
               break;
             }

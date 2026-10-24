@@ -6,6 +6,9 @@
  * @module elements/XMarkdown
  *
  * `x-markdown` renders markdown content with minimal styling.
- * It supports the `content` and `markdown-style` attributes.
+ * Key attributes: `content`, `markdown-style`, `content-id`, `text-selection`,
+ * `text-maxline`, `content-range`, `markdown-effect`, and the typewriter
+ * controls `animation-type`, `animation-velocity`, `animation-paused`,
+ * `initial-animation-step` and `content-complete`.
  */
 export { XMarkdown } from './XMarkdown.js';

@@ -28,6 +28,49 @@ export const OPENUI_CATEGORIES = [
 
 export const OPENUI_COMPONENT_CATALOG: OpenUIComponentDoc[] = [
   {
+    name: 'Canvas',
+    category: 'data-display',
+    description:
+      'Web Canvas 2D drawing using standard ctx commands. Stream an array of code chunks for progressive drawing. Non-Web hosts display an unsupported message unless they override this component.',
+    props: [
+      {
+        name: 'code',
+        type: 'string | string[]',
+        description:
+          'Drawing code using ctx, width and height. Array chunks execute independently in order; while streaming, the last item waits for the next item or stream completion. Appending executes only new chunks; editing a prior chunk resets and replays. Do not access canvas, acquire a context or register events.',
+      },
+      {
+        name: 'width',
+        type: 'number',
+        description: 'Logical width, 1–2048 pixels.',
+        default: '360',
+      },
+      {
+        name: 'height',
+        type: 'number',
+        description: 'Logical height, 1–2048 pixels.',
+        default: '360',
+      },
+      {
+        name: 'name',
+        type: 'string',
+        description:
+          'Canvas element name; with action, binds logical click coordinates { x, y }. Use $state for reactive binding.',
+      },
+      {
+        name: 'action',
+        type: 'ActionExpression',
+        description:
+          'Runs after writing click coordinates to name. Disabled while streaming.',
+      },
+    ],
+    usage: `root = Stack([Canvas(${
+      JSON.stringify(
+        'ctx.fillStyle = \'#2563eb\'; ctx.beginPath(); ctx.arc(width / 2, height / 2, 60, 0, Math.PI * 2); ctx.fill();',
+      )
+    }, 360, 200)])`,
+  },
+  {
     name: 'Stack',
     category: 'layout',
     description: 'Flex layout container.',
@@ -42,7 +85,7 @@ export const OPENUI_COMPONENT_CATALOG: OpenUIComponentDoc[] = [
       { name: 'wrap', type: 'boolean', description: 'Enable flex-wrap.' },
       {
         name: 'gap',
-        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        type: '"none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl"',
         description: 'Gap between children.',
         default: '"m"',
       },
@@ -83,7 +126,7 @@ subtitle = TextContent("A simple stack example")`,
       },
       {
         name: 'gap',
-        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        type: '"none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl"',
         description: 'Gap between children.',
         default: '"m"',
       },
@@ -112,7 +155,7 @@ subtitle = TextContent("A simple stack example")`,
       },
       {
         name: 'gap',
-        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        type: '"none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl"',
         description: 'Gap between children.',
         default: '"m"',
       },
@@ -146,7 +189,7 @@ subtitle = TextContent("A simple stack example")`,
       },
       {
         name: 'gap',
-        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        type: '"none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl"',
         description: 'Gap between items.',
         default: '"m"',
       },
@@ -157,7 +200,7 @@ subtitle = TextContent("A simple stack example")`,
       },
     ],
     usage:
-      `root = List([Text("First", "body"), Text("Second", "body"), Text("Third", "body")], "vertical", "stretch", "s", true)`,
+      `root = List([Text("First", "body"), Text("Second", "body"), Text("Third", "body")], null, "vertical", "stretch", "s", true)`,
   },
   {
     name: 'Card',
@@ -180,7 +223,7 @@ subtitle = TextContent("A simple stack example")`,
       { name: 'wrap', type: 'boolean', description: 'Enable flex-wrap.' },
       {
         name: 'gap',
-        type: '"none" | "xs" | "s" | "m" | "l" | "xl"',
+        type: '"none" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "2xl"',
         description: 'Gap between children.',
         default: '"m"',
       },

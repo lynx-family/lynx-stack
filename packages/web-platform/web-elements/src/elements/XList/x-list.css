@@ -192,10 +192,6 @@ x-list::part(lower-threshold-observer) {
   flex-direction: column-reverse;
 }
 
-x-list[vertical-orientation="false"]::part(lower-threshold-observer) {
-  flex-direction: row-reverse;
-}
-
 /* list-type single */
 x-list {
   display: flex;

@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from '@rstest/core';
 
+import { BASIC_CATALOG } from '../agent/a2ui/a2ui-catalog.js';
 import app from '../src/app.js';
 
 interface MockStreamingService {
@@ -17,7 +18,9 @@ interface MockStreamingService {
 
 type GlobalWithStreamingServices = typeof globalThis & {
   __A2UI_AGENT_SERVICE__?: MockStreamingService;
+  __HTML_AGENT_SERVICE__?: MockStreamingService;
   __OPENUI_AGENT_SERVICE__?: MockStreamingService;
+  __LYNX_XML_AGENT_SERVICE__?: MockStreamingService;
 };
 
 function createPendingService(
@@ -87,12 +90,55 @@ describe('agent stream cancellation', () => {
     try {
       await cancelResponse(
         '/a2ui/stream',
-        { messages: [{ role: 'user', content: 'Create a card' }] },
+        {
+          messages: [{ role: 'user', content: 'Create a card' }],
+          catalog: BASIC_CATALOG,
+        },
         '203.0.113.43',
       );
       expect(receivedSignal?.aborted).toBe(true);
     } finally {
       global.__A2UI_AGENT_SERVICE__ = previousService;
+    }
+  });
+
+  test('aborts Lynx XML generation when the response reader disconnects', async () => {
+    const global = globalThis as GlobalWithStreamingServices;
+    const previousService = global.__LYNX_XML_AGENT_SERVICE__;
+    let receivedSignal: AbortSignal | undefined;
+    global.__LYNX_XML_AGENT_SERVICE__ = createPendingService((signal) => {
+      receivedSignal = signal;
+    });
+
+    try {
+      await cancelResponse(
+        '/lynx-xml/stream',
+        { messages: [{ role: 'user', content: 'Create a counter' }] },
+        '203.0.113.46',
+      );
+      expect(receivedSignal?.aborted).toBe(true);
+    } finally {
+      global.__LYNX_XML_AGENT_SERVICE__ = previousService;
+    }
+  });
+
+  test('aborts HTML generation when the response reader disconnects', async () => {
+    const global = globalThis as GlobalWithStreamingServices;
+    const previousService = global.__HTML_AGENT_SERVICE__;
+    let receivedSignal: AbortSignal | undefined;
+    global.__HTML_AGENT_SERVICE__ = createPendingService((signal) => {
+      receivedSignal = signal;
+    });
+
+    try {
+      await cancelResponse(
+        '/html/stream',
+        { messages: [{ role: 'user', content: 'Create a dashboard' }] },
+        '203.0.113.49',
+      );
+      expect(receivedSignal?.aborted).toBe(true);
+    } finally {
+      global.__HTML_AGENT_SERVICE__ = previousService;
     }
   });
 
@@ -110,6 +156,7 @@ describe('agent stream cancellation', () => {
         {
           action: { name: 'refresh' },
           surfaceId: 'surface-1',
+          catalog: BASIC_CATALOG,
         },
         '203.0.113.44',
       );

@@ -59,6 +59,8 @@ x-foldview-header-ng {
   order: 2;
   flex: 0 0 auto;
   position: absolute;
+  /* an out-of-flow box shrinks to fit its content without an explicit width */
+  width: 100%;
 }
 
 x-foldview-ng[header-over-slot] > x-foldview-slot-ng,

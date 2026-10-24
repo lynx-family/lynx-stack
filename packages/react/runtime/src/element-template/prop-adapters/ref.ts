@@ -120,12 +120,12 @@ export function prepareSpreadRefAttrValue(
 export function queueRefAttrUpdate(
   oldValue: unknown,
   newValue: unknown,
-  handleId: number,
+  instance: { readonly instanceId: number },
   attrSlotIndex: number,
 ): void {
   const oldRef = getRefFromValue(oldValue);
   const newRef = getRefFromValue(newValue);
-  refEffectQueue.queue(oldRef, newRef, [handleId, attrSlotIndex]);
+  refEffectQueue.queue(oldRef, newRef, instance, attrSlotIndex, [instance.instanceId, attrSlotIndex]);
 }
 
 export function flushPendingRefs(): void {

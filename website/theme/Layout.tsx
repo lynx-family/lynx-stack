@@ -11,11 +11,11 @@ export const Layout = () => {
     <BasicLayout
       beforeNav={
         <Banner
-          href='https://lynxjs.org'
+          href='https://lynx-stack.dev'
           storage={false}
           message={lang === 'en'
-            ? 'This is the dev preview website. Check out the document at lynxjs.org'
-            : '这是开发预览网站。请访问正式文档 lynxjs.org'}
+            ? 'This is the dev preview website. Check out the document at lynx-stack.dev'
+            : '这是开发预览网站。请访问正式文档 lynx-stack.dev'}
         />
       }
     />

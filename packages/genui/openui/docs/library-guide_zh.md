@@ -36,8 +36,47 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 
 ## 内置组件
 
-`createOpenUiLibrary()` 包含以下组件。它们也从
-`@lynx-js/genui/openui/catalog` 导出。
+默认情况下，`createOpenUiLibrary()` 包含以下组件。它们既从聚合入口
+`@lynx-js/genui/openui/catalog` 导出，也可以通过
+`@lynx-js/genui/openui/catalog/Stack` 等逐组件子路径导入。
+
+服务端生成 schema 或 prompt 时，可从
+`@lynx-js/genui/openui/catalog/agent`（或
+`@lynx-js/genui-openui/catalog/agent`）导入使用 null renderer 的组件定义。
+该入口与 ReactLynx catalog 共享名称、描述、schema 和组件 ref，无需加载 JSX、
+CSS、ReactLynx 或 Lynx UI。`createOpenUiPromptLibrary()` 直接复用这些定义。
+
+两个工厂共用组件顺序、分组和选项处理逻辑。配置和自定义组件定义对应时，
+`toJSONSchema()`、`toSpec()` 和 `.prompt()` 输出相同。渲染库提供真实的 ReactLynx
+组件；Prompt 库提供返回 null 的 renderer，可以在 Node 中加载。
+
+两端都支持用 `componentNames` 筛选内置组件，并自动保留选定的 root；也支持
+`includeDefaultComponents: false`，仅使用调用方传入的组件和分组。自定义组件始终
+追加在内置组件后，同名定义以后者为准。禁用默认组件时，`componentNames` 不生效，
+调用方必须自行提供 root。筛选仅控制 Library 的组件集合；若还需要排除未选组件的
+模块依赖，使用 `openui/explicit` 配合逐组件导入。
+
+```ts
+// 服务端和客户端使用相同的筛选配置。
+const options = { componentNames: ['Stack', 'Text'] };
+const promptLibrary = createOpenUiPromptLibrary(options);
+const rendererLibrary = createOpenUiLibrary(options);
+```
+
+`buildOpenUiSystemPrompt()` 会额外添加生成规则和示例，与上述底层 `.prompt()` 的
+一致性约定不同。组件集合受限时，不添加依赖其他默认组件的规则和示例。
+
+按需引入单个定义时，使用 `@lynx-js/genui/openui/catalog/agent/Stack`（或
+`@lynx-js/genui-openui/catalog/agent/Stack`）。每个子路径导出与 Agent 聚合入口
+相同的组件名，只加载该组件定义及其 schema 依赖。
+
+```ts
+import { Stack, Text } from '@lynx-js/genui/openui/catalog/agent';
+import { createLibrary } from '@openuidev/lang-core';
+
+const library = createLibrary({ root: 'Stack', components: [Stack, Text] });
+const prompt = library.prompt();
+```
 
 ### 布局
 
@@ -76,6 +115,7 @@ const library = useMemo(() => createOpenUiLibrary(), []);
 | `Video`       | 带 URL 和可选标题的视频附件占位。                   |
 | `AudioPlayer` | 带 URL 和描述的音频附件占位。                       |
 | `Loading`     | Inline 或 block skeleton/loading feedback。         |
+| `Canvas`      | 通过字符串或流式代码片段绘制 Web Canvas 2D。        |
 
 ### 浮层
 
@@ -183,6 +223,35 @@ notice = Banner("Payment received", "success")
 同名，后加入的自定义 definition 会覆盖 `components` map 中的默认值。这应当被
 视为一次有意 override，并且 prompt 侧 schema 必须与它保持一致。
 
+## 显式选择组件
+
+如果 Library 只应包含调用方提供的 definitions，请把
+`includeDefaultComponents` 设为 `false`。仍要使用的每个内置组件都需要从 catalog
+导入，并通过 `components` 传入：
+
+```ts
+import { createOpenUiLibrary } from '@lynx-js/genui/openui/explicit';
+import { Stack } from '@lynx-js/genui/openui/catalog/Stack';
+import { TextContent } from '@lynx-js/genui/openui/catalog/TextContent';
+
+export const library = createOpenUiLibrary({
+  includeDefaultComponents: false,
+  components: [Stack, TextContent],
+  componentGroups: [
+    { name: 'Selected', components: ['Stack', 'TextContent'] },
+  ],
+});
+```
+
+关闭 defaults 后，26 个内置 component definitions 及其 groups 都不会加入。
+root 仍默认是 `Stack`；如果所选 components 不包含 root，创建 Library 时会报错。
+可以像示例一样导入并传入 `Stack`，也可以把 `root` 设为另一个由调用方提供的组件。
+Agent prompt 和客户端 Library 必须限制为相同的组件名称。
+
+`includeDefaultComponents` 控制的是 Library vocabulary。从 `openui` 主入口导入
+factory 时，该入口仍会静态引用默认 catalog。如果未选择的 catalog modules 不应
+进入静态依赖图，请像上面的示例一样使用 `openui/explicit` 和逐组件子路径。
+
 ## 渲染嵌套 component values
 
 如果自定义 prop 接受 child components，请使用 component render contract 中的
@@ -240,8 +309,12 @@ const parser = createParser(library.toJSONSchema(), library.root);
 const result = parser.parse('root = Stack([TextContent("Hello")])');
 ```
 
-流式文本使用 `createStreamingParser`。如果 UI 保存累计 response，可以调用
+在 renderer 外解析流式文本时，使用 `createStreamingParser`。如果 UI 保存累计 response，可以调用
 `set(fullText)`；如果只传新增 delta，则调用 `push(chunk)`。
+
+渲染模型输出时，传入累计 `response` 和 `isStreaming`；renderer 已经管理自己的
+streaming parser，无需另行解析同一份文本。接入方式见
+[流式模型输出](./overview_zh.md#流式模型输出)。
 
 如果同一 response 已经交给 renderer，优先使用它的 `onParseResult` callback，避免
 为了检查 `root`、`stateDeclarations`、data statements 或 `meta` diagnostics 而

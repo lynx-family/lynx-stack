@@ -1,0 +1,452 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.scroll {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #eef2f7;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  border-radius: 24px;
+  background-color: #153448;
+}
+
+.hero-kicker {
+  color: #9ed8cc;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.hero-title {
+  margin-top: 8px;
+  color: #ffffff;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.hero-subtitle {
+  margin-top: 8px;
+  color: #bed0d9;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: normal;
+}
+
+.hero-stats {
+  display: flex;
+  flex-direction: row;
+  margin-top: 20px;
+}
+
+.hero-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-radius: 14px;
+  background-color: #21475d;
+}
+
+.hero-stat.second {
+  margin-left: 10px;
+}
+
+.hero-stat-label {
+  color: #91b3c1;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hero-stat-value {
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.section-title {
+  margin-top: 22px;
+  color: #1c2a36;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.day-tabs {
+  display: flex;
+  flex-direction: row;
+  margin-top: 12px;
+}
+
+.day-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  border-radius: 14px;
+  background-color: #ffffff;
+}
+
+.day-tab.middle,
+.day-tab.last {
+  margin-left: 8px;
+}
+
+.day-tab.selected {
+  background-color: #ff7657;
+}
+
+.day-name {
+  color: #657381;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.day-date {
+  margin-top: 3px;
+  color: #1c2a36;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.day-name.selected,
+.day-date.selected {
+  color: #ffffff;
+}
+
+.route-host {
+  display: flex;
+  flex-direction: column;
+}
+
+.route-card {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  padding: 18px;
+  border-radius: 22px;
+  background-color: #ffffff;
+}
+
+.route-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.route-label {
+  color: #7d8996;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.route-summary {
+  color: #ff7657;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stop {
+  display: flex;
+  flex-direction: row;
+  margin-top: 16px;
+}
+
+.stop-time {
+  width: 54px;
+  color: #44515e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stop-marker {
+  width: 12px;
+  height: 12px;
+  margin-top: 2px;
+  border-radius: 6px;
+  background-color: #ff7657;
+}
+
+.stop-marker.food {
+  background-color: #22a68a;
+}
+
+.stop-marker.culture {
+  background-color: #7259d9;
+}
+
+.stop-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+}
+
+.stop-title {
+  color: #1c2a36;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.stop-detail {
+  margin-top: 4px;
+  color: #7b8794;
+  font-size: 12px;
+  line-height: 17px;
+  white-space: normal;
+}
+
+.rerender-note {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  color: #5c6b78;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: normal;
+  background-color: #f5f7fa;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const page = __CreatePage("0", 0);
+const pageId = __GetElementUniqueID(page);
+const tapOptions = {};
+const renderPageEventName = "__RenderPage";
+const destroyLifetimeEventName = "__DestroyLifetime";
+
+const days = [
+  {
+    name: "FRI",
+    date: "18",
+    summary: "3 stops · 5.2 km",
+    stops: [
+      ["10:30", "Hotel check-in", "Harbor House · leave bags", "default"],
+      ["12:00", "Mercado lunch", "Seasonal plates near the waterfront", "food"],
+      ["15:30", "Old town walk", "Tiles, bookshops, and river views", "culture"],
+    ],
+  },
+  {
+    name: "SAT",
+    date: "19",
+    summary: "4 stops · 8.7 km",
+    stops: [
+      ["09:00", "Garden breakfast", "Coffee and pastries in Cedofeita", "food"],
+      ["11:00", "Serralves Museum", "Contemporary art and sculpture park", "culture"],
+      ["16:00", "Foz coastline", "Ocean promenade at golden hour", "default"],
+      ["20:00", "Dinner booking", "Small plates at Rua das Flores", "food"],
+    ],
+  },
+  {
+    name: "SUN",
+    date: "20",
+    summary: "3 stops · 4.1 km",
+    stops: [
+      ["09:30", "Riverside market", "Local ceramics and picnic supplies", "food"],
+      ["12:30", "Bridge lookout", "Panoramic views above the Douro", "default"],
+      ["15:00", "Station departure", "Collect bags before the 16:10 train", "culture"],
+    ],
+  },
+];
+
+let selectedDay = 0;
+let routeHost;
+let rendered = false;
+const dayButtons = [];
+const dayNameTexts = [];
+const dayDateTexts = [];
+const buttonListeners = [];
+
+function createText(className, value) {
+  const text = __CreateText(pageId);
+  __SetClasses(text, className);
+  __AppendElement(text, __CreateRawText(value));
+  return text;
+}
+
+function bindTap(node, handler) {
+  __AddEventListener(node, "tap", handler, tapOptions);
+  buttonListeners.push({ node, handler });
+}
+
+function createStat(className, label, value) {
+  const stat = __CreateView(pageId);
+  __SetClasses(stat, className);
+  __AppendElement(stat, createText("hero-stat-label", label));
+  __AppendElement(stat, createText("hero-stat-value", value));
+  return stat;
+}
+
+function createStop(stop) {
+  const row = __CreateView(pageId);
+  __SetClasses(row, "stop");
+  __AppendElement(row, createText("stop-time", stop[0]));
+
+  const marker = __CreateView(pageId);
+  __SetClasses(marker, `stop-marker ${stop[3]}`);
+  __AppendElement(row, marker);
+
+  const copy = __CreateView(pageId);
+  __SetClasses(copy, "stop-copy");
+  __AppendElement(copy, createText("stop-title", stop[1]));
+  __AppendElement(copy, createText("stop-detail", stop[2]));
+  __AppendElement(row, copy);
+  return row;
+}
+
+function createRoute(day) {
+  const route = __CreateView(pageId);
+  __SetClasses(route, "route-card");
+
+  const header = __CreateView(pageId);
+  __SetClasses(header, "route-header");
+  __AppendElement(header, createText("route-label", `${day.name} ROUTE`));
+  __AppendElement(header, createText("route-summary", day.summary));
+  __AppendElement(route, header);
+
+  for (const stop of day.stops) {
+    __AppendElement(route, createStop(stop));
+  }
+
+  __AppendElement(
+    route,
+    createText(
+      "rerender-note",
+      "Selecting another day replaces this complete itinerary subtree.",
+    ),
+  );
+  return route;
+}
+
+function selectDay(index) {
+  if (selectedDay === index || !routeHost) return;
+  selectedDay = index;
+
+  for (let itemIndex = 0; itemIndex < dayButtons.length; itemIndex += 1) {
+    const selected = itemIndex === selectedDay;
+    const positionClass = itemIndex === 1
+      ? "middle"
+      : itemIndex === 2
+      ? "last"
+      : "";
+    __SetClasses(
+      dayButtons[itemIndex],
+      `day-tab ${positionClass}${selected ? " selected" : ""}`,
+    );
+    __SetClasses(dayNameTexts[itemIndex], selected ? "day-name selected" : "day-name");
+    __SetClasses(dayDateTexts[itemIndex], selected ? "day-date selected" : "day-date");
+  }
+
+  __ReplaceElements(
+    routeHost,
+    [createRoute(days[selectedDay])],
+    __GetChildren(routeHost),
+  );
+  __FlushElementTree();
+}
+
+function createDayTab(day, index) {
+  const tab = __CreateView(pageId);
+  const positionClass = index === 1 ? "middle" : index === 2 ? "last" : "";
+  __SetClasses(
+    tab,
+    `day-tab ${positionClass}${index === selectedDay ? " selected" : ""}`,
+  );
+  __SetAttribute(tab, "aria-label", `Show ${day.name} ${day.date} itinerary`);
+
+  const nameText = createText(
+    index === selectedDay ? "day-name selected" : "day-name",
+    day.name,
+  );
+  const dateText = createText(
+    index === selectedDay ? "day-date selected" : "day-date",
+    day.date,
+  );
+  __AppendElement(tab, nameText);
+  __AppendElement(tab, dateText);
+  dayButtons.push(tab);
+  dayNameTexts.push(nameText);
+  dayDateTexts.push(dateText);
+  bindTap(tab, () => selectDay(index));
+  return tab;
+}
+
+function renderPage() {
+  if (rendered) return;
+  rendered = true;
+
+  const scroll = __CreateScrollView(pageId);
+  __SetClasses(scroll, "scroll");
+  __SetAttribute(scroll, "scroll-orientation", "vertical");
+
+  const content = __CreateView(pageId);
+  __SetClasses(content, "content");
+
+  const hero = __CreateView(pageId);
+  __SetClasses(hero, "hero");
+  __AppendElement(hero, createText("hero-kicker", "WEEKEND PLAN"));
+  __AppendElement(hero, createText("hero-title", "Three days in Porto"));
+  __AppendElement(
+    hero,
+    createText(
+      "hero-subtitle",
+      "A relaxed city break balanced across food, culture, and the coast.",
+    ),
+  );
+  const stats = __CreateView(pageId);
+  __SetClasses(stats, "hero-stats");
+  __AppendElement(stats, createStat("hero-stat", "DATES", "18–20 OCT"));
+  __AppendElement(stats, createStat("hero-stat second", "BUDGET", "€420"));
+  __AppendElement(hero, stats);
+  __AppendElement(content, hero);
+
+  __AppendElement(content, createText("section-title", "Your itinerary"));
+  const tabs = __CreateView(pageId);
+  __SetClasses(tabs, "day-tabs");
+  for (let index = 0; index < days.length; index += 1) {
+    __AppendElement(tabs, createDayTab(days[index], index));
+  }
+  __AppendElement(content, tabs);
+
+  routeHost = __CreateView(pageId);
+  __SetClasses(routeHost, "route-host");
+  __AppendElement(routeHost, createRoute(days[selectedDay]));
+  __AppendElement(content, routeHost);
+  __AppendElement(scroll, content);
+  __AppendElement(page, scroll);
+}
+
+function cleanup() {
+  for (const { node, handler } of buttonListeners.splice(0)) {
+    __RemoveEventListener(node, "tap", handler, tapOptions);
+  }
+  engine.removeEventListener(renderPageEventName, renderPage);
+  engine.removeEventListener(destroyLifetimeEventName, cleanup);
+  dayButtons.length = 0;
+  dayNameTexts.length = 0;
+  dayDateTexts.length = 0;
+  routeHost = undefined;
+}
+
+engine.addEventListener(renderPageEventName, renderPage);
+engine.addEventListener(destroyLifetimeEventName, cleanup);
+</script>
+</lynx>

@@ -7,6 +7,7 @@ import {
   setAttributeSlotOnTemplateInstance,
 } from './templateTree.js';
 import type { CompiledTemplateNode } from './templateTree.js';
+import { registerTemplates } from '../../debug/registry.js';
 
 type CompiledElementTemplate = NonNullable<CompiledTemplateNode['__compiledTemplate']>;
 
@@ -73,9 +74,10 @@ describe('mock native template tree spread slots', () => {
         'component-at-index': componentAtIndex,
         'update-list-info': { insertAction: [] },
       }],
-      __elementSlots: null,
+      __childSlots: null,
       __options: {
         listChildren: [child],
+        estimatedHeight: 80,
         callback: componentAtIndex,
       },
     } satisfies CompiledTemplateNode;
@@ -83,17 +85,18 @@ describe('mock native template tree spread slots', () => {
     const serializedChild = {
       templateKey: '_et_builtin_raw_text',
       attributeSlots: ['row'],
-      elementSlots: [],
+      childSlots: [],
       uid: 2,
     };
 
     expect(serializeTemplateInstance(root)).toEqual({
       tag: 'list',
       attributes: { 'update-list-info': { insertAction: [] } },
-      elementSlots: null,
+      childSlots: null,
       uid: 1,
       options: {
         listChildren: [serializedChild],
+        estimatedHeight: 80,
       },
     });
   });
@@ -118,12 +121,53 @@ describe('mock native template tree spread slots', () => {
       templateKey: '_et_test',
       bundleUrl: 'dynamic-entry',
       attributeSlots: [],
-      elementSlots: [],
+      childSlots: [],
       uid: 1,
     });
   });
 
-  it('moves typed children between element slots instead of duplicating them', () => {
+  it('keeps generic create and update values in baseline mock storage', () => {
+    registerTemplates([{
+      templateId: '_et_mock_generic_values',
+      compiledTemplate: {
+        kind: 'element',
+        type: 'view',
+        attributesArray: [{ kind: 'spread', attrSlotIndex: 0 }],
+        children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
+      },
+    }]);
+    const createTyped = __CreateTypedElementTemplate as (...args: unknown[]) => unknown;
+    const createCompiled = __CreateElementTemplate as (...args: unknown[]) => unknown;
+    const child = createTyped('view', { text: 'child' }, null, 2, null) as CompiledTemplateNode;
+    const sparse = new Array<unknown>(2);
+    sparse[1] = child;
+    const attributes = { child, invalidNumber: Number.NaN, sparse };
+    const options = { child, invalidNumber: Number.NaN, sparse };
+    const root = createCompiled(
+      '_et_mock_generic_values',
+      null,
+      [attributes],
+      [[child]],
+      1,
+      options,
+    ) as CompiledTemplateNode;
+
+    expect(root.__attributeSlots?.[0]).toBe(attributes);
+    expect(root.__options).toBe(options);
+    expect(root.attributes).toEqual(attributes);
+
+    const updated = { child, invalidNumber: Number.NaN, sparse };
+    (__SetAttributeOfElementTemplate as (...args: unknown[]) => unknown)(
+      root,
+      0,
+      updated,
+    );
+
+    expect(root.__attributeSlots?.[0]).toBe(updated);
+    expect(root.attributes).toEqual(updated);
+  });
+
+  it('moves typed children between child slots instead of duplicating them', () => {
     const child = { tag: 'view' };
     const root = {
       tag: 'list',
@@ -132,12 +176,12 @@ describe('mock native template tree spread slots', () => {
       __typedElementType: 'list',
       __handleId: 1,
       __attributeSlots: null,
-      __elementSlots: [[child], []],
+      __childSlots: [[child], []],
     } satisfies CompiledTemplateNode;
 
     insertNodeIntoTemplateInstance(root, 1, child, null);
 
-    expect(root.__elementSlots).toEqual([[], [child]]);
+    expect(root.__childSlots).toEqual([[], [child]]);
     expect(root.children).toEqual([]);
   });
 });

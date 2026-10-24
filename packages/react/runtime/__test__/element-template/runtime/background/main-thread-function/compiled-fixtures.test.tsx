@@ -3,6 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import path from 'node:path';
+import {
+  installElementTemplateRefInitValueListener,
+  resetElementTemplateRefInitValueListener,
+} from '../../../../../src/element-template/main-thread-ref-init-value.js';
 import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -100,15 +104,11 @@ describe('Compiled runOnMainThread background fixtures', () => {
     installElementTemplateCommitHook();
     installElementTemplateHydrationListener();
 
-    vi.stubGlobal(
-      '__LoadLepusChunk',
-      vi.fn().mockImplementation(() => {
-        initWorklet();
-        return true;
-      }),
-    );
+    initWorklet();
+    vi.stubGlobal('__LoadLepusChunk', vi.fn());
 
     envManager.switchToMainThread();
+    installElementTemplateRefInitValueListener();
     installElementTemplatePatchListener();
     lynx.getJSContext().addEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     envManager.switchToBackground();
@@ -118,6 +118,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
     envManager.switchToMainThread();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     resetElementTemplatePatchListener();
+    resetElementTemplateRefInitValueListener();
     envManager.switchToBackground();
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
@@ -142,7 +143,7 @@ describe('Compiled runOnMainThread background fixtures', () => {
   }> {
     return loadCompiledFixturePair<CompiledRunOnMainThreadModule>(
       FIXTURE,
-      { enableWorkletTransform: true },
+      { enableWorkletTransform: true, envManager },
     );
   }
 
@@ -174,13 +175,20 @@ describe('Compiled runOnMainThread background fixtures', () => {
     });
 
     expect(backgroundArtifact.code).toContain('runOnMainThread');
+    expect(backgroundArtifact.code).toContain('captureMainThreadObject');
+    expect(backgroundArtifact.code).toContain('defineMainThreadObjectType');
+    expect(backgroundArtifact.code).toContain('useMainThreadObject');
     expect(backgroundArtifact.code).toContain('from \'@lynx-js/react\'');
     expect(backgroundArtifact.code).not.toContain('snapshot/');
     expect(backgroundArtifact.code).not.toContain('__globalSnapshotPatch');
     expect(backgroundArtifact.code).not.toContain('PatchList');
     expect(backgroundArtifact.code).not.toContain('isRendering');
-    expect(mainArtifact.code).toContain('loadWorkletRuntime');
-    expect(mainArtifact.code).toContain('registerWorkletInternal("main-thread"');
+    expect(mainArtifact.code).toContain(
+      'import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init"',
+    );
+    expect(mainArtifact.code).not.toContain('loadWorkletRuntime');
+    expect(mainArtifact.code).toContain('element-template-formatter');
+    expect(mainArtifact.code).toContain('__registerWorklet("main-thread"');
     expect(mainArtifact.code).not.toContain('snapshot/');
   });
 

@@ -4,7 +4,11 @@
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { isMtsEnabled, isRunOnBackgroundEnabled } from './functionality.js';
-import { registerBackgroundFunctionCtx } from '../../core/background-function/run-on-background.js';
+import {
+  registerBackgroundFunctionCtx,
+  resetBackgroundFunctionRuntime,
+} from '../../core/background-function/run-on-background.js';
+import { resetFunctionCallReturnListener } from '../../core/thread-function-call/return-value.js';
 
 /**
  * @internal
@@ -19,4 +23,9 @@ export function onPostWorkletCtx(afterValue: Worklet | null): Worklet | null {
   }
   registerBackgroundFunctionCtx(afterValue);
   return afterValue;
+}
+
+export function resetSnapshotBackgroundFunctionRuntime(): void {
+  resetBackgroundFunctionRuntime();
+  resetFunctionCallReturnListener();
 }

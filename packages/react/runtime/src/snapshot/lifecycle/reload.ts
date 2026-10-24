@@ -9,20 +9,29 @@
 
 import { render } from 'preact';
 
+import { clearDelayedRunOnBackgroundFunctions } from '@lynx-js/react/worklet-runtime/bindings';
+
 import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
+import {
+  canReEvalBackgroundEntry,
+  canReEvalMainThreadEntry,
+  installMainThreadReloadCompleter,
+  reEvalBackgroundEntry,
+  reEvalMainThreadEntry,
+} from '../../core/entry-reload.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
+import { resetFunctionCallReturnListener } from '../../core/thread-function-call/return-value.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
-import { __page } from '../snapshot/definition.js';
+import { __page, setupPage } from '../snapshot/definition.js';
 import { SnapshotInstance, snapshotInstanceManager } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
-import { clearFirstScreenEventIdSwap, isFirstScreenSynced } from './event/firstScreenSync.js';
-import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { clearFirstScreenEventIdSwap, firstScreenSync } from './event/firstScreenSync.js';
 import { shouldDelayUiOps } from './ref/delay.js';
 
 function reloadMainThread(data: unknown, options: UpdatePageOption): void {
@@ -30,6 +39,8 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     profileStart('ReactLynx::reloadMainThread');
   }
 
+  clearDelayedRunOnBackgroundFunctions();
+  resetFunctionCallReturnListener();
   increaseReloadVersion();
 
   if (typeof data == 'object' && data !== null && !isEmptyObject(data)) {
@@ -41,10 +52,31 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   clearFirstScreenEventIdSwap();
 
   const oldRoot = __root;
+  if (canReEvalMainThreadEntry()) {
+    reEvalMainThreadEntry<MainThreadReloadHandoff>({ oldRoot: oldRoot as SnapshotInstance, page: __page, options });
+    return;
+  }
   setRoot(new SnapshotInstance('root'));
   __root.__jsx = oldRoot.__jsx;
+  finishMainThreadReload(oldRoot as SnapshotInstance, options);
+}
+
+interface MainThreadReloadHandoff {
+  oldRoot: SnapshotInstance;
+  page: FiberElement;
+  options: UpdatePageOption;
+}
+
+function completeMainThreadReload({ oldRoot, page, options }: MainThreadReloadHandoff): void {
+  setupPage(page);
+  finishMainThreadReload(oldRoot, options);
+}
+
+installMainThreadReloadCompleter(completeMainThreadReload);
+
+function finishMainThreadReload(oldRoot: SnapshotInstance, options: UpdatePageOption): void {
   renderMainThread();
-  hydrate(oldRoot as SnapshotInstance, __root as SnapshotInstance, {
+  hydrate(oldRoot, __root as SnapshotInstance, {
     skipUnRef: true,
   });
 
@@ -52,7 +84,11 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   __pendingListUpdates.flush();
   applyRefQueue();
 
-  if (isFirstScreenSynced) {
+  if (typeof lepusng_gc === 'function') {
+    lepusng_gc();
+  }
+
+  if (firstScreenSync.isSynced) {
     __OnLifecycleEvent([
       LifecycleConstant.firstScreen, /* FIRST_SCREEN */
       {
@@ -66,18 +102,22 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
-  return;
 }
 
-function reloadBackground(updateData: Record<string, any>): void {
+function reloadBackground(updateData: Record<string, any>, options?: Record<string, unknown>): void {
+  if (canReEvalBackgroundEntry()) {
+    reEvalBackgroundEntry(updateData, options, () => {
+      // A queued `updateGlobalProps` callback must not render it again.
+      __root.__jsx = undefined;
+    });
+    return;
+  }
+
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::reloadBackground');
   }
 
-  deinitGlobalSnapshotPatch();
-
   destroyBackground();
-
   increaseReloadVersion();
 
   // COW when modify `lynx.__initData` to make sure Provider & Consumer works
@@ -92,4 +132,4 @@ function reloadBackground(updateData: Record<string, any>): void {
   }
 }
 
-export { reloadBackground, reloadMainThread };
+export { completeMainThreadReload, reloadBackground, reloadMainThread };

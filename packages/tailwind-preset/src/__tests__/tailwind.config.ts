@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config: Config = {
   presets: [lynxPreset],
   content: [
-    path.resolve(__dirname, 'test-content.tsx'),
+    path.resolve(__dirname, 'test-content.ts'),
     path.resolve(__dirname, 'styles.css'),
   ],
 };

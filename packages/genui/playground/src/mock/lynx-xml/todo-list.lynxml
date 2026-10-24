@@ -1,0 +1,461 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.scroll {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f1f3f8;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  border-radius: 24px;
+  background-color: #5138a5;
+}
+
+.eyebrow {
+  color: #c8bdf4;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.title {
+  margin-top: 7px;
+  color: #ffffff;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.summary {
+  margin-top: 7px;
+  color: #d8d1f5;
+  font-size: 13px;
+}
+
+.add-button {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  border-radius: 14px;
+  background-color: #ffffff;
+}
+
+.add-button-text {
+  color: #5138a5;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.filter-row {
+  display: flex;
+  flex-direction: row;
+  margin-top: 18px;
+  padding: 5px;
+  border-radius: 15px;
+  background-color: #e4e7ef;
+}
+
+.filter-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 6px;
+  border-radius: 11px;
+}
+
+.filter-button.selected {
+  background-color: #ffffff;
+}
+
+.filter-text {
+  color: #7b8291;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.filter-text.selected {
+  color: #392878;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.todo-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background-color: #ffffff;
+}
+
+.todo-row.done {
+  background-color: #e9ebf1;
+}
+
+.checkbox {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #b6b9c5;
+  border-radius: 8px;
+}
+
+.checkbox.done {
+  border-color: #6f59c5;
+  background-color: #6f59c5;
+}
+
+.checkmark {
+  color: transparent;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.checkmark.done {
+  color: #ffffff;
+}
+
+.todo-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 13px;
+}
+
+.todo-title {
+  color: #282b35;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: normal;
+}
+
+.todo-title.done {
+  color: #9397a3;
+  text-decoration: line-through;
+}
+
+.todo-tag {
+  margin-top: 5px;
+  color: #8a8f9d;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.empty {
+  margin-top: 10px;
+  padding: 28px 18px;
+  border-radius: 18px;
+  color: #8c92a0;
+  font-size: 13px;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+.footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 0 4px 18px;
+}
+
+.footer-note {
+  color: #898f9c;
+  font-size: 11px;
+}
+
+.clear-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background-color: #e4ddfa;
+}
+
+.clear-button-text {
+  color: #5138a5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.todo-row:active,
+.add-button:active,
+.filter-button:active,
+.clear-button:active {
+  opacity: 0.72;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const page = __CreatePage("0", 0);
+const pageId = __GetElementUniqueID(page);
+const tapOptions = {};
+const renderPageEventName = "__RenderPage";
+const destroyLifetimeEventName = "__DestroyLifetime";
+
+const quickAdds = [
+  ["Review launch checklist", "WORK"],
+  ["Book dentist appointment", "PERSONAL"],
+  ["Send weekend photos", "SOCIAL"],
+];
+const todos = [
+  { id: 1, title: "Prepare design handoff", tag: "WORK", done: false },
+  { id: 2, title: "Pick up groceries", tag: "PERSONAL", done: true },
+  { id: 3, title: "Read 20 pages", tag: "FOCUS", done: false },
+];
+
+let nextId = 4;
+let nextQuickAdd = 0;
+let selectedFilter = "all";
+let rendered = false;
+let summaryText;
+let listHost;
+let footerNote;
+const filterButtons = [];
+const filterTexts = [];
+const persistentListeners = [];
+const rowListeners = [];
+
+
+function createText(className, value) {
+  const text = __CreateText(pageId);
+  __SetClasses(text, className);
+  __AppendElement(text, __CreateRawText(value));
+  return text;
+}
+
+function replaceText(text, value) {
+  __ReplaceElements(text, [__CreateRawText(value)], __GetChildren(text));
+}
+
+function bindTap(node, handler, listeners) {
+  __AddEventListener(node, "tap", handler, tapOptions);
+  listeners.push({ node, handler });
+}
+
+function clearListeners(listeners) {
+  for (const { node, handler } of listeners.splice(0)) {
+    __RemoveEventListener(node, "tap", handler, tapOptions);
+  }
+}
+
+function getVisibleTodos() {
+  if (selectedFilter === "active") {
+    return todos.filter((todo) => !todo.done);
+  }
+  if (selectedFilter === "done") {
+    return todos.filter((todo) => todo.done);
+  }
+  return todos;
+}
+
+function createTodoRow(todo) {
+  const row = __CreateView(pageId);
+  __SetClasses(row, todo.done ? "todo-row done" : "todo-row");
+  __SetAttribute(
+    row,
+    "aria-label",
+    `${todo.done ? "Mark active" : "Complete"}: ${todo.title}`,
+  );
+
+  const checkbox = __CreateView(pageId);
+  __SetClasses(checkbox, todo.done ? "checkbox done" : "checkbox");
+  __AppendElement(
+    checkbox,
+    createText(todo.done ? "checkmark done" : "checkmark", "✓"),
+  );
+  __AppendElement(row, checkbox);
+
+  const copy = __CreateView(pageId);
+  __SetClasses(copy, "todo-copy");
+  __AppendElement(
+    copy,
+    createText(todo.done ? "todo-title done" : "todo-title", todo.title),
+  );
+  __AppendElement(copy, createText("todo-tag", todo.tag));
+  __AppendElement(row, copy);
+  bindTap(row, () => toggleTodo(todo.id), rowListeners);
+  return row;
+}
+
+function syncFilterButtons() {
+  const names = ["all", "active", "done"];
+  for (let index = 0; index < names.length; index += 1) {
+    const selected = names[index] === selectedFilter;
+    __SetClasses(
+      filterButtons[index],
+      selected ? "filter-button selected" : "filter-button",
+    );
+    __SetClasses(
+      filterTexts[index],
+      selected ? "filter-text selected" : "filter-text",
+    );
+  }
+}
+
+function renderTodos() {
+  clearListeners(rowListeners);
+  const visible = getVisibleTodos();
+  const rows = visible.length > 0
+    ? visible.map(createTodoRow)
+    : [createText("empty", "Nothing here — enjoy the open space.")];
+  __ReplaceElements(listHost, rows, __GetChildren(listHost));
+
+  const remaining = todos.filter((todo) => !todo.done).length;
+  replaceText(
+    summaryText,
+    `${remaining} open · ${todos.length - remaining} completed`,
+  );
+  replaceText(
+    footerNote,
+    `${visible.length} item${visible.length === 1 ? "" : "s"} shown`,
+  );
+  syncFilterButtons();
+  __FlushElementTree();
+}
+
+function toggleTodo(id) {
+  const todo = todos.find((item) => item.id === id);
+  if (!todo) return;
+  todo.done = !todo.done;
+  renderTodos();
+}
+
+function selectFilter(filter) {
+  selectedFilter = filter;
+  renderTodos();
+}
+
+function addQuickTodo() {
+  const quickAdd = quickAdds[nextQuickAdd % quickAdds.length];
+  todos.unshift({
+    id: nextId,
+    title: quickAdd[0],
+    tag: quickAdd[1],
+    done: false,
+  });
+  nextId += 1;
+  nextQuickAdd += 1;
+  selectedFilter = "all";
+  renderTodos();
+}
+
+function clearCompleted() {
+  for (let index = todos.length - 1; index >= 0; index -= 1) {
+    if (todos[index].done) todos.splice(index, 1);
+  }
+  renderTodos();
+}
+
+function createFilter(label, filter) {
+  const button = __CreateView(pageId);
+  __SetClasses(
+    button,
+    selectedFilter === filter ? "filter-button selected" : "filter-button",
+  );
+  __SetAttribute(button, "aria-label", `Show ${filter} tasks`);
+  const text = createText(
+    selectedFilter === filter ? "filter-text selected" : "filter-text",
+    label,
+  );
+  __AppendElement(button, text);
+  filterButtons.push(button);
+  filterTexts.push(text);
+  bindTap(button, () => selectFilter(filter), persistentListeners);
+  return button;
+}
+
+function renderPage() {
+  if (rendered) return;
+  rendered = true;
+
+  const scroll = __CreateScrollView(pageId);
+  __SetClasses(scroll, "scroll");
+  __SetAttribute(scroll, "scroll-orientation", "vertical");
+  const content = __CreateView(pageId);
+  __SetClasses(content, "content");
+
+  const header = __CreateView(pageId);
+  __SetClasses(header, "header");
+  __AppendElement(header, createText("eyebrow", "TODAY · PERSONAL BOARD"));
+  __AppendElement(header, createText("title", "Make room for progress"));
+  summaryText = createText("summary", "2 open · 1 completed");
+  __AppendElement(header, summaryText);
+  const addButton = __CreateView(pageId);
+  __SetClasses(addButton, "add-button");
+  __SetAttribute(addButton, "aria-label", "Add a suggested task");
+  __AppendElement(addButton, createText("add-button-text", "+ Add suggested task"));
+  bindTap(addButton, addQuickTodo, persistentListeners);
+  __AppendElement(header, addButton);
+  __AppendElement(content, header);
+
+  const filters = __CreateView(pageId);
+  __SetClasses(filters, "filter-row");
+  __AppendElement(filters, createFilter("All", "all"));
+  __AppendElement(filters, createFilter("Active", "active"));
+  __AppendElement(filters, createFilter("Done", "done"));
+  __AppendElement(content, filters);
+
+  listHost = __CreateView(pageId);
+  __SetClasses(listHost, "list");
+  for (const todo of getVisibleTodos()) {
+    __AppendElement(listHost, createTodoRow(todo));
+  }
+  __AppendElement(content, listHost);
+
+  const footer = __CreateView(pageId);
+  __SetClasses(footer, "footer");
+  footerNote = createText("footer-note", "3 items shown");
+  __AppendElement(footer, footerNote);
+  const clearButton = __CreateView(pageId);
+  __SetClasses(clearButton, "clear-button");
+  __SetAttribute(clearButton, "aria-label", "Clear completed tasks");
+  __AppendElement(clearButton, createText("clear-button-text", "Clear completed"));
+  bindTap(clearButton, clearCompleted, persistentListeners);
+  __AppendElement(footer, clearButton);
+  __AppendElement(content, footer);
+
+  __AppendElement(scroll, content);
+  __AppendElement(page, scroll);
+}
+
+function cleanup() {
+  clearListeners(rowListeners);
+  clearListeners(persistentListeners);
+  engine.removeEventListener(renderPageEventName, renderPage);
+  engine.removeEventListener(destroyLifetimeEventName, cleanup);
+  filterButtons.length = 0;
+  filterTexts.length = 0;
+  summaryText = undefined;
+  listHost = undefined;
+  footerNote = undefined;
+}
+
+engine.addEventListener(renderPageEventName, renderPage);
+engine.addEventListener(destroyLifetimeEventName, cleanup);
+</script>
+</lynx>

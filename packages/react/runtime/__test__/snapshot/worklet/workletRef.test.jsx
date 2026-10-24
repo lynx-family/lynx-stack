@@ -12,9 +12,14 @@ import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { destroyWorklet } from '../../../src/snapshot/worklet/destroy';
 import { clearConfigCacheForTesting } from '../../../src/snapshot/worklet/functionality';
-import { MainThreadRef, useMainThreadRef } from '../../../src/snapshot/worklet/ref/workletRef';
+import { MainThreadRef, isMainThreadRef, useMainThreadRef } from '../../../src/core/main-thread-ref';
+import { isMainThreadFunction } from '../../../src/core/main-thread-function';
+import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value';
 import { globalEnvManager } from '../utils/envManager';
-import { injectUpdateMTRefInitValue } from '../../../src/snapshot/worklet/ref/updateInitValue';
+import {
+  injectUpdateMTRefInitValue,
+  sendMTRefInitValueToMainThread,
+} from '../../../src/snapshot/worklet/ref/updateInitValue';
 
 const Comp = () => {
   const ref = useMainThreadRef(233);
@@ -30,6 +35,7 @@ beforeAll(() => {
     _refImpl: {
       updateWorkletRef: vi.fn(),
       updateWorkletRefInitValueChanges: vi.fn(),
+      registerMainThreadObjectType: vi.fn(),
       clearFirstScreenWorkletRefMap: vi.fn(),
     },
     _runOnBackgroundDelayImpl: {
@@ -48,6 +54,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  globalThis.__ALOG__ = true;
   destroyWorklet();
   vi.clearAllMocks();
 });
@@ -77,6 +84,24 @@ describe('WorkletRef in js', () => {
     expect(JSON.stringify(ref)).toMatchInlineSnapshot(`"{"_wvid":1}"`);
   });
 
+  it('should discard pending init values when resetting the test environment', () => {
+    globalEnvManager.switchToBackground();
+    new MainThreadRef('stale');
+
+    globalEnvManager.resetEnv();
+    globalEnvManager.switchToBackground();
+    new MainThreadRef('fresh');
+
+    expect(takeMainThreadRefInitValuePatch()).toEqual([[1, 'fresh']]);
+  });
+
+  it('should identify main-thread ref values', () => {
+    expect(isMainThreadRef({ _wvid: 1 })).toBe(true);
+    expect(isMainThreadRef({ _wkltId: 'callback' })).toBe(false);
+    expect(isMainThreadFunction({ _wkltId: 'callback' })).toBe(true);
+    expect(isMainThreadFunction({ _wvid: 1 })).toBe(false);
+  });
+
   it('should send init value to the main thread', () => {
     // main thread render
     {
@@ -93,7 +118,7 @@ describe('WorkletRef in js', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -130,6 +155,13 @@ describe('WorkletRef in js', () => {
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
       globalThis[rLynxChange[1][0]](rLynxChange[1][1]);
       expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toBeCalledTimes(1);
+      const logs = console.alog.mock.calls.map(([message]) => message).filter(message =>
+        message.includes('MTRefInitValue')
+      );
+      expect(logs).toEqual([
+        '[ReactLynxDebug] Snapshot BTS -> MTS sendMTRefInitValue:\n[[1,233]]',
+        '[ReactLynxDebug] Snapshot MTS updateMTRefInitValue:\n[[1,233]]',
+      ]);
     }
   });
 
@@ -155,12 +187,16 @@ describe('WorkletRef in js', () => {
     );
   });
 
-  it('should throw when native capabilities not fulfilled', () => {
+  it.each([false, undefined])('should initialize refs without alog when the flag is %s', (alog) => {
+    globalThis.__ALOG__ = alog;
     globalEnvManager.switchToBackground();
-    lynx.getCoreContext = undefined;
-    expect(() => {
-      new MainThreadRef(1);
-    }).not.toThrow();
+    new MainThreadRef(233);
+    sendMTRefInitValueToMainThread();
+    const [name, data] = lynx.getNativeApp().callLepusMethod.mock.calls.at(-1);
+    globalEnvManager.switchToMainThread();
+    globalThis[name](data);
+    expect(globalThis.lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges).toHaveBeenCalledWith([[1, 233]]);
+    expect(console.alog.mock.calls.some(([message]) => message.includes('MTRefInitValue'))).toBe(false);
   });
 
   it('should not send init value to the main thread when native capabilities not fulfilled', () => {
@@ -185,7 +221,7 @@ describe('WorkletRef in js', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();
@@ -238,7 +274,7 @@ describe('WorkletRef in js', () => {
     {
       // LifecycleConstant.firstScreen
       globalEnvManager.switchToBackground();
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
 
       // rLynxChange
       globalEnvManager.switchToMainThread();

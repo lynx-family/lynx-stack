@@ -1,0 +1,2 @@
+root = Card([answer])
+answer = TextContent("本次检索没有找到符合60–80元预算的两件男士速干T恤，返回的两件为55元和95元，均在预算外。")

@@ -17,6 +17,16 @@ pub struct EventHandler {
   /* bind capture-bind catch capture-catch */
   #[with(rkyv::with::Skip)]
   pub(crate) framework_run_worklet_identifier: FnvHashMap<String, wasm_bindgen::JsValue>,
+  /* bind capture-bind catch capture-catch */
+  /// Callbacks registered through `__AddEventListener`, which binds a
+  /// main-thread function rather than a handler name or a worklet.
+  ///
+  /// A list, unlike the two single-valued maps above: an element can only carry
+  /// one handler *name* or one worklet per event type, but `addEventListener`
+  /// semantics allow several callbacks, and the engine's own `EventListenerMap`
+  /// keeps a list too. Registration order is preserved, matching `EventTarget`.
+  #[with(rkyv::with::Skip)]
+  pub(crate) closure_identifier: FnvHashMap<String, Vec<wasm_bindgen::JsValue>>,
 }
 
 #[derive(Archive, Deserialize, Clone)]
@@ -147,6 +157,70 @@ impl LynxElementData {
         .framework_run_worklet_identifier
         .remove(&event_type);
     }
+  }
+
+  /// Every callback registered for `(event_name, event_type)`, in registration
+  /// order. Empty when none is registered.
+  pub(crate) fn get_closure_event_handlers(
+    &self,
+    event_name: &str,
+    event_type: &str,
+  ) -> Vec<wasm_bindgen::JsValue> {
+    self
+      .event_handlers_map
+      .as_ref()
+      .and_then(|map| map.get(event_name))
+      .and_then(|store| store.closure_identifier.get(event_type))
+      .cloned()
+      .unwrap_or_default()
+  }
+
+  /// Appends `closure`, ignoring a callback that is already registered for this
+  /// `(event_name, event_type)` so re-registering the same one is a no-op, as
+  /// with `EventTarget`.
+  pub(crate) fn add_closure_event_handler(
+    &mut self,
+    event_name: String,
+    event_type: String,
+    closure: wasm_bindgen::JsValue,
+  ) {
+    let event_handlers_map = self.event_handlers_map.get_or_insert_default();
+    let event_handler_store = event_handlers_map.entry(event_name).or_default();
+    let closures = event_handler_store
+      .closure_identifier
+      .entry(event_type)
+      .or_default();
+    if !closures.contains(&closure) {
+      closures.push(closure);
+    }
+  }
+
+  /// Removes `closure`, or every callback for this `(event_name, event_type)`
+  /// when `closure` is `None`. Returns whether any remain afterwards.
+  pub(crate) fn remove_closure_event_handler(
+    &mut self,
+    event_name: &str,
+    event_type: &str,
+    closure: Option<&wasm_bindgen::JsValue>,
+  ) -> bool {
+    let Some(event_handlers_map) = self.event_handlers_map.as_mut() else {
+      return false;
+    };
+    let Some(event_handler_store) = event_handlers_map.get_mut(event_name) else {
+      return false;
+    };
+    let Some(closures) = event_handler_store.closure_identifier.get_mut(event_type) else {
+      return false;
+    };
+    match closure {
+      Some(closure) => closures.retain(|existing| *existing != *closure),
+      None => closures.clear(),
+    }
+    let remaining = !closures.is_empty();
+    if !remaining {
+      event_handler_store.closure_identifier.remove(event_type);
+    }
+    remaining
   }
 }
 

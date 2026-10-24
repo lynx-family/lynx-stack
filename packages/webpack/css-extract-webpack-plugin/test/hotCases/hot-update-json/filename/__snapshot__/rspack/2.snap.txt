@@ -5,8 +5,8 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Manifest: main/main.LAST_HASH.css.hot-update.json, size: 1870
+- Manifest: main.LAST_HASH.hot-update.json, size: 53
+- Manifest: main/main.LAST_HASH.css.hot-update.json, size: 1850
 - Update: main.LAST_HASH.hot-update.js, size: 1212
 
 ## Manifest
@@ -19,7 +19,12 @@
     "main"
   ],
   "r": [],
-  "m": []
+  "m": [],
+  "miniCss": {
+    "c": [
+      "main"
+    ]
+  }
 }
 ```
 
@@ -53,15 +58,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {

@@ -7,7 +7,7 @@ import path from 'node:path';
 it('should have updated css from beforeEncode hook in tasm.json', async () => {
   const target = path.resolve(
     __dirname,
-    '.rspeedy',
+    '.lynx',
     'tasm.json',
   );
   expect(existsSync(target)).toBe(true);

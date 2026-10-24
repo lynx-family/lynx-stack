@@ -626,8 +626,7 @@ describe('mode + QueryComponent — dev throw', () => {
       .stubGlobal('__BACKGROUND__', true)
       .stubGlobal('__JS__', true)
       .stubGlobal('__LAZY_BUNDLE_FETCHER__', 'QueryComponent')
-      .stubGlobal('lynx', { QueryComponent: vi.fn() })
-      .stubGlobal('lynxCoreInject', { tt: { getDynamicComponentExports: vi.fn() } });
+      .stubGlobal('lynx', { QueryComponent: vi.fn(), getApp: () => ({ getDynamicComponentExports: vi.fn() }) });
   });
 
   test('__DEV__ + mode set → throws', async () => {

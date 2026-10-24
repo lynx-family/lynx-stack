@@ -2,9 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { useSignal } from '@preact/signals';
-
 import { root, useEffect } from '@lynx-js/react';
+import { useSignal } from '@lynx-js/react-signals';
 
 import { startUpdateBenchmark } from '../../src/UpdateBenchmark.js';
 import { FullAttributeUpdateBenchmark } from '../../src/UpdateBenchmarks.js';

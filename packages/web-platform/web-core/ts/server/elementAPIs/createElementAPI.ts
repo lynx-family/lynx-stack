@@ -7,10 +7,12 @@
 import { MainThreadServerContext, StyleSheetResource } from '../wasm.js';
 
 import {
+  HTML_TAG_TO_LYNX_TAG_MAP,
   LYNX_TAG_TO_HTML_TAG_MAP,
   uniqueIdSymbol,
   lynxDefaultDisplayLinearAttribute,
   lynxDefaultOverflowVisibleAttribute,
+  lynxEnableCSSInheritanceAttribute,
   lynxEntryNameAttribute,
   lynxUniqueIdAttribute,
 } from '../../constants.js';
@@ -31,6 +33,7 @@ import type {
   CreateWrapperElementPAPI,
   DecoratedHTMLElement,
   ElementPAPIs,
+  GetAttributeNamesPAPI,
   GetAttributesPAPI,
   GetClassesPAPI,
   GetIDPAPI,
@@ -47,6 +50,7 @@ import {
   __AddConfig,
   __AddDataset,
   __AddEvent,
+  __AddEventListener,
   __ElementIsEqual,
   __FirstElement,
   __GetChildren,
@@ -67,6 +71,7 @@ import {
   __MarkTemplateElement,
   __NextElement,
   __RemoveElement,
+  __RemoveEventListener,
   __ReplaceElement,
   __ReplaceElements,
   __SetConfig,
@@ -99,6 +104,7 @@ export function createElementAPI(
     enableCSSSelector: boolean;
     defaultOverflowVisible: boolean;
     defaultDisplayLinear: boolean;
+    enableCSSInheritance?: boolean;
     transformVW: boolean;
     transformVH: boolean;
     transformREM: boolean;
@@ -165,20 +171,16 @@ export function createElementAPI(
       __GetTag: ((element: HTMLElement) => {
         const el = element as ServerElement;
         const tag = wasmContext.get_tag(el[uniqueIdSymbol]) ?? '';
-        // Reverse-map HTML tag to Lynx tag (consistent with CSR `__GetTag` behavior)
-        for (
-          const [lynxTag, htmlTag] of Object.entries(LYNX_TAG_TO_HTML_TAG_MAP)
-        ) {
-          if (tag === htmlTag) {
-            return lynxTag;
-          }
-        }
-        return tag;
+        return HTML_TAG_TO_LYNX_TAG_MAP[tag] ?? tag;
       }) as GetTagPAPI,
       __GetAttributes: ((element: HTMLElement) => {
         const el = element as ServerElement;
         return wasmContext.get_attributes(el[uniqueIdSymbol]);
       }) as GetAttributesPAPI,
+      __GetAttributeNames: ((element: HTMLElement) => {
+        const el = element as ServerElement;
+        return Object.keys(wasmContext.get_attributes(el[uniqueIdSymbol]));
+      }) as GetAttributeNamesPAPI,
       __GetAttributeByName: (element: unknown, name: string) => {
         return getAttribute(element as ServerElement, name) ?? null;
       },
@@ -199,6 +201,8 @@ export function createElementAPI(
       }) as GetParentPAPI,
       __GetChildren,
       __AddEvent,
+      __AddEventListener,
+      __RemoveEventListener,
       __GetEvent,
       __GetEvents,
       __SetEvents,
@@ -389,6 +393,14 @@ export function createElementAPI(
         }
         wasmContext.set_attribute(id, 'part', 'page');
 
+        if (config.enableCSSInheritance === true) {
+          wasmContext.set_attribute(
+            id,
+            lynxEnableCSSInheritanceAttribute,
+            'true',
+          );
+        }
+
         if (config.defaultDisplayLinear === false) {
           wasmContext.set_attribute(
             id,
@@ -516,6 +528,10 @@ export function createElementAPI(
       __QuerySelectorAll: () => {
         throw new Error('Not yet Implemented');
       },
+      // SSR does not recognize gestures, but gesture-bearing bundles still
+      // need the PAPIs to exist while their main-thread code is evaluated.
+      __SetGestureDetector: () => undefined,
+      __RemoveGestureDetector: () => undefined,
     },
     wasmContext,
   };

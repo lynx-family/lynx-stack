@@ -68,6 +68,12 @@ function findMissingChangesets({
     }
     if (curPkg.private) continue;
     if (!curPkg.name) continue;
+    // Scaffolding templates carry a placeholder name that is substituted at
+    // generation time (`packages/genui/cli/templates/default` is named
+    // `{{projectName}}`). That name can never appear in `changeset status`
+    // releases, so a dependency bump inside such a template is reported as
+    // missing a changeset forever and no PR touching it can go green.
+    if (curPkg.name.includes('{{')) continue;
     const depsChanged = !isShallowEqual(
       curPkg.dependencies,
       basePkg.dependencies,

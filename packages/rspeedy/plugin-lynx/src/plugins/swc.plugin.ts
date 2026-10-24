@@ -34,12 +34,17 @@ export function pluginSwc(): RsbuildPlugin {
               config.env = {
                 ...config.env,
                 targets: ES_ENV_TARGETS,
+                // A `Set`, so applying the engine more than once to the same
+                // environment does not repeat the transforms.
                 include: [
-                  // Lower `let`/`const` to `var`; QuickJS parses `var` faster.
-                  // Listing it in `env.exclude` opts out (exclude > include).
-                  'transform-block-scoping',
-                  ...getESVersionEnvInclude(),
-                  ...(config.env?.include ?? []),
+                  ...new Set([
+                    // Lower `let`/`const` to `var`; QuickJS parses `var`
+                    // faster. Listing it in `env.exclude` opts out
+                    // (exclude > include).
+                    'transform-block-scoping',
+                    ...getESVersionEnvInclude(),
+                    ...(config.env?.include ?? []),
+                  ]),
                 ],
               }
             },

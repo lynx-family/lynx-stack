@@ -1,0 +1,33 @@
+.OpenUIChatTable {
+  width: 100%;
+  border: 1rpx solid var(--openui-color-border);
+  border-radius: 12rpx;
+}
+.OpenUIChatTableRow {
+  display: flex;
+  flex-direction: row;
+}
+.OpenUIChatTableContent {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 100%;
+}
+.OpenUIChatTableCell {
+  width: 240rpx;
+  flex-grow: 1;
+  flex-shrink: 0;
+  padding: 16rpx;
+  border-bottom: 1rpx solid var(--openui-color-border);
+}
+.OpenUIChatTableCell text {
+  font-size: 24rpx;
+  color: var(--openui-color-text);
+  line-height: 1.5;
+}
+.OpenUIChatTableHeader {
+  font-weight: 700;
+}
+.OpenUIChatTableNumber {
+  text-align: right;
+}

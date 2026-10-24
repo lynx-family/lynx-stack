@@ -11,6 +11,9 @@ path = "src/lib.rs"
 libloading = "0.9"
 thiserror = "2.0.19"
 
+[dev-dependencies]
+static_assertions = "1.1.0"
+
 [build-dependencies]
 fs2 = "0.4.3"
 hex = { workspace = true }

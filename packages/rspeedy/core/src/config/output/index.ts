@@ -1,16 +1,20 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { DataUriLimit, InlineChunkConfig, Rspack } from '@rsbuild/core'
+import type {
+  DataUriLimit,
+  DistPathConfig,
+  InlineChunkConfig,
+  Rspack,
+} from '@rsbuild/core'
 
 import type { CssModules } from './css-modules.js'
-import type { DistPath } from './dist-path.js'
 import type { Filename } from './filename.js'
 import type { Minify } from './minify.js'
 import type { SourceMap } from './source-map.js'
 
 /**
- * {@inheritdoc Config.output}
+ * {@inheritDoc Config.output}
  * @public
  */
 export interface Output {
@@ -230,6 +234,8 @@ export interface Output {
    *   },
    * })
    * ```
+   *
+   * @lynxDefaultChanged
    */
   dataUriLimit?: number | DataUriLimit | undefined
 
@@ -256,11 +262,13 @@ export interface Output {
    *   },
    * })
    * ```
+   *
+   * @lynxDefaultChanged
    */
-  distPath?: DistPath | undefined
+  distPath?: DistPathConfig | undefined
 
   /**
-   * The {@link Filename} determines the name of the JavaScript bundle file to be output. These bundles will be written to the directory specified by output.path.
+   * The {@link Filename} determines the name of the Lynx bundle files emitted under {@link Output.distPath}.
    *
    * @defaultValue `{ bundle: '[name].[platform].bundle', template: '[name].[platform].bundle' }`
    *
@@ -374,6 +382,8 @@ export interface Output {
    * - `inline`: Preserve all legal comments in original position.
    *
    * - `none`: Remove all legal comments.
+   *
+   * @lynxDefaultChanged
    */
   legalComments?: 'none' | 'inline' | 'linked' | undefined
 
@@ -400,6 +410,8 @@ export interface Output {
    * The {@link SourceMap} configures whether and how to generate source-map for outputs.
    *
    * @defaultValue When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.
+   *
+   * @lynxDefaultChanged
    */
   sourceMap?: boolean | SourceMap | undefined
 }

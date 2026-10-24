@@ -30,6 +30,11 @@ interface CssExtractRspackPluginOptions
 
   /**
    * The name of non-initial CSS chunk files
+   *
+   * @remarks
+   * When set, CSS chunks of lazy bundles still go to
+   * `.lynx/lazy-bundle/<name>/<layer>.css` (or `.lynx/lazy-bundle/<name>.css`
+   * when the chunk has no layer); this template applies to the other chunks.
    */
   chunkFilename?: string;
 
@@ -56,7 +61,7 @@ const require = createRequire(import.meta.url);
  *     rules: [
  *       {
  *         test: /\.css$/,
- *         uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+ *         use: [CssExtractRspackPlugin.loader, 'css-loader'],
  *       },
  *     ],
  *   },
@@ -85,7 +90,7 @@ class CssExtractRspackPlugin {
    *     rules: [
    *       {
    *         test: /\.css$/,
-   *         uses: [CssExtractRspackPlugin.loader, 'css-loader'],
+   *         use: [CssExtractRspackPlugin.loader, 'css-loader'],
    *       },
    *     ],
    *   },
@@ -153,7 +158,7 @@ class CssExtractRspackPluginImpl {
     compiler: Compiler,
     public options: CssExtractRspackPluginOptions,
   ) {
-    // Route a lazy bundle's CSS chunk to `.rspeedy/lazy-bundle/<name>/<layer>.css`,
+    // Route a lazy bundle's CSS chunk to `.lynx/lazy-bundle/<name>/<layer>.css`,
     // co-located with the bundle's other intermediate outputs. Non-lazy
     // chunks keep the configured template.
     let currentCompilation: Compilation | undefined;
@@ -173,7 +178,7 @@ class CssExtractRspackPluginImpl {
             id,
           );
           if (layoutName !== undefined) {
-            return `.rspeedy/lazy-bundle/${layoutName}.css`;
+            return `.lynx/lazy-bundle/${layoutName}.css`;
           }
         }
         return userChunkFilename;
@@ -256,6 +261,16 @@ class CssExtractRspackPluginImpl {
               } = args.finalEncodeOptions;
               const baseEncodeOptions = { ...args.finalEncodeOptions };
               baseEncodeOptions.compilerOptions = restCompilerOptions;
+              // `debugMetadataUrl` is per-template too since #2642
+              const sourceContent = args
+                .finalEncodeOptions['sourceContent'] as {
+                  config: Record<string, unknown>;
+                };
+              const { debugMetadataUrl, ...restConfig } = sourceContent.config;
+              baseEncodeOptions['sourceContent'] = {
+                ...sourceContent,
+                config: restConfig,
+              };
               delete baseEncodeOptions.elementTemplate;
               const { buffer } = await hooks.encode.promise({
                 encodeOptions: {
@@ -329,10 +344,10 @@ class CssExtractRspackPluginImpl {
                   : undefined;
                 const path = layoutName === undefined
                   ? compilation.getAssetPathWithInfo(
-                    options.chunkFilename ?? '.rspeedy/async/[name]/[name].css',
+                    options.chunkFilename ?? '.lynx/async/[name]/[name].css',
                     { chunk: c },
                   ).path
-                  : `.rspeedy/lazy-bundle/${layoutName}.css`;
+                  : `.lynx/lazy-bundle/${layoutName}.css`;
                 return [String(c.name ?? c.id), path] as const;
               });
 

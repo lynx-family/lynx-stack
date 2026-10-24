@@ -46,7 +46,7 @@ export interface ElementTemplateConfig {
 }
 
 /**
- * {@inheritdoc PluginReactLynxOptions.shake}
+ * {@inheritDoc PluginReactLynxOptions.shake}
  * @public
  */
 export interface ShakeVisitorConfig {
@@ -161,7 +161,7 @@ export interface ShakeVisitorConfig {
 }
 
 /**
- * {@inheritdoc PluginReactLynxOptions.defineDCE}
+ * {@inheritDoc PluginReactLynxOptions.defineDCE}
  * @public
  */
 export interface DefineDceVisitorConfig {

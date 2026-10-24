@@ -11,7 +11,11 @@ import { fileURLToPath } from 'node:url'
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
-import type { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+import type {
+  ReactWebpackPlugin,
+  ReactWebpackPluginOptions,
+} from '@lynx-js/react-webpack-plugin'
+import type { RuntimeConfigWebpackPlugin } from '@lynx-js/runtime-config-webpack-plugin'
 import type {
   LynxEncodePlugin,
   LynxTemplatePlugin,
@@ -340,7 +344,6 @@ describe('Config', () => {
     )
   })
 
-  // eslint-disable-next-line unicorn/consistent-function-scoping
   const getBackgroundLayerOptions = async (rsbuild: RsbuildInstance) => {
     const [config] = await rsbuild.initConfigs()
 
@@ -461,12 +464,116 @@ describe('Config', () => {
     expect(
       (
         reactWebpackPlugin as unknown as {
-          options?: {
-            experimental_transformBuiltinAttributeNames?: unknown
-          }
+          options?: ReactWebpackPluginOptions
         }
-      ).options?.experimental_transformBuiltinAttributeNames,
-    ).toEqual(transformConfig)
+      ).options,
+    ).not.toHaveProperty('experimental_transformBuiltinAttributeNames')
+
+    const runtimeConfigWebpackPlugin = config?.plugins?.find(
+      (plugin): plugin is RuntimeConfigWebpackPlugin =>
+        plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+    )
+
+    expect(runtimeConfigWebpackPlugin).toBeDefined()
+    expect(
+      (
+        runtimeConfigWebpackPlugin as unknown as {
+          options?: unknown
+        }
+      ).options,
+    ).toEqual({
+      transformBuiltinAttributeNames: transformConfig,
+    })
+  })
+
+  test.each([
+    {
+      name: 'host bundle',
+      callerName: 'rspeedy',
+      pluginOptions: {
+        experimental_transformBuiltinAttributeNames: true,
+      },
+      expectedRuntimeConfig: {
+        transformBuiltinAttributeNames: true,
+      },
+    },
+    {
+      name: 'lazy bundle',
+      callerName: 'rspeedy',
+      pluginOptions: {
+        experimental_isLazyBundle: true,
+        experimental_transformBuiltinAttributeNames: true,
+      },
+      expectedRuntimeConfig: undefined,
+    },
+    {
+      name: 'external bundle',
+      callerName: 'rslib',
+      pluginOptions: {
+        experimental_transformBuiltinAttributeNames: true,
+      },
+      expectedRuntimeConfig: undefined,
+    },
+  ])('only injects runtime config into the host: $name', async ({
+    callerName,
+    expectedRuntimeConfig,
+    pluginOptions,
+  }) => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      callerName,
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx(pluginOptions),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    const runtimeConfigWebpackPlugin = config?.plugins?.find(
+      (plugin): plugin is RuntimeConfigWebpackPlugin =>
+        plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+    )
+
+    if (expectedRuntimeConfig === undefined) {
+      expect(runtimeConfigWebpackPlugin).toBeUndefined()
+      return
+    }
+
+    expect(runtimeConfigWebpackPlugin).toBeDefined()
+    expect(
+      (
+        runtimeConfigWebpackPlugin as unknown as {
+          options?: unknown
+        }
+      ).options,
+    ).toEqual(expectedRuntimeConfig)
+  })
+
+  test('does not apply the runtime config plugin when all runtime configs are disabled', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_transformBuiltinAttributeNames: false,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(
+      config?.plugins?.find(
+        plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+      ),
+    ).toBeUndefined()
   })
 
   test('experimental_useElementTemplate wires aliases and loader/plugin options', async () => {
@@ -1034,14 +1141,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.[contenthash:8].js",
+            "filename": ".lynx/main/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1078,28 +1185,28 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "bar": {
-            "filename": ".rspeedy/bar/background.[contenthash:8].js",
+            "filename": ".lynx/bar/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar/main-thread.js",
+            "filename": ".lynx/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo": {
-            "filename": ".rspeedy/foo/background.[contenthash:8].js",
+            "filename": ".lynx/foo/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo/main-thread.js",
+            "filename": ".lynx/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1136,28 +1243,28 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "foo/bar": {
-            "filename": ".rspeedy/foo/bar/background.[contenthash:8].js",
+            "filename": ".lynx/foo/bar/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/bar__main-thread": {
-            "filename": ".rspeedy/foo/bar/main-thread.js",
+            "filename": ".lynx/foo/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo/baz": {
-            "filename": ".rspeedy/foo/baz/background.[contenthash:8].js",
+            "filename": ".lynx/foo/baz/background.[contenthash:8].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz/main-thread.js",
+            "filename": ".lynx/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1200,42 +1307,42 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "bar": {
-            "filename": ".rspeedy/bar/background.js",
+            "filename": ".lynx/bar/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar/main-thread.js",
+            "filename": ".lynx/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo": {
-            "filename": ".rspeedy/foo/background.js",
+            "filename": ".lynx/foo/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz": {
-            "filename": ".rspeedy/foo/baz/background.js",
+            "filename": ".lynx/foo/baz/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz/main-thread.js",
+            "filename": ".lynx/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo/main-thread.js",
+            "filename": ".lynx/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1276,14 +1383,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/main/background.js",
+            "filename": ".lynx/main/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1327,42 +1434,42 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "bar": {
-            "filename": ".rspeedy/bar/background.js",
+            "filename": ".lynx/bar/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "bar__main-thread": {
-            "filename": ".rspeedy/bar/main-thread.js",
+            "filename": ".lynx/bar/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo": {
-            "filename": ".rspeedy/foo/background.js",
+            "filename": ".lynx/foo/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz": {
-            "filename": ".rspeedy/foo/baz/background.js",
+            "filename": ".lynx/foo/baz/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "foo/baz__main-thread": {
-            "filename": ".rspeedy/foo/baz/main-thread.js",
+            "filename": ".lynx/foo/baz/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:main-thread",
           },
           "foo__main-thread": {
-            "filename": ".rspeedy/foo/main-thread.js",
+            "filename": ".lynx/foo/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1401,14 +1508,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1448,14 +1555,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1494,14 +1601,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.[contenthash].js",
+            "filename": ".lynx/main/background.[contenthash].js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1540,14 +1647,14 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "./fixtures/basic.tsx",
             ],
@@ -1583,7 +1690,7 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.js",
+            "filename": ".lynx/main/background.js",
             "import": [
               "@lynx-js/webpack-dev-transport/client",
               "@lynx-js/react/refresh",
@@ -1593,7 +1700,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
@@ -1633,7 +1740,7 @@ describe('Config', () => {
       expect(config?.entry).toMatchInlineSnapshot(`
         {
           "main": {
-            "filename": ".rspeedy/main/background.[contenthash].js",
+            "filename": ".lynx/main/background.[contenthash].js",
             "import": [
               "@lynx-js/webpack-dev-transport/client",
               "@lynx-js/react/refresh",
@@ -1643,7 +1750,7 @@ describe('Config', () => {
             "layer": "react:background",
           },
           "main__main-thread": {
-            "filename": ".rspeedy/main/main-thread.js",
+            "filename": ".lynx/main/main-thread.js",
             "import": [
               "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
               "./fixtures/basic.tsx",
@@ -1721,6 +1828,31 @@ describe('Config', () => {
           output: {
             sourceMap: {
               js: 'nosources-source-map',
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const backgroundConfig = await getBackgroundLayerOptions(rsbuild)
+
+      expect(backgroundConfig).toHaveProperty('inlineSourcesContent', false)
+    })
+
+    test('with output.sourceMap.js: "nosources" set on an environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {
+              output: {
+                sourceMap: {
+                  js: 'nosources-source-map',
+                },
+              },
             },
           },
           plugins: [
@@ -1912,6 +2044,45 @@ describe('Config', () => {
         `)
     })
 
+    test('splitChunks excludes chunks by runtime', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: {
+            preset: 'default',
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+      if (typeof config.optimization.splitChunks.chunks !== 'function') {
+        expect.fail('splitChunks.chunks should be a function')
+      }
+
+      const chunks = config.optimization.splitChunks.chunks
+      const createChunk = (runtime: string[]) =>
+        ({ runtime: new Set(runtime) }) as unknown as Parameters<
+          typeof chunks
+        >[0]
+
+      expect(chunks(createChunk(['main__main-thread']))).toBe(false)
+      expect(chunks(createChunk(['lazy-main-thread']))).toBe(true)
+      expect(chunks(createChunk(['main']))).toBe(true)
+      expect(chunks(createChunk(['main__main-thread', 'main']))).toBe(true)
+    })
+
     test('splitChunks.preset: "default"', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -1942,6 +2113,67 @@ describe('Config', () => {
       expect(config.optimization.splitChunks.cacheGroups).toHaveProperty(
         'preact',
       )
+    })
+
+    test('splitChunks.preset: "default" set on an environment', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {
+              splitChunks: {
+                preset: 'default',
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+      expect(config.optimization.splitChunks).not.toBe(false)
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+      expect(config.optimization.splitChunks.cacheGroups).toHaveProperty(
+        'preact',
+      )
+    })
+
+    test('performance.chunkSplit.strategy set on an environment overrides the root', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          performance: {
+            chunkSplit: {
+              strategy: 'split-by-experience',
+            },
+          },
+          environments: {
+            lynx: {
+              performance: {
+                chunkSplit: {
+                  strategy: 'all-in-one',
+                },
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+      expect(config?.optimization?.splitChunks).toBe(false)
     })
 
     test('splitChunks overrides performance.chunkSplit', async () => {
@@ -2254,7 +2486,7 @@ describe('Config', () => {
       const candidateOutputPaths = [
         path.join(
           rsbuild.context.distPath,
-          '.rspeedy',
+          '.lynx',
           entryName,
           'main-thread.js',
         ),
@@ -2335,13 +2567,13 @@ describe('Config', () => {
 
       const mainThreadPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy',
+        '.lynx',
         entryName,
         'main-thread.js',
       )
       const backgroundPath = path.join(
         rsbuild.context.distPath,
-        '.rspeedy',
+        '.lynx',
         entryName,
         'background.js',
       )
@@ -2403,15 +2635,76 @@ describe('Config', () => {
         "enableCSSSelector": true,
         "enableNewGesture": false,
         "enableRemoveCSSScope": true,
+        "enableReuseLoadScriptExports": false,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
-        "intermediate": ".rspeedy/main",
+        "intermediate": ".lynx/main",
         "lazyBundleFetcher": "QueryComponent",
         "removeDescendantSelectorScope": true,
         "targetSdkVersion": "3.2",
       }
     `)
   })
+
+  test('reuses loadScript exports for experimental entry re-evaluation', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_reEvalJSOnReload: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    const templatePlugin = config?.plugins?.find((
+      p,
+    ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin')
+
+    expect(templatePlugin).toBeDefined()
+    const templateOptions = (templatePlugin as unknown as {
+      options: { enableReuseLoadScriptExports?: boolean }
+    }).options
+    expect(templateOptions.enableReuseLoadScriptExports).toBe(true)
+  })
+
+  test.each([
+    { callerName: 'rspeedy', expectedEntrySupport: true },
+    { callerName: 'rslib', expectedEntrySupport: false },
+  ])(
+    'marks re-evaluation entry support only for applications: $callerName',
+    async ({
+      callerName,
+      expectedEntrySupport,
+    }) => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        callerName,
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ experimental_reEvalJSOnReload: true }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+      const [config] = await rsbuild.initConfigs()
+      const wrapper = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'RuntimeWrapperWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+      const react = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'ReactWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+
+      expect(wrapper.options.experimental_reEvalJSOnReload).toBe(
+        expectedEntrySupport,
+      )
+      expect(react.options.experimental_reEvalJSOnReload).toBe(true)
+    },
+  )
 
   test('targetSdkVersion', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -2539,7 +2832,7 @@ describe('Config', () => {
         expect(config?.entry).toMatchInlineSnapshot(`
           {
             "main": {
-              "filename": ".rspeedy/main/background.[contenthash:8].js",
+              "filename": ".lynx/main/background.[contenthash:8].js",
               "import": [
                 "@lynx-js/webpack-dev-transport/client",
                 "@lynx-js/react/refresh",
@@ -2549,7 +2842,7 @@ describe('Config', () => {
               "layer": "react:background",
             },
             "main__main-thread": {
-              "filename": ".rspeedy/main/main-thread.js",
+              "filename": ".lynx/main/main-thread.js",
               "import": [
                 "<ROOT>/packages/webpack/css-extract-webpack-plugin/runtime/hotModuleReplacement.lepus.cjs",
                 "./src/index.js",
@@ -2562,14 +2855,14 @@ describe('Config', () => {
         expect(config?.entry).toMatchInlineSnapshot(`
           {
             "main": {
-              "filename": ".rspeedy/main/background.[contenthash:8].js",
+              "filename": ".lynx/main/background.[contenthash:8].js",
               "import": [
                 "./src/index.js",
               ],
               "layer": "react:background",
             },
             "main__main-thread": {
-              "filename": ".rspeedy/main/main-thread.js",
+              "filename": ".lynx/main/main-thread.js",
               "import": [
                 "./src/index.js",
               ],
@@ -2781,101 +3074,6 @@ describe('Config', () => {
     })
   })
 
-  test('worklet runtime (mode: production)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'production',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
-  })
-
-  test('worklet runtime (mode: development)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'development',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-dev-runtime'),
-    )
-  })
-
-  test('worklet runtime (mode: none)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'none',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    const require = createRequire(import.meta.url)
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
-  })
-
   test('worklet runtime bindings resolve to the runtime-owned build output', () => {
     const require = createRequire(import.meta.url)
 
@@ -2931,11 +3129,11 @@ describe('Config', () => {
 
       expect(configs[0]!.name).toBe('lynx')
       expect(configs[1]!.name).toBe('lynx-foo')
-      // only lynx output will be emitted to `.rspeedy`
+      // only lynx output will be emitted to `.lynx`
       expect(
         (configs[1]?.entry as Record<string, Rspack.EntryDescription>)?.['main']
           ?.filename,
-      ).toBe('.rspeedy/main/background.js')
+      ).toBe('.lynx/main/background.js')
     })
 
     test('web environment', async () => {
@@ -3037,17 +3235,17 @@ describe('Config', () => {
       ).toMatchInlineSnapshot(`
         [
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/cssUrlLoader.mjs",
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<PNPM_INNER>/@rsbuild/core/dist/cssUrlLoader.mjs",
+            "<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
+            "<PNPM_INNER>/@rspack/core/dist/cssExtractLoader.js",
+            "<PNPM_INNER>/@rsbuild/core/compiled/css-loader/index.js",
             "builtin:lightningcss-loader",
           ],
         ]
@@ -3067,7 +3265,7 @@ describe('Config', () => {
       ).toMatchInlineSnapshot(`
         [
           [
-            "<ROOT>/node_modules/<PNPM_INNER>/@rsbuild/core/dist/workerLoader.mjs",
+            "<PNPM_INNER>/@rsbuild/core/dist/workerLoader.mjs",
           ],
           [
             "builtin:swc-loader",
@@ -3138,8 +3336,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3204,8 +3402,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3313,8 +3511,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3379,8 +3577,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3446,8 +3644,8 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
       ]
     `)
   })
@@ -3519,9 +3717,9 @@ describe('MPA Config', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(reactWebpackPlugin.options.mainThreadChunks).toMatchInlineSnapshot(`
       [
-        ".rspeedy/foo/main-thread.js",
-        ".rspeedy/bar/main-thread.js",
-        ".rspeedy/baz/main-thread.js",
+        ".lynx/foo/main-thread.js",
+        ".lynx/bar/main-thread.js",
+        ".lynx/baz/main-thread.js",
       ]
     `)
   })

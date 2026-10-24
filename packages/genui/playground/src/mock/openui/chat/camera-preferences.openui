@@ -1,0 +1,5 @@
+root = Card([advice, form])
+$budgetBand = "unsure"
+$priority = "unsure"
+advice = TextContent("**先确定整套预算和携带优先级，再挑机身与镜头。** 旅行中如果经常长时间步行，建议把便携性纳入比较；目前还不知道你的实际偏好。下面可以暂选“还没想好”，不会把默认选项当作你的偏好。")
+form = Form("camera", Buttons([Button("按预算与偏好继续筛选", {type:"continue_conversation", context:"按表单中的整套预算和携带优先级筛选旅行摄影组合，给有来源的候选与取舍"})]), [FormControl("机身＋镜头预算（元）", RadioGroup("budgetBand", [RadioItem("8000–12000", "整套预算", "8000-12000"), RadioItem("12000–16000", "整套预算", "12000-16000"), RadioItem("其他预算或还没想好", "也可直接补充金额", "unsure")], "unsure", null, $budgetBand)), FormControl("第一优先级", RadioGroup("priority", [RadioItem("轻便", "长时间随身携带", "light"), RadioItem("画质", "愿意接受更大重量", "quality"), RadioItem("还没想好", "先了解不同取舍", "unsure")], "unsure", null, $priority))])

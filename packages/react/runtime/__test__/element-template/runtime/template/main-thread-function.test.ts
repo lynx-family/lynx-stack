@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WorkletEvents } from '@lynx-js/react/worklet-runtime/bindings';
+import { WorkletEvents, registerWorklet } from '@lynx-js/react/worklet-runtime/bindings';
 import { options } from 'preact';
 import { createElement } from 'preact/compat';
 import { useLayoutEffect, useState } from 'preact/hooks';
@@ -15,11 +15,23 @@ import {
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
-import { takeDelayedRunOnMainThreadData } from '../../../../src/core/thread-function-call/main-thread.js';
+import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
+import {
+  delayedRunOnMainThreadData,
+  takeDelayedRunOnMainThreadData,
+} from '../../../../src/core/thread-function-call/main-thread.js';
 import { resetFunctionCallReturnListener } from '../../../../src/core/thread-function-call/return-value.js';
+import {
+  installElementTemplatePatchListener,
+  resetElementTemplatePatchListener,
+} from '../../../../src/element-template/native/patch-listener.js';
+import { reloadBackground } from '../../../../src/element-template/native/reload-background.js';
+import { reloadMainThread } from '../../../../src/element-template/native/reload-main-thread.js';
 import { resetElementTemplateBackgroundFunctionRuntime } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../src/element-template/protocol/update-event.js';
+import { createElementTemplatePage, setupPage } from '../../../../src/element-template/runtime/page/page.js';
+import { initWorklet } from '../../../../src/worklet-runtime/workletRuntime.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 
 describe('ElementTemplate runOnMainThread', () => {
@@ -29,6 +41,7 @@ describe('ElementTemplate runOnMainThread', () => {
     vi.clearAllMocks();
     envManager.resetEnv('background');
     SystemInfo.lynxSdkVersion = '4.0';
+    clearMtsConfigCacheForTesting();
     resetElementTemplateCommitState();
   });
 
@@ -58,6 +71,7 @@ describe('ElementTemplate runOnMainThread', () => {
         worklet,
         params: ['hello'],
         resolveId: 1,
+        reloadVersion: 0,
       }),
     });
 
@@ -206,6 +220,7 @@ describe('ElementTemplate runOnMainThread', () => {
         worklet,
         params: ['from-layout-effect'],
         resolveId: 1,
+        reloadVersion: 0,
       }),
     });
     expect(takeDelayedRunOnMainThreadData()).toEqual([]);
@@ -258,6 +273,80 @@ describe('ElementTemplate runOnMainThread', () => {
 
     expect(takeDelayedRunOnMainThreadData()).toEqual([]);
     expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
+  });
+
+  it('drops pre-hydration and unmount calls before a reload reuses their return IDs', async () => {
+    const oldResult = vi.fn();
+    const cleanupResult = vi.fn();
+    const cleanup = vi.fn(() => {
+      void runOnMainThread({ _wkltId: 'unmount-call' } as unknown as () => string)().then(cleanupResult);
+      expect(delayedRunOnMainThreadData.map(data => data.resolveId)).toEqual([1, 2]);
+    });
+    function App() {
+      useLayoutEffect(() => cleanup, []);
+      return null;
+    }
+
+    const oldCall = vi.fn(() => 'old-page');
+    const unmountCall = vi.fn(() => 'old-page');
+    const newCall = vi.fn(() => 'new-page');
+    const workletGlobals = {
+      lynxWorkletImpl: globalThis.lynxWorkletImpl as unknown,
+      runWorklet: globalThis.runWorklet as unknown,
+      registerWorklet: globalThis.registerWorklet as unknown,
+      registerWorkletInternal: globalThis.registerWorkletInternal as unknown,
+    };
+    const dispatch = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    try {
+      envManager.switchToMainThread();
+      initWorklet();
+      registerWorklet('main-thread', 'old-call', oldCall);
+      registerWorklet('main-thread', 'unmount-call', unmountCall);
+      registerWorklet('main-thread', 'new-call', newCall);
+      setupPage(createElementTemplatePage());
+      root.render(null);
+      installElementTemplatePatchListener();
+      envManager.switchToBackground();
+      root.render(createElement(App));
+      void runOnMainThread({ _wkltId: 'old-call' } as unknown as () => string)().then(oldResult);
+      expect(delayedRunOnMainThreadData[0]?.resolveId).toBe(1);
+
+      reloadBackground({});
+      expect(cleanup).toHaveBeenCalledOnce();
+      expect(delayedRunOnMainThreadData).toEqual([]);
+      // The harness shares resolver state between threads. Finish MTS reload
+      // before registering the new BTS call, then deliver the real hydration.
+      envManager.switchToMainThread(() => reloadMainThread({}, { reloadTemplate: true }));
+      let result!: Promise<string>;
+      envManager.switchToBackground(() => {
+        result = runOnMainThread({ _wkltId: 'new-call' } as unknown as () => string)();
+        expect(delayedRunOnMainThreadData[0]?.resolveId).toBe(1);
+      });
+
+      const update = dispatch.mock.calls.find(([event]) =>
+        String(event.type) === ElementTemplateLifecycleConstant.update
+      )?.[0];
+      expect(parseElementTemplateUpdateEventPayload(update?.data)).toMatchObject({
+        isHydration: true,
+        delayedRunOnMainThreadData: [{ worklet: { _wkltId: 'new-call' }, params: [], resolveId: 1 }],
+      });
+      envManager.switchToMainThread();
+      envManager.switchToBackground();
+
+      expect(newCall).toHaveBeenCalledExactlyOnceWith();
+      expect(oldCall).not.toHaveBeenCalled();
+      expect(unmountCall).not.toHaveBeenCalled();
+      await expect(result).resolves.toBe('new-page');
+      expect(oldResult).not.toHaveBeenCalled();
+      expect(cleanupResult).not.toHaveBeenCalled();
+    } finally {
+      // Do not enqueue another cleanup call while disposing the replacement tree.
+      cleanup.mockImplementation(() => {});
+      envManager.switchToBackground(() => destroyElementTemplateBackgroundRuntime());
+      envManager.switchToMainThread(() => resetElementTemplatePatchListener());
+      envManager.switchToBackground();
+      Object.assign(globalThis, workletGlobals);
+    }
   });
 
   it('throws on the main thread', () => {

@@ -1,14 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { OPENUI_DATA_TOOL_NAMES } from '@lynx-js/genui/openui/data-tools';
+
 import {
-  CHAT_PROVIDER_SETTINGS_ADAPTER,
-  filterProviderRequestOptionsForEndpoint,
+  createProviderSettingsAdapter,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatArtifact,
   ChatHost,
@@ -25,16 +27,19 @@ import type {
   ConversationContext,
   ModelChatMessage,
 } from '../../hooks/useConversation.js';
-import {
-  OPENUI_SCENARIOS,
-  parseOpenUIScenarioRaw,
-} from '../../mock/openui-scenarios.js';
+import { OPENUI_SCENARIOS } from '../../mock/openui-scenarios.js';
 import type { OpenUIScenario } from '../../mock/openui-scenarios.js';
+import {
+  readOpenUIParsedJSON,
+  readOpenUIQueryDefaults,
+} from '../../openui/inspector.js';
+import { createOpenUILocalDataView } from '../../openui/localDataView.js';
 import type { PreviewPerformanceMetrics } from '../../storage/types.js';
 
 export interface OpenUIOutput {
   rawText: string;
   scenarioTitle: string;
+  isStreaming?: boolean;
 }
 
 export interface OpenUIStreamState {
@@ -56,24 +61,6 @@ const WELCOME_MESSAGE: ChatMessageModel = {
     'Describe the OpenUI surface you want to create. I will stream OpenUI Lang from the GenUI server and render the result in Lynx Preview.',
 };
 
-const SUGGESTIONS = [
-  {
-    label: 'Weather query',
-    text:
-      'Create an OpenUI weather card for Seattle with live query data, a refresh action, metrics, and alerts.',
-  },
-  {
-    label: 'Pricing picker',
-    text:
-      'Create an OpenUI pricing page with three plans, selected state, billing controls, and reset actions.',
-  },
-  {
-    label: 'Pizza order',
-    text:
-      'Create an OpenUI pizza order card with options, a summary, and an order action.',
-  },
-] as const;
-
 const LOCAL_SCENARIO_PROMPT_PREFIX = 'Load local OpenUI scenario: ';
 const OPENUI_ACTION_MESSAGE_TYPES = new Set([
   'A2UI_USER_ACTION',
@@ -82,10 +69,6 @@ const OPENUI_ACTION_MESSAGE_TYPES = new Set([
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function formatCharacterCount(value: string): string {
-  return `${value.length.toLocaleString()} chars`;
 }
 
 function stringifyValue(value: unknown): string {
@@ -154,10 +137,22 @@ function buildMessagesFromHistory(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     messages.push(
-      previousScenarioTitle
-        ? createLoadedScenarioStatus(previousScenarioTitle)
-        : createGeneratedStatus(),
+      {
+        ...(previousScenarioTitle
+          ? createLoadedScenarioStatus(previousScenarioTitle)
+          : createGeneratedStatus()),
+        generationUsage: message.generationUsage,
+      },
     );
     previousScenarioTitle = null;
   }
@@ -211,12 +206,8 @@ function createOpenUIRequest(
   settings: ProviderSettings,
   host: ChatHost,
 ): ChatHttpRequest {
-  const endpoint = getChatEndpoint('openui', host);
-  const providerOptions = filterProviderRequestOptionsForEndpoint(
-    toProviderRequestOptions(settings),
-    endpoint,
-    host,
-  );
+  const endpoint = getChatEndpoint('openui', host, settings);
+  const providerOptions = toProviderRequestOptions(settings, 'openui');
   return {
     url: endpoint,
     method: 'POST' as const,
@@ -226,6 +217,7 @@ function createOpenUIRequest(
     },
     body: {
       resourceId: 'openui-create',
+      tools: [...OPENUI_DATA_TOOL_NAMES],
       messages: [{ role: 'user' as const, content: prompt }],
       conversation,
       ...providerOptions,
@@ -255,10 +247,16 @@ function createOpenUIStreamAdapter(
         if (typeof data.text !== 'string') return streamStep(state);
         const generatedText = state.generatedText + data.text;
         const nextState = { ...state, generatedText };
-        return streamStep(nextState, [{
-          type: 'progress',
-          text: generatedText,
-        }]);
+        return streamStep(nextState, [
+          { type: 'progress', text: generatedText },
+          {
+            type: 'partial',
+            output: {
+              ...createOutput(generatedText, scenarioTitle),
+              isStreaming: true,
+            },
+          },
+        ]);
       }
 
       if (frame.event !== 'done') return streamStep(state);
@@ -301,8 +299,8 @@ function createOpenUIStreamAdapter(
       return streamStep({ generatedText: finalText, finalText }, emissions);
     },
     finish(state) {
-      const finalText = state.finalText ?? state.generatedText;
-      return finalText.trim() ? createOutput(finalText, scenarioTitle) : null;
+      const finalText = state.finalText;
+      return finalText?.trim() ? createOutput(finalText, scenarioTitle) : null;
     },
     error: normalizeErrorPayload,
   };
@@ -356,16 +354,9 @@ function actionUserText(action: OpenUIActionEvent): string {
 }
 
 function createArtifact(output: OpenUIOutput): ChatArtifact {
-  let parsedText: string;
-  try {
-    parsedText = parseOpenUIScenarioRaw(output.rawText);
-  } catch (error) {
-    parsedText = `Unable to parse OpenUI DSL:\n${String(error)}`;
-  }
-
   return {
     title: 'Generated OpenUI Output',
-    meta: `${output.scenarioTitle} - ${formatCharacterCount(output.rawText)}`,
+    meta: output.scenarioTitle,
     views: [
       {
         id: 'raw',
@@ -376,9 +367,27 @@ function createArtifact(output: OpenUIOutput): ChatArtifact {
       {
         id: 'json',
         label: 'JSON',
-        text: parsedText,
+        get text() {
+          return readOpenUIParsedJSON(output.rawText);
+        },
         language: 'json',
       },
+      {
+        id: 'data',
+        label: 'Query data',
+        get text() {
+          return JSON.stringify(
+            readOpenUIQueryDefaults(output.rawText),
+            null,
+            2,
+          );
+        },
+        language: 'json',
+      },
+      createOpenUILocalDataView(
+        output.rawText,
+        () => readOpenUIQueryDefaults(output.rawText),
+      ),
     ],
   };
 }
@@ -405,8 +414,8 @@ export const OPENUI_CHAT_ADAPTER = {
     progressLabel: 'Streaming OpenUI Lang from the GenUI server...',
     failurePrefix: 'OpenUI generation failed',
   },
-  suggestions: SUGGESTIONS,
-  settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
+  settings: createProviderSettingsAdapter('openui'),
   createRequest({ prompt, conversation, settings, host }) {
     return createOpenUIRequest(prompt, conversation, settings, host);
   },
@@ -426,14 +435,12 @@ export const OPENUI_CHAT_ADAPTER = {
         text: 'Streaming OpenUI Lang from the GenUI server...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming OpenUI Lang from the GenUI server... ${
-          formatCharacterCount(text)
-        }`,
+        text: 'Streaming OpenUI Lang from the GenUI server...',
       };
     },
     success() {
@@ -473,7 +480,12 @@ export const OPENUI_CHAT_ADAPTER = {
     },
   },
   preview: {
-    delivery: 'reload',
+    delivery: 'live-message',
+    initialOutput: (): OpenUIOutput => ({
+      rawText: '',
+      scenarioTitle: 'Agent response',
+      isStreaming: true,
+    }),
     source(output, context) {
       return output
         ? {
@@ -481,17 +493,28 @@ export const OPENUI_CHAT_ADAPTER = {
           rawText: output.rawText,
           theme: context.theme,
           liveAction: true,
+          liveStream: true,
         }
         : undefined;
     },
     artifact: createArtifact,
+    livePayload(output) {
+      return [{
+        rawText: output.rawText,
+        isStreaming: output.isStreaming === true,
+      }];
+    },
+    isEquivalent(current, next) {
+      return current.rawText === next.rawText
+        && current.isStreaming === next.isStreaming;
+    },
     merge(_current, next) {
       return next;
     },
     emptyTitle: 'Send a prompt to generate OpenUI',
     emptySubtitle: 'Generated OpenUI output will be previewed here',
     generatingHint:
-      'Streaming OpenUI output from the GenUI server. The preview will appear when the response is complete.',
+      'Streaming OpenUI output from the GenUI server into the live preview.',
     emptyHint:
       'No OpenUI output yet. Send a prompt or load a local scenario to preview it.',
   },

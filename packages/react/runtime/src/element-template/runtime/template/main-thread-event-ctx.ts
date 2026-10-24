@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { registerMTEventBackgroundFunctionCtx } from './main-thread-background-function.js';
+import { registerMainThreadBackgroundFunctionCtx } from './main-thread-background-function.js';
+import { isMainThreadFunction } from '../../../core/main-thread-function.js';
 import type { SerializableValue } from '../../protocol/types.js';
 
 export interface MTEventCtx {
@@ -18,19 +19,12 @@ export interface MTEventNativeWrapper {
   value: MTEventCtx;
 }
 
-export function isMTEventCtx(value: unknown): value is MTEventCtx {
-  return value != null
-    && typeof value === 'object'
-    && !Array.isArray(value)
-    && typeof (value as { _wkltId?: unknown })._wkltId === 'string';
-}
-
 export function isMTEventNativeWrapper(value: unknown): value is MTEventNativeWrapper {
   return value != null
     && typeof value === 'object'
     && !Array.isArray(value)
     && (value as { type?: unknown }).type === 'worklet'
-    && isMTEventCtx((value as { value?: unknown }).value);
+    && isMainThreadFunction((value as { value?: unknown }).value);
 }
 
 export function prepareMTEventCtxForNative(
@@ -43,7 +37,7 @@ export function prepareMTEventCtxForNative(
   }
 
   const preparedCtx = { ...rawCtx };
-  registerMTEventBackgroundFunctionCtx(preparedCtx);
+  registerMainThreadBackgroundFunctionCtx(preparedCtx);
 
   return {
     type: 'worklet',

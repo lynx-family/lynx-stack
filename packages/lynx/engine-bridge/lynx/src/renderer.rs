@@ -1,5 +1,5 @@
 use crate::sys;
-use crate::{c_str_to_string, Env, Error, Result};
+use crate::{c_str_to_string, Error, LynxEnv, Result};
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -135,12 +135,11 @@ fn renderer_contexts() -> &'static Mutex<HashMap<usize, Arc<RendererContext>>> {
 pub struct WindowlessRenderer {
   sys: Arc<sys::LoadedLibrary>,
   raw: *mut sys::lynx_windowless_renderer_t,
-  renderer_type: sys::lynx_windowless_renderer_type_e,
 }
 
 impl WindowlessRenderer {
   pub fn software(
-    env: &Env,
+    env: &LynxEnv,
     renderer: impl SoftwareRenderer,
     host: impl WindowlessHost,
   ) -> Result<Self> {
@@ -152,7 +151,7 @@ impl WindowlessRenderer {
     )
   }
 
-  pub fn gl(env: &Env, renderer: impl GlRenderer, host: impl WindowlessHost) -> Result<Self> {
+  pub fn gl(env: &LynxEnv, renderer: impl GlRenderer, host: impl WindowlessHost) -> Result<Self> {
     Self::create(
       env,
       sys::kRendererTypeGL,
@@ -162,7 +161,7 @@ impl WindowlessRenderer {
   }
 
   pub fn gl_direct(
-    env: &Env,
+    env: &LynxEnv,
     renderer: impl GlRenderer,
     host: impl WindowlessHost,
   ) -> Result<Self> {
@@ -175,7 +174,7 @@ impl WindowlessRenderer {
   }
 
   pub fn accelerated(
-    env: &Env,
+    env: &LynxEnv,
     renderer: impl AcceleratedRenderer,
     host: impl WindowlessHost,
   ) -> Result<Self> {
@@ -188,7 +187,7 @@ impl WindowlessRenderer {
   }
 
   fn create(
-    env: &Env,
+    env: &LynxEnv,
     renderer_type: sys::lynx_windowless_renderer_type_e,
     backend: RendererBackend,
     host: impl WindowlessHost,
@@ -253,19 +252,11 @@ impl WindowlessRenderer {
       }
     }
 
-    Ok(Self {
-      sys,
-      raw,
-      renderer_type,
-    })
+    Ok(Self { sys, raw })
   }
 
   pub(crate) fn raw(&self) -> *mut sys::lynx_windowless_renderer_t {
     self.raw
-  }
-
-  pub(crate) fn use_texture_backend(&self) -> bool {
-    self.renderer_type != sys::kRendererTypeSoftware
   }
 
   pub fn run_task(&self, task: Task) {
@@ -326,7 +317,7 @@ fn global_ui_task_runner_slot() -> &'static Mutex<Option<usize>> {
   SLOT.get_or_init(|| Mutex::new(None))
 }
 
-pub fn set_global_ui_task_runner(env: &Env, runner: impl GlobalUiTaskRunner) -> Result<bool> {
+pub fn set_global_ui_task_runner(env: &LynxEnv, runner: impl GlobalUiTaskRunner) -> Result<bool> {
   let mut slot = global_ui_task_runner_slot()
     .lock()
     .expect("global UI task runner slot lock poisoned");
@@ -357,7 +348,7 @@ pub fn set_global_ui_task_runner(env: &Env, runner: impl GlobalUiTaskRunner) -> 
   Ok(true)
 }
 
-pub fn run_global_ui_task(env: &Env, task: Task) -> bool {
+pub fn run_global_ui_task(env: &LynxEnv, task: Task) -> bool {
   unsafe { (env.sys().lynx_windowless_run_ui_task)(task.raw()) }
 }
 

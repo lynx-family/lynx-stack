@@ -27,8 +27,6 @@ const defaultUpgradeRspeedyLink =
 /**
  * A configuration interface for Lynx Config defined by `@lynx-js/type-config`.
  *
- * See all available options in {@link https://lynxjs.org/next/api/lynx-config/config-reference.html}.
- *
  * @public
  */
 export interface Config extends LynxConfig, LynxCompilerOptions {}
@@ -79,12 +77,14 @@ export interface Options {
  * @example
  * ```ts
  * import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin'
- * import { defineConfig } from '@lynx-js/rspeedy'
+ * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+ * import { defineConfig } from '@rsbuild/core'
  *
  * export default defineConfig({
  *   plugins: [
+ *     pluginReactLynx(),
  *     pluginLynxConfig({
- *       enableCheckExposureOptimize: false,
+ *       alignMouseEventWithW3C: true,
  *     }),
  *   ],
  * })
@@ -110,6 +110,10 @@ export function pluginLynxConfig(
     name: 'lynx:config',
     async setup(api) {
       api.expose(Symbol.for('lynx.config'), { config })
+
+      if (api.context.callerName === 'rstest') {
+        return
+      }
 
       api.modifyBundlerChain(chain => {
         const exposed = api.useExposed<

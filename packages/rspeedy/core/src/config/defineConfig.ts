@@ -62,7 +62,7 @@ export type ConfigExport =
  * The `defineConfig` method is a helper function used to get TypeScript intellisense.
  *
  * @param config - The config of Rspeedy.
- * @returns - The identical config as the input config.
+ * @returns The identical config as the input config.
  *
  * @example
  *
@@ -82,7 +82,7 @@ export function defineConfig(config: Config): Config
  * The `defineConfig` method is a helper function used to get TypeScript intellisense.
  *
  * @param config - The function that returns a config of Rspeedy.
- * @returns - The identical function as the input.
+ * @returns The identical function as the input.
  *
  * @example
  *
@@ -123,7 +123,7 @@ export function defineConfig(
  * The `defineConfig` method is a helper function used to get TypeScript intellisense.
  *
  * @param config - The promise that resolves to a config of Rspeedy.
- * @returns - The identical promise as the input.
+ * @returns The identical promise as the input.
  *
  * @example
  *
@@ -146,7 +146,7 @@ export function defineConfig(config: Promise<Config>): Promise<Config>
  * The `defineConfig` method is a helper function used to get TypeScript intellisense.
  *
  * @param config - The function that returns a promise that resolves to a config of Rspeedy.
- * @returns - The identical function as the input.
+ * @returns The identical function as the input.
  *
  * @example
  *

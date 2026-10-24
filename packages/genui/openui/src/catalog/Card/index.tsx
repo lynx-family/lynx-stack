@@ -1,9 +1,9 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
 
-import { defineComponent } from '../../core/library.jsx';
+import { Card as CardDefinition } from './definition.js';
+import type { DefinedComponent } from '../../core/library.jsx';
 import { GAP_CLASS, asArray } from '../utils.js';
 
 import '../../../styles/catalog/Card.css';
@@ -36,19 +36,8 @@ function getJustifyClass(
   }
 }
 
-export const Card = defineComponent({
-  name: 'Card',
-  props: z.object({
-    children: z.array(z.any()),
-    variant: z.enum(['card', 'sunk', 'clear']).optional(),
-    direction: z.enum(['row', 'column']).optional(),
-    wrap: z.boolean().optional(),
-    gap: z.enum(['none', 'xs', 's', 'm', 'l', 'xl']).optional(),
-    align: z.enum(['start', 'center', 'end', 'stretch']).optional(),
-    justify: z.enum(['start', 'center', 'end', 'between']).optional(),
-  }),
-  description:
-    'Styled container (card/sunk/clear). Accept Stack layout parameters.',
+export const Card: DefinedComponent<typeof CardDefinition.props> = {
+  ...CardDefinition,
   component: ({ props, renderNode }) => {
     const variant = props.variant ?? 'card';
     let variantClass = 'OpenUICardVariantCard';
@@ -66,7 +55,7 @@ export const Card = defineComponent({
     const layoutClassName = [
       direction === 'row' ? 'OpenUIStackRow' : 'OpenUIStackColumn',
       props.wrap ? 'OpenUIStackWrap' : '',
-      GAP_CLASS[gap] ?? GAP_CLASS['m'],
+      GAP_CLASS[gap] ?? GAP_CLASS.m,
       getAlignClass(align),
       getJustifyClass(justify),
     ]
@@ -79,4 +68,4 @@ export const Card = defineComponent({
       </view>
     );
   },
-});
+};

@@ -22,10 +22,20 @@ if (__LAZY_BUNDLE_FETCHER__ === 'FetchBundle') {
   );
 } else {
   const LazyComponent = lazy(() => import('./LazyComponent.js'));
+  const NamedLazyComponent = lazy(() =>
+    import(
+      /* webpackChunkName: "named-lazy" */ './NamedLazyComponent.js'
+    )
+  );
   LazyComponentDemo = () => (
-    <Suspense fallback={<text>Loading...</text>}>
-      <LazyComponent />
-    </Suspense>
+    <>
+      <Suspense fallback={<text>Loading...</text>}>
+        <LazyComponent />
+      </Suspense>
+      <Suspense fallback={<text>Loading named-lazy...</text>}>
+        <NamedLazyComponent />
+      </Suspense>
+    </>
   );
 }
 

@@ -16,7 +16,7 @@ Rspeedy 支持使用包括图片、字体、音频和视频等多种静态资源
 // Import the logo.png image in the static directory
 import logo from './static/logo.png';
 
-export function App() {
+function App() {
   return <image src={logo} />; // Can be directly used in ReactLynx
 }
 ```
@@ -58,7 +58,7 @@ console.log(logo); // "https://example.com/assets/logo.6c12aba3.png"
 在 JavaScript 代码中，你可以通过 `process.env.ASSET_PREFIX` 拼接这些资源的 URL：
 
 ```js
-export const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
+const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
 ```
 
 :::warning
@@ -77,14 +77,18 @@ export const logoURL = `${process.env.ASSET_PREFIX}/logo.png`;
 TS2307: Cannot find module './static/logo.png' or its corresponding type declarations.
 ```
 
-此时你需要为静态资源添加类型声明文件，请在项目中创建 `src/rspeedy-env.d.ts` 文件，并添加相应的类型声明。
+此时请在 `tsconfig.json` 的 `types` 数组中追加声明了静态资源类型的 `@lynx-js/rspeedy/client`，保留已有的项：
 
-```typescript title=src/rspeedy-env.d.ts
-/// <reference types="@lynx-js/rspeedy/client" />
+```json title=tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@lynx-js/rspeedy/client"]
+  }
+}
 ```
 
 :::tip
-[`create-rspeedy`](https://npmjs.com/create-rspeedy) will automatically create this file for you.
+[`create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) 在创建项目时会自动包含该配置。
 :::
 
 ## 内联静态资源
@@ -144,16 +148,38 @@ console.log(img); // "/static/foo.fe0bb4d0.png"
 
 ## 扩展静态资源类型
 
-如果内置资源类型不能满足你的需求，你可以通过 [`source.assetsInclude`] 配置项指定需要被视为静态资源的额外文件类型。
+如果内置资源类型不能满足你的需求，你可以：
+
+- 通过 [`source.assetsInclude`] 配置项指定需要被视为静态资源的额外文件类型。
+- 通过 [`tools.rspack`] 修改内置的 Rspack 配置扩展你需要的资源类型。
 
 例如，如果你希望将 `*.pdf` 文件视为资源并直接输出到 `dist` 目录，可以添加以下配置：
+
+<!-- eslint-disable import/export -->
 
 ```ts title="lynx.config.ts"
 import { defineConfig } from '@lynx-js/rspeedy';
 
+// planA: source.assetsInclude
 export default defineConfig({
   source: {
     assetsInclude: /\.pdf$/,
+  },
+});
+
+// planB: tools.rspack
+export default defineConfig({
+  tools: {
+    rspack(config, { addRules }) {
+      addRules([
+        {
+          test: /\.pdf$/,
+          // converts asset to a separate file and exports the URL address.
+          type: 'asset/resource',
+        },
+      ]);
+      return config;
+    },
   },
 });
 ```
@@ -170,8 +196,8 @@ console.log(myFile); // "/static/myFile.6c12aba3.pdf"
 
 有关资源模块的更多信息，请参考 [Rspack - 资源模块](https://rspack.rs/guide/features/asset-module)。
 
-[`dev.assetPrefix`]: ../../api/rspeedy.dev.assetprefix
-[`output.assetPrefix`]: ../../api/rspeedy.output.assetprefix
-[`output.dataUriLimit`]: ../../api/rspeedy.output.dataurilimit
-[`tools.rspack`]: ../../api/rspeedy.tools.rspack
-[`source.assetsInclude`]: ../../api/rspeedy.source.assetsinclude
+[`dev.assetPrefix`]: ../api/rspeedy.dev.assetprefix.md
+[`output.assetPrefix`]: ../api/rspeedy.output.assetprefix.md
+[`output.dataUriLimit`]: ../api/rspeedy.output.dataurilimit.md
+[`tools.rspack`]: ../api/rspeedy.tools.rspack.md
+[`source.assetsInclude`]: ../api/rspeedy.source.assetsinclude.md

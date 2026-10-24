@@ -10,10 +10,12 @@ import {
 import {
   __etAttrPlanMap,
   adaptMTEventAttrSlot,
+  adaptMTRefAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
   createElementTemplateWithReservedHandle,
+  createTypedElementTemplateWithReservedHandle,
   destroyElementTemplateId,
   reserveElementTemplateId,
 } from '../../../../src/element-template/runtime/template/handle.js';
@@ -26,13 +28,17 @@ import { resetTemplateId } from '../../../../src/element-template/runtime/templa
 describe('ElementTemplateHandle', () => {
   const mockNativeRef = { __isNativeRef: true };
   const mockCreatedNativeRef = { __isTemplateRef: true };
-  const mockCreateElementTemplate = vi.fn();
+  const mockCreateCompiledElementTemplate = vi.fn();
+  const mockCreateTypedElementTemplate = vi.fn();
   // const mockReleaseElement = vi.fn();
 
   beforeEach(() => {
-    mockCreateElementTemplate.mockReset();
-    mockCreateElementTemplate.mockReturnValue(mockCreatedNativeRef);
-    vi.stubGlobal('__CreateElementTemplate', mockCreateElementTemplate);
+    mockCreateCompiledElementTemplate.mockReset();
+    mockCreateCompiledElementTemplate.mockReturnValue(mockCreatedNativeRef);
+    mockCreateTypedElementTemplate.mockReset();
+    mockCreateTypedElementTemplate.mockReturnValue(mockCreatedNativeRef);
+    vi.stubGlobal('__CreateElementTemplate', mockCreateCompiledElementTemplate);
+    vi.stubGlobal('__CreateTypedElementTemplate', mockCreateTypedElementTemplate);
     // vi.stubGlobal('__ReleaseElement', mockReleaseElement);
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
@@ -66,7 +72,7 @@ describe('ElementTemplateHandle', () => {
     );
 
     expect(nativeRef).toBe(mockCreatedNativeRef);
-    expect(mockCreateElementTemplate).toHaveBeenCalledWith(
+    expect(mockCreateCompiledElementTemplate).toHaveBeenCalledWith(
       '_et_test',
       null,
       ['text'],
@@ -114,12 +120,96 @@ describe('ElementTemplateHandle', () => {
     });
   });
 
+  it('initializes object MTRef detached after reserved-handle create and strips the native slot payload', () => {
+    const id = reserveElementTemplateId();
+    const ref = { _wvid: 7 };
+    const updateWorkletRef = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _refImpl: {
+        updateWorkletRef,
+      },
+    } as typeof globalThis.lynxWorkletImpl;
+    __etAttrPlanMap['__Card__:_et_test'] = [0, adaptMTRefAttrSlot];
+
+    try {
+      createElementTemplateWithReservedHandle(
+        id,
+        '_et_test',
+        null,
+        [{ type: 'main-thread-ref', value: ref }],
+        null,
+      );
+
+      expect(mockCreateCompiledElementTemplate).toHaveBeenCalledWith(
+        '_et_test',
+        null,
+        [null],
+        null,
+        -1,
+      );
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
+        kind: 'mt-ref',
+        value: ref,
+      });
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('registers the direct native result of typed template creation', () => {
+    const id = reserveElementTemplateId();
+
+    const nativeRef = createTypedElementTemplateWithReservedHandle(
+      id,
+      'page',
+      { id: 'root' },
+      null,
+      { estimatedHeight: 80 },
+    );
+
+    expect(nativeRef).toBe(mockCreatedNativeRef);
+    expect(mockCreateTypedElementTemplate).toHaveBeenCalledWith(
+      'page',
+      { id: 'root' },
+      null,
+      -1,
+      { estimatedHeight: 80 },
+    );
+    expect(elementTemplateRegistry.get(-1)).toBe(mockCreatedNativeRef);
+  });
+
+  it('passes list-specific options to typed-list native create', () => {
+    const id = reserveElementTemplateId();
+    const listChildren = [mockNativeRef as unknown as ElementTemplateHandle];
+
+    const nativeRef = createTypedElementTemplateWithReservedHandle(
+      id,
+      'list',
+      { id: 'list' },
+      null,
+      { listChildren },
+    );
+
+    expect(nativeRef).toBe(mockCreatedNativeRef);
+    expect(mockCreateTypedElementTemplate).toHaveBeenCalledWith(
+      'list',
+      { id: 'list' },
+      null,
+      -1,
+      { listChildren },
+    );
+    expect(elementTemplateRegistry.get(-1)).toBe(mockCreatedNativeRef);
+  });
+
   it('should allocate monotonically decreasing handle ids for template creation', () => {
     createElementTemplateWithReservedHandle(reserveElementTemplateId(), '_et_first', null, null, null);
     createElementTemplateWithReservedHandle(reserveElementTemplateId(), '_et_second', null, null, null);
 
-    expect(mockCreateElementTemplate.mock.calls[0]?.[4]).toEqual(-1);
-    expect(mockCreateElementTemplate.mock.calls[1]?.[4]).toEqual(-2);
+    expect(mockCreateCompiledElementTemplate.mock.calls[0]?.[4]).toEqual(-1);
+    expect(mockCreateCompiledElementTemplate.mock.calls[1]?.[4]).toEqual(-2);
     expect(elementTemplateRegistry.get(-1)).toBe(mockCreatedNativeRef);
     expect(elementTemplateRegistry.get(-2)).toBe(mockCreatedNativeRef);
   });

@@ -22,9 +22,13 @@ import type {
   TransformBuiltinAttributeNamesOptions,
 } from '@lynx-js/react-transform'
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
+import { pluginAutoLynx } from './autoLynx.js'
 import { applyBackgroundOnly } from './backgroundOnly.js'
+import {
+  REACT_COMPILE_RESULT_EXPOSURE,
+  reactCompileResultExposure,
+} from './compileResult.js'
 import { applyCSS } from './css.js'
 import { applyEntry } from './entry.js'
 import { applyGenerator } from './generator.js'
@@ -45,7 +49,7 @@ import { validateConfig } from './validate.js'
  */
 export interface PluginReactLynxOptions {
   /**
-   * Enable UI source map generation and debug-metadata asset emission.
+   * Generate UI source maps in the main-thread transform.
    *
    * @defaultValue `false`
    */
@@ -90,7 +94,8 @@ export interface PluginReactLynxOptions {
    * By setting `customCSSInheritanceList: ['direction', 'overflow']`, only the `direction` and `overflow` properties are inheritable.
    *
    * ```js
-   * import { defineConfig } from '@lynx-js/rspeedy'
+   * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
+   * import { defineConfig } from '@rsbuild/core'
    *
    * export default defineConfig({
    *  plugins: [
@@ -99,7 +104,7 @@ export interface PluginReactLynxOptions {
    *      customCSSInheritanceList: ['direction', 'overflow']
    *    }),
    *  ],
-   * }
+   * })
    * ```
    *
    * @defaultValue `undefined`
@@ -366,6 +371,16 @@ export interface PluginReactLynxOptions {
       mainThread?: boolean
       background?: boolean
     }
+
+  /**
+   * Re-evaluate the whole JS bundle on `reloadTemplate` instead of reusing
+   * the JSX of the previous render, so module scoped state of the entry is
+   * reset while the element tree is still reused.
+   *
+   * @defaultValue `false`
+   * @experimental
+   */
+  experimental_reEvalJSOnReload?: boolean
 }
 
 /**
@@ -419,6 +434,7 @@ export function pluginReactLynx(
     experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,
+    experimental_reEvalJSOnReload: false,
   }
   const resolvedOptions = Object.assign(defaultOptions, userOptions, {
     // Use `engineVersion` to override the default values
@@ -427,6 +443,7 @@ export function pluginReactLynx(
   })
 
   return [
+    pluginAutoLynx(),
     pluginReactAlias({
       lazy: resolvedOptions.experimental_isLazyBundle,
       elementTemplate: resolvedOptions.experimental_useElementTemplate,
@@ -436,6 +453,11 @@ export function pluginReactLynx(
       name: 'lynx:react',
       pre: ['lynx:rsbuild:plugin-api', 'lynx:config'],
       setup(api) {
+        api.expose(
+          REACT_COMPILE_RESULT_EXPOSURE,
+          reactCompileResultExposure,
+        )
+
         const isRslib = api.context.callerName === 'rslib'
         const isRstest = api.context.callerName === 'rstest'
 
@@ -508,15 +530,6 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
-        // Only expose `LynxTemplatePlugin.getLynxTemplatePluginHooks` to avoid
-        // other breaking changes in `LynxTemplatePlugin`
-        // breaks `pluginReactLynx`
-        api.expose(Symbol.for('LynxTemplatePlugin'), {
-          LynxTemplatePlugin: {
-            getLynxTemplatePluginHooks: LynxTemplatePlugin
-              .getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
-          },
-        })
         const require = createRequire(import.meta.url)
 
         const { version } = require('../package.json') as { version: string }

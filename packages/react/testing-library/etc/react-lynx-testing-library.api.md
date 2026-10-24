@@ -21,7 +21,7 @@ export { ElementTree }
 export { LynxTestingEnv }
 
 // @public
-export function render<Q extends Queries>(
+export function render<Q extends Queries = typeof queries>(
 ui: ComponentChild,
 options?: RenderOptions<Q>,
 ): RenderResult<Q>;
@@ -59,7 +59,7 @@ export interface RenderOptions<Q extends Queries = typeof queries> {
 export type RenderResult<Q extends Queries = typeof queries> = {
     container: LynxElement;
     rerender: (ui: ComponentChild) => void;
-    unmount: () => boolean;
+    unmount: () => void;
 } & { [P in keyof Q]: BoundFunction<Q[P]> };
 
 // @public

@@ -44,19 +44,18 @@ function reloadApp({ hot, liveReload }: Options, status: Status): void {
   else if (liveReload) {
     const intervalId = +setInterval(() => {
       // reload immediately
-      applyReload(intervalId);
+      clearInterval(intervalId);
+      reloadPage();
     }, 10);
   }
 }
 
-function applyReload(intervalId: number) {
-  clearInterval(intervalId);
-
+function reloadPage(): void {
   if (
     typeof NativeModules.LynxDevToolSetModule?.invokeCdp !== 'function'
     && typeof NativeModules.LynxDevtoolSetModule?.invokeCdp !== 'function'
   ) {
-    console.error('[HMR] live-reload failed: cannot invoke cdp from DevTool.');
+    console.error('[HMR] reload failed: cannot invoke cdp from DevTool.');
     console.error('[HMR] Please reload the page manually.');
     return;
   }
@@ -85,7 +84,7 @@ function applyReload(intervalId: number) {
           error?: { message: string; code: number };
         };
         if (error) {
-          console.error('[HMR] live-reload failed:', error.message);
+          console.error('[HMR] reload failed:', error.message);
         }
       } catch {
         // explicitly ignore error
@@ -95,3 +94,4 @@ function applyReload(intervalId: number) {
 }
 
 export default reloadApp;
+export { reloadPage };

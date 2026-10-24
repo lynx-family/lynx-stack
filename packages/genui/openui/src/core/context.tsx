@@ -9,7 +9,7 @@ import type {
   Store,
 } from '@openuidev/lang-core';
 
-import type { ReactNode } from '@lynx-js/react';
+import type { Context, ReactNode } from '@lynx-js/react';
 import { createContext, useContext, useEffect } from '@lynx-js/react';
 
 /**
@@ -81,7 +81,10 @@ export interface OpenUIContextValue {
   reportError?: (error: OpenUIError) => void;
 }
 
-export const OpenUIContext = createContext<OpenUIContextValue | null>(null);
+/** Runtime context for the nearest OpenUI renderer. */
+export const OpenUIContext: Context<OpenUIContextValue | null> = createContext<
+  OpenUIContextValue | null
+>(null);
 
 /**
  * Access the full OpenUI context. Throws if used outside an
@@ -157,7 +160,10 @@ export function useSetFieldValue() {
 
 // ─── FormName context ───
 
-export const FormNameContext = createContext<string | undefined>(undefined);
+/** Name of the nearest enclosing OpenUI form. */
+export const FormNameContext: Context<string | undefined> = createContext<
+  string | undefined
+>(undefined);
 
 /**
  * Get the current form name (set by the nearest parent Form component).

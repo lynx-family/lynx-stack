@@ -1,5 +1,23 @@
 # @lynx-js/css-extract-webpack-plugin
 
+## 0.11.1
+
+### Patch Changes
+
+- Fix `Conflict: Multiple assets emit different content to the same filename` on a CSS hot-update file shared by several lazy bundles in development, caused by the per-template `debugMetadataUrl` leaking into it. ([#4105](https://github.com/lynx-family/lynx-stack/pull/4105))
+
+## 0.11.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Emit the intermediate files into `.lynx` instead of `.rspeedy`, since the directory is written by the Lynx build engine rather than by Rspeedy. The directory is no longer configurable: `output.distPath.intermediate` was documented as never read, and nothing else reads it now either. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+## 0.10.1
+
+### Patch Changes
+
+- Allow the next minor of `@lynx-js/template-webpack-plugin` as a peer dependency. ([#3362](https://github.com/lynx-family/lynx-stack/pull/3362))
+
 ## 0.10.0
 
 ### Minor Changes

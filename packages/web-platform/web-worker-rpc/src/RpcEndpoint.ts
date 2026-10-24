@@ -60,14 +60,13 @@ export interface RpcEndpointBase<
   readonly _TypeReturn: Return;
   /**
    * @public
-   * if this endpoint has return value.
-   * Only valid for sync endpoints.
-   * Always true for async endpoints.
+   * Whether the endpoint returns a value.
+   * Only used by async endpoints; sync endpoints return a value when `bufferSize` is set.
    */
   readonly hasReturn: HasReturn;
   /**
    * @public
-   * the call is a async call or not
+   * Whether the call is synchronous (blocks via `Atomics.wait`).
    */
   readonly isSync: IsSync;
   /**

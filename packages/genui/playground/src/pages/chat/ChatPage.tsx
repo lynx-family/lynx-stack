@@ -3,8 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
 import { ChatController } from './ChatController.js';
+import { HTML_CHAT_ADAPTER } from './html.js';
+import { LYNX_XML_CHAT_ADAPTER } from './lynx-xml.js';
 import { MCP_APPS_CHAT_ADAPTER } from './mcp-apps.js';
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
+import { REACTLYNX_CHAT_ADAPTER } from './reactlynx.js';
+import { REACTWEB_CHAT_ADAPTER } from './reactweb.js';
 import type { Protocol } from '../../utils/protocol.js';
 
 export interface ChatPageProps {
@@ -13,6 +17,42 @@ export interface ChatPageProps {
 }
 
 export function ChatPage(props: ChatPageProps) {
+  if (props.protocol.name === 'reactweb') {
+    return (
+      <ChatController
+        key='reactweb'
+        {...props}
+        adapter={REACTWEB_CHAT_ADAPTER}
+      />
+    );
+  }
+  if (props.protocol.name === 'reactlynx') {
+    return (
+      <ChatController
+        key='reactlynx'
+        {...props}
+        adapter={REACTLYNX_CHAT_ADAPTER}
+      />
+    );
+  }
+  if (props.protocol.name === 'html') {
+    return (
+      <ChatController
+        key='html'
+        {...props}
+        adapter={HTML_CHAT_ADAPTER}
+      />
+    );
+  }
+  if (props.protocol.name === 'lynx-xml') {
+    return (
+      <ChatController
+        key='lynx-xml'
+        {...props}
+        adapter={LYNX_XML_CHAT_ADAPTER}
+      />
+    );
+  }
   if (props.protocol.name === 'mcp-apps') {
     return (
       <ChatController

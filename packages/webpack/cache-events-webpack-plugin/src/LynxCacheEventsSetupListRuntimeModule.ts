@@ -83,7 +83,7 @@ export function createLynxCacheEventsSetupListRuntimeModule(
           `{
       name: 'ttMethod',
       setup: () => {
-        const tt = lynxCoreInject.tt;
+        const tt = lynx.getApp();
         const methodsToMock = [
           'OnLifecycleEvent',
           'publishEvent',
@@ -133,7 +133,7 @@ export function createLynxCacheEventsSetupListRuntimeModule(
           `{
       name: 'performanceEvent',
       setup: () => {
-          const tt = lynxCoreInject.tt;
+          const tt = lynx.getApp();
           const lynxPerformanceListenerKeys = {
             onPerformance: 'lynx.performance.onPerformanceEvent',
             onSetup: 'lynx.performance.timing.onSetup',

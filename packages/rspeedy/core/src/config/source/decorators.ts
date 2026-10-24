@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * {@inheritdoc Source.decorators}
+ * {@inheritDoc Source.decorators}
  *
  * @public
  */

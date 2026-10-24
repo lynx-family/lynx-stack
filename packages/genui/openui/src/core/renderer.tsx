@@ -32,6 +32,7 @@ import type { ReactNode } from '@lynx-js/react';
 
 import { OpenUIContext, useOpenUI, useRenderNode } from './context.jsx';
 import { useOpenUIState } from './hooks/useOpenUIState.js';
+import type { InitialQueryResults } from './hooks/useOpenUIState.js';
 import type { ComponentRenderer, Library, RenderOutput } from './library.jsx';
 import { keyFrom } from './utils.js';
 import type { LegacyActionConfig } from '../catalog/Action/index.jsx';
@@ -50,11 +51,26 @@ export type ToolProviderInput =
  * actions, and query execution.
  */
 export interface OpenUiRendererRuntimeProps {
-  /** Raw openui-lang response text. This enables v0.5 runtime features. */
+  /**
+   * Full accumulated OpenUI Lang text, or null to clear the rendered output.
+   * Append model deltas before passing this prop; completed statements are
+   * cached by the renderer's incremental parser. Replacing text resets parsing.
+   * Clearing text does not reset form state; use a new key for a fresh session.
+   * @example
+   * ```tsx
+   * <OpenUiRenderer response={accumulatedText} isStreaming={isGenerating} library={library} />
+   * ```
+   */
   response: string | null;
   /** Component library from createOpenUiLibrary(). */
   library: Library;
-  /** Whether the LLM is still streaming; disables interactions while true. */
+  /**
+   * Whether model generation is active. Partial output renders while Query
+   * execution, mutation registration, and built-in interactions wait.
+   * Set false only after successful completion, even if response is unchanged.
+   * On failure or cancellation, clear response instead of completing partial text.
+   * @defaultValue false
+   */
   isStreaming?: boolean;
   /** Callback when a component triggers a host action. */
   onAction?: (event: ActionEvent) => void;
@@ -62,6 +78,11 @@ export interface OpenUiRendererRuntimeProps {
   onStateUpdate?: (state: Record<string, unknown>) => void;
   /** Initial persisted state. $-prefixed keys hydrate reactive bindings. */
   initialState?: Record<string, unknown>;
+  /**
+   * Prefetched Query results keyed by Query assignment name (statement ID).
+   * Results render synchronously, then an optional toolProvider revalidates.
+   */
+  initialQueryResults?: InitialQueryResults;
   /** Called whenever the raw parse result changes. */
   onParseResult?: (result: ParseResult | null) => void;
   /** Tool provider for Query()/Mutation(): function map or MCP client. */
@@ -156,11 +177,15 @@ function renderDeep(value: unknown): ReactNode {
   }
 
   if (Array.isArray(value)) {
-    return value.map((v, i) => (
-      <Fragment key={keyFrom(v, i)}>
-        {renderDeep(v)}
-      </Fragment>
-    ));
+    const occurrences = new Map<string, number>();
+    return value.map((v, i) => {
+      const identity = keyFrom(v, i);
+      const occurrence = occurrences.get(identity) ?? 0;
+      occurrences.set(identity, occurrence + 1);
+      return (
+        <Fragment key={`${identity}:${occurrence}`}>{renderDeep(v)}</Fragment>
+      );
+    });
   }
 
   if (isElementNode(value)) {
@@ -226,6 +251,7 @@ function RuntimeOpenUiRenderer(
     onAction,
     onStateUpdate,
     initialState,
+    initialQueryResults,
     onParseResult,
     toolProvider,
     queryLoader,
@@ -278,6 +304,7 @@ function RuntimeOpenUiRenderer(
     ...(onAction ? { onAction } : {}),
     ...(onStateUpdate ? { onStateUpdate } : {}),
     ...(initialState ? { initialState } : {}),
+    ...(initialQueryResults ? { initialQueryResults } : {}),
     ...(onError ? { onError } : {}),
   };
 
@@ -498,9 +525,7 @@ function ParsedOpenUiRenderer(
   );
 }
 
-/**
- * Render OpenUI language output using a ReactLynx component library.
- */
+/** Render OpenUI language output using a ReactLynx component library. */
 export function OpenUiRenderer(props: OpenUiRendererProps) {
   if ('response' in props) {
     return <RuntimeOpenUiRenderer {...props} />;

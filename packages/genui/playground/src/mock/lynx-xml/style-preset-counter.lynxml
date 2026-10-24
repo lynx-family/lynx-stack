@@ -1,0 +1,143 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<template>
+  <scroll-view class="flex flex-col w-full h-screen py-7 px-6 canvas" scroll-orientation="vertical">
+    <text class="text-muted text-tiny font-bold eyebrow">MAKE A LITTLE PROGRESS</text>
+    <text class="mt-3 ink font-bold title">Daily counter</text>
+    <text class="text-sm whitespace-normal text-muted description">Small steps add up. Set your own pace.</text>
+    <view class="flex flex-col items-center shrink-0 mt-7 py-7 px-4 rounded-3xl bg-white">
+      <text class="text-muted text-tiny font-bold value-label">TODAY'S TOTAL</text>
+      <text id="count" class="mt-2 ink font-bold value">8</text>
+      <text id="note" class="mt-2 text-muted text-xs whitespace-normal text-center">Keep the momentum going</text>
+    </view>
+    <view class="flex flex-row shrink-0 gap-3 mt-5">
+      <view class="flex flex-col items-center justify-center flex-1 py-5 px-3 stat">
+        <text class="text-3xl ink">12</text>
+        <text class="mt-2 text-muted text-xs whitespace-normal text-center">Daily goal</text>
+      </view>
+      <view class="flex flex-col items-center justify-center flex-1 py-5 px-3 stat highlight">
+        <text id="remaining" class="text-3xl ink">4</text>
+        <text class="mt-2 text-muted text-xs whitespace-normal text-center">Steps to go</text>
+      </view>
+    </view>
+    <view class="flex flex-row shrink-0 gap-3 mt-4">
+      <view id="decrement" class="flex flex-col items-center justify-center flex-1 rounded-2xl step-button">
+        <text class="ink step-button-text">−</text>
+      </view>
+      <view id="increment" class="flex flex-col items-center justify-center flex-1 rounded-2xl step-button highlight">
+        <text class="ink step-button-text">+</text>
+      </view>
+    </view>
+    <view id="reset" class="flex flex-col items-center justify-center shrink-0 min-h-12 mt-2">
+      <text class="text-sm font-bold reset-button-text">Start over</text>
+    </view>
+  </scroll-view>
+</template>
+<style>
+.canvas {
+  background-color: #f3f0e8;
+}
+.ink {
+  color: #233c32;
+}
+.text-muted {
+  color: #687367;
+}
+.text-tiny {
+  font-size: 10px;
+}
+.eyebrow {
+  letter-spacing: 1.5px;
+}
+.title {
+  font-size: 34px;
+}
+.description {
+  margin-top: 10px;
+  line-height: 22px;
+}
+.value-label {
+  letter-spacing: 1px;
+}
+.value {
+  font-size: 80px;
+  line-height: 96px;
+}
+.stat {
+  border-radius: 18px;
+  background-color: #e0e6dd;
+}
+.step-button {
+  height: 52px;
+  background-color: #e0e6dd;
+}
+.step-button-text {
+  font-size: 28px;
+}
+.reset-button-text {
+  color: #526453;
+}
+.highlight {
+  background-color: #c2de83;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const tapOptions = {};
+let count = 8;
+let nodes;
+
+function replaceText(node, value) {
+  __ReplaceElements(node, [__CreateRawText(value)], __GetChildren(node));
+}
+
+function updateCounter() {
+  replaceText(nodes.count, String(count));
+  replaceText(nodes.remaining, String(Math.max(0, 12 - count)));
+  replaceText(nodes.note, count >= 12 ? "Daily goal reached!" : "Keep the momentum going");
+}
+
+function increment() {
+  count += 1;
+  updateCounter();
+  __FlushElementTree();
+}
+
+function decrement() {
+  count = Math.max(0, count - 1);
+  updateCounter();
+  __FlushElementTree();
+}
+
+function reset() {
+  count = 0;
+  updateCounter();
+  __FlushElementTree();
+}
+
+function renderPage() {
+  if (nodes) return;
+  const page = __CreatePage("0", 0);
+  const pageId = __GetElementUniqueID(page);
+  nodes = createFragment(page, pageId);
+  __AddEventListener(nodes.increment, "tap", increment, tapOptions);
+  __AddEventListener(nodes.decrement, "tap", decrement, tapOptions);
+  __AddEventListener(nodes.reset, "tap", reset, tapOptions);
+  updateCounter();
+}
+
+function cleanup() {
+  if (nodes) {
+    __RemoveEventListener(nodes.increment, "tap", increment, tapOptions);
+    __RemoveEventListener(nodes.decrement, "tap", decrement, tapOptions);
+    __RemoveEventListener(nodes.reset, "tap", reset, tapOptions);
+  }
+  nodes = undefined;
+  engine.removeEventListener("__RenderPage", renderPage);
+  engine.removeEventListener("__DestroyLifetime", cleanup);
+}
+
+engine.addEventListener("__RenderPage", renderPage);
+engine.addEventListener("__DestroyLifetime", cleanup);
+</script>
+</lynx>

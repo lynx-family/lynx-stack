@@ -1,0 +1,40 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "//#build",
+        "^build"
+      ],
+      "env": [
+        "NODE_ENV"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../packages/**/{docs/**,package.json,README.md,typedoc.json,tsdoc.json,tsconfig*.json}",
+        "!../packages/**/node_modules/**"
+      ],
+      "outputs": [
+        "doc_build/**",
+        "content/*/api/**",
+        "content/*/_nav.json",
+        "manifest.json",
+        "i18n/**"
+      ]
+    },
+    "dev": {
+      "dependsOn": [
+        "//#build",
+        "^build"
+      ],
+      "env": [
+        "NODE_ENV"
+      ],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

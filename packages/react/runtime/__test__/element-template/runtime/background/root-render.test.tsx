@@ -1,18 +1,36 @@
+import { options } from 'preact';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
-import { installElementTemplateRenderScopeHooks } from '../../../../src/element-template/background/render-scope.js';
+import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
+import {
+  BackgroundElementTemplateInstance,
+  BackgroundPageRootInstance,
+} from '../../../../src/element-template/background/instance.js';
+import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
+import {
+  installElementTemplateRenderScopeHooks,
+  isElementTemplateRendering,
+} from '../../../../src/element-template/background/render-scope.js';
 import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
-import { root } from '../../../../src/element-template/index.js';
+import { root, useEffect, useState } from '../../../../src/element-template/index.js';
 import { clearRefState, flushPendingRefs } from '../../../../src/element-template/prop-adapters/ref.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
+import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page.js';
 import {
   __etAttrPlanMap,
   adaptRefAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
+
+function waitSchedule(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      setTimeout(resolve);
+    });
+  });
+}
 
 describe('ElementTemplate root render timing', () => {
   const envManager = new ElementTemplateEnvManager();
@@ -44,11 +62,188 @@ describe('ElementTemplate root render timing', () => {
     expect(performance.profileEnd).toHaveBeenCalled();
   });
 
+  it('flushes passive effects and ordinary unmount cleanup without waiting for a frame', async () => {
+    const calls: string[] = [];
+    function App() {
+      useEffect(() => {
+        calls.push('effect');
+        return () => {
+          calls.push('cleanup');
+        };
+      }, []);
+      return null;
+    }
+
+    root.render(<App />);
+    expect(calls).toEqual([]);
+
+    // Only drain microtasks: act() replaces Preact's scheduler, and the existing
+    // waitSchedule() also waits for frames and timers, hiding this regression.
+    await Promise.resolve();
+    expect(calls).toEqual(['effect']);
+
+    root.render(null);
+    expect(calls).toEqual(['effect']);
+
+    await Promise.resolve();
+    expect(calls).toEqual(['effect', 'cleanup']);
+  });
+
+  it('flushes passive cleanup synchronously on background destroy', async () => {
+    const effect = vi.fn();
+    const cleanup = vi.fn();
+    function App() {
+      useEffect(() => {
+        effect();
+        return cleanup;
+      }, []);
+      return null;
+    }
+
+    root.render(<App />);
+    await Promise.resolve();
+    expect(effect).toHaveBeenCalledTimes(1);
+    expect(cleanup).not.toHaveBeenCalled();
+
+    const scheduler = options.requestAnimationFrame;
+    callDestroyLifetimeFun();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(options.requestAnimationFrame).toBe(scheduler);
+
+    await Promise.resolve();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps render scope hook installation idempotent', () => {
     expect(() => {
       installElementTemplateRenderScopeHooks();
       installElementTemplateRenderScopeHooks();
     }).not.toThrow();
+  });
+
+  it('does not emit a page attr update for an initial page without attrs', () => {
+    root.render(
+      <__ElementTemplatePage $0={<view />} />,
+    );
+
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toBeNull();
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:1')).toBeUndefined();
+    expect((__root as BackgroundPageRootInstance).getRawAttributeSlot(1)).toBeUndefined();
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('keeps the keyed replacement attrs when the old helper cleanup runs', async () => {
+    let replacePage: (() => void) | undefined;
+    function App() {
+      const [pageId, setPageId] = useState('first');
+      replacePage = () => setPageId('second');
+      return <__ElementTemplatePage key={pageId} attributes={{ id: pageId }} $0={<view />} />;
+    }
+
+    root.render(<App />);
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toEqual({
+      id: 'first',
+    });
+
+    await waitSchedule();
+    replacePage?.();
+    await waitSchedule();
+
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toEqual({
+      id: 'second',
+    });
+  });
+
+  it('updates authored page attrs through real background renders', async () => {
+    let setPageId: ((value: string) => void) | undefined;
+
+    function App() {
+      const [pageId, setId] = useState('first');
+      setPageId = setId;
+      return <__ElementTemplatePage attributes={{ id: pageId }} $0={<view />} />;
+    }
+
+    root.render(<App />);
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toEqual({
+      id: 'first',
+    });
+
+    setPageId?.('second');
+    await waitSchedule();
+
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toEqual({
+      id: 'second',
+    });
+  });
+
+  it('preserves authored page attrs through descendant-only updates', async () => {
+    let updateChild: (() => void) | undefined;
+
+    function Child() {
+      const [count, setCount] = useState(0);
+      updateChild = () => setCount(value => value + 1);
+      return <view data-count={count} />;
+    }
+
+    function App() {
+      return <__ElementTemplatePage attributes={{ id: 'stable' }} $0={<Child />} />;
+    }
+
+    root.render(<App />);
+    const pageAttributes = backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0');
+
+    updateChild?.();
+    await waitSchedule();
+
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toBe(pageAttributes);
+  });
+
+  it('clears authored page attrs after the page is removed', async () => {
+    let hidePage: (() => void) | undefined;
+
+    function App() {
+      const [withPage, setWithPage] = useState(true);
+      hidePage = () => setWithPage(false);
+      return withPage
+        ? <__ElementTemplatePage attributes={{ id: 'temporary' }} $0={<view />} />
+        : <view />;
+    }
+
+    root.render(<App />);
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toEqual({
+      id: 'temporary',
+    });
+
+    await waitSchedule();
+    hidePage?.();
+    await waitSchedule();
+
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toBeNull();
+  });
+
+  it('clears authored page state on background destroy', async () => {
+    root.render(
+      <__ElementTemplatePage attributes={{ id: 'destroyed' }} $0={<view />} />,
+    );
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toEqual({
+      id: 'destroyed',
+    });
+
+    await waitSchedule();
+    callDestroyLifetimeFun();
+
+    expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0')).toBeNull();
+  });
+
+  it('resets the render-in-progress flag when a render never commits', async () => {
+    installElementTemplateRenderScopeHooks();
+    const { options: preactOptions } = await import('preact');
+    // Fire the renderComponent hook without a following commit (a render that
+    // throws or suspends): the generation microtask must clear the flag.
+    preactOptions!['renderComponent']!(<view />, null);
+    expect(isElementTemplateRendering()).toBe(true);
+    await Promise.resolve();
+    expect(isElementTemplateRendering()).toBe(false);
   });
 
   it('cleans direct refs through root unmount on background destroy', () => {

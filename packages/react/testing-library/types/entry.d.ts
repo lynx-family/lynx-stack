@@ -142,7 +142,7 @@ export interface RenderOptions<Q extends Queries = typeof queries> {
 export type RenderResult<Q extends Queries = typeof queries> = {
   container: LynxElement;
   rerender: (ui: React.ReactNode) => void;
-  unmount: () => boolean;
+  unmount: () => void;
   asFragment: () => DocumentFragment;
 } & { [P in keyof Q]: BoundFunction<Q[P]> };
 
@@ -178,7 +178,7 @@ export type RenderResult<Q extends Queries = typeof queries> = {
  *
  * @public
  */
-export function render<Q extends Queries>(
+export function render<Q extends Queries = typeof queries>(
   ui: React.ReactNode,
   options?: RenderOptions<Q>,
 ): RenderResult<Q>;
@@ -257,7 +257,7 @@ export interface RenderHookOptions<Props> {
    * export * from '@lynx-js/react/testing-library'
    *
    * // override renderHook method
-   * export { customRender as renderHook }
+   * export { customRenderHook as renderHook }
    * ```
    */
   wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }> | undefined;

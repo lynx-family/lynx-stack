@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getReloadVersion } from '../../../src/core/reload-version.js';
+import { MainThreadRef, clearMainThreadRefLastIdForTesting } from '../../../src/core/main-thread-ref.js';
+import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value.js';
+import { clearMtsConfigCacheForTesting } from '../../../src/core/mts-capability.js';
 import {
   globalCommitContext,
   markRemovedSubtreeForPostDispatchTeardown,
@@ -14,7 +17,7 @@ import { BackgroundElementTemplateInstance } from '../../../src/element-template
 import { backgroundElementTemplateInstanceManager } from '../../../src/element-template/background/manager.js';
 import { ElementTemplateLifecycleConstant } from '../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../src/element-template/protocol/opcodes.js';
-import type { SerializedElementTemplate } from '../../../src/element-template/protocol/types.js';
+import type { SerializedCompiledNode } from '../../../src/element-template/protocol/types.js';
 import { callDestroyLifetimeFun } from '../../../src/element-template/native/callDestroyLifetimeFun.js';
 import { __root } from '../../../src/element-template/runtime/page/root-instance.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
@@ -26,12 +29,16 @@ describe('callDestroyLifetimeFun', () => {
     vi.clearAllMocks();
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
+    clearMainThreadRefLastIdForTesting();
+    clearMtsConfigCacheForTesting();
+    takeMainThreadRefInitValuePatch();
     envManager.resetEnv('background');
   });
 
   afterEach(() => {
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
+    takeMainThreadRefInitValuePatch();
   });
 
   it('destroys background runtime state', () => {
@@ -50,9 +57,17 @@ describe('callDestroyLifetimeFun', () => {
 
     callDestroyLifetimeFun();
 
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
     expect(globalCommitContext.ops).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.values.size).toBe(0);
+  });
+
+  it('discards pending MainThreadRef init values on full-lifetime destroy', () => {
+    new MainThreadRef('stale');
+
+    callDestroyLifetimeFun();
+
+    expect(takeMainThreadRefInitValuePatch()).toEqual([]);
   });
 
   it('removes the hydration listener without processing later hydrate payloads', () => {
@@ -68,14 +83,19 @@ describe('callDestroyLifetimeFun', () => {
     lynx.getJSContext().dispatchEvent({
       type: ElementTemplateLifecycleConstant.hydrate,
       data: {
-        instances: [
-          {
-            templateKey: '_et_test',
-            attributeSlots: [],
-            elementSlots: [],
-            uid: -1,
-          } satisfies SerializedElementTemplate,
-        ],
+        page: {
+          tag: 'page',
+          attributes: null,
+          childSlots: [[
+            {
+              templateKey: '_et_test',
+              attributeSlots: [],
+              childSlots: [],
+              uid: -1,
+            } satisfies SerializedCompiledNode,
+          ]],
+          uid: 0,
+        },
         reloadVersion: getReloadVersion(),
       },
     });

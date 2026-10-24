@@ -1,0 +1,36 @@
+.NamedCard {
+  width: 82vw;
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background-color: rgba(10, 13, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 3px solid #ef9bff;
+}
+
+.NamedCard__badge {
+  align-self: flex-start;
+  padding: 3px 10px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background-color: rgba(239, 155, 255, 0.16);
+  border: 1px solid rgba(239, 155, 255, 0.45);
+}
+
+.NamedCard__badgeText {
+  font-size: 11px;
+  color: #efc0ff;
+}
+
+.NamedCard__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.NamedCard__hint {
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(255, 255, 255, 0.88);
+}

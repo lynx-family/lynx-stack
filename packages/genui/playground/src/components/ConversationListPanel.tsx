@@ -4,7 +4,9 @@
 import { useRef, useState } from 'react';
 
 import { Button } from './Button.js';
-import { MessageSquarePlus, Pencil, Share2, Trash2 } from './Icon.js';
+import { HistoryItemMenu } from './HistoryItemMenu.js';
+import { HistoryRailShell } from './HistoryRailShell.js';
+import { Pencil, Share2, Trash2 } from './Icon.js';
 import type { ConversationMeta } from '../storage/types.js';
 
 interface ConversationListPanelProps {
@@ -13,6 +15,7 @@ interface ConversationListPanelProps {
   disabled?: boolean;
   isPersistent: boolean;
   onCreate: () => void;
+  onClear?: () => void;
   onSwitch: (id: string) => void;
   onShare: (id: string) => void;
   onRename: (id: string, title: string) => void;
@@ -67,118 +70,120 @@ export function ConversationListPanel(props: ConversationListPanelProps) {
   };
 
   return (
-    <aside className='conversationPanel'>
-      <div className='conversationPanelHeader'>
-        <Button
-          variant='secondary'
-          size='lg'
-          fullWidth
-          responsiveIconOnly
-          iconBefore={MessageSquarePlus}
-          disabled={disabled}
-          aria-label='New Chat'
-          onClick={onCreate}
+    <HistoryRailShell
+      className='conversationPanel'
+      ariaLabel='Conversation history'
+      createLabel='New Chat'
+      count={conversations.length}
+      disabled={disabled}
+      listClassName='conversationList'
+      onCreate={onCreate}
+      footer={
+        <button
+          type='button'
+          className='historyRailClear conversationHistoryClear'
+          disabled={disabled || conversations.length === 0 || !props.onClear}
+          onClick={() => props.onClear?.()}
         >
-          New Chat
-        </Button>
-      </div>
-
-      <div className='conversationList'>
-        {conversations.map((conversation) => {
-          const active = conversation.id === activeId;
-          const editing = conversation.id === editingId;
-          return (
-            <div
-              key={conversation.id}
-              className={active
-                ? 'conversationListItem conversationListItem-active'
-                : 'conversationListItem'}
-            >
-              {editing
-                ? (
-                  <div className='conversationListItemMain'>
-                    <input
-                      className='conversationRenameInput'
-                      value={draftTitle}
-                      autoFocus
-                      onChange={(e) => setDraftTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          cancelRenameRef.current = true;
-                          commitEdit();
-                        }
-                        if (e.key === 'Escape') {
-                          cancelRenameRef.current = true;
-                          setEditingId(null);
-                        }
-                      }}
-                      onBlur={handleBlur}
-                    />
-                  </div>
-                )
-                : (
-                  <button
-                    type='button'
-                    className='conversationListItemMain'
-                    disabled={disabled}
-                    onClick={() => onSwitch(conversation.id)}
-                  >
-                    <>
-                      <span className='conversationListItemTitle'>
-                        {conversation.title}
-                      </span>
-                      <span className='conversationListItemMeta'>
-                        {formatTime(conversation.updatedAt)}
-                        {conversation.messageCount > 0
-                          ? ` · ${conversation.messageCount}`
-                          : ''}
-                      </span>
-                      {conversation.previewText
-                        ? (
-                          <span className='conversationListItemPreview'>
-                            {conversation.previewText}
-                          </span>
-                        )
-                        : null}
-                    </>
-                  </button>
-                )}
-              <div className='conversationListItemActions'>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  iconOnly
-                  iconBefore={Share2}
-                  disabled={disabled || editing}
-                  title='Copy conversation link'
-                  aria-label='Share conversation'
-                  onClick={() => onShare(conversation.id)}
-                />
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  iconOnly
-                  iconBefore={Pencil}
-                  disabled={disabled || editing}
-                  title='Rename'
-                  aria-label='Rename conversation'
-                  onClick={() => beginEdit(conversation)}
-                />
-                <Button
-                  variant='danger'
-                  size='sm'
-                  iconOnly
-                  iconBefore={Trash2}
-                  disabled={disabled || conversations.length <= 1}
-                  title='Delete'
-                  aria-label='Delete conversation'
-                  onClick={() => onRemove(conversation.id)}
-                />
-              </div>
+          Clear history
+        </button>
+      }
+      empty={<div className='conversationListEmpty'>No conversations yet</div>}
+    >
+      {conversations.map((conversation) => {
+        const active = conversation.id === activeId;
+        const editing = conversation.id === editingId;
+        return (
+          <div
+            key={conversation.id}
+            className={active
+              ? 'conversationListItem conversationListItem-active'
+              : 'conversationListItem'}
+          >
+            {editing
+              ? (
+                <div className='conversationListItemMain'>
+                  <input
+                    className='conversationRenameInput'
+                    value={draftTitle}
+                    autoFocus
+                    onChange={(e) => setDraftTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        cancelRenameRef.current = true;
+                        commitEdit();
+                      }
+                      if (e.key === 'Escape') {
+                        cancelRenameRef.current = true;
+                        setEditingId(null);
+                      }
+                    }}
+                    onBlur={handleBlur}
+                  />
+                </div>
+              )
+              : (
+                <button
+                  type='button'
+                  className='conversationListItemMain'
+                  disabled={disabled}
+                  onClick={() => onSwitch(conversation.id)}
+                >
+                  <>
+                    <span className='conversationListItemTitle'>
+                      {conversation.title}
+                    </span>
+                    <span className='conversationListItemMeta'>
+                      {formatTime(conversation.updatedAt)}
+                      {conversation.messageCount > 0
+                        ? ` · ${conversation.messageCount}`
+                        : ''}
+                    </span>
+                    {conversation.previewText
+                      ? (
+                        <span className='conversationListItemPreview'>
+                          {conversation.previewText}
+                        </span>
+                      )
+                      : null}
+                  </>
+                </button>
+              )}
+            <div className='conversationListItemActions'>
+              <Button
+                variant='ghost'
+                size='sm'
+                iconOnly
+                iconBefore={Share2}
+                disabled={disabled || editing}
+                title='Copy conversation link'
+                aria-label={`Share conversation ${conversation.title}`}
+                onClick={() => onShare(conversation.id)}
+              />
+              <HistoryItemMenu
+                title={conversation.title}
+                disabled={disabled || editing}
+                actions={[
+                  {
+                    label: 'Rename',
+                    ariaLabel: 'Rename conversation',
+                    icon: Pencil,
+                    onSelect: () => beginEdit(conversation),
+                  },
+                  {
+                    label: 'Delete',
+                    ariaLabel: 'Delete conversation',
+                    icon: Trash2,
+                    danger: true,
+                    disabled: conversations.length <= 1,
+                    onSelect: () => onRemove(conversation.id),
+                  },
+                ]}
+              />
             </div>
-          );
-        })}
-      </div>
-    </aside>
+          </div>
+        );
+      })}
+    </HistoryRailShell>
   );
 }

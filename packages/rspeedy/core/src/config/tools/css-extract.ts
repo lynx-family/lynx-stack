@@ -3,20 +3,20 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * {@inheritdoc Tools.cssExtract}
+ * {@inheritDoc Tools.cssExtract}
  *
  * @public
  */
 export interface CssExtract {
   /**
-   * {@inheritdoc @lynx-js/css-extract-webpack-plugin#LoaderOptions}
+   * {@inheritDoc @lynx-js/css-extract-webpack-plugin#LoaderOptions}
    *
    * @defaultValue undefined
    */
   loaderOptions?: CssExtractRspackLoaderOptions | undefined
 
   /**
-   * {@inheritdoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions}
+   * {@inheritDoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions}
    *
    * @defaultValue undefined
    */
@@ -24,7 +24,7 @@ export interface CssExtract {
 }
 
 /**
- * {@inheritdoc @lynx-js/css-extract-webpack-plugin#LoaderOptions}
+ * {@inheritDoc @lynx-js/css-extract-webpack-plugin#LoaderOptions}
  *
  * @public
  */
@@ -69,20 +69,20 @@ export interface CssExtractRspackLoaderOptions {
 }
 
 /**
- * {@inheritdoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions}
+ * {@inheritDoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions}
  *
  * @public
  */
 export interface CssExtractRspackPluginOptions {
   /**
-   * {@inheritdoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.ignoreOrder}
+   * Whether to ignore warnings about conflicting order of CSS modules.
    *
    * @defaultValue undefined
    */
   ignoreOrder?: boolean | undefined
 
   /**
-   * {@inheritdoc @lynx-js/css-extract-webpack-plugin#CssExtractRspackPluginOptions.pathinfo}
+   * Whether to include comments with the module path in the output CSS.
    *
    * @defaultValue undefined
    */

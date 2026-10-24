@@ -15,6 +15,8 @@ import { getCloneSnapshotInfo, getCloneSnapshotType, isCompiledSnapshot } from '
  * The call signature of ReactLynx `createElement`.
  *
  * @public
+ *
+ * @group Types
  */
 export interface CreateElement {
   /** Creates an element for a Lynx intrinsic element. */
@@ -35,6 +37,8 @@ export interface CreateElement {
  * The call signature of ReactLynx `cloneElement`.
  *
  * @public
+ *
+ * @group Types
  */
 export interface CloneElement {
   /** Clones an element with optional replacement props and children. */
@@ -107,7 +111,10 @@ function pickChildrenProps(
 /**
  * Creates a ReactLynx element using the snapshot runtime.
  *
+ * @function
  * @public
+ *
+ * @group Functions
  */
 export const createElement =
   (function(type: CreateElementParams[0], props: CreateElementParams[1], ...rest: CreateElementParams[2][]) {
@@ -143,7 +150,10 @@ export const createElement =
 /**
  * Clones a ReactLynx element using the snapshot runtime.
  *
+ * @function
  * @public
+ *
+ * @group Functions
  */
 export const cloneElement =
   (function(vnode: CloneElementParams[0], props: CloneElementParams[1], ...rest: CloneElementParams[2][]) {

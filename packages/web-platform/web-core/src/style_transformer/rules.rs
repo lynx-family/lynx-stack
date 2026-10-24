@@ -20,6 +20,8 @@ lazy_static::lazy_static! {
       (CSSPropertyEnum::ListMainAxisGap.into(), "--list-main-axis-gap"),
       (CSSPropertyEnum::ListCrossAxisGap.into(), "--list-cross-axis-gap"),
       (CSSPropertyEnum::Flex.into(), "--flex"),
+      (CSSPropertyEnum::TextStrokeWidth.into(), "-webkit-text-stroke-width"),
+      (CSSPropertyEnum::TextStrokeColor.into(), "-webkit-text-stroke-color"),
     ])
   };
 

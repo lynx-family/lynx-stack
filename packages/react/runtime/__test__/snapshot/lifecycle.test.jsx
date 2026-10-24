@@ -5,11 +5,19 @@ import { useEffect, useLayoutEffect, useState } from '../../src/index';
 import { globalEnvManager } from './utils/envManager';
 import { waitSchedule } from './utils/nativeMethod';
 import { globalCommitTaskMap, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
-import { deinitGlobalSnapshotPatch, initGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
+import {
+  __globalSnapshotPatch,
+  deinitGlobalSnapshotPatch,
+  initGlobalSnapshotPatch,
+} from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../../src/snapshot/lifecycle/constant';
 import { CATCH_ERROR } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
 import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { onFunctionCall, resetFunctionCallReturnListener } from '../../src/core/thread-function-call/return-value.js';
+import { getReloadVersion } from '../../src/core/reload-version.js';
+import { reloadBackground } from '../../src/snapshot/lifecycle/reload.js';
+import { WorkletEvents } from '../../src/worklet-runtime/bindings/events.js';
 
 beforeAll(() => {
   setupPage(__CreatePage('0', 0));
@@ -367,7 +375,7 @@ describe('componentWillUnmount', () => {
 
     expect(willUnmount).toHaveBeenCalledTimes(1);
 
-    lynxCoreInject.tt.callDestroyLifetimeFun();
+    lynx.getApp().callDestroyLifetimeFun();
     expect(willUnmount).toHaveBeenCalledTimes(2);
   });
 });
@@ -470,7 +478,7 @@ describe('useState', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange
@@ -531,7 +539,7 @@ describe('useState', () => {
     // hydrate
     {
       // LifecycleConstant.firstScreen
-      lynxCoreInject.tt.OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
       globalThis.__OnLifecycleEvent.mockClear();
 
       // rLynxChange
@@ -672,4 +680,56 @@ describe('componentDidUpdate', () => {
     expect(callback).nthCalledWith(1, 1);
     expect(callback).nthCalledWith(2, 2);
   });
+});
+
+it.each(['page close', 'reload'])('cleans Snapshot patches and return listeners on %s', (boundary) => {
+  globalEnvManager.switchToBackground();
+  const context = lynx.getCoreContext();
+  const addListener = vi.spyOn(context, 'addEventListener').mockClear();
+  const removeListener = vi.spyOn(context, 'removeEventListener').mockClear();
+  const oldResolve = vi.fn();
+  let patchDuringUnmount = null;
+  const unmount = vi.fn(() => {
+    patchDuringUnmount = __globalSnapshotPatch;
+    // Cleanup can itself create a pending cross-thread call.
+    onFunctionCall(oldResolve);
+  });
+  class Comp extends Component {
+    componentWillUnmount() {
+      unmount();
+    }
+
+    render() {
+      return null;
+    }
+  }
+
+  try {
+    __root.__jsx = <Comp />;
+    render(__root.__jsx, __root);
+    initGlobalSnapshotPatch();
+    __globalSnapshotPatch.push('pending patch');
+    onFunctionCall(oldResolve);
+
+    if (boundary === 'page close') lynx.getApp().callDestroyLifetimeFun();
+    else reloadBackground({});
+
+    expect(unmount).toHaveBeenCalledOnce();
+    expect.soft(patchDuringUnmount).toBeUndefined();
+    expect.soft(__globalSnapshotPatch).toBeUndefined();
+    for (const [type, listener] of addListener.mock.calls) {
+      if (type === WorkletEvents.FunctionCallRet) {
+        expect.soft(removeListener).toHaveBeenCalledWith(type, listener);
+      }
+    }
+
+    const newResolve = vi.fn();
+    const resolveId = onFunctionCall(newResolve);
+    const listener = addListener.mock.lastCall[1];
+    listener({ data: JSON.stringify({ resolveId, returnValue: 'new result', reloadVersion: getReloadVersion() }) });
+    expect(newResolve).toHaveBeenCalledWith('new result');
+    expect(oldResolve).not.toHaveBeenCalled();
+  } finally {
+    resetFunctionCallReturnListener();
+  }
 });

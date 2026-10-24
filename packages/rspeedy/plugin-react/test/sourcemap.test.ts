@@ -82,7 +82,7 @@ async function buildSourcemapFixture(
                 // add .ts suffix to ignore-css-loader
                 // this workaround is needed because vitest
                 // runs on our ts files.
-                rule.get('loader') as string + '.ts',
+                rule.get('loader')! + '.ts',
               )
             })
           },
@@ -134,7 +134,7 @@ async function getSourceMapFiles(tmp: string) {
   for await (
     const file of glob([
       path.join(tmp, '**/*.map'),
-      // for files inside `.rspeedy`
+      // for files inside `.lynx`
       path.join(tmp, '.*/**/*.map'),
     ])
   ) {
@@ -149,14 +149,14 @@ describe('Sourcemap', () => {
     const tmp = await mkdtemp(path.join(tmpdir(), 'rspeedy-react-test'))
     tempDirs.push(tmp)
 
-    await mkdir(path.join(tmp, '.rspeedy/main'), { recursive: true })
+    await mkdir(path.join(tmp, '.lynx/main'), { recursive: true })
     await mkdir(path.join(tmp, 'static/js/async'), { recursive: true })
     await writeFile(path.join(tmp, 'static/js/async/z-last.map'), '')
-    await writeFile(path.join(tmp, '.rspeedy/main/a-first.map'), '')
+    await writeFile(path.join(tmp, '.lynx/main/a-first.map'), '')
     await writeFile(path.join(tmp, 'static/js/async/m-middle.map'), '')
 
     expect(await getSourceMapFiles(tmp)).toEqual([
-      '.rspeedy/main/a-first.map',
+      '.lynx/main/a-first.map',
       'static/js/async/m-middle.map',
       'static/js/async/z-last.map',
     ])
@@ -170,13 +170,13 @@ describe('Sourcemap', () => {
 
     const debugMetadataJson = await Promise.all([
       readFile(
-        path.join(tmp, '.rspeedy/main/debug-metadata.json'),
+        path.join(tmp, '.lynx/main/debug-metadata.json'),
         'utf-8',
       ),
       readFile(
         path.join(
           tmp,
-          '.rspeedy/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/debug-metadata.json',
+          '.lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/debug-metadata.json',
         ),
         'utf-8',
       ),
@@ -193,11 +193,11 @@ describe('Sourcemap', () => {
 
     expect(mapPathsInMetadata).toMatchInlineSnapshot(`
       [
-        ".rspeedy/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/background.js.map",
-        ".rspeedy/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/main-thread.js.map",
-        ".rspeedy/main/background.js.map",
-        ".rspeedy/main/main-thread.js.map",
-        ".rspeedy/main/main.css.map",
+        ".lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/background.js.map",
+        ".lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/main-thread.js.map",
+        ".lynx/main/background.js.map",
+        ".lynx/main/main-thread.js.map",
+        ".lynx/main/main.css.map",
       ]
     `)
   }, 25_000)
@@ -207,16 +207,31 @@ describe('Sourcemap', () => {
     async () => {
       const tmp = await buildSourcemapFixture(undefined)
       const mainThread = await readFile(
-        path.join(tmp, '.rspeedy/main/main-thread.js'),
+        path.join(tmp, '.lynx/main/main-thread.js'),
         'utf-8',
       )
       const background = await readFile(
-        path.join(tmp, '.rspeedy/main/background.js'),
+        path.join(tmp, '.lynx/main/background.js'),
         'utf-8',
       )
+      const lazyMainThreadPath = path.join(
+        tmp,
+        '.lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/main-thread.js',
+      )
+      const [lazyMainThread, lazyMetadata] = await Promise.all([
+        readFile(lazyMainThreadPath, 'utf-8'),
+        readFile(
+          path.join(path.dirname(lazyMainThreadPath), 'debug-metadata.json'),
+          'utf-8',
+        ).then(json => JSON.parse(json) as DebugMetadataAsset),
+      ])
 
       const mtRelease = releaseOf(mainThread)
       const btRelease = releaseOf(background)
+      const lazyMtRelease = releaseOf(lazyMainThread)
+      const lazyMainThreadMap = findSourceMap(lazyMetadata, {
+        filename: 'main-thread.js.map',
+      })!
 
       // `minify: false` keeps the banner var name, so the release is greppable.
       // The release is `debugmetadata:` + a 160-bit sha1 over the chunk's
@@ -228,18 +243,31 @@ describe('Sourcemap', () => {
       expect(btRelease, 'background should declare a release').toMatch(
         /^debugmetadata:[0-9a-f]+$/,
       )
+      expect(
+        lazyMtRelease,
+        'lazy main-thread should declare a release',
+      ).toMatch(/^debugmetadata:[0-9a-f]+$/)
+      expect(lazyMtRelease).toBe(`debugmetadata:${lazyMainThreadMap.key}`)
       // The injected runtime registers the release with the Lynx engine.
       expect(mainThread).toContain('_SetSourceMapRelease')
       expect(background).toContain('_SetSourceMapRelease')
+      expect(lazyMainThread).toContain('_SetSourceMapRelease')
+      expect(lazyMainThread).toContain(
+        '("main-thread",',
+      )
       // The `[name]` placeholder in the runtime must be substituted with each
       // file's own name (engineVersion > 2.13 reports the stack filename, so a
       // literal `[name]` makes reverse-resolution target a non-existent file).
       expect(mainThread).toContain('file://main-thread.js')
       expect(background).toContain('file://background.js')
+      expect(lazyMainThread).toContain('file://main-thread.js')
       expect(mainThread).not.toContain('file://[name].js')
       expect(background).not.toContain('file://[name].js')
+      expect(lazyMainThread).not.toContain('file://[name].js')
       // Per-chunk: main-thread and background carry their own (distinct) hash.
       expect(mtRelease).not.toBe(btRelease)
+      expect(lazyMtRelease).not.toBe(mtRelease)
+      expect(lazyMtRelease).not.toBe(btRelease)
     },
     25_000,
   )
@@ -251,13 +279,13 @@ describe('Sourcemap', () => {
 
       const [mainMetadataJson, asyncMetadataJson] = await Promise.all([
         readFile(
-          path.join(tmp, '.rspeedy/main/debug-metadata.json'),
+          path.join(tmp, '.lynx/main/debug-metadata.json'),
           'utf-8',
         ),
         readFile(
           path.join(
             tmp,
-            '.rspeedy/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/debug-metadata.json',
+            '.lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/debug-metadata.json',
           ),
           'utf-8',
         ),
@@ -273,17 +301,17 @@ describe('Sourcemap', () => {
 
       expect(sourceMapFiles).toMatchInlineSnapshot(`
         [
-          ".rspeedy/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/background.js.map",
-          ".rspeedy/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/main-thread.js.map",
-          ".rspeedy/main/background.js.map",
-          ".rspeedy/main/main-thread.js.map",
-          ".rspeedy/main/main.css.map",
+          ".lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/background.js.map",
+          ".lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/main-thread.js.map",
+          ".lynx/main/background.js.map",
+          ".lynx/main/main-thread.js.map",
+          ".lynx/main/main.css.map",
         ]
       `)
-      expect(sourceMapFiles).toContain('.rspeedy/main/main.css.map')
+      expect(sourceMapFiles).toContain('.lynx/main/main.css.map')
 
       const cssSource = await readFile(
-        path.join(tmp, '.rspeedy/main/main.css'),
+        path.join(tmp, '.lynx/main/main.css'),
         'utf-8',
       )
       const cssSourceMap = findSourceMap(debugMetadata, {
@@ -305,7 +333,7 @@ describe('Sourcemap', () => {
       expect(path.basename(cssSourcePosition.source ?? '')).toBe('index.css')
 
       const backgroundSource = await readFile(
-        path.join(tmp, '.rspeedy/main/background.js'),
+        path.join(tmp, '.lynx/main/background.js'),
         'utf-8',
       )
       const backgroundSourceMap = findSourceMap(debugMetadata, {
@@ -338,13 +366,13 @@ describe('Sourcemap', () => {
         {
           "function renderComponent": {
             "column": 0,
-            "line": 296,
+            "line": 319,
             "name": null,
             "source": "preact.mjs",
           },
           "functionThatThrows": {
             "column": 2,
-            "line": 19,
+            "line": 23,
             "name": "functionThatThrows",
             "source": "index.tsx",
           },
@@ -356,9 +384,114 @@ describe('Sourcemap', () => {
           },
         }
       `)
+      const backgroundRuntimeStatement = '__root = root;'
+      const backgroundRuntimeOffset = backgroundSource.indexOf(
+        backgroundRuntimeStatement,
+      )
+      expect(backgroundRuntimeOffset).toBeGreaterThan(-1)
+      const backgroundRuntimeSourceIndex = backgroundSourceMap.sources
+        .findIndex(source =>
+          normalizeSlashes(source).endsWith('/runtime/src/root.ts')
+        )
+      expect(backgroundRuntimeSourceIndex).toBeGreaterThan(-1)
+      const backgroundRuntimeSourceContent = backgroundSourceMap
+        .sourcesContent?.[backgroundRuntimeSourceIndex]
+      expect(backgroundRuntimeSourceContent).toContain(
+        backgroundRuntimeStatement,
+      )
+      const backgroundRuntimePosition = consumer.originalPositionFor(
+        generatedPositionAt(backgroundSource, backgroundRuntimeOffset),
+      )
+      expect(normalizeSlashes(backgroundRuntimePosition.source!))
+        .toContain('/runtime/src/root.ts')
+      expect(backgroundRuntimePosition).toMatchObject(
+        generatedPositionAt(
+          backgroundRuntimeSourceContent!,
+          backgroundRuntimeSourceContent!.indexOf(backgroundRuntimeStatement),
+        ),
+      )
+
       // clean
       cssConsumer.destroy()
       consumer.destroy()
+
+      const mainMap = findSourceMap(debugMetadata, {
+        filename: 'main-thread.js.map',
+      })!.map as RawSourceMap
+      const lazyMap = findSourceMap(asyncMetadata, {
+        filename: 'main-thread.js.map',
+      })!.map as RawSourceMap
+
+      const mainThreadSource = await readFile(
+        path.join(tmp, '.lynx/main/main-thread.js'),
+        'utf-8',
+      )
+      const runtimeStatement = 'globalThis.lynxWorkletImpl = {'
+      const runtimeOffset = mainThreadSource.indexOf(runtimeStatement)
+      expect(runtimeOffset).toBeGreaterThan(-1)
+      const runtimeSourceIndex = mainMap.sources.findIndex(source =>
+        normalizeSlashes(source).endsWith('/worklet-runtime/workletRuntime.ts')
+      )
+      expect(runtimeSourceIndex).toBeGreaterThan(-1)
+      const runtimeSourceContent = mainMap.sourcesContent?.[runtimeSourceIndex]
+      expect(runtimeSourceContent).toContain(runtimeStatement)
+      await SourceMapConsumer.with(mainMap, null, mainConsumer => {
+        const runtimePosition = mainConsumer.originalPositionFor(
+          generatedPositionAt(mainThreadSource, runtimeOffset),
+        )
+        expect(normalizeSlashes(runtimePosition.source!))
+          .toContain('/worklet-runtime/workletRuntime.ts')
+        expect(runtimePosition).toMatchObject(
+          generatedPositionAt(
+            runtimeSourceContent!,
+            runtimeSourceContent!.indexOf(runtimeStatement),
+          ),
+        )
+      })
+
+      const lazySource = await readFile(
+        path.join(
+          tmp,
+          '.lynx/lazy-bundle/fixtures_sourcemap_lazy-bundle-comp.tsx/main-thread.js',
+        ),
+        'utf-8',
+      )
+      const registrationOffset = lazySource.indexOf(
+        '("main-thread",',
+      )
+      expect(registrationOffset).toBeGreaterThan(-1)
+      const registrationSourceOffset = lazySource.indexOf(
+        '\'main thread\'',
+        registrationOffset,
+      )
+      expect(registrationSourceOffset).toBeGreaterThan(registrationOffset)
+      const registrationPosition = generatedPositionAt(
+        lazySource,
+        registrationSourceOffset,
+      )
+      await SourceMapConsumer.with(lazyMap, null, lazyConsumer => {
+        const registrationSourcePosition = lazyConsumer.originalPositionFor(
+          registrationPosition,
+        )
+        const lazySourceIndex = lazyMap.sources.findIndex(source =>
+          normalizeSlashes(source).endsWith('/lazy-bundle-comp.tsx')
+        )
+        expect(lazySourceIndex).toBeGreaterThan(-1)
+        const lazySourceContent = lazyMap.sourcesContent?.[lazySourceIndex]
+        expect(lazySourceContent).toContain('\'main thread\'')
+        const authoredDirectivePosition = generatedPositionAt(
+          lazySourceContent!,
+          lazySourceContent!.indexOf('\'main thread\''),
+        )
+        expect(registrationSourcePosition).toMatchObject({
+          source: new URL(
+            './fixtures/sourcemap/lazy-bundle-comp.tsx',
+            import.meta.url,
+          ).href,
+          line: authoredDirectivePosition.line,
+          column: authoredDirectivePosition.column,
+        })
+      })
     },
     25_000,
   )
@@ -366,6 +499,14 @@ describe('Sourcemap', () => {
 
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/')
+}
+
+function generatedPositionAt(source: string, offset: number) {
+  const linesBeforeOffset = source.slice(0, offset).split('\n')
+  return {
+    line: linesBeforeOffset.length,
+    column: linesBeforeOffset.at(-1)!.length,
+  }
 }
 
 function releaseOf(src: string): string | undefined {

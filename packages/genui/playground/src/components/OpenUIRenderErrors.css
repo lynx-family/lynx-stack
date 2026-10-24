@@ -1,0 +1,24 @@
+.openuiRenderErrors {
+  flex-shrink: 0;
+  margin: 0 12px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-sm);
+  background: var(--geist-error-light);
+  color: var(--geist-error);
+  font-size: 12px;
+}
+
+.openuiRenderErrors summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.openuiRenderErrors pre {
+  max-height: 180px;
+  margin: 8px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}

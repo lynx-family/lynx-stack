@@ -62,7 +62,10 @@ export const makeSyncThen = function<T>(result: T): Promise<T>['then'] {
         // );
       }
 
-      const p = Promise.resolve(ret);
+      // The Lynx Promise polyfill shares resolved promises for primitive values.
+      // Own this promise before replacing `then`, or an undefined callback
+      // result would make unrelated Promise.resolve().then(...) calls synchronous.
+      const p = new Promise<TR1>(resolve => resolve(ret));
 
       const then = makeSyncThen(ret as TR1);
       p.then = then as Promise<Awaited<TR1>>['then'];
@@ -153,7 +156,7 @@ export const loadLazyBundle: <
         const { code, detail } = result;
         if (code === 0) {
           const { schema } = detail;
-          const exports = lynxCoreInject.tt.getDynamicComponentExports(schema);
+          const exports = lynx.getApp().getDynamicComponentExports(schema);
           // `code === 0` means that the lazy bundle has been successfully parsed. However,
           // its javascript files may still fail to run, which would prevent the retrieval of the exports object.
           if (exports) {

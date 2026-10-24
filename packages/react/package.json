@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.123.2",
+  "version": "0.129.0",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -39,18 +39,22 @@
     },
     "./element-template": {
       "types": "./runtime/lib/element-template/index.d.ts",
+      "lazy": "./runtime/lazy/element-template.js",
       "default": "./runtime/lib/element-template/index.js"
     },
     "./element-template/internal": {
       "types": "./runtime/lib/element-template/internal.d.ts",
+      "lazy": "./runtime/lazy/element-template-internal.js",
       "default": "./runtime/lib/element-template/internal.js"
     },
     "./element-template/jsx-runtime": {
       "types": "./runtime/lib/element-template/jsx-runtime/index.d.ts",
+      "lazy": "./runtime/lazy/element-template-jsx-runtime.js",
       "default": "./runtime/lib/element-template/jsx-runtime/index.js"
     },
     "./element-template/jsx-dev-runtime": {
       "types": "./runtime/lib/element-template/jsx-dev-runtime/index.d.ts",
+      "lazy": "./runtime/lazy/element-template-jsx-dev-runtime.js",
       "default": "./runtime/lib/element-template/jsx-dev-runtime/index.js"
     },
     "./jsx-runtime": {
@@ -99,13 +103,9 @@
         "default": "./transform/main.js"
       }
     },
-    "./worklet-runtime": {
+    "./worklet-runtime/init": {
       "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./runtime/worklet-runtime/main.js"
-    },
-    "./worklet-dev-runtime": {
-      "types": "./runtime/lib/worklet-runtime/index.d.ts",
-      "default": "./runtime/worklet-runtime/dev.js"
+      "default": "./runtime/lib/worklet-runtime/index.js"
     },
     "./worklet-runtime/bindings": {
       "types": "./runtime/lib/worklet-runtime/bindings/index.d.ts",
@@ -192,10 +192,7 @@
       "runtime-components": [
         "./components/lib/index.d.ts"
       ],
-      "worklet-runtime": [
-        "./runtime/lib/worklet-runtime/index.d.ts"
-      ],
-      "worklet-dev-runtime": [
+      "worklet-runtime/init": [
         "./runtime/lib/worklet-runtime/index.d.ts"
       ],
       "worklet-runtime/bindings": [
@@ -214,22 +211,22 @@
     "types",
     "docs",
     "testing-library",
+    "!**/node_modules/**",
     "CHANGELOG.md",
     "internal.js",
     "README.md",
     "README.zh.md"
   ],
   "scripts": {
-    "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build"
+    "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
     "preact": "catalog:lynxjs"
   },
   "devDependencies": {
-    "@lynx-js/types": "4.0.0",
+    "@lynx-js/types": "4.1.0",
     "@microsoft/api-extractor": "catalog:",
-    "@types/react": "^19.2.17"
+    "@types/react": "^19.2.18"
   },
   "peerDependencies": {
     "@lynx-js/types": "*",

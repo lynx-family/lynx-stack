@@ -69,7 +69,7 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
   initElementPAPICallAlog();
 }
 
-if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+function initBackgroundRuntime(): void {
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
@@ -88,6 +88,10 @@ if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       initProfileHook();
     }
   }
+}
+
+if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
+  initBackgroundRuntime();
 }
 
 setupLynxEnv();

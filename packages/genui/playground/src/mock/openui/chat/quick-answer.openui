@@ -1,0 +1,2 @@
+root = Card([answer])
+answer = TextContent("可以。**先把米饭放凉**，炒的时候更容易粒粒分明。")

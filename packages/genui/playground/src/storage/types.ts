@@ -1,8 +1,25 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import type { GenerationUsageRecord } from '../utils/modelPricing.js';
 
-export type ConversationProtocol = 'a2ui' | 'openui' | 'mcp-apps';
+export type ConversationProtocol =
+  | 'a2ui'
+  | 'openui'
+  | 'mcp-apps'
+  | 'reactlynx'
+  | 'reactweb'
+  | 'lynx-xml'
+  | 'html';
+
+export interface ConversationGenerationSettings {
+  provider?: string;
+  reasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+  enableDesignGuidance: boolean;
+  enableHtmlFragment?: boolean;
+  enableScriptReuse?: boolean;
+  stylePreset?: 'default' | false;
+}
 
 export interface ConversationMeta {
   id: string;
@@ -12,26 +29,57 @@ export interface ConversationMeta {
   updatedAt: number;
   messageCount: number;
   previewText: string;
+  generationSettings?: ConversationGenerationSettings;
 }
 
-export interface PreviewPayloadUrls {
-  messagesUrl: string;
-  actionMocksUrl?: string;
-}
+export type PreviewPayloadUrls =
+  | {
+    messagesUrl: string;
+    actionMocksUrl?: string;
+    sourceUrl?: never;
+  }
+  | {
+    sourceUrl: string;
+    messagesUrl?: never;
+    actionMocksUrl?: never;
+  };
 
 export interface PreviewPerformanceMetrics {
   fcpMs?: number;
   fmpMs?: number;
   ttiMs?: number;
+  /** Server generation pipeline, including validation but excluding publishing. */
+  generationMs?: number;
+  /** Server-side time spent transforming generated source into its final artifact. */
+  artifactTransformMs?: number;
+  /** Server-side time spent compiling generated source into runnable artifacts. */
+  artifactBuildMs?: number;
+  /** Server-side time spent publishing the finalized artifact for preview. */
+  artifactUploadMs?: number;
+  /** Time from generation start to the first non-empty reasoning delta. */
+  firstReasoningTokenMs?: number;
+  /** Time from generation start to the first non-empty text delta. */
+  firstTextTokenMs?: number;
+  /** Cumulative duration of model invocations; concurrent calls may overlap. */
+  modelMs?: number;
+  /** Cumulative duration of web and image search calls. */
+  searchMs?: number;
+  /** Cumulative duration of image-generation calls. */
+  imageGenerationMs?: number;
+  /** Legacy request-to-response duration; never interpret as generationMs. */
   agentOutputMs?: number;
   renderMs?: number;
 }
 
 export interface PersistedMessage {
+  generationUsage?: GenerationUsageRecord;
+  generationError?: string;
   conversationId: string;
   seq: number;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  lynxXmlFragment?: string;
+  lynxXmlModelOutput?: string;
   previewPayloadUrls?: PreviewPayloadUrls;
   previewMetrics?: PreviewPerformanceMetrics;
   createdAt: number;

@@ -109,77 +109,65 @@ fn max_attr_slot_index(value: &serde_json::Value) -> Option<usize> {
 }
 
 fn first_attribute_slots_len(code: &str) -> Option<usize> {
-  let prefix = "attributeSlots={[";
-  let start = code.find(prefix)? + prefix.len();
-  let mut square_depth = 0usize;
-  let mut brace_depth = 0usize;
-  let mut paren_depth = 0usize;
-  let mut quote: Option<char> = None;
-  let mut escape = false;
-  let mut has_content = false;
-  let mut len = 1usize;
+  use std::sync::Arc;
+  use swc_core::common::{FileName, SourceMap};
+  use swc_core::ecma::{
+    ast::*,
+    parser::{lexer::Lexer, Parser, StringInput},
+    visit::{Visit, VisitWith},
+  };
 
-  for ch in code[start..].chars() {
-    if let Some(quote_ch) = quote {
-      if escape {
-        escape = false;
-        continue;
+  #[derive(Default)]
+  struct SlotInput(Option<usize>);
+  impl Visit for SlotInput {
+    fn visit_jsx_attr(&mut self, attr: &JSXAttr) {
+      if let JSXAttrName::Ident(name) = &attr.name {
+        if name.sym == "attributeSlots" && self.0.is_none() {
+          if let Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+            expr: JSXExpr::Expr(expr),
+            ..
+          })) = &attr.value
+          {
+            if let Expr::Array(array) = &**expr {
+              self.0 = Some(array.elems.len());
+            }
+          }
+        }
       }
-      if ch == '\\' {
-        escape = true;
-        continue;
-      }
-      if ch == quote_ch {
-        quote = None;
-      }
-      continue;
+      attr.visit_children_with(self);
     }
-
-    match ch {
-      '\'' | '"' | '`' => {
-        has_content = true;
-        quote = Some(ch);
-      }
-      '[' => {
-        has_content = true;
-        square_depth += 1;
-      }
-      ']' if square_depth == 0 && brace_depth == 0 && paren_depth == 0 => {
-        return Some(if has_content { len } else { 0 });
-      }
-      ']' => {
-        if square_depth == 0 {
-          return None;
+    fn visit_call_expr(&mut self, call: &CallExpr) {
+      if let Callee::Expr(callee) = &call.callee {
+        if let Expr::Member(member) = &**callee {
+          if matches!(&member.prop, MemberProp::Ident(name) if name.sym == "__etHost")
+            && self.0.is_none()
+          {
+            if let Expr::Array(array) = &*call.args[4].expr {
+              self.0 = Some(array.elems.len());
+            }
+          }
         }
-        square_depth -= 1;
       }
-      '{' => {
-        has_content = true;
-        brace_depth += 1;
-      }
-      '}' => {
-        if brace_depth == 0 {
-          return None;
-        }
-        brace_depth -= 1;
-      }
-      '(' => {
-        has_content = true;
-        paren_depth += 1;
-      }
-      ')' => {
-        if paren_depth == 0 {
-          return None;
-        }
-        paren_depth -= 1;
-      }
-      ',' if square_depth == 0 && brace_depth == 0 && paren_depth == 0 => len += 1,
-      ch if !ch.is_whitespace() => has_content = true,
-      _ => {}
+      call.visit_children_with(self);
     }
   }
-
-  None
+  let cm = Arc::<SourceMap>::default();
+  let file = cm.new_source_file(FileName::Anon.into(), code.to_string());
+  let lexer = Lexer::new(
+    Syntax::Es(EsSyntax {
+      jsx: true,
+      ..Default::default()
+    }),
+    Default::default(),
+    StringInput::from(&*file),
+    None,
+  );
+  let module = Parser::new_from(lexer)
+    .parse_module()
+    .expect("valid generated code");
+  let mut slots = SlotInput::default();
+  module.visit_with(&mut slots);
+  slots.0
 }
 
 fn assert_attribute_slots_match_template(code: &str, templates: &[ElementTemplateAsset]) {
@@ -252,7 +240,7 @@ et_snapshot_test!(
             <text>Header</text>
         </view>
         <view class="content">
-            {/* Expression should become an elementSlot */}
+            {/* Expression should become an childSlot */}
             {items.map(item => <text>{item}</text>)}
         </view>
         <view class="footer">
@@ -391,7 +379,7 @@ et_snapshot_test!(
 );
 
 et_snapshot_test!(
-  should_isolate_arrays_with_element_slot_placeholder,
+  should_isolate_arrays_with_child_slot_placeholder,
   r#"
     <view>
         {["a", "b"]}
@@ -779,9 +767,9 @@ fn should_reuse_same_content_template_id_and_asset_in_one_module() {
     "same content should emit one template id const:\n{code}"
   );
   assert_eq!(
-    code.matches(&format!("<{template_id}")).count(),
+    code.matches(&format!("__etHost({template_id},")).count(),
     2,
-    "both JSX usages should reference the reused template id exactly once each:\n{code}"
+    "both host calls should reference the reused template id exactly once each:\n{code}"
   );
 }
 
@@ -857,10 +845,10 @@ fn should_keep_dynamic_component_asset_id_content_addressed_without_entry_prefix
 }
 
 #[test]
-fn should_report_page_element_as_unsupported() {
-  let (_, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+fn should_lower_page_element_to_internal_page_helper() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
     r#"
-      <page>
+      <page key={pageKey} id="root-page" bindtap={onTap} ref={pageRef}>
         <view>Page Element Test</view>
       </page>
     "#,
@@ -868,14 +856,195 @@ fn should_report_page_element_as_unsupported() {
   );
 
   assert!(
-    diagnostics
+    !diagnostics
       .iter()
       .any(|message| message == "<page /> is not supported"),
-    "expected <page /> unsupported diagnostic, got: {diagnostics:?}"
+    "valid <page /> should not emit unsupported diagnostic, got: {diagnostics:?}"
+  );
+  assert!(
+    code.contains("__ElementTemplatePage"),
+    "authored <page /> should lower to ET internal page helper:\n{code}"
+  );
+  assert!(
+    code.contains("key={pageKey}") && code.contains("attributes={{"),
+    "authored <page /> should use explicit key plus typed attributes:\n{code}"
+  );
+  assert!(
+    code.contains("\"bindtap\": onTap")
+      && code.contains("\"ref\": pageRef")
+      && !code.contains("__ELEMENT_TEMPLATE_DIRECT_REF_MARKER"),
+    "page event/ref values should remain in typed attributes:\n{code}"
+  );
+
+  let user_templates = user_templates(&templates);
+  assert_eq!(
+    user_templates.len(),
+    1,
+    "only the child view should produce a compiled ET template: {templates:?}"
+  );
+  let template =
+    serde_json::to_value(&user_templates[0].compiled_template).expect("compiled template json");
+  assert_eq!(template["type"], "view");
+  assert!(
+    user_templates
+      .iter()
+      .all(|template| template.compiled_template["type"].as_str() != Some("page")),
+    "authored <page /> must not emit a page compiled template: {templates:?}"
+  );
+}
+
+#[test]
+fn should_lower_page_element_in_development_mode() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics_with_mode(
+    r#"
+      <page id="root-page">
+        <view>Page Element Test</view>
+      </page>
+    "#,
+    JSXTransformerConfig {
+      runtime_pkg: "@custom/react".into(),
+      ..element_template_config()
+    },
+    TransformMode::Development,
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "valid <page /> should not emit diagnostics in development mode, got: {diagnostics:?}"
+  );
+  assert!(
+    code.contains(r#"import * as ReactLynxInternal from "@custom/react/internal""#),
+    "development mode should use the current internal runtime namespace import:\n{code}"
+  );
+  assert!(
+    !code.contains("require("),
+    "development mode should not restore the obsolete runtime require alias:\n{code}"
+  );
+  assert!(
+    code.contains("__ElementTemplatePage"),
+    "authored <page /> should lower to ET internal page helper:\n{code}"
+  );
+  assert_eq!(user_templates(&templates).len(), 1);
+}
+
+#[test]
+fn should_follow_typed_list_carrier_for_explicit_page_children() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"<page id="root-page" children={explicitChild} />"#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "unexpected diagnostics: {diagnostics:?}"
+  );
+  assert!(
+    code.contains("attributes={{")
+      && code.contains("\"id\": \"root-page\"")
+      && code.contains("\"children\": explicitChild")
+      && code.contains("$0={[]}"),
+    "page should inherit the current typed-list carrier contract:\n{code}"
+  );
+  assert!(
+    user_templates(&templates).is_empty(),
+    "a childless authored page should not emit a user page template: {templates:?}"
+  );
+}
+
+#[test]
+fn should_follow_typed_list_key_partition_order() {
+  let (code, _, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"<page id={before()} key={pageKey()} ref={pageRef()} title={after()} />"#,
+    element_template_config_for_target(TransformTarget::JS),
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "unexpected diagnostics: {diagnostics:?}"
+  );
+  let before_position = code.find("before()").expect("before attr");
+  let key_position = code.find("pageKey()").expect("page key");
+  let ref_position = code.find("pageRef()").expect("page ref");
+  let after_position = code.find("after()").expect("after attr");
+  assert!(
+    key_position < before_position
+      && before_position < ref_position
+      && ref_position < after_position,
+    "page should inherit the current typed-list key partition order:\n{code}"
+  );
+}
+
+#[test]
+fn should_lower_spread_page_with_typed_list_carrier() {
+  let (code, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      <page key={beforeKey} id="before" {...first()} children={explicitChild} {...second()} bindtap={onTap} ref={pageRef}>
+        {jsxChild}
+      </page>
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics.is_empty(),
+    "unexpected diagnostics: {diagnostics:?}"
+  );
+  assert_eq!(
+    code.matches("first()").count(),
+    1,
+    "each page spread expression must be evaluated once:\n{code}"
+  );
+  assert_eq!(
+    code.matches("second()").count(),
+    1,
+    "each page spread expression must be evaluated once:\n{code}"
+  );
+  assert!(
+    code.contains("key={beforeKey}")
+      && code.contains("attributes={{")
+      && code.contains("\"children\": explicitChild")
+      && code.contains("...first()")
+      && code.contains("...second()")
+      && !code.contains("__ElementTemplatePageSpread")
+      && !code.contains("__ELEMENT_TEMPLATE_DIRECT_REF_MARKER"),
+    "page should collect non-key opening attrs with the typed-list carrier:\n{code}"
+  );
+  assert!(
+    code.contains("\"bindtap\": onTap") && code.contains("\"ref\": pageRef"),
+    "page event/ref values should remain in typed attributes:\n{code}"
+  );
+  assert!(
+    code.contains("$0={jsxChild}"),
+    "JSX children should use the typed logical carrier:\n{code}"
+  );
+  assert!(
+    user_templates(&templates)
+      .iter()
+      .all(|template| template.compiled_template["type"].as_str() != Some("page")),
+    "spread-authored <page /> must not emit a page compiled template: {templates:?}"
+  );
+}
+
+#[test]
+fn should_still_report_component_element_as_unsupported() {
+  let (_, templates, diagnostics) = transform_to_code_templates_and_diagnostics(
+    r#"
+      <component is="dynamic-view">
+        <view>Component Element Test</view>
+      </component>
+    "#,
+    element_template_config(),
+  );
+
+  assert!(
+    diagnostics
+      .iter()
+      .any(|message| message == "<component /> is not supported"),
+    "expected <component /> unsupported diagnostic, got: {diagnostics:?}"
   );
   assert!(
     templates.is_empty(),
-    "unsupported <page /> should not emit poisoned templates: {templates:?}"
+    "unsupported <component /> should not emit poisoned templates: {templates:?}"
   );
 }
 
@@ -1022,5 +1191,21 @@ fn should_warn_and_override_nested_dynamic_user_css_id_attr_without_reserving_sl
     &template["children"][0],
     100.0,
     "nested dynamic user css-id should be replaced by the framework css-id",
+  );
+}
+
+#[test]
+fn should_lower_lepus_hosts_in_component_children_and_jsx_valued_props() {
+  let (code, templates) = transform_to_code_and_templates(
+    r#"const result = <Wrapper first=<view id={first()} /> second={<view id={second()} />}><view key={key()} id={third()} /></Wrapper>;"#,
+    element_template_config(),
+  );
+  assert_eq!(user_templates(&templates).len(), 1, "{code}");
+  assert_eq!(code.matches(".__etHost(").count(), 3, "{code}");
+  assert!(!code.contains("<_et_"), "{code}");
+  assert!(!code.contains("attributeSlots="), "{code}");
+  assert!(
+    code.contains("key(), ["),
+    "key evaluation must precede attributes: {code}"
   );
 }

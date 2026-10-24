@@ -11,8 +11,9 @@ import { stringify } from 'javascript-stringify'
 import color from 'picocolors'
 
 import type { Config } from '../config/index.js'
-import { DEFAULT_DIST_PATH_INTERMEDIATE } from '../config/output/dist-path.js'
 import { debug } from '../debug.js'
+
+const DIST_PATH_INTERMEDIATE = '.lynx'
 
 export function pluginInspect(config: Config): RsbuildPlugin {
   return {
@@ -23,8 +24,8 @@ export function pluginInspect(config: Config): RsbuildPlugin {
           config,
           /** path */ path.join(
             api.context.distPath,
-            DEFAULT_DIST_PATH_INTERMEDIATE,
-            'rspeedy.config.js',
+            DIST_PATH_INTERMEDIATE,
+            'rspeedy.config.mjs',
           ),
           /** verbose */ false,
         )

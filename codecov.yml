@@ -23,6 +23,7 @@ coverage:
     patch:
       default:
         threshold: "1%"
+        only_pulls: true
 
 ignore:
   - ".github/**"
@@ -33,6 +34,7 @@ ignore:
   - "rstest.config.ts"
   - "**/rstest.config.ts"
   - "**/__test__/**/fixtures/**"
+  - "packages/react/runtime/__test__/element-template/test-utils/**"
 
 fixes:
   - "/home/runner/_work/lynx-stack::"
@@ -59,6 +61,7 @@ component_management:
         target: auto
       - type: patch
         threshold: "1%"
+        only_pulls: true
   individual_components:
     - component_id: react
       name: React

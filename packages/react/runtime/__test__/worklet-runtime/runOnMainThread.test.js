@@ -37,7 +37,7 @@ describe('runOnMainThread', () => {
       [
         [
           {
-            "data": "{"resolveId":10,"returnValue":"ret"}",
+            "data": "{"resolveId":10,"returnValue":"ret","reloadVersion":0}",
             "type": "Lynx.Worklet.FunctionCallRet",
           },
         ],
@@ -45,7 +45,7 @@ describe('runOnMainThread', () => {
     `);
   });
 
-  it('dispatches the legacy return event when the worklet throws', () => {
+  it('sends a scoped return event when the worklet throws', () => {
     const error = new Error('main-thread worklet failed');
     globalThis.registerWorklet('main-thread', '1', () => {
       throw error;
@@ -56,7 +56,7 @@ describe('runOnMainThread', () => {
       [
         [
           {
-            "data": "{"resolveId":10}",
+            "data": "{"resolveId":10,"reloadVersion":0}",
             "type": "Lynx.Worklet.FunctionCallRet",
           },
         ],

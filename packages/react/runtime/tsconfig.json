@@ -4,6 +4,8 @@
     "composite": true,
     "types": ["node"],
     "outDir": "./lib",
+    // Published maps must retain their sources because runtime/src is not shipped.
+    "inlineSources": true,
     // Keep incremental metadata under lib so clearing generated outputs also
     // invalidates the runtime build cache for worklet-runtime artifacts.
     "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo",

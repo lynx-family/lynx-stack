@@ -571,7 +571,7 @@ async function createTypeDocProject(
     excludePrivate: false,
     excludeProtected: false,
     readme: 'none',
-    skipErrorChecking: true,
+    skipErrorChecking: false,
     sort: ['source-order'],
     sortEntryPoints: false,
   };
@@ -1043,7 +1043,7 @@ function parseUnionType(
     getStringLiteralValue(type)
   );
   if (stringLiteralValues.every(value => value !== undefined)) {
-    return { type: 'string', enum: stringLiteralValues };
+    return { type: 'string', enum: stringLiteralValues.sort() };
   }
 
   if (
@@ -1063,7 +1063,25 @@ function parseUnionType(
     }
   }
 
+  oneOf.sort((left, right) => {
+    const a = schemaSortKey(left);
+    const b = schemaSortKey(right);
+    return a < b ? -1 : (a > b ? 1 : 0);
+  });
   return oneOf.length === 1 ? oneOf[0]! : { oneOf };
+}
+
+/** Canonicalize object keys without changing order-sensitive schema arrays. */
+function schemaSortKey(schema: JsonSchema): string {
+  return JSON.stringify(schema, (_key, value: unknown) => {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+      return value;
+    }
+    const record = value as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.keys(record).sort().map(key => [key, record[key]]),
+    );
+  });
 }
 
 function parseObjectReflection(

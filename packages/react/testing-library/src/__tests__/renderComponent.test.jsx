@@ -95,7 +95,7 @@ test('setState generates insertBefore operation', async () => {
     [
       "rLynxChange",
       {
-        "data": "{"patchList":[{"id":3,"snapshotPatch":[1,-2,-5,-9,0]}]}",
+        "data": "{"patchList":[{"id":3,"snapshotPatch":[1,-2,-7,-5,0]}]}",
         "patchOptions": {
           "pipelineOptions": {
             "dsl": "reactLynx",
@@ -115,8 +115,8 @@ test('setState generates insertBefore operation', async () => {
   expect(formattedSnapshotPatch).toMatchInlineSnapshot(`
     [
       {
-        "beforeId": -9,
-        "childId": -5,
+        "beforeId": -5,
+        "childId": -7,
         "op": "InsertBefore",
         "parentId": -2,
         "slotIndex": 0,

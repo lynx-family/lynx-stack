@@ -2,6 +2,7 @@ import './jsdom.js';
 import { describe, test, expect } from '@rstest/core';
 import {
   encodeCSS,
+  encodeCSSMap,
   RawStyleInfo,
   Rule,
   Selector,
@@ -15,6 +16,27 @@ import {
 } from '../binary/encode/encode.js';
 import { encode, TasmJSONInfo } from '../ts/encode/webEncoder.js';
 import { TemplateSectionLabel } from '../ts/constants.js';
+import { loadStyleFromJSON } from '../ts/client/decodeWorker/cssLoader.js';
+import { wasmInstance as clientWasmInstance } from '../ts/client/wasm.js';
+
+const X_ELEMENT_ALIASES = [
+  ['viewpager', 'x-viewpager-ng'],
+  ['viewpager-item', 'x-viewpager-item-ng'],
+  ['webview', 'x-webview'],
+  ['overlay', 'x-overlay-ng'],
+  ['refresh', 'x-refresh-view'],
+  ['refresh-header', 'x-refresh-header'],
+  ['blur-view', 'x-blur-view'],
+  ['scroll-coordinator', 'x-foldview-ng'],
+  ['scroll-coordinator-header', 'x-foldview-header-ng'],
+  ['scroll-coordinator-slot', 'x-foldview-slot-ng'],
+  ['scroll-coordinator-slot-drag', 'x-foldview-slot-drag-ng'],
+  ['scroll-coordinator-toolbar', 'x-foldview-toolbar-ng'],
+  ['input', 'x-input'],
+  ['x-input-ng', 'x-input'],
+  ['textarea', 'x-textarea'],
+  ['x-textarea-ng', 'x-textarea'],
+] as const;
 
 describe('RawStyleInfo', () => {
   test('should encode StyleRule correctly', () => {
@@ -62,7 +84,57 @@ describe('RawStyleInfo', () => {
   });
 });
 
+describe('legacy JSON CSS', () => {
+  test('should transform XElement aliases in lynx-tag selectors', () => {
+    const styleInfo = {
+      '0': {
+        content: [],
+        rules: X_ELEMENT_ALIASES.map(([alias]) => ({
+          sel: [[[`[lynx-tag="${alias}"]`], [], [], []]],
+          decl: [['width', '1px'] as [string, string]],
+        })),
+      },
+    };
+
+    const decodedStyleInfo = loadStyleFromJSON(
+      styleInfo,
+      true,
+      false,
+      false,
+      false,
+    );
+    const css = clientWasmInstance.get_style_content(decodedStyleInfo);
+
+    for (const [, htmlTag] of X_ELEMENT_ALIASES) {
+      expect(css).toContain(`${htmlTag}:not([l-e-name]){width:1px;}`);
+    }
+    expect(css).not.toContain('x-input-ng:not([l-e-name])');
+    expect(css).not.toContain('x-textarea-ng:not([l-e-name])');
+  });
+});
+
 describe('encodeCSS', () => {
+  test('should transform XElement alias type selectors', () => {
+    const cssMap = {
+      '0': CSS.parse(
+        X_ELEMENT_ALIASES.map(([alias]) => `${alias} { width: 1px; }`).join(
+          '\n',
+        ),
+      ).root,
+    };
+
+    const buffer = encodeCSS(cssMap);
+    const css = get_style_content(
+      decode_style_info(buffer, undefined, true),
+    );
+
+    for (const [, htmlTag] of X_ELEMENT_ALIASES) {
+      expect(css).toContain(`${htmlTag}:not([l-e-name]){width:1px;}`);
+    }
+    expect(css).not.toContain('x-input-ng:not([l-e-name])');
+    expect(css).not.toContain('x-textarea-ng:not([l-e-name])');
+  });
+
   test('should encode basic StyleRule', () => {
     const css = `
       .foo {
@@ -533,5 +605,78 @@ describe('webEncoder', () => {
       }
       offset += length;
     }
+  });
+
+  function readSections(buffer: Uint8Array): Map<number, Uint8Array> {
+    const view = new DataView(buffer.buffer);
+    const sections = new Map<number, Uint8Array>();
+    let offset = 8 + 4; // Magic + Version
+    while (offset < buffer.byteLength) {
+      const label = view.getUint32(offset, true);
+      offset += 4;
+      const length = view.getUint32(offset, true);
+      offset += 4;
+      sections.set(label, buffer.subarray(offset, offset + length));
+      offset += length;
+    }
+    expect(offset).toBe(buffer.byteLength);
+    return sections;
+  }
+
+  function readCustomSections(
+    sections: Map<number, Uint8Array>,
+  ): Record<string, unknown> {
+    return JSON.parse(
+      new TextDecoder('utf-16le').decode(
+        sections.get(TemplateSectionLabel.CustomSections),
+      ),
+    );
+  }
+
+  test('should encode the CSS custom sections with the css encoder', () => {
+    const ruleListMap = {
+      foo: CSS.parse('.foo { background-color: red; }').root,
+      bar: CSS.parse('.bar { background-color: green; }').root,
+    };
+    const sections = readSections(encode({
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: {
+        foo: { encoding: 'CSS', content: { ruleList: ruleListMap.foo } },
+        bar: { encoding: 'CSS', content: { ruleList: ruleListMap.bar } },
+        baz: { content: 'baz' },
+        qux: { encoding: 'JsBytecode', content: 'qux' },
+      },
+      elementTemplates: {},
+    }));
+
+    expect(readCustomSections(sections)).toEqual({
+      baz: { content: 'baz' },
+      qux: { encoding: 'JsBytecode', content: 'qux' },
+    });
+    expect(sections.get(TemplateSectionLabel.CustomSectionsStyleInfo))
+      .toEqual(encodeCSSMap(ruleListMap));
+  });
+
+  test('should skip the custom sections style info if there is no CSS custom section', () => {
+    const sections = readSections(encode({
+      styleInfo: {},
+      manifest: {},
+      cardType: 'card',
+      appType: 'card',
+      pageConfig: {},
+      lepusCode: {},
+      customSections: { baz: { content: 'baz' } },
+      elementTemplates: {},
+    }));
+
+    expect(readCustomSections(sections)).toEqual({ baz: { content: 'baz' } });
+    expect(sections.has(TemplateSectionLabel.CustomSectionsStyleInfo)).toBe(
+      false,
+    );
   });
 });

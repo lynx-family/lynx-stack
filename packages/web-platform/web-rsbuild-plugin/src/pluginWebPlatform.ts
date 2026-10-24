@@ -49,7 +49,7 @@ export interface PluginWebPlatformOptions {
   /**
    * The absolute path of the native-modules file.
    *
-   * When enabled, nativeModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   * When enabled, nativeModules will be packaged directly into the worker chunk instead of being loaded at runtime from the URLs in the lynx-view's `nativeModulesMap`.
    *
    * Warning: If you use this, you don't need to pass nativeModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
    */
@@ -57,7 +57,7 @@ export interface PluginWebPlatformOptions {
   /**
    * The absolute path of the napi-modules file, it is similar to nativeModulesPath.
    *
-   * When enabled, napiModules will be packaged directly into the worker chunk instead of being transferred through Blob.
+   * When enabled, napiModules will be packaged directly into the worker chunk instead of being loaded at runtime from the URLs in the lynx-view's `napiModulesMap`.
    *
    * Warning: If you use this, you don't need to pass napiModulesMap in the lynx-view tag, otherwise it will cause duplicate packaging.
    */

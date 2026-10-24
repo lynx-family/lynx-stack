@@ -26,12 +26,13 @@ class JsFunctionLifecycleManager {
     if (this.retainedObjects.has(objToRef)) {
       return;
     }
+    // A failed engine registration must leave the target eligible for a retry.
+    this.registry.register(objToRef, execId);
     this.retainedObjects.add(objToRef);
     this.execIdRefCount.set(
       execId,
       (this.execIdRefCount.get(execId) ?? 0) + 1,
     );
-    this.registry.register(objToRef, execId);
   }
 
   removeRef(execId: number): void {

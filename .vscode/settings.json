@@ -5,6 +5,7 @@
     "renovate.json5": "jsonc",
     "*.mdx": "mdx",
     "*.snap.txt": "markdown",
+    "*.lynxml": "html",
   },
   "[javascript]": {
     "editor.defaultFormatter": "dprint.dprint",

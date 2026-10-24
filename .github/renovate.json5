@@ -7,7 +7,19 @@
     "helpers:pinGitHubActionDigests",
     // Delay npm updates by 3 days so risky or unpublished releases have time to surface.
     "security:minimumReleaseAgeNpm",
+    ":disableRateLimiting",
+    // Automerge non-major updates of semver-stable (non-0.x) packages, and all
+    // `@types/*`, once CI is green. Groups below opt out where a green CI is
+    // not enough of a signal. Note that a grouped PR only automerges when
+    // *every* upgrade in it is automergeable.
+    ":automergeStableNonMajor",
+    ":automergeTypes",
   ],
+
+  // Default is `auto`, which resolves to `behind-base-branch` for automerge
+  // branches and `conflicted` for the rest. We want the reverse: keep PRs that
+  // need review up to date; automerge branches opt out below.
+  "rebaseWhen": "behind-base-branch",
 
   // Exclude `examples` from "config:recommended"
   "ignorePaths": [
@@ -31,18 +43,16 @@
 
   "labels": ["bot:renovate"],
 
-  // Raise the open-PR limits above Renovate's defaults (prConcurrentLimit: 10,
-  // prHourlyLimit: 2). This repo has enough active dependencies that a short
-  // triage lag lets the open-PR count reach 10, after which Renovate stops
-  // opening any new PR and parks every update as "Rate-Limited" on the
-  // Dependency Dashboard -- making it look like Renovate has stopped working.
-  "prConcurrentLimit": 20,
-  "prHourlyLimit": 4,
-
-  // Auto-generate a changeset for the dependency bump (see the script). No-op
-  // unless the command is allow-listed in the self-hosted `allowedCommands`.
+  // Auto-generate a changeset for the dependency bump (see the script). Renovate
+  // only updates lockfiles and never installs the repo's dependencies, so install
+  // the root package first: the script needs `yaml` from the root devDependencies.
+  // No-op unless both commands are allow-listed in the self-hosted
+  // `allowedCommands`.
   "postUpgradeTasks": {
-    "commands": ["node .github/scripts/generate-renovate-changeset.cjs"],
+    "commands": [
+      "pnpm install --filter . --frozen-lockfile --ignore-scripts",
+      "node .github/scripts/generate-renovate-changeset.cjs",
+    ],
     "fileFilters": [".changeset/renovate-*.md"],
     "executionMode": "branch",
   },
@@ -53,6 +63,26 @@
         "*",
       ],
       "rangeStrategy": "bump",
+    },
+    {
+      // Automerge branches: rebasing pushes a new commit, and renovate skips
+      // the merge check on any branch it pushed to in that run (`!commitSha`).
+      // Mirrors `:automergeStableNonMajor` / `:automergeTypes`; groups with
+      // `automerge: false` below set `behind-base-branch` again.
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "rebaseWhen": "conflicted",
+    },
+    {
+      "matchPackageNames": ["@types/**"],
+      "rebaseWhen": "conflicted",
+    },
+    {
+      // 0.x patches are compatible (`^0.1.1` accepts 0.1.2); 0.0.z is not.
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^0\\.0\\./",
+      "automerge": true,
+      "rebaseWhen": "conflicted",
     },
     {
       // The Lynx preset relies on Tailwind CSS v3 configuration and internal
@@ -90,50 +120,35 @@
         "nyc",
         "tiny-invariant",
         "wasm-feature-detect",
+        "@lynx-js/lynx-core",
+        "@preact/signals",
+        "@rspack/lite-tapable",
       ],
       "groupName": null,
     },
     {
-      "groupName": "Rspack",
-      "groupSlug": "Rspack",
+      // Rslib and Rstest depend on Rsbuild, which in turn pins a compatible
+      // Rspack range. Upgrade the complete toolchain in one PR so a newer
+      // transitive Rsbuild is never paired with an older Rspack override.
+      "groupName": "Rstack toolchain",
+      "groupSlug": "rstack-toolchain",
       "addLabels": ["upstream:rspack"],
       "matchDepTypes": [
         "devDependencies",
         "dependencies",
+        "pnpm.catalog.rspack",
+        "pnpm.catalog.rsbuild",
+        "pnpm.catalog.rslib",
+        "pnpm.catalog.rstest",
       ],
+      "automerge": false,
+      "rebaseWhen": "behind-base-branch",
       "matchPackageNames": [
-        "/@rspack/*/",
-      ],
-      "rangeStrategy": "pin",
-    },
-    {
-      "groupName": "Rsbuild",
-      "groupSlug": "Rsbuild",
-      "addLabels": ["upstream:rspack"],
-      "matchDepTypes": [
-        "devDependencies",
-        "dependencies",
-      ],
-      "matchPackageNames": [
-        "/@rsbuild/*/",
-        "/rsbuild-plugin-*/",
-      ],
-      "rangeStrategy": "pin",
-    },
-    {
-      // `@rstest/adapter-rsbuild` and `@rstest/coverage-istanbul` both peer on
-      // `@rstest/core`, so bumping one without the others fails
-      // `strictPeerDependencies` and Renovate cannot write the lock file —
-      // the PR then carries a catalog bump with no matching `pnpm-lock.yaml`.
-      "groupName": "Rstest",
-      "groupSlug": "Rstest",
-      "addLabels": ["upstream:rspack"],
-      "matchDepTypes": [
-        "devDependencies",
-        "dependencies",
-      ],
-      "matchPackageNames": [
-        "/@rstest/*/",
+        "/^@rspack\\//",
+        "/^@rsbuild\\//",
+        "/^@rslib\\//",
+        "/^@rstest\\//",
+        "/^rsbuild-plugin-/",
       ],
       "rangeStrategy": "pin",
     },
@@ -144,6 +159,8 @@
         "devDependencies",
         "dependencies",
       ],
+      "automerge": false,
+      "rebaseWhen": "behind-base-branch",
       "matchPackageNames": [
         "rspress",
         "/@rspress/*/",
@@ -191,6 +208,11 @@
         "@lynx-js/**",
       ],
       "minimumReleaseAge": "0 days",
+      // First-party releases are coordinated by hand (and the dated-snapshot
+      // builds above ship straight from `main`), so they get a human look
+      // instead of riding on a green CI.
+      "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
     {
       "groupName": "API Extractor",
@@ -259,6 +281,8 @@
       "matchPackageNames": [
         "@typescript/native-preview",
       ],
+      "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
     {
       "groupName": "Lynx Engine",
@@ -271,6 +295,8 @@
       "schedule": [
         "* 0-3 1 * *",
       ],
+      "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
         {
       "groupName": "Rust Crates",
@@ -295,6 +321,8 @@
         "rkyv",
         "rkyv_derive",
       ],
+      "automerge": false,
+      "rebaseWhen": "behind-base-branch",
     },
     {
       "groupName": "SWC",

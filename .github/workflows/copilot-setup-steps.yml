@@ -35,7 +35,7 @@ jobs:
           cache-key: test-ubuntu-copilot-setup-steps
       - name: Install
         run: |
-          npm install -g corepack@latest
+          npm install -g corepack@0.35.0
           corepack enable
           pnpm install --frozen-lockfile
       - name: Build

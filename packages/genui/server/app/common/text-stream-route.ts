@@ -1,0 +1,404 @@
+// Copyright 2026 The Lynx Authors. All rights reserved.
+// Licensed under the Apache License Version 2.0 that can be found in the
+// LICENSE file in the root directory of this source tree.
+
+import { Hono } from 'hono';
+
+import { validateConversation, validateMessages } from './chat-validation.js';
+import { jsonWithCors } from './cors.js';
+import { errorMessage } from './errors.js';
+import { createFailureReasoning } from './failure-reasoning.js';
+import { createGenerationTiming } from './generation-timing.js';
+import { pickProviderOptions } from './provider-options.js';
+import { checkRateLimit, rateLimitSseResponse } from './rate-limit.js';
+import { readJsonBodyWithLimit } from './request.js';
+import { encodeSSE, sseHeaders } from './sse.js';
+import { createStreamLogger } from './stream-logger.js';
+import { extractTokenUsage } from './usage.js';
+import {
+  GenerationPostprocessError,
+  GenerationUpstreamError,
+} from '../../service/common/result.js';
+import type {
+  ChatMessage,
+  ChatOptions,
+  ConversationContext,
+  OpenAIReasoningEffort,
+} from '../../service/common/types.js';
+
+interface TextChatBody extends Record<string, unknown> {
+  messages?: unknown;
+  conversation?: unknown;
+  resourceId?: string;
+  model?: string;
+  apiKey?: string;
+  baseURL?: string;
+  api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
+}
+
+interface TextStreamingService {
+  streamAsAsyncIterable(
+    messages: ChatMessage[],
+    options: ChatOptions,
+    conversation?: ConversationContext,
+    abortSignal?: AbortSignal,
+  ): Promise<{
+    textStream: AsyncIterable<string>;
+    finalize: () => Promise<{
+      text: string | undefined;
+      usage: unknown;
+      finishReason: unknown;
+      metadata?: Record<string, unknown>;
+    }>;
+  }>;
+}
+
+export interface TextStreamRouteOptions {
+  /** Emit complete text lines, preserving the final unterminated line. */
+  deltaFraming?: 'line';
+  parseOptions?: (body: Record<string, unknown>) =>
+    | { ok: true; options: ChatOptions }
+    | { ok: false; error: string };
+  publishFinalText?: (value: string) => Promise<unknown>;
+  scope: string;
+  path: string;
+  getService: () => TextStreamingService;
+  normalizeFinalText?: (value: string) => string;
+  postprocess?: (
+    text: string,
+    context: {
+      signal: AbortSignal;
+      requestUrl: string;
+      emit: (event: string, data: unknown) => boolean;
+      recordArtifactBuild: (durationMs: number) => void;
+      recordArtifactUpload: (durationMs: number) => void;
+    },
+  ) => Promise<Record<string, unknown>>;
+}
+
+async function postTextStream(req: Request, config: TextStreamRouteOptions) {
+  const { log, requestId } = createStreamLogger(config.scope, config.path);
+  log('request.received', {
+    contentLength: req.headers.get('content-length'),
+  });
+
+  const decision = checkRateLimit(req);
+  if (!decision.ok) {
+    log('rate_limit.rejected', {
+      retryAfterSec: decision.retryAfterSec,
+      remaining: decision.remaining,
+      resetAt: decision.resetAt,
+    });
+    return rateLimitSseResponse(req, decision);
+  }
+  log('rate_limit.accepted', {
+    remaining: decision.remaining,
+    resetAt: decision.resetAt,
+  });
+
+  const parsed = await readJsonBodyWithLimit<TextChatBody>(req);
+  log(parsed.ok ? 'body.parsed' : 'body.rejected', {
+    ...parsed.metrics,
+    error: parsed.ok ? undefined : parsed.error,
+  });
+  if (!parsed.ok) {
+    return jsonWithCors(
+      req,
+      { ok: false, error: parsed.error },
+      { status: parsed.status },
+    );
+  }
+
+  const validationStartedAt = performance.now();
+  const validated = validateMessages(parsed.body.messages);
+  if (!validated.ok) {
+    log('messages.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: validated.error,
+    });
+    return jsonWithCors(
+      req,
+      { ok: false, error: validated.error },
+      { status: validated.status },
+    );
+  }
+  const validatedConversation = validateConversation(parsed.body.conversation);
+  if (!validatedConversation.ok) {
+    log('conversation.rejected', {
+      durationMs: performance.now() - validationStartedAt,
+      error: validatedConversation.error,
+    });
+    return jsonWithCors(
+      req,
+      { ok: false, error: validatedConversation.error },
+      { status: validatedConversation.status },
+    );
+  }
+  log('request.validated', {
+    durationMs: performance.now() - validationStartedAt,
+  });
+
+  const protocolOptions = config.parseOptions?.(parsed.body);
+  if (protocolOptions && !protocolOptions.ok) {
+    return jsonWithCors(req, { ok: false, error: protocolOptions.error }, {
+      status: 400,
+    });
+  }
+  const reasoning = createFailureReasoning([
+    parsed.body.apiKey,
+    parsed.body.baseURL,
+  ]);
+  let observeGenerationTiming:
+    | ((event: string, details?: Record<string, unknown>) => void)
+    | undefined;
+  const opts = {
+    ...pickProviderOptions(parsed.body),
+    ...(typeof parsed.body.enableDesignGuidance === 'boolean'
+      ? { enableDesignGuidance: parsed.body.enableDesignGuidance }
+      : {}),
+    ...(protocolOptions?.ok ? protocolOptions.options : {}),
+    onReasoning: reasoning.append,
+    onPerformanceEvent: (event: string, details = {}) => {
+      log(event, details);
+      observeGenerationTiming?.(event, details);
+    },
+  };
+  const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
+  const service = config.getService();
+
+  log('request.accepted', {
+    messageCount: validated.messages.length,
+    messageChars: validated.messages.reduce(
+      (total, message) => total + message.content.length,
+      0,
+    ),
+    conversationHistoryCount: validatedConversation.conversation?.history.length
+      ?? 0,
+    conversationHistoryChars: validatedConversation.conversation?.history
+      .reduce((total, message) => total + message.content.length, 0) ?? 0,
+    dataModelKeyCount: validatedConversation.conversation
+      ? Object.keys(validatedConversation.conversation.dataModel).length
+      : 0,
+    model: opts.model,
+    hasBaseURL: Boolean(opts.baseURL),
+  });
+
+  let closed = false;
+  const generationController = new AbortController();
+  const abortGeneration = (reason?: unknown) => {
+    if (!generationController.signal.aborted) {
+      generationController.abort(reason);
+    }
+  };
+  const onRequestAbort = () => abortGeneration(req.signal.reason);
+  if (req.signal.aborted) {
+    onRequestAbort();
+  } else {
+    req.signal.addEventListener('abort', onRequestAbort, { once: true });
+  }
+
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      let resultMetadata:
+        | { finishReason: unknown; usage: unknown }
+        | undefined;
+      const enqueue = (event: string, data: unknown) => {
+        if (closed) return false;
+        try {
+          controller.enqueue(encodeSSE(event, data));
+          return true;
+        } catch {
+          closed = true;
+          return false;
+        }
+      };
+
+      const run = async () => {
+        const timing = createGenerationTiming();
+        observeGenerationTiming = timing.observe;
+        try {
+          const connectStartedAt = performance.now();
+          log('agent.connect.started');
+          const { textStream, finalize } = await service.streamAsAsyncIterable(
+            validated.messages,
+            {
+              ...opts,
+              onModelInteraction: event => {
+                enqueue('model', event);
+              },
+            },
+            validatedConversation.conversation,
+            generationController.signal,
+          );
+          log('agent.connect.completed', {
+            durationMs: performance.now() - connectStartedAt,
+          });
+
+          let streamedText = '';
+          let chunkCount = 0;
+          let firstChunkLogged = false;
+          let pendingDelta = '';
+          log('upstream.stream.started');
+
+          for await (const chunk of textStream) {
+            chunkCount++;
+            if (!firstChunkLogged) {
+              firstChunkLogged = true;
+              log('upstream.first_chunk', {
+                durationSinceConnectStartedMs: performance.now()
+                  - connectStartedAt,
+                chunkLength: chunk.length,
+              });
+            }
+            streamedText += chunk;
+            if (config.deltaFraming === 'line') {
+              pendingDelta += chunk;
+              let newline: number;
+              while ((newline = pendingDelta.indexOf('\n')) !== -1) {
+                const text = pendingDelta.slice(0, newline + 1);
+                pendingDelta = pendingDelta.slice(newline + 1);
+                if (!enqueue('delta', { text })) break;
+              }
+              if (closed) break;
+            } else if (!enqueue('delta', { text: chunk })) break;
+          }
+
+          if (pendingDelta) enqueue('delta', { text: pendingDelta });
+
+          generationController.signal.throwIfAborted();
+          log('upstream.stream.ended', {
+            chunkCount,
+            streamedTextLength: streamedText.length,
+          });
+
+          const { text, usage, finishReason, metadata } = await finalize();
+          resultMetadata = { finishReason, usage };
+          generationController.signal.throwIfAborted();
+          if (finishReason === 'error') {
+            throw new GenerationUpstreamError(undefined, {
+              text: text ?? streamedText,
+              usage,
+              finishReason,
+            });
+          }
+          const rawFinalText = text ?? streamedText;
+          log('upstream.result.finalized', {
+            rawFinalTextLength: rawFinalText.length,
+            finishReason,
+            usage,
+          });
+          let finalText: string;
+          try {
+            finalText = config.normalizeFinalText?.(rawFinalText)
+              ?? rawFinalText;
+          } catch (error) {
+            if (finishReason === 'length') {
+              const validationError = errorMessage(error).message;
+              throw new Error(
+                'Model output reached its token limit before producing a '
+                  + `valid final artifact: ${validationError}`,
+              );
+            }
+            throw error;
+          }
+          const metrics = timing.finish();
+          if (config.publishFinalText) enqueue('metrics', { metrics });
+          let preview: unknown;
+          if (config.publishFinalText) {
+            const publishStartedAt = performance.now();
+            try {
+              preview = await config.publishFinalText(finalText);
+            } finally {
+              const artifactUploadMs = performance.now() - publishStartedAt;
+              timing.recordArtifactUpload(artifactUploadMs);
+              log('artifact.publish.completed', {
+                durationMs: artifactUploadMs,
+                published: preview !== undefined,
+              });
+            }
+          }
+          generationController.signal.throwIfAborted();
+          const postprocessMetadata = await config.postprocess?.(finalText, {
+            signal: generationController.signal,
+            requestUrl: req.url,
+            emit: enqueue,
+            recordArtifactBuild: durationMs => {
+              timing.recordArtifactBuild(durationMs);
+            },
+            recordArtifactUpload: durationMs => {
+              timing.recordArtifactUpload(durationMs);
+            },
+          });
+          generationController.signal.throwIfAborted();
+          log('done.enqueued', {
+            finalTextLength: finalText.length,
+            finishReason,
+            hasUsage: usage !== undefined,
+            hasPreviewUrl: preview !== undefined,
+            requestId,
+          });
+          enqueue('done', {
+            metrics,
+            ok: true,
+            text: finalText,
+            ...(metadata || postprocessMetadata
+              ? { metadata: { ...metadata, ...postprocessMetadata } }
+              : {}),
+            usage,
+            tokenUsage: extractTokenUsage(usage),
+            finishReason,
+            preview,
+          });
+        } catch (error: unknown) {
+          if (
+            error instanceof GenerationPostprocessError
+            || error instanceof GenerationUpstreamError
+          ) {
+            resultMetadata = {
+              usage: error.result.usage,
+              finishReason: error.result.finishReason,
+            };
+          }
+          if (!closed && !generationController.signal.aborted) {
+            const payload = {
+              metrics: timing.finish(),
+              ...errorMessage(error, errorOptions),
+              ...(resultMetadata ?? {}),
+              tokenUsage: extractTokenUsage(resultMetadata?.usage),
+            };
+            log('error.enqueued', payload);
+            enqueue('error', { ...payload, ...reasoning.payload() });
+          }
+        } finally {
+          req.signal.removeEventListener('abort', onRequestAbort);
+          if (!closed) {
+            closed = true;
+            log('stream.closed');
+            try {
+              controller.close();
+            } catch {
+              // The reader may have canceled between the state check and close.
+            }
+          }
+        }
+      };
+      void run();
+    },
+    cancel(reason) {
+      closed = true;
+      req.signal.removeEventListener('abort', onRequestAbort);
+      abortGeneration(reason);
+    },
+  });
+
+  return new Response(stream, { status: 200, headers: sseHeaders(req) });
+}
+
+export function createTextStreamRoute(
+  config: TextStreamRouteOptions,
+): Hono {
+  const route = new Hono();
+  route.post('/', (context) => postTextStream(context.req.raw, config));
+  return route;
+}

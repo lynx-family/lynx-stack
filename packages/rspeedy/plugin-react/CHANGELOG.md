@@ -1,5 +1,210 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.22.0
+
+### Minor Changes
+
+- Add the experimental `experimental_reEvalJSOnReload` option. When it is enabled, `reloadTemplate` evaluates the main-thread and background entries again, so module-level state starts over while the native element tree is reused. It is disabled by default. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
+  Re-evaluating the background entry requires `reloadCard` from the Lynx client. Without it, the background keeps the existing reload behavior.
+
+### Patch Changes
+
+- Updated dependencies [[`f3a9192`](https://github.com/lynx-family/lynx-stack/commit/f3a91921e53784b8255e5eda230ee8602648499e), [`f3a9192`](https://github.com/lynx-family/lynx-stack/commit/f3a91921e53784b8255e5eda230ee8602648499e), [`90bc7ca`](https://github.com/lynx-family/lynx-stack/commit/90bc7cafae16ace990d013e7eaf0faf45349076a)]:
+  - @lynx-js/react-webpack-plugin@0.14.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.22.0
+  - @lynx-js/template-webpack-plugin@0.16.5
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.5
+  - @lynx-js/react-refresh-webpack-plugin@0.4.5
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.1
+  - @lynx-js/rsbuild-plugin@0.1.6
+
+## 0.21.0
+
+### Minor Changes
+
+- Deliver the main-thread runtime through named imports from its init entry, including background-only definitions that carry their registration dependencies into the main-thread graph. Runtime code participates in business defines and release processing. Every supported transform supplies semantic runtime requirements, including for definitions injected from background-only modules; watch rebuilds refresh their dependencies and metadata. ([#4066](https://github.com/lynx-family/lynx-stack/pull/4066))
+
+  Upgrade the build plugins and `@lynx-js/react` together. This release requires `@lynx-js/react@^0.128.0`; its runtime and bundled transform use the same module-delivery protocol. The refresh plugin adds support for `@lynx-js/react-webpack-plugin@^0.13.0` while retaining its existing supported versions. Older compiler output is unsupported. The prebuilt worklet-runtime chunk, its package entries, and `loadWorkletRuntime` are removed. Combined lazy chunks share their paired main runtime, and standalone lazy bundles bootstrap themselves.
+
+  The worklet init entry follows `worklet.runtimePkg`: remove a trailing `/internal`, if present, and append `/worklet-runtime/init`. Its `registerWorklet` export uses the existing host registration function when the runtime is already initialized. Default worklet options use `@lynx-js/react/internal` for helpers.
+
+  Testing-library initializes module-delivered worklets on its emulated main thread in Vitest and Rstest.
+
+### Patch Changes
+
+- Add the `@lynx-js/react/worklet-runtime/init` entry and resolve it to the published, unbundled runtime module in normal and lazy builds. The entry uses the existing runtime initialization guard, so loading it again preserves the runtime and its registrations. ([#4065](https://github.com/lynx-family/lynx-stack/pull/4065))
+
+  Existing compiler output continues to use the legacy runtime-loading path.
+- Aggregate semantic runtime requirements over final emitted chunk modules, excluding tree-shaken candidates and including concatenated and injected definitions. Expose versioned semantic React compilation results through `Symbol.for('@lynx-js/react/internal:compile-result')`. Consumers can read main-thread programmability requirements from Stats or MultiStats without inspecting filenames. Missing or incompatible compilation results remain unknown rather than becoming an explicit false result. ([#4067](https://github.com/lynx-family/lynx-stack/pull/4067))
+
+  Export the shared `ReactCompileResult` type from both plugin packages and `ReactCompileResultExposureV1` from the Rsbuild plugin. Document how to consume original Stats objects and select a single environment in mixed builds.
+- Updated dependencies [[`bdb7471`](https://github.com/lynx-family/lynx-stack/commit/bdb7471ce6e98461b062d1572df766ecccf6bca4), [`89b828a`](https://github.com/lynx-family/lynx-stack/commit/89b828aba5e4eff14d8d2b5c44baecc121856c7d), [`1625472`](https://github.com/lynx-family/lynx-stack/commit/16254726bc1da310e828c7aac796de6edc8ffa3a), [`8efa510`](https://github.com/lynx-family/lynx-stack/commit/8efa51010e03579c9c2d4a9e762aec828436e3e3), [`16b45de`](https://github.com/lynx-family/lynx-stack/commit/16b45defdc76e822086b5207c0c290d51224da0e)]:
+  - @lynx-js/react-webpack-plugin@0.13.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.21.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.4
+  - @lynx-js/template-webpack-plugin@0.16.4
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.1
+  - @lynx-js/rsbuild-plugin@0.1.5
+
+## 0.20.4
+
+### Patch Changes
+
+- Add typed `MainThreadObject` handles whose target factory is defined by a Main Thread Function, with identity-preserving capture and hydration, runtime-owned reference release, and exact-type handle downcasting for readonly creation-payload access. V1 intentionally exposes no user-land disposal API. Applications import the APIs from `@lynx-js/react`. ([#3788](https://github.com/lynx-family/lynx-stack/pull/3788))
+
+- Preserve MainThreadObject identity in member and nested captures, and support Main Thread object methods with receiver-bound captures. ([#3789](https://github.com/lynx-family/lynx-stack/pull/3789))
+
+- Keep the main-thread chunks of lazy bundles out of `splitChunks`. They no longer carry `__main-thread` in their name since `webpackChunkName` stopped being injected, so they are now detected by their runtime. ([#4104](https://github.com/lynx-family/lynx-stack/pull/4104))
+- Updated dependencies [[`9fd8712`](https://github.com/lynx-family/lynx-stack/commit/9fd8712e14c02099b26f04260e8f0487eeb12df9), [`18327c5`](https://github.com/lynx-family/lynx-stack/commit/18327c5af18578b1fb17f92418f8b3f8b5a2c983), [`9484386`](https://github.com/lynx-family/lynx-stack/commit/94843864c1cba3b2408bca45905a1daddc31d49f)]:
+  - @lynx-js/css-extract-webpack-plugin@0.11.1
+  - @lynx-js/react-webpack-plugin@0.12.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.4
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.3
+  - @lynx-js/template-webpack-plugin@0.16.3
+  - @lynx-js/rsbuild-plugin@0.1.4
+
+## 0.20.3
+
+### Patch Changes
+
+- Default `performance.profile` to `true` in `pluginLynx` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, to align with Rspeedy. ([#3973](https://github.com/lynx-family/lynx-stack/pull/3973))
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+- Updated dependencies [[`388e50e`](https://github.com/lynx-family/lynx-stack/commit/388e50e42106e5f11751b317b82c0313089b29b2), [`b5241dd`](https://github.com/lynx-family/lynx-stack/commit/b5241dd52770e97cb9bc5f08d9aa3bdbf7be9ce8), [`bb272ef`](https://github.com/lynx-family/lynx-stack/commit/bb272efaea7d3cd757e8d0f86ebe67261715b44e), [`c5809d0`](https://github.com/lynx-family/lynx-stack/commit/c5809d097d6cd3c29ba8a140288fce0846b60b2c), [`4ccff90`](https://github.com/lynx-family/lynx-stack/commit/4ccff90024f05d12eb48d1a8b6303a2a8618270c), [`4ccff90`](https://github.com/lynx-family/lynx-stack/commit/4ccff90024f05d12eb48d1a8b6303a2a8618270c), [`4c453b9`](https://github.com/lynx-family/lynx-stack/commit/4c453b9ed1c58860f96cde9c4e91722f5d145470), [`f5779c6`](https://github.com/lynx-family/lynx-stack/commit/f5779c6364caba15152181baf7205a33b2037870), [`0cea2a3`](https://github.com/lynx-family/lynx-stack/commit/0cea2a3d34cb4dee019f0bc82ba07ef3a664ef23), [`c8a6aaf`](https://github.com/lynx-family/lynx-stack/commit/c8a6aafdde20972252898eae32da0aa385f31d6e), [`8eb5c3a`](https://github.com/lynx-family/lynx-stack/commit/8eb5c3aab2c99fa306313cd2382ec7369e97408e), [`10a10bc`](https://github.com/lynx-family/lynx-stack/commit/10a10bcd73f207482fec3bb79a2f04d7c26086d9)]:
+  - @lynx-js/react-webpack-plugin@0.12.0
+  - @lynx-js/template-webpack-plugin@0.16.2
+  - @lynx-js/react-refresh-webpack-plugin@0.4.3
+  - @lynx-js/rsbuild-plugin@0.1.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.3
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.0
+
+## 0.20.2
+
+### Patch Changes
+
+- Upgrade Rsbuild to 2.2.4 and fix CSS rule cloning with its stricter bundler chain types. ([#3885](https://github.com/lynx-family/lynx-stack/pull/3885))
+- Updated dependencies [[`4cde2f4`](https://github.com/lynx-family/lynx-stack/commit/4cde2f42601fa58a6936481eb2f486c68ebd3f55), [`c044a0b`](https://github.com/lynx-family/lynx-stack/commit/c044a0b8c581658ed75611503b72d0fbfad3cd7e), [`b900a78`](https://github.com/lynx-family/lynx-stack/commit/b900a78a43914adf2aae60849e2d6433be5eb797), [`9a56957`](https://github.com/lynx-family/lynx-stack/commit/9a5695786d050b395e262e0964747aaa3eae69d7), [`c171d53`](https://github.com/lynx-family/lynx-stack/commit/c171d53a110e64062371357efef290fabf95dd9e), [`9b4693f`](https://github.com/lynx-family/lynx-stack/commit/9b4693f4277bf637fceaeb39022664f49428d4f2), [`958ffb4`](https://github.com/lynx-family/lynx-stack/commit/958ffb4d591f0c3be4affe7ffc2da97c3044c701)]:
+  - @lynx-js/rsbuild-plugin@0.1.2
+  - @lynx-js/react-webpack-plugin@0.11.4
+  - @lynx-js/template-webpack-plugin@0.16.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+  - @lynx-js/css-extract-webpack-plugin@0.11.0
+
+## 0.20.1
+
+### Patch Changes
+
+- Updated dependencies [[`566c61d`](https://github.com/lynx-family/lynx-stack/commit/566c61d0f53ec6c8fad7a2f63c6fbf652e02b4f8), [`cb0dcab`](https://github.com/lynx-family/lynx-stack/commit/cb0dcabd097f14b13fb298c76da539df5a66ec17)]:
+  - @lynx-js/react-webpack-plugin@0.11.3
+  - @lynx-js/rsbuild-plugin@0.1.1
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.1
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+
+## 0.20.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Require `@lynx-js/rspeedy` `^0.17.0` in the plugins that read the build engine config through `Symbol.for('@lynx-js/rsbuild-plugin:config')`, since the engine that ships with `0.16` does not expose it. The plugins that do not touch the engine keep their existing range and add `^0.17.0` to it. ([#3682](https://github.com/lynx-family/lynx-stack/pull/3682))
+
+### Patch Changes
+
+- Do not apply the Lynx build engine again when `pluginLynx` is registered on an environment rather than globally, which silently replaced the options it was given. ([#3695](https://github.com/lynx-family/lynx-stack/pull/3695))
+
+- Move runtime attribute-name configuration to the page-scoped `lynx` object and ([#3718](https://github.com/lynx-family/lynx-stack/pull/3718))
+  inject it from the host compilation through a standalone webpack plugin. Lazy
+  and external bundles reuse the host-injected configuration without applying
+  the plugin themselves. The runtime-config webpack plugin is published through
+  its own DSL-neutral package entry and accepts arbitrary runtime configuration
+  keys without depending on ReactLynx. The merged top-level configuration is
+  shallow-frozen to prevent accidental mutation after host initialization.
+- Accept `DEBUG=lynx` (and `lynx:*`, `lynx:template`) for the Lynx debug output and intermediates. It is the recommended form now that the plugins also run under Rslib and Rsbuild; `DEBUG=rspeedy` keeps working. ([#3735](https://github.com/lynx-family/lynx-stack/pull/3735))
+
+- Honor `splitChunks`, `performance.chunkSplit` and `output.sourceMap` when they are set on an environment. `pluginReactLynx` used to read them from the root of the config only when deciding whether to split chunks and whether to inline sources into source maps. ([#3768](https://github.com/lynx-family/lynx-stack/pull/3768))
+
+- Skip the background runtime wrapper on any asset marked `lynx:main-thread` instead of matching filenames, and mark the main-thread assets of an external bundle by the layer of their modules, so a main-thread entry an external bundle names itself is no longer wrapped. ([#3751](https://github.com/lynx-family/lynx-stack/pull/3751))
+
+- Declare the build host as an optional peer dependency. `@rsbuild/core` covers a plain Rsbuild build, and `@lynx-js/rspeedy` covers an Rspeedy one, so whichever host is installed is version-checked. ([#3678](https://github.com/lynx-family/lynx-stack/pull/3678))
+
+- Add `performance` to the `pluginLynx` options, alongside `output`, and expose it on the config `pluginLynx` provides. Rspeedy maps its `performance.profile` onto it, so a plugin can read the option from the build engine instead of requiring Rspeedy to be the caller. `pluginReactLynx` reads it from there instead of requiring Rspeedy. ([#3691](https://github.com/lynx-family/lynx-stack/pull/3691))
+
+- Honor `output.distPath.intermediate`. The Lynx build engine now resolves the intermediate directory, so the option is no longer ignored by the plugins that emit a Lynx bundle. ([#3676](https://github.com/lynx-family/lynx-stack/pull/3676))
+
+- Accept `@lynx-js/react` 0.126, which ships Preact 11. ([#3450](https://github.com/lynx-family/lynx-stack/pull/3450))
+
+- Apply the Lynx build engine to `rslib` builds: module resolution, SWC transforms, bundler target, output, minification (JS and CSS), source maps and debug metadata now match an application build. The plugins that load or serve a bundle stay off, since `rslib` assembles its own. ([#3696](https://github.com/lynx-family/lynx-stack/pull/3696))
+
+- `pluginReactLynx` registers the encoders and the background runtime wrapper for every caller, and `WebEncodePlugin` routes the custom sections of a bundle without a root into the slots the web runtime reads. `@lynx-js/lynx-bundle-rslib-config` only sets the template plugin and the main-thread wrapper up now. ([#3744](https://github.com/lynx-family/lynx-stack/pull/3744))
+
+- Expose `Symbol.for('LynxTemplatePlugin')` from `pluginLynx` instead of from each DSL plugin, so the plugins that tap the template hooks work with the build engine alone. ([#3675](https://github.com/lynx-family/lynx-stack/pull/3675))
+
+- Skip the built-in `pluginLynx` when one is already applied, so a user who needs to configure the Lynx build engine can apply `pluginLynx` themselves and have their options win. `@lynx-js/rspeedy` becomes an optional peer dependency of `pluginReactLynx` and `pluginQRCode`. ([#3661](https://github.com/lynx-family/lynx-stack/pull/3661))
+- Updated dependencies [[`643a52d`](https://github.com/lynx-family/lynx-stack/commit/643a52d9aefb327ca5a090cb052fd9b08cefbba6), [`76126fc`](https://github.com/lynx-family/lynx-stack/commit/76126fcad0f16e649c372d22c013e90ad88640df), [`b854dec`](https://github.com/lynx-family/lynx-stack/commit/b854dec62d48a09f60abc0632ba541bbdffda31f), [`c21cddd`](https://github.com/lynx-family/lynx-stack/commit/c21cddd0b75290330b6891f041db63ee5b28f492), [`f743e12`](https://github.com/lynx-family/lynx-stack/commit/f743e123e058d8f97720b1ce8c4a3d6601c8f7be), [`9bbfe5d`](https://github.com/lynx-family/lynx-stack/commit/9bbfe5d6e5367fbbaacc0129559e7b1d823038ad), [`5637926`](https://github.com/lynx-family/lynx-stack/commit/5637926c579bac5e9b78a02b982b1110cf4421d4), [`cdceffc`](https://github.com/lynx-family/lynx-stack/commit/cdceffc6f3fb9ac7b5ce1f48b7edb53c7788c057), [`6da3e18`](https://github.com/lynx-family/lynx-stack/commit/6da3e189f58637e14318782c176ed5970b59f75d), [`754ed35`](https://github.com/lynx-family/lynx-stack/commit/754ed35f8063c9333b75a7a7bbb264cb19c5cc51), [`5637926`](https://github.com/lynx-family/lynx-stack/commit/5637926c579bac5e9b78a02b982b1110cf4421d4), [`ab041b7`](https://github.com/lynx-family/lynx-stack/commit/ab041b72bc0d93e22f542b5963e221b6bd3f39e8), [`0a52438`](https://github.com/lynx-family/lynx-stack/commit/0a524389500421bb07e6a69366879e453d5d1d09), [`c6f971a`](https://github.com/lynx-family/lynx-stack/commit/c6f971a31fc0c54b98458c01f8c39a0828fe198c), [`0c47383`](https://github.com/lynx-family/lynx-stack/commit/0c4738342365ed4670ec659df5ede683e5aa2529), [`b3c6045`](https://github.com/lynx-family/lynx-stack/commit/b3c604544f84f1c600fb42468b05f7d73c120ad3), [`08a36e3`](https://github.com/lynx-family/lynx-stack/commit/08a36e39a5ba336946335d55a29efba1750e65ad), [`abab087`](https://github.com/lynx-family/lynx-stack/commit/abab087d0a4ce2e993c2417ce7bbf17e585ac972), [`32ba734`](https://github.com/lynx-family/lynx-stack/commit/32ba7347d1733eb4b2e19e95d7b7415ae78e23d2), [`7850e1e`](https://github.com/lynx-family/lynx-stack/commit/7850e1edb6f02ef2d332b756cd6e1a6ae6584368), [`3ab5ba3`](https://github.com/lynx-family/lynx-stack/commit/3ab5ba3fb738c368cfca6b6a5fc8c4ea323de124), [`eaefef6`](https://github.com/lynx-family/lynx-stack/commit/eaefef64d9874a8236d99b8abe17978d803a02da), [`e2ac811`](https://github.com/lynx-family/lynx-stack/commit/e2ac811c48535672bb14e4662f38dbebf0276167), [`0be26e9`](https://github.com/lynx-family/lynx-stack/commit/0be26e91d362041d1b0f568d15828d92f0ed2a6d), [`3d63331`](https://github.com/lynx-family/lynx-stack/commit/3d63331dc861bf3180f975ca54d4e7d9afd5eb70), [`32ba734`](https://github.com/lynx-family/lynx-stack/commit/32ba7347d1733eb4b2e19e95d7b7415ae78e23d2)]:
+  - @lynx-js/rsbuild-plugin@0.1.0
+  - @lynx-js/react-webpack-plugin@0.11.2
+  - @lynx-js/runtime-config-webpack-plugin@0.0.1
+  - @lynx-js/template-webpack-plugin@0.16.0
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.4
+  - @lynx-js/react-alias-rsbuild-plugin@0.20.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+
+## 0.19.1
+
+### Patch Changes
+
+- Apply the Lynx build engine automatically when it is not already applied, so `pluginReactLynx` works with plain Rsbuild. ([#3578](https://github.com/lynx-family/lynx-stack/pull/3578))
+
+- Read the bundle filename from the Rsbuild config instead of the Rspeedy API. ([#3570](https://github.com/lynx-family/lynx-stack/pull/3570))
+
+- Emit the Lynx template for callers other than `rslib` and `rstest`. ([#3572](https://github.com/lynx-family/lynx-stack/pull/3572))
+
+- Widen the `@lynx-js/react` peer dependency range to include 0.125. ([#3551](https://github.com/lynx-family/lynx-stack/pull/3551))
+- Updated dependencies [[`1d08862`](https://github.com/lynx-family/lynx-stack/commit/1d08862ef9a1883fe98f2b9f7dce59d092d14d68), [`99ed745`](https://github.com/lynx-family/lynx-stack/commit/99ed7451d190cd18a45f78f731141994104a054b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`0d10b79`](https://github.com/lynx-family/lynx-stack/commit/0d10b796d219e6f661709885d9ff2a4e61f4e65b), [`92b54ed`](https://github.com/lynx-family/lynx-stack/commit/92b54edba5adea2a4ddd355c821ff25205273479), [`37497d5`](https://github.com/lynx-family/lynx-stack/commit/37497d58fe4e0762d687001d61181ec5e0e650b9)]:
+  - @lynx-js/react-webpack-plugin@0.11.1
+  - @lynx-js/rsbuild-plugin@0.0.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.19.1
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+  - @lynx-js/css-extract-webpack-plugin@0.10.1
+  - @lynx-js/template-webpack-plugin@0.15.2
+
+## 0.19.0
+
+### Minor Changes
+
+- Register the snapshot and worklet definitions collected from the background build on the main thread, so a definition the main-thread bundle dropped no longer fails with `Snapshot not found`. ([#3393](https://github.com/lynx-family/lynx-stack/pull/3393))
+
+### Patch Changes
+
+- Add `compat.transformLegacyEventAttributeNames` to disable legacy event attribute-name conversion independently from other compatibility transforms. ([#3475](https://github.com/lynx-family/lynx-stack/pull/3475))
+- Updated dependencies [[`21528f1`](https://github.com/lynx-family/lynx-stack/commit/21528f12c347564c40bc0c15de3df7db5ce85afe), [`f391460`](https://github.com/lynx-family/lynx-stack/commit/f391460d176eb84cb30faa0ca1644be388ce216a), [`c58b6f9`](https://github.com/lynx-family/lynx-stack/commit/c58b6f91cf7084d2585f42e00db3dd699c27ed61), [`6cc9624`](https://github.com/lynx-family/lynx-stack/commit/6cc9624fb54dc7f73b6e68e49e2322b8136d3418), [`328f712`](https://github.com/lynx-family/lynx-stack/commit/328f7125d1881cf438e58aa749f1e554a756b652), [`c58b6f9`](https://github.com/lynx-family/lynx-stack/commit/c58b6f91cf7084d2585f42e00db3dd699c27ed61)]:
+  - @lynx-js/react-webpack-plugin@0.11.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.19.0
+  - @lynx-js/template-webpack-plugin@0.15.1
+  - @lynx-js/react-refresh-webpack-plugin@0.4.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.10.1
+
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies [[`3b36a4e`](https://github.com/lynx-family/lynx-stack/commit/3b36a4eb378b98f335c7212cb5258c6722efeed6), [`43f74b0`](https://github.com/lynx-family/lynx-stack/commit/43f74b01e1d6af7798e79ddd03c0a972d49c3aea), [`3b36a4e`](https://github.com/lynx-family/lynx-stack/commit/3b36a4eb378b98f335c7212cb5258c6722efeed6)]:
+  - @lynx-js/css-extract-webpack-plugin@0.10.1
+  - @lynx-js/react-webpack-plugin@0.10.3
+  - @lynx-js/template-webpack-plugin@0.15.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.18.3
+  - @lynx-js/react-refresh-webpack-plugin@0.4.1
+  - @lynx-js/use-sync-external-store@1.5.0
+
 ## 0.18.2
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/genui/server/agent/**"
+applyTo: "packages/genui/server/agent/a2ui/**"
 ---
 
 When prompting or validating A2UI template children, follow the v0.9 collection scope rules: the container uses an absolute collection path such as `{ "path": "/items", "componentId": "itemRow" }`, while bindings inside the template component tree use relative item paths such as `{ "path": "name" }`. Do not generate or accept wildcard item bindings like `{ "path": "/items/*/name" }`; `*` appears only in validator-internal flattened data-model coverage.

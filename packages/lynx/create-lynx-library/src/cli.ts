@@ -74,8 +74,9 @@ const LIBRARY_FEATURE_LABELS: Record<LibraryFeature, string> = {
   service: 'Service',
 };
 const LIBRARY_FEATURE_HINTS: Record<LibraryFeature, string> = {
-  'native-module': 'JS bridge APIs for Android, iOS, and HarmonyOS targets',
-  'napi-native-module': 'shared C++ N-API native module generated from typings',
+  'native-module':
+    'platform modules on mobile; a shared Node-API adapter on Lynxtron',
+  'napi-native-module': 'shared C++ Node-API module for mobile and Lynxtron',
   element: 'native UI element for Android, iOS, HarmonyOS, and shared C++',
   service: 'native service implementation registered globally',
 };
@@ -210,8 +211,8 @@ Options:
   --help, -h                   Show this help message.
 
 Library features:
-  native-module                JS bridge APIs for Android, iOS, and HarmonyOS platform targets.
-  napi-native-module           Shared C++ N-API native module generated from typings.
+  native-module                Platform modules on mobile and a Node-API adapter on Lynxtron.
+  napi-native-module           Shared C++ Node-API module for mobile and Lynxtron.
   element                      Native UI element for Android, iOS, HarmonyOS, and shared C++ targets.
   service                      Native service implementation registered globally.
 
@@ -481,7 +482,6 @@ function formatSuccessMessage({
 
 Library features:
 ${featureSummary}
-
 Native platforms:
 ${platformSummary}
 

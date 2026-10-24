@@ -2,8 +2,38 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-const ONLINE_A2UI_SERVER_ORIGIN = 'https://genui-server.vercel.app';
-const LOCAL_A2UI_SERVER_PORT = '3060';
+import { buildGenuiServerUrl } from '../config/genuiServer.js';
+
+declare const __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__: boolean;
+
+export function usesLocalPayloadStore(): boolean {
+  return typeof __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__ !== 'undefined'
+    && __A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__;
+}
+
+/** Development payloads expire after thirty minutes and are never cached as durable shares. */
+export function isLocalPayloadUrl(value: string): boolean {
+  try {
+    return new URL(value).pathname.startsWith('/__a2ui/');
+  } catch {
+    return false;
+  }
+}
+
+export async function publishLocalConversation(
+  messages: unknown,
+): Promise<string> {
+  const res = await window.fetch('/__a2ui_payload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+  });
+  const data = await res.json() as { messagesUrl?: unknown };
+  if (!res.ok || typeof data.messagesUrl !== 'string') {
+    throw new Error('Failed to publish the local conversation');
+  }
+  return new URL(data.messagesUrl, window.location.origin).toString();
+}
 
 export interface PublishedPayload {
   messagesUrl: string;
@@ -13,6 +43,19 @@ export interface PublishedPayload {
 export interface PublishedOpenUIPayload {
   rawTextUrl: string;
 }
+
+export type PayloadStorageMethod =
+  | 'a2ui'
+  | 'openui'
+  | 'mcp-apps'
+  | 'reactlynx'
+  | 'reactweb'
+  | 'lynx-xml'
+  | 'html';
+
+export type A2UIPayloadStorageLocation =
+  | { method?: 'a2ui'; type?: 'preview' }
+  | { method: PayloadStorageMethod; type: 'conversation' };
 
 export function isDevHost(hostname: string): boolean {
   return (
@@ -26,36 +69,29 @@ export function isDevHost(hostname: string): boolean {
 }
 
 export function getA2UIPayloadEndpoint(): string {
-  if (
-    window.location.protocol === 'http:' && isDevHost(window.location.hostname)
-  ) {
-    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/a2ui/payload`;
-  }
-  return `${ONLINE_A2UI_SERVER_ORIGIN}/a2ui/payload`;
+  return buildGenuiServerUrl('a2ui/payload');
 }
 
 export function getOpenUIPayloadEndpoint(): string {
-  if (
-    window.location.protocol === 'http:' && isDevHost(window.location.hostname)
-  ) {
-    return `http://${window.location.hostname}:${LOCAL_A2UI_SERVER_PORT}/openui/payload`;
-  }
-  return `${ONLINE_A2UI_SERVER_ORIGIN}/openui/payload`;
+  return buildGenuiServerUrl('openui/payload');
 }
 
 /**
- * Upload an A2UI payload to the GenUI server (Supabase Storage) and return the
- * durable public URLs. The returned `messagesUrl` can be fed to
+ * Upload an A2UI payload through the GenUI server and return the durable public
+ * URLs selected by the server. The returned `messagesUrl` can be fed to
  * `buildRenderUrl()` to produce a shareable `render.html` link.
  */
 export async function publishA2UIPayload(
   messages: unknown,
   actionMocks?: Record<string, unknown>,
+  storage: A2UIPayloadStorageLocation = {},
 ): Promise<PublishedPayload> {
+  const method = storage.method ?? 'a2ui';
+  const type = storage.type ?? 'preview';
   const res = await window.fetch(getA2UIPayloadEndpoint(), {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, actionMocks }),
+    body: JSON.stringify({ messages, actionMocks, method, type }),
   });
   const payload = await res.json().catch(() => ({})) as {
     preview?: {
@@ -87,7 +123,7 @@ export async function publishOpenUIPayload(
   rawText: string,
 ): Promise<PublishedOpenUIPayload> {
   const res = await window.fetch(getOpenUIPayloadEndpoint(), {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ rawText }),
   });

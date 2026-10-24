@@ -147,6 +147,38 @@ body[data-panel-resize] iframe {
   height: 100%;
 }
 
+html[data-playground-entry="render"],
+html[data-playground-entry="render"] body,
+html[data-playground-entry="render"] #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.renderLynx,
+.reactWebRender,
+.lynxXmlRenderView {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.reactWebRender {
+  border: 0;
+}
+
+.lynxXmlRenderError {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  place-items: center;
+  color: #666;
+  font: 14px/1.5 system-ui, sans-serif;
+  text-align: center;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -897,6 +929,18 @@ html[data-theme="dark"] .phoneHomeIndicator {
   padding: 0;
   align-items: stretch;
   justify-content: stretch;
+}
+
+.previewPanelImageBody {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+}
+
+.previewPanelBody[hidden],
+.previewPanelImageBody[hidden] {
+  display: none;
 }
 
 /* ── Preview Metrics ── */

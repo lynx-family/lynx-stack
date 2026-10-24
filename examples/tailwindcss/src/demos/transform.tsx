@@ -29,6 +29,10 @@ export function TransformDemo() {
         <view className='w-[120px] h-[40px] rounded-[8px] bg-primary skew-y-12' />
       </DemoCell>
 
+      <DemoCell label='skew-x-12 skew-y-6'>
+        <view className='w-[120px] h-[40px] rounded-[8px] bg-primary-muted skew-x-12 skew-y-6' />
+      </DemoCell>
+
       <DemoCell label='perspective-[400px] rotate-x-45'>
         <view className='perspective-[400px]'>
           <view className='w-[120px] h-[48px] rounded-[8px] bg-primary-muted rotate-x-45' />

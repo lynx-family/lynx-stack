@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import '@lynx-js/react/hooks';
 import type { ComponentChild, ContainerNode, VNode } from 'preact';
-import { render } from 'preact';
+import { options, render } from 'preact';
 
 import { callDestroyLifetimeFun } from './callDestroyLifetimeFun.js';
 import { injectCalledByNative } from './main-thread-api.js';
@@ -14,15 +14,18 @@ import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { setupComponentStack } from '../../shared/component-stack.js';
+import { lynxQueueMicrotask } from '../../utils.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
-import { BackgroundElementTemplateInstance } from '../background/instance.js';
+import { BackgroundPageRootInstance } from '../background/instance.js';
 import { installElementTemplateRenderScopeHooks } from '../background/render-scope.js';
 import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
+import { installElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 
@@ -55,6 +58,7 @@ function init(): void {
   if (__MAIN_THREAD__) {
     installMainThreadHooks();
     injectCalledByNative();
+    installElementTemplateRefInitValueListener();
     installElementTemplatePatchListener();
     installOnMtsDestruction();
     if (__PROFILE__) {
@@ -63,17 +67,21 @@ function init(): void {
   }
 
   if (__BACKGROUND__) {
+    if (__DEV__) {
+      setupComponentStack();
+    }
+    options.requestAnimationFrame = lynxQueueMicrotask;
     console.log('experimental_useElementTemplate:', __USE_ELEMENT_TEMPLATE__);
-    setRoot(new BackgroundElementTemplateInstance('root'));
+    setRoot(new BackgroundPageRootInstance());
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();
     resetEventStateForRuntime();
-    lynxCoreInject.tt.callDestroyLifetimeFun = callDestroyLifetimeFun;
-    lynxCoreInject.tt.publishEvent = publishEvent;
-    lynxCoreInject.tt.publicComponentEvent = publicComponentEvent;
-    lynxCoreInject.tt.updateGlobalProps = updateGlobalProps;
-    lynxCoreInject.tt.updateCardData = updateCardData;
-    lynxCoreInject.tt.onAppReload = reloadBackground;
+    lynx.getApp().callDestroyLifetimeFun = callDestroyLifetimeFun;
+    lynx.getApp().publishEvent = publishEvent;
+    lynx.getApp().publicComponentEvent = publicComponentEvent;
+    lynx.getApp().updateGlobalProps = updateGlobalProps;
+    lynx.getApp().updateCardData = updateCardData;
+    lynx.getApp().onAppReload = reloadBackground;
     installElementTemplateRenderScopeHooks();
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {

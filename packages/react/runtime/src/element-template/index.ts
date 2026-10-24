@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import './runtime-backend-marker.js';
+import './runtime-marker.js';
 import {
   Children,
   Component,
@@ -132,6 +132,13 @@ export { useLynxGlobalEventListener };
 export * from './client/root.js';
 export { runOnBackground } from './runtime/template/main-thread-background-function.js';
 export { runOnMainThread } from './runtime/template/main-thread-function.js';
+export { MainThreadRef, useMainThreadRef } from '../core/main-thread-ref.js';
+export { defineMainThreadObjectType, useMainThreadObject } from '../core/main-thread-object.js';
 
 export type { GlobalProps } from '../core/globalProps.js';
+export type {
+  MainThreadObjectHandle,
+  MainThreadObjectType,
+  MainThreadObjectTypeDefinition,
+} from '../core/main-thread-object.js';
 export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '../lynx-api.js';

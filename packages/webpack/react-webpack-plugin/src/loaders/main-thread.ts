@@ -7,10 +7,24 @@ import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata';
 
+import {
+  DEFINES_FOR_SNAPSHOT_BUILD_INFO,
+  DEFINES_FOR_WORKLET_BUILD_INFO,
+} from '../Defines.js';
+import {
+  boundaryKey,
+  definesImportByBoundary,
+} from './defines-import-by-boundary.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+export const REACT_RUNTIME_REQUIREMENTS_BUILD_INFO =
+  'lynx:react-runtime-requirements';
+
+export interface ReactRuntimeRequirementsBuildInfo {
+  mainThreadProgrammability: boolean;
+}
 
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   this: LoaderContext<ReactLoaderOptions>,
@@ -103,20 +117,49 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | undefined;
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
+    if (
+      typeof result.runtimeRequirements !== 'object'
+      || result.runtimeRequirements === null
+      || typeof result.runtimeRequirements.mainThreadProgrammability
+        !== 'boolean'
+    ) {
+      throw new TypeError(
+        'react-transform must provide runtimeRequirements.mainThreadProgrammability as a boolean; upgrade the build plugins and @lynx-js/react (runtime and transform) together to the module-delivery release (^0.128.0).',
+      );
+    }
+    buildInfo[REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] =
+      result.runtimeRequirements;
     if (result.elementTemplates && result.elementTemplates.length > 0) {
       buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
     } else {
       delete buildInfo[ELEMENT_TEMPLATE_BUILD_INFO];
     }
+    if (result.definesForSnapshot) {
+      buildInfo[DEFINES_FOR_SNAPSHOT_BUILD_INFO] = result.definesForSnapshot;
+    }
+    if (result.definesForWorklet) {
+      buildInfo[DEFINES_FOR_WORKLET_BUILD_INFO] = result.definesForWorklet;
+    }
   }
+
+  const definesImport = this._compiler
+    ? definesImportByBoundary(this._compiler).get(
+      boundaryKey(
+        (currentModule as { layer?: string | null } | undefined)?.layer,
+        this.resourcePath,
+      ),
+    )
+    : undefined;
 
   this.callback(
     null,
-    result.code + (
-      this.hot
-        // TODO: temporary fix LEPUS error `$RefreshReg$ is not defined`
-        // should make react-refresh transform in `react-transform`.
-        ? `\
+    result.code
+      + (definesImport ? `\nimport ${JSON.stringify(definesImport)};` : '')
+      + (
+        this.hot
+          // TODO: temporary fix LEPUS error `$RefreshReg$ is not defined`
+          // should make react-refresh transform in `react-transform`.
+          ? `\
   // noop fns to prevent runtime errors during initialization
   if (typeof globalThis !== "undefined") {
     globalThis.$RefreshReg$ = function () {};
@@ -127,8 +170,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     };
   }
 `
-        : ''
-    ),
+          : ''
+      ),
     result.map,
   );
 };

@@ -28,6 +28,8 @@ interface GlobalPropsApi<Data> {
  * The interface you can extends so that the `useGlobalProps` returning value can be customized
  *
  * @public
+ *
+ * @group Types
  */
 export interface GlobalProps {}
 
@@ -65,7 +67,7 @@ export function updateGlobalProps(
     }
   }
 
-  lynxCoreInject.tt.GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
+  lynx.getApp().GlobalEventEmitter.emit('onGlobalPropsChanged', [lynx.__globalProps]);
 }
 
 function warnGlobalPropsMode(): void {

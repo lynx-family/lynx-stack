@@ -8,6 +8,7 @@ module.exports = {
       tt: {},
     };
     global.lynx = {
+      getApp: () => global.lynxCoreInject.tt,
       requireModuleAsync: (_request, callback) => {
         callback(null, {
           ids: ['0'],

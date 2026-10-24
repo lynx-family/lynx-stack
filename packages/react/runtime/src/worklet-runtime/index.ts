@@ -10,3 +10,10 @@ if (globalThis.lynxWorkletImpl === undefined) {
   initApiEnv();
   initEventListeners();
 }
+
+/**
+ * Registers compiler-generated main-thread functions with the initialized host runtime.
+ *
+ * @internal
+ */
+export const registerWorklet = globalThis.registerWorkletInternal;

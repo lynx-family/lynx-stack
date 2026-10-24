@@ -30,7 +30,7 @@ describe('ElementTemplate commit context', () => {
     markRemovedSubtreeForPostDispatchTeardown(root);
     markRemovedSubtreeForPostDispatchTeardown(root);
 
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([root]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([root]);
     expect({
       ops: globalCommitContext.ops,
       flushOptions: globalCommitContext.flushOptions,
@@ -52,7 +52,27 @@ describe('ElementTemplate commit context', () => {
 
     resetGlobalCommitContext();
 
-    expect(globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown).toEqual([]);
+    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
+  });
+
+  it('deduplicates a removal batch in first-seen order and keeps dispatched batches independent', () => {
+    const roots = Array.from({ length: 512 }, () => new BackgroundElementTemplateInstance('view'));
+    for (const root of roots) {
+      markRemovedSubtreeForPostDispatchTeardown(root);
+    }
+    for (let i = roots.length - 1; i >= 0; i -= 1) {
+      markRemovedSubtreeForPostDispatchTeardown(roots[i]!);
+    }
+    const dispatched = takeRemovedSubtreesForPostDispatchTeardown();
+    expect(dispatched).toEqual(roots);
+
+    markRemovedSubtreeForPostDispatchTeardown(roots[0]!);
+    resetGlobalCommitContext();
+    expect(takeRemovedSubtreesForPostDispatchTeardown()).toEqual([]);
+    expect(dispatched).toEqual(roots);
+
+    markRemovedSubtreeForPostDispatchTeardown(roots[1]!);
+    expect(takeRemovedSubtreesForPostDispatchTeardown()).toEqual([roots[1]]);
   });
 
   it('collects only handles that are registered in the main-thread registry', () => {

@@ -1,5 +1,31 @@
 # @lynx-js/web-worker-rpc
 
+## 0.26.5
+
+No changes in this release.
+
+## 0.26.4
+
+No changes in this release.
+
+## 0.26.3
+
+No changes in this release.
+
+## 0.26.2
+
+No changes in this release.
+
+## 0.26.1
+
+## 0.26.0
+
+## 0.25.0
+
+## 0.24.1
+
+## 0.24.0
+
 ## 0.23.1
 
 ## 0.23.0

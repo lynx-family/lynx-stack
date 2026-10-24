@@ -2,6 +2,56 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/**
+ * `@lynx-js/react` is React for Lynx. It keeps the React 17 API surface,
+ * re-exporting the standard hooks and APIs, and adds what the dual-thread
+ * model needs: main-thread functions, the data a page receives from native,
+ * and a few compile-time directives and macros.
+ *
+ * @remarks
+ *
+ * The React APIs below behave as the
+ * {@link https://react.dev/reference/react | official React reference}
+ * describes them, unless a page says otherwise. They are compatible with
+ * React 17 and {@link https://preactjs.com/guide/v10/switching-to-preact/ | Preact}.
+ *
+ * React entered its "concurrent" era with
+ * {@link https://react.dev/blog/2022/03/29/react-v18 | React 18}. Concurrent
+ * features such as `useTransition` and `useDeferredValue` make strict demands
+ * on how the host schedules work — they depend on browser Web APIs or on the
+ * React Native architecture. Lynx evolves its own architecture, so ReactLynx
+ * builds on React 17 and keeps the React programming model. The parts of
+ * {@link https://react.dev/blog/2024/04/25/react-19 | React 19} and the
+ * {@link https://react.dev/learn/react-compiler | React Compiler} that do not
+ * depend on the concurrent architecture are still on the table.
+ *
+ * For an introduction to ReactLynx, see the
+ * {@link https://lynxjs.org/react/ | ReactLynx guides}.
+ *
+ * @groupDescription Hooks
+ * Hooks that ReactLynx adds on top of React, plus the React hooks it
+ * re-exports or re-implements for the dual-thread model.
+ *
+ * @groupDescription Components
+ * Provider and consumer components for the data a Lynx page receives from
+ * the native side, and the components re-exported from React.
+ *
+ * @groupDescription Functions
+ * Functions for crossing the thread boundary, creating elements outside JSX
+ * and mounting the root.
+ *
+ * @groupDescription Types
+ * The types and classes exported by `@lynx-js/react`. Augment `InitData` and
+ * `GlobalProps` in your project to type the data your page receives.
+ *
+ * @document ../docs/directives.md
+ * @document ../docs/macros.md
+ * @document ../docs/global-events.md
+ * @document ../docs/import-attributes.md
+ *
+ * @packageDocumentation
+ */
+
 import type { ReactLynxChildren } from '../runtime/lib/index.js';
 
 declare global {
@@ -49,8 +99,7 @@ declare global {
 }
 
 /**
- * Built-in React Hooks
- * @see https://react.dev/reference/react/hooks
+ * @group Hooks
  */
 export {
   useCallback,
@@ -64,25 +113,91 @@ export {
   useSyncExternalStore,
 } from 'react';
 
-export { useEffect, useLayoutEffect, useErrorBoundary } from '../runtime/lib/core/hooks/react.js';
+export { useEffect, useLayoutEffect } from '../runtime/lib/core/hooks/react.js';
 
 /**
- * Built-in React APIs
- * @see https://react.dev/reference/react/apis
+ * Catches errors thrown by the components below and lets the component
+ * render a fallback.
+ * @see https://preactjs.com/guide/v10/hooks/#useerrorboundary
+ *
+ * @group Hooks
+ */
+export { useErrorBoundary } from '../runtime/lib/core/hooks/react.js';
+
+/**
+ * @group Functions
  */
 export { createContext, forwardRef, lazy, memo } from 'react';
 
 /**
- * Built-in React Components
- * @see https://react.dev/reference/react/components
+ * Lets you group elements without a wrapper node.
+ *
+ * @see {@link https://react.dev/reference/react/Fragment | React Docs}
+ *
+ * @example
+ *
+ * ```tsx
+ * import { Fragment } from '@lynx-js/react';
+ *
+ * <Fragment>
+ *   <text>Hello</text>
+ *   <text>World</text>
+ * </Fragment>
+ * ```
+ *
+ * @example
+ *
+ * ```tsx
+ * // Using the <></> shorthand syntax:
+ *
+ * <>
+ *   <text>Hello</text>
+ *   <text>World</text>
+ * </>
+ * ```
+ *
+ * @public
+ *
+ * @group Components
+ *
+ * @function
  */
-export { Fragment, Suspense } from 'react';
+export const Fragment: typeof import('react').Fragment;
 
 /**
- * Legacy React APIs
- * @see https://react.dev/reference/react/legacy
+ * Lets you display a fallback until its children have finished loading.
+ *
+ * @see {@link https://react.dev/reference/react/Suspense | React Docs}
+ *
+ * @example
+ *
+ * ```tsx
+ * import { Suspense, lazy } from '@lynx-js/react';
+ *
+ * const ProfileDetails = lazy(() => import('./ProfileDetails.jsx'));
+ *
+ * <Suspense fallback={<Loading />}>
+ *   <ProfileDetails />
+ * </Suspense>
+ * ```
+ *
+ * @public
+ *
+ * @group Components
+ *
+ * @function
  */
-export { Component, PureComponent, createRef, isValidElement } from 'react';
+export const Suspense: typeof import('react').Suspense;
+
+/**
+ * @group Components
+ */
+export { Component, PureComponent } from 'react';
+
+/**
+ * @group Functions
+ */
+export { createRef, isValidElement } from 'react';
 
 export type { CloneElement, CreateElement, ReactLynxChildren } from '../runtime/lib/index.js';
 
@@ -92,6 +207,8 @@ export type { CloneElement, CreateElement, ReactLynxChildren } from '../runtime/
  * Arrays returned by `map`, `forEach`, and `toArray` are frozen.
  *
  * @public
+ *
+ * @group Functions
  */
 export const Children: ReactLynxChildren;
 
@@ -100,6 +217,8 @@ export const Children: ReactLynxChildren;
  * `NodesRef` (e.g. from `ref={setX}` or `lynx.createSelectorQuery()`).
  *
  * @public
+ *
+ * @group Functions
  */
 export { createPortal } from '../runtime/lib/index.js';
 

@@ -1,15 +1,20 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { tagSchemaId } from '@openuidev/lang-core';
 import { z } from 'zod/v4';
 
-export const GAP_CLASS: Record<string, string> = {
+import type { OpenUiGap } from '../shared/layout.js';
+
+export const GAP_CLASS: Record<OpenUiGap, string> = {
   none: 'OpenUIGapNone',
+  xxs: 'OpenUIGapXxs',
   xs: 'OpenUIGapXs',
   s: 'OpenUIGapS',
   m: 'OpenUIGapM',
   l: 'OpenUIGapL',
   xl: 'OpenUIGapXl',
+  '2xl': 'OpenUIGap2Xl',
 };
 
 export function asArray<T>(value: T | T[] | null | undefined): T[] {
@@ -20,6 +25,7 @@ export function asArray<T>(value: T | T[] | null | undefined): T[] {
 export const pathBindingSchema = z.object({
   path: z.string(),
 });
+tagSchemaId(pathBindingSchema, 'PathBinding');
 
 export const stringLikeSchema = z.union([
   z.string(),
@@ -27,16 +33,19 @@ export const stringLikeSchema = z.union([
   z.boolean(),
   pathBindingSchema,
 ]);
+tagSchemaId(stringLikeSchema, 'StringLike');
 
 export const booleanLikeSchema = z.union([
   z.boolean(),
   pathBindingSchema,
 ]);
+tagSchemaId(booleanLikeSchema, 'BooleanLike');
 
 export const templateChildrenSchema = z.object({
   componentId: z.string(),
   path: z.string(),
 });
+tagSchemaId(templateChildrenSchema, 'TemplateChildren');
 
 export type StringLike = z.infer<typeof stringLikeSchema>;
 
