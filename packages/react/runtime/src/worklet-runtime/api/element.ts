@@ -26,6 +26,7 @@ export class Element {
     // a crash occurs when printing or transferring refCounted across threads.
     // Bypass this problem by hiding the element object.
     Object.defineProperty(this, 'element', {
+      enumerable: false,
       get() {
         return element;
       },
