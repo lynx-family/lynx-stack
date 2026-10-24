@@ -14,7 +14,7 @@ import { restoreReuseTransition } from '../list/reuseTransition.js';
 import {
   captureNestedListMeasurements,
   getRetainedListItemPlatformInfo,
-  isNestedListSnapshot,
+  hasNestedListState,
   transferNestedListState,
   updateNestedListChildren,
 } from '../list/nativeState.js';
@@ -233,13 +233,25 @@ export function hydrate(
   before: SnapshotInstance,
   after: SnapshotInstance,
   options?: HydrationOptions,
-  reuseRoot: FiberElement | undefined = before.__element_root,
+  /** The reused cell root, passed only when a list recycles a cell for another item. */
+  reuseRoot?: FiberElement,
 ): void {
-  restoreReuseTransition(before);
   if (
-    !isMainThreadHydrating && after.__snapshot_def.isListHolder
+    before.__restoreReuseTransition
+    && (before.__id !== after.__id
+      || before.__listItemPlatformInfo?.['item-key'] !== after.__listItemPlatformInfo?.['item-key'])
+  ) {
+    // A new owner must not inherit an active donor's temporary transition styles.
+    before.__restoreReuseTransition();
+  }
+  restoreReuseTransition(before);
+  // First-screen, main-thread and reload hydration keep the same logical
+  // content even when snapshot IDs change; only recycling changes the owner.
+  const recycling = reuseRoot !== undefined && !isMainThreadHydrating;
+  if (
+    recycling && after.__snapshot_def.isListHolder
     && before.__id !== after.__id && before.__element_root
-    && before.__element_root !== reuseRoot && isNestedListSnapshot(after)
+    && before.__element_root !== reuseRoot && hasNestedListState(before)
   ) {
     // A list's opaque native anchor belongs to one logical owner. Reuse the
     // containing row, but not another item's nested list binding state.
@@ -269,7 +281,7 @@ export function hydrate(
     // Attribute updates can synchronously reset the native list's offset.
     // Assign the new owner and guard its pending restore before those updates.
     const listElement = after.__elements![after.__snapshot_def.slot[0]![1]]!;
-    transferNestedListState(after, listElement, isMainThreadHydrating);
+    transferNestedListState(after, listElement, !recycling);
   }
 
   if (!(options?.skipUnRef)) {
@@ -417,13 +429,14 @@ export function hydrate(
             }
 
             if (a.__elements) {
+              const listItemID = __GetElementUniqueID(a.__element_root!);
               // transfer a's elements to b
-              hydrate(a, b, options, reuseRoot);
+              // Each native cell owns its root/sign, even when its template also contains a list.
+              hydrate(a, b, options, reuseRoot && a.__element_root);
 
               // if a list-item has `elements`, it may be:
               //   - `enqueueComponent` already called on it: so we need to update the `signMap` and the `recycleMap`
               //   - `enqueueComponent` not called on it: update the `signMap`
-              const listItemID = __GetElementUniqueID(a.__element_root!);
               if (signMap.has(listItemID)) {
                 signMap.set(listItemID, b);
               }

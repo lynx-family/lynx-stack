@@ -139,7 +139,7 @@ export class SnapshotInstance {
   __listDescendantCount?: number | undefined;
   __restoreReuseTransition?: (() => void) | undefined;
   __listScrollOffset?: { x: number; y: number } | undefined;
-  __listScrollAnchor?: { itemKey: string; index: number; viewportOffset: number } | undefined;
+  __listScrollAnchor?: { itemKey: string; viewportOffset: number } | undefined;
   __listItemMeasuredExtent?: number | undefined;
   __listItemMeasuredOrientation?: 'horizontal' | 'vertical' | undefined;
   __listWorkletEvents?: Map<string, Worklet> | undefined;
@@ -238,6 +238,12 @@ export class SnapshotInstance {
       // In nested list scenarios, there are some `list` that are lazily created.
       // We need to `flush` them during `ensureElements`.
       // Also, `flush` is a safe operation since it checks if the `list` is in `__pendingListUpdates`.
+      if (__pendingListUpdates.values?.[this.__id]?.isFromEmpty() === false) {
+        // The native list was just created and is empty. A record started
+        // while this list already had children (for example after a recycled
+        // row released it) only holds a delta, so describe the full source.
+        __pendingListUpdates.clear(this.__id);
+      }
       if (__pendingListUpdates.values && !__pendingListUpdates.values[this.__id] && this.__firstChild !== null) {
         let child: SnapshotInstance | null = this.__firstChild;
         while (child) {
@@ -330,6 +336,7 @@ export class SnapshotInstance {
   }
 
   takeElements(): SnapshotInstance {
+    this.__restoreReuseTransition?.();
     restoreReuseTransition(this);
     captureNestedListMeasurements(this);
     const a = Object.create(SnapshotInstance.prototype) as SnapshotInstance;

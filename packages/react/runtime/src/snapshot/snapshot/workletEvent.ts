@@ -55,7 +55,7 @@ function updateWorkletEvent(
 
   if (workletType === 'main-thread') {
     retainWorkletCtx(value);
-    recordNestedListEvent(snapshot, elementIndex, eventType, eventName, value);
+    recordNestedListEvent(snapshot, elementIndex, eventType, eventName, rawValue == null ? undefined : value);
   }
 
   if (!snapshot.__elements) {
@@ -68,7 +68,14 @@ function updateWorkletEvent(
       type: 'worklet',
       value,
     };
-    if (!bindNestedListEvent(snapshot.__elements[elementIndex]!, eventType, eventName, value)) {
+    if (
+      !bindNestedListEvent(
+        snapshot.__elements[elementIndex]!,
+        eventType,
+        eventName,
+        rawValue == null ? undefined : value,
+      )
+    ) {
       __AddEvent(snapshot.__elements[elementIndex]!, eventType, eventName, event);
     }
   }

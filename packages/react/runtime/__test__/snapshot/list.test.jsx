@@ -2129,8 +2129,8 @@ describe('list reload', () => {
 
     // Should only update `list-item` in the recycling pool
     // Should not add the on-screen `list-item` to the recycling pool,
-    expect([...recycleSignMap.keys()]).toStrictEqual([__GetElementUniqueID(d3.__element_root)]);
-    expect(recycleSignMap.get(__GetElementUniqueID(d3.__element_root))).not.toBe(d3);
+    expect([...recycleSignMap.keys()]).toStrictEqual([uiSign2]);
+    expect(recycleSignMap.get(uiSign2)).not.toBe(d3);
 
     // The one rendered <list-item/> should be removed
     expect(root).toMatchInlineSnapshot(`
@@ -2299,13 +2299,13 @@ describe('list reload', () => {
     `);
 
     expect(signMap.get(__GetElementUniqueID(d1_.__element_root))).toBe(d1_);
-    expect(signMap.get(__GetElementUniqueID(d1.__element_root))).toBe(d2_); // note: d1 is reused by d2_
+    expect(signMap.get(uiSign0)).toBe(d2_); // note: d1 is reused by d2_
     expect(signMap.get(__GetElementUniqueID(d2_.__element_root))).toBe(d2_);
     expect(signMap.get(__GetElementUniqueID(d3_.__element_root))).toBe(d3_);
     // d1 was enqueued as well, so it should be in the recycling pool
     expect([...recycleSignMap.keys()]).toStrictEqual([
-      __GetElementUniqueID(d3.__element_root),
-      __GetElementUniqueID(d1.__element_root),
+      uiSign2,
+      uiSign0,
     ]);
   });
 });

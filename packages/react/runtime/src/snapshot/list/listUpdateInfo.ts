@@ -11,6 +11,8 @@ import type { SnapshotInstance } from '../snapshot/snapshot.js';
 export interface ListUpdateInfo {
   flush(): number | undefined;
   getAttachedListId(): number | undefined;
+  /** Whether the recorded changes start from an empty list. */
+  isFromEmpty(): boolean;
   onInsertBefore(
     newNode: SnapshotInstance,
     existingNode?: SnapshotInstance,
@@ -133,6 +135,10 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
       return undefined;
     }
     return this.list.__id;
+  }
+
+  isFromEmpty(): boolean {
+    return this.oldChildNodes.length === 0;
   }
 
   private oldChildNodes: SnapshotInstance[];

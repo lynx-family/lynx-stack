@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { Worklet } from '../../worklet-runtime/bindings/types.js';
-import { EventResult } from '../../worklet-runtime/eventPropagation.js';
 import { LIST_EVENT_ID, setListEventDispatch } from '../../worklet-runtime/listEvent.js';
 import type { ListEventDispatch } from '../../worklet-runtime/listEvent.js';
 import type { PlatformInfo } from '../snapshot/platformInfo.js';
@@ -14,7 +13,6 @@ interface Offset {
   y: number;
 }
 interface RestoreToken {
-  owner: SnapshotInstance;
   element: FiberElement;
   generation: number;
   offset: Offset;
@@ -45,11 +43,24 @@ export function isNestedListSnapshot(owner: SnapshotInstance): boolean {
   return Boolean(ancestor);
 }
 
+/** Only a tracked native binding can participate in scroll-preserving replacement. */
+export function hasNestedListState(owner: SnapshotInstance): boolean {
+  if (!states.size) return false;
+  const element = owner.__elements![owner.__snapshot_def.slot[0]![1]]!;
+  return states.get(__GetElementUniqueID(element))?.owner === owner;
+}
+
 /** Only nested-list cells and their containing rows need rebind suppression. */
 export function isNestedListReuse(listID: number, owner: SnapshotInstance): boolean {
   return states.size > 0
     && (states.has(listID) || Boolean(owner.__snapshot_def.isListHolder) || Boolean(owner.__listDescendantCount));
 }
+
+/**
+ * Slots the internal proxy always occupies. Touchstart listens in the capture
+ * phase, so it also sees touches that a cell catches.
+ */
+const TRACKED_EVENT_TYPE: Record<string, string> = { scroll: 'bindEvent', touchstart: 'capture-bind' };
 
 function bind(state: ListState, eventType: string, eventName: string): void {
   __AddEvent(state.element, eventType, eventName, {
@@ -69,7 +80,13 @@ export function createNestedListState(
   element: FiberElement,
   children: readonly SnapshotInstance[] = [],
 ): void {
-  if (!isNestedListSnapshot(owner)) return;
+  if (
+    typeof __InvokeUIMethod !== 'function' || typeof __GetAttributeByName !== 'function'
+    // Web lists do not recycle cells while scrolling, and Web keeps one caught
+    // flag per element and phase, so internal listeners would alter catches.
+    || String(SystemInfo.platform).startsWith('web')
+    || !isNestedListSnapshot(owner)
+  ) return;
   const state: ListState = {
     element,
     owner,
@@ -81,17 +98,19 @@ export function createNestedListState(
   const listID = __GetElementUniqueID(element);
   destroyNestedListState(listID);
   states.set(listID, state);
+  setListEventDispatch(dispatchNestedListEvent);
   if (state.pending) pendingStates.add(state);
   // Native visible-cell coordinates let restoration target the logical cell,
   // instead of anchoring to an unmeasured prefix at virtual index zero.
   __SetAttribute(element, 'needs-visible-cells', true);
-  if (!state.handlers.has('bindEvent:scroll')) bind(state, 'bindEvent', 'scroll');
-  if (!state.handlers.has('bindEvent:touchstart')) bind(state, 'bindEvent', 'touchstart');
+  for (const eventName in TRACKED_EVENT_TYPE) {
+    const eventType = TRACKED_EVENT_TYPE[eventName]!;
+    if (!state.handlers.has(`${eventType}:${eventName}`)) bind(state, eventType, eventName);
+  }
   for (const key of state.handlers.keys()) {
     const separator = key.lastIndexOf(':');
     bind(state, key.slice(0, separator), key.slice(separator + 1));
   }
-  setListEventDispatch(dispatchNestedListEvent);
 }
 
 /** Publish the same data source as the native callbacks, before native updates can reenter. */
@@ -111,21 +130,14 @@ const dispatchNestedListEvent: ListEventDispatch = (context, params, options, ru
   const name = context['eventName'] as string;
   const raw = params[0] as { detail?: Record<string, unknown>; [key: string]: unknown };
   const detail = raw.detail ?? raw;
-  // A list restoring saved state can emit an intermediate data baseline,
-  // including when the native list was recreated for the same logical owner.
-  // That DIFF is initialization, not this owner's scrolling.
-  if (
-    name === 'scroll' && detail['eventSource'] === 0
-    && (current.pending || current.inflight)
-  ) {
-    return { eventReturnResult: EventResult.kStopImmediatePropagationMask };
-  }
   if (name === 'touchstart') {
     current.generation++;
     current.pending = undefined;
     pendingStates.delete(current);
     current.inflight = undefined;
   }
+  // Only user scrolling is this owner's position. While a restore is pending
+  // or in flight, the rebound list still reports the donor's offset.
   if (
     name === 'scroll' && !current.pending && !current.inflight
     && (detail['eventSource'] === undefined || detail['eventSource'] === 2)
@@ -151,7 +163,7 @@ const dispatchNestedListEvent: ListEventDispatch = (context, params, options, ru
           !anchor
           || (viewportOffset <= 0 && (anchor.viewportOffset > 0 || viewportOffset > anchor.viewportOffset))
           || (viewportOffset > 0 && anchor.viewportOffset > 0 && viewportOffset < anchor.viewportOffset)
-        ) anchor = { itemKey, index, viewportOffset };
+        ) anchor = { itemKey, viewportOffset };
       }
       // A delayed event carrying another data source's cells is not this
       // owner's new scroll intent.
@@ -177,7 +189,7 @@ export function recordNestedListEvent(
   elementIndex: number,
   eventType: string,
   eventName: string,
-  handler: Worklet,
+  handler: Worklet | null | undefined,
 ): void {
   if (eventName !== 'scroll' && eventName !== 'touchstart') return;
   // JSX spreads pass a values-only facade to updateWorkletEvent.
@@ -187,7 +199,18 @@ export function recordNestedListEvent(
     owner = original;
   }
   if (!isNestedListSnapshot(owner) || owner.__snapshot_def.slot[0]?.[1] !== elementIndex) return;
-  (owner.__listWorkletEvents ??= new Map()).set(`${eventType}:${eventName}`, handler);
+  const key = `${eventType}:${eventName}`;
+  if (handler) (owner.__listWorkletEvents ??= new Map()).set(key, handler);
+  else owner.__listWorkletEvents?.delete(key);
+}
+
+/** Clearing a native background listener can also clear its independent worklet slot. */
+export function retainNestedListEvent(element: FiberElement, eventType: string, eventName: string): void {
+  if (!states.size || (eventName !== 'scroll' && eventName !== 'touchstart')) return;
+  const state = states.get(__GetElementUniqueID(element));
+  if (state && (eventType === TRACKED_EVENT_TYPE[eventName] || state.handlers.has(`${eventType}:${eventName}`))) {
+    bind(state, eventType, eventName);
+  }
 }
 
 /** Preserve the original worklet context and its normal hydration/delay path. */
@@ -195,12 +218,16 @@ export function bindNestedListEvent(
   element: FiberElement,
   eventType: string,
   eventName: string,
-  handler: Worklet,
+  handler: Worklet | null | undefined,
 ): boolean {
   if (eventName !== 'scroll' && eventName !== 'touchstart') return false;
   const state = states.get(__GetElementUniqueID(element));
   if (!state) return false;
-  state.handlers.set(`${eventType}:${eventName}`, handler);
+  const key = `${eventType}:${eventName}`;
+  if (handler) state.handlers.set(key, handler);
+  else state.handlers.delete(key);
+  // Only the tracked slot is permanent; keep other removals on their existing SDK path.
+  if (!handler && eventType !== TRACKED_EVENT_TYPE[eventName]) return false;
   bind(state, eventType, eventName);
   return true;
 }
@@ -214,9 +241,10 @@ export function transferNestedListState(owner: SnapshotInstance, element: FiberE
     owner.__listScrollAnchor = state.owner.__listScrollAnchor;
   }
   state.owner = owner;
-  state.generation++;
-  state.inflight = undefined;
+  // Preserved content keeps any queued or in-flight restore; a new owner does not.
   if (!preserve) {
+    state.generation++;
+    state.inflight = undefined;
     state.pending = owner.__listScrollOffset ?? { x: 0, y: 0 };
     pendingStates.add(state);
   }
@@ -281,7 +309,6 @@ export function prepareNestedListRestore(root: SnapshotInstance): (() => void) |
         tokens.push({
           state,
           token: {
-            owner,
             element,
             generation: state.generation,
             offset: state.pending,
@@ -300,9 +327,10 @@ export function prepareNestedListRestore(root: SnapshotInstance): (() => void) |
   if (!tokens.length) return;
   return () => {
     for (const { state, token } of tokens) {
-      const { owner, element, generation, offset } = token;
+      const { element, generation, offset } = token;
+      const { owner } = state;
       if (
-        state.owner !== owner || state.generation !== generation || state.pending !== offset
+        state.generation !== generation || state.pending !== offset
         || owner.__elements?.[owner.__snapshot_def.slot[0]![1]] !== element
       ) continue;
       // Consume before invoking native: reentrant callbacks cannot issue twice.

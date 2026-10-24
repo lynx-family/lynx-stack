@@ -8,6 +8,9 @@ import { getListItemPlatformInfoFromIndexedValue } from '../../src/snapshot/snap
 import { updateSpread } from '../../src/snapshot/snapshot/spread';
 import { updateWorkletEvent } from '../../src/snapshot/snapshot/workletEvent';
 import { updateWorkletRef } from '../../src/snapshot/snapshot/workletRef';
+import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot';
+import { snapshotInitializeList, snapshotDestroyList } from '../../src/snapshot/snapshot/list';
+import { nestedListBridge } from '../../src/worklet-runtime/listEvent';
 
 function createSnapshot(value: unknown) {
   return {
@@ -194,5 +197,83 @@ describe('worklet lifecycle without elements', () => {
     ).toEqual({
       'item-key': 'item-0',
     });
+  });
+});
+
+describe('SSR nested-list event adoption', () => {
+  const snapshots: SnapshotInstance[] = [];
+
+  beforeEach(() => {
+    vi.stubGlobal('__InvokeUIMethod', vi.fn());
+  });
+
+  function createOwner(value: unknown): SnapshotInstance {
+    const outer = new SnapshotInstance('list');
+    const row = new SnapshotInstance('list-item');
+    const owner = new SnapshotInstance('list');
+    snapshots.push(outer, row, owner);
+    outer.__insertBefore(row);
+    row.__insertBefore(owner);
+    owner.__values = [value];
+    return owner;
+  }
+
+  function adoptAndScroll(owner: SnapshotInstance) {
+    const element = __CreateElement('list', 0);
+    owner.__elements = [element];
+    owner.__element_root = element;
+    snapshotInitializeList(owner, element, []);
+    const run = vi.fn();
+    nestedListBridge().dispatch!(
+      {
+        listID: __GetElementUniqueID(element),
+        eventType: 'bindEvent',
+        eventName: 'scroll',
+      },
+      [{ detail: { eventSource: 2, scrollLeft: 10, scrollTop: 0 } }],
+      undefined,
+      run,
+    );
+    return run;
+  }
+
+  afterEach(() => {
+    for (const snapshot of snapshots) {
+      if (snapshot.__elements) snapshotDestroyList(snapshot);
+      snapshotInstanceManager.values.delete(snapshot.__id);
+    }
+    snapshots.length = 0;
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it.each(['named', 'spread'])('forwards the original legacy SSR scroll context from %s attributes', kind => {
+    const handler = { _lepusWorkletHash: 'legacy-nested-scroll' };
+    const owner = createOwner(kind === 'spread' ? { 'main-thread:bindscroll': handler } : handler);
+    if (kind === 'spread') updateSpread(owner, 0, {}, 0);
+    else updateWorkletEvent(owner, 0, undefined as any, 0, 'main-thread', 'bindEvent', 'scroll');
+    expect(owner.__elements).toBeUndefined();
+
+    const run = adoptAndScroll(owner);
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(run.mock.calls[0]![0]).toBe(handler);
+  });
+
+  it.each([{}, { 'main-thread:bindscroll': null }])('does not resurrect a cleared SSR spread handler (%j)', next => {
+    const handler = { _lepusWorkletHash: 'removed-nested-scroll' };
+    const previous = { 'main-thread:bindscroll': handler };
+    const owner = createOwner(previous);
+    updateSpread(owner, 0, {}, 0);
+    owner.__values = [next];
+    updateSpread(owner, 0, previous, 0);
+
+    expect(adoptAndScroll(owner)).not.toHaveBeenCalled();
+  });
+
+  it('does not retain an invalid primitive SSR event as a nested worklet consumer', () => {
+    const owner = createOwner({ 'main-thread:bindscroll': 'not-a-worklet' });
+    updateSpread(owner, 0, {}, 0);
+    expect(owner.__listWorkletEvents).toBeUndefined();
+    expect(adoptAndScroll(owner)).not.toHaveBeenCalled();
   });
 });

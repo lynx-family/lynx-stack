@@ -6,6 +6,7 @@ import { clearReuseTransitions, prepareReuseTransition } from './reuseTransition
 import { cardLifetime } from '../../core/card-lifetime.js';
 import { maybePromise } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
+import type { HydrationOptions } from '../renderToOpcodes/hydrate.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 
@@ -25,11 +26,12 @@ interface ListBindCompletion {
   cancel: () => void;
 }
 let currentListCommit: ListBindCompletion[] | undefined;
+const synchronousListCommit: ListBindCompletion[] = [];
 
 /** This scope is synchronous; deferred batches own their completion bucket. */
 function withListCommit<T>(work: () => T, bucket?: ListBindCompletion[]): T {
   const parent = currentListCommit;
-  const completions = bucket ?? parent ?? [];
+  const completions = bucket ?? parent ?? synchronousListCommit;
   const start = completions.length;
   currentListCommit = completions;
   let result: T;
@@ -46,6 +48,7 @@ function withListCommit<T>(work: () => T, bucket?: ListBindCompletion[]): T {
 }
 
 function finishListCommit(completions: ListBindCompletion[]): void {
+  if (!completions.length) return;
   if (currentListCommit && currentListCommit !== completions) {
     currentListCommit.push(...completions);
     completions.length = 0;
@@ -73,8 +76,7 @@ function finishListBind(child: SnapshotInstance, restoreTransition?: () => void)
     },
     cancel: () => restoreTransition?.(),
   };
-  if (currentListCommit) currentListCommit.push(completion);
-  else completion.complete();
+  currentListCommit!.push(completion);
 }
 
 export function clearListGlobal(): void {
@@ -90,7 +92,12 @@ export function clearListGlobal(): void {
 
 export function componentAtIndexFactory(
   ctx: SnapshotInstance[],
-  hydrateFunction: (before: SnapshotInstance, after: SnapshotInstance) => void,
+  hydrateFunction: (
+    before: SnapshotInstance,
+    after: SnapshotInstance,
+    options?: HydrationOptions,
+    reuseRoot?: FiberElement,
+  ) => void,
 ): [ComponentAtIndexCallback, ComponentAtIndexesCallback] {
   // A hack workaround to ensure childCtx has no direct reference through `__parent` to list,
   // to avoid memory leak.
@@ -167,6 +174,12 @@ export function componentAtIndexFactory(
               childCtx.__extraProps!['isReady'] = 1;
 
               void resolvedPromise.then(() => {
+                // The list may have been destroyed while this cell was loading,
+                // including when a recycled row replaced its nested list.
+                if (!gSignMap[listID]) {
+                  resolve(-1);
+                  return;
+                }
                 // the cellIndex may be changed already, but the `childCtx` is the same
                 resolve(withListCommit(
                   () => componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification),
@@ -224,7 +237,8 @@ export function componentAtIndexFactory(
       recycleSignMap.delete(sign);
       // Hydration may remove the donor's last nested list.
       const wasNested = isNestedListReuse(listID, oldCtx);
-      hydrateFunction(oldCtx, childCtx);
+      // Passing the reused row root marks this as a cross-cell recycle.
+      hydrateFunction(oldCtx, childCtx, undefined, oldCtx.__element_root);
       oldCtx.unRenderElements();
       if (!oldCtx.__id) {
         oldCtx.tearDown();
@@ -378,6 +392,11 @@ export function componentAtIndexFactory(
       if (hasUnready) {
         // eslint-disable-next-line @typescript-eslint/await-thenable
         void Promise.all(p).then((uiSigns) => {
+          if (!gSignMap[listID]) {
+            // Release the batch's pending rebind work with its destroyed list.
+            for (const completion of completions.splice(0)) completion.cancel();
+            return;
+          }
           withListCommit(() => {
             __FlushElementTree(list, {
               triggerLayout: true,

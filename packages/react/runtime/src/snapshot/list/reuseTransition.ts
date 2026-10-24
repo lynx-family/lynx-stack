@@ -1,8 +1,10 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { nestedListBridge } from '../../worklet-runtime/listEvent.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
+// Lynx tools/css_generator/css_defines/110-transition-property.json (also web-core CSSPropertyType).
 const TRANSITION_PROPERTY_ID = 110;
 const elementRestores = new Map<number, () => void>();
 const pendingCancels = new Set<() => void>();
@@ -39,7 +41,7 @@ export function restoreReuseTransition(snapshot: SnapshotInstance): void {
 
 /** Keep suppression through the existing native bind, without an extra flush. */
 export function prepareReuseTransition(snapshot: SnapshotInstance): ReuseTransitionBinding | undefined {
-  if (typeof __GetInlineStyle !== 'function') return;
+  if (typeof __GetInlineStyle !== 'function' || typeof __GetInlineStyles !== 'function') return;
   const styles: { element: FiberElement; id: number; property: unknown; raw: string }[] = [];
   const visit = (element: FiberElement): void => {
     const tag = __GetTag(element);
@@ -69,7 +71,6 @@ export function prepareReuseTransition(snapshot: SnapshotInstance): ReuseTransit
     bindingSnapshots.delete(snapshot);
     pendingCancels.delete(cancel);
     for (const { element, id, property, raw } of styles) {
-      if (elementRestores.get(id) !== restore) continue;
       elementRestores.delete(id);
       if (restoreStyles) {
         if (raw) __SetInlineStyles(element, raw);
@@ -83,6 +84,8 @@ export function prepareReuseTransition(snapshot: SnapshotInstance): ReuseTransit
   snapshot.__restoreReuseTransition = restore;
   bindingSnapshots.add(snapshot);
   pendingCancels.add(cancel);
+  // Public MTS style writes may come from a separately bundled worklet runtime.
+  nestedListBridge().restoreStyle ??= restoreReusedElementStyle;
   for (const { id } of styles) elementRestores.set(id, restore);
   return {
     restore,
