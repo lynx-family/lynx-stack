@@ -39,3 +39,23 @@ test('published JavaScript and public declarations do not import build dependenc
     );
   }
 });
+
+test('Mini vendor graph does not acquire private DOM or scheduling modules', () => {
+  const pending = [new NodeURL('../dist/upstream/mini.js', import.meta.url)];
+  const visited = new Set<string>();
+  while (pending.length > 0) {
+    const file = pending.pop()!;
+    if (visited.has(file.href)) continue;
+    visited.add(file.href);
+    expect(file.pathname).not.toContain('/polyfill/');
+    const source = readFileSync(file, 'utf8');
+    for (
+      const match of source.matchAll(
+        /(?:import|export)[^;]*?from\s*["'](\.[^"']+)["']/g,
+      )
+    ) {
+      pending.push(new NodeURL(match[1]!, file));
+    }
+  }
+  expect(visited.size).toBeGreaterThan(0);
+});

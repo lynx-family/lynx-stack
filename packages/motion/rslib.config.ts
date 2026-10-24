@@ -1,8 +1,9 @@
 import { defineConfig } from '@rslib/core';
+import type { Rsbuild, RslibConfig } from '@rslib/core';
 import { pluginPublint } from 'rsbuild-plugin-publint';
-import { pluginMotionRuntime } from './build/pluginMotionRuntime.js';
+import { pluginLynxRuntime } from './build/pluginLynxRuntime.js';
 
-export default defineConfig({
+const config: RslibConfig = defineConfig({
   lib: [
     {
       format: 'esm',
@@ -26,7 +27,7 @@ export default defineConfig({
         setup(api) {
           // Bundleless JS uses Rslib's glob-based Rspack entries. Its declaration
           // bundler separately needs explicit public entry points.
-          api.modifyEnvironmentConfig((config) => {
+          api.modifyEnvironmentConfig((config: Rsbuild.EnvironmentConfig) => {
             config.source ??= {};
             config.source.entry = {
               index: './src/index.ts',
@@ -50,7 +51,7 @@ export default defineConfig({
       output: {
         autoExternal: { dependencies: false },
       },
-      plugins: [pluginMotionRuntime()],
+      plugins: [pluginLynxRuntime()],
     },
   ],
   source: {
@@ -61,3 +62,5 @@ export default defineConfig({
     buildCache: false,
   },
 });
+
+export default config;

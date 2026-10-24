@@ -68,6 +68,14 @@ package. `motion`, `motion-dom`, and `motion-utils` are build-time development
 dependencies; consumers do not need to install them. The build uses Rslib/Rspack
 directly and has no Babel dependency.
 
+The zero-configuration plugin uses a predefined Lynx runtime preset. It injects
+only APIs referenced by the bundled code; timing-only code does not import the
+DOM adapter, and typeof-only checks can be folded without an import. The preset
+also includes requestAnimationFrame/cancelAnimationFrame with a paired timer
+fallback. See [upstream compatibility](https://github.com/lynx-family/lynx-stack/blob/main/packages/motion/UPSTREAM_COMPATIBILITY.md)
+for the supported preset, selection checks, version differences, and the isolated
+Motion 14.6.0 probe. The production upstream versions remain pinned.
+
 ## Motion Mini (`@lynx-js/motion/mini`)
 
 Motion Mini is a lightweight, **main-thread-optimized** version of the library. It provides a core subset of animation capabilities designed for high performance and low bundle size.

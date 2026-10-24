@@ -65,13 +65,17 @@ globalThis.lynx = {
     Promise.resolve().then(callback);
   },
 };
-const motion = await import('../../dist/upstream/full.js');
-const runtime = await import('../../dist/polyfill/runtime.js');
+const dist = new URL(
+  process.env.MOTION_TEST_DIST ?? '../../dist/',
+  import.meta.url,
+);
+const motion = await import(new URL('upstream/full.js', dist));
+const runtime = await import(new URL('polyfill/runtime.js', dist));
 now = () => runtime.performance.now();
 const mini = {
-  ...await import('../../dist/mini/core/animate.js'),
-  ...await import('../../dist/mini/core/MotionValue.js'),
-  ...await import('../../dist/mini/core/spring.js'),
+  ...await import(new URL('mini/core/animate.js', dist)),
+  ...await import(new URL('mini/core/MotionValue.js', dist)),
+  ...await import(new URL('mini/core/spring.js', dist)),
 };
 function element(selector, styles = {}) {
   const native = {
@@ -375,8 +379,65 @@ await test('mini: unsupported animation types fail explicitly', () => {
   }
 });
 
+if (process.env.MOTION_TEST_LATEST === 'true') {
+  await test('latest: grid, edge and random stagger options', () => {
+    const grid = motion.stagger(0.1, { grid: [3, 3], from: 'center' });
+    near(grid(4, 9), 0);
+    near(grid(0, 9), Math.sqrt(2) * 0.1);
+    const edges = motion.stagger(0.1, { grid: [3, 3], from: 'edges' });
+    near(edges(0, 9), 0);
+    near(edges(4, 9), 0.1);
+    const random = motion.stagger(0.1, { from: 'random' });
+    const delays = Array.from({ length: 5 }, (_, index) => random(index, 5));
+    assert.equal(new Set(delays).size, 5);
+    delays.sort((a, b) => a - b).forEach((value, index) =>
+      near(value, index * 0.1)
+    );
+  });
+
+  await test('latest: negative bounce creates a settling overdamped spring', () => {
+    const generator = motion.spring({
+      keyframes: [0, 1],
+      duration: 500,
+      bounce: -0.5,
+    });
+    let previous = 0;
+    for (let time = 0; time <= 500; time += 10) {
+      const sample = generator.next(time);
+      assert.ok(Number.isFinite(sample.value));
+      assert.ok(sample.value >= previous - 0.00001 && sample.value <= 1.00001);
+      previous = sample.value;
+    }
+    near(generator.next(10000).value, 1);
+    assert.equal(generator.next(10000).done, true);
+  });
+
+  await test('latest: cleanup of a replaced styleEffect retains the new binding', async () => {
+    const { native } = element('.latest-rebind');
+    const first = motion.motionValue(0);
+    const second = motion.motionValue(0.2);
+    const cleanupFirst = motion.styleEffect('.latest-rebind', {
+      opacity: first,
+    });
+    const cleanupSecond = motion.styleEffect('.latest-rebind', {
+      opacity: second,
+    });
+    cleanupFirst();
+    second.set(0.8);
+    await until(() => Number(native.styles.opacity) === 0.8);
+    cleanupSecond();
+    second.set(0.3);
+    await wait(35);
+    near(native.styles.opacity, 0.8);
+    first.destroy();
+    second.destroy();
+  });
+}
+
 await test('full and mini leave host globals untouched after exercising features', async () => {
-  const { queueMicrotask } = await import('../../dist/polyfill/microtask.js');
+  const { queueMicrotask } = await import(
+    new URL('polyfill/microtask.js', dist)
+  );
   await new Promise(resolve => queueMicrotask(resolve));
   assert.ok(microtasks > 0);
   assert.deepEqual(
