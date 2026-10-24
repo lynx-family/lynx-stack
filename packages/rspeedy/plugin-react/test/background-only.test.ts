@@ -108,13 +108,17 @@ describe('Config', () => {
 
     if (Array.isArray(rule.use)) {
       const useEntry = rule.use.find(item => {
+        if (!item) {
+          return false
+        }
         if (typeof item === 'string') {
           return item.includes('invalid-import-error-loader')
         } else {
           return item.loader.includes('invalid-import-error-loader')
             && typeof item.options === 'object'
+            && item.options !== null
             && Object.prototype.hasOwnProperty.call(item.options, 'message')
-            && item.options['message']
+            && item.options.message
               === '\'background-only\' cannot be imported from a main-thread module.'
         }
       })

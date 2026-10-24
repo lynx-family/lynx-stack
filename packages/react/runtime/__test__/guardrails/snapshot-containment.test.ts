@@ -184,6 +184,10 @@ describe('snapshot containment guardrails', () => {
       lazy: './runtime/lazy/legacy-react-runtime.js',
       default: './runtime/lib/core/compat/legacy-react-runtime.js',
     });
+    expect(packageJson.exports['./experimental/lazy/load']).toEqual({
+      types: './runtime/lib/core/lynx/lazy-bundle.d.ts',
+      default: './runtime/lib/core/lynx/lazy-bundle.js',
+    });
 
     const typesVersions = JSON.stringify(packageJson.typesVersions ?? {});
 

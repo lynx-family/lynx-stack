@@ -3,6 +3,7 @@ import type { PageConfig } from '../../types/PageConfig.js';
 export interface DecodeWorkerMessage {
   type: string;
   url: string;
+  decodeKey?: string;
 }
 
 export interface InitMessage extends DecodeWorkerMessage {
