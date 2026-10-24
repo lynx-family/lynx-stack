@@ -17,9 +17,16 @@ import {
   detachMainThreadDynamicAttrRefsForSubtree,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
   updateMainThreadEventAttrSlot as setMTEventSlot,
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+
+import { prepareMainThreadBackgroundFunctionCtx } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
+import { prepareMTEventCtxForNative } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import type { MTEventNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import type { Worklet } from '../../../../src/worklet-runtime/bindings/types.js';
+import { initWorklet } from '../../../../src/worklet-runtime/workletRuntime.js';
 
 const MT_EVENT_TEMPLATE = '_et_mt_event';
 const MT_REF_TEMPLATE = '_et_mt_ref';
@@ -53,6 +60,10 @@ function installJsFunctionLifecycleManager(): {
     ...previousWorkletImpl,
     _jsFunctionLifecycleManager: {
       addRef,
+      prepareWorkletCtx: vi.fn(),
+      retainWorkletCtx: (ctx: { _execId?: number }) => {
+        if (ctx._execId !== undefined) addRef(ctx._execId, ctx);
+      },
     },
   } as typeof globalThis.lynxWorkletImpl;
   return {
@@ -87,6 +98,39 @@ describe('main-thread dynamic attr state', () => {
   afterEach(() => {
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
+  });
+
+  it('executes Native event descriptors using the slot-owned context before and after hydration', () => {
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const previousSdkVersion = SystemInfo.lynxSdkVersion;
+    try {
+      SystemInfo.lynxSdkVersion = '4.0';
+      vi.stubGlobal('__JS__', false);
+      initWorklet();
+      globalThis.registerWorklet('main-thread', 'callback', function(this: Worklet) {
+        return this._jsFn;
+      });
+      const first = prepareMTEventCtxForNative({
+        _wkltId: 'callback',
+        _jsFn: { cb: { _isFirstScreen: true } },
+      }) as unknown as MTEventNativeWrapper;
+      prepareMainThreadBackgroundFunctionCtx(first.value);
+      setMTEventSlot(17, 0, first);
+      const deliver = (ctx: object) => globalThis.runWorklet(JSON.parse(JSON.stringify(ctx)), []);
+      expect(deliver(first.value)).toBe(first.value._jsFn);
+      const next = { _wkltId: 'callback', _execId: 11, _jsFn: { cb: { _jsFnId: 1 } } };
+      prepareMainThreadBackgroundFunctionCtx(next);
+      setMTEventSlot(17, 0, { type: 'worklet', value: next }, true);
+      expect(deliver(next)).toBe(next._jsFn);
+      expect(next._jsFn.cb).toEqual({ _jsFnId: 1, _execId: 11 });
+      expect(getMainThreadDynamicAttrState(17, 0)).toEqual({ kind: 'mt-event', nativeHeldValue: next });
+      deleteMainThreadDynamicAttrStateForSubtree([17]);
+      expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+      SystemInfo.lynxSdkVersion = previousSdkVersion;
+      vi.unstubAllGlobals();
+    }
   });
 
   it('records native-held MTEvent ctx by handle and slot without storing the wrapper', () => {
@@ -254,31 +298,33 @@ describe('main-thread dynamic attr state', () => {
     }
   });
 
-  it('retains native-held MTEvent ctx recorded from initial attribute slots', () => {
+  it('tracks prepared MTEvent input once before committing initial slots', () => {
     const { addRef, restore } = installJsFunctionLifecycleManager();
     const ctx = { _execId: 99, _wkltId: 'tap' };
     __etAttrPlanMap[MT_EVENT_TEMPLATE] = [0, adaptMTEventAttrSlot];
 
     try {
-      initializeMainThreadDynamicAttrSlots(17, MT_EVENT_TEMPLATE, [{
-        type: 'worklet',
-        value: ctx,
-      }]);
+      const slots = [{ type: 'worklet', value: ctx }];
+      prepareMainThreadDynamicAttrSlotsForNative(MT_EVENT_TEMPLATE, slots);
+      expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
+      initializeMainThreadDynamicAttrSlots(17, MT_EVENT_TEMPLATE, slots);
 
-      expect(addRef).toHaveBeenCalledWith(99, ctx);
+      expect(addRef).toHaveBeenCalledExactlyOnceWith(99, ctx);
     } finally {
       restore();
     }
   });
 
-  it('retains native-held MTEvent ctx recorded from updates', () => {
+  it('commits MTEvent updates without repeating prepared input tracking', () => {
     const { addRef, restore } = installJsFunctionLifecycleManager();
     const ctx = { _execId: 100, _wkltId: 'tap' };
 
     try {
+      prepareMainThreadBackgroundFunctionCtx(ctx);
+      expect(getMainThreadDynamicAttrState(17, 3)).toBeUndefined();
       setMTEventSlot(17, 3, { type: 'worklet', value: ctx });
 
-      expect(addRef).toHaveBeenCalledWith(100, ctx);
+      expect(addRef).toHaveBeenCalledExactlyOnceWith(100, ctx);
     } finally {
       restore();
     }

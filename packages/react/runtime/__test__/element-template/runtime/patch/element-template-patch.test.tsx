@@ -8,6 +8,7 @@ import {
 } from '../../../../src/element-template/main-thread-ref-init-value.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { root } from '../../../../src/element-template/index.js';
@@ -337,6 +338,43 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     expect(mockSetElementTemplateAttributeSlot.mock.calls.length).toBeGreaterThan(0);
     expect(mockFlushElementTree.mock.calls.length).toBeGreaterThan(0);
+  });
+
+  it.each([false, true])('tracks setter input before Native and commits only on success (throws=%s)', (throws) => {
+    const previous = globalThis.lynxWorkletImpl;
+    const manager = new JsFunctionLifecycleManager();
+    const hydrate = vi.fn();
+    globalThis.lynxWorkletImpl = { ...previous, _jsFunctionLifecycleManager: manager, _hydrateCtx: hydrate };
+    const oldCtx = { _wkltId: 'tap', _execId: 30 };
+    const nextCtx = { _wkltId: 'tap', _execId: 31 };
+    elementTemplateRegistry.set(101, {} as ElementTemplateHandle);
+    seedMTEventState(101, 0, oldCtx);
+    const retain = vi.spyOn(manager, 'addRef');
+    const error = new Error('setter failed');
+    mockSetElementTemplateAttributeSlot.mockImplementationOnce((_native, _slot, value) => {
+      expect(manager.resolveWorkletCtx(JSON.parse(JSON.stringify(value.value)))).toBe(nextCtx);
+      expect(retain).toHaveBeenCalledExactlyOnceWith(31, nextCtx);
+      expect(getMainThreadDynamicAttrState(101, 0)?.nativeHeldValue).toBe(oldCtx);
+      if (throws) throw error;
+    });
+    try {
+      const apply = () =>
+        applyElementTemplateUpdateCommands([
+          ElementTemplateUpdateOps.setMainThreadEvent,
+          101,
+          0,
+          { type: 'worklet', value: nextCtx },
+        ], true);
+      if (throws) expect(apply).toThrow(error);
+      else apply();
+      expect(getMainThreadDynamicAttrState(101, 0)?.nativeHeldValue).toBe(throws ? oldCtx : nextCtx);
+      expect(retain).toHaveBeenCalledExactlyOnceWith(31, nextCtx);
+      if (throws) expect(hydrate).not.toHaveBeenCalled();
+      else expect(hydrate).toHaveBeenCalledExactlyOnceWith(nextCtx, oldCtx);
+    } finally {
+      manager.dispose();
+      globalThis.lynxWorkletImpl = previous;
+    }
   });
 
   it('records MTEvent state after setMainThreadEvent PAPI succeeds', () => {
