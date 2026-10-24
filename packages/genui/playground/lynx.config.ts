@@ -15,13 +15,7 @@ export default defineConfig({
     hmr: false,
   },
   plugins: [
-    pluginQRCode({
-      schema(url) {
-        return {
-          default: `${url}?fullscreen=true`,
-        };
-      },
-    }),
+    pluginQRCode({ fullscreen: true }),
     pluginReactLynx({
       defaultDisplayLinear: false,
     }),

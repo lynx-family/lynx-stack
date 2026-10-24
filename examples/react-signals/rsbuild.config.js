@@ -11,11 +11,7 @@ export default defineConfig({
   },
   plugins: [
     pluginReactLynx(),
-    pluginQRCode({
-      schema(url) {
-        return `${url}?fullscreen=true`;
-      },
-    }),
+    pluginQRCode({ fullscreen: true }),
   ],
   environments: {
     web: {},

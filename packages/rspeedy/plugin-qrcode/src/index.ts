@@ -99,9 +99,9 @@ export interface PluginQRCodeOptions {
    * navigation chrome stripped).
    *
    * When enabled, the plugin:
-   * - Appends a `fullscreen` entry to the schema rotation — the QR keeps
-   *   opening on your default schema; press `a` in the dev console to switch
-   *   to the `fullscreen` variant.
+   * - Puts a `fullscreen` entry first in the schema rotation, so the QR code
+   *   opens the fullscreen variant by default; press `a` in the dev console to
+   *   switch to your own schema entries.
    * - Appends an `∟ Fullscreen` URL line under each Lynx bundle URL printed
    *   by the dev server.
    *
@@ -260,11 +260,10 @@ export function wrapPrintUrlsWithFullscreen(
 }
 
 /**
- * Wrap a user-provided schema function so that the returned schema map gains a
- * `fullscreen` entry appended to the rotation. The variant is derived from the
- * first URL in the user's schema output by appending `?fullscreen=true` —
- * the user's existing first entry stays as the initial QR (preserving pre-PR
- * behavior), and the `a` shortcut switches to `fullscreen`.
+ * Wrap a user-provided schema function so that the returned schema map starts
+ * with a `fullscreen` entry. The variant is derived from the first URL in the
+ * user's schema output by appending `?fullscreen=true`; it becomes the initial
+ * QR, and the `a` shortcut switches to the user's own entries.
  *
  * @internal
  */
@@ -278,7 +277,7 @@ export function withFullscreenSchema(
     if (firstUrl === undefined) {
       return map
     }
-    return { ...map, fullscreen: appendFullscreenParam(firstUrl) }
+    return { fullscreen: appendFullscreenParam(firstUrl), ...map }
   }
 }
 

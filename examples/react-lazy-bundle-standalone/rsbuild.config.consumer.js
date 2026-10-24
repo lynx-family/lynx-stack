@@ -53,11 +53,7 @@ export default defineConfig({
     pluginReactLynx({
       ...(enableFetchBundle ? { engineVersion: '3.9' } : {}),
     }),
-    pluginQRCode({
-      schema(url) {
-        return `${url}?fullscreen=true`;
-      },
-    }),
+    pluginQRCode({ fullscreen: true }),
   ],
   environments: {
     lynx: {},
