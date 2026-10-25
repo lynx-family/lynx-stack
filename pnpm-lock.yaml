@@ -2122,6 +2122,9 @@ importers:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-lynx
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../../webpack/template-webpack-plugin
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.2.9(core-js@3.50.0)
