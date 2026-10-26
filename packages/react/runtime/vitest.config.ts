@@ -142,7 +142,6 @@ export default defineConfig({
         'src/element-template/**',
         'src/core/hooks/mainThread.ts',
         'src/core/hooks/mainThreadImpl.ts',
-        'src/shared/component-stack.ts',
         'src/shared/profile.ts',
         'src/index.ts',
         'src/lynx-api.ts',

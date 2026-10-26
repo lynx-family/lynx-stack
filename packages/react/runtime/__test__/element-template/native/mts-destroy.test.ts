@@ -9,6 +9,10 @@ import {
   registerElementTemplateListState,
 } from '../../../src/element-template/runtime/list/list.js';
 import {
+  getNextElementTemplateId,
+  reserveElementTemplateId,
+} from '../../../src/element-template/runtime/template/handle.js';
+import {
   attachMainThreadDynamicAttrRefsForSubtree,
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
@@ -185,6 +189,50 @@ describe('mts-destroy', () => {
       1,
     );
     expect(delayedBackgroundFunctionArray).toHaveLength(0);
+  });
+
+  it('resets main-thread template id counter on destruction', () => {
+    expect(reserveElementTemplateId()).toBe(-1);
+    expect(reserveElementTemplateId()).toBe(-2);
+    expect(getNextElementTemplateId()).toBe(-3);
+
+    onMtsDestruction();
+
+    expect(getNextElementTemplateId()).toBe(-1);
+  });
+
+  it('still clears dynamic attr state and resets template id when a materialized main-thread ref cleanup throws', () => {
+    const registryRef = {} as ElementTemplateHandle;
+    const cleanupError = new Error('mt-ref cleanup failed');
+    const throwingRef: { _wkltId: string; _unmount?: () => void } = {
+      _wkltId: 'ref-cleanup',
+    };
+    expect(reserveElementTemplateId()).toBe(-1);
+    elementTemplateRegistry.set(-1, registryRef);
+    __etAttrPlanMap._et_throwing_destroy = [0, adaptMTEventAttrSlot, 1, adaptMTRefAttrSlot];
+    initializeMainThreadDynamicAttrSlots(
+      -1,
+      '_et_throwing_destroy',
+      [
+        {
+          type: 'worklet',
+          value: { _wkltId: 'tap' },
+        },
+        {
+          type: 'main-thread-ref',
+          value: throwingRef,
+        },
+      ],
+    );
+    attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: registryRef }]);
+    throwingRef._unmount = vi.fn(() => {
+      throw cleanupError;
+    });
+
+    expect(() => onMtsDestruction()).toThrow(cleanupError);
+    expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
+    expect(getMainThreadDynamicAttrState(-1, 1)).toBeUndefined();
+    expect(getNextElementTemplateId()).toBe(-1);
   });
 
   it('marks list callbacks destroyed on main-thread runtime destruction', () => {

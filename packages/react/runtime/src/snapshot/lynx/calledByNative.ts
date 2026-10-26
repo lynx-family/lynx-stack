@@ -138,7 +138,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
 
     setPipeline(options?.pipelineOptions);
     markTiming('updateDiffVdomStart');
-    {
+    try {
       __pendingListUpdates.clearAttachedLists();
       renderMainThread();
       // As said by codename `firstScreenEventIdSwap`, this swap will only be used for event remap,
@@ -152,17 +152,19 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
       applyRefQueue();
-    }
 
-    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
-      onFirstScreenTreeReady();
-    }
+      if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
+        onFirstScreenTreeReady();
+      }
 
-    flushOptions.triggerDataUpdated = true;
-    markTiming('updateDiffVdomEnd');
+      flushOptions.triggerDataUpdated = true;
+      markTiming('updateDiffVdomEnd');
 
-    if (typeof lepusng_gc === 'function') {
-      lepusng_gc();
+      if (typeof lepusng_gc === 'function') {
+        lepusng_gc();
+      }
+    } finally {
+      setPipeline(undefined);
     }
   }
 

@@ -120,13 +120,6 @@ test('state change will cause re-render', async () => {
         {
           "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-1,2,0,"__snapshot_f46c5_test_2",3,0,null,4,3,4,0,"Hello World",1,3,4,null,0,1,-1,3,null,0]}]}",
           "patchOptions": {
-            "pipelineOptions": {
-              "dsl": "reactLynx",
-              "needTimestamps": true,
-              "pipelineID": "pipelineID",
-              "pipelineOrigin": "reactLynxHydrate",
-              "stage": "hydrate",
-            },
             "reloadVersion": 0,
           },
         },

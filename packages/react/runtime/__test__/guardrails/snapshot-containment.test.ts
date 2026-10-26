@@ -119,7 +119,9 @@ describe('snapshot containment guardrails', () => {
     const elementTemplateRoot = path.join(srcRoot, 'element-template');
     const snapshotPrefix = `${path.join(srcRoot, 'snapshot')}${path.sep}`;
     const snapshotRootFiles = new Set(
-      ['document', 'index', 'internal', 'lynx', 'root', 'runtime-marker'].map((name) => path.join(srcRoot, name)),
+      ['document', 'index', 'internal', 'lynx', 'lynx-api', 'root', 'runtime-marker'].map((name) =>
+        path.join(srcRoot, name)
+      ),
     );
     const offenders = walkFiles(elementTemplateRoot)
       .filter((file) =>
@@ -159,6 +161,11 @@ describe('snapshot containment guardrails', () => {
       `${path.join(srcRoot, 'snapshot')}${path.sep}`,
       `${path.join(srcRoot, 'element-template')}${path.sep}`,
     ];
+    const snapshotRootFiles = new Set(
+      ['document', 'index', 'internal', 'lynx', 'lynx-api', 'root', 'runtime-marker'].map((name) =>
+        path.join(srcRoot, name)
+      ),
+    );
     const offenders = [
       ...walkFiles(coreRoot),
       ...walkFiles(sharedRoot),
@@ -166,6 +173,7 @@ describe('snapshot containment guardrails', () => {
       .filter((file) =>
         getResolvedRelativeImports(file).some((resolved) =>
           backendPrefixes.some((prefix) => resolved.startsWith(prefix))
+          || snapshotRootFiles.has(stripModuleExtension(resolved))
         )
       )
       .map((file) => path.relative(runtimeRoot, file));

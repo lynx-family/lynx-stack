@@ -26,8 +26,8 @@ export function registerDestroyTask(task: DestroyTask): () => void {
 
 export function runDestroyTasks(): void {
   const tasks = Array.from(destroyTasks);
+  destroyTasks.clear();
   for (const task of tasks) {
     task();
   }
-  destroyTasks.clear();
 }
