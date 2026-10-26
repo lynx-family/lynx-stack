@@ -13,14 +13,17 @@ import hmrLoadChunkRuntime from '../src/runtime/javascript/hmr-load-chunk.js';
 type Factory = () => string;
 interface Update {
   modules: Record<string, Factory>;
-  lynxRefreshModules?: string[];
+  lynxRefreshModules?: (string | number)[];
 }
 type Callback = (error: Error | null, update: Update) => void;
-type LoadUpdateChunk = (id: string, updatedModules: string[]) => Promise<void>;
+type LoadUpdateChunk = (id: string, updatedModules?: string[]) => Promise<void>;
 const oldFactory = () => 'old';
 const newFactory = () => 'new';
 
-function createLoader(currentUpdate: Record<string, Factory | false>) {
+function createLoader(
+  currentUpdate: Record<string, Factory | false>,
+  ownerId = 'owner',
+) {
   const callbacks = new Map<string, Callback>();
   const requireModuleAsync = (url: string, callback: Callback) => {
     callbacks.set(url, callback);
@@ -34,8 +37,8 @@ function createLoader(currentUpdate: Record<string, Factory | false>) {
         p: '/',
         hu: (id: string) => `${id}.hot-update.js`,
         o: (object: object, key: string) => Object.hasOwn(object, key),
-        c: { owner: {} },
-        m: { owner: oldFactory },
+        c: { [ownerId]: {} },
+        m: { [ownerId]: oldFactory },
       },
       lynx: { requireModuleAsync },
     },
@@ -99,3 +102,79 @@ it('does not replay an owner removed by the update manifest', async () => {
   expect(currentUpdate).toEqual({ owner: false });
   expect(updatedModules).toEqual([]);
 });
+
+it.each(
+  [
+    { cached: false, update: { modules: { owner: newFactory } } },
+    {
+      cached: false,
+      update: { modules: {}, lynxRefreshModules: ['owner', 'owner'] },
+    },
+    {
+      cached: true,
+      update: { modules: {}, lynxRefreshModules: ['owner', 'owner'] },
+    },
+  ] satisfies { cached: boolean; update: Update }[],
+)(
+  'reports listed owners after an overlapping chunk was loaded without a list: %j',
+  async ({ cached, update }) => {
+    const currentUpdate: Record<string, Factory | false> = {};
+    const loader = createLoader(currentUpdate);
+    const unlisted = loader.load('unlisted');
+    loader.complete(
+      'unlisted',
+      cached
+        ? { modules: {}, lynxRefreshModules: ['owner'] }
+        : { modules: { owner: newFactory } },
+    );
+    await unlisted;
+
+    const updatedModules: string[] = [];
+    const listed = loader.load('listed', updatedModules);
+    loader.complete('listed', update);
+    await listed;
+
+    expect(currentUpdate).toEqual({ owner: cached ? oldFactory : newFactory });
+    expect(updatedModules).toEqual(['owner']);
+  },
+);
+
+it('reports a module once for each supplied result list', async () => {
+  const loader = createLoader({});
+  const lists = [[], []] as string[][];
+  const pending = Promise.all(
+    lists.map((list, index) => loader.load(String(index), list)),
+  );
+  for (let index = 0; index < lists.length; index++) {
+    loader.complete(String(index), { modules: { owner: newFactory } });
+  }
+  await pending;
+
+  expect(lists).toEqual([['owner'], ['owner']]);
+});
+
+it.each([
+  ['owner', 'runtime'],
+  ['runtime', 'owner'],
+])(
+  'deduplicates numeric refresh IDs against factory keys in order %s, %s',
+  async (first, second) => {
+    const currentUpdate: Record<string, Factory | false> = {};
+    const loader = createLoader(currentUpdate, '123');
+    const updatedModules: string[] = [];
+    const pending = Promise.all([
+      loader.load('runtime', updatedModules),
+      loader.load('owner', updatedModules),
+    ]);
+    const updates: Record<string, Update> = {
+      runtime: { modules: {}, lynxRefreshModules: [123, '123'] },
+      owner: { modules: { 123: newFactory } },
+    };
+    loader.complete(first!, updates[first!]!);
+    loader.complete(second!, updates[second!]!);
+    await pending;
+
+    expect(currentUpdate).toEqual({ 123: newFactory });
+    expect(updatedModules).toEqual(['123']);
+  },
+);

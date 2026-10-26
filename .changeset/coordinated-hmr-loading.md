@@ -8,3 +8,5 @@ Add internal HMR loading and update coordination hooks. Allow coordinated update
 Keep downloaded factories ahead of cached refresh fallbacks across update chunks, regardless of loading order.
 
 Allow up to ten seconds for coordinated background application before timeout recovery.
+
+Report each hot-update module once per result list, including modules collected earlier without a list.

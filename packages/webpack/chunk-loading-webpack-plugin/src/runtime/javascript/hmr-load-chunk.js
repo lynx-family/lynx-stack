@@ -29,7 +29,7 @@ export default function() {
             if ($RuntimeGlobals_hasOwnProperty$(updatedModules, moduleId)) {
               if (
                 updatedModulesList
-                && !$RuntimeGlobals_hasOwnProperty$(currentUpdate, moduleId)
+                && updatedModulesList.indexOf(moduleId) === -1
               ) updatedModulesList.push(moduleId);
               currentUpdate[moduleId] = updatedModules[moduleId];
             }
@@ -38,12 +38,19 @@ export default function() {
           // factories are only fallbacks; any downloaded factory takes priority
           // regardless of which update chunk finishes loading first.
           (update.lynxRefreshModules || []).forEach(function(moduleId) {
+            // Match the string keys used by downloaded module factories.
+            moduleId = String(moduleId);
             if (
               __webpack_require__.c[moduleId]
-              && !$RuntimeGlobals_hasOwnProperty$(currentUpdate, moduleId)
+              && currentUpdate[moduleId] !== false
             ) {
-              currentUpdate[moduleId] = __webpack_require__.m[moduleId];
-              if (updatedModulesList) updatedModulesList.push(moduleId);
+              if (!$RuntimeGlobals_hasOwnProperty$(currentUpdate, moduleId)) {
+                currentUpdate[moduleId] = __webpack_require__.m[moduleId];
+              }
+              if (
+                updatedModulesList
+                && updatedModulesList.indexOf(moduleId) === -1
+              ) updatedModulesList.push(moduleId);
             }
           });
           if (runtime) currentUpdateRuntime.push(runtime);
