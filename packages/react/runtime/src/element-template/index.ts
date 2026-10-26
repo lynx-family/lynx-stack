@@ -39,7 +39,7 @@ import { createGlobalProps } from '../core/globalProps.js';
 import type { GlobalProps } from '../core/globalProps.js';
 import { useLynxGlobalEventListener } from '../core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from '../core/initData.js';
-import type { InitData } from '../lynx-api.js';
+import type { InitData } from '../core/lynx-data-processors.js';
 import './native/index.js';
 
 installComponentCompat();
@@ -141,4 +141,4 @@ export type {
   MainThreadObjectType,
   MainThreadObjectTypeDefinition,
 } from '../core/main-thread-object.js';
-export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '../lynx-api.js';
+export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from '../core/lynx-data-processors.js';

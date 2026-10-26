@@ -110,15 +110,18 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
 }
 
 export function clearMainThreadDynamicAttrState(): void {
-  for (const [handleId, handleState] of mtRefAttrState) {
-    if (attachedMTRefHandleIds.has(handleId)) {
-      cleanupMTRefHandleState(handleState);
+  try {
+    for (const [handleId, handleState] of mtRefAttrState) {
+      if (attachedMTRefHandleIds.has(handleId)) {
+        cleanupMTRefHandleState(handleState);
+      }
     }
+  } finally {
+    mtEventAttrState.clear();
+    mtRefAttrState.clear();
+    attachedMTRefHandleIds.clear();
+    pendingMTRefAttachments = [];
   }
-  mtEventAttrState.clear();
-  mtRefAttrState.clear();
-  attachedMTRefHandleIds.clear();
-  pendingMTRefAttachments = [];
 }
 
 export function getMainThreadDynamicAttrState(
