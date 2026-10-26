@@ -53,6 +53,30 @@ side-effect entry:
 import '@lynx-js/web-core/animax';
 ```
 
+### Resolve image resources
+
+Set `resolveResource` before loading a view to resolve `<image>` and
+`<filter-image>` sources and placeholders against your asset directory:
+
+```typescript
+import type { LynxViewElement } from '@lynx-js/web-core/client';
+import '@lynx-js/web-core/client';
+
+const view = document.createElement('lynx-view') as LynxViewElement;
+view.style.cssText = 'height: 100vh; width: 100vw';
+view.resolveResource = (src) =>
+  new URL(src, 'https://example.com/assets/').href;
+view.url = 'https://example.com/main.web.bundle';
+document.body.append(view);
+```
+
+The hook runs synchronously for image loads, placeholder preloads, and error
+fallbacks. It receives the original `src` or `placeholder` value; the element's
+attributes remain unchanged. Images resolve their URLs again when connected or
+moved to another shadow-root host. Changing the hook does not reload images that
+are already connected. Without a hook, URLs are used unchanged. This hook does
+not resolve CSS URLs or bundle URLs.
+
 ## Document
 
 See our website for more information.
