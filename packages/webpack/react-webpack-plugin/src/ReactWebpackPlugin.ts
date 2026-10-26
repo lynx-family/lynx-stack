@@ -298,6 +298,14 @@ export function collectElementTemplatesForChunkGroups<TChunk>(
  */
 interface ReactWebpackPluginOptions {
   /**
+   * The template plugin implementation supplied by the build engine.
+   * Rsbuild integrations use the implementation exposed by `pluginLynx`.
+   *
+   * @defaultValue The `LynxTemplatePlugin` exported by `@lynx-js/template-webpack-plugin`.
+   */
+  LynxTemplatePlugin?: typeof LynxTemplatePlugin;
+
+  /**
    * Whether disable runtime warnings about using ReactLynx2.0-incompatible `SelectorQuery` APIs.
    */
   disableCreateSelectorQueryIncompatibleWarning?: boolean | undefined;
@@ -457,6 +465,7 @@ class ReactWebpackPlugin {
    */
   static defaultOptions: Readonly<Required<ReactWebpackPluginOptions>> = Object
     .freeze<Required<ReactWebpackPluginOptions>>({
+      LynxTemplatePlugin,
       disableCreateSelectorQueryIncompatibleWarning: false,
       firstScreenSyncTiming: 'immediately',
       globalPropsMode: 'reactive',
@@ -589,6 +598,7 @@ class ReactWebpackPlugin {
           compiler,
           entryPairs,
           !options.experimental_useElementTemplate,
+          options.LynxTemplatePlugin,
         );
       }
     }
@@ -665,7 +675,9 @@ class ReactWebpackPlugin {
         },
       );
 
-      const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+      const hooks = options.LynxTemplatePlugin.getLynxTemplatePluginHooks(
+        compilation,
+      );
 
       // The transform appends `-react__<layer>` to a `webpackChunkName` so the
       // two layers keep their own chunk. Strip it again here: the resulting
@@ -680,7 +692,7 @@ class ReactWebpackPlugin {
 
       if (
         compiler.options.plugins.some(
-          (p) => p instanceof LynxTemplatePlugin,
+          (p) => p instanceof options.LynxTemplatePlugin,
         )
       ) {
         compilation.hooks.processAssets.tap(

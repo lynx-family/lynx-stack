@@ -11,7 +11,7 @@ import { createContext, runInContext } from 'node:vm';
 
 import { rspack } from '@rspack/core';
 import type { Compiler, Configuration, Stats } from '@rspack/core';
-import { expect, it } from '@rstest/core';
+import { expect, it, rstest } from '@rstest/core';
 
 import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin';
 import {
@@ -23,10 +23,11 @@ import type { EncodeOptions } from '@lynx-js/template-webpack-plugin';
 // @ts-expect-error Existing JavaScript fixture has no declaration file.
 import { createConfig as untypedCreateConfig } from './create-react-config.js';
 import { ReactWebpackPlugin } from '../src/ReactWebpackPlugin.js';
+import type { ReactWebpackPluginOptions } from '../src/ReactWebpackPlugin.js';
 
 const createConfig = (
   loaderOptions: { engineVersion?: string },
-  pluginOptions?: { entryPairs: { mainThread: string; background: string }[] },
+  pluginOptions?: ReactWebpackPluginOptions,
 ): Configuration => {
   const config = untypedCreateConfig(
     loaderOptions,
@@ -56,6 +57,15 @@ it.each([
 ])(
   'updates native worklets and owners (BTS-only source=$synthetic, diagnostic recovery=$recover)',
   async ({ synthetic, recover }) => {
+    class EngineTemplatePlugin extends LynxTemplatePlugin {
+      static override getLynxTemplatePluginHooks = rstest.fn(
+        LynxTemplatePlugin.getLynxTemplatePluginHooks.bind(LynxTemplatePlugin),
+      );
+    }
+    // Exercise injected hooks in one watch case and standalone defaults in the others.
+    const templatePlugin = !synthetic && !recover
+      ? EngineTemplatePlugin
+      : LynxTemplatePlugin;
     const tempRoot = path.resolve(
       __dirname,
       '../../../../.tmp/main-thread-hmr',
@@ -95,6 +105,9 @@ it.each([
     );
 
     const config: Configuration = createConfig({ engineVersion: '3.9' }, {
+      ...(!synthetic && !recover
+        ? { LynxTemplatePlugin: templatePlugin }
+        : {}),
       entryPairs: [{
         mainThread: 'main__main-thread',
         background: 'main__background',
@@ -123,7 +136,7 @@ it.each([
       new rspack.HotModuleReplacementPlugin(),
       new ChunkLoadingWebpackPlugin(),
       new LynxEncodePlugin(),
-      new LynxTemplatePlugin({
+      new templatePlugin({
         ...LynxTemplatePlugin.defaultOptions,
         filename: 'base.bundle',
         chunks: ['main__main-thread', 'main__background'],
@@ -169,6 +182,11 @@ it.each([
                   );
                 }
                 hashes.push(stats!.hash!);
+                if (templatePlugin === EngineTemplatePlugin) {
+                  // Both ordinary React hooks and Native HMR must use the engine provider.
+                  expect(EngineTemplatePlugin.getLynxTemplatePluginHooks)
+                    .toHaveBeenCalledTimes(hashes.length * 2);
+                }
                 const compilation = stats!.compilation;
                 const n = hashes.length;
                 if (n === 1) {

@@ -4,7 +4,7 @@
 
 import type { Chunk, Compiler, Module } from '@rspack/core';
 
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { RuntimeGlobals as LynxRuntimeGlobals } from '@lynx-js/webpack-runtime-globals';
 
 import { DEFINES_FOR_WORKLET_BUILD_INFO } from './Defines.js';
@@ -21,6 +21,7 @@ export function applyMainThreadHMR(
   compiler: Compiler,
   entryPairs: EntryPair[],
   acceptEntryModules: boolean,
+  templatePlugin: typeof LynxTemplatePlugin,
 ): void {
   const name = 'ReactMainThreadHMR';
   (compiler as unknown as Record<symbol, unknown>)[MAIN_THREAD_HMR] = true;
@@ -216,7 +217,7 @@ export function applyMainThreadHMR(
     });
 
     const emitted = new Set<string>();
-    const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
+    const hooks = templatePlugin.getLynxTemplatePluginHooks(compilation);
     hooks.beforeEmit.tapPromise(name, async args => {
       if (!previousHash) return args;
       for (const pair of entryPairs) {
