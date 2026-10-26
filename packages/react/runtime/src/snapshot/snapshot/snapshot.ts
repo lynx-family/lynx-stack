@@ -389,6 +389,14 @@ export class SnapshotInstance {
     });
   }
 
+  /** Destroy the native list bindings in a subtree whose elements were removed. */
+  destroyLists(): void {
+    let destroyedLists: Set<number> | undefined;
+    traverseSnapshotInstance(this, snapshot => {
+      if (snapshot.__snapshot_def.isListHolder) snapshotDestroyList(snapshot, destroyedLists ??= new Set());
+    });
+  }
+
   tearDown(): void {
     traverseSnapshotInstance(this, v => {
       v.__parent = null;

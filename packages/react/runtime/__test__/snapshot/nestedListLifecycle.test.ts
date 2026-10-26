@@ -487,6 +487,7 @@ describe('nested list callback data-source publication', () => {
     expect(beforeRow.childNodes[0]!.__element_root).toBe(oldInner);
     expect(beforeRow.childNodes[0]!.childNodes[0]!.__element_root).toBe(oldInner);
     const afterInner = list([keyedRow('fresh-child')]);
+    afterInner.__listScrollOffset = { x: 30, y: 0 };
     const innerAlias = node(ALIAS, [afterInner]);
     const outerAlias = node(ALIAS, [innerAlias]);
     const afterRow = node(SLOT_ROW, [outerAlias]);
@@ -832,7 +833,275 @@ describe('native list bind completion barriers', () => {
     expect(log).toEqual(['flush:a', 'restore:a', 'flush:b-batch', 'restore:b']);
   });
 
-  it('keeps overlapping deferred batches independent until each final native flush', async () => {
+  it('suppresses transitions on cells that a kept nested list rebinds for another item', () => {
+    const { raw, frames } = mockInlineStyles();
+    const cellA = keyedRow('c0');
+    cellA.__values = ['height:100px;transition:height 300ms;'];
+    const cellB = keyedRow('c0');
+    const target = 'height:120px;transition:height 300ms;';
+    cellB.__values = [target];
+    // The row snapshot is itself the list holder, so the recycle keeps its native list.
+    const rowA = list([cellA]);
+    rowA.__listItemPlatformInfo = { 'item-key': 'a' };
+    const rowB = list([cellB]);
+    rowB.__listItemPlatformInfo = { 'item-key': 'b' };
+    const outer = list([rowA, rowB]);
+    node(ROW, [outer]).ensureElements();
+    const sign = bind(outer, 0);
+    bind(rowA, 0);
+    const listElement = elementOf(rowA);
+    const cellRoot = elementOf(cellA);
+    elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+    let atFlush: string | undefined;
+    vi.stubGlobal('__FlushElementTree', (element: FiberElement) => {
+      if (element === listElement) atFlush = raw.get(cellRoot);
+    });
+
+    expect(bind(outer, 1)).toBe(sign);
+
+    expect(elementOf(rowB)).toBe(listElement);
+    expect(elementOf(cellB)).toBe(cellRoot);
+    expect(atFlush).toBe(`${target};transition-property:none !important;`);
+    while (frames.length) frames.shift()!();
+    expect(raw.get(cellRoot)).toBe(target);
+  });
+
+  it('releases kept cell suppression when the recycle hydration throws', () => {
+    const { raw, frames } = mockInlineStyles();
+    const cellA = keyedRow('c0');
+    cellA.__values = ['height:100px;transition:height 300ms;'];
+    const cellB = keyedRow('c0');
+    cellB.__values = ['height:120px;transition:height 300ms;'];
+    const rowA = list([cellA]);
+    rowA.__listItemPlatformInfo = { 'item-key': 'a' };
+    const rowB = list([cellB, keyedRow('c1')]);
+    rowB.__listItemPlatformInfo = { 'item-key': 'b' };
+    const outer = list([rowA, rowB]);
+    node(ROW, [outer]).ensureElements();
+    const sign = bind(outer, 0);
+    bind(rowA, 0);
+    const cellRoot = elementOf(cellA);
+    elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+    const [componentAtIndex] = componentAtIndexFactory(outer.childNodes, (before, after, options, reuseRoot) => {
+      hydrate(before, after, options, reuseRoot);
+      throw new Error('hydrate failed');
+    });
+
+    expect(() => componentAtIndex(elementOf(outer), __GetElementUniqueID(elementOf(outer)), 1, 0, false))
+      .toThrow('hydrate failed');
+    while (frames.length) frames.shift()!();
+
+    expect(raw.get(cellRoot)).not.toContain('transition-property:none');
+    expect(cellB.__restoreReuseTransition).toBeUndefined();
+  });
+
+  it('does not suppress transitions when a nested list recycles its own cells', () => {
+    const { writeRaw, frames } = mockInlineStyles();
+    const c0 = keyedRow('c0');
+    c0.__values = ['height:100px;transition:height 300ms;'];
+    const c1 = keyedRow('c1');
+    c1.__values = ['height:120px;transition:height 300ms;'];
+    const inner = list([c0, c1]);
+    const outer = list([keyedRow('a', [inner])]);
+    node(ROW, [outer]).ensureElements();
+    bind(outer, 0);
+    const sign = bind(inner, 0);
+    const cellRoot = elementOf(c0);
+    elementTree.triggerEnqueueComponent(elementOf(inner), sign);
+    writeRaw.mockClear();
+
+    expect(bind(inner, 1)).toBe(sign);
+
+    expect(frames).toHaveLength(0);
+    expect(
+      writeRaw.mock.calls.some(([element, value]) =>
+        element === cellRoot && String(value).includes('transition-property:none')
+      ),
+    ).toBe(false);
+  });
+
+  it('restores a saved zero offset because a new list may not start at zero', () => {
+    const inner = list([keyedRow('c0')]);
+    inner.__listScrollOffset = { x: 0, y: 0 };
+    const outer = list([keyedRow('a', [inner])]);
+    node(ROW, [outer]).ensureElements();
+
+    bind(outer, 0);
+
+    expect(invoke).toHaveBeenCalledExactlyOnceWith(
+      elementOf(inner),
+      'scrollToPosition',
+      expect.objectContaining({ position: 0 }),
+      expect.any(Function),
+    );
+  });
+
+  it('suppresses transitions on cells a kept nested list recycles while its row rebinds', () => {
+    const { raw, frames } = mockInlineStyles();
+    const a0 = keyedRow('a0');
+    a0.__values = ['height:100px;transition:height 300ms;'];
+    const b0 = keyedRow('b0');
+    const target = 'height:120px;transition:height 300ms;';
+    b0.__values = [target];
+    const rowA = list([a0]);
+    rowA.__listItemPlatformInfo = { 'item-key': 'a' };
+    const rowB = list([b0]);
+    rowB.__listItemPlatformInfo = { 'item-key': 'b' };
+    const outer = list([rowA, rowB]);
+    node(ROW, [outer]).ensureElements();
+    const sign = bind(outer, 0);
+    const cellSign = bind(rowA, 0);
+    const listElement = elementOf(rowA);
+    const cellRoot = elementOf(a0);
+    elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+    let relaid = false;
+    let atCellFlush: string | undefined;
+    vi.stubGlobal('__FlushElementTree', (element: FiberElement) => {
+      if (element === listElement && !relaid) {
+        relaid = true;
+        // Native lays out the kept list inside the row's flush and reuses a0's cell for b0.
+        elementTree.triggerEnqueueComponent(listElement as TestElement, cellSign);
+        expect(bind(rowB, 0)).toBe(cellSign);
+      } else if (element === cellRoot) {
+        atCellFlush = raw.get(cellRoot);
+      }
+    });
+
+    expect(bind(outer, 1)).toBe(sign);
+
+    expect(relaid).toBe(true);
+    expect(atCellFlush).toBe(`${target};transition-property:none !important;`);
+    while (frames.length) frames.shift()!();
+    expect(raw.get(cellRoot)).toBe(target);
+  });
+
+  it.each(['batch', 'asyncFlush'] as const)(
+    'suppresses cells a kept nested list binds for the new item after a %s row rebind',
+    mode => {
+      const { raw, frames } = mockInlineStyles();
+      const a0 = keyedRow('a0');
+      a0.__values = ['height:100px;transition:height 300ms;'];
+      const b0 = keyedRow('b0');
+      const target = 'height:120px;transition:height 300ms;';
+      b0.__values = [target];
+      const b1 = keyedRow('b1');
+      b1.__values = ['height:90px;transition:height 300ms;'];
+      const rowA = list([a0]);
+      rowA.__listItemPlatformInfo = { 'item-key': 'a' };
+      const rowB = list([b0, b1]);
+      rowB.__listItemPlatformInfo = { 'item-key': 'b' };
+      const outer = list([rowA, rowB]);
+      node(ROW, [outer]).ensureElements();
+      const outerElement = elementOf(outer);
+      const sign = bind(outer, 0);
+      const cellSign = bind(rowA, 0);
+      const listElement = elementOf(rowA);
+      const cellRoot = elementOf(a0);
+      elementTree.triggerEnqueueComponent(outerElement, sign);
+      const seen: string[] = [];
+      const bindInner = () => {
+        elementTree.triggerEnqueueComponent(listElement as TestElement, cellSign);
+        expect(bind(rowB, 0)).toBe(cellSign);
+      };
+      vi.stubGlobal('__FlushElementTree', (element: FiberElement, options?: { operationIDs?: number[] }) => {
+        if (mode === 'batch' && element === outerElement && options?.operationIDs) bindInner();
+        else if (element === cellRoot) seen.push(String(raw.get(cellRoot)));
+      });
+
+      elementTree.triggerComponentAtIndexes(outerElement, [1], [7], false, mode === 'asyncFlush');
+      if (mode === 'asyncFlush') bindInner();
+
+      expect(seen[0]).toBe(`${target};transition-property:none !important;`);
+      while (frames.length) frames.shift()!();
+      expect(raw.get(cellRoot)).toBe(target);
+      // After the row's frame, the list's own scroll recycles keep their transitions.
+      elementTree.triggerEnqueueComponent(listElement as TestElement, cellSign);
+      seen.length = 0;
+      expect(bind(rowB, 1)).toBe(cellSign);
+      expect(seen[0]).not.toContain('transition-property:none');
+    },
+  );
+
+  it('releases a nested list that a recycled row drops for an item without one', () => {
+    const inner = list([keyedRow('c0')]);
+    const b = keyedRow('b');
+    const outer = list([keyedRow('a', [inner]), b]);
+    node(ROW, [outer]).ensureElements();
+    const sign = bind(outer, 0);
+    const innerElement = elementOf(inner);
+    const innerID = __GetElementUniqueID(innerElement);
+    elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+
+    expect(bind(outer, 1)).toBe(sign);
+
+    expect(parentMap.has(innerElement as TestElement)).toBe(false);
+    expect(gSignMap[innerID]).toBeUndefined();
+    expect(gRecycleMap[innerID]).toBeUndefined();
+  });
+
+  it.each(['missing', 'throwing'] as const)(
+    'restores a recycled row transition when the frame API is %s',
+    kind => {
+      const { raw, frames } = mockInlineStyles();
+      vi.stubGlobal('lynx', {
+        ...lynx,
+        requestAnimationFrame: kind === 'missing' ? undefined : () => {
+          throw new Error('requestAnimationFrame in main thread script requires Lynx sdk version 2.16');
+        },
+      });
+      const a = pendingRow('a', 10);
+      const b = pendingRow('b', 20);
+      a.row.__values = ['height:100px;transition:height 300ms;'];
+      const target = 'height:120px;transition:height 300ms;';
+      b.row.__values = [target];
+      const owner = list([a.row, b.row]);
+      owner.ensureElements();
+      const sign = bind(owner, 0);
+      const root = elementOf(a.row);
+      elementTree.triggerEnqueueComponent(elementOf(owner), sign);
+
+      expect(bind(owner, 1)).toBe(sign);
+
+      expect(frames).toHaveLength(0);
+      expect(raw.get(root)).toBe(target);
+    },
+  );
+
+  it('releases a recycled ready row even when its deferred batch sibling never becomes ready', async () => {
+    const { raw, frames } = mockInlineStyles();
+    const a = pendingRow('a', 10);
+    const b = pendingRow('b', 20);
+    const deferred = pendingRow('deferred', 30);
+    deferred.row.setAttribute('isReady', 0);
+    const rowStyle = 'height:120px;transition:height 300ms;';
+    a.row.__values = ['height:100px;transition:height 300ms;'];
+    b.row.__values = [rowStyle];
+    const owner = list([a.row, b.row, deferred.row]);
+    owner.ensureElements();
+    __SetAttribute(elementOf(owner), 'custom-list-name', 'list-container');
+    const sign = bind(owner, 0);
+    const root = elementOf(a.row);
+    elementTree.triggerEnqueueComponent(elementOf(owner), sign);
+    invoke.mockClear();
+    vi.stubGlobal('__FlushElementTree', vi.fn());
+
+    componentAtIndexFactory(owner.childNodes, hydrate)[1](
+      elementOf(owner),
+      __GetElementUniqueID(elementOf(owner)),
+      [1, 2],
+      [1, 2],
+      false,
+      false,
+    );
+    await Promise.resolve();
+    while (frames.length) frames.shift()!();
+
+    expect(gSignMap[__GetElementUniqueID(elementOf(owner))]!.get(sign)).toBe(b.row);
+    expect(raw.get(root)).toBe(rowStyle);
+    expect(invoke.mock.calls.map(([element]) => element)).toEqual([elementOf(b.inner)]);
+  });
+
+  it('completes ready cells after the first flush and deferred cells after their own batch', async () => {
     const a = pendingRow('a', 10);
     const deferredA = pendingRow('deferred-a', 11);
     const b = pendingRow('b', 20);
@@ -852,13 +1121,18 @@ describe('native list bind completion barriers', () => {
     batchB(elementOf(outerB), __GetElementUniqueID(elementOf(outerB)), [0, 1], [21, 22], false, false);
     expect(() => singleA(elementOf(outerA), __GetElementUniqueID(elementOf(outerA)), 1, 0, false))
       .toThrow('componentAtIndex was called on a pending deferred list item');
-    expect(invoke).not.toHaveBeenCalled();
+    // A ready cell is committed by its batch's first flush and does not wait for a deferred sibling.
+    expect(invoke.mock.calls.map(([element]) => element)).toEqual([elementOf(a.inner), elementOf(b.inner)]);
 
     const readyA = deferredA.row.__extraProps!['isReady'] as Promise<number>;
     deferredA.row.setAttribute('isReady', 1);
     await readyA;
     await Promise.resolve();
-    expect(invoke.mock.calls.map(([element]) => element)).toEqual([elementOf(a.inner), elementOf(deferredA.inner)]);
+    expect(invoke.mock.calls.map(([element]) => element)).toEqual([
+      elementOf(a.inner),
+      elementOf(b.inner),
+      elementOf(deferredA.inner),
+    ]);
     expect(flush).toHaveBeenCalledWith(
       elementOf(outerA),
       expect.objectContaining({
@@ -873,11 +1147,216 @@ describe('native list bind completion barriers', () => {
     await Promise.resolve();
     expect(invoke.mock.calls.map(([element]) => element)).toEqual([
       elementOf(a.inner),
-      elementOf(deferredA.inner),
       elementOf(b.inner),
+      elementOf(deferredA.inner),
       elementOf(deferredB.inner),
     ]);
     expect(flush).toHaveBeenLastCalledWith(elementOf(outerB), expect.objectContaining({ operationIDs: [21, 22] }));
+  });
+
+  it('restores the remaining recycled rows when an earlier completion throws', () => {
+    const { raw, frames } = mockInlineStyles();
+    const rows = ['a', 'c', 'b', 'd'].map((key, index) => pendingRow(key, 10 + index));
+    const targets = ['height:120px;transition:height 300ms;', 'height:140px;transition:height 300ms;'];
+    rows[0]!.row.__values = ['height:100px;transition:height 300ms;'];
+    rows[1]!.row.__values = ['height:110px;transition:height 300ms;'];
+    rows[2]!.row.__values = [targets[0]];
+    rows[3]!.row.__values = [targets[1]];
+    const owner = list(rows.map(({ row }) => row));
+    owner.ensureElements();
+    const listID = __GetElementUniqueID(elementOf(owner));
+    const signs = [bind(owner, 0), bind(owner, 1)];
+    const roots = [elementOf(rows[0]!.row), elementOf(rows[1]!.row)];
+    for (const sign of signs) elementTree.triggerEnqueueComponent(elementOf(owner), sign);
+    invoke.mockReset();
+    invoke.mockImplementationOnce(() => {
+      throw new Error('restore failed');
+    });
+    vi.stubGlobal('__FlushElementTree', vi.fn());
+
+    expect(() =>
+      componentAtIndexFactory(owner.childNodes, hydrate)[1](elementOf(owner), listID, [2, 3], [1, 2], false, false)
+    )
+      .toThrow('restore failed');
+
+    // The failing row's restore was queued before its scroll restore threw; the next row is released now.
+    expect(frames).toHaveLength(1);
+    expect(raw.get(roots[1]!)).toBe(targets[1]);
+    expect(rows[3]!.row.__restoreReuseTransition).toBeUndefined();
+    frames.shift()!();
+    expect(raw.get(roots[0]!)).toBe(targets[0]);
+  });
+
+  it('releases a deferred sibling after another deferred cell in its batch fails to bind', async () => {
+    const errors: unknown[] = [];
+    const onRejection = (error: unknown) => errors.push(error);
+    process.on('unhandledRejection', onRejection);
+    const { raw, frames } = mockInlineStyles();
+    const a = pendingRow('a', 10);
+    const b = pendingRow('b', 20);
+    const failing = keyedRow('failing');
+    const rowStyle = 'height:120px;transition:height 300ms;';
+    a.row.__values = ['height:100px;transition:height 300ms;'];
+    b.row.__values = [rowStyle];
+    for (const row of [b.row, failing]) row.setAttribute('isReady', 0);
+    const owner = list([a.row, b.row, failing]);
+    owner.ensureElements();
+    __SetAttribute(elementOf(owner), 'custom-list-name', 'list-container');
+    const listID = __GetElementUniqueID(elementOf(owner));
+    const sign = bind(owner, 0);
+    const root = elementOf(a.row);
+    elementTree.triggerEnqueueComponent(elementOf(owner), sign);
+    const flush = vi.fn();
+    vi.stubGlobal('__FlushElementTree', flush);
+    try {
+      componentAtIndexFactory(owner.childNodes, hydrate)[1](elementOf(owner), listID, [1, 2], [1, 2], false, false);
+      flush.mockClear();
+      // B binds into A's row and waits for the batch's final flush.
+      const readyB = b.row.__extraProps!['isReady'] as Promise<number>;
+      b.row.setAttribute('isReady', 1);
+      await readyB;
+      expect(raw.get(root)).not.toBe(rowStyle);
+
+      vi.spyOn(failing, 'ensureElements').mockImplementation(() => {
+        throw new Error('deferred bind failed');
+      });
+      failing.setAttribute('isReady', 1);
+      for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
+    } finally {
+      process.off('unhandledRejection', onRejection);
+    }
+
+    expect(errors).toEqual([new Error('deferred bind failed')]);
+    // The batch's final list flush is skipped, as before, but B's rebind work is released.
+    expect(flush.mock.calls.filter(([target]) => target === elementOf(owner))).toEqual([]);
+    expect(raw.get(root)).toBe(rowStyle);
+    expect(b.row.__restoreReuseTransition).toBeUndefined();
+    expect(frames).toHaveLength(0);
+  });
+
+  it('releases deferred siblings that bind after another deferred cell in their batch failed', async () => {
+    const errors: unknown[] = [];
+    const onRejection = (error: unknown) => errors.push(error);
+    process.on('unhandledRejection', onRejection);
+    const { raw, frames } = mockInlineStyles();
+    const a = pendingRow('a', 10);
+    const b = pendingRow('b', 20);
+    const failing = [keyedRow('failing-1'), keyedRow('failing-2')];
+    const rowStyle = 'height:120px;transition:height 300ms;';
+    a.row.__values = ['height:100px;transition:height 300ms;'];
+    b.row.__values = [rowStyle];
+    for (const row of [b.row, ...failing]) row.setAttribute('isReady', 0);
+    // Failing cells are created fresh, leaving A's row for B.
+    for (const row of failing) row.__listItemPlatformInfo!['reuse-identifier'] = 'fresh';
+    const owner = list([a.row, failing[0]!, b.row, failing[1]!]);
+    owner.ensureElements();
+    __SetAttribute(elementOf(owner), 'custom-list-name', 'list-container');
+    const listID = __GetElementUniqueID(elementOf(owner));
+    const sign = bind(owner, 0);
+    const root = elementOf(a.row);
+    elementTree.triggerEnqueueComponent(elementOf(owner), sign);
+    const flush = vi.fn();
+    vi.stubGlobal('__FlushElementTree', flush);
+    const wait = async () => {
+      for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
+    };
+    try {
+      componentAtIndexFactory(owner.childNodes, hydrate)[1](
+        elementOf(owner),
+        listID,
+        [1, 2, 3],
+        [1, 2, 3],
+        false,
+        false,
+      );
+      flush.mockClear();
+      failing.forEach((row, index) => {
+        vi.spyOn(row, 'ensureElements').mockImplementation(() => {
+          throw new Error(`deferred bind ${index + 1} failed`);
+        });
+      });
+      failing[0]!.setAttribute('isReady', 1);
+      await wait();
+      // B binds into A's row after the batch already failed.
+      b.row.setAttribute('isReady', 1);
+      await wait();
+      expect(gSignMap[listID]!.get(sign)).toBe(b.row);
+      expect(raw.get(root)).toBe(rowStyle);
+      expect(b.row.__restoreReuseTransition).toBeUndefined();
+      failing[1]!.setAttribute('isReady', 1);
+      await wait();
+    } finally {
+      process.off('unhandledRejection', onRejection);
+    }
+
+    expect(errors).toEqual([new Error('deferred bind 1 failed'), new Error('deferred bind 2 failed')]);
+    expect(flush.mock.calls.filter(([target]) => target === elementOf(owner))).toEqual([]);
+    expect(frames).toHaveLength(0);
+  });
+
+  it('releases deferred cells when their batch final flush throws', async () => {
+    const errors: unknown[] = [];
+    const onRejection = (error: unknown) => errors.push(error);
+    process.on('unhandledRejection', onRejection);
+    const { raw, frames } = mockInlineStyles();
+    const a = pendingRow('a', 10);
+    const b = pendingRow('b', 20);
+    const rowStyle = 'height:120px;transition:height 300ms;';
+    a.row.__values = ['height:100px;transition:height 300ms;'];
+    b.row.__values = [rowStyle];
+    b.row.setAttribute('isReady', 0);
+    const owner = list([a.row, b.row]);
+    owner.ensureElements();
+    __SetAttribute(elementOf(owner), 'custom-list-name', 'list-container');
+    const listID = __GetElementUniqueID(elementOf(owner));
+    const sign = bind(owner, 0);
+    const root = elementOf(a.row);
+    elementTree.triggerEnqueueComponent(elementOf(owner), sign);
+    vi.stubGlobal('__FlushElementTree', vi.fn());
+    try {
+      componentAtIndexFactory(owner.childNodes, hydrate)[1](elementOf(owner), listID, [1], [1], false, false);
+      vi.stubGlobal('__FlushElementTree', (target: FiberElement) => {
+        if (target === elementOf(owner)) throw new Error('final flush failed');
+      });
+      b.row.setAttribute('isReady', 1);
+      for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
+    } finally {
+      process.off('unhandledRejection', onRejection);
+    }
+
+    expect(errors).toEqual([new Error('final flush failed')]);
+    expect(gSignMap[listID]!.get(sign)).toBe(b.row);
+    expect(raw.get(root)).toBe(rowStyle);
+    expect(b.row.__restoreReuseTransition).toBeUndefined();
+    expect(frames).toHaveLength(0);
+    expect(invoke).not.toHaveBeenCalledWith(
+      elementOf(b.inner),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('reports a failed deferred bind outside a batch once', async () => {
+    const errors: unknown[] = [];
+    const onRejection = (error: unknown) => errors.push(error);
+    process.on('unhandledRejection', onRejection);
+    const failing = keyedRow('failing');
+    failing.setAttribute('isReady', 0);
+    const owner = list([failing]);
+    owner.ensureElements();
+    __SetAttribute(elementOf(owner), 'custom-list-name', 'list-container');
+    try {
+      expect(bind(owner, 0) as unknown).toBeInstanceOf(Promise);
+      vi.spyOn(failing, 'ensureElements').mockImplementation(() => {
+        throw new Error('deferred bind failed');
+      });
+      failing.setAttribute('isReady', 1);
+      for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
+    } finally {
+      process.off('unhandledRejection', onRejection);
+    }
+    expect(errors).toEqual([new Error('deferred bind failed')]);
   });
 
   it('does not leak a failed batch completion into the next synchronous commit', () => {
@@ -1003,7 +1482,7 @@ describe('nested list replacement boundaries', () => {
       deferred.setAttribute('isReady', 0);
       const innerA = list([deferred]);
       const a = keyedRow('a', [innerA]);
-      const b = pendingRow('b', 0);
+      const b = pendingRow('b', 20);
       const outer = list([a, b.row]);
       node(ROW, [outer]).ensureElements();
       const signA = bind(outer, 0);
@@ -1024,30 +1503,34 @@ describe('nested list replacement boundaries', () => {
 
   it('keeps a queued restore when a reload hands the nested list to a new snapshot', async () => {
     const a = pendingRow('a', 0);
-    const b = pendingRow('b', 40);
-    const d = pendingRow('d', 0);
-    d.row.setAttribute('isReady', 0);
-    const outer = list([a.row, b.row, d.row]);
+    const d1 = pendingRow('d1', 40);
+    const d2 = pendingRow('d2', 0);
+    for (const row of [d1.row, d2.row]) row.setAttribute('isReady', 0);
+    const outer = list([a.row, d1.row, d2.row]);
     const root = node(ROW, [outer]);
     root.ensureElements();
     __SetAttribute(elementOf(outer), 'custom-list-name', 'list-container');
     const listID = __GetElementUniqueID(elementOf(outer));
     elementTree.triggerEnqueueComponent(elementOf(outer), bind(outer, 0));
     vi.stubGlobal('__FlushElementTree', vi.fn());
-    // B reuses A's row in a batch whose deferred cell D delays the restore.
     componentAtIndexFactory(outer.childNodes, hydrate)[1](elementOf(outer), listID, [1, 2], [1, 2], false, false);
-    const element = elementOf(b.inner);
+    // D1 reuses A's row; its restore waits for the batch's final flush, which waits for D2.
+    const readyD1 = d1.row.__extraProps!['isReady'] as Promise<number>;
+    d1.row.setAttribute('isReady', 1);
+    await readyD1;
+    const element = elementOf(d1.inner);
+    expect(invoke.mock.calls.filter(([target]) => target === element)).toHaveLength(0);
+
     const reloadedInner = list();
     hydrate(
       root,
-      node(ROW, [list([keyedRow('a', [list()]), keyedRow('b', [reloadedInner]), keyedRow('d', [list()])])]),
+      node(ROW, [list([keyedRow('a', [list()]), keyedRow('d1', [reloadedInner]), keyedRow('d2', [list()])])]),
       { skipUnRef: true },
     );
     __pendingListUpdates.flush();
     expect(elementOf(reloadedInner)).toBe(element);
-    invoke.mockClear();
 
-    d.row.setAttribute('isReady', 1);
+    d2.row.setAttribute('isReady', 1);
     for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(invoke.mock.calls.filter(([target]) => target === element)).toHaveLength(1);
@@ -1064,7 +1547,7 @@ describe('nested list replacement boundaries', () => {
     const deferred = keyedRow('d0');
     deferred.setAttribute('isReady', 0);
     const innerA = list([keyedRow('c0'), deferred]);
-    const b = pendingRow('b', 0);
+    const b = pendingRow('b', 20);
     const outer = list([keyedRow('a', [innerA]), b.row]);
     node(ROW, [outer]).ensureElements();
     const signA = bind(outer, 0);
@@ -1084,6 +1567,203 @@ describe('nested list replacement boundaries', () => {
 
     expect(flush.mock.calls.filter(([target]) => target === innerElement)).toEqual([]);
   });
+
+  it('keeps a reused row native list for a new snapshot of the same key when the reuse identifier is the item key', () => {
+    const { raw, properties } = mockInlineStyles();
+    const style = 'height:100px;transition:height 300ms;';
+    // Another tracked nested list on the page.
+    const tracked = list([keyedRow('t0')]);
+    const trackedOuter = list([keyedRow('t', [tracked])]);
+    node(ROW, [trackedOuter]).ensureElements();
+    bind(trackedOuter, 0);
+    const innerA = list([keyedRow('a0'), keyedRow('a1')]);
+    const innerAgain = list([keyedRow('a0'), keyedRow('a1')]);
+    const a = keyedRow('a', [innerA]);
+    // The item was removed and added back: a new snapshot with the same key.
+    const again = keyedRow('a', [innerAgain]);
+    for (const row of [a, again]) {
+      row.__values = [style];
+      row.__listItemPlatformInfo!['reuse-identifier'] = 'a';
+    }
+    const outer = list([a, again]);
+    node(ROW, [outer]).ensureElements();
+    const sign = bind(outer, 0);
+    bind(innerA, 0);
+    const innerElement = elementOf(innerA);
+    const cellRoot = elementOf(innerA.childNodes[0]!);
+    innerA.__listScrollOffset = { x: 120, y: 0 };
+    elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+    invoke.mockClear();
+
+    expect(bind(outer, 1)).toBe(sign);
+
+    // The untracked native list keeps its cells and its own scroll position.
+    expect(elementOf(innerAgain)).toBe(innerElement);
+    expect(invoke).not.toHaveBeenCalled();
+    // No transition suppression on the row or on its kept list's cells.
+    expect(raw.get(elementOf(again))).toBe(style);
+    expect(elementOf(innerAgain.childNodes[0]!)).toBe(cellRoot);
+    expect(properties.get(cellRoot)?.get(110)).toBeUndefined();
+  });
+
+  it('does not track nested lists in rows whose reuse identifier is their item key', () => {
+    const own = pendingRow('own', 40);
+    own.row.__listItemPlatformInfo!['reuse-identifier'] = 'own';
+    const sharedInner = list();
+    const outer = list([own.row, keyedRow('shared', [sharedInner])]);
+    node(ROW, [outer]).ensureElements();
+    bind(outer, 0);
+    bind(outer, 1);
+
+    // Such a row is only recycled for its own item, so its list keeps its native behavior.
+    expect(__GetAttributeByName(elementOf(own.inner), 'needs-visible-cells')).toBeUndefined();
+    expect(__GetAttributeByName(elementOf(sharedInner), 'needs-visible-cells')).toBe(true);
+    expect(invoke).not.toHaveBeenCalled();
+    emit(own.inner, 'x', 90);
+    expect(own.inner.__listScrollOffset).toEqual({ x: 40, y: 0 });
+  });
+
+  it('tracks a nested list whose own-key cell sits in a list that another item can take over', () => {
+    const leafA = list();
+    const middle = list([keyedRow('c0', [leafA])]);
+    middle.childNodes[0]!.__listItemPlatformInfo!['reuse-identifier'] = 'c0';
+    // The outer rows share a pool, so the middle list can move to another item.
+    const outer = list([keyedRow('a', [middle])]);
+    node(ROW, [outer]).ensureElements();
+    bind(outer, 0);
+    bind(middle, 0);
+
+    expect(__GetAttributeByName(elementOf(leafA), 'needs-visible-cells')).toBe(true);
+  });
+
+  it('does not track a nested list when every containing cell is reused only for its own item', () => {
+    const leafA = list();
+    const middle = list([keyedRow('c0', [leafA])]);
+    const outer = list([keyedRow('a', [middle])]);
+    for (const cell of [middle.childNodes[0]!, outer.childNodes[0]!]) {
+      cell.__listItemPlatformInfo!['reuse-identifier'] = cell.__listItemPlatformInfo!['item-key'];
+    }
+    node(ROW, [outer]).ensureElements();
+    bind(outer, 0);
+    bind(middle, 0);
+
+    expect(__GetAttributeByName(elementOf(middle), 'needs-visible-cells')).toBeUndefined();
+    expect(__GetAttributeByName(elementOf(leafA), 'needs-visible-cells')).toBeUndefined();
+  });
+
+  it('treats a same-key own-identifier cell as another item when its list can change owner', () => {
+    const { raw } = mockInlineStyles();
+    const style = 'height:100px;transition:height 300ms;';
+    const cells = [keyedRow('c0', [list()]), keyedRow('c0', [list()])];
+    for (const cell of cells) {
+      cell.__values = [style];
+      cell.__listItemPlatformInfo!['reuse-identifier'] = 'c0';
+    }
+    const middle = list(cells);
+    // The middle list's row shares a pool with other items' rows.
+    const outer = list([keyedRow('a', [middle])]);
+    node(ROW, [outer]).ensureElements();
+    bind(outer, 0);
+    const sign = bind(middle, 0);
+    const root = elementOf(cells[0]!);
+    elementTree.triggerEnqueueComponent(elementOf(middle), sign);
+    let atFlush: string | undefined;
+    vi.stubGlobal('__FlushElementTree', (element: FiberElement) => {
+      if (element === root) atFlush = raw.get(root);
+    });
+
+    expect(bind(middle, 1)).toBe(sign);
+
+    expect(atFlush).toBe(`${style};transition-property:none !important;`);
+  });
+
+  it('does not track the nested list of an own-identifier cell that is itself the list holder', () => {
+    const addEvent = vi.fn();
+    vi.stubGlobal('__AddEvent', addEvent);
+    const inline = list([keyedRow('i0')]);
+    inline.__listItemPlatformInfo = { 'item-key': 'inline', 'reuse-identifier': 'inline' };
+    const outer = list([inline]);
+    node(ROW, [outer]).ensureElements();
+    bind(outer, 0);
+
+    expect(__GetAttributeByName(elementOf(inline), 'needs-visible-cells')).toBeUndefined();
+    expect(addEvent.mock.calls.filter(([element]) => element === elementOf(inline))).toEqual([]);
+  });
+
+  it('keeps the native nested list when neither item has a position', () => {
+    const innerA = list([keyedRow('a0')]);
+    const innerB = list([keyedRow('b0')]);
+    const outer = list([keyedRow('a', [innerA]), keyedRow('b', [innerB])]);
+    node(ROW, [outer]).ensureElements();
+    const sign = bind(outer, 0);
+    bind(innerA, 0);
+    const innerElement = elementOf(innerA);
+    elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+
+    expect(bind(outer, 1)).toBe(sign);
+
+    expect(elementOf(innerB)).toBe(innerElement);
+    expect(gSignMap[__GetElementUniqueID(innerElement)]).toBeDefined();
+    // The kept list now serves B's source.
+    const cell = gSignMap[__GetElementUniqueID(innerElement)]!.get(bind(innerB, 0))!;
+    expect(cell.__listItemPlatformInfo?.['item-key']).toBe('b0');
+  });
+
+  it('keeps an untracked native nested list while other nested lists are tracked', () => {
+    const tracked = list([keyedRow('t0')]);
+    const trackedOuter = list([keyedRow('t', [tracked])]);
+    node(ROW, [trackedOuter]).ensureElements();
+    bind(trackedOuter, 0);
+    expect(gSignMap[__GetElementUniqueID(elementOf(tracked))]).toBeDefined();
+    vi.stubGlobal('__InvokeUIMethod', undefined);
+    const innerA = list([keyedRow('a0')]);
+    const innerB = list([keyedRow('b0')]);
+    innerB.__listScrollOffset = { x: 40, y: 0 };
+    const outer = list([keyedRow('a', [innerA]), keyedRow('b', [innerB])]);
+    node(ROW, [outer]).ensureElements();
+    const sign = bind(outer, 0);
+    const innerElement = elementOf(innerA);
+    elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+
+    expect(bind(outer, 1)).toBe(sign);
+
+    expect(elementOf(innerB)).toBe(innerElement);
+  });
+
+  it.each(['scrolled donor', 'saved receiver', 'pending restore'] as const)(
+    'gives the receiving item a new native nested list for a %s',
+    reason => {
+      const innerA = list([keyedRow('a0')]);
+      const innerB = list([keyedRow('b0')]);
+      const c = pendingRow('c', 0);
+      const outer = list([keyedRow('a', [innerA]), keyedRow('b', [innerB]), c.row]);
+      node(ROW, [outer]).ensureElements();
+      if (reason === 'saved receiver') innerB.__listScrollOffset = { x: 40, y: 0 };
+      const sign = bind(outer, 0);
+      bind(innerA, 0);
+      let donor = innerA;
+      if (reason === 'scrolled donor') {
+        __SetAttribute(elementOf(innerA), 'scroll-orientation', 'horizontal');
+        emit(innerA, 'a0', 25);
+      }
+      if (reason === 'pending restore') {
+        // C keeps A's list at zero, but native has not acknowledged C's restore yet.
+        invoke.mockImplementation(() => {});
+        const listA = elementOf(innerA);
+        elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+        expect(bind(outer, 2)).toBe(sign);
+        expect(elementOf(c.inner)).toBe(listA);
+        expect(invoke.mock.calls.filter(([element]) => element === listA)).toHaveLength(1);
+        donor = c.inner;
+      }
+      const donorElement = elementOf(donor);
+      elementTree.triggerEnqueueComponent(elementOf(outer), sign);
+
+      expect(bind(outer, 1)).toBe(sign);
+
+      expect(elementOf(innerB)).not.toBe(donorElement);
+    },
+  );
 
   it('keeps visible nested lists and their offsets when a reload rehydrates with new IDs', () => {
     const inner = list([keyedRow('c0')]);

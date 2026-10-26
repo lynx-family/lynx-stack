@@ -14,6 +14,7 @@ import {
   destroyNestedListState,
   getRetainedListItemPlatformInfo,
   isNestedListSnapshot,
+  isOwnReuseCell,
   prepareNestedListRestore,
   transferNestedListState,
   updateNestedListChildren,
@@ -276,6 +277,54 @@ describe('nested list state ownership', () => {
     expect(a.__listScrollOffset).toEqual({ x: 90, y: 0 });
   });
 
+  it('does not treat a detached own-key cell as reused only for its own item', () => {
+    const cell = new SnapshotInstance('nested-state-row');
+    cell.__listItemPlatformInfo = { 'item-key': 'a', 'reuse-identifier': 'a' };
+    expect(isOwnReuseCell(cell)).toBe(false);
+  });
+
+  it('requires the reuse identifier to equal the item key in every containing cell', () => {
+    const cell = (info: Record<string, string>, children: SnapshotInstance[] = []) => {
+      const row = new SnapshotInstance('nested-state-row');
+      row.__listItemPlatformInfo = info;
+      for (const child of children) row.insertBefore(child);
+      return row;
+    };
+    const tree = (top: Record<string, string>, inner: Record<string, string>) => {
+      const innerCell = cell(inner);
+      const middle = new SnapshotInstance('nested-state-list');
+      middle.insertBefore(innerCell);
+      const outer = new SnapshotInstance('nested-state-list');
+      outer.insertBefore(cell(top, [middle]));
+      return innerCell;
+    };
+    const own = (key: string) => ({ 'item-key': key, 'reuse-identifier': key });
+
+    expect(isOwnReuseCell(tree(own('a'), own('c0')))).toBe(true);
+    expect(isOwnReuseCell(tree({ 'item-key': 'a' }, own('c0')))).toBe(false);
+    expect(isOwnReuseCell(tree(own('a'), { 'item-key': 'c0' }))).toBe(false);
+    expect(isOwnReuseCell(tree(own('a'), { 'reuse-identifier': 'c0' }))).toBe(false);
+  });
+
+  it('records only scroll events whose target is the tracked list', () => {
+    const owner = makeOwner();
+    const element = elementOf(owner);
+    track(owner);
+    const handler: Worklet = { _wkltId: 'consumer-scroll' };
+    setMainThread(owner, handler);
+    const inner = __CreateElement('list', 0);
+    const bubbled = { target: { elementRefptr: inner }, detail: { scrollLeft: 90, eventSource: 2 } };
+
+    // A nested list's scroll bubbles to its ancestors' listeners.
+    nestedListBridge().dispatch!(slots(element).worklet!, [bubbled], undefined, run);
+    expect(owner.__listScrollOffset).toBeUndefined();
+    expect(run).toHaveBeenCalledExactlyOnceWith(handler, [bubbled], undefined);
+
+    const own = { target: { elementRefptr: element }, detail: { scrollLeft: 30, eventSource: 2 } };
+    nestedListBridge().dispatch!(slots(element).worklet!, [own], undefined, run);
+    expect(owner.__listScrollOffset).toEqual({ x: 30, y: 0 });
+  });
+
   it('forwards scroll events to consumers during a pending restore without recording them', () => {
     const a = makeOwner();
     const element = elementOf(a);
@@ -394,6 +443,53 @@ describe('nested list consumer event handlers', () => {
     expect(owner.__listWorkletEvents).toBeUndefined();
     expect(slots(elementOf(owner)).worklet).toBe(handler);
     expect(slots(list).worklet?._wkltId).toBe(LIST_EVENT_ID);
+  });
+
+  it('leaves an untracked element alone when its background scroll listener is cleared', () => {
+    track(makeOwner());
+    const flat = new SnapshotInstance('nested-state-list');
+    const element = __CreateElement('list', 0);
+    flat.__elements = [element];
+    flat.__element_root = element;
+    setBackground(flat, () => {});
+
+    setBackground(flat, undefined);
+
+    expect(eventSlots.get(element)?.has('bindEvent:scroll')).toBe(false);
+  });
+
+  it('rebinds an earlier consumer type when a background listener of that type is cleared', () => {
+    const owner = makeOwner();
+    const element = elementOf(owner);
+    track(owner);
+    const catchHandler: Worklet = { _wkltId: 'consumer-catch-scroll' };
+    owner.__values = [undefined, catchHandler, { _wkltId: 'consumer-capture-scroll' }];
+    updateWorkletEvent(owner, 1, undefined as unknown as Worklet, 0, 'main-thread', 'catchEvent', 'scroll');
+    updateWorkletEvent(owner, 2, undefined as unknown as Worklet, 0, 'main-thread', 'capture-bind', 'scroll');
+    setBackground(owner, () => {}, 'catchEvent', 'scroll');
+
+    setBackground(owner, undefined, 'catchEvent', 'scroll');
+
+    expect(slots(element, 'scroll', 'catchEvent').worklet?._wkltId).toBe(LIST_EVENT_ID);
+    emit(element, { scrollLeft: 9, eventSource: 2 }, 'scroll', 'catchEvent');
+    expect(run).toHaveBeenCalledExactlyOnceWith(
+      catchHandler,
+      [{ detail: { scrollLeft: 9, eventSource: 2 } }],
+      undefined,
+    );
+  });
+
+  it('keeps the capture touch proxy when a consumer touch handler exists before tracking', () => {
+    const owner = makeOwner();
+    const element = elementOf(owner);
+    const handler: Worklet = { _wkltId: 'consumer-touch' };
+    setMainThread(owner, handler, 'bindEvent', 'touchstart');
+
+    track(owner);
+
+    expect(slots(element, 'touchstart', 'capture-bind').worklet?._wkltId).toBe(LIST_EVENT_ID);
+    emit(element, {}, 'touchstart', 'bindEvent');
+    expect(run).toHaveBeenCalledExactlyOnceWith(handler, [{ detail: {} }], undefined);
   });
 
   it('keeps the internal touch proxy out of the bubble-phase slots a background catch uses', () => {
@@ -562,6 +658,25 @@ describe('nested list anchors and measured estimates', () => {
       else expect(run).not.toHaveBeenCalled();
     },
   );
+
+  it('treats the deprecated vertical-orientation={false} as a horizontal list', () => {
+    const element = __CreateElement('list', 0);
+    const owner = makeOwner(element);
+    __SetAttribute(element, 'scroll-orientation', undefined);
+    __SetAttribute(element, 'vertical-orientation', false);
+    const child = new SnapshotInstance('nested-state-row');
+    child.__listItemPlatformInfo = { 'item-key': 'h0' };
+    owner.insertBefore(child);
+    track(owner);
+
+    emit(element, {
+      scrollLeft: 40,
+      eventSource: 2,
+      attachedCells: [{ index: 0, itemKey: 'h0', left: -40, top: 0 }],
+    });
+
+    expect(owner.__listScrollAnchor).toEqual({ itemKey: 'h0', viewportOffset: -40 });
+  });
 
   it('restores the stable visible item after variable-width cells move to different indexes', () => {
     const owner = makeOwner();
@@ -893,5 +1008,95 @@ describe('nested list events without authored main-thread scripts', () => {
       .toEqual([params]);
     expect(globalThis.lynxWorkletImpl._eventDelayImpl._delayedWorkletParamsMap.get('legacy-nested-scroll')![0])
       .toBe(params);
+  });
+});
+
+describe('nested list events in a single native worklet slot per event name', () => {
+  // Native keeps one main-thread handler per element and event name, whatever
+  // its type; background handlers live in a separate map.
+  const worklets = new Map<FiberElement, Map<string, { type: string; value: Worklet }>>();
+  const backgrounds = new Map<FiberElement, Map<string, string>>();
+
+  beforeEach(() => {
+    worklets.clear();
+    backgrounds.clear();
+    vi.stubGlobal('__AddEvent', (
+      element: FiberElement,
+      type: string,
+      name: string,
+      handler: string | { type: string; value: Worklet } | undefined,
+    ) => {
+      if (handler === undefined) {
+        backgrounds.get(element)?.delete(`${type}:${name}`);
+        return;
+      }
+      if (typeof handler === 'string') {
+        if (!backgrounds.has(element)) backgrounds.set(element, new Map());
+        backgrounds.get(element)!.set(`${type}:${name}`, handler);
+        return;
+      }
+      if (!worklets.has(element)) worklets.set(element, new Map());
+      worklets.get(element)!.set(name, { type, value: handler.value });
+    });
+  });
+
+  function slot(element: FiberElement, name: string) {
+    return worklets.get(element)?.get(name);
+  }
+
+  function fireSlot(element: FiberElement, name: string, detail: Record<string, unknown>): unknown {
+    const current = slot(element, name)!;
+    expect(current.value._wkltId).toBe(LIST_EVENT_ID);
+    return nestedListBridge().dispatch!(current.value, [{ detail }], undefined, run);
+  }
+
+  it('keeps scroll tracking after a consumer main-thread catch handler is removed', () => {
+    const owner = makeOwner();
+    const element = elementOf(owner);
+    track(owner);
+    const handler: Worklet = { _wkltId: 'consumer-catch-scroll' };
+    setMainThread(owner, handler, 'catchEvent', 'scroll');
+    expect(slot(element, 'scroll')!.type).toBe('catchEvent');
+    fireSlot(element, 'scroll', { scrollLeft: 30, eventSource: 2 });
+    expect(run).toHaveBeenCalledExactlyOnceWith(handler, [{ detail: { scrollLeft: 30, eventSource: 2 } }], undefined);
+
+    setMainThread(owner, undefined, 'catchEvent', 'scroll');
+    run.mockClear();
+
+    expect(slot(element, 'scroll')!.type).toBe('bindEvent');
+    fireSlot(element, 'scroll', { scrollLeft: 50, eventSource: 2 });
+    expect(owner.__listScrollOffset).toEqual({ x: 50, y: 0 });
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('keeps a consumer main-thread handler when a background handler of another type is cleared', () => {
+    const owner = makeOwner();
+    const element = elementOf(owner);
+    track(owner);
+    const handler: Worklet = { _wkltId: 'consumer-catch-scroll' };
+    setMainThread(owner, handler, 'catchEvent', 'scroll');
+    setBackground(owner, () => {}, 'bindEvent', 'scroll');
+
+    setBackground(owner, undefined, 'bindEvent', 'scroll');
+
+    expect(slot(element, 'scroll')!.type).toBe('catchEvent');
+    fireSlot(element, 'scroll', { scrollLeft: 12, eventSource: 2 });
+    expect(run).toHaveBeenCalledExactlyOnceWith(handler, [{ detail: { scrollLeft: 12, eventSource: 2 } }], undefined);
+  });
+
+  it('restores the capture-phase touch proxy after a consumer bind handler is removed', () => {
+    const before = makeOwner();
+    const element = elementOf(before);
+    track(before);
+    setMainThread(before, { _wkltId: 'consumer-touch' }, 'bindEvent', 'touchstart');
+    setMainThread(before, undefined, 'bindEvent', 'touchstart');
+    expect(slot(element, 'touchstart')!.type).toBe('capture-bind');
+
+    const after = makeOwner(element);
+    transferNestedListState(after, element, false);
+    const restore = prepareNestedListRestore(after)!;
+    fireSlot(element, 'touchstart', {});
+    restore();
+    expect(invoke).not.toHaveBeenCalled();
   });
 });

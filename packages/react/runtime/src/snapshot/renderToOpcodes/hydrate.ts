@@ -3,7 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 
 import { profileEnd, profileStart } from '../../shared/profile.js';
-import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
+import {
+  componentAtIndexFactory,
+  enqueueComponentFactory,
+  gRecycleMap,
+  gSignMap,
+  noteKeptNestedList,
+  suppressKeptCellTransition,
+} from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { DynamicPartType } from '../snapshot/dynamicPartType.js';
 import type { PlatformInfo } from '../snapshot/platformInfo.js';
@@ -14,7 +21,7 @@ import { restoreReuseTransition } from '../list/reuseTransition.js';
 import {
   captureNestedListMeasurements,
   getRetainedListItemPlatformInfo,
-  hasNestedListState,
+  needsFreshNestedList,
   transferNestedListState,
   updateNestedListChildren,
 } from '../list/nativeState.js';
@@ -248,10 +255,16 @@ export function hydrate(
   // First-screen, main-thread and reload hydration keep the same logical
   // content even when snapshot IDs change; only recycling changes the owner.
   const recycling = reuseRoot !== undefined && !isMainThreadHydrating;
+  // Known limitation: when the row snapshot is itself the list holder (an inline
+  // `<list-item><list>` without a component between them), its root is the
+  // reused cell root, which cannot be replaced. That list is always kept and only
+  // scrolled with `scrollToPosition`, so the engine's old anchor can leave a
+  // recycled row slightly off its saved position. Wrapping the nested list in a
+  // component avoids it.
   if (
     recycling && after.__snapshot_def.isListHolder
     && before.__id !== after.__id && before.__element_root
-    && before.__element_root !== reuseRoot && hasNestedListState(before)
+    && before.__element_root !== reuseRoot && needsFreshNestedList(before, after)
   ) {
     // A list's opaque native anchor belongs to one logical owner. Reuse the
     // containing row, but not another item's nested list binding state.
@@ -282,6 +295,7 @@ export function hydrate(
     // Assign the new owner and guard its pending restore before those updates.
     const listElement = after.__elements![after.__snapshot_def.slot[0]![1]]!;
     transferNestedListState(after, listElement, !recycling);
+    if (recycling) noteKeptNestedList(listElement);
   }
 
   if (!(options?.skipUnRef)) {
@@ -377,6 +391,8 @@ export function hydrate(
               before.__elements![elementIndex]!,
               node.__element_root!,
             );
+            // Lists in a removed subtree lose their native element for good.
+            node.destroyLists();
           },
           (node, target) => {
             __RemoveElement(
@@ -433,6 +449,13 @@ export function hydrate(
               // transfer a's elements to b
               // Each native cell owns its root/sign, even when its template also contains a list.
               hydrate(a, b, options, reuseRoot && a.__element_root);
+              if (
+                reuseRoot && (a.__id !== b.__id
+                  || a.__listItemPlatformInfo?.['item-key'] !== b.__listItemPlatformInfo?.['item-key'])
+              ) {
+                // This kept list's cell now shows another item inside the recycled row's bind.
+                suppressKeptCellTransition(b);
+              }
 
               // if a list-item has `elements`, it may be:
               //   - `enqueueComponent` already called on it: so we need to update the `signMap` and the `recycleMap`

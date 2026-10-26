@@ -32,8 +32,21 @@ const pendingStates = new Set<ListState>();
 
 /** Schedule on the owning native main-thread context, not a layout worker. */
 export function requestListFrame(callback: () => void): void {
-  const mainThreadLynx = lynx as typeof lynx & { requestAnimationFrame(callback: () => void): number };
-  mainThreadLynx.requestAnimationFrame(callback);
+  const { requestAnimationFrame } = lynx as typeof lynx & { requestAnimationFrame?: (callback: () => void) => number };
+  try {
+    // The main-thread runtime's wrapper throws on SDKs before 2.16.
+    if (typeof requestAnimationFrame === 'function') return void requestAnimationFrame.call(lynx, callback);
+  } catch {}
+  // Without a frame the bind flush has already applied the new styles, so
+  // restoring now only lets the next flush carry the original transitions.
+  callback();
+}
+
+/** `vertical-orientation={false}` is the deprecated spelling of a horizontal list. */
+function isHorizontal(element: FiberElement): boolean {
+  const orientation: unknown = __GetAttributeByName(element, 'scroll-orientation');
+  if (orientation) return orientation === 'horizontal';
+  return String(__GetAttributeByName(element, 'vertical-orientation')) === 'false';
 }
 
 export function isNestedListSnapshot(owner: SnapshotInstance): boolean {
@@ -43,14 +56,31 @@ export function isNestedListSnapshot(owner: SnapshotInstance): boolean {
   return Boolean(ancestor);
 }
 
-/** Only a tracked native binding can participate in scroll-preserving replacement. */
-export function hasNestedListState(owner: SnapshotInstance): boolean {
+/**
+ * Whether a recycle must give the receiving item a new native list. The old
+ * list's opaque anchor only matters when a position is not zero: the donor
+ * was scrolled or still has a restore queued, or the receiver has a saved
+ * position. Otherwise keeping the native list avoids recreating its cells.
+ */
+export function needsFreshNestedList(before: SnapshotInstance, after: SnapshotInstance): boolean {
   if (!states.size) return false;
-  const element = owner.__elements![owner.__snapshot_def.slot[0]![1]]!;
-  return states.get(__GetElementUniqueID(element))?.owner === owner;
+  const element = before.__elements![before.__snapshot_def.slot[0]![1]]!;
+  const state = states.get(__GetElementUniqueID(element));
+  if (state?.owner !== before) return false;
+  return Boolean(state.pending ?? state.inflight) || isMoved(before.__listScrollOffset)
+    || isMoved(after.__listScrollOffset);
 }
 
-/** Only nested-list cells and their containing rows need rebind suppression. */
+function isMoved(offset: Offset | undefined): boolean {
+  return offset !== undefined && (offset.x !== 0 || offset.y !== 0);
+}
+
+/** Rows that are or contain a nested list need rebind suppression. */
+export function isNestedListRow(owner: SnapshotInstance): boolean {
+  return states.size > 0 && (Boolean(owner.__snapshot_def.isListHolder) || Boolean(owner.__listDescendantCount));
+}
+
+/** Cells of a nested list, and rows that are or contain one. */
 export function isNestedListReuse(listID: number, owner: SnapshotInstance): boolean {
   return states.size > 0
     && (states.has(listID) || Boolean(owner.__snapshot_def.isListHolder) || Boolean(owner.__listDescendantCount));
@@ -61,6 +91,31 @@ export function isNestedListReuse(listID: number, owner: SnapshotInstance): bool
  * phase, so it also sees touches that a cell catches.
  */
 const TRACKED_EVENT_TYPE: Record<string, string> = { scroll: 'bindEvent', touchstart: 'capture-bind' };
+
+/**
+ * The latest consumer main-thread handler type for an event name, or the
+ * tracked type. Engines that keep one main-thread handler per element and
+ * event name end with the proxy bound at this type.
+ */
+function slotType(state: ListState, eventName: string): string {
+  let type = TRACKED_EVENT_TYPE[eventName]!;
+  for (const key of state.handlers.keys()) {
+    const separator = key.lastIndexOf(':');
+    if (key.slice(separator + 1) === eventName) type = key.slice(0, separator);
+  }
+  return type;
+}
+
+/**
+ * Bind the tracked proxy, then the consumer's type. Per-type native listeners
+ * keep both; a single per-name slot ends with the consumer's forwarding proxy.
+ */
+function bindProxies(state: ListState, eventName: string): void {
+  const tracked = TRACKED_EVENT_TYPE[eventName]!;
+  bind(state, tracked, eventName);
+  const type = slotType(state, eventName);
+  if (type !== tracked) bind(state, type, eventName);
+}
 
 function bind(state: ListState, eventType: string, eventName: string): void {
   __AddEvent(state.element, eventType, eventName, {
@@ -75,6 +130,28 @@ function bind(state: ListState, eventType: string, eventName: string): void {
   });
 }
 
+function containingCell(owner: SnapshotInstance): SnapshotInstance {
+  let cell = owner;
+  while (!cell.parentNode!.__snapshot_def.isListHolder) cell = cell.parentNode!;
+  return cell;
+}
+
+/**
+ * Whether a list cell is only ever recycled for its own item: its reuse
+ * identifier is its item key, and so is that of every cell containing its
+ * list, so no list on the path changes owner and the same key is the same item.
+ */
+export function isOwnReuseCell(cell: SnapshotInstance): boolean {
+  for (;;) {
+    const info = cell.__listItemPlatformInfo;
+    if (info?.['reuse-identifier'] === undefined || info['reuse-identifier'] !== info['item-key']) return false;
+    const list = cell.parentNode;
+    if (!list) return false;
+    if (!isNestedListSnapshot(list)) return true;
+    cell = containingCell(list);
+  }
+}
+
 export function createNestedListState(
   owner: SnapshotInstance,
   element: FiberElement,
@@ -86,6 +163,8 @@ export function createNestedListState(
     // flag per element and phase, so internal listeners would alter catches.
     || String(SystemInfo.platform).startsWith('web')
     || !isNestedListSnapshot(owner)
+    // Such a list keeps its native behavior.
+    || isOwnReuseCell(containingCell(owner))
   ) return;
   const state: ListState = {
     element,
@@ -93,6 +172,7 @@ export function createNestedListState(
     children,
     generation: 0,
     handlers: new Map(owner.__listWorkletEvents),
+    // Restore even a saved zero: a list with `initial-scroll-index` does not start there.
     pending: owner.__listScrollOffset,
   };
   const listID = __GetElementUniqueID(element);
@@ -103,14 +183,7 @@ export function createNestedListState(
   // Native visible-cell coordinates let restoration target the logical cell,
   // instead of anchoring to an unmeasured prefix at virtual index zero.
   __SetAttribute(element, 'needs-visible-cells', true);
-  for (const eventName in TRACKED_EVENT_TYPE) {
-    const eventType = TRACKED_EVENT_TYPE[eventName]!;
-    if (!state.handlers.has(`${eventType}:${eventName}`)) bind(state, eventType, eventName);
-  }
-  for (const key of state.handlers.keys()) {
-    const separator = key.lastIndexOf(':');
-    bind(state, key.slice(0, separator), key.slice(separator + 1));
-  }
+  for (const eventName in TRACKED_EVENT_TYPE) bindProxies(state, eventName);
 }
 
 /** Publish the same data source as the native callbacks, before native updates can reenter. */
@@ -136,16 +209,19 @@ const dispatchNestedListEvent: ListEventDispatch = (context, params, options, ru
     pendingStates.delete(current);
     current.inflight = undefined;
   }
-  // Only user scrolling is this owner's position. While a restore is pending
-  // or in flight, the rebound list still reports the donor's offset.
+  const target = (raw['target'] as { elementRefptr?: FiberElement } | undefined)?.elementRefptr;
+  // Only user scrolling of this list is this owner's position: a nested
+  // list's scroll can bubble here. While a restore is pending or in flight,
+  // the rebound list still reports the donor's offset.
   if (
     name === 'scroll' && !current.pending && !current.inflight
+    && (!target || __GetElementUniqueID(target) === context['listID'])
     && (detail['eventSource'] === undefined || detail['eventSource'] === 2)
   ) {
     const cells = detail['attachedCells'];
     let anchor: SnapshotInstance['__listScrollAnchor'];
     if (Array.isArray(cells)) {
-      const horizontal = __GetAttributeByName(current.element, 'scroll-orientation') === 'horizontal';
+      const horizontal = isHorizontal(current.element);
       const children = current.children;
       for (const rawCell of cells) {
         const cell = rawCell as { index?: number; position?: number; itemKey?: string; left?: number; top?: number };
@@ -208,9 +284,10 @@ export function recordNestedListEvent(
 export function retainNestedListEvent(element: FiberElement, eventType: string, eventName: string): void {
   if (!states.size || (eventName !== 'scroll' && eventName !== 'touchstart')) return;
   const state = states.get(__GetElementUniqueID(element));
-  if (state && (eventType === TRACKED_EVENT_TYPE[eventName] || state.handlers.has(`${eventType}:${eventName}`))) {
-    bind(state, eventType, eventName);
-  }
+  if (!state) return;
+  // Per-type listeners lose this type's consumer proxy too.
+  if (state.handlers.has(`${eventType}:${eventName}`)) bind(state, eventType, eventName);
+  bindProxies(state, eventName);
 }
 
 /** Preserve the original worklet context and its normal hydration/delay path. */
@@ -224,11 +301,14 @@ export function bindNestedListEvent(
   const state = states.get(__GetElementUniqueID(element));
   if (!state) return false;
   const key = `${eventType}:${eventName}`;
-  if (handler) state.handlers.set(key, handler);
-  else state.handlers.delete(key);
-  // Only the tracked slot is permanent; keep other removals on their existing SDK path.
-  if (!handler && eventType !== TRACKED_EVENT_TYPE[eventName]) return false;
-  bind(state, eventType, eventName);
+  state.handlers.delete(key);
+  if (handler) {
+    state.handlers.set(key, handler);
+  } else if (eventType !== TRACKED_EVENT_TYPE[eventName]) {
+    // Clear this type with the SDK's usual empty descriptor first.
+    __AddEvent(element, eventType, eventName, { type: 'worklet', value: { _workletType: 'main-thread' } });
+  }
+  bindProxies(state, eventName);
   return true;
 }
 
@@ -257,7 +337,7 @@ export function captureNestedListMeasurements(owner: SnapshotInstance): void {
   const element = owner.__elements[owner.__snapshot_def.slot[0]![1]]!;
   const state = states.get(__GetElementUniqueID(element));
   if (state?.owner !== owner) return;
-  const horizontal = __GetAttributeByName(element, 'scroll-orientation') === 'horizontal';
+  const horizontal = isHorizontal(element);
   const orientation = horizontal ? 'horizontal' : 'vertical';
   const axis = horizontal ? 'width' : 'height';
   const leading = horizontal ? 'margin-left' : 'margin-top';
@@ -287,7 +367,7 @@ export function getRetainedListItemPlatformInfo(
     || info?.['estimated-main-axis-size-px'] !== undefined
   ) return info;
   const element = list.__elements[list.__snapshot_def.slot[0]![1]]!;
-  const orientation = __GetAttributeByName(element, 'scroll-orientation') === 'horizontal' ? 'horizontal' : 'vertical';
+  const orientation = isHorizontal(element) ? 'horizontal' : 'vertical';
   if (child.__listItemMeasuredOrientation !== orientation) return info;
   return { ...info, 'estimated-main-axis-size-px': child.__listItemMeasuredExtent };
 }

@@ -1,7 +1,14 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { clearNestedListState, isNestedListReuse, prepareNestedListRestore, requestListFrame } from './nativeState.js';
+import {
+  clearNestedListState,
+  isNestedListReuse,
+  isNestedListRow,
+  isOwnReuseCell,
+  prepareNestedListRestore,
+  requestListFrame,
+} from './nativeState.js';
 import { clearReuseTransitions, prepareReuseTransition } from './reuseTransition.js';
 import { cardLifetime } from '../../core/card-lifetime.js';
 import { maybePromise } from '../../utils.js';
@@ -26,6 +33,25 @@ interface ListBindCompletion {
   cancel: () => void;
 }
 let currentListCommit: ListBindCompletion[] | undefined;
+let keptCellTransitions: NonNullable<ReturnType<typeof prepareReuseTransition>>[] | undefined;
+let keptLists: number[] | undefined;
+/**
+ * Nested lists a cross-item row rebind kept, once per such row, until that
+ * row's transitions are restored. Native may bind their cells for the new
+ * item later in the same commit, in a batch flush or asynchronously.
+ */
+const rebindingLists: number[] = [];
+
+/** A kept nested list rebinds its native cells to new items inside the row's own bind. */
+export function suppressKeptCellTransition(cell: SnapshotInstance): void {
+  const binding = keptCellTransitions && prepareReuseTransition(cell);
+  if (binding) keptCellTransitions!.push(binding);
+}
+
+/** Record a nested list that a recycle keeps for the row's new item. */
+export function noteKeptNestedList(element: FiberElement): void {
+  keptLists?.push(__GetElementUniqueID(element));
+}
 const synchronousListCommit: ListBindCompletion[] = [];
 
 /** This scope is synchronous; deferred batches own their completion bucket. */
@@ -56,9 +82,13 @@ function finishListCommit(completions: ListBindCompletion[]): void {
   }
   const parent = currentListCommit;
   currentListCommit = completions;
+  let i = 0;
   try {
     // A native command can synchronously bind another nested cell.
-    for (let i = 0; i < completions.length; i++) completions[i]!.complete();
+    for (; i < completions.length; i++) completions[i]!.complete();
+  } catch (error) {
+    for (const completion of completions.slice(i + 1)) completion.cancel();
+    throw error;
   } finally {
     completions.length = 0;
     currentListCommit = parent;
@@ -80,6 +110,7 @@ function finishListBind(child: SnapshotInstance, restoreTransition?: () => void)
 }
 
 export function clearListGlobal(): void {
+  rebindingLists.length = 0;
   clearReuseTransitions();
   clearNestedListState();
   for (const key in gSignMap) {
@@ -166,7 +197,7 @@ export function componentAtIndexFactory(
 
       // use a promise to track the list-item's readiness
       let p: Promise<number>;
-      return (p = new Promise<number>((resolve) => {
+      return (p = new Promise<number>((resolve, reject) => {
         Object.defineProperty(childCtx.__extraProps, 'isReady', {
           set(isReady) {
             if (isReady === 1) {
@@ -180,11 +211,17 @@ export function componentAtIndexFactory(
                   resolve(-1);
                   return;
                 }
-                // the cellIndex may be changed already, but the `childCtx` is the same
-                resolve(withListCommit(
-                  () => componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification),
-                  completions,
-                ));
+                try {
+                  // the cellIndex may be changed already, but the `childCtx` is the same
+                  resolve(withListCommit(
+                    () => componentAtChildCtx(list, listID, childCtx, operationID, enableReuseNotification),
+                    completions,
+                  ));
+                } catch (error) {
+                  // Settle the cell so its batch can release its siblings' rebind work.
+                  // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- keep the thrown value
+                  reject(error);
+                }
               });
             }
           },
@@ -236,9 +273,29 @@ export function componentAtIndexFactory(
       const [sign, oldCtx] = first!;
       recycleSignMap.delete(sign);
       // Hydration may remove the donor's last nested list.
-      const wasNested = isNestedListReuse(listID, oldCtx);
-      // Passing the reused row root marks this as a cross-cell recycle.
-      hydrateFunction(oldCtx, childCtx, undefined, oldCtx.__element_root);
+      const wasNested = isNestedListRow(oldCtx);
+      const transitions: NonNullable<ReturnType<typeof prepareReuseTransition>>[] = [];
+      const lists: number[] = [];
+      const parentKeptCells = keptCellTransitions;
+      const parentKeptLists = keptLists;
+      keptCellTransitions = transitions;
+      keptLists = lists;
+      // A cell only ever recycled for its own item rebinds as that item, as before.
+      const ownItem = oldCtx.__listItemPlatformInfo?.['item-key'] === platformInfo['item-key']
+        && isOwnReuseCell(childCtx);
+      try {
+        // Passing the reused row root marks this as a cross-cell recycle.
+        hydrateFunction(oldCtx, childCtx, undefined, ownItem ? undefined : oldCtx.__element_root);
+      } catch (error) {
+        for (const transition of transitions) {
+          transition.restore();
+          transition.finish();
+        }
+        throw error;
+      } finally {
+        keptCellTransitions = parentKeptCells;
+        keptLists = parentKeptLists;
+      }
       oldCtx.unRenderElements();
       if (!oldCtx.__id) {
         oldCtx.tearDown();
@@ -254,14 +311,23 @@ export function componentAtIndexFactory(
       // Install the new owner before a style commit can invoke native list callbacks.
       // This also preserves the deferred-item enqueue/relayout ordering below.
       signMap.set(sign, childCtx);
-      let transition: ReturnType<typeof prepareReuseTransition>;
-      if (
-        (wasNested || isNestedListReuse(listID, childCtx))
-        && (oldCtx.__id !== childCtx.__id
-          || oldCtx.__listItemPlatformInfo?.['item-key'] !== platformInfo['item-key'])
-      ) {
-        transition = prepareReuseTransition(childCtx);
+      const crossItem = !ownItem && (oldCtx.__id !== childCtx.__id
+        || oldCtx.__listItemPlatformInfo?.['item-key'] !== platformInfo['item-key']);
+      const crossItemRow = crossItem && (wasNested || isNestedListRow(childCtx));
+      // A kept nested list may bind its cells for its row's new item; cells it
+      // recycles while scrolling on its own keep their transitions.
+      if (crossItemRow || (crossItem && rebindingLists.includes(listID))) {
+        const transition = prepareReuseTransition(childCtx);
+        if (transition) transitions.push(transition);
       }
+      const marked = transitions.length ? lists : [];
+      rebindingLists.push(...marked);
+      const restoreTransitions = transitions.length
+        ? () => {
+          for (const id of marked.splice(0)) rebindingLists.splice(rebindingLists.indexOf(id), 1);
+          for (const transition of transitions) transition.restore();
+        }
+        : undefined;
       try {
         if (!enableBatchRender) {
           const flushOptions: FlushOptions = {
@@ -290,12 +356,12 @@ export function componentAtIndexFactory(
           __FlushElementTree(root, flushOptions);
         }
       } catch (error) {
-        transition?.restore();
+        restoreTransitions?.();
         throw error;
       } finally {
-        transition?.finish();
+        for (const transition of transitions) transition.finish();
       }
-      finishListBind(childCtx, transition?.restore);
+      finishListBind(childCtx, restoreTransitions);
       return sign;
     }
 
@@ -390,22 +456,43 @@ export function componentAtIndexFactory(
       // not the one generated by any code here, to workaround a bug of Lynx Engine.
       // So we CANNOT split the `operationIDs` into two parts: one for ready items, one for unready items.
       if (hasUnready) {
+        const release = (): void => {
+          for (const completion of completions.splice(0)) completion.cancel();
+        };
         // eslint-disable-next-line @typescript-eslint/await-thenable
         void Promise.all(p).then((uiSigns) => {
           if (!gSignMap[listID]) {
             // Release the batch's pending rebind work with its destroyed list.
-            for (const completion of completions.splice(0)) completion.cancel();
+            release();
             return;
           }
-          withListCommit(() => {
-            __FlushElementTree(list, {
-              triggerLayout: true,
-              operationIDs,
-              elementIDs: uiSigns,
-              listID,
-            });
-          }, completions);
+          try {
+            withListCommit(() => {
+              __FlushElementTree(list, {
+                triggerLayout: true,
+                operationIDs,
+                elementIDs: uiSigns,
+                listID,
+              });
+            }, completions);
+          } catch (error) {
+            // Deferred cells queued their rebind work before this flush.
+            release();
+            throw error;
+          }
           finishListCommit(completions);
+        }, (error: unknown) => {
+          // A deferred cell failed to bind, so the batch is never flushed.
+          // Release its siblings' rebind work as each of them settles.
+          for (const u of p) {
+            if (typeof u !== 'number') {
+              void u.then(release, (other: unknown) => {
+                release();
+                if (other !== error) throw other;
+              });
+            }
+          }
+          throw error;
         });
       }
       __FlushElementTree(list, {
@@ -415,7 +502,8 @@ export function componentAtIndexFactory(
         listID,
       });
     }, completions);
-    if (!hasUnready) finishListCommit(completions);
+    // Ready cells are committed by the first flush; deferred cells complete after the final one.
+    finishListCommit(completions);
   }
   return [componentAtIndex, componentAtIndexes] as const;
 }

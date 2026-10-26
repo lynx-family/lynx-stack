@@ -56,7 +56,8 @@ export function prepareReuseTransition(snapshot: SnapshotInstance): ReuseTransit
       if (raw) __SetInlineStyles(element, `${raw};transition-property:none !important;`);
       else __AddInlineStyle(element, TRANSITION_PROPERTY_ID, 'none');
     }
-    // Nested cells have independent owners and independent bind transactions.
+    // Nested cells are suppressed by their own owners: by their own bind, or
+    // individually when hydration keeps their list (`suppressKeptCellTransition`).
     if (tag === 'list') return;
     let child = __FirstElement(element);
     while (child) {
