@@ -260,13 +260,18 @@ export function detachMainThreadDynamicAttrRefsForSubtree(
 export function deleteMainThreadDynamicAttrStateForSubtree(
   handleIds: readonly number[],
 ): void {
-  for (const handleId of handleIds) {
-    const handleState = mtRefAttrState.get(handleId);
-    if (handleState && attachedMTRefHandleIds.has(handleId)) {
-      cleanupMTRefHandleState(handleState);
+  try {
+    for (const handleId of handleIds) {
+      const handleState = mtRefAttrState.get(handleId);
+      if (handleState && attachedMTRefHandleIds.has(handleId)) {
+        cleanupMTRefHandleState(handleState);
+      }
     }
-    attachedMTRefHandleIds.delete(handleId);
-    mtEventAttrState.delete(handleId);
-    mtRefAttrState.delete(handleId);
+  } finally {
+    for (const handleId of handleIds) {
+      attachedMTRefHandleIds.delete(handleId);
+      mtEventAttrState.delete(handleId);
+      mtRefAttrState.delete(handleId);
+    }
   }
 }

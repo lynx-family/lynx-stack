@@ -6,5 +6,9 @@ import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.j
 
 export function callDestroyLifetimeFun(): void {
   takeMainThreadRefInitValuePatch();
-  destroyElementTemplateBackgroundRuntime();
+  try {
+    destroyElementTemplateBackgroundRuntime();
+  } finally {
+    takeMainThreadRefInitValuePatch();
+  }
 }
