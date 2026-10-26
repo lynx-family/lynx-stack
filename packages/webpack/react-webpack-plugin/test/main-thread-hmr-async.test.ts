@@ -4,6 +4,7 @@
 
 // Worklet implementations are read from executed Rspack VM factories.
 
+import { writeFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -164,7 +165,8 @@ it.each([
                 }
               }
               if (build < versions.length) {
-                await fs.writeFile(target, versions[build]!);
+                // Complete the source version before yielding to watch callbacks.
+                writeFileSync(target, versions[build]!);
               } else watcher.close(resolve);
             })().catch(error => watcher.close(() => reject(error as Error)));
           },
