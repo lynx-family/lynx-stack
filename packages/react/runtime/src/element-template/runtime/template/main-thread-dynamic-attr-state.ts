@@ -625,20 +625,24 @@ export function detachMainThreadDynamicAttrRefsForSubtree(
 export function deleteMainThreadDynamicAttrStateForSubtree(
   handleIds: readonly number[],
 ): void {
-  for (const handleId of handleIds) {
-    const wasAttached = attachedMTRefHandles.delete(handleId);
-    unhydratedSpreadMTRefSlots.delete(handleId);
-    pendingMTRefReconciliations.delete(handleId);
-    if (wasAttached) {
-      cleanupAttachedElementsForHandle(handleId);
-    } else {
-      attachedMTRefsByElement.delete(handleId);
+  try {
+    for (const handleId of handleIds) {
+      if (attachedMTRefHandles.has(handleId)) {
+        cleanupAttachedElementsForHandle(handleId);
+      }
     }
-    gestureAttrState.delete(handleId);
-    mtEventAttrState.delete(handleId);
-    mtRefAttrState.delete(handleId);
-    mtRefSlotSpecs.delete(handleId);
-    spreadAttrSlots.delete(handleId);
-    spreadSlotState.delete(handleId);
+  } finally {
+    for (const handleId of handleIds) {
+      attachedMTRefHandles.delete(handleId);
+      unhydratedSpreadMTRefSlots.delete(handleId);
+      pendingMTRefReconciliations.delete(handleId);
+      attachedMTRefsByElement.delete(handleId);
+      gestureAttrState.delete(handleId);
+      mtEventAttrState.delete(handleId);
+      mtRefAttrState.delete(handleId);
+      mtRefSlotSpecs.delete(handleId);
+      spreadAttrSlots.delete(handleId);
+      spreadSlotState.delete(handleId);
+    }
   }
 }

@@ -17,18 +17,21 @@ import { resetElementTemplateMainThreadFunctionRuntime } from '../runtime/templa
 export function destroyElementTemplateBackgroundRuntime(): void {
   resetElementTemplateHydrationListener();
   cancelElementTemplateRemovedSubtreeCleanup();
-
-  withSyncEffectFlush(() => {
-    render(null, __root as unknown as ContainerNode);
-  });
-  // Run user cleanup before dropping the backend side tables; after clearRefState
-  // the raw ref ownership needed to detach callbacks is gone.
-  flushPendingRefs();
-
   resetElementTemplateCommitState();
-  resetElementTemplateBackgroundFunctionRuntime();
-  resetElementTemplateMainThreadFunctionRuntime();
-  clearEventState();
-  clearRefState();
-  backgroundElementTemplateInstanceManager.clear();
+
+  try {
+    withSyncEffectFlush(() => {
+      render(null, __root as unknown as ContainerNode);
+    });
+    // Run user cleanup before dropping the backend side tables; after clearRefState
+    // the raw ref ownership needed to detach callbacks is gone.
+    flushPendingRefs();
+  } finally {
+    resetElementTemplateCommitState();
+    resetElementTemplateBackgroundFunctionRuntime();
+    resetElementTemplateMainThreadFunctionRuntime();
+    clearEventState();
+    clearRefState();
+    backgroundElementTemplateInstanceManager.clear();
+  }
 }
