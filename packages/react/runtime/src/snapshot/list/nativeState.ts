@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { cardLifetime } from '../../core/card-lifetime.js';
 import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { LIST_EVENT_ID, setListEventDispatch } from '../../worklet-runtime/listEvent.js';
 import type { ListEventDispatch } from '../../worklet-runtime/listEvent.js';
@@ -27,8 +28,9 @@ interface ListState {
   inflight?: RestoreToken | undefined;
   handlers: Map<string, Worklet>;
 }
-const states = new Map<number, ListState>();
-const pendingStates = new Set<ListState>();
+// Native lists outlive a re-evaluated entry, which hydrates them and keeps tracking them.
+const states = /*#__PURE__*/ cardLifetime('nestedListStates', () => new Map<number, ListState>());
+const pendingStates = /*#__PURE__*/ cardLifetime('nestedListPendingStates', () => new Set<ListState>());
 
 /** Schedule on the owning native main-thread context, not a layout worker. */
 export function requestListFrame(callback: () => void): void {

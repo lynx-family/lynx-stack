@@ -1,14 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { cardLifetime } from '../../core/card-lifetime.js';
 import { nestedListBridge } from '../../worklet-runtime/listEvent.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 // Lynx tools/css_generator/css_defines/110-transition-property.json (also web-core CSSPropertyType).
 const TRANSITION_PROPERTY_ID = 110;
-const elementRestores = new Map<number, () => void>();
-const pendingCancels = new Set<() => void>();
-const bindingSnapshots = new Set<SnapshotInstance>();
+// Suppressed native styles outlive a re-evaluated entry, whose updates must still end the suppression.
+const elementRestores = /*#__PURE__*/ cardLifetime('reuseTransitionRestores', () => new Map<number, () => void>());
+const pendingCancels = /*#__PURE__*/ cardLifetime('reuseTransitionCancels', () => new Set<() => void>());
+const bindingSnapshots = /*#__PURE__*/ cardLifetime('reuseTransitionBindings', () => new Set<SnapshotInstance>());
 
 interface ReuseTransitionBinding {
   restore: () => void;

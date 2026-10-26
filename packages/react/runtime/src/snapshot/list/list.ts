@@ -40,7 +40,7 @@ let keptLists: number[] | undefined;
  * row's transitions are restored. Native may bind their cells for the new
  * item later in the same commit, in a batch flush or asynchronously.
  */
-const rebindingLists: number[] = [];
+const rebindingLists: number[] = /*#__PURE__*/ cardLifetime('listRebindingLists', () => []);
 
 /** A kept nested list rebinds its native cells to new items inside the row's own bind. */
 export function suppressKeptCellTransition(cell: SnapshotInstance): void {
