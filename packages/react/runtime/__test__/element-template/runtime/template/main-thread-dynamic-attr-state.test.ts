@@ -22,7 +22,7 @@ import {
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 
-import { prepareMainThreadBackgroundFunctionCtx } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
+import { retainMainThreadBackgroundFunctionCtx } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
 import { prepareMTEventCtxForNative } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
 import type { MTEventNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
 import type { Worklet } from '../../../../src/worklet-runtime/bindings/types.js';
@@ -60,7 +60,6 @@ function installJsFunctionLifecycleManager(): {
     ...previousWorkletImpl,
     _jsFunctionLifecycleManager: {
       addRef,
-      prepareWorkletCtx: vi.fn(),
       retainWorkletCtx: (ctx: { _execId?: number }) => {
         if (ctx._execId !== undefined) addRef(ctx._execId, ctx);
       },
@@ -100,7 +99,7 @@ describe('main-thread dynamic attr state', () => {
     clearEtAttrPlanMap();
   });
 
-  it('executes Native event descriptors using the slot-owned context before and after hydration', () => {
+  it('executes the original Native-held event context before and after hydration', () => {
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     const previousSdkVersion = SystemInfo.lynxSdkVersion;
     try {
@@ -114,12 +113,12 @@ describe('main-thread dynamic attr state', () => {
         _wkltId: 'callback',
         _jsFn: { cb: { _isFirstScreen: true } },
       }) as unknown as MTEventNativeWrapper;
-      prepareMainThreadBackgroundFunctionCtx(first.value);
+      retainMainThreadBackgroundFunctionCtx(first.value);
       setMTEventSlot(17, 0, first);
-      const deliver = (ctx: object) => globalThis.runWorklet(JSON.parse(JSON.stringify(ctx)), []);
+      const deliver = (ctx: object) => globalThis.runWorklet(ctx, []);
       expect(deliver(first.value)).toBe(first.value._jsFn);
       const next = { _wkltId: 'callback', _execId: 11, _jsFn: { cb: { _jsFnId: 1 } } };
-      prepareMainThreadBackgroundFunctionCtx(next);
+      retainMainThreadBackgroundFunctionCtx(next);
       setMTEventSlot(17, 0, { type: 'worklet', value: next }, true);
       expect(deliver(next)).toBe(next._jsFn);
       expect(next._jsFn.cb).toEqual({ _jsFnId: 1, _execId: 11 });
@@ -320,7 +319,7 @@ describe('main-thread dynamic attr state', () => {
     const ctx = { _execId: 100, _wkltId: 'tap' };
 
     try {
-      prepareMainThreadBackgroundFunctionCtx(ctx);
+      retainMainThreadBackgroundFunctionCtx(ctx);
       expect(getMainThreadDynamicAttrState(17, 3)).toBeUndefined();
       setMTEventSlot(17, 3, { type: 'worklet', value: ctx });
 

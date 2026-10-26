@@ -352,7 +352,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     const retain = vi.spyOn(manager, 'addRef');
     const error = new Error('setter failed');
     mockSetElementTemplateAttributeSlot.mockImplementationOnce((_native, _slot, value) => {
-      expect(manager.resolveWorkletCtx(JSON.parse(JSON.stringify(value.value)))).toBe(nextCtx);
+      expect(value.value).toBe(nextCtx);
       expect(retain).toHaveBeenCalledExactlyOnceWith(31, nextCtx);
       expect(getMainThreadDynamicAttrState(101, 0)?.nativeHeldValue).toBe(oldCtx);
       if (throws) throw error;

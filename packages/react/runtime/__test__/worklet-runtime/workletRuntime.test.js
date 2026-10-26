@@ -61,26 +61,20 @@ describe('Worklet', () => {
     if (kind === 'metadata') expect(value.nested).toEqual({ _wvid: 999 });
   });
 
-  it('executes copied native descriptors through the retained local context', () => {
+  it('executes the original Native-held context without replacing its captures', () => {
     initWorklet();
     registerWorklet('main-thread', 'background-owner', function() {
       return this._jsFn;
     });
     const handle = { _jsFnId: 7 };
     const ctx = { _wkltId: 'background-owner', _execId: 3, _jsFn: { a: handle, b: handle } };
-    lynxWorkletImpl._jsFunctionLifecycleManager.prepareWorkletCtx(ctx);
     lynxWorkletImpl._jsFunctionLifecycleManager.addRef(3, ctx);
-    const nativeDescriptor = JSON.parse(JSON.stringify(ctx));
-    const first = runWorklet(nativeDescriptor, []);
+    const nativeContext = ctx;
+    const first = runWorklet(nativeContext, []);
     expect(first.a).toBe(first.b);
     expect(first.a).toBe(ctx._jsFn.a);
-    expect(runWorklet(JSON.parse(JSON.stringify(nativeDescriptor)), [])).toBe(first);
+    expect(runWorklet(nativeContext, [])).toBe(first);
     expect(lynxWorkletImpl._jsFunctionLifecycleManager.execIdRefCount.get(3)).toBe(2);
-    initWorklet();
-    const fn = vi.fn();
-    registerWorklet('main-thread', 'background-owner', fn);
-    expect(runWorklet(nativeDescriptor, [])).toBeUndefined();
-    expect(fn).not.toHaveBeenCalled();
   });
 
   it.each(['2.15', '2.16'])('prepares captured execution metadata without a lifecycle manager on SDK %s', (version) => {

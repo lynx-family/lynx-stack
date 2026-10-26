@@ -61,10 +61,6 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkl
     return;
   }
 
-  const localCtx = lynxWorkletImpl._jsFunctionLifecycleManager?.resolveWorkletCtx(ctx);
-  if (ctx._runtimeCtxId !== undefined && !localCtx) return;
-  ctx = localCtx ?? ctx;
-
   if (__DEV__) {
     if (options?.source === RunWorkletSource.EVENT && Array.isArray(params)) {
       const first = params[0];

@@ -114,7 +114,7 @@ describe('ElementTemplateHandle', () => {
       const error = new Error('create failed');
       __etAttrPlanMap['__Card__:_et_test'] = [0, adaptMTEventAttrSlot];
       mockCreateCompiledElementTemplate.mockImplementationOnce((_key, _url, slots) => {
-        expect(manager.resolveWorkletCtx(JSON.parse(JSON.stringify(slots[0].value)))).toBe(ctx);
+        expect(slots[0].value).toBe(ctx);
         expect(retain).toHaveBeenCalledExactlyOnceWith(21, ctx);
         expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
         if (outcome === 'throw') throw error;

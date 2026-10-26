@@ -37,8 +37,6 @@ export type MainThreadRefInitValuePatch = (
 )[];
 
 export interface Worklet {
-  /** Runtime-local lookup identity for descriptors copied by Native. */
-  _runtimeCtxId?: number;
   _wkltId: string;
   _workletType?: string;
   _c?: Record<string, ClosureValueType>;

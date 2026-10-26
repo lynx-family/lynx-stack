@@ -11,7 +11,6 @@ import {
   runOnBackground,
 } from '../../../core/background-function/run-on-background.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
-import type { Worklet } from '../../../worklet-runtime/bindings/types.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
 
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
@@ -34,15 +33,8 @@ export function registerMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroun
   }
 }
 
-// Native clones descriptors, so establish lookup identity before crossing that boundary.
-// Track the prepared input even if Native rejects it: collecting that input must
-// still release its already-registered background execution. Slot ownership commits later.
-export function prepareMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
-  const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
-  manager?.prepareWorkletCtx(ctx as Worklet);
-  retainMainThreadBackgroundFunctionCtx(ctx);
-}
-
+// Track the input before Native takes ownership. If Native rejects it, collection
+// must still release its already-registered background execution; slot state commits later.
 export function retainMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
   retainWorkletCtx(ctx as RetainableMainThreadCtx);
 }
