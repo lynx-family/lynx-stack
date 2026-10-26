@@ -42,20 +42,27 @@ export function hydrateMTRefValue(
 export function attachMTRefValue(
   value: MTRefValue,
   nativeRef: ElementRef,
-): () => void {
+): void {
   if (isMainThreadRef(value)) {
     updateWorkletRef(value, nativeRef);
-    return () => updateWorkletRef(value, null);
+    return;
   }
-  const cleanup = runWorkletCtx(
+  value._unmount = runWorkletCtx(
     value,
     [{ elementRefptr: nativeRef }] as unknown as Parameters<typeof runWorkletCtx>[1],
-  );
-  // A callback value can be reused by later attachments. Keep the returned
-  // cleanup local to this attachment rather than mutating the shared worklet.
-  return typeof cleanup === 'function' ? cleanup as () => void : () => {
-    runWorkletCtx(value, [null]);
-  };
+  ) as () => void;
+}
+
+export function cleanupMTRefValue(value: MTRefValue): void {
+  if (isMainThreadRef(value)) {
+    updateWorkletRef(value, null);
+    return;
+  }
+  if (typeof value._unmount === 'function') {
+    value._unmount();
+    return;
+  }
+  runWorkletCtx(value, [null]);
 }
 
 export function prepareMTRefForNative(

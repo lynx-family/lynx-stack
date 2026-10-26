@@ -812,7 +812,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         _wkltId: 'next-ref-callback',
       }));
       expect(runWorklet.mock.calls[0]?.[1]).toEqual([{ elementRefptr: REF_TARGET }]);
-      expect(mountedCallback).not.toHaveProperty('_unmount');
+      expect(mountedCallback).toHaveProperty('_unmount', nextCleanup);
       expect(nextCallback).not.toHaveProperty('_unmount');
       expect(getMainThreadDynamicAttrState(targetId, 0)).toEqual({
         kind: 'mt-ref',
@@ -1483,8 +1483,8 @@ describe('ElementTemplate patch stream (apply)', () => {
       expect(runRunOnMainThreadTask).not.toHaveBeenCalled();
       expect(mockFlushElementTree).not.toHaveBeenCalled();
     } finally {
-      clearMainThreadDynamicAttrState();
       globalThis.runWorklet = previousRunWorklet;
+      clearMainThreadDynamicAttrState();
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });
