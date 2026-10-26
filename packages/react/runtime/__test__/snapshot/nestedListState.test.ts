@@ -306,6 +306,37 @@ describe('nested list state ownership', () => {
     expect(isOwnReuseCell(tree(own('a'), { 'reuse-identifier': 'c0' }))).toBe(false);
   });
 
+  it('walks past a Suspense virtual div between a nested list and its row', () => {
+    const outer = new SnapshotInstance('nested-state-list');
+    const row = new SnapshotInstance('nested-state-row');
+    // Suspense parks its content under a 'div' that has no snapshot definition.
+    const suspense = new SnapshotInstance('div');
+    const owner = new SnapshotInstance('nested-state-list');
+    outer.insertBefore(row);
+    row.insertBefore(suspense);
+    suspense.__insertBefore(owner);
+    const element = __CreateElement('list', 0);
+    owner.__elements = [element];
+    owner.__element_root = element;
+
+    expect(isNestedListSnapshot(owner)).toBe(true);
+    track(owner);
+    expect(slots(element).worklet?._wkltId).toBe(LIST_EVENT_ID);
+
+    const ownRow = new SnapshotInstance('nested-state-row');
+    ownRow.__listItemPlatformInfo = { 'item-key': 'own', 'reuse-identifier': 'own' };
+    const ownSuspense = new SnapshotInstance('div');
+    const ownOwner = new SnapshotInstance('nested-state-list');
+    outer.insertBefore(ownRow);
+    ownRow.insertBefore(ownSuspense);
+    ownSuspense.__insertBefore(ownOwner);
+    const ownElement = __CreateElement('list', 0);
+    ownOwner.__elements = [ownElement];
+    ownOwner.__element_root = ownElement;
+    track(ownOwner);
+    expect(slots(ownElement).worklet).toBeUndefined();
+  });
+
   it('records only scroll events whose target is the tracked list', () => {
     const owner = makeOwner();
     const element = elementOf(owner);

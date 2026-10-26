@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, parentMap } from './utils/nativeMethod';
 import { applyNodesRefRemoveChild } from '../../src/snapshot/lifecycle/patch/nodesRefApply';
-import { componentAtIndexFactory, gRecycleMap, gSignMap } from '../../src/snapshot/list/list';
+import { clearListGlobal, componentAtIndexFactory, gRecycleMap, gSignMap } from '../../src/snapshot/list/list';
 import { ListUpdateInfoRecording } from '../../src/snapshot/list/listUpdateInfo';
 import {
   isNestedListReuse,
@@ -973,6 +973,48 @@ describe('native list bind completion barriers', () => {
     expect(atCellFlush).toBe(`${target};transition-property:none !important;`);
     while (frames.length) frames.shift()!();
     expect(raw.get(cellRoot)).toBe(target);
+  });
+
+  it('keeps a newer kept list marked when a cleared rebind restores its transitions late', () => {
+    const { raw, frames } = mockInlineStyles();
+    const rowRebind = (prefix: string) => {
+      const a0 = keyedRow(`${prefix}a0`);
+      a0.__values = ['height:100px;transition:height 300ms;'];
+      const b0 = keyedRow(`${prefix}b0`);
+      const target = 'height:120px;transition:height 300ms;';
+      b0.__values = [target];
+      const rowA = list([a0]);
+      rowA.__listItemPlatformInfo = { 'item-key': `${prefix}a` };
+      const rowB = list([b0]);
+      rowB.__listItemPlatformInfo = { 'item-key': `${prefix}b` };
+      const outer = list([rowA, rowB]);
+      node(ROW, [outer]).ensureElements();
+      const outerElement = elementOf(outer);
+      const sign = bind(outer, 0);
+      const cellSign = bind(rowA, 0);
+      const listElement = elementOf(rowA);
+      const cellRoot = elementOf(a0);
+      elementTree.triggerEnqueueComponent(outerElement, sign);
+      vi.stubGlobal('__FlushElementTree', () => {});
+      // Async flush: the kept list binds its cell for the new item after the row's bind.
+      elementTree.triggerComponentAtIndexes(outerElement, [1], [7], false, true);
+      return { rowB, listElement, cellSign, cellRoot, target };
+    };
+    rowRebind('stale-');
+    const staleFrames = frames.splice(0);
+    clearListGlobal();
+    const current = rowRebind('current-');
+    // The cleared rebind's frame fires after the newer row marked its kept list.
+    for (const frame of staleFrames) frame();
+    const seen: string[] = [];
+    vi.stubGlobal('__FlushElementTree', (element: FiberElement) => {
+      if (element === current.cellRoot) seen.push(String(raw.get(current.cellRoot)));
+    });
+    elementTree.triggerEnqueueComponent(current.listElement as TestElement, current.cellSign);
+
+    expect(bind(current.rowB, 0)).toBe(current.cellSign);
+
+    expect(seen[0]).toBe(`${current.target};transition-property:none !important;`);
   });
 
   it.each(['batch', 'asyncFlush'] as const)(

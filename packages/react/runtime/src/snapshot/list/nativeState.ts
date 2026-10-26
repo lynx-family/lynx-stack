@@ -54,7 +54,8 @@ function isHorizontal(element: FiberElement): boolean {
 export function isNestedListSnapshot(owner: SnapshotInstance): boolean {
   if (!owner.__snapshot_def.isListHolder) return false;
   let ancestor = owner.parentNode;
-  while (ancestor && !ancestor.__snapshot_def.isListHolder) ancestor = ancestor.parentNode;
+  // A Suspense virtual 'div' between the lists has no snapshot definition.
+  while (ancestor && !ancestor.__snapshot_def?.isListHolder) ancestor = ancestor.parentNode;
   return Boolean(ancestor);
 }
 
@@ -134,7 +135,7 @@ function bind(state: ListState, eventType: string, eventName: string): void {
 
 function containingCell(owner: SnapshotInstance): SnapshotInstance {
   let cell = owner;
-  while (!cell.parentNode!.__snapshot_def.isListHolder) cell = cell.parentNode!;
+  while (!cell.parentNode!.__snapshot_def?.isListHolder) cell = cell.parentNode!;
   return cell;
 }
 

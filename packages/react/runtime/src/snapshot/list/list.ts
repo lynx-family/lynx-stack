@@ -324,7 +324,11 @@ export function componentAtIndexFactory(
       rebindingLists.push(...marked);
       const restoreTransitions = transitions.length
         ? () => {
-          for (const id of marked.splice(0)) rebindingLists.splice(rebindingLists.indexOf(id), 1);
+          for (const id of marked.splice(0)) {
+            // Clearing the list globals may have dropped this entry already.
+            const index = rebindingLists.indexOf(id);
+            if (index >= 0) rebindingLists.splice(index, 1);
+          }
           for (const transition of transitions) transition.restore();
         }
         : undefined;
