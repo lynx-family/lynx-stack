@@ -43,6 +43,7 @@ pub struct ExtractingIdentsCollector {
   member_expr_depth: u32,
   // when `d` in `a.b.c.d` is visited, `member_expr_path` should be [a, b, c].
   member_expr_path: Vec<Box<Expr>>,
+  optional_member_sources: Vec<Box<Expr>>,
 }
 
 impl ExtractingIdentsCollector {
@@ -63,7 +64,12 @@ impl ExtractingIdentsCollector {
       }],
       member_expr_depth: 0,
       member_expr_path: vec![],
+      optional_member_sources: vec![],
     }
+  }
+
+  pub fn take_optional_member_sources(&mut self) -> Vec<Box<Expr>> {
+    take(&mut self.optional_member_sources)
   }
 
   pub fn take_values(&mut self) -> Box<Expr> {
@@ -275,6 +281,66 @@ impl ExtractingIdentsCollector {
     }
   }
 
+  fn record_optional_member_source(&mut self, obj: &Expr) {
+    let normalized = Self::normalize_extracted_member_obj(obj);
+    if !self
+      .optional_member_sources
+      .iter()
+      .any(|existing| existing.eq_ignore_span(&normalized))
+    {
+      self.optional_member_sources.push(normalized);
+    }
+  }
+
+  fn visit_member_expr(&mut self, n: &mut MemberExpr, optional: bool) {
+    let prop_is_computed = n.prop.is_computed();
+    let prop_is_computed_lit = prop_is_computed && n.prop.as_computed().unwrap().expr.is_lit();
+    let prop_is_computed_lit_str = prop_is_computed_lit
+      && matches!(
+        n.prop.as_computed().unwrap().expr.as_lit().unwrap(),
+        Lit::Str(_)
+      );
+
+    if (prop_is_computed && !prop_is_computed_lit_str)
+      || (n.prop.is_ident() && n.prop.as_ident().unwrap().sym == "current")
+      || !Self::is_extractable_member_obj(&n.obj)
+    {
+      self.member_expr_depth = 0;
+      n.obj.visit_mut_with(self);
+    } else {
+      self.member_expr_depth += 1;
+      n.obj.visit_mut_with(self);
+      self.member_expr_depth = max(self.member_expr_depth, 1) - 1;
+    }
+
+    match &n.prop {
+      MemberProp::Computed(comp) => {
+        if prop_is_computed_lit_str {
+          if !self.member_expr_path.is_empty() {
+            if optional {
+              self.record_optional_member_source(&n.obj);
+            }
+            let extracted_member = Self::normalize_extracted_member_expr(n);
+            self.add_if_needed(
+              Expr::Lit(comp.expr.as_lit().unwrap().clone()).into(),
+              &extracted_member,
+            );
+          }
+        } else {
+          n.prop.visit_mut_with(self);
+        }
+      }
+      MemberProp::Ident(ident) if !self.member_expr_path.is_empty() => {
+        if optional {
+          self.record_optional_member_source(&n.obj);
+        }
+        let extracted_member = Self::normalize_extracted_member_expr(n);
+        self.add_if_needed(Expr::Ident(ident.clone().into()).into(), &extracted_member);
+      }
+      _ => {}
+    }
+  }
+
   fn push_fn_scope(&mut self, ids_declared_in_scope: FxHashSet<Id>) {
     let last_scope = self.scope_env.last().unwrap();
     self.scope_env.push(ScopeEnv {
@@ -330,47 +396,15 @@ impl VisitMut for ExtractingIdentsCollector {
     n.visit_mut_children_with(self);
   }
 
+  fn visit_mut_opt_chain_expr(&mut self, n: &mut OptChainExpr) {
+    match &mut *n.base {
+      OptChainBase::Member(member) => self.visit_member_expr(member, n.optional),
+      OptChainBase::Call(call) => call.visit_mut_with(self),
+    }
+  }
+
   fn visit_mut_member_expr(&mut self, n: &mut MemberExpr) {
-    let prop_is_computed = n.prop.is_computed();
-    let prop_is_computed_lit = prop_is_computed && n.prop.as_computed().unwrap().expr.is_lit();
-    let prop_is_computed_lit_str = prop_is_computed_lit
-      && matches!(
-        n.prop.as_computed().unwrap().expr.as_lit().unwrap(),
-        Lit::Str(_)
-      );
-
-    if (prop_is_computed && !prop_is_computed_lit_str)
-      || (n.prop.is_ident() && n.prop.as_ident().unwrap().sym == "current")
-      || !Self::is_extractable_member_obj(&n.obj)
-    {
-      self.member_expr_depth = 0;
-      n.obj.visit_mut_with(self);
-    } else {
-      self.member_expr_depth += 1;
-      n.obj.visit_mut_with(self);
-      self.member_expr_depth = max(self.member_expr_depth, 1) - 1;
-    }
-
-    match &n.prop {
-      MemberProp::Computed(comp) => {
-        if prop_is_computed_lit_str {
-          if !self.member_expr_path.is_empty() {
-            let extracted_member = Self::normalize_extracted_member_expr(n);
-            self.add_if_needed(
-              Expr::Lit(comp.expr.as_lit().unwrap().clone()).into(),
-              &extracted_member,
-            );
-          }
-        } else {
-          n.prop.visit_mut_with(self);
-        }
-      }
-      MemberProp::Ident(ident) if !self.member_expr_path.is_empty() => {
-        let extracted_member = Self::normalize_extracted_member_expr(n);
-        self.add_if_needed(Expr::Ident(ident.clone().into()).into(), &extracted_member);
-      }
-      _ => {}
-    }
+    self.visit_member_expr(n, false);
   }
 
   /*

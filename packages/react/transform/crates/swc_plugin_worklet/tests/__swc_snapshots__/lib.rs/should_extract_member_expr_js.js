@@ -2,22 +2,22 @@ import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/r
 var captureMainThreadObject = __captureMainThreadObject;
 let onTapLepus = {
     _c: {
-        aaaa: aaaa == null ? aaaa : captureMainThreadObject(aaaa) ?? {
+        aaaa: captureMainThreadObject(aaaa) ?? {
             bbbb: aaaa.bbbb
         },
-        cccc: cccc == null ? cccc : captureMainThreadObject(cccc) ?? {
+        cccc: captureMainThreadObject(cccc) ?? {
             dddd: cccc.dddd
         },
-        hhhh: hhhh == null ? hhhh : captureMainThreadObject(hhhh) ?? {
+        hhhh: captureMainThreadObject(hhhh) ?? {
             iiii: hhhh.iiii
         },
         llll,
-        oooo: oooo == null ? oooo : captureMainThreadObject(oooo) ?? {
+        oooo: captureMainThreadObject(oooo) ?? {
             pppp: oooo.pppp,
             qqqq: oooo.qqqq
         },
         rrrr,
-        uuuu: uuuu == null ? uuuu : captureMainThreadObject(uuuu) ?? {
+        uuuu: captureMainThreadObject(uuuu) ?? {
             "__??__": uuuu["__??__"]
         },
         enabled,

@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-Preserve nullish bases (`null` and `undefined`) when narrowing worklet object-member and optional-chain captures so creating a worklet does not eagerly dereference properties on nullish objects before guards inside the worklet body run.
+Preserve nullish bases (`null` and `undefined`) when narrowing worklet optional-chain member captures so creating a worklet does not eagerly dereference properties on nullish objects before guards inside the worklet body run.
