@@ -1,5 +1,11 @@
 # @lynx-js/react-signals
 
+## 0.0.7
+
+### Patch Changes
+
+- Support `@lynx-js/react@0.129.0`, `@lynx-js/react-webpack-plugin@0.14.0`, and `@lynx-js/react-rsbuild-plugin@0.22.0`. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
 ## 0.0.6
 
 ### Patch Changes

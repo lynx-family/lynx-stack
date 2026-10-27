@@ -61,7 +61,10 @@ beforeEach(() => {
       compiledTemplate: {
         kind: 'element',
         type: 'view',
-        attributesArray: [{ kind: 'slot', key: 'id', attrSlotIndex: 0 }],
+        attributesArray: [
+          { kind: 'slot', key: 'id', attrSlotIndex: 0 },
+          { kind: 'slot', key: 'main-thread:ref', attrSlotIndex: 1 },
+        ],
       },
     },
   ]);

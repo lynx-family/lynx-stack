@@ -67,6 +67,19 @@ export function cancelElementTemplateRemovedSubtreeCleanup(): void {
   scheduledRemovedSubtreeCleanupTimers.clear();
 }
 
+function cleanupFailedElementTemplateCommit(
+  removedSubtreesAwaitingTeardown: BackgroundElementTemplateInstance[],
+  delayedRunOnMainThreadPayload: readonly { resolveId: number }[] | undefined,
+): void {
+  if (delayedRunOnMainThreadPayload) {
+    dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
+  }
+  clearPendingRefs();
+  resetGlobalCommitContext();
+  setPipeline(undefined);
+  scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+}
+
 function flushElementTemplateCommitChanges(): void {
   const hasNativeOps = globalCommitContext.ops.length > 0;
   const hasDelayedRunOnMainThread = delayedRunOnMainThreadData.length > 0;
@@ -127,12 +140,7 @@ function flushElementTemplateCommitChanges(): void {
         delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
       });
     } catch (error) {
-      if (delayedRunOnMainThreadPayload) {
-        dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-      }
-      clearPendingRefs();
-      resetGlobalCommitContext();
-      scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+      cleanupFailedElementTemplateCommit(removedSubtreesAwaitingTeardown, delayedRunOnMainThreadPayload);
       throw error;
     }
 
@@ -162,12 +170,10 @@ export function installElementTemplateCommitHook(): void {
       try {
         sendMTRefInitValueToMainThread();
       } catch (error) {
-        const removedSubtreesAwaitingTeardown = takeRemovedSubtreesForPostDispatchTeardown();
-        dropFunctionCallReturnIds(takeDelayedRunOnMainThreadData().map(data => data.resolveId));
-        clearPendingRefs();
-        resetGlobalCommitContext();
-        setPipeline(undefined);
-        scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
+        cleanupFailedElementTemplateCommit(
+          takeRemovedSubtreesForPostDispatchTeardown(),
+          takeDelayedRunOnMainThreadData(),
+        );
         throw error;
       }
     }

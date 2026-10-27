@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { JsFunctionLifecycleManager } from '../../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
 import {
   composeElementTemplateListAttributes,
@@ -8,7 +9,12 @@ import {
   registerElementTemplateListState,
 } from '../../../src/element-template/runtime/list/list.js';
 import {
+  getNextElementTemplateId,
+  reserveElementTemplateId,
+} from '../../../src/element-template/runtime/template/handle.js';
+import {
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
@@ -92,6 +98,37 @@ describe('mts-destroy', () => {
     }
   });
 
+  it('retires callback owners before a new runtime can reuse background execution IDs', () => {
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const previous = new JsFunctionLifecycleManager();
+    const oldCtx = { _wkltId: 'tap', _execId: 3 };
+    previous.addRef(3, oldCtx);
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _jsFunctionLifecycleManager: previous,
+    } as typeof globalThis.lynxWorkletImpl;
+    const dispatch = vi.spyOn(lynx.getJSContext(), 'dispatchEvent');
+    try {
+      onMtsDestruction();
+      const current = globalThis.lynxWorkletImpl._jsFunctionLifecycleManager!;
+      const next = { _wkltId: 'tap', _execId: 3 };
+      current.addRef(3, next);
+      expect(current).not.toBe(previous);
+      previous.removeRef(3);
+      previous.fire();
+      expect(dispatch).not.toHaveBeenCalled();
+      current.removeRef(3);
+      current.fire();
+      expect(dispatch).toHaveBeenCalledExactlyOnceWith({
+        type: 'Lynx.Worklet.releaseBackgroundWorkletCtx',
+        data: [3],
+      });
+    } finally {
+      dispatch.mockRestore();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
   it('clears the element template registry on destruction', () => {
     const registryRef = {} as ElementTemplateHandle;
     const mtRef = { _wvid: 7 };
@@ -120,6 +157,8 @@ describe('mts-destroy', () => {
       ],
     );
     attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: registryRef }]);
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue({ id: 'actual-element' } as unknown as ElementRef);
+    applyPendingMainThreadRefAttachments();
 
     try {
       expect(elementTemplateRegistry.get(-1)).toBe(registryRef);
@@ -155,6 +194,50 @@ describe('mts-destroy', () => {
       1,
     );
     expect(delayedBackgroundFunctionArray).toHaveLength(0);
+  });
+
+  it('resets main-thread template id counter on destruction', () => {
+    expect(reserveElementTemplateId()).toBe(-1);
+    expect(reserveElementTemplateId()).toBe(-2);
+    expect(getNextElementTemplateId()).toBe(-3);
+
+    onMtsDestruction();
+
+    expect(getNextElementTemplateId()).toBe(-1);
+  });
+
+  it('still clears dynamic attr state and resets template id when a materialized main-thread ref cleanup throws', () => {
+    const registryRef = {} as ElementTemplateHandle;
+    const cleanupError = new Error('mt-ref cleanup failed');
+    const throwingRef: { _wkltId: string; _unmount?: () => void } = {
+      _wkltId: 'ref-cleanup',
+    };
+    expect(reserveElementTemplateId()).toBe(-1);
+    elementTemplateRegistry.set(-1, registryRef);
+    __etAttrPlanMap._et_throwing_destroy = [0, adaptMTEventAttrSlot, 1, adaptMTRefAttrSlot];
+    initializeMainThreadDynamicAttrSlots(
+      -1,
+      '_et_throwing_destroy',
+      [
+        {
+          type: 'worklet',
+          value: { _wkltId: 'tap' },
+        },
+        {
+          type: 'main-thread-ref',
+          value: throwingRef,
+        },
+      ],
+    );
+    attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: registryRef }]);
+    throwingRef._unmount = vi.fn(() => {
+      throw cleanupError;
+    });
+
+    expect(() => onMtsDestruction()).toThrow(cleanupError);
+    expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
+    expect(getMainThreadDynamicAttrState(-1, 1)).toBeUndefined();
+    expect(getNextElementTemplateId()).toBe(-1);
   });
 
   it('marks list callbacks destroyed on main-thread runtime destruction', () => {

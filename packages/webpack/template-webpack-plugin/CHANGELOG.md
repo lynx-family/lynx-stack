@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.5
+
+### Patch Changes
+
+- Support `@lynx-js/react@0.129.0`, `@lynx-js/react-webpack-plugin@0.14.0`, and `@lynx-js/react-rsbuild-plugin@0.22.0`. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+- Updated dependencies [[`4f74827`](https://github.com/lynx-family/lynx-stack/commit/4f748279ddf56706fc29cf64056324c9344d8829)]:
+  - @lynx-js/web-core@0.26.5
+
 ## 0.16.4
 
 ### Patch Changes

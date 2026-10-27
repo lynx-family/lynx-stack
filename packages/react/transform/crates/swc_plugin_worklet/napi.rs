@@ -6,9 +6,7 @@ use swc_core::ecma::ast::*;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut};
 
 use crate::{WorkletVisitor as CoreVisitor, WorkletVisitorConfig as CoreConfig};
-use swc_plugins_shared::{
-  defines::DefinesCollector, target_napi::TransformTarget, transform_mode_napi::TransformMode,
-};
+use swc_plugins_shared::{defines::DefinesCollector, target_napi::TransformTarget};
 
 #[derive(Clone, Debug)]
 #[napi(object)]
@@ -69,7 +67,7 @@ pub struct WorkletVisitor {
 
 impl Default for WorkletVisitor {
   fn default() -> Self {
-    WorkletVisitor::new(TransformMode::Production, WorkletVisitorConfig::default())
+    WorkletVisitor::new(WorkletVisitorConfig::default())
   }
 }
 
@@ -117,9 +115,9 @@ impl WorkletVisitor {
     self
   }
 
-  pub fn new(mode: TransformMode, cfg: WorkletVisitorConfig) -> Self {
+  pub fn new(cfg: WorkletVisitorConfig) -> Self {
     Self {
-      inner: CoreVisitor::new(mode.into(), cfg.into()),
+      inner: CoreVisitor::new(cfg.into()),
     }
   }
 }

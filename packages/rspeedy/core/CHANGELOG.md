@@ -1,5 +1,12 @@
 # @lynx-js/rspeedy
 
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.6
+
 ## 0.18.2
 
 ### Patch Changes

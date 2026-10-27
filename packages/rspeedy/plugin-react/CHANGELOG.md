@@ -1,5 +1,25 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.22.0
+
+### Minor Changes
+
+- Add the experimental `experimental_reEvalJSOnReload` option. When it is enabled, `reloadTemplate` evaluates the main-thread and background entries again, so module-level state starts over while the native element tree is reused. It is disabled by default. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
+  Re-evaluating the background entry requires `reloadCard` from the Lynx client. Without it, the background keeps the existing reload behavior.
+
+### Patch Changes
+
+- Updated dependencies [[`f3a9192`](https://github.com/lynx-family/lynx-stack/commit/f3a91921e53784b8255e5eda230ee8602648499e), [`f3a9192`](https://github.com/lynx-family/lynx-stack/commit/f3a91921e53784b8255e5eda230ee8602648499e), [`90bc7ca`](https://github.com/lynx-family/lynx-stack/commit/90bc7cafae16ace990d013e7eaf0faf45349076a)]:
+  - @lynx-js/react-webpack-plugin@0.14.0
+  - @lynx-js/react-alias-rsbuild-plugin@0.22.0
+  - @lynx-js/template-webpack-plugin@0.16.5
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.5
+  - @lynx-js/react-refresh-webpack-plugin@0.4.5
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.1
+  - @lynx-js/rsbuild-plugin@0.1.6
+
 ## 0.21.0
 
 ### Minor Changes

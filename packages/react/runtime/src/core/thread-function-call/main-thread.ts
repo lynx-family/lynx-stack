@@ -11,6 +11,7 @@ import { registerBackgroundFunctionCtx } from '../background-function/run-on-bac
 import { isMainThreadFunction } from '../main-thread-function.js';
 import { isMtsEnabled } from '../mts-capability.js';
 import { dispatchReloadScopedEvent } from '../reload-scoped-event.js';
+import { isRuntimeDestroyed } from '../runtime-destroy.js';
 
 interface RunOnMainThreadOptions {
   shouldDispatchRunOnMainThreadDirectly: () => boolean;
@@ -45,6 +46,7 @@ export function createRunOnMainThread(
     }
     return async (...params: Parameters<Fn>): Promise<R> => {
       return new Promise((resolve) => {
+        if (isRuntimeDestroyed()) return;
         const worklet = fn as unknown as Worklet;
         prepareMainThreadFunctionCtx(worklet);
         const data = {

@@ -19,9 +19,9 @@ import type { RuntimeConfigWebpackPluginOptions } from '@lynx-js/runtime-config-
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
-  LynxTemplatePlugin,
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
+import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
@@ -62,6 +62,7 @@ export function applyEntry(
 
     experimental_isLazyBundle,
     experimental_transformBuiltinAttributeNames,
+    experimental_reEvalJSOnReload,
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
@@ -73,6 +74,14 @@ export function applyEntry(
   }
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
+    // Rstest has no template engine. Application and library builds read the
+    // engine implementation after all user plugin setup hooks have run.
+    const { LynxTemplatePlugin } = api.context.callerName === 'rstest'
+      ? ReactWebpackPlugin.defaultOptions
+      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+      : api.useExposed<{
+        LynxTemplatePlugin: typeof LynxTemplatePluginClass
+      }>(Symbol.for('LynxTemplatePlugin'))!
     const mainThreadChunks: string[] = []
     const entryPairs: Array<{ mainThread: string, background: string }> = []
 
@@ -242,6 +251,7 @@ export function applyEntry(
             experimental_isLazyBundle,
             lazyBundleFetcher,
             cssPlugins: [],
+            enableReuseLoadScriptExports: experimental_reEvalJSOnReload,
           }])
           .end()
       })
@@ -276,6 +286,10 @@ export function applyEntry(
           },
           targetSdkVersion,
           experimental_isLazyBundle,
+          // External libraries share the host Lynx object and must not mark
+          // a legacy application entry as supporting re-evaluation.
+          experimental_reEvalJSOnReload: experimental_reEvalJSOnReload
+            && isApplication,
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)
@@ -308,6 +322,7 @@ export function applyEntry(
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
       .use(ReactWebpackPlugin, [{
+        LynxTemplatePlugin,
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
@@ -322,6 +337,7 @@ export function applyEntry(
         profile: getDefaultProfile(),
         lazyBundleFetcher,
         runtimeVersion,
+        experimental_reEvalJSOnReload,
       }])
 
     // Runtime config belongs to the page host. Standalone lazy bundles and

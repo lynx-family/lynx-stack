@@ -4,6 +4,7 @@ import { injectCalledByNative } from '../../../src/element-template/native/main-
 import { reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { createElementTemplatePage, setupPage } from '../../../src/element-template/runtime/page/page.js';
 import { renderMainThread } from '../../../src/element-template/runtime/render/render-main-thread.js';
+import { clearMainThreadDynamicAttrState } from '../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 
 const mockedPageModuleState = vi.hoisted(() => ({
   page: undefined as unknown,
@@ -42,6 +43,7 @@ describe('injectCalledByNative', () => {
   });
 
   afterEach(() => {
+    clearMainThreadDynamicAttrState();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
@@ -82,7 +84,7 @@ describe('injectCalledByNative', () => {
     expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
   });
 
-  it('flushes updateGlobalProps without page or options when options are absent', () => {
+  it('flushes updateGlobalProps with default root options when options are absent', () => {
     injectCalledByNative();
     const globalAny = globalThis as typeof globalThis & {
       updateGlobalProps: (data?: Record<string, unknown>, options?: UpdatePageOption) => void;
@@ -92,7 +94,7 @@ describe('injectCalledByNative', () => {
 
     globalAny.updateGlobalProps({ theme: 'light' });
 
-    expect(__FlushElementTree).toHaveBeenCalledWith();
+    expect(__FlushElementTree).toHaveBeenCalledWith(undefined, {});
     expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
     expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
     expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
@@ -110,6 +112,7 @@ describe('injectCalledByNative', () => {
     expect(vi.mocked(createElementTemplatePage)).toHaveBeenCalledTimes(1);
     expect(vi.mocked(setupPage)).toHaveBeenCalledWith({ type: 'page', id: '0', children: [] });
     expect(vi.mocked(renderMainThread)).toHaveBeenCalledTimes(1);
+    expect(__FlushElementTree).not.toHaveBeenCalled();
   });
 
   it('merges updatePage data into initData and flushes at the root', () => {

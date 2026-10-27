@@ -44,7 +44,7 @@ interface PatchedVNode extends VNode {
 /**
  * Get human readable name of the component/dom node
  */
-export function getDisplayName(vnode: PatchedVNode): string {
+function getVNodeDisplayName(vnode: PatchedVNode): string {
   if (vnode.type === Fragment) {
     return 'Fragment';
   } else if (typeof vnode.type == 'function') {
@@ -81,6 +81,7 @@ const renderStack: PatchedVNode[] = [];
  * optimization. In these cases the `_owner` will be different.
  */
 let ownerStack: PatchedVNode[] = [];
+let didInstallComponentStack = false;
 
 /**
  * Get the currently rendered `vnode`
@@ -108,7 +109,7 @@ export function getOwnerStack(vnode: PatchedVNode): string {
   }
 
   return stack.reduce((acc, owner) => {
-    acc += `  in ${getDisplayName(owner)}`;
+    acc += `  in ${getVNodeDisplayName(owner)}`;
 
     const source = owner.__source;
     if (source) {
@@ -125,6 +126,13 @@ export function getOwnerStack(vnode: PatchedVNode): string {
  * debug messages for `this.setState` where the `vnode` is `undefined`.
  */
 export function setupComponentStack(): void {
+  renderStack.length = 0;
+  ownerStack = [];
+  if (didInstallComponentStack) {
+    return;
+  }
+  didInstallComponentStack = true;
+
   /* eslint-disable @typescript-eslint/unbound-method */
   const oldDiff = options[DIFF];
   const oldDiffed = options[DIFFED];
@@ -135,9 +143,15 @@ export function setupComponentStack(): void {
 
   options[DIFFED] = vnode => {
     if (isPossibleOwner(vnode)) {
-      ownerStack.pop();
+      const ownerIndex = ownerStack.lastIndexOf(vnode);
+      if (ownerIndex !== -1) {
+        ownerStack.length = ownerIndex;
+      }
+      const renderIndex = renderStack.lastIndexOf(vnode);
+      if (renderIndex !== -1) {
+        renderStack.length = renderIndex;
+      }
     }
-    renderStack.pop();
     if (oldDiffed) oldDiffed(vnode);
   };
 
@@ -149,7 +163,10 @@ export function setupComponentStack(): void {
   };
 
   options[ROOT] = (vnode, parent) => {
-    ownerStack = [];
+    if (!(parent as { parentNode?: unknown } | null | undefined)?.parentNode) {
+      renderStack.length = 0;
+      ownerStack = [];
+    }
     if (oldRoot) oldRoot(vnode, parent);
   };
 

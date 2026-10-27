@@ -98,8 +98,8 @@ export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory
 export { loadLazyBundle } from './core/lynx/lazy-bundle.js';
 
 export { createBackgroundFunctionHandle as transformToWorklet } from './core/background-function/handle.js';
-export { registerWorkletOnBackground } from './snapshot/worklet/hmr.js';
 
+export { loadWorkletRuntime } from '@lynx-js/react/worklet-runtime/bindings';
 export { captureMainThreadObject } from './core/capture-main-thread-object.js';
 
 if (__DEV__) {

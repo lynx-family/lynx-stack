@@ -1,6 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { cardLifetime } from '../../../core/card-lifetime.js';
 import { isProcessingDefaultData } from '../../../core/lynx-data-processors.js';
 import { __root } from '../../../root.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
@@ -9,13 +10,20 @@ import { LifecycleConstant } from '../../lifecycle/constant.js';
 // Initialized once at module load (`renderPage` runs once per runtime and does
 // not reset), so a ready mark set before `renderPage` (e.g. in `defaultDataProcessor`)
 // survives. In `'manual'` mode the first screen syncs only after both are true.
-let isFirstScreenSynced = false;
-let firstScreenEventIdSwap: Record<string | number, number> = {};
-let isMarkedFirstScreenSyncReady = false;
-let isFirstScreenTreeReady = false;
+const firstScreenSync: {
+  isSynced: boolean;
+  eventIdSwap: Record<string | number, number>;
+  isMarkedReady: boolean;
+  isTreeReady: boolean;
+} = /*#__PURE__*/ cardLifetime('firstScreenSync', () => ({
+  isSynced: false,
+  eventIdSwap: {},
+  isMarkedReady: false,
+  isTreeReady: false,
+}));
 
 function syncFirstScreen(): void {
-  isFirstScreenSynced = true;
+  firstScreenSync.isSynced = true;
 
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::serializeRoot');
@@ -31,13 +39,13 @@ function syncFirstScreen(): void {
     LifecycleConstant.firstScreen, /* FIRST_SCREEN */
     {
       root,
-      firstScreenEventIdSwap,
+      firstScreenEventIdSwap: firstScreenSync.eventIdSwap,
     },
   ]);
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
-  firstScreenEventIdSwap = {};
+  firstScreenSync.eventIdSwap = {};
 }
 
 // ready signal: business/framework allows the handover. Syncs if the tree is ready.
@@ -45,10 +53,10 @@ function onFirstScreenSyncReady(): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::onFirstScreenSyncReady');
   }
-  isMarkedFirstScreenSyncReady = true;
+  firstScreenSync.isMarkedReady = true;
   // A mark made inside `defaultDataProcessor` (a native call before the upcoming render)
   // is recorded but not synced now; `onFirstScreenTreeReady` honors it once render ends.
-  if (isFirstScreenTreeReady && !isProcessingDefaultData() && !isFirstScreenSynced) {
+  if (firstScreenSync.isTreeReady && !isProcessingDefaultData() && !firstScreenSync.isSynced) {
     syncFirstScreen();
   }
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -58,8 +66,8 @@ function onFirstScreenSyncReady(): void {
 
 // tree built (`renderPage` / `updatePage` done). Syncs if the ready signal already came.
 function onFirstScreenTreeReady(): void {
-  isFirstScreenTreeReady = true;
-  if (isMarkedFirstScreenSyncReady && !isFirstScreenSynced) {
+  firstScreenSync.isTreeReady = true;
+  if (firstScreenSync.isMarkedReady && !firstScreenSync.isSynced) {
     syncFirstScreen();
   }
 }
@@ -67,19 +75,19 @@ function onFirstScreenTreeReady(): void {
 // the first-screen tree is being (re-)rendered, a mark during this period
 // must not sync until the next `onFirstScreenTreeReady`
 function resetFirstScreenTreeReady(): void {
-  isFirstScreenTreeReady = false;
+  firstScreenSync.isTreeReady = false;
 }
 
 function clearFirstScreenEventIdSwap(): void {
-  firstScreenEventIdSwap = {};
+  firstScreenSync.eventIdSwap = {};
 }
 
 // Full reset of all first-screen state. Used by SSR hydration to re-initialize.
 function resetFirstScreenSyncState(): void {
-  isFirstScreenSynced = false;
-  firstScreenEventIdSwap = {};
-  isMarkedFirstScreenSyncReady = false;
-  isFirstScreenTreeReady = false;
+  firstScreenSync.isSynced = false;
+  firstScreenSync.eventIdSwap = {};
+  firstScreenSync.isMarkedReady = false;
+  firstScreenSync.isTreeReady = false;
 }
 
 /**
@@ -87,8 +95,7 @@ function resetFirstScreenSyncState(): void {
  */
 export {
   syncFirstScreen,
-  isFirstScreenSynced,
-  firstScreenEventIdSwap,
+  firstScreenSync,
   clearFirstScreenEventIdSwap,
   resetFirstScreenSyncState,
   onFirstScreenSyncReady,

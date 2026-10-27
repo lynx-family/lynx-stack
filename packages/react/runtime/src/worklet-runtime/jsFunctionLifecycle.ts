@@ -16,6 +16,7 @@ class JsFunctionLifecycleManager {
   private execIdSetToFire = new Set<number>();
   private retainedObjects = new WeakSet<object>();
   private willFire = false;
+  private active = true;
   private registry: FinalizationRegistry<number>;
 
   constructor() {
@@ -26,12 +27,13 @@ class JsFunctionLifecycleManager {
     if (this.retainedObjects.has(objToRef)) {
       return;
     }
+    // A failed engine registration must leave the target eligible for a retry.
+    this.registry.register(objToRef, execId);
     this.retainedObjects.add(objToRef);
     this.execIdRefCount.set(
       execId,
       (this.execIdRefCount.get(execId) ?? 0) + 1,
     );
-    this.registry.register(objToRef, execId);
   }
 
   removeRef(execId: number): void {
@@ -50,7 +52,12 @@ class JsFunctionLifecycleManager {
     }
   }
 
+  dispose(): void {
+    this.active = false;
+  }
+
   fire(): void {
+    if (!this.active) return;
     profile('JsFunctionLifecycleManager.fire', () => {
       lynx.getJSContext().dispatchEvent({
         type: WorkletEvents.releaseBackgroundWorkletCtx,

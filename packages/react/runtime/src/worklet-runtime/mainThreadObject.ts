@@ -33,8 +33,9 @@ function registerMainThreadObjectType(
         `Conflicting MainThreadObject registration for type "${type}". A type key must always use the same create function.`,
       );
     }
-    return;
+    if (registered.create === create) return;
   }
+  // A re-evaluated module brings a factory bound to its own module state.
   mainThreadObjectDefinitions.set(type, { create });
 }
 

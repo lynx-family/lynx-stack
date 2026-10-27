@@ -69,6 +69,7 @@ function reloadPage(): void {
 
   invokeCdp?.(
     JSON.stringify({
+      id: 1,
       method: 'Page.reload',
       params: {
         ignoreCache: true,

@@ -38,7 +38,6 @@ export const {
   process,
   registerRuntimeBackend,
   registerRuntimeVersion,
-  registerWorkletOnBackground,
   transformToWorklet,
   withInitDataInState,
   wrapWithLynxComponent,

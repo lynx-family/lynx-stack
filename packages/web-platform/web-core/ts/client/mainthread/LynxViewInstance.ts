@@ -285,7 +285,11 @@ export class LynxViewInstance implements AsyncDisposable {
       btsUrls,
       isExternalBundle,
     );
-    this.backgroundThread.startBTS();
+    // External and lazy bundles can finish before the entry manifest arrives.
+    // Only the entry bundle may start its app-service module.
+    if (url === this.templateUrl) {
+      this.backgroundThread.startBTS();
+    }
   }
 
   loadUnknownElement(tagName: string) {

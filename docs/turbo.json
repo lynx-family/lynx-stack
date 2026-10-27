@@ -18,7 +18,6 @@
         "!../packages/**/node_modules/**"
       ],
       "outputs": [
-        "doc_build/**",
         "content/*/api/**",
         "content/*/_nav.json",
         "manifest.json",

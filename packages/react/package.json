@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react",
-  "version": "0.128.0",
+  "version": "0.129.0",
   "description": "ReactLynx is a framework for developing Lynx applications with familiar React.",
   "repository": {
     "type": "git",
@@ -76,8 +76,8 @@
       "default": "./runtime/jsx-dev-runtime/index.js"
     },
     "./lepus/jsx-dev-runtime": {
-      "types": "./runtime/jsx-runtime/index.d.ts",
-      "default": "./runtime/lepus/jsx-runtime/index.js"
+      "types": "./runtime/jsx-dev-runtime/index.d.ts",
+      "default": "./runtime/lepus/jsx-dev-runtime/index.js"
     },
     "./hooks": {
       "types": "./runtime/lib/core/hooks/react.d.ts",
@@ -220,7 +220,6 @@
     "testing-library",
     "!**/node_modules/**",
     "CHANGELOG.md",
-    "internal.js",
     "README.md",
     "README.zh.md"
   ],

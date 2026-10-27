@@ -6,8 +6,7 @@ import { markTiming, setPipeline } from '../../core/performance.js';
 import { __root, setRoot } from '../../root.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import {
-  firstScreenEventIdSwap,
-  isFirstScreenSynced,
+  firstScreenSync,
   onFirstScreenSyncReady,
   onFirstScreenTreeReady,
   resetFirstScreenSyncState,
@@ -126,7 +125,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   applyUpdatePageData(data, options);
 
   const flushOptions = options ?? {};
-  if (!isFirstScreenSynced) {
+  if (!firstScreenSync.isSynced) {
     if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
       // a `markFirstScreenSyncReady` call during the re-render below must not
       // sync the half-rendered tree; it is deferred to `onFirstScreenTreeReady`
@@ -139,7 +138,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
 
     setPipeline(options?.pipelineOptions);
     markTiming('updateDiffVdomStart');
-    {
+    try {
       __pendingListUpdates.clearAttachedLists();
       renderMainThread();
       // As said by codename `firstScreenEventIdSwap`, this swap will only be used for event remap,
@@ -147,23 +146,25 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
       hydrate(
         oldRoot as SnapshotInstance,
         __root as SnapshotInstance,
-        { skipUnRef: true, swap: firstScreenEventIdSwap },
+        { skipUnRef: true, swap: firstScreenSync.eventIdSwap },
       );
 
       // always call this before `__FlushElementTree`
       __pendingListUpdates.flush();
       applyRefQueue();
-    }
 
-    if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
-      onFirstScreenTreeReady();
-    }
+      if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
+        onFirstScreenTreeReady();
+      }
 
-    flushOptions.triggerDataUpdated = true;
-    markTiming('updateDiffVdomEnd');
+      flushOptions.triggerDataUpdated = true;
+      markTiming('updateDiffVdomEnd');
 
-    if (typeof lepusng_gc === 'function') {
-      lepusng_gc();
+      if (typeof lepusng_gc === 'function') {
+        lepusng_gc();
+      }
+    } finally {
+      setPipeline(undefined);
     }
   }
 

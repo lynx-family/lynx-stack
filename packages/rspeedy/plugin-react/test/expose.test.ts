@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url'
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
+import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
+
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
 import type {
@@ -84,6 +86,7 @@ describe('Expose', () => {
     const { pluginReactLynx } = await import('../src/index.js')
 
     let expose: { LynxTemplatePlugin: LynxTemplatePlugin } | undefined
+    let engineTemplatePlugin: typeof LynxTemplatePluginClass
     let beforeEncodeArgs:
       | Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0]
       | undefined
@@ -110,6 +113,17 @@ describe('Expose', () => {
           {
             name: 'pluginThatUsesTemplateHooks',
             setup(api) {
+              api.modifyBundlerChain({
+                order: 'pre',
+                handler: () => {
+                  const exposed = api.useExposed<{
+                    LynxTemplatePlugin: typeof LynxTemplatePluginClass
+                  }>(Symbol.for('LynxTemplatePlugin'))!
+                  const Original = exposed.LynxTemplatePlugin
+                  engineTemplatePlugin = class extends Original {}
+                  exposed.LynxTemplatePlugin = engineTemplatePlugin
+                },
+              })
               api.modifyBundlerChain(chain => {
                 // `pluginLynx` exposes this, and Rspeedy applies the engine
                 // after the user plugins, so it is read in a hook rather than
@@ -117,6 +131,11 @@ describe('Expose', () => {
                 expose = api.useExposed<
                   { LynxTemplatePlugin: LynxTemplatePlugin }
                 >(Symbol.for('LynxTemplatePlugin'))
+                expect(chain.plugin('lynx:template-main').get('plugin')).toBe(
+                  engineTemplatePlugin,
+                )
+                expect(chain.plugin('lynx:react').get('args'))
+                  .toMatchObject([{ LynxTemplatePlugin: engineTemplatePlugin }])
                 const PLUGIN_NAME = 'pluginThatUsesTemplateHooks'
                 chain.plugin(PLUGIN_NAME).use({
                   apply(compiler) {
