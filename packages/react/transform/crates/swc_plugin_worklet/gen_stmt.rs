@@ -327,19 +327,11 @@ impl StmtGen {
     }
     .into();
     let captured_or_fallback: Expr = if is_optional {
-      CondExpr {
-        span: DUMMY_SP,
-        test: BinExpr {
-          span: DUMMY_SP,
-          op: BinaryOp::EqEq,
-          left: capture_argument.clone().into(),
-          right: Lit::Null(Null { span: DUMMY_SP }).into(),
-        }
-        .into(),
-        cons: capture_argument.clone().into(),
-        alt: captured_or_fallback.into(),
-      }
-      .into()
+      quote!(
+        "$src == null ? $src : $expr" as Expr,
+        src: Expr = capture_argument.clone(),
+        expr: Expr = captured_or_fallback,
+      )
     } else {
       captured_or_fallback
     };
