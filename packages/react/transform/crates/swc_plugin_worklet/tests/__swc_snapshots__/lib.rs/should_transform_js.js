@@ -8,7 +8,7 @@ let X = {
         y4,
         y8,
         y5,
-        y6: captureMainThreadObject(y6) ?? {
+        y6: y6 == null ? y6 : captureMainThreadObject(y6) ?? {
             m: y6.m
         },
         y7

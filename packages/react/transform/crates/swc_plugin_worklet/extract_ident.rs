@@ -247,6 +247,34 @@ impl ExtractingIdentsCollector {
       })
   }
 
+  fn is_extractable_member_obj(expr: &Expr) -> bool {
+    match expr {
+      Expr::Ident(_) | Expr::Member(_) | Expr::This(_) => true,
+      Expr::OptChain(opt_chain) => matches!(&*opt_chain.base, OptChainBase::Member(_)),
+      _ => false,
+    }
+  }
+
+  fn normalize_extracted_member_expr(member: &MemberExpr) -> Box<Expr> {
+    Expr::Member(MemberExpr {
+      span: member.span,
+      obj: Self::normalize_extracted_member_obj(&member.obj),
+      prop: member.prop.clone(),
+    })
+    .into()
+  }
+
+  fn normalize_extracted_member_obj(expr: &Expr) -> Box<Expr> {
+    match expr {
+      Expr::Member(member) => Self::normalize_extracted_member_expr(member),
+      Expr::OptChain(opt_chain) => match &*opt_chain.base {
+        OptChainBase::Member(member) => Self::normalize_extracted_member_expr(member),
+        _ => expr.clone().into(),
+      },
+      _ => expr.clone().into(),
+    }
+  }
+
   fn push_fn_scope(&mut self, ids_declared_in_scope: FxHashSet<Id>) {
     let last_scope = self.scope_env.last().unwrap();
     self.scope_env.push(ScopeEnv {
@@ -313,7 +341,7 @@ impl VisitMut for ExtractingIdentsCollector {
 
     if (prop_is_computed && !prop_is_computed_lit_str)
       || (n.prop.is_ident() && n.prop.as_ident().unwrap().sym == "current")
-      || !(n.obj.is_ident() || n.obj.is_member() || n.obj.is_this())
+      || !Self::is_extractable_member_obj(&n.obj)
     {
       self.member_expr_depth = 0;
       n.obj.visit_mut_with(self);
@@ -327,9 +355,10 @@ impl VisitMut for ExtractingIdentsCollector {
       MemberProp::Computed(comp) => {
         if prop_is_computed_lit_str {
           if !self.member_expr_path.is_empty() {
+            let extracted_member = Self::normalize_extracted_member_expr(n);
             self.add_if_needed(
               Expr::Lit(comp.expr.as_lit().unwrap().clone()).into(),
-              &Expr::Member(n.clone()).into(),
+              &extracted_member,
             );
           }
         } else {
@@ -337,10 +366,8 @@ impl VisitMut for ExtractingIdentsCollector {
         }
       }
       MemberProp::Ident(ident) if !self.member_expr_path.is_empty() => {
-        self.add_if_needed(
-          Expr::Ident(ident.clone().into()).into(),
-          &Expr::Member(n.clone()).into(),
-        );
+        let extracted_member = Self::normalize_extracted_member_expr(n);
+        self.add_if_needed(Expr::Ident(ident.clone().into()).into(), &extracted_member);
       }
       _ => {}
     }

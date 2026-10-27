@@ -299,11 +299,23 @@ impl StmtGen {
       type_args: None,
     }
     .into();
-    let captured_or_fallback: Expr = BinExpr {
+    let captured_or_fallback: Expr = CondExpr {
       span: DUMMY_SP,
-      op: BinaryOp::NullishCoalescing,
-      left: captured,
-      right: fallback,
+      test: BinExpr {
+        span: DUMMY_SP,
+        op: BinaryOp::EqEq,
+        left: capture_argument.clone().into(),
+        right: Lit::Null(Null { span: DUMMY_SP }).into(),
+      }
+      .into(),
+      cons: capture_argument.clone().into(),
+      alt: BinExpr {
+        span: DUMMY_SP,
+        op: BinaryOp::NullishCoalescing,
+        left: captured,
+        right: fallback,
+      }
+      .into(),
     }
     .into();
     *value = if source_argument.is_ident() {

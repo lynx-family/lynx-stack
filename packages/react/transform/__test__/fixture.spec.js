@@ -2186,8 +2186,8 @@ export function getCurrentDelta(event) {
           var captureMainThreadObject = __captureMainThreadObject;
           export let getCurrentDelta = {
               _c: {
-                  foo: captureMainThreadObject(foo) ?? {
-                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                  foo: foo == null ? foo : captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                               baz: __mainThreadObjectSource.baz
                           })(foo.bar)
                   }
@@ -2208,8 +2208,8 @@ export function getCurrentDelta(event) {
           var captureMainThreadObject = __captureMainThreadObject;
           export let getCurrentDelta = {
               _c: {
-                  foo: captureMainThreadObject(foo) ?? {
-                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                  foo: foo == null ? foo : captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                               baz: __mainThreadObjectSource.baz
                           })(foo.bar)
                   }
@@ -2225,8 +2225,8 @@ export function getCurrentDelta(event) {
           var captureMainThreadObject = __captureMainThreadObject;
           export let getCurrentDelta = {
               _c: {
-                  foo: captureMainThreadObject(foo) ?? {
-                      bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                  foo: foo == null ? foo : captureMainThreadObject(foo) ?? {
+                      bar: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                               baz: __mainThreadObjectSource.baz
                           })(foo.bar)
                   }
@@ -2286,16 +2286,16 @@ export function foo(event) {
       var captureMainThreadObject = __captureMainThreadObject;
       export let foo = {
           _c: {
-              bar: captureMainThreadObject(bar) ?? {
-                  baz: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+              bar: bar == null ? bar : captureMainThreadObject(bar) ?? {
+                  baz: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                           'qux': __mainThreadObjectSource['qux']
                       })(bar.baz),
-                  qux: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                  qux: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                           'baz': __mainThreadObjectSource['baz']
                       })(bar.qux)
               },
-              qux: captureMainThreadObject(qux) ?? {
-                  bar: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+              qux: qux == null ? qux : captureMainThreadObject(qux) ?? {
+                  bar: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                           baz: __mainThreadObjectSource.baz
                       })(qux.bar)
               }

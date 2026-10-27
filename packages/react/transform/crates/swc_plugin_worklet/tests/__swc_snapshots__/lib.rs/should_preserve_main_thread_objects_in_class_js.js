@@ -8,12 +8,12 @@ class App extends Component {
         return {
             _wkltId: "a123:test:1",
             ...{
-                value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                value: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                         "get": __mainThreadObjectSource["get"],
                         set: __mainThreadObjectSource.set
                     })(this.value),
-                props: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
-                        value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                props: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        value: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                                 get: __mainThreadObjectSource.get
                             })(__mainThreadObjectSource.value)
                     })(this.props),
@@ -25,7 +25,7 @@ class App extends Component {
         return {
             _wkltId: "a123:test:2",
             ...{
-                value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+                value: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                         get: __mainThreadObjectSource.get
                     })(this.value)
             }
@@ -34,7 +34,7 @@ class App extends Component {
     static onStatic = {
         _wkltId: "a123:test:3",
         ...{
-            value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+            value: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                     get: __mainThreadObjectSource.get
                 })(this.value)
         }
