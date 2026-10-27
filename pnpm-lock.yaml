@@ -2413,6 +2413,9 @@ importers:
       '@rsbuild/plugin-css-minimizer':
         specifier: 2.0.1
         version: 2.0.1(@rsbuild/core@2.2.9(core-js@3.50.0))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
+      core-js:
+        specifier: ^3.50.0
+        version: 3.50.0
     devDependencies:
       '@lynx-js/test-tools':
         specifier: workspace:*

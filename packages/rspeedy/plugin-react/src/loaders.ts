@@ -146,8 +146,8 @@ export function applyLoaders(
         // `jsc.target` and `env` can't coexist in SWC: drop the target and
         // express the fixed es2019 main-thread baseline through `env`. The
         // main thread targets an es2019 engine, so its baseline is a platform
-        // constant — user `tools.swc.env.include` only extends the base/
-        // background config, matching the previous `jsc.target` behavior.
+        // constant. Carry builtin polyfill includes to both threads while
+        // keeping extra syntax transforms on the base/background config.
         const jsc = { ...swcLoaderOptions.jsc } as Record<string, unknown>
         delete jsc['target']
         rule.use(CHAIN_ID.USE.SWC)
@@ -162,7 +162,15 @@ export function applyLoaders(
                 // Lower `let`/`const` to `var`; QuickJS parses `var` faster.
                 // Spreading `swcLoaderOptions.env` carries `exclude` through,
                 // so the background opt-out also applies here.
-                include: ['transform-block-scoping', ...MAIN_THREAD_ENV_INCLUDE],
+                include: [
+                  ...new Set([
+                    'transform-block-scoping',
+                    ...MAIN_THREAD_ENV_INCLUDE,
+                    ...(swcLoaderOptions.env?.include ?? []).filter(feature =>
+                      /^(?:es|esnext|web)\./.test(feature)
+                    ),
+                  ]),
+                ],
               },
             } satisfies Rspack.SwcLoaderOptions,
           )

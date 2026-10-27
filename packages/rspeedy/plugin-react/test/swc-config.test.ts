@@ -149,6 +149,7 @@ describe('SWC configuration', () => {
               "transform-class-static-block",
               "transform-private-methods",
               "transform-private-property-in-object",
+              "es.object.has-own",
             ],
             "targets": {
               "chrome": "120",
@@ -344,7 +345,7 @@ describe('SWC configuration', () => {
     // Keep this exact: the normal Rspeedy/DSL target may change, but the
     // ReactLynx main-thread product must stay on the es2019 baseline.
     expect(mainThreadLoaderOptions?.env?.include).toEqual(
-      MAIN_THREAD_ES2019_ENV_INCLUDE,
+      [...MAIN_THREAD_ES2019_ENV_INCLUDE, 'es.object.has-own'],
     )
   })
 
@@ -371,7 +372,7 @@ describe('SWC configuration', () => {
     )
   })
 
-  test('layers - user env.include applies to background, not the main-thread baseline', async () => {
+  test('layers - share builtin includes while preserving the main-thread syntax baseline', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     const rsbuild = await createRspeedy({
       rspeedyConfig: {
@@ -381,7 +382,11 @@ describe('SWC configuration', () => {
               // An extra transform that is in neither layer's baseline, so its
               // routing is observable (`transform-block-scoping` would not work
               // here — it is a default on both layers).
-              include: ['transform-arrow-functions'],
+              include: [
+                'transform-arrow-functions',
+                'es.object.has-own',
+                'es.object.has-own',
+              ],
             },
           },
         },
@@ -424,6 +429,11 @@ describe('SWC configuration', () => {
     expect(backgroundLoaderOptions?.env?.include).toContain(
       'transform-arrow-functions',
     )
+    expect(
+      backgroundLoaderOptions?.env?.include?.filter(feature =>
+        feature === 'es.object.has-own'
+      ),
+    ).toHaveLength(1)
 
     const mainThreadRule = getLayerRule(swcRule, LAYERS.MAIN_THREAD)
     assert(mainThreadRule)
@@ -436,9 +446,8 @@ describe('SWC configuration', () => {
     expect({ module: { rules: [mainThreadRule] } }).not.toHaveLoader(
       ReactWebpackPlugin.loaders.BACKGROUND,
     )
-    // ... but not the main-thread layer, whose es2019 baseline is a fixed
-    // platform target (it does not accept user `env.include`, matching the
-    // previous `jsc.target` behavior).
+    // ... but not the main-thread layer, whose syntax baseline stays fixed.
+    // Builtin API gaps apply to both VMs and must survive the layer split.
     const mainThreadLoaderOptions = getLoaderOptions<Rspack.SwcLoaderOptions>({
       module: {
         rules: [mainThreadRule],
@@ -448,8 +457,9 @@ describe('SWC configuration', () => {
       'transform-arrow-functions',
     )
     expect(mainThreadLoaderOptions?.env?.include).toEqual(
-      MAIN_THREAD_ES2019_ENV_INCLUDE,
+      [...MAIN_THREAD_ES2019_ENV_INCLUDE, 'es.object.has-own'],
     )
+    expect(mainThreadLoaderOptions?.env?.mode).toBeUndefined()
   })
 
   test('layers - user env.exclude opts both layers out of transform-block-scoping', async () => {
