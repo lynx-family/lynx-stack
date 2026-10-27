@@ -446,6 +446,7 @@
   "Configure how Rslib handles `.wasm` modules.": "配置 Rslib 如何处理 `.wasm` 模块。",
   "Configure how Rslib handles `.wasm` modules. Set to `false` to leave\nESM `.wasm` imports exactly as written in the source.": "配置 Rslib 如何处理 `.wasm` 模块。设为 `false` 时，ESM 的 `.wasm` 导入保持源码中的写法不变。",
   "Configure proxy rules for the dev server or preview server to proxy requests to the specified service.": "为开发服务器或预览服务器配置代理规则，将请求代理到指定的服务。",
+  "Configure public directories for this environment.\nOther server options are shared across environments.": "为当前环境配置公共目录。\n其他服务器选项在各环境间共享。",
   "Configure the base path of the server.": "配置服务器的基础路径。",
   "Configure the generation of the TypeScript declaration files.": "配置 TypeScript 声明文件的生成。",
   "Configure the redirect of the import paths, applicable [bundle]() is set to `false`.": "配置导入路径的重定向，适用于 [bundle]() 设置为 `false` 的情况。",
