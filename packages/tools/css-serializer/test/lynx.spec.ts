@@ -37,6 +37,16 @@ test('rules', () => {
   expect(parse(readCode('rules')).root).toMatchSnapshot();
 });
 
+test('nested-rules', () => {
+  const { root } = parse(readCode('nested-rules'));
+  expect(
+    root.flatMap(rule =>
+      rule.type === 'StyleRule' ? [rule.selectorText.value] : []
+    ),
+  ).toEqual(['.a', '.a .b', '.a .c', '.a .c .d', '.a .c .e', '.a .f,.a .g']);
+  expect(root).toMatchSnapshot();
+});
+
 test('attribute', () => {
   expect(parse(readCode('attribute')).root).toMatchSnapshot();
 });
