@@ -1,0 +1,18 @@
+{
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "env": [
+        "RELOAD_LAB_ET",
+        "RELOAD_LAB_REEVAL",
+        "RELOAD_LAB_HOST",
+        "RELOAD_LAB_PORT"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
+    }
+  }
+}
