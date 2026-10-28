@@ -27,7 +27,12 @@ let onTapLepus = {
                 nnnn: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
                         'oooo': __mainThreadObjectSource['oooo']
                     })(__mainThreadObjectSource.nnnn)
-            })(this.mmmm)
+            })(this.mmmm),
+        pppp: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+                qqqq: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        rrrr: __mainThreadObjectSource.rrrr
+                    })(__mainThreadObjectSource.qqqq)
+            })(this.pppp)
     }
 };
 __registerWorklet("main-thread", "a123:test:1", function() {
@@ -47,6 +52,7 @@ __registerWorklet("main-thread", "a123:test:1", function() {
     this.hhhh.kkkk;
     this.hhhh.iiii.jjjj;
     this.llll[this.mmmm.nnnn['oooo']];
+    this.pppp?.qqqq?.rrrr;
     aaaa;
     bbbb;
     eeee;

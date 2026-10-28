@@ -20,13 +20,22 @@ let onTapLepus = {
         rrrr,
         uuuu: captureMainThreadObject(uuuu) ?? {
             "__??__": uuuu["__??__"]
+        },
+        enabled,
+        handlers: handlers == null ? handlers : captureMainThreadObject(handlers) ?? {
+            start: handlers.start
+        },
+        vvvv: vvvv == null ? vvvv : captureMainThreadObject(vvvv) ?? {
+            wwww: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    xxxx: __mainThreadObjectSource.xxxx
+                })(vvvv.wwww)
         }
     },
     _wkltId: "a123:test:1"
 };
 __registerWorklet("main-thread", "a123:test:1", function() {
     const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
-    let { aaaa, cccc, hhhh, llll, oooo, rrrr, uuuu } = this["_c"];
+    let { aaaa, cccc, hhhh, llll, oooo, rrrr, uuuu, enabled, handlers, vvvv } = this["_c"];
     "main thread";
     aaaa.bbbb[cccc.dddd].eeee;
     aaaa.bbbb[cccc.dddd].eeee;
@@ -43,4 +52,6 @@ __registerWorklet("main-thread", "a123:test:1", function() {
     rrrr.ssss;
     rrrr.ssss.tttt;
     uuuu["__??__"];
+    if (enabled && handlers?.start) handlers.start();
+    vvvv?.wwww?.xxxx;
 });

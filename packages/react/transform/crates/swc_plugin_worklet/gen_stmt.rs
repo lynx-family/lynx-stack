@@ -66,12 +66,16 @@ impl StmtGen {
     let hash = Expr::Lit(hash.into());
     let mut extracted_value = ident_collector.take_values();
     let mut extracted_this_expr = ident_collector.take_this_expr();
-    if StmtGen::wrap_main_thread_object_candidates(&mut extracted_value, CaptureRoot::Ident)
-      | StmtGen::wrap_main_thread_object_candidates(
-        &mut extracted_this_expr,
-        CaptureRoot::ThisMember,
-      )
-    {
+    let optional_member_sources = ident_collector.take_optional_member_sources();
+    if StmtGen::wrap_main_thread_object_candidates(
+      &mut extracted_value,
+      CaptureRoot::Ident,
+      &optional_member_sources,
+    ) | StmtGen::wrap_main_thread_object_candidates(
+      &mut extracted_this_expr,
+      CaptureRoot::ThisMember,
+      &optional_member_sources,
+    ) {
       named_imports.insert("captureMainThreadObject".into());
     }
     let extracted_idents = ident_collector.take_idents();
@@ -231,6 +235,7 @@ impl StmtGen {
   fn wrap_main_thread_object_candidates(
     extracted_value: &mut Box<Expr>,
     capture_root: CaptureRoot,
+    optional_member_sources: &[Box<Expr>],
   ) -> bool {
     let mut wrapped = false;
     let Some(object) = extracted_value.as_mut_object() else {
@@ -254,13 +259,21 @@ impl StmtGen {
       let Some(source) = source else {
         continue;
       };
-      wrapped |= StmtGen::wrap_main_thread_object_candidate(&mut key_value.value, source);
+      wrapped |= StmtGen::wrap_main_thread_object_candidate(
+        &mut key_value.value,
+        source,
+        optional_member_sources,
+      );
     }
 
     wrapped
   }
 
-  fn wrap_main_thread_object_candidate(value: &mut Box<Expr>, source: Expr) -> bool {
+  fn wrap_main_thread_object_candidate(
+    value: &mut Box<Expr>,
+    source: Expr,
+    optional_member_sources: &[Box<Expr>],
+  ) -> bool {
     let Some(object) = value.as_mut_object() else {
       return false;
     };
@@ -276,9 +289,16 @@ impl StmtGen {
         continue;
       }
       let child_source = StmtGen::append_member(source.clone(), &key_value.key);
-      StmtGen::wrap_main_thread_object_candidate(&mut key_value.value, child_source);
+      StmtGen::wrap_main_thread_object_candidate(
+        &mut key_value.value,
+        child_source,
+        optional_member_sources,
+      );
     }
 
+    let is_optional = optional_member_sources
+      .iter()
+      .any(|optional_source| optional_source.as_ref().eq_ignore_span(&source));
     let mut fallback = value.clone();
     let source_argument = source.clone();
     let capture_argument = if source.is_ident() {
@@ -306,6 +326,15 @@ impl StmtGen {
       right: fallback,
     }
     .into();
+    let captured_or_fallback: Expr = if is_optional {
+      quote!(
+        "$src == null ? $src : $expr" as Expr,
+        src: Expr = capture_argument.clone(),
+        expr: Expr = captured_or_fallback,
+      )
+    } else {
+      captured_or_fallback
+    };
     *value = if source_argument.is_ident() {
       captured_or_fallback.into()
     } else {

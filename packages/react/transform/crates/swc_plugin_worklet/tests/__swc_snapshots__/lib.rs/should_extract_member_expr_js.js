@@ -19,6 +19,15 @@ let onTapLepus = {
         rrrr,
         uuuu: captureMainThreadObject(uuuu) ?? {
             "__??__": uuuu["__??__"]
+        },
+        enabled,
+        handlers: handlers == null ? handlers : captureMainThreadObject(handlers) ?? {
+            start: handlers.start
+        },
+        vvvv: vvvv == null ? vvvv : captureMainThreadObject(vvvv) ?? {
+            wwww: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+                    xxxx: __mainThreadObjectSource.xxxx
+                })(vvvv.wwww)
         }
     },
     _wkltId: "a123:test:1"

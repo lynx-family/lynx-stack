@@ -8,7 +8,7 @@ class App extends Component {
     onTap = {
         _wkltId: "a123:test:1",
         ...{
-            value: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
+            value: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
                     "get": __mainThreadObjectSource["get"],
                     set: __mainThreadObjectSource.set
                 })(this.value),

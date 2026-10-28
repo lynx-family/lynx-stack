@@ -26,6 +26,11 @@ let onTapLepus = {
                 nnnn: ((__mainThreadObjectSource)=>captureMainThreadObject(__mainThreadObjectSource) ?? {
                         'oooo': __mainThreadObjectSource['oooo']
                     })(__mainThreadObjectSource.nnnn)
-            })(this.mmmm)
+            })(this.mmmm),
+        pppp: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+                qqqq: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+                        rrrr: __mainThreadObjectSource.rrrr
+                    })(__mainThreadObjectSource.qqqq)
+            })(this.pppp)
     }
 };
