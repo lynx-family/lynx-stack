@@ -43,10 +43,14 @@ import type {
 import {
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
+  isSpreadDynamicAttrSlot,
   prepareMainThreadDynamicAttrSlotsForNative,
+  prepareSpreadAttrSlotForNative,
+  reconcileUnhydratedSpreadMTRefSlots,
   updateGestureAttrSlot,
   updateMainThreadEventAttrSlot,
   updateMainThreadRefAttrSlot,
+  updateSpreadAttrSlot,
 } from './template/main-thread-dynamic-attr-state.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
 import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
@@ -108,6 +112,7 @@ export function applyElementTemplateUpdateCommands(
             handleId,
             templateType,
             attributeSlots,
+            true,
           );
         }
         break;
@@ -130,6 +135,12 @@ export function applyElementTemplateUpdateCommands(
             __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, listAttributes);
             break;
           }
+        }
+        if (isSpreadDynamicAttrSlot(targetId, attrSlotIndex)) {
+          const nativeValue = prepareSpreadAttrSlotForNative(value);
+          __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, nativeValue);
+          updateSpreadAttrSlot(targetId, attrSlotIndex, value, nativeRef, isHydration);
+          break;
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
         break;
@@ -346,6 +357,9 @@ export function applyElementTemplateUpdateCommands(
         }
       }
     }
+  }
+  if (isHydration) {
+    reconcileUnhydratedSpreadMTRefSlots();
   }
   flushPendingListUpdates();
 }

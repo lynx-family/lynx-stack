@@ -87,7 +87,7 @@ export function installElementTemplatePatchListener(): void {
         } else {
           markTiming('mtsRenderEnd');
         }
-        applyPendingMainThreadRefAttachments();
+        applyPendingMainThreadRefAttachments(isHydration);
       } finally {
         if (isHydration) {
           flushDelayedRunOnBackgroundFunctions();

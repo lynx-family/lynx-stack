@@ -512,7 +512,7 @@ describe('direct renderer native contracts', () => {
     __etAttrPlanMap._et_spread = [0, adaptSpreadAttrSlot];
 
     renderToElementTemplate(
-      h('_et_spread', { attributeSlots: [{ id: 'cta', ref, 'main-thread:ref': vi.fn(), 'worklet:ref': vi.fn() }] }),
+      h('_et_spread', { attributeSlots: [{ id: 'cta', ref, 'custom:ref': vi.fn(), 'worklet:ref': vi.fn() }] }),
     );
 
     expect(createElementTemplate).toHaveBeenCalledWith(
@@ -523,5 +523,25 @@ describe('direct renderer native contracts', () => {
       -1,
     );
     expect(ref).not.toHaveBeenCalled();
+  });
+
+  it('strips spread main-thread:ref from native create while adding layout-only and flatten guards', () => {
+    const rootRef = { kind: 'root-ref' };
+    const mtRef = { _wvid: 1 };
+    createElementTemplate.mockReturnValue(rootRef);
+    __etAttrPlanMap['__Card__:_et_spread'] = [0, adaptSpreadAttrSlot];
+
+    const rendered = renderToElementTemplate(
+      h('__Card__:_et_spread', { attributeSlots: [{ id: 'cta', 'main-thread:ref': mtRef }] }),
+    );
+
+    expect(createElementTemplate).toHaveBeenCalledWith(
+      '_et_spread',
+      null,
+      [{ id: 'cta', 'has-react-ref': true, flatten: false }],
+      null,
+      -1,
+    );
+    expect(rendered.rootSubtreeHandles).toEqual([[{ uid: -1, ref: rootRef }]]);
   });
 });

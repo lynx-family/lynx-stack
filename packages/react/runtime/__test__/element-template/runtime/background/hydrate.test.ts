@@ -24,6 +24,7 @@ import {
   adaptEventAttrSlot,
   adaptMTEventAttrSlot,
   adaptMTRefAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { hydrateBackground as hydrate } from '../../test-utils/debug/hydrate.js';
@@ -259,6 +260,75 @@ describe('hydrate', () => {
     root.setAttribute('attributeSlots', [{ _wkltId: 'tap' }]);
 
     expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('forces spread slot hydration only when live main-thread capabilities or main-thread:ref keys exist', () => {
+    __etAttrPlanMap.root = [
+      0,
+      adaptSpreadAttrSlot,
+      1,
+      adaptSpreadAttrSlot,
+      2,
+      adaptSpreadAttrSlot,
+      3,
+      adaptSpreadAttrSlot,
+      4,
+      adaptSpreadAttrSlot,
+      5,
+      adaptSpreadAttrSlot,
+    ];
+    const gestureSpread = {
+      'main-thread:gesture': { type: 'gesture', value: [] },
+    };
+    const eventSpread = {
+      'main-thread:bindtap': { type: 'worklet', value: { _wkltId: 'tap' } },
+    };
+    const clearedRefSpread = {
+      'main-thread:ref': null,
+    };
+    const clearedEventAndGestureSpread = {
+      id: 'same',
+      'main-thread:gesture': null,
+      'main-thread:bindtap': null,
+    };
+    const root = new BackgroundElementTemplateInstance('root');
+    root.attributeSlots = [
+      null,
+      { id: 'same' },
+      gestureSpread,
+      eventSpread,
+      clearedRefSpread,
+      clearedEventAndGestureSpread,
+    ];
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [
+          null,
+          { id: 'same' },
+          { 'main-thread:gesture': { type: 'gesture', value: [] } },
+          { 'main-thread:bindtap': { type: 'worklet', value: { _wkltId: 'tap' } } },
+          { 'main-thread:ref': null },
+          { id: 'same', 'main-thread:gesture': null, 'main-thread:bindtap': null },
+        ],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      2,
+      gestureSpread,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      3,
+      eventSpread,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      4,
+      clearedRefSpread,
+    ]);
   });
 
   it('patches attribute slots while creating and inserting background-only children', () => {

@@ -42,6 +42,14 @@ export interface GestureSlotValue {
   value: GestureDescriptor[];
 }
 
+export function isGestureSlotValue(value: unknown): value is GestureSlotValue {
+  return value !== null
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && (value as { type?: unknown }).type === 'gesture'
+    && Array.isArray((value as { value?: unknown }).value);
+}
+
 // Provenance stays outside the wire value. A repeated prepare before native
 // delivery must reuse its registered ctx, while mutable Gesture config is copied.
 const callbackSources = new WeakMap<MTEventCtx, MTEventCtx>();
