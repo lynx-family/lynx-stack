@@ -44,6 +44,7 @@ import {
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
   prepareMainThreadDynamicAttrSlotsForNative,
+  updateGestureAttrSlot,
   updateMainThreadEventAttrSlot,
   updateMainThreadRefAttrSlot,
 } from './template/main-thread-dynamic-attr-state.js';
@@ -129,6 +130,19 @@ export function applyElementTemplateUpdateCommands(
           }
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
+        break;
+      }
+
+      case ElementTemplateUpdateOps.setGesture: {
+        const targetId = stream[i++] as number;
+        const attrSlotIndex = stream[i++] as number;
+        const value = stream[i++] as SerializableValue | null;
+        const nativeRef = resolveTargetHandle(targetId, 'target');
+        if (!nativeRef) {
+          continue;
+        }
+        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
+        updateGestureAttrSlot(targetId, attrSlotIndex, value, isHydration);
         break;
       }
 

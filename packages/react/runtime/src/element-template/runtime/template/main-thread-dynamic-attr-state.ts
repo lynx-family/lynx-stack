@@ -10,6 +10,8 @@ import { retainMainThreadBackgroundFunctionCtx } from './main-thread-background-
 import type { MTEventCtx, MTEventNativeWrapper } from './main-thread-event-ctx.js';
 import { attachMTRefValue, cleanupMTRefValue, hydrateMTRefValue, retainMTRefValue } from './main-thread-ref-ctx.js';
 import type { MTRefNativeWrapper, MTRefValue } from './main-thread-ref-ctx.js';
+import { hydrateGestureCallbacks, retainGestureCallbacks } from '../../prop-adapters/gesture.js';
+import type { GestureSlotValue } from '../../prop-adapters/gesture.js';
 import type { SerializableValue } from '../../protocol/types.js';
 
 type MainThreadDynamicAttrState =
@@ -17,6 +19,8 @@ type MainThreadDynamicAttrState =
   | { kind: 'mt-ref'; value: MTRefValue };
 
 type MainThreadDynamicAttrStateMap<T> = Map<number, Map<number, T>>;
+
+const gestureAttrState: MainThreadDynamicAttrStateMap<GestureSlotValue> = new Map();
 
 const mtEventAttrState: MainThreadDynamicAttrStateMap<MTEventCtx> = new Map();
 const mtRefAttrState: MainThreadDynamicAttrStateMap<MTRefValue> = new Map();
@@ -117,6 +121,7 @@ export function clearMainThreadDynamicAttrState(): void {
       }
     }
   } finally {
+    gestureAttrState.clear();
     mtEventAttrState.clear();
     mtRefAttrState.clear();
     attachedMTRefHandleIds.clear();
@@ -147,12 +152,33 @@ export function initializeMainThreadDynamicAttrSlots(
   }
   for (const [attrSlotIndex, kind] of slotKinds) {
     const value = attributeSlots?.[attrSlotIndex];
-    if (kind === 'mt-event' && value != null) {
+    if (kind === 'gesture' && value != null) {
+      updateGestureAttrSlot(handleId, attrSlotIndex, value);
+    } else if (kind === 'mt-event' && value != null) {
       setMTEventSlotState(handleId, attrSlotIndex, (value as MTEventNativeWrapper).value);
     } else if (kind === 'mt-ref' && value != null) {
       setMTRefSlotState(handleId, attrSlotIndex, (value as MTRefNativeWrapper).value);
     }
   }
+}
+
+export function updateGestureAttrSlot(
+  handleId: number,
+  attrSlotIndex: number,
+  value: unknown,
+  isHydration = false,
+): void {
+  const previous = isHydration ? gestureAttrState.get(handleId)?.get(attrSlotIndex) : undefined;
+  if (value == null) {
+    deleteSlotState(gestureAttrState, handleId, attrSlotIndex);
+    return;
+  }
+  const next = value as GestureSlotValue;
+  retainGestureCallbacks(next);
+  if (previous) {
+    hydrateGestureCallbacks(next, previous);
+  }
+  setSlotState(gestureAttrState, handleId, attrSlotIndex, next);
 }
 
 export function updateMainThreadEventAttrSlot(
@@ -266,6 +292,7 @@ export function deleteMainThreadDynamicAttrStateForSubtree(
       cleanupMTRefHandleState(handleState);
     }
     attachedMTRefHandleIds.delete(handleId);
+    gestureAttrState.delete(handleId);
     mtEventAttrState.delete(handleId);
     mtRefAttrState.delete(handleId);
   }

@@ -905,6 +905,19 @@ describe('ElementTemplate patch stream (apply)', () => {
     }
   });
 
+  it('does not send a Gesture update to Native when the target is missing', () => {
+    envManager.switchToMainThread();
+    installElementTemplatePatchListener();
+    envManager.switchToBackground();
+    dispatchElementTemplateUpdate({
+      ops: [ElementTemplateUpdateOps.setGesture, 124, 0, null],
+      flushOptions: {},
+    });
+    envManager.switchToMainThread();
+    expect(mockSetElementTemplateAttributeSlot).not.toHaveBeenCalled();
+    resetReportedErrors();
+  });
+
   it('does not update MTRef state when the target is missing', () => {
     const targetId = 124;
     const ref = { _wvid: 9 };
