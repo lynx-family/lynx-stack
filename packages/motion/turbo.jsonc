@@ -18,5 +18,10 @@
         "dist/**",
       ],
     },
+    "test": {
+      "dependsOn": [
+        "build",
+      ],
+    },
   },
 }

@@ -44,7 +44,7 @@
   "scripts": {
     "build": "rslib",
     "dev": "rslib --watch",
-    "test": "vitest run"
+    "test": "turbo build --filter=@lynx-js/motion && vitest run"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

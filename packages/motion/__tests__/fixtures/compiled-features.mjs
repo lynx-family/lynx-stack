@@ -438,8 +438,9 @@ await test('full and mini leave host globals untouched after exercising features
   const { queueMicrotask } = await import(
     new URL('polyfill/microtask.js', dist)
   );
+  const before = microtasks;
   await new Promise(resolve => queueMicrotask(resolve));
-  assert.ok(microtasks > 0);
+  assert.ok(microtasks > before, 'queueMicrotask must use lynx.queueMicrotask');
   assert.deepEqual(
     names.map(name => Object.getOwnPropertyDescriptor(globalThis, name)),
     descriptors,

@@ -18,6 +18,7 @@ const names = [
 ] as const;
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.resetModules();
 });
@@ -63,4 +64,62 @@ describe('Private Motion runtime', () => {
     );
     expect(lynx.querySelectorAll).toHaveBeenCalledWith('.item');
   });
+
+  test('returns null for a missing Lynx selector', async () => {
+    vi.stubGlobal('lynx', { querySelector: vi.fn(() => null) });
+    const { document } = await import('../src/polyfill/dom.js');
+    expect(document.querySelector('.missing')).toBeNull();
+  });
+
+  test('uses the host animation-frame pair with its receiver', async () => {
+    const callback = vi.fn();
+    const request = vi.fn(function(this: unknown, cb: typeof callback) {
+      expect(this).toBe(globalThis);
+      expect(cb).toBe(callback);
+      return 42;
+    });
+    const cancel = vi.fn(function(this: unknown, handle: number) {
+      expect(this).toBe(globalThis);
+      expect(handle).toBe(42);
+    });
+    vi.stubGlobal('requestAnimationFrame', request);
+    vi.stubGlobal('cancelAnimationFrame', cancel);
+    const runtime = await import('../src/polyfill/animationFrame.js');
+
+    const handle = runtime.requestAnimationFrame(callback);
+    runtime.cancelAnimationFrame(handle);
+    expect(request).toHaveBeenCalledOnce();
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  test.each(['neither', 'request only', 'cancel only'])(
+    'uses cancellable timers when the host provides %s frame methods',
+    async (mode) => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      const hostRequest = vi.fn();
+      const hostCancel = vi.fn();
+      vi.stubGlobal(
+        'requestAnimationFrame',
+        mode === 'request only' ? hostRequest : undefined,
+      );
+      vi.stubGlobal(
+        'cancelAnimationFrame',
+        mode === 'cancel only' ? hostCancel : undefined,
+      );
+      vi.stubGlobal('performance', { now: () => 123 });
+      const runtime = await import('../src/polyfill/animationFrame.js');
+      const cancelled = vi.fn();
+      const delivered = vi.fn();
+
+      runtime.cancelAnimationFrame(runtime.requestAnimationFrame(cancelled));
+      runtime.requestAnimationFrame(delivered);
+      vi.advanceTimersByTime(15);
+      expect(delivered).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(delivered).toHaveBeenCalledExactlyOnceWith(123);
+      expect(cancelled).not.toHaveBeenCalled();
+      expect(hostRequest).not.toHaveBeenCalled();
+      expect(hostCancel).not.toHaveBeenCalled();
+    },
+  );
 });
