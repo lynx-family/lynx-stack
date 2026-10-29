@@ -96,6 +96,10 @@ support for upstream APIs that this adapter does not export.
 
 ## Observed results
 
+The results below were recorded on 2026-10-24 using standalone validation pages.
+The interactive feature cases now live in the normal Motion demo's case selector;
+the standalone Mini entry and isolated compiled-artifact tests remain available.
+
 | Check                                         | Pinned inputs       | 14.6.0 inputs       |
 | --------------------------------------------- | ------------------- | ------------------- |
 | Library build                                 | Passed              | Passed              |

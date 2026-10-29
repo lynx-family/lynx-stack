@@ -14,7 +14,7 @@ export default defineConfig({
   source: {
     entry: {
       main: './src/index.tsx',
-      mini: './src/Mini/index.tsx',
+      mini: './src/Mini/main.tsx',
     },
   },
   plugins: [
@@ -23,7 +23,7 @@ export default defineConfig({
         profile: enableBundleAnalysis,
       },
     }),
-    pluginReactLynx(),
+    pluginReactLynx({ enableCSSSelector: true }),
     pluginQRCode({
       schema(url) {
         // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode

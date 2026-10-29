@@ -16,7 +16,7 @@ import {
   useMotionValueRef,
   useMotionValueRefEvent,
 } from '@lynx-js/motion';
-import { root, runOnBackground, useMainThreadRef } from '@lynx-js/react';
+import { runOnBackground, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
 import { assert, near, runCases, until, wait } from './checks.js' with {
@@ -203,4 +203,3 @@ export default function FullFeatures() {
     </FeaturePage>
   );
 }
-root.render(<FullFeatures />);

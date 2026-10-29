@@ -4,7 +4,6 @@
 import { mix, springValue } from '@lynx-js/motion';
 import type { MotionValue } from '@lynx-js/motion';
 import {
-  root,
   runOnMainThread,
   useEffect,
   useMainThreadRef,
@@ -57,5 +56,3 @@ export default function ValuesExample() {
     </view>
   );
 }
-
-root.render(<ValuesExample />);

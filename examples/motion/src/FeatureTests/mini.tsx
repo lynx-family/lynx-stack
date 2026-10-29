@@ -19,7 +19,7 @@ import {
   useMotionValueRef,
   useMotionValueRefEvent,
 } from '@lynx-js/motion/mini';
-import { root, runOnBackground, useMainThreadRef } from '@lynx-js/react';
+import { runOnBackground, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
 import { assert, near, runCases, until, wait } from './checks.js' with {
@@ -196,4 +196,3 @@ export default function MiniFeatures() {
     </FeaturePage>
   );
 }
-root.render(<MiniFeatures />);

@@ -134,20 +134,19 @@ See [LICENSE](./LICENSE), [NOTICE](./NOTICE) for details.
 
 ## Feature validation
 
-The Motion example includes independent full and Mini feature pages. Each page
-runs assertions against the public APIs in real main-thread worklets and displays
-individual results. Build them separately from the repository root:
+The Motion demo includes **Full features**, **Mini features**, and **Motion values**
+in its case selector. The feature pages run assertions against the public APIs
+in real main-thread worklets and display individual results. Build the example
+with the rest of the repository:
 
 ```sh
-MOTION_FEATURE_VARIANT=full pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
-MOTION_FEATURE_VARIANT=mini pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
-MOTION_FEATURE_VARIANT=values pnpm turbo build --env-mode=loose --filter @lynx-js/motion-examples --only --force -- --config rsbuild.features.config.js
+pnpm turbo build
 ```
 
-After the required full repository build, open `features.lynx.bundle` or
-`features.web.bundle` from `examples/motion/dist/features-full` or
-`examples/motion/dist/features-mini`, then select **Run full cases** or
-**Run mini cases**. The full suite covers keyframes, colors, element refs,
+Open `main.lynx.bundle` or `main.web.bundle` from `examples/motion/dist`, select
+**Full features** or **Mini features**, then select **Run full cases** or
+**Run mini cases**. The standalone `mini` entry remains available for checking a
+Mini-only consumer. The full suite covers keyframes, colors, element refs,
 selectors, element arrays, stagger, sequences, playback controls, replacement,
 repeat, derived values, style-effect cleanup, springs, and React hooks. Mini
 covers every exported easing, tween and spring animation, callback and numeric
@@ -166,10 +165,11 @@ not for bypassing the hydration of worklet descriptors. The pre-existing compile
 limitation for a module referenced only through background-created worklets is
 tracked separately in [#4244](https://github.com/lynx-family/lynx-stack/issues/4244).
 
-The independent `values` example starts a `springValue`/`mix` animation from an
+The **Motion values** case starts a `springValue`/`mix` animation from an
 effect. Until that compiler issue is fixed, it deliberately keeps the Motion
 implementation module reachable during main-thread rendering with
 `useMemo(() => springValue, [])`. This is a temporary example-only reference; it
 does not call the worklet descriptor during render or add a dummy public export.
-Open `features.lynx.bundle` or `features.web.bundle` from
-`examples/motion/dist/features-values`; the box should grow from 100px to 200px.
+Select **Motion values** in the demo; the box should grow from 100px to 200px.
+These cases share the demo's module graph, so they do not independently reproduce
+the compiler limitation in #4244 or establish Mini-only bundle size.
