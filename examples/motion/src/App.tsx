@@ -4,9 +4,6 @@ import Basic from './Basic/index.js';
 import BasicPercent from './BasicPercent/index.js';
 import BasicSelector from './BasicSelector/index.js';
 import ColorInterception from './ColorInterception/index.js';
-import FullFeatures from './FeatureTests/full.js';
-import MiniFeatures from './FeatureTests/mini.js';
-import ValuesExample from './FeatureTests/values.js';
 import iOSSlider from './iOSSlider/index.js';
 import Mini from './Mini/index.js';
 import MotionValue from './MotionValue/index.js';
@@ -61,18 +58,6 @@ const CASES: CaseItem[] = [
   {
     name: 'Mini',
     comp: Mini,
-  },
-  {
-    name: 'Full features',
-    comp: FullFeatures,
-  },
-  {
-    name: 'Mini features',
-    comp: MiniFeatures,
-  },
-  {
-    name: 'Motion values',
-    comp: ValuesExample,
   },
 ];
 

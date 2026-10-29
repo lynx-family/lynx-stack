@@ -15,6 +15,7 @@ export default defineConfig({
     entry: {
       main: './src/index.tsx',
       mini: './src/Mini/main.tsx',
+      features: './src/FeatureTests/index.tsx',
     },
   },
   plugins: [

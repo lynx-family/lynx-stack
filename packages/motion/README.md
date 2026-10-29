@@ -134,16 +134,19 @@ See [LICENSE](./LICENSE), [NOTICE](./NOTICE) for details.
 
 ## Feature validation
 
-The Motion demo includes **Full features**, **Mini features**, and **Motion values**
-in its case selector. The feature pages run assertions against the public APIs
-in real main-thread worklets and display individual results. Build the example
-with the rest of the repository:
+The Motion example has three entries in its normal build configuration:
+
+- `main`: demonstration cases.
+- `mini`: a standalone Mini demonstration.
+- `features`: verification suites with assertions and individual results.
+
+Build them with the rest of the repository:
 
 ```sh
 pnpm turbo build
 ```
 
-Open `main.lynx.bundle` or `main.web.bundle` from `examples/motion/dist`, select
+Open `features.lynx.bundle` or `features.web.bundle` from `examples/motion/dist`, select
 **Full features** or **Mini features**, then select **Run full cases** or
 **Run mini cases**. The standalone `mini` entry remains available for checking a
 Mini-only consumer. The full suite covers keyframes, colors, element refs,
@@ -165,11 +168,11 @@ not for bypassing the hydration of worklet descriptors. The pre-existing compile
 limitation for a module referenced only through background-created worklets is
 tracked separately in [#4244](https://github.com/lynx-family/lynx-stack/issues/4244).
 
-The **Motion values** case starts a `springValue`/`mix` animation from an
+The **Motion values** verification case starts a `springValue`/`mix` animation from an
 effect. Until that compiler issue is fixed, it deliberately keeps the Motion
 implementation module reachable during main-thread rendering with
 `useMemo(() => springValue, [])`. This is a temporary example-only reference; it
 does not call the worklet descriptor during render or add a dummy public export.
-Select **Motion values** in the demo; the box should grow from 100px to 200px.
-These cases share the demo's module graph, so they do not independently reproduce
-the compiler limitation in #4244 or establish Mini-only bundle size.
+Select **Motion values** in the `features` entry; the box should grow from 100px
+to 200px. The verification suites share an entry, so they do not independently
+reproduce the compiler limitation in #4244 or establish Mini-only bundle size.
