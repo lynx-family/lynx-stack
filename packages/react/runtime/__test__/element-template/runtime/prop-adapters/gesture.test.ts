@@ -333,6 +333,27 @@ describe('ET Gesture callback handoff and lifecycle', () => {
     }
   });
 
+  it('hands off repeated detector types in declaration order without reusing an earlier callback', () => {
+    const previous = slot(
+      gesture(1, 0, { onBegin: { _wkltId: 'first-pan' } }),
+      gesture(2, 0, { onBegin: { _wkltId: 'second-pan' } }),
+    );
+    const next = slot(
+      gesture(3, 0, { onBegin: { _wkltId: 'first-pan' } }),
+      gesture(4, 0, { onBegin: { _wkltId: 'second-pan' } }),
+    );
+    const { hydrate, restore } = installHydrationObserver();
+    try {
+      hydrateGestureCallbacks(next, previous);
+      expect(hydrate.mock.calls).toEqual([
+        [next.value[0]!.callbacks[0]!.callback, previous.value[0]!.callbacks[0]!.callback],
+        [next.value[1]!.callbacks[0]!.callback, previous.value[1]!.callbacks[0]!.callback],
+      ]);
+    } finally {
+      restore();
+    }
+  });
+
   it('hands off callbacks by name and leaves new callbacks and new detector kinds unhydrated', () => {
     const previous = slot(gesture(1, 0, { onBegin: { _wkltId: 'begin' }, onEnd: { _wkltId: 'end' } }));
     const next = slot(
