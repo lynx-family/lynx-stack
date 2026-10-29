@@ -51,16 +51,14 @@ it('should call loadScript only once per (bundle, section) pair', async () => {
 
   // PkgB reuses PkgA's already-loaded global — no createLoadExternal call.
   // The === undefined guard is preserved so host-injected values are not overwritten.
-  const pkgBAssignment = '["PkgB"] === undefined ? '
-    + 'lynx[Symbol.for(\'__LYNX_EXTERNAL_GLOBAL__\')]["PkgA"] : '
-    + 'lynx[Symbol.for(\'__LYNX_EXTERNAL_GLOBAL__\')]["PkgB"]';
+  const pkgBAssignment = 'deferExternal' + '("PkgB", () => '
+    + 'lynx[Symbol.for(\'__LYNX_EXTERNAL_GLOBAL__\')]["PkgA"]);';
   expect(background).toContain(pkgBAssignment);
   expect(mainThread).toContain(pkgBAssignment);
 
   // PkgE reuses PkgD (both async, same section) — no extra createLoadExternalAsync call.
-  const pkgEAssignment = '["PkgE"] === undefined ? '
-    + 'lynx[Symbol.for(\'__LYNX_EXTERNAL_GLOBAL__\')]["PkgD"] : '
-    + 'lynx[Symbol.for(\'__LYNX_EXTERNAL_GLOBAL__\')]["PkgE"]';
+  const pkgEAssignment = 'deferExternal' + '("PkgE", () => '
+    + 'lynx[Symbol.for(\'__LYNX_EXTERNAL_GLOBAL__\')]["PkgD"]);';
   expect(background).toContain(pkgEAssignment);
   expect(mainThread).toContain(pkgEAssignment);
 });

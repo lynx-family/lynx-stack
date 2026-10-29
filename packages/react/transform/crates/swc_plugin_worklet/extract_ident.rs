@@ -6,7 +6,7 @@ use std::mem::{swap, take};
 use std::ops::Deref;
 use std::{borrow::Cow, cmp::max};
 use swc_core::common::util::take::Take;
-use swc_core::common::EqIgnoreSpan;
+use swc_core::common::{EqIgnoreSpan, DUMMY_SP};
 use swc_core::ecma::ast::*;
 use swc_core::ecma::utils::quote_ident;
 use swc_core::ecma::visit::{noop_visit_mut_type, VisitMut, VisitMutWith};
@@ -43,6 +43,7 @@ pub struct ExtractingIdentsCollector {
   member_expr_depth: u32,
   // when `d` in `a.b.c.d` is visited, `member_expr_path` should be [a, b, c].
   member_expr_path: Vec<Box<Expr>>,
+  optional_member_sources: Vec<Box<Expr>>,
 }
 
 impl ExtractingIdentsCollector {
@@ -63,7 +64,12 @@ impl ExtractingIdentsCollector {
       }],
       member_expr_depth: 0,
       member_expr_path: vec![],
+      optional_member_sources: vec![],
     }
+  }
+
+  pub fn take_optional_member_sources(&mut self) -> Vec<Box<Expr>> {
+    take(&mut self.optional_member_sources)
   }
 
   pub fn take_values(&mut self) -> Box<Expr> {
@@ -116,7 +122,7 @@ impl ExtractingIdentsCollector {
           .contains(&String::from(s)))
   }
 
-  fn add_if_needed(&mut self, name: Box<Expr>, expr_to_extract: &Box<Expr>) {
+  fn add_if_needed(&mut self, name: Box<Expr>) {
     assert!(name.is_ident() || name.is_lit() || name.is_this());
 
     if self.member_expr_path.is_empty()
@@ -143,15 +149,16 @@ impl ExtractingIdentsCollector {
     }
 
     if !name.is_this() {
+      let expr_to_extract = Self::expr_from_path(&self.member_expr_path);
       if !self.member_expr_path.is_empty() && self.member_expr_path[0].is_this() {
         Self::add_inner(
-          expr_to_extract,
+          &expr_to_extract,
           &mut self.this_expr_to_extract,
           &self.member_expr_path[1..],
         );
       } else {
         Self::add_inner(
-          expr_to_extract,
+          &expr_to_extract,
           &mut self.values_extracted,
           &self.member_expr_path,
         )
@@ -247,6 +254,85 @@ impl ExtractingIdentsCollector {
       })
   }
 
+  fn is_extractable_member_obj(expr: &Expr) -> bool {
+    match expr {
+      Expr::Ident(_) | Expr::Member(_) | Expr::This(_) => true,
+      Expr::OptChain(opt_chain) => matches!(&*opt_chain.base, OptChainBase::Member(_)),
+      _ => false,
+    }
+  }
+
+  fn expr_from_path(path: &[Box<Expr>]) -> Box<Expr> {
+    let mut expr = path[0].clone();
+    for segment in &path[1..] {
+      let prop = match &**segment {
+        Expr::Ident(id) => MemberProp::Ident(id.clone().into()),
+        Expr::Lit(Lit::Str(_)) => MemberProp::Computed(ComputedPropName {
+          span: DUMMY_SP,
+          expr: segment.clone(),
+        }),
+        _ => unreachable!("Unexpected property name type - expected Ident or Str"),
+      };
+      expr = Expr::Member(MemberExpr {
+        span: DUMMY_SP,
+        obj: expr,
+        prop,
+      })
+      .into();
+    }
+    expr
+  }
+
+  fn visit_member_expr(&mut self, n: &mut MemberExpr, optional: bool) {
+    let prop_is_computed = n.prop.is_computed();
+    let prop_is_computed_lit = prop_is_computed && n.prop.as_computed().unwrap().expr.is_lit();
+    let prop_is_computed_lit_str = prop_is_computed_lit
+      && matches!(
+        n.prop.as_computed().unwrap().expr.as_lit().unwrap(),
+        Lit::Str(_)
+      );
+
+    if (prop_is_computed && !prop_is_computed_lit_str)
+      || (n.prop.is_ident() && n.prop.as_ident().unwrap().sym == "current")
+      || !Self::is_extractable_member_obj(&n.obj)
+    {
+      self.member_expr_depth = 0;
+      n.obj.visit_mut_with(self);
+    } else {
+      self.member_expr_depth += 1;
+      n.obj.visit_mut_with(self);
+      self.member_expr_depth = max(self.member_expr_depth, 1) - 1;
+    }
+
+    let extracted_prop = match &n.prop {
+      MemberProp::Computed(comp) if prop_is_computed_lit_str => {
+        Some(Expr::Lit(comp.expr.as_lit().unwrap().clone()).into())
+      }
+      MemberProp::Computed(_) => {
+        n.prop.visit_mut_with(self);
+        None
+      }
+      MemberProp::Ident(ident) => Some(Expr::Ident(ident.clone().into()).into()),
+      _ => None,
+    };
+
+    if let Some(prop) = extracted_prop {
+      if !self.member_expr_path.is_empty() {
+        if optional {
+          let source = Self::expr_from_path(&self.member_expr_path);
+          if !self
+            .optional_member_sources
+            .iter()
+            .any(|existing| existing.eq_ignore_span(&source))
+          {
+            self.optional_member_sources.push(source);
+          }
+        }
+        self.add_if_needed(prop);
+      }
+    }
+  }
+
   fn push_fn_scope(&mut self, ids_declared_in_scope: FxHashSet<Id>) {
     let last_scope = self.scope_env.last().unwrap();
     self.scope_env.push(ScopeEnv {
@@ -275,7 +361,7 @@ impl VisitMut for ExtractingIdentsCollector {
 
   fn visit_mut_this_expr(&mut self, n: &mut ThisExpr) {
     if self.member_expr_depth > 0 && !self.scope_env.last().unwrap().is_inner_fn_scope {
-      self.add_if_needed(Expr::This(*n).into(), &Expr::This(*n).into());
+      self.add_if_needed(Expr::This(*n).into());
     }
   }
 
@@ -293,57 +379,21 @@ impl VisitMut for ExtractingIdentsCollector {
       .iter()
       .any(|env| env.ids_declared_locally.contains(&n.to_id()))
     {
-      self.add_if_needed(
-        Expr::Ident(n.clone()).into(),
-        &Expr::Ident(n.clone()).into(),
-      );
+      self.add_if_needed(Expr::Ident(n.clone()).into());
     }
 
     n.visit_mut_children_with(self);
   }
 
+  fn visit_mut_opt_chain_expr(&mut self, n: &mut OptChainExpr) {
+    match &mut *n.base {
+      OptChainBase::Member(member) => self.visit_member_expr(member, n.optional),
+      OptChainBase::Call(call) => call.visit_mut_with(self),
+    }
+  }
+
   fn visit_mut_member_expr(&mut self, n: &mut MemberExpr) {
-    let prop_is_computed = n.prop.is_computed();
-    let prop_is_computed_lit = prop_is_computed && n.prop.as_computed().unwrap().expr.is_lit();
-    let prop_is_computed_lit_str = prop_is_computed_lit
-      && matches!(
-        n.prop.as_computed().unwrap().expr.as_lit().unwrap(),
-        Lit::Str(_)
-      );
-
-    if (prop_is_computed && !prop_is_computed_lit_str)
-      || (n.prop.is_ident() && n.prop.as_ident().unwrap().sym == "current")
-      || !(n.obj.is_ident() || n.obj.is_member() || n.obj.is_this())
-    {
-      self.member_expr_depth = 0;
-      n.obj.visit_mut_with(self);
-    } else {
-      self.member_expr_depth += 1;
-      n.obj.visit_mut_with(self);
-      self.member_expr_depth = max(self.member_expr_depth, 1) - 1;
-    }
-
-    match &n.prop {
-      MemberProp::Computed(comp) => {
-        if prop_is_computed_lit_str {
-          if !self.member_expr_path.is_empty() {
-            self.add_if_needed(
-              Expr::Lit(comp.expr.as_lit().unwrap().clone()).into(),
-              &Expr::Member(n.clone()).into(),
-            );
-          }
-        } else {
-          n.prop.visit_mut_with(self);
-        }
-      }
-      MemberProp::Ident(ident) if !self.member_expr_path.is_empty() => {
-        self.add_if_needed(
-          Expr::Ident(ident.clone().into()).into(),
-          &Expr::Member(n.clone()).into(),
-        );
-      }
-      _ => {}
-    }
+    self.visit_member_expr(n, false);
   }
 
   /*

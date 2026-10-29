@@ -17,6 +17,8 @@ import { profile } from './utils/profile.js';
 import { getFromWorkletRefMap, initWorkletRef } from './workletRef.js';
 
 function initWorklet(): void {
+  const previousManager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
+  previousManager?.dispose();
   globalThis.lynxWorkletImpl = {
     _workletMap: {},
     _refImpl: initWorkletRef(),

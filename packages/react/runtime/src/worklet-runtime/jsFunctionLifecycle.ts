@@ -16,6 +16,7 @@ class JsFunctionLifecycleManager {
   private execIdSetToFire = new Set<number>();
   private retainedObjects = new WeakSet<object>();
   private willFire = false;
+  private active = true;
   private registry: FinalizationRegistry<number>;
 
   constructor() {
@@ -51,7 +52,12 @@ class JsFunctionLifecycleManager {
     }
   }
 
+  dispose(): void {
+    this.active = false;
+  }
+
   fire(): void {
+    if (!this.active) return;
     profile('JsFunctionLifecycleManager.fire', () => {
       lynx.getJSContext().dispatchEvent({
         type: WorkletEvents.releaseBackgroundWorkletCtx,

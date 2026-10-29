@@ -100,4 +100,16 @@ describe('jsFunctionLifecycle', () => {
     expect(register).toHaveBeenCalledTimes(2);
     expect(manager.execIdRefCount.get(3)).toBe(1);
   });
+
+  it('does not release a new runtime execution when retired finalizers run', () => {
+    const previous = new JsFunctionLifecycleManager();
+    previous.addRef(3, {});
+    previous.removeRef(3);
+    previous.dispose();
+    const current = new JsFunctionLifecycleManager();
+    current.addRef(3, {});
+    previous.fire();
+    expect(events).toEqual([]);
+    expect(current.execIdRefCount.get(3)).toBe(1);
+  });
 });

@@ -17,6 +17,7 @@ import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
 import { applyElementTemplateUpdateCommands } from '../runtime/patch.js';
+import { applyPendingMainThreadRefAttachments } from '../runtime/template/main-thread-dynamic-attr-state.js';
 
 let listener:
   | ((event: Pick<ElementTemplateUpdateEvent, 'data'>) => void)
@@ -38,79 +39,83 @@ export function installElementTemplatePatchListener(): void {
       });
     }
     setPipeline(pipelineOptions);
-    markTiming('mtsRenderStart');
-    markTiming('parseChangesStart');
+    try {
+      markTiming('mtsRenderStart');
+      markTiming('parseChangesStart');
 
-    const payload = JSON.parse(event.data.payload) as ElementTemplateUpdateCommitContext;
-    markTiming('parseChangesEnd');
+      const payload = JSON.parse(event.data.payload) as ElementTemplateUpdateCommitContext;
+      markTiming('parseChangesEnd');
 
-    if (
-      typeof patchOptions.reloadVersion === 'number'
-      && patchOptions.reloadVersion < getReloadVersion()
-    ) {
-      markTiming('mtsRenderEnd');
-      if (shouldProfilePatch) {
-        lynx.performance.profileEnd();
-      }
-      return;
-    }
-
-    const hasOps = payload.ops.length > 0;
-    const flushOptions = payload.flushOptions;
-    const isHydration = payload.isHydration === true;
-    const delayedRunOnMainThreadData = payload.delayedRunOnMainThreadData;
-    if (hasOps) {
-      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-        console.alog?.(
-          '[ReactLynxDebug] ElementTemplate main-thread patch:\n'
-            + JSON.stringify(
-              {
-                ops: formatElementTemplateUpdateCommands(payload.ops),
-                flushOptions,
-                flowIds,
-              },
-              null,
-              2,
-            ),
-        );
-      }
-      markTiming('patchChangesStart');
-      try {
-        applyElementTemplateUpdateCommands(payload.ops, isHydration);
-      } finally {
-        markTiming('patchChangesEnd');
+      if (
+        typeof patchOptions.reloadVersion === 'number'
+        && patchOptions.reloadVersion < getReloadVersion()
+      ) {
         markTiming('mtsRenderEnd');
+        if (shouldProfilePatch) {
+          lynx.performance.profileEnd();
+        }
+        return;
+      }
+
+      const hasOps = payload.ops.length > 0;
+      const flushOptions = payload.flushOptions;
+      const isHydration = payload.isHydration === true;
+      const delayedRunOnMainThreadData = payload.delayedRunOnMainThreadData;
+      try {
+        if (hasOps) {
+          if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+            console.alog?.(
+              '[ReactLynxDebug] ElementTemplate main-thread patch:\n'
+                + JSON.stringify(
+                  {
+                    ops: formatElementTemplateUpdateCommands(payload.ops),
+                    flushOptions,
+                    flowIds,
+                  },
+                  null,
+                  2,
+                ),
+            );
+          }
+          markTiming('patchChangesStart');
+          try {
+            applyElementTemplateUpdateCommands(payload.ops, isHydration);
+          } finally {
+            markTiming('patchChangesEnd');
+            markTiming('mtsRenderEnd');
+          }
+        } else {
+          markTiming('mtsRenderEnd');
+        }
+        applyPendingMainThreadRefAttachments();
+      } finally {
         if (isHydration) {
           flushDelayedRunOnBackgroundFunctions();
           clearFirstScreenMainThreadRefs();
         }
       }
-    } else {
-      markTiming('mtsRenderEnd');
-      if (isHydration) {
-        flushDelayedRunOnBackgroundFunctions();
-        clearFirstScreenMainThreadRefs();
-      }
-    }
-    if (delayedRunOnMainThreadData?.length) {
-      setEomShouldFlushElementTree(false);
-      try {
-        for (const data of delayedRunOnMainThreadData) {
-          try {
-            runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
-          } catch (error) {
-            lynx.reportError(error as Error);
+      if (delayedRunOnMainThreadData?.length) {
+        setEomShouldFlushElementTree(false);
+        try {
+          for (const data of delayedRunOnMainThreadData) {
+            try {
+              runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+            } catch (error) {
+              lynx.reportError(error as Error);
+            }
           }
+        } finally {
+          setEomShouldFlushElementTree(true);
         }
-      } finally {
-        setEomShouldFlushElementTree(true);
       }
-    }
 
-    __FlushElementTree(undefined, flushOptions);
+      __FlushElementTree(undefined, flushOptions);
 
-    if (shouldProfilePatch) {
-      lynx.performance.profileEnd();
+      if (shouldProfilePatch) {
+        lynx.performance.profileEnd();
+      }
+    } finally {
+      setPipeline(undefined);
     }
   };
 

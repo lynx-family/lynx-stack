@@ -2,8 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { flushElementTemplate } from '../../../../src/element-template/native/flush.js';
 import {
   __etAttrPlanMap,
   adaptMTEventAttrSlot,
@@ -12,18 +13,36 @@ import {
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   deleteMainThreadDynamicAttrStateForSubtree,
   detachMainThreadDynamicAttrRefsForSubtree,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
   updateMainThreadEventAttrSlot as setMTEventSlot,
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 
+import { retainMainThreadBackgroundFunctionCtx } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
+import { prepareMTEventCtxForNative } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import type { MTEventNativeWrapper } from '../../../../src/element-template/runtime/template/main-thread-event-ctx.js';
+import type { Worklet } from '../../../../src/worklet-runtime/bindings/types.js';
+import { initWorklet } from '../../../../src/worklet-runtime/workletRuntime.js';
+
 const MT_EVENT_TEMPLATE = '_et_mt_event';
 const MT_REF_TEMPLATE = '_et_mt_ref';
-const TEST_NATIVE_REF = { id: 'dynamic-attr-target' } as unknown as ElementTemplateHandle;
+const TEST_NATIVE_REF = { id: 'dynamic-attr-template' } as unknown as ElementTemplateHandle;
+const TEST_ELEMENT_REF = { id: 'dynamic-attr-element' } as unknown as ElementRef;
+
+function completeRefAttachments(): void {
+  applyPendingMainThreadRefAttachments();
+}
+
+function attachAndComplete(handles: Parameters<typeof attachMainThreadDynamicAttrRefsForSubtree>[0]): void {
+  attachMainThreadDynamicAttrRefsForSubtree(handles);
+  completeRefAttachments();
+}
 
 function setMTRefSlot(
   handleId: number,
@@ -33,6 +52,7 @@ function setMTRefSlot(
   nativeRef: ElementTemplateHandle = TEST_NATIVE_REF,
 ): void {
   setMTRefSlotImpl(handleId, attrSlotIndex, value, nativeRef, isHydration);
+  completeRefAttachments();
 }
 
 function registerMTRefSlots(handleId: number, ...slotIndexes: number[]): void {
@@ -53,6 +73,9 @@ function installJsFunctionLifecycleManager(): {
     ...previousWorkletImpl,
     _jsFunctionLifecycleManager: {
       addRef,
+      retainWorkletCtx: (ctx: { _execId?: number }) => {
+        if (ctx._execId !== undefined) addRef(ctx._execId, ctx);
+      },
     },
   } as typeof globalThis.lynxWorkletImpl;
   return {
@@ -84,9 +107,79 @@ function installRefRuntime(): {
 }
 
 describe('main-thread dynamic attr state', () => {
+  beforeEach(() => {
+    vi.stubGlobal('__GetElementByAttrSlot', vi.fn(() => TEST_ELEMENT_REF));
+  });
   afterEach(() => {
     clearMainThreadDynamicAttrState();
     clearEtAttrPlanMap();
+  });
+
+  it('executes the original Native-held event context before and after hydration', () => {
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const previousSdkVersion = SystemInfo.lynxSdkVersion;
+    try {
+      SystemInfo.lynxSdkVersion = '4.0';
+      vi.stubGlobal('__JS__', false);
+      initWorklet();
+      globalThis.registerWorklet('main-thread', 'callback', function(this: Worklet) {
+        return this._jsFn;
+      });
+      const first = prepareMTEventCtxForNative({
+        _wkltId: 'callback',
+        _jsFn: { cb: { _isFirstScreen: true } },
+      }) as unknown as MTEventNativeWrapper;
+      retainMainThreadBackgroundFunctionCtx(first.value);
+      setMTEventSlot(17, 0, first);
+      const deliver = (ctx: object) => globalThis.runWorklet(ctx, []);
+      expect(deliver(first.value)).toBe(first.value._jsFn);
+      const next = { _wkltId: 'callback', _execId: 11, _jsFn: { cb: { _jsFnId: 1 } } };
+      retainMainThreadBackgroundFunctionCtx(next);
+      setMTEventSlot(17, 0, { type: 'worklet', value: next }, true);
+      expect(deliver(next)).toBe(next._jsFn);
+      expect(next._jsFn.cb).toEqual({ _jsFnId: 1, _execId: 11 });
+      expect(getMainThreadDynamicAttrState(17, 0)).toEqual({ kind: 'mt-event', nativeHeldValue: next });
+      deleteMainThreadDynamicAttrStateForSubtree([17]);
+      expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+      SystemInfo.lynxSdkVersion = previousSdkVersion;
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('resolves distinct inner nodes before native flush without a layout hook', () => {
+    const { updateWorkletRef, restore } = installRefRuntime();
+    const flush = vi.fn();
+    vi.stubGlobal('__FlushElementTree', flush);
+    const firstRef = { _wvid: 7 };
+    const secondRef = { _wvid: 8 };
+    const secondElement = { id: 'second-inner-node' } as unknown as ElementRef;
+    vi.mocked(__GetElementByAttrSlot).mockImplementation((_handle, slot) =>
+      slot === 0 ? TEST_ELEMENT_REF : secondElement
+    );
+    try {
+      registerMTRefSlots(17, 0, 1);
+      setMTRefSlot(17, 0, { type: 'main-thread-ref', value: firstRef });
+      setMTRefSlot(17, 1, { type: 'main-thread-ref', value: secondRef });
+      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      const options = { emptyPatch: true, asyncFlush: true };
+      flushElementTemplate(options);
+      expect(updateWorkletRef.mock.calls).toEqual([[firstRef, TEST_ELEMENT_REF], [secondRef, secondElement]]);
+      expect(flush).toHaveBeenCalledWith(undefined, options);
+      expect(updateWorkletRef.mock.invocationCallOrder.at(-1)).toBeLessThan(flush.mock.invocationCallOrder[0]!);
+    } finally {
+      restore();
+    }
+  });
+
+  it('fails visibly when native cannot resolve a submitted ref target during ref delivery', () => {
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue(null);
+    registerMTRefSlots(17, 0);
+    setMTRefSlot(17, 0, { type: 'main-thread-ref', value: { _wvid: 7 } });
+    attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+    expect(() => applyPendingMainThreadRefAttachments()).toThrow('target 17:0 could not be materialized');
   });
 
   it('records native-held MTEvent ctx by handle and slot without storing the wrapper', () => {
@@ -139,16 +232,16 @@ describe('main-thread dynamic attr state', () => {
       registerMTRefSlots(17, 0);
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: firstRef });
 
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      attachAndComplete([{ uid: 17, ref: nativeRef }]);
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(firstRef, nativeRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(firstRef, TEST_ELEMENT_REF);
       expect(getMainThreadDynamicAttrState(17, 0)).toEqual({
         kind: 'mt-ref',
         value: firstRef,
       });
 
       updateWorkletRef.mockClear();
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      attachAndComplete([{ uid: 17, ref: nativeRef }]);
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
       updateWorkletRef.mockClear();
@@ -175,9 +268,9 @@ describe('main-thread dynamic attr state', () => {
 
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      attachAndComplete([{ uid: 17, ref: nativeRef }]);
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(nextRef, nativeRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(nextRef, TEST_ELEMENT_REF);
       expect(getMainThreadDynamicAttrState(17, 0)).toEqual({
         kind: 'mt-ref',
         value: nextRef,
@@ -193,12 +286,12 @@ describe('main-thread dynamic attr state', () => {
 
     try {
       registerMTRefSlots(17, 0);
-      attachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      attachAndComplete([{ uid: 17, ref: TEST_NATIVE_REF }]);
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: ref });
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, TEST_NATIVE_REF);
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, TEST_ELEMENT_REF);
     } finally {
       restore();
     }
@@ -215,11 +308,11 @@ describe('main-thread dynamic attr state', () => {
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: ref });
 
       updateWorkletRef.mockImplementationOnce(() => {
-        attachMainThreadDynamicAttrRefsForSubtree(subtree);
+        attachAndComplete(subtree);
       });
-      attachMainThreadDynamicAttrRefsForSubtree(subtree);
+      attachAndComplete(subtree);
       expect(updateWorkletRef).toHaveBeenCalledTimes(1);
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, nativeRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, TEST_ELEMENT_REF);
 
       updateWorkletRef.mockClear();
       updateWorkletRef.mockImplementationOnce(() => {
@@ -241,7 +334,7 @@ describe('main-thread dynamic attr state', () => {
     try {
       registerMTRefSlots(17, 0);
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: ref });
-      attachMainThreadDynamicAttrRefsForSubtree(subtree);
+      attachAndComplete(subtree);
       detachMainThreadDynamicAttrRefsForSubtree(subtree);
 
       updateWorkletRef.mockClear();
@@ -254,31 +347,33 @@ describe('main-thread dynamic attr state', () => {
     }
   });
 
-  it('retains native-held MTEvent ctx recorded from initial attribute slots', () => {
+  it('tracks prepared MTEvent input once before committing initial slots', () => {
     const { addRef, restore } = installJsFunctionLifecycleManager();
     const ctx = { _execId: 99, _wkltId: 'tap' };
     __etAttrPlanMap[MT_EVENT_TEMPLATE] = [0, adaptMTEventAttrSlot];
 
     try {
-      initializeMainThreadDynamicAttrSlots(17, MT_EVENT_TEMPLATE, [{
-        type: 'worklet',
-        value: ctx,
-      }]);
+      const slots = [{ type: 'worklet', value: ctx }];
+      prepareMainThreadDynamicAttrSlotsForNative(MT_EVENT_TEMPLATE, slots);
+      expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
+      initializeMainThreadDynamicAttrSlots(17, MT_EVENT_TEMPLATE, slots);
 
-      expect(addRef).toHaveBeenCalledWith(99, ctx);
+      expect(addRef).toHaveBeenCalledExactlyOnceWith(99, ctx);
     } finally {
       restore();
     }
   });
 
-  it('retains native-held MTEvent ctx recorded from updates', () => {
+  it('commits MTEvent updates without repeating prepared input tracking', () => {
     const { addRef, restore } = installJsFunctionLifecycleManager();
     const ctx = { _execId: 100, _wkltId: 'tap' };
 
     try {
+      retainMainThreadBackgroundFunctionCtx(ctx);
+      expect(getMainThreadDynamicAttrState(17, 3)).toBeUndefined();
       setMTEventSlot(17, 3, { type: 'worklet', value: ctx });
 
-      expect(addRef).toHaveBeenCalledWith(100, ctx);
+      expect(addRef).toHaveBeenCalledExactlyOnceWith(100, ctx);
     } finally {
       restore();
     }
@@ -410,7 +505,7 @@ describe('main-thread dynamic attr state', () => {
     const previousRunWorklet = globalThis.runWorklet;
     const ref = { _wvid: 7 };
     const callbackCleanup = vi.fn();
-    const callback = { _wkltId: 'ref-callback', _unmount: callbackCleanup };
+    const callback = { _wkltId: 'ref-callback' };
     globalThis.runWorklet = vi.fn(() => callbackCleanup);
 
     try {
@@ -430,7 +525,7 @@ describe('main-thread dynamic attr state', () => {
         false,
         { id: 'callback-target' } as unknown as ElementTemplateHandle,
       );
-      attachMainThreadDynamicAttrRefsForSubtree([
+      attachAndComplete([
         { uid: 17, ref: { id: 'ref-target' } as unknown as ElementTemplateHandle },
         { uid: 18, ref: { id: 'callback-target' } as unknown as ElementTemplateHandle },
       ]);
@@ -439,7 +534,7 @@ describe('main-thread dynamic attr state', () => {
 
       expect(updateWorkletRef).toHaveBeenCalledWith(ref, null);
       expect(callbackCleanup).toHaveBeenCalledTimes(1);
-      expect(globalThis.runWorklet).toHaveBeenCalledWith(callback, [{ elementRefptr: { id: 'callback-target' } }]);
+      expect(globalThis.runWorklet).toHaveBeenCalledWith(callback, [{ elementRefptr: TEST_ELEMENT_REF }]);
       expect(getMainThreadDynamicAttrState(17, 0)).toBeUndefined();
       expect(getMainThreadDynamicAttrState(18, 0)).toBeUndefined();
     } finally {
@@ -462,7 +557,7 @@ describe('main-thread dynamic attr state', () => {
         false,
         { id: 'callback-target' } as unknown as ElementTemplateHandle,
       );
-      attachMainThreadDynamicAttrRefsForSubtree([
+      attachAndComplete([
         { uid: 17, ref: { id: 'callback-target' } as unknown as ElementTemplateHandle },
       ]);
 
@@ -488,7 +583,7 @@ describe('main-thread dynamic attr state', () => {
         false,
         { id: 'target' } as unknown as ElementTemplateHandle,
       );
-      attachMainThreadDynamicAttrRefsForSubtree([
+      attachAndComplete([
         { uid: 17, ref: { id: 'target' } as unknown as ElementTemplateHandle },
       ]);
 

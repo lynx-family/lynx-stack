@@ -9,6 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { installComponentCompat } from '../../../src/core/component';
+import { globalPipelineOptions } from '../../../src/core/performance';
 import { initTimingAPI } from '../../../src/snapshot/lynx/performance';
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
@@ -128,6 +129,7 @@ describe('setState timing api', () => {
 
     globalEnvManager.switchToMainThread();
     rLynxChange(mtCallbacks[0][1]);
+    expect(globalPipelineOptions).toBeUndefined();
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -210,6 +212,7 @@ describe('attribute timing api', () => {
 
     globalEnvManager.switchToMainThread();
     rLynxChange(mtCallbacks[0][1]);
+    expect(globalPipelineOptions).toBeUndefined();
     expect(__root.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"

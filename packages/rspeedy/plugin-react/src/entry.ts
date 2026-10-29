@@ -19,9 +19,9 @@ import type { RuntimeConfigWebpackPluginOptions } from '@lynx-js/runtime-config-
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
-  LynxTemplatePlugin,
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
+import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
@@ -74,6 +74,14 @@ export function applyEntry(
   }
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
+    // Rstest has no template engine. Application and library builds read the
+    // engine implementation after all user plugin setup hooks have run.
+    const { LynxTemplatePlugin } = api.context.callerName === 'rstest'
+      ? ReactWebpackPlugin.defaultOptions
+      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+      : api.useExposed<{
+        LynxTemplatePlugin: typeof LynxTemplatePluginClass
+      }>(Symbol.for('LynxTemplatePlugin'))!
     const mainThreadChunks: string[] = []
     const entryPairs: Array<{ mainThread: string, background: string }> = []
 
@@ -314,6 +322,7 @@ export function applyEntry(
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
       .use(ReactWebpackPlugin, [{
+        LynxTemplatePlugin,
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,

@@ -388,6 +388,24 @@ export class ExternalsLoadingPlugin {
         const runtimeGlobalsInit =
           `${lynxExternalGlobal} = ${lynxExternalGlobal} === undefined ? {} : ${lynxExternalGlobal};`;
         const loadExternalFunc = `
+function deferExternal(name, load) {
+  const globals = ${lynxExternalGlobal};
+  const descriptor = Object.getOwnPropertyDescriptor(globals, name);
+  if ((descriptor && descriptor.get) || globals[name] !== undefined) return;
+  function mount(value) {
+    Object.defineProperty(globals, name, {
+      value, writable: true, enumerable: true, configurable: true
+    });
+    return value;
+  }
+  Object.defineProperty(globals, name, {
+    configurable: true,
+    enumerable: true,
+    get() { return mount(load()); },
+    set: mount
+  });
+}
+
 function createRetryingHandler(fetchBundle, retries) {
   let cachedResponse = null
   let asyncPromise = null
@@ -524,6 +542,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           const libraryNameStr = Array.isArray(libraryNameWithDefault)
             ? libraryNameWithDefault[0]
             : libraryNameWithDefault;
+          const externalName = JSON.stringify(libraryNameStr);
 
           const normalizedExternal = bundlePath
             ? {
@@ -556,7 +575,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             getLynxExternalGlobal(
               externalsLoadingPluginOptions.globalObject,
             )
-          }[${JSON.stringify(libraryNameStr)}]`;
+          }[${externalName}]`;
 
           // If another external already generated a loadScript call for this exact
           // (bundle, section, async) triple, reuse its result instead of calling
@@ -568,29 +587,22 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           if (existingMountVar !== undefined) {
             // Preserve any value the host may have pre-populated for this global,
             // matching the same === undefined guard used on the primary load path.
-            loadCode.add(
-              `${mountVar} = ${mountVar} === undefined ? ${existingMountVar} : ${mountVar};`,
-            );
+            const alias =
+              `deferExternal(${externalName}, () => ${existingMountVar});`;
+            loadCode.add(alias);
             continue;
           }
           sectionLoadTracker.set(sectionKey, mountVar);
 
           const handlerIndex = [...url2fetchCode.keys()].indexOf(urlKey);
-
-          if (async) {
-            loadCode.add(
-              `${mountVar} = ${mountVar} === undefined ? createLoadExternalAsync(handler${handlerIndex}, ${
-                JSON.stringify(layerOptions.sectionPath)
-              }) : ${mountVar};`,
-            );
-            continue;
-          }
-
-          loadCode.add(
-            `${mountVar} = ${mountVar} === undefined ? createLoadExternalSync(handler${handlerIndex}, ${
-              JSON.stringify(layerOptions.sectionPath)
-            }, ${timeout}) : ${mountVar};`,
-          );
+          const loader = async
+            ? 'createLoadExternalAsync'
+            : 'createLoadExternalSync';
+          const sectionPath = JSON.stringify(layerOptions.sectionPath);
+          const timeoutArgument = async ? '' : `, ${timeout}`;
+          const load =
+            `deferExternal(${externalName}, () => ${loader}(handler${handlerIndex}, ${sectionPath}${timeoutArgument}));`;
+          loadCode.add(load);
         }
 
         return [

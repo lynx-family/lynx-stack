@@ -36,72 +36,76 @@ function updateMainThread(
   }
 
   setPipeline(patchOptions.pipelineOptions);
-  markTiming('mtsRenderStart');
-  markTiming('parseChangesStart');
-  const parsedData = JSON.parse(data) as PatchList;
-  const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = parsedData;
-
-  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-    console.alog?.(
-      '[ReactLynxDebug] BTS -> MTS updateMainThread:\n' + JSON.stringify(
-        {
-          data: {
-            ...parsedData,
-            patchList: parsedData.patchList.map(patch => ({
-              ...patch,
-              snapshotPatch: prettyFormatSnapshotPatch(patch.snapshotPatch),
-            })),
-          },
-          patchOptions,
-        },
-        null,
-        2,
-      ),
-    );
-  }
-
-  markTiming('parseChangesEnd');
-  markTiming('patchChangesStart');
-  if (patchOptions.isHydration) {
-    setMainThreadHydrating(true);
-  }
   try {
-    for (const { snapshotPatch, id } of patchList) {
-      __pendingListUpdates.clearAttachedLists();
-      if (snapshotPatch) {
-        snapshotPatchApply(snapshotPatch, id, patchOptions.isHydration === true);
+    markTiming('mtsRenderStart');
+    markTiming('parseChangesStart');
+    const parsedData = JSON.parse(data) as PatchList;
+    const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = parsedData;
+
+    if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+      console.alog?.(
+        '[ReactLynxDebug] BTS -> MTS updateMainThread:\n' + JSON.stringify(
+          {
+            data: {
+              ...parsedData,
+              patchList: parsedData.patchList.map(patch => ({
+                ...patch,
+                snapshotPatch: prettyFormatSnapshotPatch(patch.snapshotPatch),
+              })),
+            },
+            patchOptions,
+          },
+          null,
+          2,
+        ),
+      );
+    }
+
+    markTiming('parseChangesEnd');
+    markTiming('patchChangesStart');
+    if (patchOptions.isHydration) {
+      setMainThreadHydrating(true);
+    }
+    try {
+      for (const { snapshotPatch, id } of patchList) {
+        __pendingListUpdates.clearAttachedLists();
+        if (snapshotPatch) {
+          snapshotPatchApply(snapshotPatch, id, patchOptions.isHydration === true);
+        }
+        __pendingListUpdates.flush();
+        // console.debug('********** Lepus updatePatch:');
+        // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
       }
-      __pendingListUpdates.flush();
-      // console.debug('********** Lepus updatePatch:');
-      // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
+    } finally {
+      markTiming('patchChangesEnd');
+      markTiming('mtsRenderEnd');
+      if (patchOptions.isHydration) {
+        setMainThreadHydrating(false);
+      }
+    }
+    applyRefQueue();
+    if (delayedRunOnMainThreadData && isMtsEnabled()) {
+      setEomShouldFlushElementTree(false);
+      for (const data of delayedRunOnMainThreadData) {
+        try {
+          runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
+          /* v8 ignore next 3 */
+        } catch (e) {
+          lynx.reportError(e as Error);
+        }
+      }
+      setEomShouldFlushElementTree(true);
+    }
+    if (patchOptions.pipelineOptions) {
+      flushOptions.pipelineOptions = patchOptions.pipelineOptions;
+    }
+    __FlushElementTree(__page, flushOptions);
+
+    if (flowIds) {
+      lynx.performance.profileEnd();
     }
   } finally {
-    markTiming('patchChangesEnd');
-    markTiming('mtsRenderEnd');
-    if (patchOptions.isHydration) {
-      setMainThreadHydrating(false);
-    }
-  }
-  applyRefQueue();
-  if (delayedRunOnMainThreadData && isMtsEnabled()) {
-    setEomShouldFlushElementTree(false);
-    for (const data of delayedRunOnMainThreadData) {
-      try {
-        runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
-        /* v8 ignore next 3 */
-      } catch (e) {
-        lynx.reportError(e as Error);
-      }
-    }
-    setEomShouldFlushElementTree(true);
-  }
-  if (patchOptions.pipelineOptions) {
-    flushOptions.pipelineOptions = patchOptions.pipelineOptions;
-  }
-  __FlushElementTree(__page, flushOptions);
-
-  if (flowIds) {
-    lynx.performance.profileEnd();
+    setPipeline(undefined);
   }
 }
 

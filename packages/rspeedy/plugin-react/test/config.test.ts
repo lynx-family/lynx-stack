@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
@@ -3191,8 +3192,9 @@ describe('Config', () => {
   describe('callerName: rstest', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
+    const rsbuild = await createRsbuild({
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+      rsbuildConfig: {
         plugins: [
           pluginReactLynx(),
         ],

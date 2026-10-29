@@ -1,7 +1,6 @@
 #![allow(clippy::boxed_local)]
 use crate::extract_ident::ExtractingIdentsCollector;
 use crate::worklet_type::WorkletType;
-use crate::TransformMode;
 use std::collections::HashSet;
 use std::vec;
 use swc_core::common::{EqIgnoreSpan, DUMMY_SP};
@@ -37,7 +36,6 @@ impl VisitMut for CaptureRootReplacer {
 }
 
 struct RegisterWorkletParams<'a> {
-  mode: TransformMode,
   target: TransformTarget,
   worklet_type: WorkletType,
   function_name: Ident,
@@ -46,7 +44,6 @@ struct RegisterWorkletParams<'a> {
   extracted_js_fns: Vec<(IdentName, Box<Expr>)>,
   hash: Expr,
   is_class_member: bool,
-  named_imports: &'a mut HashSet<String>,
   requires_main_thread_runtime: &'a mut bool,
   register_worklet: &'a Ident,
 }
@@ -54,7 +51,6 @@ struct RegisterWorkletParams<'a> {
 impl StmtGen {
   #[allow(clippy::too_many_arguments)]
   pub fn transform_worklet(
-    mode: TransformMode,
     worklet_type: WorkletType,
     hash: String,
     target: TransformTarget,
@@ -70,12 +66,16 @@ impl StmtGen {
     let hash = Expr::Lit(hash.into());
     let mut extracted_value = ident_collector.take_values();
     let mut extracted_this_expr = ident_collector.take_this_expr();
-    if StmtGen::wrap_main_thread_object_candidates(&mut extracted_value, CaptureRoot::Ident)
-      | StmtGen::wrap_main_thread_object_candidates(
-        &mut extracted_this_expr,
-        CaptureRoot::ThisMember,
-      )
-    {
+    let optional_member_sources = ident_collector.take_optional_member_sources();
+    if StmtGen::wrap_main_thread_object_candidates(
+      &mut extracted_value,
+      CaptureRoot::Ident,
+      &optional_member_sources,
+    ) | StmtGen::wrap_main_thread_object_candidates(
+      &mut extracted_this_expr,
+      CaptureRoot::ThisMember,
+      &optional_member_sources,
+    ) {
       named_imports.insert("captureMainThreadObject".into());
     }
     let extracted_idents = ident_collector.take_idents();
@@ -87,10 +87,8 @@ impl StmtGen {
       // that could turn an anonymous registration into a second worklet.
       let mut collected_function = function.clone();
       collected_function.body.as_mut().unwrap().stmts.remove(0);
-      let mut collected_imports = HashSet::new();
       let mut collected_runtime_requirement = false;
       StmtGen::gen_register_worklet_stmt(RegisterWorkletParams {
-        mode,
         target: TransformTarget::LEPUS,
         worklet_type: worklet_type.clone(),
         function_name: function_name.clone(),
@@ -99,7 +97,6 @@ impl StmtGen {
         extracted_js_fns: extracted_js_fns.clone(),
         hash: hash.clone(),
         is_class_member,
-        named_imports: &mut collected_imports,
         requires_main_thread_runtime: &mut collected_runtime_requirement,
         register_worklet,
       })
@@ -119,7 +116,6 @@ impl StmtGen {
         named_imports,
       ),
       StmtGen::gen_register_worklet_stmt(RegisterWorkletParams {
-        mode,
         target: if target == TransformTarget::MIXED {
           TransformTarget::LEPUS
         } else {
@@ -132,7 +128,6 @@ impl StmtGen {
         extracted_js_fns,
         hash,
         is_class_member,
-        named_imports,
         requires_main_thread_runtime,
         register_worklet,
       }),
@@ -240,6 +235,7 @@ impl StmtGen {
   fn wrap_main_thread_object_candidates(
     extracted_value: &mut Box<Expr>,
     capture_root: CaptureRoot,
+    optional_member_sources: &[Box<Expr>],
   ) -> bool {
     let mut wrapped = false;
     let Some(object) = extracted_value.as_mut_object() else {
@@ -263,13 +259,21 @@ impl StmtGen {
       let Some(source) = source else {
         continue;
       };
-      wrapped |= StmtGen::wrap_main_thread_object_candidate(&mut key_value.value, source);
+      wrapped |= StmtGen::wrap_main_thread_object_candidate(
+        &mut key_value.value,
+        source,
+        optional_member_sources,
+      );
     }
 
     wrapped
   }
 
-  fn wrap_main_thread_object_candidate(value: &mut Box<Expr>, source: Expr) -> bool {
+  fn wrap_main_thread_object_candidate(
+    value: &mut Box<Expr>,
+    source: Expr,
+    optional_member_sources: &[Box<Expr>],
+  ) -> bool {
     let Some(object) = value.as_mut_object() else {
       return false;
     };
@@ -285,9 +289,16 @@ impl StmtGen {
         continue;
       }
       let child_source = StmtGen::append_member(source.clone(), &key_value.key);
-      StmtGen::wrap_main_thread_object_candidate(&mut key_value.value, child_source);
+      StmtGen::wrap_main_thread_object_candidate(
+        &mut key_value.value,
+        child_source,
+        optional_member_sources,
+      );
     }
 
+    let is_optional = optional_member_sources
+      .iter()
+      .any(|optional_source| optional_source.as_ref().eq_ignore_span(&source));
     let mut fallback = value.clone();
     let source_argument = source.clone();
     let capture_argument = if source.is_ident() {
@@ -315,6 +326,15 @@ impl StmtGen {
       right: fallback,
     }
     .into();
+    let captured_or_fallback: Expr = if is_optional {
+      quote!(
+        "$src == null ? $src : $expr" as Expr,
+        src: Expr = capture_argument.clone(),
+        expr: Expr = captured_or_fallback,
+      )
+    } else {
+      captured_or_fallback
+    };
     *value = if source_argument.is_ident() {
       captured_or_fallback.into()
     } else {
@@ -407,7 +427,6 @@ impl StmtGen {
    */
   fn gen_register_worklet_stmt(params: RegisterWorkletParams) -> Stmt {
     let RegisterWorkletParams {
-      mode,
       target,
       worklet_type,
       function_name,
@@ -416,10 +435,13 @@ impl StmtGen {
       extracted_js_fns,
       hash,
       is_class_member,
-      named_imports,
       requires_main_thread_runtime,
       register_worklet,
     } = params;
+
+    if target != TransformTarget::LEPUS {
+      return EmptyStmt { span: DUMMY_SP }.into();
+    }
 
     let function_to_register = Box::new(StmtGen::gen_function_to_register(
       function,
@@ -430,35 +452,21 @@ impl StmtGen {
       is_class_member,
     ));
 
-    if target == TransformTarget::LEPUS {
-      *requires_main_thread_runtime = true;
-      let registration = quote_expr!("$register($type_, $hash, $fn_)",
-        register: Ident = register_worklet.clone(),
-        type_: Expr = Expr::Lit(worklet_type.type_str().into()),
-        hash: Expr = hash,
-        fn_: Expr = Expr::Fn(FnExpr {
-              ident: None,
-              function: function_to_register,
-            }),
-      );
-      ExprStmt {
-        span: DUMMY_SP,
-        expr: registration,
-      }
-      .into()
-    } else if mode == TransformMode::Development {
-      named_imports.insert("registerWorkletOnBackground".into());
-      quote!("registerWorkletOnBackground($type_, $hash, $fn_)" as Stmt,
-        type_: Expr = Expr::Lit(worklet_type.type_str().into()),
-        hash: Expr = hash,
-        fn_: Expr = Expr::Fn(FnExpr {
-              ident: None,
-              function: function_to_register,
-            }),
-      )
-    } else {
-      EmptyStmt { span: DUMMY_SP }.into()
+    *requires_main_thread_runtime = true;
+    let registration = quote_expr!("$register($type_, $hash, $fn_)",
+      register: Ident = register_worklet.clone(),
+      type_: Expr = Expr::Lit(worklet_type.type_str().into()),
+      hash: Expr = hash,
+      fn_: Expr = Expr::Fn(FnExpr {
+            ident: None,
+            function: function_to_register,
+          }),
+    );
+    ExprStmt {
+      span: DUMMY_SP,
+      expr: registration,
     }
+    .into()
   }
 
   fn gen_function_to_register(

@@ -25,15 +25,25 @@ export class ImageSrc
 
   #getImg = genDomGetter<HTMLImageElement>(() => this.#dom.shadowRoot!, '#img');
 
+  #resolveResource(src: string | null): string | null {
+    if (!src) return src;
+    const host = (this.#dom.getRootNode() as ShadowRoot).host as
+      | (Element & { resolveResource?: (src: string) => string })
+      | undefined;
+    return host?.resolveResource?.(src) ?? src;
+  }
+
   @registerAttributeHandler('src', true)
   _handleSrc = bindToAttribute(this.#getImg, 'src', (newval) => {
-    return newval || this.#dom.getAttribute('placeholder');
+    return this.#resolveResource(
+      newval || this.#dom.getAttribute('placeholder'),
+    );
   });
 
   @registerAttributeHandler('placeholder', true)
   _preloadPlaceholder(newVal: string | null) {
     if (newVal) {
-      new Image().src = newVal;
+      new Image().src = this.#resolveResource(newVal)!;
     }
   }
 
@@ -52,8 +62,10 @@ export class ImageSrc
   _handleReferrerpolicy = bindToAttribute(this.#getImg, 'referrerpolicy');
 
   #onImageError = () => {
-    const currentSrc = this.#getImg().src;
-    const placeholder = this.#dom.getAttribute('placeholder');
+    const currentSrc = this.#getImg().getAttribute('src');
+    const placeholder = this.#resolveResource(
+      this.#dom.getAttribute('placeholder'),
+    );
     if (placeholder && currentSrc !== placeholder) {
       this.#getImg().src = placeholder;
     }
@@ -65,11 +77,7 @@ export class ImageSrc
   }
 
   connectedCallback() {
-    if (
-      this.#dom.getAttribute('src') === null
-      || this.#dom.getAttribute('src') === ''
-    ) {
-      this._handleSrc(null);
-    }
+    this._handleSrc(this.#dom.getAttribute('src'));
+    this._preloadPlaceholder(this.#dom.getAttribute('placeholder'));
   }
 }

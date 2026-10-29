@@ -142,7 +142,6 @@ export default defineConfig({
         'src/element-template/**',
         'src/core/hooks/mainThread.ts',
         'src/core/hooks/mainThreadImpl.ts',
-        'src/shared/component-stack.ts',
         'src/shared/profile.ts',
         'src/index.ts',
         'src/lynx-api.ts',
@@ -163,7 +162,6 @@ export default defineConfig({
         'src/snapshot/lynx/tt.ts',
         'src/snapshot/compat/componentIs.ts',
         'src/snapshot/snapshot/types.ts',
-        'src/snapshot/worklet/hmr.ts',
 
         '__test__/snapshot/page.test.jsx',
         '**/*.d.ts',

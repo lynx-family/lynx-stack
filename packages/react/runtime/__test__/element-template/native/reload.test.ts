@@ -17,6 +17,7 @@ import { elementTemplateRegistry } from '../../../src/element-template/runtime/t
 import { resetTemplateId } from '../../../src/element-template/runtime/template/handle.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
@@ -220,6 +221,8 @@ describe('ElementTemplate reloadMainThread', () => {
         ],
       );
       attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: oldRootRef }]);
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue({ id: 'actual-element' } as unknown as ElementRef);
+      applyPendingMainThreadRefAttachments();
       expect(getMainThreadDynamicAttrState(-1, 0)).toBeDefined();
       expect(getMainThreadDynamicAttrState(-1, 1)).toBeDefined();
       vi.mocked(mockRender).mockReturnValueOnce({
@@ -301,7 +304,6 @@ describe('ElementTemplate reloadMainThread', () => {
   });
 
   it('evaluates the entry again and lets it render into the retained page', () => {
-    vi.mocked(mockRender).mockReturnValue({ pageAttributes: null, rootRefs: [], rootSubtreeHandles: [] });
     const supportsReEvalKey = Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__');
     const reloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
     const completerKey = Symbol.for('__LYNX_MAIN_THREAD_RELOAD_COMPLETER__');
@@ -310,6 +312,22 @@ describe('ElementTemplate reloadMainThread', () => {
     const page = mockedState.page;
     const newJsx = { type: 'NewApp' };
     const events: string[] = [];
+    const rootRef = { type: 'new-ref' } as unknown as ElementTemplateHandle;
+    const element = { id: 'new-element' } as unknown as ElementRef;
+    const callback = { _wkltId: 'reload-ref' };
+    const runWorklet = vi.fn(() => {
+      events.push('attach');
+      return vi.fn();
+    });
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('runWorklet', runWorklet);
+    vi.stubGlobal('__GetElementByAttrSlot', vi.fn(() => element));
+    vi.mocked(lynx.getJSContext).mockReturnValue({ dispatchEvent } as ReturnType<typeof lynx.getJSContext>);
+    vi.mocked(mockRender).mockImplementationOnce(() => {
+      __etAttrPlanMap._et_reload_ref = [0, adaptMTRefAttrSlot];
+      initializeMainThreadDynamicAttrSlots(-1, '_et_reload_ref', [{ type: 'main-thread-ref', value: callback }]);
+      return { pageAttributes: null, rootRefs: [rootRef], rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]] };
+    });
     lynx.__initData = { kept: 'yes', count: 1 };
     vi.mocked(onMtsDestruction).mockImplementation(() => events.push('retire'));
     vi.mocked(increaseReloadVersion).mockImplementationOnce(() => {
@@ -334,7 +352,16 @@ describe('ElementTemplate reloadMainThread', () => {
       delete host[completerKey];
     }
 
-    expect(events).toEqual(['retire', 'advance-version', 'evaluate']);
+    expect(events).toEqual(['retire', 'advance-version', 'evaluate', 'attach']);
+    expect(__GetElementByAttrSlot).toHaveBeenCalledWith(rootRef, 0);
+    expect(runWorklet).toHaveBeenCalledWith(callback, [{ elementRefptr: element }]);
+    expect(runWorklet.mock.invocationCallOrder[0]!).toBeLessThan(
+      vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[1]!,
+    );
+    expect(runWorklet.mock.invocationCallOrder[0]!).toBeLessThan(dispatchEvent.mock.invocationCallOrder[0]!);
+    expect(runWorklet.mock.invocationCallOrder[0]!).toBeLessThan(
+      vi.mocked(__FlushElementTree).mock.invocationCallOrder[0]!,
+    );
     expect(increaseReloadVersion).toHaveBeenCalledOnce();
     expect(lynx.__initData).toEqual({ kept: 'yes', count: 2 });
     expect(setupPage).toHaveBeenLastCalledWith(page);
@@ -465,6 +492,8 @@ describe('ElementTemplate reloadMainThread', () => {
         { uid: -2, ref: firstChildRef },
         { uid: -3, ref: secondRootRef },
       ]);
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue({ id: 'actual-element' } as unknown as ElementRef);
+      applyPendingMainThreadRefAttachments();
       const nativeRefs = new Map([
         [-1, firstRootRef],
         [-2, firstChildRef],

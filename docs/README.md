@@ -3,9 +3,18 @@
 The API reference site of Lynx Stack, built with [Rspress](https://rspress.rs). Every page under `content/*/api` is generated from the TSDoc of the public packages by [TypeDoc](https://typedoc.org) and [typedoc-plugin-markdown](https://typedoc-plugin-markdown.org), when the site builds. The generated pages are not committed.
 
 ```sh
-pnpm turbo build --filter @lynx-js/lynx-stack-docs    # build the packages, generate the pages and build the site
-pnpm turbo dev --filter @lynx-js/lynx-stack-docs      # http://localhost:3000
+# Build the packages and generate or restore the publishable API pages.
+pnpm turbo build --filter @lynx-js/lynx-stack-docs
+# Force a fresh static site in doc_build.
+pnpm turbo build --filter @lynx-js/lynx-stack-docs --force
+# Start the development server at http://localhost:3000.
+pnpm turbo dev --filter @lynx-js/lynx-stack-docs
 ```
+
+The static `doc_build` directory is intentionally excluded from Turbo's
+cached outputs because it is large and is not published. On a cache hit,
+Turbo restores the generated API pages, manifest and translations, but not
+`doc_build`. Use the forced build above when you need fresh static output.
 
 ## How the pages are produced
 

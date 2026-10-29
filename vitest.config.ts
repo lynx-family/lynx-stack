@@ -40,10 +40,21 @@ export default defineConfig({
         // These modules are covered by Rstest; an unexecuted V8 report would
         // add uncovered lines when Codecov merges the two collectors.
         'packages/rspeedy/plugin-react-alias/src/index.ts',
+        'packages/webpack/externals-loading-webpack-plugin/src/index.ts',
+        // These Rstest-owned templates are stringified into generated code and
+        // intentionally ignored by Istanbul. V8's untested-file sweep would
+        // otherwise invent zero-hit coverage for their original source.
+        'packages/webpack/chunk-loading-webpack-plugin/src/runtime/javascript/hmr-load-chunk.js',
+        'packages/webpack/chunk-loading-webpack-plugin/src/runtime/javascript/hmr-load-manifest.js',
         'packages/webpack/react-webpack-plugin/src/Defines.ts',
         'packages/webpack/react-webpack-plugin/src/DefinesInjection.ts',
+        'packages/webpack/react-webpack-plugin/src/MainThreadHMR.ts',
         'packages/webpack/react-webpack-plugin/src/ReactWebpackPlugin.ts',
+        'packages/webpack/react-webpack-plugin/src/hmr/enabled.ts',
         'packages/webpack/react-webpack-plugin/src/loaders/main-thread.ts',
+        'packages/webpack/react-webpack-plugin/src/runtime/hmr-background.ts',
+        'packages/webpack/react-webpack-plugin/src/runtime/hmr-load.ts',
+        'packages/webpack/react-webpack-plugin/src/runtime/hmr-main-thread.ts',
         'packages/rspeedy/plugin-react/src/splitChunks.ts',
         'packages/rspeedy/plugin-react/src/compileResult.ts',
         'packages/rspeedy/plugin-react/src/pluginReactLynx.ts',

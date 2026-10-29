@@ -1,8 +1,131 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import type { DataProcessorDefinition, InitData, InitDataRaw } from '../lynx-api.js';
 import { profileEnd, profileStart } from '../shared/profile.js';
+
+/**
+ * The interface you can extends so that the `defaultDataProcessor` parameter can be customized
+ *
+ * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
+ *
+ * @public
+ *
+ * @group Types
+ */
+export interface InitDataRaw {}
+/**
+ * The interface you can extends so that the `defaultDataProcessor` returning value can be customized
+ *
+ * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
+ *
+ * @public
+ *
+ * @group Types
+ */
+export interface InitData {}
+
+/**
+ * The data processors that registered with {@link Lynx.registerDataProcessors}.
+ *
+ * @example
+ *
+ * Extending `dataProcessors` interface
+ *
+ * ```ts
+ * import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
+ *
+ * declare module '@lynx-js/react' {
+ *   interface DataProcessors extends WellKnownDataProcessors {
+ *     foo(bar: string): number;
+ *   }
+ * }
+ * ```
+ *
+ * Then you can use `lynx.registerDataProcessors` with types.
+ *
+ * ```js
+ * lynx.registerDataProcessors({
+ *   dataProcessors: {
+ *     foo(bar) {
+ *       return 1;
+ *     }
+ *   }
+ * })
+ * ```
+ *
+ * @public
+ *
+ * @group Types
+ */
+export interface DataProcessors {
+  /**
+   * Optional processor to override screen metrics used by the app
+   *
+   * @param metrics - The physical screen dimensions in pixels
+   *
+   * @returns New screen dimensions to be used by the app
+   *
+   * @example
+   *
+   * ```ts
+   * lynx.registerDataProcessors({
+   *   dataProcessors: {
+   *     getScreenMetricsOverride: (metrics) => {
+   *       // Force a specific aspect ratio
+   *       return {
+   *         width: metrics.width,
+   *         height: metrics.width * (16/9)
+   *       };
+   *     }
+   *   }
+   * });
+   * ```
+   */
+  getScreenMetricsOverride?(metrics: {
+    /**
+     * The physical pixel width of the screen
+     */
+    width: number;
+    /**
+     * The physical pixel height of the screen
+     */
+    height: number;
+  }): { width: number; height: number };
+
+  /**
+   * Custom unknown data processors.
+   *
+   * @remarks
+   *
+   * You may extends the `DataProcessors` interface for better TypeScript types. See {@link DataProcessors}.
+   */
+  [processorName: string]: (...args: any[]) => any;
+}
+
+/**
+ * Definition of DataProcessor(s)
+ * @public
+ *
+ * @group Types
+ */
+export interface DataProcessorDefinition {
+  /**
+   * You can custom input and output type of `defaultDataProcessor` by extends {@link InitDataRaw} and {@link InitData}
+   *
+   * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
+   *
+   * @param rawInitData - initData passed from native code
+   * @returns
+   * @public
+   */
+  defaultDataProcessor?: (rawInitData: InitDataRaw) => InitData;
+  /**
+   * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
+   *
+   * @public
+   */
+  dataProcessors?: DataProcessors;
+}
 
 // `true` only while the default data processor is running. `defaultDataProcessor` is
 // invoked by the native side as a separate call *before* `renderPage` / `updatePage`,

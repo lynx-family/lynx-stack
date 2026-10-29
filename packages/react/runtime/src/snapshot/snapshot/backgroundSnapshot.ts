@@ -28,7 +28,7 @@ import { globalPipelineOptions } from '../../core/performance.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { clearSnapshotVNodeSource, getSnapshotVNodeSource, moveSnapshotVNodeSource } from '../debug/vnodeSource.js';
-import { prepareGestureForCommit } from '../gesture/processGestureBagkround.js';
+import { prepareGestureForCommit } from '../gesture/processGestureBackground.js';
 import type { GestureKind } from '../gesture/types.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import {

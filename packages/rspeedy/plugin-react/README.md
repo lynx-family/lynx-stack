@@ -38,7 +38,7 @@ export default defineConfig({
 
 Upgrade this plugin and `@lynx-js/react` together. The module-delivery release requires `@lynx-js/react@^0.128.0`, which includes both the runtime and its matching transform. Custom transforms must implement the same registration-import and semantic runtime-requirements protocol.
 
-Main-thread functions import `@lynx-js/react/worklet-runtime/init` through the application module graph. Rebuild libraries and lazy bundles with the matching toolchain; precompiled output that calls `loadWorkletRuntime` or relies on the old runtime chunk is unsupported.
+Main-thread functions import `@lynx-js/react/worklet-runtime/init` through the application module graph. Rebuild libraries and lazy bundles with the matching toolchain. The lightweight `loadWorkletRuntime` compatibility export remains for precompiled consumers: it can reuse an initialized runtime or request a host-provided legacy chunk. The current toolchain does not emit that legacy chunk.
 
 ## Compilation results
 

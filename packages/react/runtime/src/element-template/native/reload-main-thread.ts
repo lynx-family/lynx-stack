@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { flushElementTemplate } from './flush.js';
 import { onMtsDestruction } from './mts-destroy.js';
 import {
   canReEvalMainThreadEntry,
@@ -66,7 +67,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     setRoot({ __jsx: oldRoot.__jsx });
     renderMainThread();
 
-    __FlushElementTree(undefined, options);
+    flushElementTemplate(options);
   } finally {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileEnd();

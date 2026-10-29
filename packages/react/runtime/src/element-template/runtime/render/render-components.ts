@@ -40,7 +40,7 @@ const assign = /* @__PURE__ */ Object.assign;
 // Global state for the current render pass
 export let beforeDiff: ((vnode: unknown) => void) | undefined;
 export let beforeDiff2: ((vnode: unknown, context: Record<string, unknown>) => void) | undefined;
-let afterDiff, renderHook, ummountHook;
+let afterDiff, renderHook, unmountHook;
 
 export function renderWithHooks(
   vnode: unknown,
@@ -62,7 +62,7 @@ export function renderWithHooks(
   beforeDiff2 = options[DIFF2];
   afterDiff = options[DIFFED];
   renderHook = options[RENDER];
-  ummountHook = options.unmount;
+  unmountHook = options.unmount;
 
   const parent = h(Fragment, null);
   parent[CHILDREN] = [vnode];
@@ -141,7 +141,7 @@ function renderClassComponent(vnode, context, globalContext) {
 export function cleanupVNode(vnode: unknown): void {
   if (afterDiff) afterDiff(vnode);
   vnode[PARENT] = undefined;
-  if (ummountHook) ummountHook(vnode);
+  if (unmountHook) unmountHook(vnode);
 }
 
 export function renderComponentVNode(

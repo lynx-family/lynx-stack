@@ -15,9 +15,11 @@ import {
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
+  applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
+  updateMainThreadRefAttrSlot,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 
@@ -50,6 +52,7 @@ describe('renderMainThread', () => {
     vi.stubGlobal('__InsertNodeToElementTemplate', vi.fn());
     vi.stubGlobal('__SetAttributeOfElementTemplate', vi.fn());
     vi.stubGlobal('__SerializeElementTemplate', vi.fn());
+    vi.stubGlobal('__FlushElementTree', vi.fn());
     elementTemplateRegistry.clear();
     destroyAllElementTemplateListStates();
     clearMainThreadDynamicAttrState();
@@ -281,6 +284,8 @@ describe('renderMainThread', () => {
 
   it('attaches root MTRef state only after page insertion succeeds', () => {
     const rootRef = { type: 'root-ref' } as unknown as ElementTemplateHandle;
+    const target = { type: 'actual-element' } as unknown as ElementRef;
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue(target);
     const ref = { _wvid: 80 };
     const updateWorkletRef = vi.fn();
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
@@ -312,7 +317,12 @@ describe('renderMainThread', () => {
     try {
       renderMainThread();
 
-      expect(updateWorkletRef).toHaveBeenCalledWith(ref, rootRef);
+      expect(updateWorkletRef).toHaveBeenCalledWith(ref, target);
+      expect(__FlushElementTree).not.toHaveBeenCalled();
+      expect(updateWorkletRef.mock.invocationCallOrder[0]).toBeLessThan(
+        vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
+      );
+      expect(updateWorkletRef.mock.invocationCallOrder[0]).toBeLessThan(dispatchEvent.mock.invocationCallOrder[0]!);
       expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
         updateWorkletRef.mock.invocationCallOrder[0]!,
       );
@@ -324,6 +334,96 @@ describe('renderMainThread', () => {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });
+
+  it('delivers first-screen callback effects before a synchronous hydrate roundtrip', () => {
+    const rootRef = {} as ElementTemplateHandle;
+    const target = {} as ElementRef;
+    const first = { _wkltId: 'ref-callback', initialized: false, delayIndices: [] as number[] };
+    const hydrated = { _wkltId: 'ref-callback' };
+    const events: string[] = [];
+    const previousRunWorklet = globalThis.runWorklet;
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.runWorklet = vi.fn().mockImplementationOnce(() => {
+      events.push('first attach');
+      first.initialized = true;
+      first.delayIndices.push(0);
+      return () => events.push('first cleanup');
+    }).mockImplementation(() => {
+      events.push('hydrated attach');
+    });
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _hydrateCtx: vi.fn((_next, previous) => {
+        expect(previous).toBe(first);
+        expect(first.initialized).toBe(true);
+        expect(first.delayIndices).toEqual([0]);
+        events.push('hydrate context');
+      }),
+    } as typeof globalThis.lynxWorkletImpl;
+    __etAttrPlanMap._et_ref = [0, adaptMTRefAttrSlot];
+    initializeMainThreadDynamicAttrSlots(-1, '_et_ref', [{ type: 'main-thread-ref', value: first }]);
+    vi.mocked(mockRender).mockReturnValue({
+      pageAttributes: null,
+      rootRefs: [rootRef],
+      rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]],
+    });
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue(target);
+    vi.mocked(__SerializeElementTemplate).mockImplementation(() => {
+      events.push('serialize');
+      return {} as ReturnType<typeof __SerializeElementTemplate>;
+    });
+    dispatchEvent.mockImplementation(() => {
+      events.push('dispatch hydrate');
+      updateMainThreadRefAttrSlot(-1, 0, { type: 'main-thread-ref', value: hydrated }, rootRef, true);
+      applyPendingMainThreadRefAttachments();
+    });
+    try {
+      renderMainThread();
+      expect(events).toEqual([
+        'first attach',
+        'serialize',
+        'dispatch hydrate',
+        'first cleanup',
+        'hydrate context',
+        'hydrated attach',
+      ]);
+      clearMainThreadDynamicAttrState();
+    } finally {
+      globalThis.runWorklet = previousRunWorklet;
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it.each(['missing target', 'callback throws'])(
+    'does not serialize or dispatch hydration when first-screen %s',
+    failure => {
+      const rootRef = {} as ElementTemplateHandle;
+      const previousRunWorklet = globalThis.runWorklet;
+      globalThis.runWorklet = vi.fn(() => {
+        throw new Error('ref callback failed');
+      });
+      __etAttrPlanMap._et_ref = [0, adaptMTRefAttrSlot];
+      initializeMainThreadDynamicAttrSlots(-1, '_et_ref', [{
+        type: 'main-thread-ref',
+        value: { _wkltId: 'failed-ref' },
+      }]);
+      vi.mocked(mockRender).mockReturnValue({
+        pageAttributes: null,
+        rootRefs: [rootRef],
+        rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]],
+      });
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue(failure === 'missing target' ? null : {} as ElementRef);
+      try {
+        expect(() => renderMainThread()).toThrow(
+          failure === 'missing target' ? 'could not be materialized' : 'ref callback failed',
+        );
+        expect(__SerializeElementTemplate).not.toHaveBeenCalled();
+        expect(dispatchEvent).not.toHaveBeenCalled();
+      } finally {
+        globalThis.runWorklet = previousRunWorklet;
+      }
+    },
+  );
 
   it('keeps root MTRef state blocked when page insertion throws', () => {
     const rootRef = { type: 'root-ref' } as unknown as ElementTemplateHandle;
