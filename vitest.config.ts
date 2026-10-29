@@ -40,6 +40,7 @@ export default defineConfig({
         // These modules are covered by Rstest; an unexecuted V8 report would
         // add uncovered lines when Codecov merges the two collectors.
         'packages/rspeedy/plugin-react-alias/src/index.ts',
+        'packages/webpack/externals-loading-webpack-plugin/src/index.ts',
         // These Rstest-owned templates are stringified into generated code and
         // intentionally ignored by Istanbul. V8's untested-file sweep would
         // otherwise invent zero-hit coverage for their original source.
