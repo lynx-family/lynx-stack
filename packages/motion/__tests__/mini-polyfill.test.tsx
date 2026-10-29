@@ -87,7 +87,12 @@ describe('Polyfill Unit Logic', () => {
 
     await import('../src/mini/polyfill.js');
 
-    expect(globalThis.queueMicrotask).toBe(mockQM);
+    expect(globalThis.queueMicrotask).not.toBe(mockQM);
+    const callback = vi.fn();
+    const schedule = globalThis.queueMicrotask;
+    schedule(callback);
+    expect(mockQM).toHaveBeenCalledWith(callback);
+    expect(mockQM.mock.contexts).toEqual([globalThis.lynx]);
   });
 
   test('should fallback to promise-based polyfill if both missing', async () => {
