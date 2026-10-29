@@ -7,11 +7,21 @@ import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { getMainThreadDynamicAttrSlotKinds } from './attr-slot-plan.js';
 import { retainMainThreadBackgroundFunctionCtx } from './main-thread-background-function.js';
+import { isMTEventNativeWrapper } from './main-thread-event-ctx.js';
 import type { MTEventCtx, MTEventNativeWrapper } from './main-thread-event-ctx.js';
-import { attachMTRefValue, cleanupMTRefValue, hydrateMTRefValue, retainMTRefValue } from './main-thread-ref-ctx.js';
+import {
+  attachMTRefValue,
+  cleanupMTRefValue,
+  hydrateMTRefValue,
+  isMTRefNativeWrapper,
+  retainMTRefValue,
+} from './main-thread-ref-ctx.js';
 import type { MTRefNativeWrapper, MTRefValue } from './main-thread-ref-ctx.js';
-import { hydrateGestureCallbacks, retainGestureCallbacks } from '../../prop-adapters/gesture.js';
+import { isMainThreadFunction } from '../../../core/main-thread-function.js';
+import { isMainThreadRef } from '../../../core/main-thread-ref.js';
+import { hydrateGestureCallbacks, isGestureSlotValue, retainGestureCallbacks } from '../../prop-adapters/gesture.js';
 import type { GestureSlotValue } from '../../prop-adapters/gesture.js';
+import { isMainThreadEventPropKey, isSpreadRecord } from '../../prop-adapters/spread.js';
 import type { SerializableValue } from '../../protocol/types.js';
 
 type MainThreadDynamicAttrState =
@@ -20,20 +30,26 @@ type MainThreadDynamicAttrState =
 
 type MainThreadDynamicAttrStateMap<T> = Map<number, Map<number, T>>;
 
-const gestureAttrState: MainThreadDynamicAttrStateMap<GestureSlotValue> = new Map();
-
-const mtEventAttrState: MainThreadDynamicAttrStateMap<MTEventCtx> = new Map();
-const mtRefAttrState: MainThreadDynamicAttrStateMap<MTRefValue> = new Map();
-const attachedMTRefHandleIds = new Set<number>();
-
-interface PendingMTRefAttachment {
-  handleId: number;
-  attrSlotIndex: number;
-  value: MTRefValue;
-  nativeRef: ElementTemplateHandle;
+interface SpreadSlotDynamicState {
+  events?: Map<string, MTEventCtx> | undefined;
+  gesture?: GestureSlotValue | undefined;
 }
 
-let pendingMTRefAttachments: PendingMTRefAttachment[] = [];
+interface AttachedMTRefEntry {
+  slotIndex: number;
+  value: MTRefValue;
+}
+
+const gestureAttrState: MainThreadDynamicAttrStateMap<GestureSlotValue> = new Map();
+const mtEventAttrState: MainThreadDynamicAttrStateMap<MTEventCtx> = new Map();
+const mtRefAttrState: MainThreadDynamicAttrStateMap<MTRefValue> = new Map();
+const mtRefSlotSpecs: MainThreadDynamicAttrStateMap<MTRefValue | null> = new Map();
+const spreadAttrSlots = new Map<number, Set<number>>();
+const spreadSlotState: MainThreadDynamicAttrStateMap<SpreadSlotDynamicState> = new Map();
+const attachedMTRefHandleIds = new Set<number>();
+const attachedMTRefsByElement = new Map<number, Map<ElementRef, AttachedMTRefEntry>>();
+
+let pendingMTRefReconciliations = new Map<number, ElementTemplateHandle>();
 
 export interface MainThreadDynamicAttrSubtreeHandle {
   uid: number;
@@ -55,12 +71,6 @@ function deleteSlotState<T>(
   }
 }
 
-function cleanupMTRefHandleState(handleState: Map<number, MTRefValue>): void {
-  for (const value of handleState.values()) {
-    cleanupMTRefValue(value);
-  }
-}
-
 function setSlotState<T>(
   state: MainThreadDynamicAttrStateMap<T>,
   handleId: number,
@@ -75,17 +85,144 @@ function setSlotState<T>(
   handleState.set(attrSlotIndex, value);
 }
 
+function registerHandleSlot(
+  slotsByHandle: Map<number, Set<number>>,
+  handleId: number,
+  attrSlotIndex: number,
+): void {
+  let slots = slotsByHandle.get(handleId);
+  if (!slots) {
+    slots = new Set();
+    slotsByHandle.set(handleId, slots);
+  }
+  slots.add(attrSlotIndex);
+}
+
+function hasNonNullMTRefSpec(handleId: number): boolean {
+  const specs = mtRefSlotSpecs.get(handleId);
+  if (!specs) {
+    return false;
+  }
+  for (const value of specs.values()) {
+    if (value !== null) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isSameMTRefSpec(
+  prev: MTRefValue | null | undefined,
+  next: MTRefValue | null | undefined,
+  isHydration: boolean,
+): boolean {
+  if (prev === next) {
+    return true;
+  }
+  if (prev == null || next == null) {
+    return false;
+  }
+  if (isMainThreadRef(prev) && isMainThreadRef(next)) {
+    return prev._wvid === next._wvid;
+  }
+  return !isHydration
+    && isMainThreadFunction(prev)
+    && isMainThreadFunction(next)
+    && prev._execId !== undefined
+    && prev._execId === next._execId;
+}
+
+function cleanupAttachedElementsForHandle(handleId: number): void {
+  const attachedElements = attachedMTRefsByElement.get(handleId);
+  if (!attachedElements) {
+    return;
+  }
+  attachedMTRefsByElement.delete(handleId);
+  for (const entry of attachedElements.values()) {
+    cleanupMTRefValue(entry.value);
+  }
+}
+
+function cleanupAttachedElementsForSlot(handleId: number, attrSlotIndex: number): void {
+  const attachedElements = attachedMTRefsByElement.get(handleId);
+  if (!attachedElements) {
+    return;
+  }
+  const toCleanup: MTRefValue[] = [];
+  for (const [element, entry] of attachedElements) {
+    if (entry.slotIndex === attrSlotIndex) {
+      attachedElements.delete(element);
+      toCleanup.push(entry.value);
+    }
+  }
+  if (attachedElements.size === 0) {
+    attachedMTRefsByElement.delete(handleId);
+  }
+  for (const value of toCleanup) {
+    cleanupMTRefValue(value);
+  }
+}
+
 function setMTEventSlotState(handleId: number, attrSlotIndex: number, nativeHeldValue: MTEventCtx): void {
   setSlotState(mtEventAttrState, handleId, attrSlotIndex, nativeHeldValue);
 }
 
-function setMTRefSlotState(
+function setDirectMTRefSlotState(
   handleId: number,
   attrSlotIndex: number,
   value: MTRefValue,
 ): void {
   retainMTRefValue(value);
   setSlotState(mtRefAttrState, handleId, attrSlotIndex, value);
+  setSlotState(mtRefSlotSpecs, handleId, attrSlotIndex, value);
+}
+
+export function isSpreadDynamicAttrSlot(
+  handleId: number,
+  attrSlotIndex: number,
+): boolean {
+  return spreadAttrSlots.get(handleId)?.has(attrSlotIndex) === true;
+}
+
+export function prepareSpreadAttrSlotForNative(
+  value: unknown,
+): SerializableValue | null {
+  if (!isSpreadRecord(value)) {
+    return null;
+  }
+  const keys = Object.keys(value);
+  let hasOwnMTRef = false;
+  let activeMTRefWrapper: MTRefNativeWrapper | undefined;
+  for (const key of keys) {
+    const entry = value[key];
+    if (key === 'main-thread:ref') {
+      hasOwnMTRef = true;
+      if (isMTRefNativeWrapper(entry)) {
+        activeMTRefWrapper = entry;
+        retainMTRefValue(entry.value);
+      }
+    } else if (key === 'main-thread:gesture') {
+      if (isGestureSlotValue(entry)) {
+        retainGestureCallbacks(entry);
+      }
+    } else if (isMainThreadEventPropKey(key) && isMTEventNativeWrapper(entry)) {
+      retainMainThreadBackgroundFunctionCtx(entry.value);
+    }
+  }
+  if (!hasOwnMTRef) {
+    return value as SerializableValue;
+  }
+  const nativeSpread: Record<string, SerializableValue> = {};
+  for (const key of keys) {
+    if (key !== 'main-thread:ref') {
+      nativeSpread[key] = value[key] as SerializableValue;
+    }
+  }
+  if (activeMTRefWrapper) {
+    nativeSpread['has-react-ref'] = true;
+    nativeSpread['flatten'] = false;
+  }
+  return nativeSpread;
 }
 
 export function prepareMainThreadDynamicAttrSlotsForNative(
@@ -103,6 +240,16 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
   for (const [attrSlotIndex, kind] of slotKinds) {
     if (kind === 'mt-event' && attributeSlots[attrSlotIndex] != null) {
       retainMainThreadBackgroundFunctionCtx((attributeSlots[attrSlotIndex] as MTEventNativeWrapper).value);
+      continue;
+    }
+    if (kind === 'spread') {
+      const slotValue = attributeSlots[attrSlotIndex];
+      const nativeSpread = prepareSpreadAttrSlotForNative(slotValue);
+      if (nativeSpread !== slotValue) {
+        nativeSlots ??= attributeSlots.slice() as SerializableValue[];
+        nativeSlots[attrSlotIndex] = nativeSpread;
+      }
+      continue;
     }
     if (kind !== 'mt-ref') {
       continue;
@@ -114,18 +261,21 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
 }
 
 export function clearMainThreadDynamicAttrState(): void {
+  const attachedHandleIds = Array.from(attachedMTRefHandleIds);
+  attachedMTRefHandleIds.clear();
+  pendingMTRefReconciliations.clear();
   try {
-    for (const [handleId, handleState] of mtRefAttrState) {
-      if (attachedMTRefHandleIds.has(handleId)) {
-        cleanupMTRefHandleState(handleState);
-      }
+    for (const handleId of attachedHandleIds) {
+      cleanupAttachedElementsForHandle(handleId);
     }
   } finally {
     gestureAttrState.clear();
     mtEventAttrState.clear();
     mtRefAttrState.clear();
-    attachedMTRefHandleIds.clear();
-    pendingMTRefAttachments = [];
+    mtRefSlotSpecs.clear();
+    spreadAttrSlots.clear();
+    spreadSlotState.clear();
+    attachedMTRefsByElement.clear();
   }
 }
 
@@ -139,6 +289,79 @@ export function getMainThreadDynamicAttrState(
   }
   const ref = mtRefAttrState.get(handleId)?.get(attrSlotIndex);
   return ref ? { kind: 'mt-ref', value: ref } : undefined;
+}
+
+function commitSpreadSlotState(
+  handleId: number,
+  attrSlotIndex: number,
+  value: unknown,
+  isHydration: boolean,
+  cleanupBeforeRefHydrate = false,
+): { prevSpec: MTRefValue | null | undefined; nextSpec: MTRefValue | null | undefined } {
+  const prevSpread = isHydration ? spreadSlotState.get(handleId)?.get(attrSlotIndex) : undefined;
+  const prevSpec = mtRefSlotSpecs.get(handleId)?.get(attrSlotIndex);
+
+  let nextEvents: Map<string, MTEventCtx> | undefined;
+  let nextGesture: GestureSlotValue | undefined;
+  let hasOwnMTRef = false;
+  let nextRefValue: MTRefValue | null = null;
+
+  if (isSpreadRecord(value)) {
+    for (const key of Object.keys(value)) {
+      const entry = value[key];
+      if (key === 'main-thread:ref') {
+        hasOwnMTRef = true;
+        nextRefValue = isMTRefNativeWrapper(entry) ? entry.value : null;
+      } else if (key === 'main-thread:gesture') {
+        if (isGestureSlotValue(entry)) {
+          nextGesture = entry;
+        }
+      } else if (isMainThreadEventPropKey(key) && isMTEventNativeWrapper(entry)) {
+        (nextEvents ??= new Map()).set(key, entry.value);
+      }
+    }
+  }
+
+  if (nextEvents || nextGesture) {
+    setSlotState(spreadSlotState, handleId, attrSlotIndex, {
+      events: nextEvents,
+      gesture: nextGesture,
+    });
+  } else {
+    deleteSlotState(spreadSlotState, handleId, attrSlotIndex);
+  }
+
+  const rawNextSpec = hasOwnMTRef ? nextRefValue : undefined;
+  const nextSpec = isSameMTRefSpec(prevSpec, rawNextSpec, isHydration) ? prevSpec : rawNextSpec;
+
+  if (cleanupBeforeRefHydrate && prevSpec !== nextSpec) {
+    cleanupAttachedElementsForSlot(handleId, attrSlotIndex);
+  }
+
+  if (isHydration) {
+    if (nextEvents && prevSpread?.events) {
+      for (const [eventKey, nextCtx] of nextEvents) {
+        const prevCtx = prevSpread.events.get(eventKey);
+        if (prevCtx) {
+          hydrateWorkletCtx(nextCtx as Worklet, prevCtx as Worklet);
+        }
+      }
+    }
+    if (nextGesture && prevSpread?.gesture) {
+      hydrateGestureCallbacks(nextGesture, prevSpread.gesture);
+    }
+    if (nextRefValue !== null) {
+      hydrateMTRefValue(nextRefValue, prevSpec);
+    }
+  }
+
+  if (nextSpec === undefined) {
+    deleteSlotState(mtRefSlotSpecs, handleId, attrSlotIndex);
+  } else {
+    setSlotState(mtRefSlotSpecs, handleId, attrSlotIndex, nextSpec);
+  }
+
+  return { prevSpec, nextSpec };
 }
 
 export function initializeMainThreadDynamicAttrSlots(
@@ -156,8 +379,15 @@ export function initializeMainThreadDynamicAttrSlots(
       updateGestureAttrSlot(handleId, attrSlotIndex, value);
     } else if (kind === 'mt-event' && value != null) {
       setMTEventSlotState(handleId, attrSlotIndex, (value as MTEventNativeWrapper).value);
-    } else if (kind === 'mt-ref' && value != null) {
-      setMTRefSlotState(handleId, attrSlotIndex, (value as MTRefNativeWrapper).value);
+    } else if (kind === 'mt-ref') {
+      if (value == null) {
+        setSlotState(mtRefSlotSpecs, handleId, attrSlotIndex, null);
+      } else {
+        setDirectMTRefSlotState(handleId, attrSlotIndex, (value as MTRefNativeWrapper).value);
+      }
+    } else if (kind === 'spread') {
+      registerHandleSlot(spreadAttrSlots, handleId, attrSlotIndex);
+      commitSpreadSlotState(handleId, attrSlotIndex, value, false);
     }
   }
 }
@@ -213,23 +443,44 @@ export function updateMainThreadRefAttrSlot(
 ): void {
   const previousState = mtRefAttrState.get(handleId)?.get(attrSlotIndex);
   const isAttached = attachedMTRefHandleIds.has(handleId);
+  if (isAttached) {
+    cleanupAttachedElementsForSlot(handleId, attrSlotIndex);
+  }
   if (value == null) {
-    if (previousState && isAttached) {
-      cleanupMTRefValue(previousState);
-    }
     deleteSlotState(mtRefAttrState, handleId, attrSlotIndex);
+    setSlotState(mtRefSlotSpecs, handleId, attrSlotIndex, null);
     return;
   }
-  if (previousState && isAttached) {
-    cleanupMTRefValue(previousState);
-  }
   const nextValue = (value as MTRefNativeWrapper).value;
-  setMTRefSlotState(handleId, attrSlotIndex, nextValue);
+  setDirectMTRefSlotState(handleId, attrSlotIndex, nextValue);
   if (isHydration) {
     hydrateMTRefValue(nextValue, previousState);
   }
   if (isAttached) {
-    pendingMTRefAttachments.push({ handleId, attrSlotIndex, value: nextValue, nativeRef });
+    pendingMTRefReconciliations.set(handleId, nativeRef);
+  }
+}
+
+export function updateSpreadAttrSlot(
+  handleId: number,
+  attrSlotIndex: number,
+  value: unknown,
+  nativeRef: ElementTemplateHandle,
+  isHydration = false,
+): void {
+  const isAttached = attachedMTRefHandleIds.has(handleId);
+  const { prevSpec, nextSpec } = commitSpreadSlotState(
+    handleId,
+    attrSlotIndex,
+    value,
+    isHydration,
+    isAttached,
+  );
+  if (prevSpec === nextSpec) {
+    return;
+  }
+  if (isAttached && hasNonNullMTRefSpec(handleId)) {
+    pendingMTRefReconciliations.set(handleId, nativeRef);
   }
 }
 
@@ -242,28 +493,74 @@ export function attachMainThreadDynamicAttrRefsForSubtree(
       continue;
     }
     attachedMTRefHandleIds.add(handle.uid);
-    const handleState = mtRefAttrState.get(handle.uid);
-    if (!handleState) {
-      continue;
-    }
-    for (const [attrSlotIndex, value] of handleState) {
-      pendingMTRefAttachments.push({ handleId: handle.uid, attrSlotIndex, value, nativeRef: handle.ref });
+    if (hasNonNullMTRefSpec(handle.uid)) {
+      pendingMTRefReconciliations.set(handle.uid, handle.ref);
     }
   }
 }
 
 // Consume one queue snapshot, matching Snapshot's ref delivery boundary.
 export function applyPendingMainThreadRefAttachments(): void {
-  const pending = pendingMTRefAttachments;
-  pendingMTRefAttachments = [];
-  for (const { handleId, attrSlotIndex, value, nativeRef } of pending) {
-    const element = __GetElementByAttrSlot(nativeRef, attrSlotIndex);
-    if (!element) {
-      throw new Error(
-        `ElementTemplate main-thread:ref target ${handleId}:${attrSlotIndex} could not be materialized.`,
-      );
+  if (pendingMTRefReconciliations.size === 0) {
+    return;
+  }
+  const pending = pendingMTRefReconciliations;
+  pendingMTRefReconciliations = new Map();
+
+  for (const [handleId, nativeRef] of pending) {
+    const specs = mtRefSlotSpecs.get(handleId);
+    const desiredByElement = new Map<ElementRef, AttachedMTRefEntry | null>();
+    if (specs && specs.size > 0) {
+      const sortedEntries = specs.size === 1
+        ? Array.from(specs.entries())
+        : Array.from(specs.entries()).sort((a, b) => a[0] - b[0]);
+      for (const [slotIndex, refValue] of sortedEntries) {
+        const element = __GetElementByAttrSlot(nativeRef, slotIndex);
+        if (!element) {
+          throw new Error(
+            `ElementTemplate main-thread:ref target ${handleId}:${slotIndex} could not be materialized.`,
+          );
+        }
+        desiredByElement.set(
+          element,
+          refValue === null ? null : { slotIndex, value: refValue },
+        );
+      }
     }
-    attachMTRefValue(value, element);
+
+    let attachedElements = attachedMTRefsByElement.get(handleId);
+    if (attachedElements) {
+      const staleValues: MTRefValue[] = [];
+      for (const [element, prevEntry] of attachedElements) {
+        const desired = desiredByElement.get(element) ?? null;
+        if (!desired || desired.slotIndex !== prevEntry.slotIndex || desired.value !== prevEntry.value) {
+          attachedElements.delete(element);
+          staleValues.push(prevEntry.value);
+        }
+      }
+      if (attachedElements.size === 0) {
+        attachedMTRefsByElement.delete(handleId);
+        attachedElements = undefined;
+      }
+      for (const staleValue of staleValues) {
+        cleanupMTRefValue(staleValue);
+      }
+    }
+
+    for (const [element, desired] of desiredByElement) {
+      if (!desired) {
+        continue;
+      }
+      if (attachedElements?.has(element)) {
+        continue;
+      }
+      if (!attachedElements) {
+        attachedElements = new Map();
+        attachedMTRefsByElement.set(handleId, attachedElements);
+      }
+      attachedElements.set(element, desired);
+      attachMTRefValue(desired.value, element);
+    }
   }
 }
 
@@ -276,10 +573,8 @@ export function detachMainThreadDynamicAttrRefsForSubtree(
       continue;
     }
     attachedMTRefHandleIds.delete(handleId);
-    const handleState = mtRefAttrState.get(handleId);
-    if (handleState) {
-      cleanupMTRefHandleState(handleState);
-    }
+    pendingMTRefReconciliations.delete(handleId);
+    cleanupAttachedElementsForHandle(handleId);
   }
 }
 
@@ -287,13 +582,18 @@ export function deleteMainThreadDynamicAttrStateForSubtree(
   handleIds: readonly number[],
 ): void {
   for (const handleId of handleIds) {
-    const handleState = mtRefAttrState.get(handleId);
-    if (handleState && attachedMTRefHandleIds.has(handleId)) {
-      cleanupMTRefHandleState(handleState);
+    const wasAttached = attachedMTRefHandleIds.delete(handleId);
+    pendingMTRefReconciliations.delete(handleId);
+    if (wasAttached) {
+      cleanupAttachedElementsForHandle(handleId);
+    } else {
+      attachedMTRefsByElement.delete(handleId);
     }
-    attachedMTRefHandleIds.delete(handleId);
     gestureAttrState.delete(handleId);
     mtEventAttrState.delete(handleId);
     mtRefAttrState.delete(handleId);
+    mtRefSlotSpecs.delete(handleId);
+    spreadAttrSlots.delete(handleId);
+    spreadSlotState.delete(handleId);
   }
 }

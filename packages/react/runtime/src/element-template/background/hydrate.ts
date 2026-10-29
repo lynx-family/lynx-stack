@@ -16,6 +16,8 @@ import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { isMainThreadFunction } from '../../core/main-thread-function.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
+import { isGestureSlotValue } from '../prop-adapters/gesture.js';
+import { isMainThreadEventPropKey, isSpreadRecord } from '../prop-adapters/spread.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
 import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
@@ -634,6 +636,24 @@ function shouldForceMainThreadHydrateSlot(
   }
   if (slotKind === 'mt-event') {
     return isMTEventNativeWrapper(value);
+  }
+  if (slotKind === 'spread') {
+    if (!isSpreadRecord(value)) {
+      return false;
+    }
+    for (const key of Object.keys(value)) {
+      if (key === 'main-thread:ref') {
+        return true;
+      }
+      const entry = value[key];
+      if (key === 'main-thread:gesture' && isGestureSlotValue(entry)) {
+        return true;
+      }
+      if (isMainThreadEventPropKey(key) && isMTEventNativeWrapper(entry)) {
+        return true;
+      }
+    }
+    return false;
   }
   return slotKind === 'mt-ref'
     && (value == null || isMainThreadFunction((value as unknown as MTRefNativeWrapper).value));

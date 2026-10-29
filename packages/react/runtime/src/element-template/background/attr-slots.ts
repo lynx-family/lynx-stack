@@ -10,6 +10,7 @@ import {
   __etAttrPlanMap,
   adaptRefAttrSlot,
   adaptSpreadAttrSlot,
+  adaptTypedSpreadAttrSlot,
   getMainThreadDynamicAttrSlotKinds,
 } from '../runtime/template/attr-slot-plan.js';
 import type { EtAttrAdapter, EtAttrAdapterContext, EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
@@ -53,7 +54,7 @@ function queuePlannedRefAttributeSlotUpdates(
       continue;
     }
 
-    if (adapter === adaptSpreadAttrSlot) {
+    if (adapter === adaptSpreadAttrSlot || adapter === adaptTypedSpreadAttrSlot) {
       const previousSpreadRef = getSpreadRefFromValue(previousRawSlots?.[attrSlotIndex]);
       const nextSpreadRef = getSpreadRefFromValue(nextRawSlots?.[attrSlotIndex]);
       if (previousSpreadRef === undefined && nextSpreadRef === undefined) {
