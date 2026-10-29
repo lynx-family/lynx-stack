@@ -9,7 +9,7 @@ import { getEventValue } from '../../prop-adapters/event-value.js';
 import { prepareGestureForNative } from '../../prop-adapters/gesture.js';
 import type { GestureSlotValue } from '../../prop-adapters/gesture.js';
 import { prepareRefAttrSlot } from '../../prop-adapters/ref.js';
-import { prepareSpreadAttrSlot } from '../../prop-adapters/spread.js';
+import { prepareSpreadAttrSlot, prepareTypedSpreadAttrSlot } from '../../prop-adapters/spread.js';
 import type { SerializableValue } from '../../protocol/types.js';
 
 export interface EtAttrAdapterContext {
@@ -33,7 +33,7 @@ export type EtAttrPlanMap = Record<
 
 export const __etAttrPlanMap = Object.create(null) as EtAttrPlanMap;
 
-export type MainThreadDynamicAttrKind = 'mt-event' | 'mt-ref' | 'gesture';
+export type MainThreadDynamicAttrKind = 'mt-event' | 'mt-ref' | 'gesture' | 'spread';
 
 const mainThreadDynamicAttrSlotKinds = new Map<
   string,
@@ -60,6 +60,8 @@ export function getMainThreadDynamicAttrSlotKinds(
         kind = 'gesture';
       } else if (adapter === adaptMTRefAttrSlot) {
         kind = 'mt-ref';
+      } else if (adapter === adaptSpreadAttrSlot) {
+        kind = 'spread';
       }
       if (kind) {
         (slotKinds ??= new Map()).set(attrPlan[planIndex] as number, kind);
@@ -76,7 +78,7 @@ export function hasMainThreadRefAttrSlot(templateType: string): boolean {
     return false;
   }
   for (const kind of slotKinds.values()) {
-    if (kind === 'mt-ref') {
+    if (kind === 'mt-ref' || kind === 'spread') {
       return true;
     }
   }
@@ -155,8 +157,17 @@ export function adaptSpreadAttrSlot(
   handleId: number,
   attrSlotIndex: number,
   value: unknown,
+  context?: EtAttrAdapterContext,
 ): SerializableValue | null {
-  return prepareSpreadAttrSlot(handleId, attrSlotIndex, value);
+  return prepareSpreadAttrSlot(handleId, attrSlotIndex, value, context);
+}
+
+export function adaptTypedSpreadAttrSlot(
+  handleId: number,
+  attrSlotIndex: number,
+  value: unknown,
+): SerializableValue | null {
+  return prepareTypedSpreadAttrSlot(handleId, attrSlotIndex, value);
 }
 
 export function clearEtAttrPlanMap(): void {

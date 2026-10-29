@@ -9,6 +9,7 @@ import {
   __etAttrPlanMap,
   adaptMTEventAttrSlot,
   adaptMTRefAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import {
@@ -19,9 +20,12 @@ import {
   detachMainThreadDynamicAttrRefsForSubtree,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
+  isSpreadDynamicAttrSlot,
   prepareMainThreadDynamicAttrSlotsForNative,
+  prepareSpreadAttrSlotForNative,
   updateMainThreadEventAttrSlot as setMTEventSlot,
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
+  updateSpreadAttrSlot,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
 
 import { retainMainThreadBackgroundFunctionCtx } from '../../../../src/element-template/runtime/template/main-thread-background-function.js';
@@ -657,6 +661,185 @@ describe('main-thread dynamic attr state', () => {
       expect(getMainThreadDynamicAttrState(17, 0)?.nativeHeldValue).toBe(nextCtx);
     } finally {
       globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('retains spread MTEvent, Gesture, and callback MTRef once before Native and keeps state intact on Native rejection', () => {
+    const { addRef, restore } = installJsFunctionLifecycleManager();
+    const { updateWorkletRef, restore: restoreRefs } = installRefRuntime();
+    const eventCtx = { _execId: 201, _wkltId: 'spread-tap' };
+    const gestureCb = { _execId: 202, _wkltId: 'spread-pan' };
+    const refCb = { _execId: 203, _wkltId: 'spread-ref-cb' };
+    const initialObjectRef = { _wvid: 55 };
+    __etAttrPlanMap._et_spread_retain = [0, adaptSpreadAttrSlot];
+
+    try {
+      const initialSlot = {
+        id: 'card',
+        'main-thread:bindtap': { type: 'worklet', value: eventCtx },
+        'main-thread:gesture': {
+          type: 'gesture',
+          value: [{
+            id: 1,
+            type: 0,
+            config: {},
+            callbacks: [{ name: 'onUpdate', callback: gestureCb }],
+            relationMap: { waitFor: [], simultaneous: [], continueWith: [] },
+          }],
+        },
+        'main-thread:ref': { type: 'main-thread-ref', value: initialObjectRef },
+      };
+
+      const nativeSlots = prepareMainThreadDynamicAttrSlotsForNative('_et_spread_retain', [initialSlot]);
+      expect(nativeSlots?.[0]).toEqual({
+        id: 'card',
+        'main-thread:bindtap': { type: 'worklet', value: eventCtx },
+        'main-thread:gesture': initialSlot['main-thread:gesture'],
+        'has-react-ref': true,
+        flatten: false,
+      });
+      expect(addRef.mock.calls).toEqual([
+        [201, eventCtx],
+        [202, gestureCb],
+      ]);
+
+      initializeMainThreadDynamicAttrSlots(17, '_et_spread_retain', [initialSlot]);
+      expect(isSpreadDynamicAttrSlot(17, 0)).toBe(true);
+      expect(addRef).toHaveBeenCalledTimes(2);
+      attachAndComplete([{ uid: 17, ref: TEST_NATIVE_REF }]);
+      expect(updateWorkletRef).toHaveBeenCalledExactlyOnceWith(initialObjectRef, TEST_ELEMENT_REF);
+      updateWorkletRef.mockClear();
+
+      // Simulate pre-Native prepare followed by Native throwing before updateSpreadAttrSlot runs.
+      const rejectedNextSlot = {
+        id: 'card-rejected',
+        'main-thread:ref': { type: 'main-thread-ref', value: refCb },
+      };
+      expect(prepareSpreadAttrSlotForNative(null)).toBeNull();
+      const preparedForNative = prepareSpreadAttrSlotForNative(rejectedNextSlot);
+      expect(preparedForNative).toEqual({
+        id: 'card-rejected',
+        'has-react-ref': true,
+        flatten: false,
+      });
+      expect(addRef).toHaveBeenLastCalledWith(203, refCb);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+
+      // Initial object ref remains attached and cleans cleanly on teardown.
+      deleteMainThreadDynamicAttrStateForSubtree([17]);
+      expect(updateWorkletRef).toHaveBeenCalledExactlyOnceWith(initialObjectRef, null);
+    } finally {
+      restoreRefs();
+      restore();
+    }
+  });
+
+  it('reconciles multi-slot MTRef overrides, key-deletion fallbacks, and JSON.parse sibling updates without disturbing distinct elements', () => {
+    const previousRunWorklet = globalThis.runWorklet;
+    const { updateWorkletRef, restore } = installRefRuntime();
+    const sharedElement = { id: 'shared-el' } as unknown as ElementRef;
+    const distinctElement = { id: 'distinct-el' } as unknown as ElementRef;
+    vi.mocked(__GetElementByAttrSlot).mockImplementation((_handle, slot) =>
+      slot === 3 ? distinctElement : sharedElement
+    );
+
+    const directRef = { _wvid: 1 };
+    const distinctRef = { _wvid: 99 };
+    const spread1Cleanup = vi.fn();
+    const spread1Cb = { _wkltId: 'spread1-cb', _execId: 301 };
+    const spread2Ref = { _wvid: 2 };
+    globalThis.runWorklet = vi.fn(() => spread1Cleanup);
+
+    __etAttrPlanMap._et_multi_mtref = [
+      0,
+      adaptMTRefAttrSlot,
+      1,
+      adaptSpreadAttrSlot,
+      2,
+      adaptSpreadAttrSlot,
+      3,
+      adaptSpreadAttrSlot,
+    ];
+
+    try {
+      initializeMainThreadDynamicAttrSlots(21, '_et_multi_mtref', [
+        { type: 'main-thread-ref', value: directRef },
+        { id: 's1', 'main-thread:ref': { type: 'main-thread-ref', value: spread1Cb } },
+        { id: 's2', 'main-thread:ref': { type: 'main-thread-ref', value: spread2Ref } },
+        { id: 's3', 'main-thread:ref': { type: 'main-thread-ref', value: distinctRef } },
+      ]);
+      attachAndComplete([{ uid: 21, ref: TEST_NATIVE_REF }]);
+
+      // Slot 2 overrides slots 0 & 1 on sharedElement; slot 3 attaches independently on distinctElement.
+      expect(updateWorkletRef.mock.calls).toEqual([
+        [spread2Ref, sharedElement],
+        [distinctRef, distinctElement],
+      ]);
+      expect(globalThis.runWorklet).not.toHaveBeenCalled();
+      updateWorkletRef.mockClear();
+
+      // Explicit null in slot 2 ({ 'main-thread:ref': undefined }) detaches sharedElement without falling back.
+      updateSpreadAttrSlot(21, 2, { id: 's2', 'main-thread:ref': null }, TEST_NATIVE_REF);
+      completeRefAttachments();
+      expect(updateWorkletRef.mock.calls).toEqual([[spread2Ref, null]]);
+      expect(globalThis.runWorklet).not.toHaveBeenCalled();
+      updateWorkletRef.mockClear();
+
+      // Omitting 'main-thread:ref' from slot 2 falls back to slot 1's callback ref.
+      updateSpreadAttrSlot(21, 2, { id: 's2-no-ref' }, TEST_NATIVE_REF);
+      completeRefAttachments();
+      expect(globalThis.runWorklet).toHaveBeenCalledExactlyOnceWith(spread1Cb, [{ elementRefptr: sharedElement }]);
+      expect(spread1Cleanup).not.toHaveBeenCalled();
+      vi.mocked(globalThis.runWorklet).mockClear();
+
+      // Sibling update in slot 1 arriving as a fresh JSON.parse clone with the same _execId does NOT remount spread1Cb.
+      const jsonParsedSameCbClone = JSON.parse(JSON.stringify({
+        id: 's1-updated',
+        'main-thread:ref': { type: 'main-thread-ref', value: { _wkltId: 'spread1-cb', _execId: 301 } },
+      }));
+      updateSpreadAttrSlot(21, 1, jsonParsedSameCbClone, TEST_NATIVE_REF);
+      completeRefAttachments();
+      expect(spread1Cleanup).not.toHaveBeenCalled();
+      expect(globalThis.runWorklet).not.toHaveBeenCalled();
+
+      // Clearing slot 1 entirely runs spread1Cleanup synchronously and falls back to direct slot 0!
+      updateSpreadAttrSlot(21, 1, null, TEST_NATIVE_REF);
+      expect(spread1Cleanup).toHaveBeenCalledTimes(1);
+      completeRefAttachments();
+      expect(updateWorkletRef.mock.calls).toEqual([[directRef, sharedElement]]);
+      updateWorkletRef.mockClear();
+
+      // Subtree deletion cleans both sharedElement (directRef) and distinctElement (distinctRef).
+      deleteMainThreadDynamicAttrStateForSubtree([21]);
+      expect(updateWorkletRef.mock.calls).toEqual(expect.arrayContaining([
+        [directRef, null],
+        [distinctRef, null],
+      ]));
+      expect(updateWorkletRef).toHaveBeenCalledTimes(2);
+      expect(spread1Cleanup).toHaveBeenCalledTimes(1);
+
+      // Masking an attached callback ref via a later spread's explicit null cleans it once
+      // and does not re-run cleanup on subtree deletion.
+      const maskedCleanup = vi.fn();
+      const maskedCb = { _wkltId: 'masked-cb', _execId: 302 };
+      globalThis.runWorklet = vi.fn(() => maskedCleanup);
+      __etAttrPlanMap._et_masked_destroy = [0, adaptSpreadAttrSlot, 1, adaptSpreadAttrSlot];
+      initializeMainThreadDynamicAttrSlots(77, '_et_masked_destroy', [
+        { 'main-thread:ref': { type: 'main-thread-ref', value: maskedCb } },
+        {},
+      ]);
+      attachAndComplete([{ uid: 77, ref: TEST_NATIVE_REF }]);
+      expect(maskedCleanup).toHaveBeenCalledTimes(0);
+
+      updateSpreadAttrSlot(77, 1, { 'main-thread:ref': null }, TEST_NATIVE_REF);
+      completeRefAttachments();
+      expect(maskedCleanup).toHaveBeenCalledTimes(1);
+
+      deleteMainThreadDynamicAttrStateForSubtree([77]);
+      expect(maskedCleanup).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.runWorklet = previousRunWorklet;
+      restore();
     }
   });
 });
