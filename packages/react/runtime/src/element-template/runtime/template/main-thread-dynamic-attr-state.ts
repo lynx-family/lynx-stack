@@ -101,6 +101,9 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
   }
   let nativeSlots: SerializableValue[] | undefined;
   for (const [attrSlotIndex, kind] of slotKinds) {
+    if (kind === 'gesture' && attributeSlots[attrSlotIndex] != null) {
+      retainGestureCallbacks(attributeSlots[attrSlotIndex] as GestureSlotValue);
+    }
     if (kind === 'mt-event' && attributeSlots[attrSlotIndex] != null) {
       retainMainThreadBackgroundFunctionCtx((attributeSlots[attrSlotIndex] as MTEventNativeWrapper).value);
     }
@@ -174,7 +177,6 @@ export function updateGestureAttrSlot(
     return;
   }
   const next = value as GestureSlotValue;
-  retainGestureCallbacks(next);
   if (previous) {
     hydrateGestureCallbacks(next, previous);
   }

@@ -915,6 +915,8 @@ describe('ElementTemplate patch stream (apply)', () => {
     });
     envManager.switchToMainThread();
     expect(mockSetElementTemplateAttributeSlot).not.toHaveBeenCalled();
+    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('target handle 124 not found');
     resetReportedErrors();
   });
 

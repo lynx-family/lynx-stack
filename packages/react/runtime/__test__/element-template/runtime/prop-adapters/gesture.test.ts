@@ -21,8 +21,14 @@ import {
   clearMainThreadDynamicAttrState,
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
+  prepareMainThreadDynamicAttrSlotsForNative,
   updateGestureAttrSlot,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import { createElementTemplateWithReservedHandle } from '../../../../src/element-template/runtime/template/handle.js';
+import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
+import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
+import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
+import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
 
 function gesture(id: number, type: number, callbacks: Record<string, MTEventCtx> = { onBegin: { _wkltId: 'begin' } }) {
   return { __isGesture: true, id, type, config: { enabled: true }, callbacks };
@@ -191,6 +197,112 @@ describe('ET direct Gesture preparation', () => {
 });
 
 describe('ET Gesture callback handoff and lifecycle', () => {
+  it.each(
+    [
+      ['reserved', 'success'],
+      ['reserved', 'null'],
+      ['reserved', 'throw'],
+      ['patch', 'success'],
+      ['patch', 'null'],
+      ['patch', 'throw'],
+    ] as const,
+  )('tracks %s create callbacks before Native %s without committing failed state', (mode, outcome) => {
+    const previous = globalThis.lynxWorkletImpl;
+    const manager = new JsFunctionLifecycleManager();
+    const hydrate = vi.fn();
+    globalThis.lynxWorkletImpl = { ...previous, _jsFunctionLifecycleManager: manager, _hydrateCtx: hydrate };
+    const first = slot(gesture(1, 0, { onBegin: { _wkltId: 'begin' }, onEnd: { _wkltId: 'end' } }));
+    first.value[0]!.callbacks[0]!.callback._execId = 41;
+    first.value[0]!.callbacks[1]!.callback._execId = 42;
+    const retain = vi.spyOn(manager, 'addRef');
+    const nativeRef = {} as ElementTemplateHandle;
+    const error = new Error('create failed');
+    __etAttrPlanMap['__Card__:_et_gesture_reject'] = [0, adaptGestureAttrSlot];
+    const create = vi.spyOn(globalThis, '__CreateElementTemplate').mockImplementationOnce((_key, _url, slots) => {
+      expect(slots![0]).toBe(first);
+      expect(retain).toHaveBeenCalledWith(41, first.value[0]!.callbacks[0]!.callback);
+      expect(retain).toHaveBeenCalledWith(42, first.value[0]!.callbacks[1]!.callback);
+      expect(elementTemplateRegistry.has(17)).toBe(false);
+      if (outcome === 'throw') throw error;
+      return outcome === 'null' ? null : nativeRef;
+    });
+    try {
+      const apply = () =>
+        mode === 'reserved'
+          ? createElementTemplateWithReservedHandle(17, '_et_gesture_reject', null, [first], null)
+          : applyElementTemplateUpdateCommands([
+            ElementTemplateUpdateOps.createTemplate,
+            17,
+            '_et_gesture_reject',
+            null,
+            [first],
+            null,
+          ]);
+      if (outcome === 'throw') expect(apply).toThrow(error);
+      else apply();
+      expect(retain).toHaveBeenCalledTimes(2);
+      expect(elementTemplateRegistry.has(17)).toBe(outcome === 'success');
+      const probe = slot(gesture(2, 0));
+      updateGestureAttrSlot(17, 0, probe, true);
+      if (outcome === 'success') {
+        expect(hydrate).toHaveBeenCalledExactlyOnceWith(
+          probe.value[0]!.callbacks[0]!.callback,
+          first.value[0]!.callbacks[0]!.callback,
+        );
+      } else expect(hydrate).not.toHaveBeenCalled();
+    } finally {
+      create.mockRestore();
+      elementTemplateRegistry.delete(17);
+      manager.dispose();
+      globalThis.lynxWorkletImpl = previous;
+    }
+  });
+
+  it.each([false, true])('tracks setter callbacks before Native and preserves failed state (throws=%s)', throws => {
+    const previous = globalThis.lynxWorkletImpl;
+    const manager = new JsFunctionLifecycleManager();
+    const hydrate = vi.fn();
+    globalThis.lynxWorkletImpl = { ...previous, _jsFunctionLifecycleManager: manager, _hydrateCtx: hydrate };
+    const first = slot(gesture(1, 0));
+    const next = slot(gesture(2, 0));
+    const probe = slot(gesture(3, 0));
+    next.value[0]!.callbacks[0]!.callback._execId = 51;
+    updateGestureAttrSlot(17, 0, first);
+    elementTemplateRegistry.set(17, {} as ElementTemplateHandle);
+    const retain = vi.spyOn(manager, 'addRef');
+    const error = new Error('setter failed');
+    const setter = vi.spyOn(globalThis, '__SetAttributeOfElementTemplate').mockImplementationOnce(
+      (_handle, _slot, value) => {
+        expect(value).toBe(next);
+        expect(retain).toHaveBeenCalledExactlyOnceWith(51, next.value[0]!.callbacks[0]!.callback);
+        expect(hydrate).not.toHaveBeenCalled();
+        if (throws) throw error;
+      },
+    );
+    try {
+      const apply = () => applyElementTemplateUpdateCommands([ElementTemplateUpdateOps.setGesture, 17, 0, next], true);
+      if (throws) expect(apply).toThrow(error);
+      else apply();
+      expect(retain).toHaveBeenCalledExactlyOnceWith(51, next.value[0]!.callbacks[0]!.callback);
+      if (throws) expect(hydrate).not.toHaveBeenCalled();
+      else {expect(hydrate).toHaveBeenCalledExactlyOnceWith(
+          next.value[0]!.callbacks[0]!.callback,
+          first.value[0]!.callbacks[0]!.callback,
+        );}
+      hydrate.mockClear();
+      updateGestureAttrSlot(17, 0, probe, true);
+      expect(hydrate).toHaveBeenCalledExactlyOnceWith(
+        probe.value[0]!.callbacks[0]!.callback,
+        (throws ? first : next).value[0]!.callbacks[0]!.callback,
+      );
+    } finally {
+      setter.mockRestore();
+      elementTemplateRegistry.delete(17);
+      manager.dispose();
+      globalThis.lynxWorkletImpl = previous;
+    }
+  });
+
   it('does not mistake colliding IDs allocated on different threads for callback identity', () => {
     const previous = slot(gesture(1, 0), gesture(2, 1));
     const next = slot(gesture(2, 0), gesture(3, 1));
@@ -255,6 +367,7 @@ describe('ET Gesture callback handoff and lifecycle', () => {
     const hydrated = slot(gesture(3, 0));
     __etAttrPlanMap.gesture = [0, adaptGestureAttrSlot];
     try {
+      prepareMainThreadDynamicAttrSlotsForNative('gesture', [first]);
       initializeMainThreadDynamicAttrSlots(17, 'gesture', [first]);
       expect(addRef).toHaveBeenCalledWith(41, first.value[0]!.callbacks[0]!.callback);
       expect(addRef).toHaveBeenCalledWith(42, first.value[0]!.callbacks[1]!.callback);
