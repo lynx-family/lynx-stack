@@ -1,0 +1,43 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+  .page { position: relative; width: 640px; height: 300px; }
+  .track { position: absolute; left: 40px; top: 80px; width: 560px; height: 120px; }
+  .target { position: absolute; left: 260px; top: 40px; width: 40px; height: 40px; }
+</style>
+<script thread="main">
+  const page = __CreatePage('0', 0);
+  const pageId = __GetElementUniqueID(page);
+  const track = __CreateView(pageId);
+  const target = __CreateView(pageId);
+  __SetClasses(page, 'page');
+  __SetClasses(track, 'track');
+  __SetClasses(target, 'target');
+  __SetID(target, 'coordinate-target');
+  __AppendElement(track, target);
+  __AppendElement(page, track);
+  Object.assign(globalThis, { processData(data) { return data; } });
+
+  function record(event) {
+    const point = event.touches ? event.touches[0] : event;
+    __InvokeUIMethod(track, 'boundingClientRect', {}, (result) => {
+      console.log('EVENT_COORDINATES ' + JSON.stringify({
+        type: event.type,
+        x: point.x,
+        pageX: point.pageX,
+        pageY: point.pageY,
+        clientX: point.clientX,
+        clientY: point.clientY,
+        detail: event.detail,
+        bounds: result.data,
+      }));
+    });
+  }
+  __AddEventListener(target, 'mousedown', record, {});
+  __AddEventListener(target, 'touchstart', record, {});
+  lynx.getEngine().addEventListener('__RenderPage', () => {});
+</script>
+<script thread="background">
+  const mainThread = lynx.getCoreContext();
+</script>
+</lynx>

@@ -90,7 +90,7 @@ Build-time utilities.
 3. **Routing**:
    - If it's a **Worklet** event, it's processed on the Main Thread.
    - If it's a **BTS** (standard) event, it's sent via RPC to the Background Thread to trigger the React/JS handler.
-4. **Coordinate normalization**: For events with positional payloads (`layoutchange`, `touch*`, `mouse*`, `click`/`tap`) and for the `boundingClientRect` UI method, the host `<lynx-view>`'s viewport top-left is subtracted from the emitted coordinate fields so consumers receive lynx-view-relative values, matching native Lynx semantics. The lynx-view's rect is cached by `BoundingClientRectService` (one per `LynxViewInstance`); the cache is invalidated at most once per `requestAnimationFrame`, so CSS `transform`s on the lynx-view (which `ResizeObserver` would miss) are eventually picked up without a per-event measurement and without amplifying event-modification feedback loops.
+4. **Coordinate normalization**: Mouse and touch-point `pageX`/`pageY`, touch/tap `detail.x`/`detail.y`, `layoutchange` bounds, and the `boundingClientRect` UI method use the host `<lynx-view>` as their origin. Normalize positional events from DOM `clientX`/`clientY`, not DOM document-relative `pageX`/`pageY`, so document scrolling is accounted for once. Preserve viewport-relative `clientX`/`clientY`. Existing Web mouse and touch-point `x`/`y` remain view-relative for compatibility; do not describe those aliases as native target-relative coordinates. The host rect is cached by `BoundingClientRectService`, with host animation/transition completion and throttled idle-time invalidation.
 
 ## Development & Build
 

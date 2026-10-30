@@ -235,6 +235,8 @@ describe('Element APIs', () => {
       clientY: 200,
       x: 100,
       y: 200,
+      pageX: 100,
+      pageY: 200,
     }]);
     expect(lynxEvent.targetTouches).toEqual([{ identifier: 1 }]);
     expect(lynxEvent.changedTouches).toEqual([{ pageX: 10 }]);
@@ -304,7 +306,7 @@ describe('Element APIs', () => {
     toJSON: () => ({}),
   });
 
-  test('createCrossThreadEvent shifts click detail while keeping top-level viewport coords', async () => {
+  test('createCrossThreadEvent shifts click detail and page coordinates while keeping client coordinates', async () => {
     const { createCrossThreadEvent } = await import(
       '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
     );
@@ -318,11 +320,11 @@ describe('Element APIs', () => {
     expect(lynxEvent.detail).toEqual({ x: 100, y: 100 });
     expect((lynxEvent as any).clientX).toBe(300);
     expect((lynxEvent as any).clientY).toBe(300);
-    expect((lynxEvent as any).pageX).toBe(300);
-    expect((lynxEvent as any).pageY).toBe(300);
+    expect((lynxEvent as any).pageX).toBe(100);
+    expect((lynxEvent as any).pageY).toBe(100);
   });
 
-  test('createCrossThreadEvent emits lynx-view-relative x/y for mouse events with preserved viewport coords', async () => {
+  test('createCrossThreadEvent emits view-relative mouse page coordinates with preserved client coordinates', async () => {
     const { createCrossThreadEvent } = await import(
       '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
     );
@@ -339,9 +341,62 @@ describe('Element APIs', () => {
     expect((lynxEvent as any).y).toBe(60);
     expect((lynxEvent as any).clientX).toBe(280);
     expect((lynxEvent as any).clientY).toBe(260);
-    expect((lynxEvent as any).pageX).toBe(280);
-    expect((lynxEvent as any).pageY).toBe(260);
+    expect((lynxEvent as any).pageX).toBe(80);
+    expect((lynxEvent as any).pageY).toBe(60);
   });
+
+  test.each(['touchstart', 'touchmove', 'touchend', 'touchcancel'])(
+    'normalizes page coordinates in all %s touch lists independently of document scrolling',
+    async (type) => {
+      const { createCrossThreadEvent } = await import(
+        '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+      );
+      const point = {
+        identifier: 7,
+        clientX: 380,
+        clientY: 260,
+        pageX: 480,
+        pageY: 460,
+      };
+      const event = new Event(type) as any;
+      const active = type === 'touchstart' || type === 'touchmove';
+      event.touches = active ? [point] : [];
+      event.targetTouches = active ? [point] : [];
+      event.changedTouches = [point];
+      const result = createCrossThreadEvent(event, 60, 120);
+      const expected = {
+        ...point,
+        x: 320,
+        y: 140,
+        pageX: 320,
+        pageY: 140,
+      };
+      expect(result.changedTouches).toEqual([expected]);
+      expect(result.touches).toEqual(active ? [expected] : []);
+      expect(result.targetTouches).toEqual(active ? [expected] : []);
+      if (active) expect(result.detail).toEqual({ x: 320, y: 140 });
+    },
+  );
+
+  test.each(['mousedown', 'mousemove', 'mouseup', 'click'])(
+    'uses viewport rather than document offsets to normalize %s page coordinates',
+    async (type) => {
+      const { createCrossThreadEvent } = await import(
+        '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+      );
+      const event = makeMouseLikeEvent(type, {
+        clientX: 60,
+        clientY: 120,
+        pageX: 160,
+        pageY: 320,
+      });
+      const result = createCrossThreadEvent(event, 60, 120);
+      expect(result.pageX).toBe(0);
+      expect(result.pageY).toBe(0);
+      expect(result.clientX).toBe(60);
+      expect(result.clientY).toBe(120);
+    },
+  );
 
   test('BoundingClientRectService caches the parent rect and invalidates on lynx-view transitionend', async () => {
     const { BoundingClientRectService } = await import(
