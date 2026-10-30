@@ -10,5 +10,3 @@ Accept ordinary Snapshot component and helper updates at their actual main-threa
 Allow up to ten seconds for matching main-thread completion before timeout recovery.
 
 Load background HMR updates through the same Native bundle adapter, preserve the SDK runtime wrapper in per-chunk sections, and retain the original background loader on hosts without Native app-scope initialization.
-
-Use the build engine's exposed template plugin consistently for React compilation and Native HMR hooks, while retaining the installed template plugin as the default for direct Rspack integrations.
