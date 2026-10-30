@@ -322,26 +322,47 @@ describe('Element APIs', () => {
     expect((lynxEvent as any).pageY).toBe(300);
   });
 
-  test('createCrossThreadEvent emits lynx-view-relative x/y for mouse events with preserved viewport coords', async () => {
-    const { createCrossThreadEvent } = await import(
-      '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
-    );
-    const mousedown = makeMouseLikeEvent('mousedown', {
-      clientX: 280,
-      clientY: 260,
-      pageX: 280,
-      pageY: 260,
-      button: 0,
-      buttons: 1,
-    });
-    const lynxEvent = createCrossThreadEvent(mousedown, 200, 200);
-    expect((lynxEvent as any).x).toBe(80);
-    expect((lynxEvent as any).y).toBe(60);
-    expect((lynxEvent as any).clientX).toBe(280);
-    expect((lynxEvent as any).clientY).toBe(260);
-    expect((lynxEvent as any).pageX).toBe(280);
-    expect((lynxEvent as any).pageY).toBe(260);
-  });
+  test.each([
+    'mousedown',
+    'mouseup',
+    'mousemove',
+    'mouseenter',
+    'mouseleave',
+    'mouseover',
+    'mouseout',
+  ])(
+    'createCrossThreadEvent subtracts the lynx-view offset from %s client coordinates',
+    async (type) => {
+      const { createCrossThreadEvent } = await import(
+        '../ts/client/mainthread/elementAPIs/createCrossThreadEvent.js'
+      );
+      const mouseEvent = makeMouseLikeEvent(type, {
+        clientX: 280,
+        clientY: 260,
+        pageX: 310,
+        pageY: 320,
+        button: 0,
+        buttons: 1,
+      });
+      const lynxEvent = createCrossThreadEvent(mouseEvent, 200, 150);
+      expect(lynxEvent).toMatchObject({
+        type,
+        x: 80,
+        y: 110,
+        clientX: 80,
+        clientY: 110,
+        pageX: 310,
+        pageY: 320,
+        button: 0,
+        buttons: 1,
+      });
+      // Normalization must not mutate the browser event.
+      expect(mouseEvent.clientX).toBe(280);
+      expect(mouseEvent.clientY).toBe(260);
+      expect(mouseEvent.pageX).toBe(310);
+      expect(mouseEvent.pageY).toBe(320);
+    },
+  );
 
   test('BoundingClientRectService caches the parent rect and invalidates on lynx-view transitionend', async () => {
     const { BoundingClientRectService } = await import(
