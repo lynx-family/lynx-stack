@@ -1881,8 +1881,8 @@ importers:
         specifier: 13.4.3
         version: 13.4.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       motion-dom:
-        specifier: 13.4.2
-        version: 13.4.2
+        specifier: 14.7.1
+        version: 14.7.1
       motion-utils:
         specifier: 13.5.0
         version: 13.5.0
@@ -10749,6 +10749,9 @@ packages:
   motion-dom@13.4.2:
     resolution: {integrity: sha512-mY293Iyj4rOQo5sDxUwPYLOKiveLQrJoK1tKfG8V1H3MMGMfan3s2i7NBW18WnD39DD79ogyiL/1fmy22GLG5w==}
 
+  motion-dom@14.7.1:
+    resolution: {integrity: sha512-p9q9F7+HoijbQjUG/cSGNmWS2t1OaAKxkd2RG5gQJRoDwoTap/Khb7K1P5rLW90crnSmx0rcRXzh3Jd5UNrpEw==}
+
   motion-utils@12.23.6:
     resolution: {integrity: sha512-eAWoPgr4eFEOFfg2WjIsMoqJTW6Z8MTUCgn/GZ3VRpClWBdnbjryiA3ZSNLyxCTmCQx4RmYX6jX1iWHbenUPNQ==}
 
@@ -10757,6 +10760,9 @@ packages:
 
   motion-utils@13.5.0:
     resolution: {integrity: sha512-Hqe/sqjIKliPZg8sVjWAkdySDPJNIeKH+euVkDOG8ri3DUUU7ZjndmHsGqEPz2iHpiyVaV5I22iguCMHU2he+Q==}
+
+  motion-utils@14.7.0:
+    resolution: {integrity: sha512-woO0/Nb7ys75f94fjvQi/6leiHGvZUYkeHUPEZ3vxsV+9OpEVhkxp01x8MlRwX0zt31EqgXsKDAoBoJLC148Tw==}
 
   motion@13.4.3:
     resolution: {integrity: sha512-Js4rk+VUxSRMKOFT4hOMyMKlxyF11ee9jomiLT3uuwMOU88EoSro0ZEbTYes4m457pqZQ2G3RsLdHQzoEDyBCQ==}
@@ -21071,11 +21077,17 @@ snapshots:
     dependencies:
       motion-utils: 13.5.0
 
+  motion-dom@14.7.1:
+    dependencies:
+      motion-utils: 14.7.0
+
   motion-utils@12.23.6: {}
 
   motion-utils@12.39.0: {}
 
   motion-utils@13.5.0: {}
+
+  motion-utils@14.7.0: {}
 
   motion@13.4.3(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
