@@ -2916,8 +2916,8 @@ importers:
   packages/testing-library/kitten-lynx:
     dependencies:
       '@lynx-js/devtool-connector':
-        specifier: 0.13.2
-        version: 0.13.2
+        specifier: 0.18.2
+        version: 0.18.2
       '@yume-chan/adb':
         specifier: catalog:adb
         version: 2.6.4
@@ -5210,8 +5210,13 @@ packages:
   '@lynx-js/animax@0.1.0-alpha.0':
     resolution: {integrity: sha512-cAF5xicCvRu88xCMi8+wPtGCbf7lB1zs6cjFtxNx/Pea1UklO7J+o9EvbBot7xnt9H6qy2V/K4bj2LBwsdApQg==}
 
-  '@lynx-js/devtool-connector@0.13.2':
-    resolution: {integrity: sha512-7NXFJFogGJAOQmIk4x95Ef9b9JbBJK5J5xviDF5OWmOeW+ZiSfCAALUMwRUlU9nXPMeH/rdtT3Kis0QtV4WDfA==}
+  '@lynx-js/debug-metadata@0.1.0':
+    resolution: {integrity: sha512-3N+Wgc/kIc4/aG5KpdPWKsC9MsNngygeyg9JS6IOayS8AQJ37xjVEzlz1U3aYzT9al0RJKL7w4poa0tGaXBv1g==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  '@lynx-js/devtool-connector@0.18.2':
+    resolution: {integrity: sha512-57cAfq2QnkyHgTXY5F4Kjc+yh1bRI2PZ5Omf4WxhUbXlT/u0I0Mvi/yir3RLsRwE7G1yE3VfC5bWLr6WCHemZg==}
     engines: {node: '>=18.19'}
 
   '@lynx-js/gesture-runtime@2.1.1':
@@ -7769,20 +7774,35 @@ packages:
   '@yume-chan/adb@2.6.4':
     resolution: {integrity: sha512-aaN21ZOLjWW1nC09C21f0yQkCqxkuMWMqheryGEbmGLPhuzIyOhTurJK8cXh5ZnQ+ptdKBexqvoG6zYoul9XPA==}
 
+  '@yume-chan/adb@3.0.0-beta.4':
+    resolution: {integrity: sha512-GdfQptvzXEoMUPc93PJRmOHtIY5oKmjQT4Q3fCK7rEnMvnZvOJj5bmjEvwXzjSFl8YQ7EEkVxhJJeAezMEwGWw==}
+
   '@yume-chan/async@4.1.3':
     resolution: {integrity: sha512-0vzhNJMkWUPyjKzUK4rqHEeCU6YQtF78RsB1kFRB6Y2BLupmEQNxcSb0mjKabPL9jZpCCiLa5KL8oTOJClUVaw==}
 
   '@yume-chan/event@2.0.0':
     resolution: {integrity: sha512-z56MDOcX1QlgLUCuA6th3r10negVb7A3gzY//TwSC9ZOvzuRlrAqXcxZf1T3hHfNMk/NFO9RIgQgegXYSfaqLw==}
 
+  '@yume-chan/event@3.0.0-beta.4':
+    resolution: {integrity: sha512-w7cXpK109+2ObjyGtruA0yxpMf8w50irwsAKwac6qkw6CvtI9zz3bRfZ3KHuaFe2IACip8yPvxcPnLfu4bbWSQ==}
+
   '@yume-chan/no-data-view@2.0.0':
     resolution: {integrity: sha512-0GRJrrt6wtZlbiE92jocHOnaAvjQ+Y7xwwhwOPqLkwf90Kj1JIHJ5Zh4wJVQSQIkzfRSOpM+jeEQdC2K15snlA==}
+
+  '@yume-chan/no-data-view@3.0.0-beta.4':
+    resolution: {integrity: sha512-HZo2h1stUQH/J2hXAaJwNFVOsrxHfWoUCds7jk3R1sEfIQFD0GBQOqXrloQolF4UUkhETz09kJEHGHAng3Mrkw==}
 
   '@yume-chan/stream-extra@2.6.1':
     resolution: {integrity: sha512-GQ+Q0SQf9p6Fl7ZK0UO5vHVGBJgkTJm/WXKurUMpjHQV4VUpjZ2hrQ744aCfT7WwSol7Bz/uEiXWmk240Hr/hg==}
 
+  '@yume-chan/stream-extra@3.0.0-beta.4':
+    resolution: {integrity: sha512-/mPzXjFBWSCm5aHPozRgk270Q8Gt+zUXpN6tplzRnYEPs/fhYXYD2Y9exDqfBE8oYEL1ydkd34s1DZu1TWtQ/Q==}
+
   '@yume-chan/struct@2.3.2':
     resolution: {integrity: sha512-afoCnSKV+5HRK7e4innVd9YTYDyNWdjA1CVQa1j8rWYnmr7HGZfdkHMQr+AESLk6GxWFMzOIPQIG6nYOTGMFIw==}
+
+  '@yume-chan/struct@3.0.0-beta.4':
+    resolution: {integrity: sha512-6efB/lmuARQzAyfn5mZw1CLcGuJg/aVnBu4XFAGjShlzxJV8k+G5HYSfCTGdda5SaCbDQybjD4Q4Qm0cI3lMIg==}
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -14882,15 +14902,12 @@ snapshots:
 
   '@lynx-js/animax@0.1.0-alpha.0': {}
 
-  '@lynx-js/devtool-connector@0.13.2':
+  '@lynx-js/debug-metadata@0.1.0': {}
+
+  '@lynx-js/devtool-connector@0.18.2':
     dependencies:
-      jpeg-js: 0.4.4
-      obug: 2.1.4
-      semver: 7.8.5
-      ws: 8.21.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
+      '@lynx-js/debug-metadata': 0.1.0
+      '@yume-chan/adb': 3.0.0-beta.4
 
   '@lynx-js/gesture-runtime@2.1.1(@lynx-js/react@packages+react)(@lynx-js/types@4.1.0)':
     dependencies:
@@ -17520,23 +17537,47 @@ snapshots:
       '@yume-chan/stream-extra': 2.6.1
       '@yume-chan/struct': 2.3.2
 
+  '@yume-chan/adb@3.0.0-beta.4':
+    dependencies:
+      '@yume-chan/async': 4.1.3
+      '@yume-chan/event': 3.0.0-beta.4
+      '@yume-chan/no-data-view': 3.0.0-beta.4
+      '@yume-chan/stream-extra': 3.0.0-beta.4
+      '@yume-chan/struct': 3.0.0-beta.4
+
   '@yume-chan/async@4.1.3': {}
 
   '@yume-chan/event@2.0.0':
     dependencies:
       '@yume-chan/async': 4.1.3
 
+  '@yume-chan/event@3.0.0-beta.4':
+    dependencies:
+      '@yume-chan/async': 4.1.3
+
   '@yume-chan/no-data-view@2.0.0': {}
+
+  '@yume-chan/no-data-view@3.0.0-beta.4': {}
 
   '@yume-chan/stream-extra@2.6.1':
     dependencies:
       '@yume-chan/async': 4.1.3
       '@yume-chan/struct': 2.3.2
 
+  '@yume-chan/stream-extra@3.0.0-beta.4':
+    dependencies:
+      '@yume-chan/async': 4.1.3
+      '@yume-chan/struct': 3.0.0-beta.4
+
   '@yume-chan/struct@2.3.2':
     dependencies:
       '@yume-chan/async': 4.1.3
       '@yume-chan/no-data-view': 2.0.0
+
+  '@yume-chan/struct@3.0.0-beta.4':
+    dependencies:
+      '@yume-chan/async': 4.1.3
+      '@yume-chan/no-data-view': 3.0.0-beta.4
 
   accepts@2.0.0:
     dependencies:
