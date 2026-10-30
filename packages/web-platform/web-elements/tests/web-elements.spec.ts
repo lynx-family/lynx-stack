@@ -26,10 +26,17 @@ const diffScreenShot = async (
   });
 };
 
-const gotoWebComponentPage = async (page: Page, testname: string) => {
-  await page.goto(`/tests/fixtures/${testname}.html`, {
-    waitUntil: 'load',
-  });
+const gotoWebComponentPage = async (
+  page: Page,
+  testname: string,
+  params?: URLSearchParams,
+) => {
+  await page.goto(
+    `/tests/fixtures/${testname}.html${params ? `?${params}` : ''}`,
+    {
+      waitUntil: 'load',
+    },
+  );
   await page.evaluate(() => document.fonts.ready);
 };
 
@@ -119,6 +126,86 @@ test.describe('web-elements test suite', () => {
       expect(typeof detail.top).toBe('number');
       expect(typeof detail.bottom).toBe('number');
       expect(detail.id).toBe('target');
+    });
+
+    for (
+      const { transform, outer, writingMode } of [
+        { transform: 'none' },
+        { transform: 'scale(0.5)' },
+        { transform: 'scale(1.368)' },
+        { transform: 'scale(0.7, 1.4)' },
+        { transform: 'rotate(30deg)' },
+        { transform: 'scale(0.5)', outer: 'scale(0.7, 1.4)' },
+        { transform: 'scale(0.5)', writingMode: 'vertical-rl' },
+        { transform: 'scale(1.368)', writingMode: 'vertical-lr' },
+      ]
+    ) {
+      test(`layoutchange border box ${transform} ${outer ?? ''} ${writingMode ?? ''}`, async ({ page }) => {
+        const params = new URLSearchParams({
+          transform,
+          ...(outer ? { outer } : {}),
+          ...(writingMode ? { writingMode } : {}),
+        });
+        await gotoWebComponentPage(
+          page,
+          'x-view/event-layoutchange-border-box',
+          params,
+        );
+        const target = page.locator('#target');
+        await expect(target).toHaveAttribute('data-width', '133.75');
+        await expect(target).toHaveAttribute('data-height', '63.5');
+        await expect(page.locator('#indicator')).toHaveCSS('width', '133.75px');
+
+        await target.evaluate((element) => {
+          element.style.width = '162.5px';
+        });
+        await expect(target).toHaveAttribute('data-width', '162.5');
+        await expect(page.locator('#indicator')).toHaveCSS('width', '162.5px');
+      });
+    }
+
+    test('layoutchange observes padding and border changes with a fixed content box', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-view/event-layoutchange-border-box');
+      const target = page.locator('#target');
+      await expect(target).toHaveAttribute('data-width', '133.75');
+      await target.evaluate((element) => {
+        element.style.boxSizing = 'content-box';
+      });
+      await expect(target).toHaveAttribute('data-width', '153.75');
+      await expect(target).toHaveAttribute('data-height', '75.5');
+      await target.evaluate((element) => {
+        element.style.padding = '8px 12px';
+      });
+      await expect(target).toHaveAttribute('data-width', '161.75');
+      await expect(target).toHaveAttribute('data-height', '83.5');
+      await target.evaluate((element) => {
+        element.style.borderWidth = '4px';
+      });
+      await expect(target).toHaveAttribute('data-width', '165.75');
+      await expect(target).toHaveAttribute('data-height', '87.5');
+    });
+
+    test('layoutchange dimensions remain reusable after the host scale changes', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-view/event-layoutchange-border-box');
+      const target = page.locator('#target');
+      await expect(target).toHaveAttribute('data-width', '133.75');
+      await page.locator('#frame').evaluate((element) => {
+        element.style.transform = 'scale(0.5)';
+      });
+      await expect.poll(async () => {
+        const tab = await target.boundingBox();
+        const indicator = await page.locator('#indicator').boundingBox();
+        return { tab: tab?.width, indicator: indicator?.width };
+      }).toEqual({ tab: 66.875, indicator: 66.875 });
+      await target.evaluate((element) => {
+        element.style.width = '162.5px';
+      });
+      await expect(target).toHaveAttribute('data-width', '162.5');
+      await expect.poll(async () => {
+        const tab = await target.boundingBox();
+        const indicator = await page.locator('#indicator').boundingBox();
+        return { tab: tab?.width, indicator: indicator?.width };
+      }).toEqual({ tab: 81.25, indicator: 81.25 });
     });
   });
   test.describe('x-text', () => {

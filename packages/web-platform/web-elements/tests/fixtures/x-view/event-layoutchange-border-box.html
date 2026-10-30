@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 The Lynx Authors. All rights reserved.
+ Licensed under the Apache License Version 2.0 that can be found in the
+ LICENSE file in the root directory of this source tree. -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Layout change border box</title>
+    <link href="/main.css" rel="stylesheet">
+    <style>
+    #outer, #frame {
+      transform-origin: top left;
+    }
+    #target {
+      box-sizing: border-box;
+      display: flex;
+      width: 133.75px;
+      height: 63.5px;
+      padding: 4px 8px;
+      border: 2px solid black;
+      flex-shrink: 0;
+    }
+    #indicator {
+      height: 4px;
+      background: pink;
+    }
+    </style>
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <div id="outer">
+      <div id="frame">
+        <x-view id="target"></x-view>
+        <div id="indicator"></div>
+      </div>
+    </div>
+    <script type="module">
+    const params = new URLSearchParams(location.search);
+      const target = document.querySelector('#target');
+      document.querySelector('#outer').style.transform =
+        params.get('outer') ?? 'none';
+      document.querySelector('#frame').style.transform =
+        params.get('transform') ?? 'none';
+      target.style.writingMode = params.get('writingMode')
+        ?? 'horizontal-tb';
+      target.addEventListener('layoutchange', ({ detail }) => {
+        target.dataset.width = String(detail.width);
+        target.dataset.height = String(detail.height);
+        target.dataset.events = String(
+          Number(target.dataset.events ?? 0) + 1,
+        );
+        document.querySelector('#indicator').style.width =
+          `${detail.width}px`;
+      });
+    </script>
+  </body>
+</html>

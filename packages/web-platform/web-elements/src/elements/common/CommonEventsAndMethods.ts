@@ -27,8 +27,15 @@ export class CommonEventsAndMethods {
         this.#resizeObserver = new ResizeObserver(([entry]) => {
           if (entry) {
             const id = this.#dom.id;
-            // Reuse getBoundingClientRect to get left and top, because ResizeObserver-contentRect is calculated based on padding box
-            const { top, bottom, left, right, width, height } = entry.target
+            const size = entry.borderBoxSize[0];
+            if (!size) return;
+            const vertical = getComputedStyle(entry.target).writingMode
+              !== 'horizontal-tb';
+            // Layout sizes must exclude transforms so consumers can reuse them
+            // as local pixel styles. Keep the existing visual position fields.
+            const width = vertical ? size.blockSize : size.inlineSize;
+            const height = vertical ? size.inlineSize : size.blockSize;
+            const { top, bottom, left, right } = entry.target
               .getBoundingClientRect();
             this.#dom.dispatchEvent(
               new CustomEvent('layoutchange', {
@@ -47,7 +54,9 @@ export class CommonEventsAndMethods {
           }
         });
         if (!this.#resizeObserving) {
-          this.#resizeObserver.observe(this.#dom[layoutChangeTarget]);
+          this.#resizeObserver.observe(this.#dom[layoutChangeTarget], {
+            box: 'border-box',
+          });
           this.#resizeObserving = true;
         }
       }
