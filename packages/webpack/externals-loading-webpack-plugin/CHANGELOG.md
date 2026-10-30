@@ -1,5 +1,15 @@
 # @lynx-js/externals-loading-webpack-plugin
 
+## 0.3.0
+
+### Minor Changes
+
+- Support runtime `async` callbacks for external bundles, allowing applications to select asynchronous fetching on Harmony and synchronous fetching on other platforms in the same bundle. Callback externals use promise module semantics in both modes. ([#4277](https://github.com/lynx-family/lynx-stack/pull/4277))
+
+### Patch Changes
+
+- Evaluate synchronous and asynchronous external sections when their modules are imported instead of during runtime startup. This lets a page initialize its worklet runtime before importing legacy component externals, while preserving bundle prefetching and caching exports or the loading Promise on first access. ([#4262](https://github.com/lynx-family/lynx-stack/pull/4262))
+
 ## 0.2.1
 
 ### Patch Changes

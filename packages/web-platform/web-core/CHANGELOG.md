@@ -1,5 +1,16 @@
 # @lynx-js/web-core
 
+## 0.26.6
+
+### Patch Changes
+
+- Add the optional `lynx-view.resolveResource` hook to resolve image sources and placeholders before loading, including placeholder preloads, error fallbacks, and reconnection. Keep the original image attributes unchanged and prevent repeated fallback loads for relative placeholder URLs. ([#4240](https://github.com/lynx-family/lynx-stack/pull/4240))
+
+- Wait for the entry bundle's background scripts to be registered before starting the background runtime. This prevents external or lazy bundles that load first from triggering premature requests for unregistered entry modules. ([#4239](https://github.com/lynx-family/lynx-stack/pull/4239))
+- Updated dependencies [[`208ef02`](https://github.com/lynx-family/lynx-stack/commit/208ef02c932bbd5a804c4ff8753739b6ec68401c)]:
+  - @lynx-js/web-elements@0.12.16
+  - @lynx-js/web-worker-rpc@0.26.6
+
 ## 0.26.5
 
 ### Patch Changes

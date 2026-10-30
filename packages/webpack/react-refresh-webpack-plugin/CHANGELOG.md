@@ -1,5 +1,13 @@
 # @lynx-js/react-refresh-webpack-plugin
 
+## 0.4.6
+
+### Patch Changes
+
+- Apply main-thread hot updates to loaded async chunks, keep async definition modules stable when worklets are added or removed, and retain background HMR on hosts without Native bundle loading. ([#4179](https://github.com/lynx-family/lynx-stack/pull/4179))
+
+- Allow `@lynx-js/react-webpack-plugin` 0.15 as a peer dependency. ([#4279](https://github.com/lynx-family/lynx-stack/pull/4279))
+
 ## 0.4.5
 
 ### Patch Changes

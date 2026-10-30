@@ -1,5 +1,28 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.22.1
+
+### Patch Changes
+
+- Support Main Thread Function HMR in native ReactLynx development builds. Apply main-thread updates through native bundle loading before releasing background Fast Refresh, and refresh worklet owners when their main-thread dependencies change. Reload once if either runtime fails or times out, and preserve runtime version coordination when the development connection reconnects. ([#4179](https://github.com/lynx-family/lynx-stack/pull/4179))
+
+  Accept ordinary Snapshot component and helper updates at their actual main-thread entry roots, preserving explicit HMR handlers and declines. Keep a stable main-thread registration module so the first background-only worklet added during development is registered before Fast Refresh resumes.
+
+  Allow up to ten seconds for matching main-thread completion before timeout recovery.
+
+  Load background HMR updates through the same Native bundle adapter, preserve the SDK runtime wrapper in per-chunk sections, and retain the original background loader on hosts without Native app-scope initialization.
+- Add the `LynxTemplatePlugin` option to `ReactWebpackPlugin` so React compilation and Native HMR hooks use the template plugin supplied by the build engine. `pluginReactLynx` passes the implementation exposed by `pluginLynx`; direct Rspack integrations keep using the one exported by `@lynx-js/template-webpack-plugin` by default. ([#4279](https://github.com/lynx-family/lynx-stack/pull/4279))
+- Updated dependencies [[`7d498ae`](https://github.com/lynx-family/lynx-stack/commit/7d498aece52a20e77abc19e2a4579333861c11da), [`7d498ae`](https://github.com/lynx-family/lynx-stack/commit/7d498aece52a20e77abc19e2a4579333861c11da), [`7336d1e`](https://github.com/lynx-family/lynx-stack/commit/7336d1e5459ef3e46feafd597848e40a02d9a98d), [`7336d1e`](https://github.com/lynx-family/lynx-stack/commit/7336d1e5459ef3e46feafd597848e40a02d9a98d)]:
+  - @lynx-js/react-webpack-plugin@0.15.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.6
+  - @lynx-js/template-webpack-plugin@0.16.6
+  - @lynx-js/react-alias-rsbuild-plugin@0.22.1
+  - @lynx-js/runtime-config-webpack-plugin@0.0.2
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.6
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.1
+  - @lynx-js/rsbuild-plugin@0.1.7
+
 ## 0.22.0
 
 ### Minor Changes
