@@ -183,7 +183,7 @@ export interface ReactLynxExternalsPresetOptions {
    *
    * @example
    * ```js
-   * { async: ({ systemInfo }) => ['Harmony', 'web'].includes(systemInfo.platform) }
+   * { async: ({ systemInfo }) => ['Harmony', 'web'].includes(String(systemInfo['platform'])) }
    * ```
    *
    * @defaultValue `false`

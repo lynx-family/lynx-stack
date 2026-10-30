@@ -233,7 +233,7 @@ export interface ExternalValue {
    *
    * @example
    * ```js
-   * async: ({ systemInfo }) => ['Harmony', 'web'].includes(systemInfo.platform)
+   * async: ({ systemInfo }) => ['Harmony', 'web'].includes(String(systemInfo['platform']))
    * ```
    *
    * @defaultValue `true`

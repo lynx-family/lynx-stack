@@ -228,7 +228,7 @@ pluginExternalBundle({
   externalsPresets: {
     reactlynx: {
       async: ({ systemInfo }) =>
-        ['Harmony', 'web'].includes(systemInfo.platform),
+        ['Harmony', 'web'].includes(String(systemInfo['platform'])),
     },
   },
 })

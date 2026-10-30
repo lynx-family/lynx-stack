@@ -25,7 +25,7 @@ import { pluginStubLayers } from './stub-layers.plugin.js'
 
 const runtimeAsyncPredicate = (
   { systemInfo }: { systemInfo: Record<string, unknown> },
-) => systemInfo['platform'] === 'Harmony'
+) => ['Harmony', 'web'].includes(String(systemInfo['platform']))
 
 class MockResponse extends Writable {
   headers = new Map<string, string>()
