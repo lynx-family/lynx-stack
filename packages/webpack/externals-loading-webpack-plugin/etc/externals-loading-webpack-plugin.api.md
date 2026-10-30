@@ -26,7 +26,9 @@ export interface ExternalsLoadingPluginOptions {
 
 // @public
 export interface ExternalValue {
-    async?: boolean;
+    async?: boolean | ((context: {
+        systemInfo: Record<string, unknown>;
+    }) => boolean);
     background?: LayerOptions;
     bundlePath?: string;
     libraryName?: string | string[];

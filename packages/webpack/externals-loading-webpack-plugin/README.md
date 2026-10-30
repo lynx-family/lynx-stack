@@ -57,3 +57,13 @@ export default {
   public path.
 - `url` is only needed when the external bundle is hosted outside the current
   build output.
+
+### Runtime loading selection
+
+`async` also accepts a standalone callback, for example
+`async: ({ systemInfo }) => ['Harmony', 'web'].includes(String(systemInfo['platform']))`.
+It runs in the generated runtime with `SystemInfo` (falling back to
+`lynx.SystemInfo` or `{}`). The callback must return a boolean synchronously and
+cannot capture build-time imports or variables. Use an arrow or function
+expression. Callback externals always use promise module semantics, including
+when synchronous loading is selected. Boolean options retain their behavior.

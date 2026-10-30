@@ -217,3 +217,32 @@ Contributions to Rspeedy are welcome and highly appreciated. However, before you
 ## License
 
 Rspeedy is Apache-2.0 licensed.
+
+### Choose the loading mode at runtime
+
+Use a standalone callback to load asynchronously on Harmony while retaining
+synchronous fetching on other native platforms:
+
+```js
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynx: {
+      async: ({ systemInfo }) =>
+        ['Harmony', 'web'].includes(String(systemInfo['platform'])),
+    },
+  },
+})
+```
+
+The callback runs in each VM before loading the external bundle. `systemInfo`
+comes from `SystemInfo`, falling back to `lynx.SystemInfo` or an empty object.
+Check the platform value supplied by your host. For web, select asynchronous
+loading because synchronous fetching is unavailable.
+
+The callback is serialized into the output: use an arrow or function expression,
+return a boolean synchronously, and do not capture imports or configuration
+variables. Both branches use promise module semantics, so dependent modules
+remain asynchronous even when the callback returns `false`. Existing boolean
+options retain their behavior. External bundles that consume this ReactLynx
+namespace must also use `output.externalsPresets.reactlynx: { async: true }` in
+`defineExternalBundleRslibConfig` so subpath imports await the namespace.
