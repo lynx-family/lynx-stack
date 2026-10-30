@@ -2153,7 +2153,7 @@ importers:
         specifier: 2.0.0
         version: 2.0.0(@rspack/core@2.2.7(@swc/helpers@0.5.23))(@types/node@24.13.3)
       typescript:
-        specifier: 5.1.6 - 6.0.x
+        specifier: 5.1.6 - 7.0.x
         version: 6.0.3
     devDependencies:
       '@lynx-js/test-tools':
