@@ -1912,8 +1912,8 @@ importers:
         specifier: ^2.11.2
         version: 2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
       '@preact/signals-core':
-        specifier: ^1.14.4
-        version: 1.14.4
+        specifier: ^1.14.5
+        version: 1.14.5
     devDependencies:
       '@lynx-js/react':
         specifier: workspace:*
@@ -5657,8 +5657,8 @@ packages:
   '@posthog/types@1.407.1':
     resolution: {integrity: sha512-WhbkXPC2rgylXqmxHqv70ffI3k+KxyR6s7DBIfr5NvIqHkxp6v0pk31D/jbz0DNVbzwkLjyll2pxr4FNbJiYzg==}
 
-  '@preact/signals-core@1.14.4':
-    resolution: {integrity: sha512-HNB6HYeYKhQbJ1aKl+YRjrS4+QWHLKX6qKoUsfS/m0vqzsVaEBiZiaKbG/e+NKk2ch5ALQr/ihWaMHxiCuuWHA==}
+  '@preact/signals-core@1.14.5':
+    resolution: {integrity: sha512-vcRv7Ityz5JVmeiVqIluLFzT/PDS/AlhHUpw3/aUWqcVUs6bDGIPXE/6RSC4evBNWYvnniozg5Syfj33al3gkg==}
 
   '@preact/signals@2.11.2':
     resolution: {integrity: sha512-rVTRTt/T0HIRgbugwS5FigbfF/kfdEFYFtiqxa+lbpqTajepqnR0firuAS2iNdHyejWB7Yc9p9QePkVNBtTAwg==}
@@ -13280,7 +13280,7 @@ snapshots:
 
   '@a2ui/web_core@0.10.6':
     dependencies:
-      '@preact/signals-core': 1.14.4
+      '@preact/signals-core': 1.14.5
       date-fns: 4.4.0
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
@@ -15548,11 +15548,11 @@ snapshots:
 
   '@posthog/types@1.407.1': {}
 
-  '@preact/signals-core@1.14.4': {}
+  '@preact/signals-core@1.14.5': {}
 
   '@preact/signals@2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
     dependencies:
-      '@preact/signals-core': 1.14.4
+      '@preact/signals-core': 1.14.5
       preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
 
   '@prefresh/core@1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
