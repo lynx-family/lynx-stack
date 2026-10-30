@@ -1,5 +1,11 @@
 # @lynx-js/webpack-runtime-globals
 
+## 0.0.9
+
+### Patch Changes
+
+- Add the shared `lynxHMR` and `lynxHMRLoad` runtime globals used to coordinate dual-thread hot updates. ([#4279](https://github.com/lynx-family/lynx-stack/pull/4279))
+
 ## 0.0.8
 
 ### Patch Changes

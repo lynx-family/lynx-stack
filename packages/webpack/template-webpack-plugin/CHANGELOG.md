@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.6
+
+### Patch Changes
+
+- Updated dependencies [[`208ef02`](https://github.com/lynx-family/lynx-stack/commit/208ef02c932bbd5a804c4ff8753739b6ec68401c), [`7336d1e`](https://github.com/lynx-family/lynx-stack/commit/7336d1e5459ef3e46feafd597848e40a02d9a98d), [`2e066a5`](https://github.com/lynx-family/lynx-stack/commit/2e066a574982aaf5d16f59de7bca07892fdde524)]:
+  - @lynx-js/web-core@0.26.6
+  - @lynx-js/webpack-runtime-globals@0.0.9
+
 ## 0.16.5
 
 ### Patch Changes

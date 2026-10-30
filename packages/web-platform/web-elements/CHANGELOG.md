@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.16
+
+### Patch Changes
+
+- Add the optional `lynx-view.resolveResource` hook to resolve image sources and placeholders before loading, including placeholder preloads, error fallbacks, and reconnection. Keep the original image attributes unchanged and prevent repeated fallback loads for relative placeholder URLs. ([#4240](https://github.com/lynx-family/lynx-stack/pull/4240))
+
 ## 0.12.15
 
 ### Patch Changes

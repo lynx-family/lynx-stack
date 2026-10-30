@@ -1,5 +1,11 @@
 # @lynx-js/lynx-stack-docs
 
+## 0.0.4
+
+### Patch Changes
+
+- Update the API reference for this release.
+
 ## 0.0.3
 
 ### Patch Changes
