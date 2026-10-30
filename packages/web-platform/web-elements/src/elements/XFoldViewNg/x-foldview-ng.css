@@ -76,3 +76,51 @@ x-foldview-slot-ng scroll-view {
   /* avoiding default bounce on ios safari */
   overscroll-behavior-y: none;
 }
+
+/*
+ * With CSS anchor positioning the slot is laid out by the style engine alone:
+ * it leaves the flow and follows the bottom edge of the header, so no script
+ * has to measure the header and the toolbar. Browsers that fail this query
+ * keep the slot in flow and offset it from `XFoldviewNg.ts`.
+ *
+ * Keep the condition in sync with `supportsAnchorPositioning` in
+ * `XFoldviewNg.ts`.
+ */
+@supports (top: anchor(--a bottom)) and (anchor-scope: all) {
+  x-foldview-ng {
+    /* a foldview nested in a slot must not anchor the outer slot */
+    anchor-scope: --lynx-foldview-header, --lynx-foldview-toolbar;
+  }
+
+  x-foldview-header-ng {
+    anchor-name: --lynx-foldview-header;
+  }
+
+  x-foldview-toolbar-ng {
+    anchor-name: --lynx-foldview-toolbar;
+  }
+
+  x-foldview-ng > x-foldview-slot-ng,
+  x-foldview-ng > lynx-wrapper > x-foldview-slot-ng {
+    /* the area the toolbar leaves in the foldview */
+    --lynx-foldview-slot-area: calc(
+      100% - anchor-size(--lynx-foldview-toolbar height, 0px)
+    );
+    position: absolute !important;
+    top: anchor(--lynx-foldview-header bottom, 0px);
+    width: 100%;
+    height: var(--lynx-foldview-slot-area);
+    /*
+     * An out-of-flow box is not flexed, so the two flex factors are applied
+     * here: the slot fills the area when it may grow, and does not exceed it
+     * unless it may not shrink (`--flex-shrink: 0`).
+     */
+    min-height: calc(
+      var(--lynx-foldview-slot-area) * min(1, var(--flex-grow) * 999999)
+    );
+    max-height: calc(
+      var(--lynx-foldview-slot-area) +
+        (1 - min(1, var(--flex-shrink) * 999999)) * 999999px
+    );
+  }
+}
