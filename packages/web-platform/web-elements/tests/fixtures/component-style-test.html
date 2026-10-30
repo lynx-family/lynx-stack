@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>component-style-test</title>
+  </head>
+  <body>
+    <script src="/main.js"></script>
+    <script>
+    const { Component, refreshStyleReactiveElements } = globalThis;
+      window.__styleValues = [];
+
+      class StyleTracker {
+        static observedAttributes = [];
+        static observedCSSProperties = ['--lynx-test-style'];
+
+        constructor(dom) {
+          this.dom = dom;
+        }
+
+        cssPropertyChangedHandler = {
+          '--lynx-test-style': function(value) {
+            window.__styleValues.push(value);
+            this.dom.setAttribute('data-style-value', value);
+          },
+        };
+      }
+
+      Component('x-style-test', [StyleTracker], '')(HTMLElement, {
+        addInitializer: (callback) => callback(),
+      });
+
+      const host = document.createElement('div');
+      host.id = 'style-host';
+      const root = host.attachShadow({ mode: 'open' });
+      const element = document.createElement('x-style-test');
+      element.id = 'style-target';
+      root.append(element);
+      window.__styleRoot = root;
+      window.__refreshStyleReactiveElements =
+        refreshStyleReactiveElements;
+      document.body.append(host);
+    </script>
+  </body>
+</html>

@@ -124,6 +124,11 @@
       "types": "./dist/elements/htmlTemplates.d.ts",
       "default": "./dist/elements/htmlTemplates.js"
     },
+    "./internal/refresh-style-reactive-elements": {
+      "@lynx-js/source-field": "./src/internal/refreshStyleReactiveElements.ts",
+      "types": "./dist/internal/refreshStyleReactiveElements.d.ts",
+      "default": "./dist/internal/refreshStyleReactiveElements.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "dist/index.js",
