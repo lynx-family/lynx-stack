@@ -61,7 +61,7 @@ export default {
 ### Runtime loading selection
 
 `async` also accepts a standalone callback, for example
-`async: ({ systemInfo }) => systemInfo.platform === 'Harmony'`.
+`async: ({ systemInfo }) => ['Harmony', 'web'].includes(systemInfo.platform)`.
 It runs in the generated runtime with `SystemInfo` (falling back to
 `lynx.SystemInfo` or `{}`). The callback must return a boolean synchronously and
 cannot capture build-time imports or variables. Use an arrow or function

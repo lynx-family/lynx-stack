@@ -20,7 +20,7 @@ import {
 import { ExternalsLoadingPlugin } from '../src/index.js';
 
 const predicate = ({ systemInfo }: { systemInfo: Record<string, unknown> }) =>
-  systemInfo['platform'] === 'Harmony';
+  systemInfo['platform'] === 'Harmony' || systemInfo['platform'] === 'web';
 
 const external = (libraryName: string | string[]) => ({
   libraryName,
@@ -31,7 +31,7 @@ const external = (libraryName: string | string[]) => ({
 });
 
 const cases = ['main-thread', 'background'].flatMap(layer =>
-  ['global', 'lynx', 'sync', 'missing'].map(info => ({ layer, info }))
+  ['global', 'lynx', 'web', 'sync', 'missing'].map(info => ({ layer, info }))
 );
 
 describe('runtime async selection', () => {
@@ -59,6 +59,7 @@ describe('runtime async selection', () => {
               component: external('Component'),
               'component-alias': external('Alias'),
               'component/subpath': external(['Component', 'Nested']),
+              unused: { ...external('Unused'), url: 'unused.bundle' },
             },
           }),
         ],
@@ -87,7 +88,7 @@ describe('runtime async selection', () => {
   it.each(cases)(
     'selects loading at first import ($layer, systemInfo: $info)',
     async ({ layer, info }) => {
-      const isAsync = info === 'global' || info === 'lynx';
+      const isAsync = info === 'global' || info === 'lynx' || info === 'web';
       const state = { ready: false, events: [] as string[] };
       const component = { run: () => state.events.push('run') };
       const wait = rstest.fn(() => {
@@ -107,14 +108,25 @@ describe('runtime async selection', () => {
       });
       runInNewContext(sources.get(layer)!, {
         __externalOrder: state,
-        ...(info === 'global' || info === 'sync'
-          ? { SystemInfo: { platform: info === 'global' ? 'Harmony' : 'iOS' } }
+        ...(info === 'global' || info === 'sync' || info === 'web'
+          ? {
+            SystemInfo: {
+              platform: info === 'web'
+                ? 'web'
+                : (info === 'global'
+                  ? 'Harmony'
+                  : 'iOS'),
+            },
+          }
           : {}),
         lynx: {
           ...(info === 'global' || info === 'lynx'
             ? { SystemInfo: { platform: info === 'lynx' ? 'Harmony' : 'iOS' } }
             : {}),
-          fetchBundle: () => ({ wait, then }),
+          fetchBundle: () =>
+            info === 'web'
+              ? Promise.resolve({ code: 0, url: 'component.bundle' })
+              : { wait, then },
           loadScript,
         },
         __LoadStyleSheet: () => null,
@@ -123,7 +135,41 @@ describe('runtime async selection', () => {
       expect(state.events).toEqual(['init', 'load', 'run', 'run', 'run']);
       expect(loadScript).toHaveBeenCalledTimes(1);
       expect(wait).toHaveBeenCalledTimes(isAsync ? 0 : 1);
-      expect(then).toHaveBeenCalledTimes(isAsync ? 1 : 0);
+      expect(then).toHaveBeenCalledTimes(isAsync && info !== 'web' ? 1 : 0);
+    },
+  );
+
+  it.each(['main-thread', 'background'])(
+    'caches synchronous failures as rejected promises on %s',
+    async layer => {
+      const component = { run: rstest.fn() };
+      const loadScript = rstest.fn((_section, { bundleName }) => {
+        if (bundleName === 'unused.bundle') throw new Error('section failed');
+        return { ...component, Nested: component };
+      });
+      const wait = rstest.fn((url: string) => ({ code: 0, url }));
+      const globals: Record<string, unknown> = {};
+      runInNewContext(sources.get(layer)!, {
+        __externalOrder: { events: [] },
+        SystemInfo: { platform: 'iOS' },
+        console: { error: rstest.fn() },
+        lynx: {
+          fetchBundle: (url: string) => ({ wait: () => wait(url) }),
+          loadScript,
+          [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
+        },
+        __LoadStyleSheet: () => null,
+      });
+      await setImmediate();
+      expect(loadScript).toHaveBeenCalledTimes(1);
+      const rejected = globals['Unused'];
+      // The executor runs immediately, preserving synchronous fetch timing.
+      expect(loadScript).toHaveBeenCalledTimes(2);
+      expect(globals['Unused']).toBe(rejected);
+      await expect(rejected).rejects.toThrow('Failed to load script');
+      expect(globals['Unused']).toBe(rejected);
+      expect(loadScript).toHaveBeenCalledTimes(2);
+      expect(wait).toHaveBeenCalledTimes(2);
     },
   );
 });

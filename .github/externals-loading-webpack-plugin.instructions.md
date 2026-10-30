@@ -11,3 +11,5 @@ Keep runtime-code generation choices in named local expressions rather than nest
 The plugin's source is covered by Rstest, not Vitest. Keep its exact source path excluded from Vitest's untested-file sweep: V8 otherwise reports zero-hit template interpolation and continuation lines that Istanbul does not consider executable, producing false misses when Codecov merges the reports. Do not exclude the source from Rstest coverage or lower the coverage threshold.
 
 When external loading mode is selected at runtime, compile consuming externals with promise semantics in both branches and resolve subpath exports only after the namespace is available. Keep boolean configurations unchanged. Runtime predicates must be standalone functions without build-time closures, and ReactLynx external-bundle producers must await the mounted namespace as well.
+
+For runtime-selected synchronous loading, invoke the loader inside a Promise executor so loading stays synchronous while thrown errors become cached rejected Promises. Runtime predicate examples shared with web must select asynchronous loading for `platform: "web"`.

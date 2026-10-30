@@ -227,7 +227,8 @@ synchronous fetching on other native platforms:
 pluginExternalBundle({
   externalsPresets: {
     reactlynx: {
-      async: ({ systemInfo }) => systemInfo.platform === 'Harmony',
+      async: ({ systemInfo }) =>
+        ['Harmony', 'web'].includes(systemInfo.platform),
     },
   },
 })

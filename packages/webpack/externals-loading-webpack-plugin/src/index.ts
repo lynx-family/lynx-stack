@@ -233,7 +233,7 @@ export interface ExternalValue {
    *
    * @example
    * ```js
-   * async: ({ systemInfo }) => systemInfo.platform === 'Harmony'
+   * async: ({ systemInfo }) => ['Harmony', 'web'].includes(systemInfo.platform)
    * ```
    *
    * @defaultValue `true`
@@ -617,7 +617,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             const loadAsync =
               `createLoadExternalAsync(handler${handlerIndex}, ${sectionPath})`;
             const loadSync =
-              `Promise.resolve(createLoadExternalSync(handler${handlerIndex}, ${sectionPath}, ${timeout}))`;
+              `new Promise(resolve => resolve(createLoadExternalSync(handler${handlerIndex}, ${sectionPath}, ${timeout})))`;
             const load =
               `deferExternal(${externalName}, () => ${predicate} ? ${loadAsync} : ${loadSync});`;
             loadCode.add(load);
