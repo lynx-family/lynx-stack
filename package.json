@@ -67,7 +67,7 @@
     "vitest": "^3.2.7",
     "yaml": "^2.9.0"
   },
-  "packageManager": "pnpm@12.9.1+sha512.06b055fff5cd20dc12781de173ced3310ce0951bf2ec620211a16045d5444d5c93a663210764ef29a653a610459ba0368f0e74f84d80c54723cf95aae7bc0d6d",
+  "packageManager": "pnpm@12.16.0+sha512.e9ccc91a0b8d52da297c16841f9ee05f3ddd631bd757ef26a211687d4a38de653c614453649294438c58be74c2ba62d53e633a4e153708c012296d0f3ee27b36",
   "engines": {
     "node": "^22.22.2 || ^24.15.0"
   }
