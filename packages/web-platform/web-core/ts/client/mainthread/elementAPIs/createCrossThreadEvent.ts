@@ -49,10 +49,9 @@ export function createCrossThreadEvent(
     const touch = [...touchEvent.touches as unknown as Touch[]];
     const targetTouches = [...touchEvent.targetTouches as unknown as Touch[]];
     const changedTouches = [...touchEvent.changedTouches as unknown as Touch[]];
-    // Each Touch keeps its original `clientX/clientY` (viewport) and
-    // `pageX/pageY` (document) for Web interop; `x/y` is added in lynx-view
-    // local space for native Lynx parity. The guard skips touches that do
-    // not carry numeric client coords (e.g. synthetic test inputs).
+    // Native Lynx page coordinates are relative to the LynxView, not the
+    // browser document. Keep client coordinates viewport-relative and retain
+    // the existing view-relative Web x/y aliases for compatibility.
     const addLynxViewLocalCoords = (t: CloneableObject): CloneableObject => {
       const cx = t['clientX'];
       const cy = t['clientY'];
@@ -61,6 +60,8 @@ export function createCrossThreadEvent(
           ...t,
           x: cx - lynxViewClientLeft,
           y: cy - lynxViewClientTop,
+          pageX: cx - lynxViewClientLeft,
+          pageY: cy - lynxViewClientTop,
         };
       }
       return t;
@@ -82,9 +83,8 @@ export function createCrossThreadEvent(
     }
   } else if (type.startsWith('mouse')) {
     const mouseEvent = domEvent as MouseEvent;
-    // `x/y` are lynx-view-relative (native Lynx parity); `clientX/clientY`
-    // and `pageX/pageY` keep their Web-standard meaning so handlers can
-    // still reach viewport/document coordinates.
+    // pageX/pageY match native Lynx's view-relative coordinates. Preserve
+    // viewport-relative clientX/clientY and the legacy Web x/y aliases.
     Object.assign(otherProperties, {
       button: mouseEvent.button,
       buttons: mouseEvent.buttons,
@@ -92,8 +92,8 @@ export function createCrossThreadEvent(
       y: mouseEvent.clientY - lynxViewClientTop,
       clientX: mouseEvent.clientX,
       clientY: mouseEvent.clientY,
-      pageX: mouseEvent.pageX,
-      pageY: mouseEvent.pageY,
+      pageX: mouseEvent.clientX - lynxViewClientLeft,
+      pageY: mouseEvent.clientY - lynxViewClientTop,
     });
   } else if (type === 'click') {
     const mouseEvent = domEvent as MouseEvent;
@@ -101,12 +101,12 @@ export function createCrossThreadEvent(
       x: mouseEvent.clientX - lynxViewClientLeft,
       y: mouseEvent.clientY - lynxViewClientTop,
     };
-    // Web-standard viewport/document coords live alongside `detail`.
+    // Keep the same coordinate spaces as mouse and touch-point payloads.
     Object.assign(otherProperties, {
       clientX: mouseEvent.clientX,
       clientY: mouseEvent.clientY,
-      pageX: mouseEvent.pageX,
-      pageY: mouseEvent.pageY,
+      pageX: mouseEvent.clientX - lynxViewClientLeft,
+      pageY: mouseEvent.clientY - lynxViewClientTop,
     });
   } else if (type === 'layoutchange') {
     const d = detail as {

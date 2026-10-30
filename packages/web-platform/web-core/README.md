@@ -77,6 +77,26 @@ moved to another shadow-root host. Changing the hook does not reload images that
 are already connected. Without a hook, URLs are used unchanged. This hook does
 not resolve CSS URLs or bundle URLs.
 
+## Event coordinates
+
+Mouse events and touch points use `pageX`/`pageY` for coordinates relative to
+the containing `lynx-view`, matching native Lynx. These coordinates share the
+origin and rendered scale of the `boundingClientRect` UI method and of
+`detail.x`/`detail.y` on touch and tap events. `clientX`/`clientY` remain relative
+to the browser viewport. In an iframe, that viewport belongs to the iframe's
+document.
+
+Before this correction, Web `pageX`/`pageY` were relative to the browser
+document. Code that needs document coordinates should read the original DOM
+event in its embedding host or add that document's scroll offset to
+`clientX`/`clientY`.
+
+For compatibility, Web mouse `x`/`y` and per-touch `x`/`y` retain their existing
+`lynx-view`-relative meaning. They do not yet match native Lynx's target-relative
+`x`/`y`. Use `pageX`/`pageY`, or touch/tap `detail.x`/`detail.y`, when combining an
+event position with LynxView-relative bounds. Combining `clientX`/`clientY`
+with those bounds works only when the viewport and LynxView origins coincide.
+
 ## Document
 
 See our website for more information.
