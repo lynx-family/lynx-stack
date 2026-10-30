@@ -24,6 +24,7 @@ Never invent a tool name, resource URI, schema field, or tool result. The host
 executes the selected tool and renders its predeclared ui:// resource.`;
 
 export interface McpAppsAgent {
+  stream: McpAppsAgent['generate'];
   generate: (
     messages: unknown,
     options?: {

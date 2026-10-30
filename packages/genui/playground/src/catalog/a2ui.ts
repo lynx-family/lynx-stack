@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
 
-import type { ProtocolName } from './utils/protocol.js';
 import {
   buildLazyComponentBundleUrl,
   getA2UIPlaygroundBaseUrl,
@@ -12,6 +11,7 @@ import {
   buildMcpAppBundleUrl,
   createWeatherMcpAppData,
 } from '../mock/basic/mcp-app.js';
+import type { ProtocolName } from '../utils/protocol.js';
 
 export interface ComponentProp {
   name: string;
@@ -39,8 +39,8 @@ export interface ComponentDoc {
   category: ComponentCategory;
   description: string;
   props: ComponentProp[];
-  usage: Record<ProtocolName, object | object[]>;
-  usageExamples: Record<ProtocolName, ComponentUsageExample[]>;
+  usage: Partial<Record<ProtocolName, object | object[]>>;
+  usageExamples: Partial<Record<ProtocolName, ComponentUsageExample[]>>;
 }
 
 export const CATEGORIES: { id: ComponentCategory; label: string }[] = [

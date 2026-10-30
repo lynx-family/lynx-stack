@@ -13,6 +13,7 @@ import type {
 import { readBenchTokenUsage, sumBenchTokenUsage } from './bench/usage.js';
 import type { BenchTokenUsage } from './bench/usage.js';
 import { redactModelConfigSecrets } from './model-config.js';
+import { createModelOutput } from './model-output.js';
 import { resolveReasoningEffort } from './provider.js';
 import type { ChatOptions } from './types.js';
 
@@ -154,6 +155,17 @@ export function createAgentStepLogger<OUTPUT = undefined>(
   let previousStepAt = startedAt;
   const usages: BenchTokenUsage[] = [];
   let streamedReasoning = false;
+  let streamedText = false;
+  const streamedTools = new Set<string>();
+  const modelOutput = createModelOutput(opts);
+  const output = (type: string, value: unknown) => {
+    if (!opts.onModelOutput) return;
+    const { providerMetadata: _providerMetadata, ...payload } = record(value);
+    if (type === 'tool-error') {
+      payload.error = errorDetails(payload.error, opts);
+    }
+    modelOutput.emit({ invocationId, step: usages.length + 1, type, payload });
+  };
   let firstReasoningTokenLogged = false;
   let firstTextTokenLogged = false;
   const emit = (event: string, details: Record<string, unknown>) => {
@@ -174,6 +186,40 @@ export function createAgentStepLogger<OUTPUT = undefined>(
     // Collect deltas as they arrive so an upstream failure can retain partial
     // reasoning even when the SDK never finishes the step. Never log this text.
     onChunk(chunk: ChunkType<OUTPUT>) {
+      if (
+        [
+          'text-delta',
+          'reasoning-delta',
+          'tool-call',
+          'tool-result',
+          'tool-error',
+          'tool-call-delta',
+          'source',
+          'file',
+          'reasoning-file',
+        ].includes(chunk.type)
+        && 'payload' in chunk
+      ) {
+        output(
+          chunk.type,
+          chunk.type === 'tool-call-delta'
+            ? {
+              toolCallId: chunk.payload.toolCallId,
+              toolName: chunk.payload.toolName,
+              text: chunk.payload.argsTextDelta,
+            }
+            : chunk.payload,
+        );
+        if (chunk.type === 'text-delta' && chunk.payload.text) {
+          streamedText = true;
+        }
+        if (
+          'toolCallId' in chunk.payload
+          && typeof chunk.payload.toolCallId === 'string'
+        ) {
+          streamedTools.add(`${chunk.type}:${chunk.payload.toolCallId}`);
+        }
+      }
       if (chunk.type === 'reasoning-delta' && chunk.payload.text) {
         if (!firstReasoningTokenLogged) {
           firstReasoningTokenLogged = true;
@@ -196,6 +242,7 @@ export function createAgentStepLogger<OUTPUT = undefined>(
     },
     // A direct SDK failure can throw before Mastra invokes onFinish.
     onError({ error }: { error: unknown }) {
+      modelOutput.flush();
       emit('agent.model.error', {
         failed: true,
         stepCount: usages.length,
@@ -207,7 +254,23 @@ export function createAgentStepLogger<OUTPUT = undefined>(
     onStepFinish(step: LLMStepResult<OUTPUT> & { runId?: string }) {
       if (!streamedReasoning && step.reasoningText) {
         opts.onReasoning?.(step.reasoningText);
+        output('reasoning-delta', { text: step.reasoningText });
       }
+      if (!streamedText && step.text) output('text-delta', { text: step.text });
+      for (const type of ['tool-call', 'tool-result'] as const) {
+        for (
+          const { payload } of type === 'tool-call'
+            ? step.toolCalls
+            : step.toolResults
+        ) {
+          if (!streamedTools.has(`${type}:${payload.toolCallId}`)) {
+            output(type, payload);
+          }
+        }
+      }
+      streamedText = false;
+      streamedTools.clear();
+      modelOutput.flush();
       if (streamedReasoning || step.reasoningText) opts.onReasoning?.('\n\n');
       streamedReasoning = false;
       const now = performance.now();
@@ -273,6 +336,7 @@ export function createAgentStepLogger<OUTPUT = undefined>(
       previousStepAt = now;
     },
     onFinish(result: MastraOnFinishCallbackArgs<OUTPUT>) {
+      modelOutput.flush();
       emit('agent.model.completed', {
         runId: result.runId,
         stepCount: usages.length,

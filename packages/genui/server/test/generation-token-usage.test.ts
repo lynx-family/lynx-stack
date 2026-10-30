@@ -122,6 +122,12 @@ describe('generation token usage on the wire', () => {
     global.__A2UI_AGENT_SERVICE__ = {
       streamAsAsyncIterable: (_messages: unknown, opts: ChatOptions) => {
         opts.onReasoning?.('Reasoning before invalid A2UI');
+        opts.onModelOutput?.({
+          invocationId: 'a2ui-call',
+          step: 1,
+          type: 'reasoning-delta',
+          payload: { text: 'Reasoning before invalid A2UI' },
+        });
         return streamed('invalid artifact');
       },
       generateValidated: () => {
@@ -144,7 +150,12 @@ describe('generation token usage on the wire', () => {
             catalog: BASIC_CATALOG,
           }),
         });
-        expect(doneFrame(await response.text())).toMatchObject({
+        const body = await response.text();
+        expect(body).toContain('event: model-output');
+        expect(body.indexOf('event: model-output')).toBeLessThan(
+          body.indexOf('event: done'),
+        );
+        expect(doneFrame(body)).toMatchObject({
           validation: { ok: false },
           reasoning: {
             text: 'Reasoning before invalid A2UI',
