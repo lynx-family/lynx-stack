@@ -102,6 +102,14 @@ declare global {
     value: any,
   ): void;
   declare function __SetInlineStyles(e: FiberElement, style: unknown): void;
+  declare function __GetInlineStyles(e: FiberElement): string;
+  declare function __GetInlineStyle(e: FiberElement, id: number): unknown;
+  declare function __InvokeUIMethod<T = unknown>(
+    e: FiberElement,
+    method: string,
+    params: object,
+    callback: (result: { code: number; data?: T }) => void,
+  ): void;
   declare function __AddEvent(
     e: FiberElement,
     eventType: string,

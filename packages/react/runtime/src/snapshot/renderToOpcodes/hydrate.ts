@@ -3,13 +3,29 @@
 // LICENSE file in the root directory of this source tree.
 
 import { profileEnd, profileStart } from '../../shared/profile.js';
-import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
+import {
+  componentAtIndexFactory,
+  enqueueComponentFactory,
+  gRecycleMap,
+  gSignMap,
+  noteKeptNestedList,
+  suppressKeptCellTransition,
+} from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { DynamicPartType } from '../snapshot/dynamicPartType.js';
 import type { PlatformInfo } from '../snapshot/platformInfo.js';
 import { unref } from '../snapshot/ref.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { isEmptyObject } from '../../utils.js';
+import { restoreReuseTransition } from '../list/reuseTransition.js';
+import {
+  captureNestedListMeasurements,
+  getRetainedListItemPlatformInfo,
+  needsFreshNestedList,
+  transferNestedListState,
+  updateNestedListChildren,
+} from '../list/nativeState.js';
+import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
 
 const UNREACHABLE_ITEM_KEY_NOT_FOUND = 'UNREACHABLE_ITEM_KEY_NOT_FOUND';
 
@@ -162,9 +178,67 @@ export interface HydrationOptions {
   swap?: Record<number, number>;
 }
 
-export function hydrate(before: SnapshotInstance, after: SnapshotInstance, options?: HydrationOptions): void {
+export function hydrate(
+  before: SnapshotInstance,
+  after: SnapshotInstance,
+  options?: HydrationOptions,
+  /** The reused cell root, passed only when a list recycles a cell for another item. */
+  reuseRoot?: FiberElement,
+): void {
+  if (
+    before.__restoreReuseTransition
+    && (before.__id !== after.__id
+      || before.__listItemPlatformInfo?.['item-key'] !== after.__listItemPlatformInfo?.['item-key'])
+  ) {
+    // A new owner must not inherit an active donor's temporary transition styles.
+    before.__restoreReuseTransition();
+  }
+  restoreReuseTransition(before);
+  // First-screen, main-thread and reload hydration keep the same logical
+  // content even when snapshot IDs change; only recycling changes the owner.
+  const recycling = reuseRoot !== undefined && !isMainThreadHydrating;
+  // Known limitation: when the row snapshot is itself the list holder (an inline
+  // `<list-item><list>` without a component between them), its root is the
+  // reused cell root, which cannot be replaced. That list is always kept and only
+  // scrolled with `scrollToPosition`, so the engine's old anchor can leave a
+  // recycled row slightly off its saved position. Wrapping the nested list in a
+  // component avoids it.
+  if (
+    recycling && after.__snapshot_def.isListHolder
+    && before.__id !== after.__id && before.__element_root
+    && before.__element_root !== reuseRoot && needsFreshNestedList(before, after)
+  ) {
+    // A list's opaque native anchor belongs to one logical owner. Reuse the
+    // containing row, but not another item's nested list binding state.
+    const oldRoot = before.__element_root;
+    captureNestedListMeasurements(before);
+    before.releaseElements();
+    // The fresh adapter needs the full source, not an old offscreen delta.
+    __pendingListUpdates.clear(after.__id);
+    after.ensureElements();
+    const newRoot = after.__element_root!;
+    __ReplaceElement(newRoot, oldRoot);
+    let parent = after.parentNode;
+    while (parent) {
+      parent.__elements?.forEach((element, index, elements) => {
+        if (element === oldRoot) elements[index] = newRoot;
+      });
+      if (parent.__element_root !== oldRoot) break;
+      parent.__element_root = newRoot;
+      parent = parent.parentNode;
+    }
+    return;
+  }
   after.__elements = before.__elements;
   after.__element_root = before.__element_root;
+
+  if (after.__snapshot_def.isListHolder) {
+    // Attribute updates can synchronously reset the native list's offset.
+    // Assign the new owner and guard its pending restore before those updates.
+    const listElement = after.__elements![after.__snapshot_def.slot[0]![1]]!;
+    transferNestedListState(after, listElement, !recycling);
+    if (recycling) noteKeptNestedList(listElement);
+  }
 
   if (!(options?.skipUnRef)) {
     unref(before, false);
@@ -201,7 +275,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         // TODO: the following null assertions are not 100% safe
         const v1 = beforeChildNodes[index]!;
         const v2 = afterChildNodes[index]!;
-        hydrate(v1, v2, options);
+        hydrate(v1, v2, options, reuseRoot);
         break;
       }
       case DynamicPartType.SlotV2:
@@ -227,7 +301,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           }
           if (samePairwise) {
             for (let i = 0; i < length; i++) {
-              hydrate(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!, options);
+              hydrate(filteredBeforeChildNodes[i]!, filteredAfterChildNodes[i]!, options, reuseRoot);
             }
             break;
           }
@@ -238,7 +312,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           filteredAfterChildNodes,
           (a, b) => a.type === b.type,
           (a, b) => {
-            hydrate(a, b, options);
+            hydrate(a, b, options, reuseRoot);
           },
           false,
         );
@@ -259,6 +333,8 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               before.__elements![elementIndex]!,
               node.__element_root!,
             );
+            // Lists in a removed subtree lose their native element for good.
+            node.destroyLists();
           },
           (node, target) => {
             __RemoveElement(
@@ -301,7 +377,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
                 !== JSON.stringify(b.__listItemPlatformInfo)
             ) {
               updateAction.push({
-                ...b.__listItemPlatformInfo,
+                ...getRetainedListItemPlatformInfo(after, b),
                 from: newIndex,
                 to: newIndex,
                 // no flush
@@ -311,18 +387,27 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
             }
 
             if (a.__elements) {
+              const listItemID = __GetElementUniqueID(a.__element_root!);
               // transfer a's elements to b
-              hydrate(a, b, options);
+              // Each native cell owns its root/sign, even when its template also contains a list.
+              hydrate(a, b, options, reuseRoot && a.__element_root);
+              if (
+                reuseRoot && (a.__id !== b.__id
+                  || a.__listItemPlatformInfo?.['item-key'] !== b.__listItemPlatformInfo?.['item-key'])
+              ) {
+                // This kept list's cell now shows another item inside the recycled row's bind.
+                suppressKeptCellTransition(b);
+              }
 
               // if a list-item has `elements`, it may be:
               //   - `enqueueComponent` already called on it: so we need to update the `signMap` and the `recycleMap`
               //   - `enqueueComponent` not called on it: update the `signMap`
-              const listItemID = __GetElementUniqueID(a.__element_root!);
               if (signMap.has(listItemID)) {
                 signMap.set(listItemID, b);
               }
-              if (recycleMap.has(a.type)) {
-                const recycleSignMap = recycleMap.get(a.type)!;
+              const reuseKey = a.type + (a.__listItemPlatformInfo?.['reuse-identifier'] ?? '');
+              if (recycleMap.has(reuseKey)) {
+                const recycleSignMap = recycleMap.get(reuseKey)!;
                 // Should only update `list-item` in the recycling pool
                 // Because if an on-screen `list-item` is added to the recycling pool,
                 // it could cause a blank screen when reused next time, as it may still be visible.
@@ -352,7 +437,7 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
           insertAction: insertions.map((it) => ({
             position: it,
             type: afterChildNodes[it]!.type,
-            ...afterChildNodes[it]!.__listItemPlatformInfo,
+            ...getRetainedListItemPlatformInfo(after, afterChildNodes[it]!),
           })),
           removeAction: removals,
           updateAction,
@@ -382,12 +467,13 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
         }
 
         const listElement = before.__elements![elementIndex]!;
+        updateNestedListChildren(after, listElement, afterChildNodes);
         __SetAttribute(listElement, 'update-list-info', info);
         const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(afterChildNodes, hydrate);
         __UpdateListCallbacks(
           listElement,
           componentAtIndex,
-          enqueueComponentFactory(),
+          enqueueComponentFactory(afterChildNodes),
           componentAtIndexes,
         );
 
