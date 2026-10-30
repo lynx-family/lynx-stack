@@ -3,10 +3,6 @@
 '@lynx-js/webpack-dev-transport': patch
 ---
 
-Add internal HMR loading and update coordination hooks. Allow coordinated updates to refresh cached module factories, serialize application, detect timeouts, preserve runtime hashes on reconnect, and reload once on failure using a valid Native CDP request.
-
-Keep downloaded factories ahead of cached refresh fallbacks across update chunks, regardless of loading order.
+Add internal HMR loading and update coordination hooks. Allow coordinated updates to refresh cached module factories, serialize application, detect timeouts, preserve runtime hashes on reconnect, and reload once on failure.
 
 Allow up to ten seconds for coordinated background application before timeout recovery.
-
-Report each hot-update module once per result list, including modules collected earlier without a list.
