@@ -68,11 +68,11 @@ export const A2UI_COMPONENT_CATALOG_SOURCE = {
       'Reference the available props before editing the usage JSON below.',
     extensions: jsonExtensions,
     getExamples(component, protocol) {
-      const examples = component.usageExamples[protocol.name];
+      const examples = component.usageExamples[protocol.name] ?? [];
       if (examples.length === 0) {
         return [{
           label: 'Default',
-          value: formatJson(component.usage[protocol.name]),
+          value: formatJson(component.usage[protocol.name] ?? {}),
         }];
       }
       return examples.map((example) => ({

@@ -134,8 +134,8 @@ export function ProductCard(props: AppRendererProps<ProductApiResult>) {
           </text>
         </view>
 
-        <text className='productName' text-maxline={2}>{product.name}</text>
-        <text className='productDescription' text-maxline={2}>
+        <text className='productName' text-maxline='2'>{product.name}</text>
+        <text className='productDescription' text-maxline='2'>
           {product.description}
         </text>
 
@@ -163,7 +163,7 @@ export function ProductCard(props: AppRendererProps<ProductApiResult>) {
               <text className='productPurchaseIcon'>✓</text>
               <view className='productPurchaseCopy'>
                 <text className='productPurchaseTitle'>Order confirmed</text>
-                <text className='productPurchaseMessage' text-maxline={2}>
+                <text className='productPurchaseMessage' text-maxline='2'>
                   {result.purchase.message}
                 </text>
               </view>

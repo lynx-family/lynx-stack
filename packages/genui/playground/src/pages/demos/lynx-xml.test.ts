@@ -272,7 +272,7 @@ describe('Lynx XML showcase', () => {
       editorValue,
       editorEdited: true,
     });
-    if (!('value' in edited)) throw new Error(edited.error);
+    if (edited.value === undefined) throw new Error(edited.error);
     expect(edited.value.previewInput.sourcePath).toBeUndefined();
     expect(edited.value.previewInput.source).not.toContain('<template>');
     expect(edited.value.previewInput.source).toContain(
@@ -317,7 +317,7 @@ describe('Lynx XML showcase', () => {
       editorValue,
       editorEdited: true,
     });
-    if (!('value' in edited)) throw new Error(edited.error);
+    if (edited.value === undefined) throw new Error(edited.error);
     const { source, sourcePath } = edited.value.previewInput;
     expect(sourcePath).toBeUndefined();
     expect(source).not.toContain('<template>');
@@ -370,7 +370,7 @@ describe('Lynx XML showcase', () => {
       editorValue,
       editorEdited: true,
     });
-    if (!('value' in edited)) throw new Error(edited.error);
+    if (edited.value === undefined) throw new Error(edited.error);
     const { source, sourcePath } = edited.value.previewInput;
     expect(sourcePath).toBeUndefined();
     expect(source).not.toContain('<template>');

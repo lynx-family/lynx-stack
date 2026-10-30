@@ -135,6 +135,47 @@ export function appendChatInteraction(
   elapsedMs: number,
   data?: unknown,
 ): ChatInteractionLog {
+  if (event === 'model-output') {
+    if (
+      !isRecord(data) || typeof data.invocationId !== 'string'
+      || typeof data.step !== 'number' || typeof data.type !== 'string'
+      || !isRecord(data.payload)
+    ) return log;
+    const payload = data.payload;
+    const isText = ['text-delta', 'reasoning-delta', 'tool-call-delta']
+      .includes(data.type);
+    const detail = isText
+      ? (typeof payload.text === 'string' ? payload.text : '')
+      : JSON.stringify(payload, null, 2);
+    if (!detail) return log;
+    const entries = [...(log.modelOutput ?? [])];
+    const previous = entries[entries.length - 1];
+    const id = payload.id ?? payload.toolCallId;
+    const partId = typeof id === 'string' ? id : undefined;
+    if (
+      isText && previous?.event === data.type
+      && previous.invocationId === data.invocationId
+      && previous.step === data.step && previous.partId === partId
+    ) {
+      entries[entries.length - 1] = {
+        ...previous,
+        detail: previous.detail + detail,
+        count: previous.count + 1,
+      };
+    } else {
+      entries.push({
+        event: data.type,
+        invocationId: data.invocationId,
+        step: data.step,
+        ...(partId === undefined ? {} : { partId }),
+        detail,
+        elapsedMs,
+        count: 1,
+        truncated: false,
+      });
+    }
+    return { ...log, modelOutput: entries };
+  }
   const isModelStart = event === 'model' && isRecord(data)
     && data.status === 'started';
   if (isModelStart) {
@@ -221,6 +262,7 @@ export function appendChatInteraction(
 export function serializeChatInteraction(log: ChatInteractionLog): string {
   return JSON.stringify(
     {
+      modelOutput: log.modelOutput,
       entries: log.entries,
       omittedEntries: log.omittedEntries,
       ...(log.modelRequestCount === undefined
@@ -276,6 +318,18 @@ export function chatInteractionLabel(event: string): string {
       return 'Server response';
     case 'message':
       return 'Protocol messages';
+    case 'text-delta':
+      return 'Text';
+    case 'reasoning-delta':
+      return 'Thinking';
+    case 'tool-call-delta':
+      return 'Tool arguments';
+    case 'tool-call':
+      return 'Tool call';
+    case 'tool-result':
+      return 'Tool result';
+    case 'tool-error':
+      return 'Tool error';
     case 'delta':
       return 'Raw output';
     case 'model':

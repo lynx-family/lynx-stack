@@ -207,8 +207,7 @@ export function BenchComparisonGroupsSection(props: {
                         value={group.protocol === 'openui'
                           ? 'Core Catalog'
                           : (hasA2UIAndOpenUI
-                              && (group.protocol === 'a2ui'
-                                || group.protocol === 'openui')
+                              && group.protocol === 'a2ui'
                             ? 'Core Catalog'
                             : group.catalog)}
                         disabled={props.locked || !usesCatalog(group)

@@ -4,10 +4,10 @@
 
 /// <reference types="@lynx-js/rspeedy/client" />
 
+import '@lynx-js/react';
+
 declare module '@lynx-js/types' {
   interface GlobalProps {
     theme?: 'light' | 'dark';
   }
 }
-
-export {};

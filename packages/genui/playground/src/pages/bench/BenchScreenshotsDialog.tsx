@@ -309,7 +309,8 @@ export function BenchScreenshotsDialog(props: {
     );
   }, []);
 
-  if (!props.open || !props.report || !matrix) return null;
+  const report = props.report;
+  if (!props.open || !report || !matrix) return null;
   const matrixStyle = {
     '--bench-screenshot-scenario-count': Math.max(1, matrix.scenarios.length),
   } as CSSProperties;
@@ -447,7 +448,7 @@ export function BenchScreenshotsDialog(props: {
                                   <>
                                     <span>
                                       Judge {formatRunJudgeMetric(
-                                        props.report,
+                                        report,
                                         props.settings,
                                         item,
                                       )}

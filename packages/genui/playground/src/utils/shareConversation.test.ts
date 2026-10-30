@@ -28,7 +28,10 @@ describe('publishConversation', () => {
     const doc = conversationDoc('openui');
     const originalWindow = globalThis.window;
     rs.stubGlobal('__A2UI_PLAYGROUND_CLIENT_PAYLOAD_STORE__', true);
-    const fetchPayload = rs.fn(async () => ({
+    const fetchPayload = rs.fn(async (
+      _input: RequestInfo | URL,
+      _init?: RequestInit,
+    ) => ({
       ok: true,
       json: async () => ({ messagesUrl: '/__a2ui/test/messages' }),
     }));
@@ -56,7 +59,10 @@ describe('publishConversation', () => {
     }
   });
   test('stores conversations under their validated protocol method', async () => {
-    const fetchPayload = rs.fn(async () => ({
+    const fetchPayload = rs.fn(async (
+      _input: RequestInfo | URL,
+      _init?: RequestInit,
+    ) => ({
       ok: true,
       json: async () => ({
         preview: { messagesUrl: 'https://storage.example.com/messages.json' },
@@ -89,7 +95,11 @@ describe('publishConversation', () => {
       }
 
       const locations = fetchPayload.mock.calls.map(([, init]) => {
-        const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        const bodyText = init?.body;
+        if (typeof bodyText !== 'string') {
+          throw new Error('Expected a JSON request body');
+        }
+        const body = JSON.parse(bodyText) as Record<string, unknown>;
         return { method: body.method, type: body.type };
       });
       expect(locations).toEqual([

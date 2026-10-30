@@ -372,7 +372,10 @@ describe('chat protocol adapters', () => {
       search: '',
       baseUrl: 'http://localhost:3000/',
     };
-    const fetchModels = rs.fn(async () => ({
+    const fetchModels = rs.fn(async (
+      _input: RequestInfo | URL,
+      _init?: RequestInit,
+    ) => ({
       ok: true,
       json: async () => ({
         defaultModel: 'Doubao Seed',
@@ -1655,6 +1658,7 @@ test('offers custom Jev in A2UI and OpenUI and forwards its connection without p
   expect(
     A2UI_CHAT_ADAPTER.createRequest({
       prompt: 'Show a card',
+      signal: new AbortController().signal,
       conversation,
       settings,
       host,
@@ -1672,13 +1676,14 @@ test('offers custom Jev in A2UI and OpenUI and forwards its connection without p
     .toMatchObject(connection);
   expect(OPENUI_CHAT_ADAPTER.settings.validate(settings)).toBeUndefined();
   expect(
-    OPENUI_CHAT_ADAPTER.settings.controls(settings).find(control =>
-      control.id === 'baseURL'
-    )?.options,
+    OPENUI_CHAT_ADAPTER.settings.controls(settings).filter(control =>
+      control.kind === 'select'
+    ).find(control => control.id === 'baseURL')?.options,
   ).toContainEqual(CUSTOM_JEV_PROVIDER_OPTION);
   expect(
     OPENUI_CHAT_ADAPTER.createRequest({
       prompt: 'Show a card',
+      signal: new AbortController().signal,
       conversation,
       settings,
       host,
@@ -1731,7 +1736,9 @@ test('offers custom Jev in A2UI and OpenUI and forwards its connection without p
         ...settings,
         baseURL: CUSTOM_PROVIDER_BASE_URL,
       })
-        .find(control => control.id === 'baseURL')?.options,
+        .filter(control => control.kind === 'select').find(control =>
+          control.id === 'baseURL'
+        )?.options,
     ).not.toContainEqual(CUSTOM_JEV_PROVIDER_OPTION);
     expect(other.settings.validate(settings)).toContain('only in A2UI');
   }

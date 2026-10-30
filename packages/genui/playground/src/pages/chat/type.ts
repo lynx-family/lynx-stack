@@ -64,6 +64,12 @@ export interface ChatInteractionLog {
   omittedEntries: number;
   /** Actual upstream requests, independent of timeline retention and SSE chunks. */
   modelRequestCount?: number;
+  /** Complete live model output; never part of model conversation inputs. */
+  modelOutput?: readonly (ChatInteractionEntry & {
+    invocationId: string;
+    step: number;
+    partId?: string;
+  })[];
   rawOutput?: ChatInteractionEntry;
   reasoning?: { text: string; truncated: boolean };
 }

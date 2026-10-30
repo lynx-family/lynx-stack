@@ -50,7 +50,10 @@ export class McpAppsAgentService {
     const modelMessages = toModelMessages(
       buildConversationMessages(messages, conversation),
     );
-    const result = await agent.generate(
+    const generate = opts.streamRawGeneration
+      ? agent.stream.bind(agent)
+      : agent.generate.bind(agent);
+    const result = await generate(
       modelMessages,
       buildCapabilityRunOptions(opts, abortSignal, 'mcp-apps'),
     ) as MastraResult;
