@@ -223,11 +223,24 @@ export interface ExternalValue {
   libraryName?: string | string[];
 
   /**
-   * Whether the source should be loaded asynchronously or not.
+   * Whether the source should be loaded asynchronously.
+   *
+   * A callback is serialized into the bundle and evaluated at runtime with
+   * `SystemInfo` (falling back to `lynx.SystemInfo`). It must be a standalone
+   * arrow or function expression without closures, and must return a boolean
+   * synchronously. Callback externals always use promise module semantics,
+   * including when the callback selects synchronous loading.
+   *
+   * @example
+   * ```js
+   * async: ({ systemInfo }) => systemInfo.platform === 'Harmony'
+   * ```
    *
    * @defaultValue `true`
    */
-  async?: boolean;
+  async?:
+    | boolean
+    | ((context: { systemInfo: Record<string, unknown> }) => boolean);
 
   /**
    * The options of the background layer.
@@ -582,7 +595,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           // loadScript again. async is included in the key because sync and async
           // externals resolve to different runtime shapes (plain value vs Promise),
           // so they must not be merged even when they share the same section.
-          const sectionKey = `${urlKey}||${layerOptions.sectionPath}||${async}`;
+          const sectionKey = `${urlKey}||${layerOptions.sectionPath}||${
+            String(async)
+          }`;
           const existingMountVar = sectionLoadTracker.get(sectionKey);
           if (existingMountVar !== undefined) {
             // Preserve any value the host may have pre-populated for this global,
@@ -595,10 +610,22 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           sectionLoadTracker.set(sectionKey, mountVar);
 
           const handlerIndex = [...url2fetchCode.keys()].indexOf(urlKey);
+          const sectionPath = JSON.stringify(layerOptions.sectionPath);
+          if (typeof async === 'function') {
+            const predicate =
+              `(${async.toString()})({ systemInfo: typeof SystemInfo !== "undefined" ? SystemInfo : (lynx.SystemInfo ?? {}) })`;
+            const loadAsync =
+              `createLoadExternalAsync(handler${handlerIndex}, ${sectionPath})`;
+            const loadSync =
+              `Promise.resolve(createLoadExternalSync(handler${handlerIndex}, ${sectionPath}, ${timeout}))`;
+            const load =
+              `deferExternal(${externalName}, () => ${predicate} ? ${loadAsync} : ${loadSync});`;
+            loadCode.add(load);
+            continue;
+          }
           const loader = async
             ? 'createLoadExternalAsync'
             : 'createLoadExternalSync';
-          const sectionPath = JSON.stringify(layerOptions.sectionPath);
           const timeoutArgument = async ? '' : `, ${timeout}`;
           const load =
             `deferExternal(${externalName}, () => ${loader}(handler${handlerIndex}, ${sectionPath}${timeoutArgument}));`;
@@ -713,7 +740,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             undefined,
             accessor
               ? `Promise.resolve(${mount}).then(function (m) { return m${accessor}; })`
-              : mount,
+              : (typeof isAsync === 'function'
+                ? `Promise.resolve(${mount})`
+                : mount),
             'promise',
           );
         }

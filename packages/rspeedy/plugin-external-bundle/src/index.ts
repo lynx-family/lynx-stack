@@ -167,18 +167,28 @@ export interface ReactLynxExternalsPresetOptions {
   reactUmdPackageName?: string
 
   /**
-   * Load the ReactLynx runtime bundle asynchronously, for the web target.
+   * Choose asynchronous loading of the ReactLynx runtime bundle.
    *
    * The web runtime (`@lynx-js/web-core`) can only fetch external bundles
    * asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a
    * promise that consuming modules await before reading a subpath (otherwise
    * `React.memo` etc. are read off a pending promise and are `undefined`).
+   * A standalone callback can choose the loading mode at runtime using
+   * `systemInfo`. It is serialized into the bundle and cannot capture variables
+   * or imports from the build configuration. Callback mode always makes the
+   * consuming modules asynchronous, even when synchronous loading is selected.
+   *
    * Only controls how the runtime is mounted; the web bundle is chosen for
    * environments other than `lynx` / `lynx-*`.
    *
+   * @example
+   * ```js
+   * { async: ({ systemInfo }) => systemInfo.platform === 'Harmony' }
+   * ```
+   *
    * @defaultValue `false`
    */
-  async?: boolean
+  async?: ExternalValue['async']
 
   /**
    * Override the runtime bundle URL directly.
