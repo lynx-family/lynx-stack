@@ -47,12 +47,6 @@ export function startBackgroundThread(
     ([lynxCore, nativeApp, napiLoader]) => {
       timingSystem.markTimingInternal('load_core_end');
       (globalThis as any)['napiLoaderOnRT' + nativeApp.id] = napiLoader;
-      const nativeLynx = createBackgroundLynx(
-        globalProps,
-        customSections,
-        nativeApp,
-        mainThreadRpc,
-      );
       const {
         loadCard,
         destroyCard,
@@ -60,6 +54,12 @@ export function startBackgroundThread(
         nativeGlobal,
         loadDynamicComponent,
       } = lynxCore;
+      const nativeLynx = createBackgroundLynx(
+        globalProps,
+        customSections,
+        nativeApp,
+        mainThreadRpc,
+      );
       // @lynx-js/lynx-core >= 0.1.3 will export nativeGlobal and loadDynamicComponent
       if (nativeGlobal && loadDynamicComponent) {
         nativeGlobal.loadDynamicComponent = loadDynamicComponent;

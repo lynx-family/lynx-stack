@@ -33,9 +33,12 @@ const config: Config = mergeRspeedyConfig(commonConfig(), {
     entry: {
       'external-bundle': {
         import: path.join(import.meta.dirname, 'external-bundle', 'index.jsx'),
-        publicPath: '/dist/',
+        publicPath: 'auto',
       },
     },
+  },
+  output: {
+    assetPrefix: 'auto',
   },
 });
 
