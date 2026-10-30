@@ -51,6 +51,7 @@ export { captureMainThreadObject } from '../core/capture-main-thread-object.js';
 export {
   __etAttrPlanMap,
   adaptEventAttrSlot,
+  adaptGestureAttrSlot,
   adaptMTEventAttrSlot,
   adaptMTRefAttrSlot,
   adaptRefAttrSlot,

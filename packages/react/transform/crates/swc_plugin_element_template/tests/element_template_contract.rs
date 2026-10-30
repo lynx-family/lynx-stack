@@ -310,6 +310,119 @@ fn should_emit_direct_main_thread_ref_attr_plan_for_lepus_target() {
 }
 
 #[test]
+fn should_emit_direct_gesture_attr_plan_for_both_targets() {
+  use swc_plugins_shared::target::TransformTarget;
+
+  for target in [TransformTarget::JS, TransformTarget::LEPUS] {
+    let (code, template) = first_user_template_json_with_code(
+      r#"<view main-thread:gesture={composedGesture} />"#,
+      JSXTransformerConfig {
+        target,
+        ..element_template_config()
+      },
+    );
+    let code = without_whitespace(&code);
+
+    assert_attr_plan_assignment(
+      &code,
+      "0,ReactLynxInternal.adaptGestureAttrSlot",
+      "direct Gesture should use the same ET adapter on both targets",
+    );
+    let raw_value_transport = if target == TransformTarget::JS {
+      "attributeSlots={[composedGesture]}"
+    } else {
+      ",void0,[composedGesture],void0,void0)"
+    };
+    assert!(
+      code.contains(raw_value_transport),
+      "Gesture composition must remain a raw runtime adapter input, got: {code}"
+    );
+    assert_eq!(
+      template["attributesArray"][0],
+      serde_json::json!({
+        "kind": "slot",
+        "key": "main-thread:gesture",
+        "attrSlotIndex": 0.0,
+      }),
+      "Native must receive the full Gesture namespace key"
+    );
+  }
+}
+
+#[test]
+fn should_keep_gesture_targets_inside_one_compiled_template() {
+  use swc_plugins_shared::target::TransformTarget;
+
+  for target in [TransformTarget::JS, TransformTarget::LEPUS] {
+    let (templates, code) = transform_fixture(
+      r#"
+        <view id={rootId} main-thread:gesture={rootGesture}>
+          <text main-thread:gesture={textGesture}>Drag</text>
+          <view id={childId} main-thread:gesture={childGesture} />
+        </view>
+      "#,
+      JSXTransformerConfig {
+        target,
+        ..element_template_config()
+      },
+    );
+    let user_templates = templates
+      .iter()
+      .filter(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+      .collect::<Vec<_>>();
+    assert_eq!(
+      user_templates.len(),
+      1,
+      "Gesture targets must not split the compiled tree or add wrappers"
+    );
+    let template = &user_templates[0].compiled_template;
+    let code = without_whitespace(&code);
+    assert_attr_plan_assignment(
+      &code,
+      "1,ReactLynxInternal.adaptGestureAttrSlot,2,ReactLynxInternal.adaptGestureAttrSlot,4,ReactLynxInternal.adaptGestureAttrSlot",
+      "Gesture adapters must retain the slot identity of each target",
+    );
+    assert!(
+      code.contains("[rootId,rootGesture,textGesture,childId,childGesture]"),
+      "runtime Gesture values must follow descriptor traversal order, got: {code}"
+    );
+    for (node, slot_index) in [
+      (template, 1.0),
+      (&template["children"][0], 2.0),
+      (&template["children"][1], 4.0),
+    ] {
+      assert!(
+        node["attributesArray"]
+          .as_array()
+          .expect("target attributes")
+          .iter()
+          .any(|attr| *attr
+            == serde_json::json!({
+              "kind": "slot",
+              "key": "main-thread:gesture",
+              "attrSlotIndex": slot_index,
+            })),
+        "Gesture slot {slot_index} must remain on its declared node: {template:?}"
+      );
+    }
+    assert_eq!(template["children"][0]["type"], "text");
+    assert_eq!(template["children"][1]["type"], "view");
+  }
+}
+
+#[test]
+fn should_only_adapt_direct_gesture_in_main_thread_namespace() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"<view gesture={ordinaryValue} other:gesture={namespacedValue} />"#,
+    element_template_config(),
+  );
+  assert!(
+    !code.contains("adaptGestureAttrSlot"),
+    "ordinary and unrelated namespaced attributes must not become Gesture bindings: {code}"
+  );
+}
+
+#[test]
 fn should_disable_flatten_for_direct_main_thread_ref_targets() {
   let template = first_user_template_json(
     r#"

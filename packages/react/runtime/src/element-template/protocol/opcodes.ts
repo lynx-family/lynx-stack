@@ -13,6 +13,7 @@ export const ElementTemplateUpdateOps = {
   updateTypedListItem: 8,
   setMainThreadEvent: 9,
   setMainThreadRef: 10,
+  setGesture: 11,
 } as const;
 
 export type ElementTemplateUpdateOp = typeof ElementTemplateUpdateOps[keyof typeof ElementTemplateUpdateOps];

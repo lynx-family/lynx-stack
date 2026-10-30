@@ -26,6 +26,7 @@ export const {
   __etHost,
   __root,
   adaptEventAttrSlot,
+  adaptGestureAttrSlot,
   adaptMTEventAttrSlot,
   adaptMTRefAttrSlot,
   adaptRefAttrSlot,
