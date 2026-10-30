@@ -14,6 +14,7 @@ export default defineConfig({
         '**/*.test-d.*',
         '**/vitest.config.ts',
         '**/rslib.config.ts',
+        '**/rslib.*.config.ts',
         '**/*.bench.js',
         '**/*.bench.ts',
         '**/dist/**',
@@ -23,6 +24,7 @@ export default defineConfig({
         'examples/**',
         'packages/**/lib/**',
         'packages/**/test/**',
+        '**/__tests__/fixtures/**',
         'website/**',
         'docs/**',
 

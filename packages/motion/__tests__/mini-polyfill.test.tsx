@@ -74,10 +74,12 @@ describe('Polyfill Unit Logic', () => {
   test('should use existing queueMicrotask if available', async () => {
     const mockQM = vi.fn();
     globalThis.queueMicrotask = mockQM;
+    delete (globalThis as any).lynx;
 
-    await import('../src/mini/polyfill.js');
+    const { queueMicrotask } = await import('../src/polyfill/microtask.js');
 
-    expect(globalThis.queueMicrotask).toBe(mockQM);
+    queueMicrotask(() => {});
+    expect(mockQM).toHaveBeenCalled();
   });
 
   test('should use lynx.queueMicrotask if global is missing', async () => {
@@ -85,22 +87,23 @@ describe('Polyfill Unit Logic', () => {
     const mockQM = vi.fn();
     (globalThis as any).lynx = { queueMicrotask: mockQM };
 
-    await import('../src/mini/polyfill.js');
+    const { queueMicrotask } = await import('../src/polyfill/microtask.js');
 
-    expect(globalThis.queueMicrotask).toBe(mockQM);
+    queueMicrotask(() => {});
+    expect(mockQM).toHaveBeenCalled();
+    expect(globalThis.queueMicrotask).toBeUndefined();
   });
 
   test('should fallback to promise-based polyfill if both missing', async () => {
     delete (globalThis as any).queueMicrotask;
     delete (globalThis as any).lynx;
 
-    await import('../src/mini/polyfill.js');
+    const { queueMicrotask } = await import('../src/polyfill/microtask.js');
 
-    expect(globalThis.queueMicrotask).toBeDefined();
-    expect(globalThis.queueMicrotask).not.toBe(originalQueueMicrotask);
+    expect(globalThis.queueMicrotask).toBeUndefined();
 
     const fn = vi.fn();
-    globalThis.queueMicrotask(fn);
+    queueMicrotask(fn);
 
     expect(fn).not.toHaveBeenCalled();
     await Promise.resolve();
@@ -111,7 +114,7 @@ describe('Polyfill Unit Logic', () => {
     delete (globalThis as any).queueMicrotask;
     delete (globalThis as any).lynx;
 
-    await import('../src/mini/polyfill.js');
+    const { queueMicrotask } = await import('../src/polyfill/microtask.js');
 
     const error = new Error('test error');
     const fn = vi.fn().mockImplementation(() => {
@@ -130,7 +133,7 @@ describe('Polyfill Unit Logic', () => {
         return 0 as any;
       });
 
-    globalThis.queueMicrotask(fn);
+    queueMicrotask(fn);
 
     // Wait enough ticks
     await Promise.resolve();

@@ -3,13 +3,10 @@ import {
   useMotionValueRef,
   useMotionValueRefEvent,
 } from '@lynx-js/motion/mini';
-import { root, runOnMainThread, useMainThreadRef } from '@lynx-js/react';
+import { runOnMainThread, useMainThreadRef } from '@lynx-js/react';
 import type { MainThread } from '@lynx-js/types';
 
 import './styles.css';
-
-import '@lynx-js/preact-devtools';
-import '@lynx-js/react/debug';
 
 export default function MiniExample() {
   const boxRef = useMainThreadRef<MainThread.Element>(null);
@@ -76,12 +73,4 @@ export default function MiniExample() {
       </view>
     </view>
   );
-}
-
-root.render(
-  <MiniExample />,
-);
-
-if (import.meta.webpackHot) {
-  import.meta.webpackHot.accept();
 }

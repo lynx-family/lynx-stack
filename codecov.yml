@@ -34,6 +34,7 @@ ignore:
   - "rstest.config.ts"
   - "**/rstest.config.ts"
   - "**/__test__/**/fixtures/**"
+  - "**/__tests__/fixtures/**"
   - "packages/react/runtime/__test__/element-template/test-utils/**"
 
 fixes:
