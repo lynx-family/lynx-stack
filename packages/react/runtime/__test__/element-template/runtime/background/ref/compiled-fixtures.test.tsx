@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createElement, options } from 'preact';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -12,7 +14,8 @@ import {
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
 import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/instance.js';
-import { clearRefState } from '../../../../../src/element-template/prop-adapters/ref.js';
+import { Component, Suspense, root, useState } from '../../../../../src/element-template/index.js';
+import { clearRefState, hasPendingRefs } from '../../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
@@ -28,16 +31,22 @@ import {
   renderCompiledFixtureOnMainThread,
 } from '../../../test-utils/debug/compiledThreadRunner.js';
 import { ElementTemplateEnvManager } from '../../../test-utils/debug/envManager.js';
+import { resetPerformanceMocks } from '../../../test-utils/mock/performance.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DIRECT_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/direct-ref/index.tsx');
+const FAILED_RENDER_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/failed-render/index.tsx');
 const SPREAD_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/spread-ref/index.tsx');
 const MULTI_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/multi-ref/index.tsx');
 const NAMESPACED_REF_FIXTURE = path.resolve(__dirname, '../../../fixtures/background/ref/unsupported-ref/index.tsx');
 
 interface DirectFixtureProps {
   hostRef?: unknown;
+}
+
+interface FailedRenderFixtureProps extends DirectFixtureProps {
+  children?: ReactNode;
 }
 
 interface SpreadFixtureProps {
@@ -141,6 +150,272 @@ describe('Compiled ordinary ref background updates', () => {
     clearRefState();
     envManager.setUseElementTemplate(false);
   });
+
+  it('does not attach refs from an uncommitted render on a later empty commit', async () => {
+    const { backgroundModule } = await loadCompiledFixture<CompiledAppModule<FailedRenderFixtureProps>>(
+      FAILED_RENDER_FIXTURE,
+    );
+    const ref = vi.fn();
+    const error = new Error('failed child render');
+    function ThrowingChild(): never {
+      throw error;
+    }
+
+    expect(() =>
+      renderOnBackground(backgroundModule, {
+        hostRef: ref,
+        children: createElement(ThrowingChild, {}),
+      })
+    ).toThrow(error);
+    // The existing profiler does not close spans for aborted renders.
+    resetPerformanceMocks();
+    expect((__root as BackgroundElementTemplateInstance).firstChild).toBeNull();
+    expect(ref).not.toHaveBeenCalled();
+
+    root.render(null);
+
+    expect(ref).not.toHaveBeenCalled();
+    expect(hasPendingRefs()).toBe(false);
+  });
+
+  it('discards a failed state update without losing a committed ref cleanup', async () => {
+    const { backgroundModule: { App } } = await loadCompiledFixture<CompiledAppModule<FailedRenderFixtureProps>>(
+      FAILED_RENDER_FIXTURE,
+    );
+    const cleanup = vi.fn();
+    const committedRef = vi.fn(() => cleanup);
+    const failedRef = vi.fn();
+    const error = new Error('failed state update');
+    let update!: () => void;
+    function ThrowingChild(): never {
+      throw error;
+    }
+    function UpdatingChild() {
+      const [fail, setFail] = useState(false);
+      update = () => setFail(true);
+      return fail
+        ? createElement(App, { hostRef: failedRef, children: createElement(ThrowingChild, {}) })
+        : null;
+    }
+
+    root.render(createElement(App, { hostRef: committedRef, children: createElement(UpdatingChild, {}) }));
+    expect(committedRef).toHaveBeenCalledTimes(1);
+    const previousDebounce = options.debounceRendering;
+    let rerender!: () => void;
+    options.debounceRendering = callback => {
+      rerender = callback;
+    };
+    try {
+      update();
+      expect(() => rerender()).toThrow(error);
+      resetPerformanceMocks();
+    } finally {
+      options.debounceRendering = previousDebounce;
+    }
+    expect(failedRef).not.toHaveBeenCalled();
+    expect(cleanup).not.toHaveBeenCalled();
+
+    root.render(null);
+
+    expect(failedRef).not.toHaveBeenCalled();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(committedRef).toHaveBeenCalledTimes(1);
+    expect(hasPendingRefs()).toBe(false);
+  });
+
+  it.each([
+    { hydrated: false, returnsCleanup: false },
+    { hydrated: false, returnsCleanup: true },
+    { hydrated: true, returnsCleanup: false },
+    { hydrated: true, returnsCleanup: true },
+  ])('preserves pending old-ref cleanup after a failed replacement: %j', async ({ hydrated, returnsCleanup }) => {
+    const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<FailedRenderFixtureProps>>(
+      FAILED_RENDER_FIXTURE,
+    );
+    const calls: string[] = [];
+    const oldRef = vi.fn((value: unknown) => {
+      calls.push(value === null ? 'old:null' : 'old:attach');
+      return value !== null && returnsCleanup
+        ? () => {
+          calls.push('old:cleanup');
+        }
+        : undefined;
+    });
+    const failedRef = vi.fn();
+    const nextRef = vi.fn((value: unknown) => {
+      calls.push(value === null ? 'next:null' : 'next:attach');
+    });
+    const error = new Error('failed ref replacement');
+    function ThrowingChild(): never {
+      throw error;
+    }
+
+    renderOnBackground(backgroundModule, { hostRef: oldRef });
+    if (hydrated) {
+      hydrateFromMainThread(mainModule, { hostRef: oldRef });
+    }
+    expect(() =>
+      renderOnBackground(backgroundModule, {
+        hostRef: failedRef,
+        children: createElement(ThrowingChild, {}),
+      })
+    ).toThrow(error);
+    resetPerformanceMocks();
+    expect(calls).toEqual(['old:attach']);
+
+    renderOnBackground(backgroundModule, { hostRef: nextRef });
+
+    expect(calls).toEqual(['old:attach', returnsCleanup ? 'old:cleanup' : 'old:null', 'next:attach']);
+    expect(failedRef).not.toHaveBeenCalled();
+    root.render(null);
+    expect(calls).toEqual(['old:attach', returnsCleanup ? 'old:cleanup' : 'old:null', 'next:attach', 'next:null']);
+    expect(hasPendingRefs()).toBe(false);
+  });
+
+  it.each([false, true])('does not detach an aborted state-update ref on unmount (hydrated: %s)', async (hydrated) => {
+    const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<FailedRenderFixtureProps>>(
+      FAILED_RENDER_FIXTURE,
+    );
+    const { App } = backgroundModule;
+    const cleanup = vi.fn();
+    const committedRef = vi.fn(() => cleanup);
+    const failedRef = vi.fn();
+    const error = new Error('failed same-host update');
+    let update!: () => void;
+    function ThrowingChild(): never {
+      throw error;
+    }
+    function StatefulApp() {
+      const [fail, setFail] = useState(false);
+      update = () => setFail(true);
+      return createElement(App, {
+        hostRef: fail ? failedRef : committedRef,
+        children: fail ? createElement(ThrowingChild, {}) : null,
+      });
+    }
+
+    root.render(createElement(StatefulApp, {}));
+    if (hydrated) {
+      hydrateFromMainThread(mainModule, { hostRef: committedRef });
+    }
+    const previousDebounce = options.debounceRendering;
+    let rerender!: () => void;
+    options.debounceRendering = callback => {
+      rerender = callback;
+    };
+    try {
+      update();
+      expect(() => rerender()).toThrow(error);
+      resetPerformanceMocks();
+    } finally {
+      options.debounceRendering = previousDebounce;
+    }
+    expect(cleanup).not.toHaveBeenCalled();
+    expect(failedRef).not.toHaveBeenCalled();
+
+    root.render(null);
+
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(committedRef).toHaveBeenCalledTimes(1);
+    expect(failedRef).not.toHaveBeenCalled();
+    expect(hasPendingRefs()).toBe(false);
+  });
+
+  it('keeps successful refs when an error boundary handles a sibling render failure', async () => {
+    const { backgroundModule: { App } } = await loadCompiledFixture<CompiledAppModule<FailedRenderFixtureProps>>(
+      FAILED_RENDER_FIXTURE,
+    );
+    const ref = vi.fn();
+    const fallbackRef = vi.fn();
+    const error = new Error('handled child render');
+    class ErrorBoundary extends Component<{ children?: ReactNode }, { failed: boolean }> {
+      state = { failed: false };
+      static getDerivedStateFromError() {
+        return { failed: true };
+      }
+      render() {
+        return this.state.failed ? createElement(App, { hostRef: fallbackRef }) : this.props.children;
+      }
+    }
+    function ThrowingChild(): never {
+      throw error;
+    }
+
+    root.render(createElement(App, {
+      hostRef: ref,
+      children: createElement(ErrorBoundary, {}, createElement(ThrowingChild, {})),
+    }));
+    expect(ref).toHaveBeenCalledTimes(1);
+    await Promise.resolve();
+    expect(fallbackRef).toHaveBeenCalledTimes(1);
+
+    root.render(null);
+    expect(ref).toHaveBeenLastCalledWith(null);
+    expect(fallbackRef).toHaveBeenLastCalledWith(null);
+  });
+
+  it('keeps successful refs when Suspense handles a pending sibling', async () => {
+    const { backgroundModule: { App } } = await loadCompiledFixture<CompiledAppModule<FailedRenderFixtureProps>>(
+      FAILED_RENDER_FIXTURE,
+    );
+    const ref = vi.fn();
+    const fallbackRef = vi.fn();
+    const pending = new Promise(() => {});
+    function SuspendingChild(): never {
+      throw pending;
+    }
+
+    root.render(createElement(App, {
+      hostRef: ref,
+      children: createElement(Suspense, {
+        fallback: createElement(App, { hostRef: fallbackRef }),
+        children: createElement(SuspendingChild, {}),
+      }),
+    }));
+    expect(ref).toHaveBeenCalledTimes(1);
+    await Promise.resolve();
+    expect(fallbackRef).toHaveBeenCalledTimes(1);
+
+    root.render(null);
+    expect(ref).toHaveBeenLastCalledWith(null);
+    expect(fallbackRef).toHaveBeenLastCalledWith(null);
+  });
+
+  it.each([false, true])(
+    'keeps a reentrant ref attachment after the old batch (same callback: %s)',
+    async (sameCallback) => {
+      const { backgroundModule: { App } } = await loadCompiledFixture<CompiledAppModule<MultiRefAppProps>>(
+        MULTI_REF_FIXTURE,
+      );
+      const calls: string[] = [];
+      const previous = vi.fn((value: unknown) => {
+        calls.push(value === null ? 'previous:null' : 'previous:attach');
+      });
+      const next = sameCallback
+        ? previous
+        : vi.fn((value: unknown) => {
+          calls.push(value === null ? 'next:null' : 'next:attach');
+        });
+      const first = vi.fn(() => () => {
+        calls.push('first:cleanup');
+        root.render(createElement(App, { directRef: null, objectRef: next }));
+      });
+
+      root.render(createElement(App, { directRef: first, objectRef: previous }));
+      root.render(createElement(App, { directRef: null, objectRef: null }));
+
+      const nextName = sameCallback ? 'previous' : 'next';
+      expect(calls).toEqual(['previous:attach', 'first:cleanup', 'previous:null', `${nextName}:attach`]);
+      root.render(null);
+      expect(calls).toEqual([
+        'previous:attach',
+        'first:cleanup',
+        'previous:null',
+        `${nextName}:attach`,
+        `${nextName}:null`,
+      ]);
+    },
+  );
 
   it('hydrates compiled direct refs and applies later ref-only updates without native patches', async () => {
     const { backgroundModule, mainModule } = await loadCompiledFixture<CompiledAppModule<DirectFixtureProps>>(
