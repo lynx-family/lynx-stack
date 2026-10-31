@@ -39,7 +39,7 @@ export function reloadBackground(updateData: unknown, options?: Record<string, u
     // Reload creates a new object so InitData Provider / Consumer observers do
     // not retain the pre-reload object identity.
     lynx.__initData = Object.assign({}, lynx.__initData);
-    applyUpdatePageData(updateData);
+    applyUpdatePageData(updateData, options);
 
     setRoot(new BackgroundPageRootInstance());
     __root.__jsx = jsx;

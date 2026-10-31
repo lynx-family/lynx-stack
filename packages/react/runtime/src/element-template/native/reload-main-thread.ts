@@ -38,6 +38,8 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     // TODO: Replace this cleanup-only serialization with a direct page-children
     // or clear-slot PAPI once native exposes one.
     const page = __SerializeElementTemplate(__page) as SerializedPageRoot;
+    let cleanupError: unknown;
+    let didCleanupThrow = false;
     for (const root of page.childSlots?.[ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX] ?? []) {
       const rootRef = elementTemplateRegistry.get(root.uid)!;
       __RemoveNodeFromElementTemplate(__page, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX, rootRef);
@@ -46,22 +48,40 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
       for (const handleId of removedHandleIds) {
         elementTemplateRegistry.delete(handleId);
       }
-      deleteMainThreadDynamicAttrStateForSubtree(removedHandleIds);
+      try {
+        deleteMainThreadDynamicAttrStateForSubtree(removedHandleIds);
+      } catch (error) {
+        if (!didCleanupThrow) {
+          cleanupError = error;
+          didCleanupThrow = true;
+        }
+      }
     }
     if (canReEvalMainThreadEntry()) {
-      onMtsDestruction();
-      increaseReloadVersion();
+      try {
+        onMtsDestruction();
+      } finally {
+        increaseReloadVersion();
+      }
+      if (didCleanupThrow) {
+        throw cleanupError;
+      }
       reEvalMainThreadEntry<MainThreadReloadHandoff>({ page: __page, options });
       return;
     }
     elementTemplateRegistry.clear();
-    clearMainThreadDynamicAttrState();
-    resetElementTemplateMainThreadBackgroundFunctionRuntime();
-    resetTemplateId();
-
-    // Ref cleanup still belongs to the old page. Advance only before rendering
-    // the new tree so calls queued by old ref/unmount callbacks remain stale.
-    increaseReloadVersion();
+    try {
+      clearMainThreadDynamicAttrState();
+    } finally {
+      resetElementTemplateMainThreadBackgroundFunctionRuntime();
+      resetTemplateId();
+      // Ref cleanup still belongs to the old page. Advance only before rendering
+      // the new tree so calls queued by old ref/unmount callbacks remain stale.
+      increaseReloadVersion();
+    }
+    if (didCleanupThrow) {
+      throw cleanupError;
+    }
 
     const oldRoot = __root;
     setRoot({ __jsx: oldRoot.__jsx });

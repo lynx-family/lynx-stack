@@ -569,6 +569,81 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(lynx.__initData).toEqual({ msg: 'reset' });
   });
 
+  it('completes main-thread reload teardown and resets template id when subtree ref cleanup throws', () => {
+    const firstRootRef = { type: 'first-root' } as unknown as ElementTemplateHandle;
+    const secondRootRef = { type: 'second-root' } as unknown as ElementTemplateHandle;
+    const firstCleanupError = new Error('first subtree ref cleanup failed');
+    const secondCleanupError = new Error('second subtree ref cleanup failed');
+    const firstThrowingRef: { _wkltId: string; _unmount?: () => void } = { _wkltId: 'first-ref' };
+    const secondThrowingRef: { _wkltId: string; _unmount?: () => void } = { _wkltId: 'second-ref' };
+    __etAttrPlanMap._et_first_root = [0, adaptMTRefAttrSlot];
+    __etAttrPlanMap._et_second_root = [0, adaptMTRefAttrSlot];
+    initializeMainThreadDynamicAttrSlots(-1, '_et_first_root', [{ type: 'main-thread-ref', value: firstThrowingRef }]);
+    initializeMainThreadDynamicAttrSlots(-2, '_et_second_root', [{
+      type: 'main-thread-ref',
+      value: secondThrowingRef,
+    }]);
+    attachMainThreadDynamicAttrRefsForSubtree([
+      { uid: -1, ref: firstRootRef },
+      { uid: -2, ref: secondRootRef },
+    ]);
+    firstThrowingRef._unmount = vi.fn(() => {
+      throw firstCleanupError;
+    });
+    secondThrowingRef._unmount = vi.fn(() => {
+      throw secondCleanupError;
+    });
+    const nativeRefs = new Map([
+      [-1, firstRootRef],
+      [-2, secondRootRef],
+    ]);
+    vi.mocked(elementTemplateRegistry.get).mockImplementation(id => nativeRefs.get(id));
+    vi.mocked(__SerializeElementTemplate).mockReturnValueOnce({
+      tag: 'page',
+      attributes: null,
+      childSlots: [[
+        { templateKey: '_et_first_root', uid: -1 },
+        { templateKey: '_et_second_root', uid: -2 },
+      ]],
+      uid: 0,
+    } as ReturnType<typeof __SerializeElementTemplate>);
+
+    expect(() => reloadMainThread(undefined, { reloadTemplate: true })).toThrow(firstCleanupError);
+    expect(elementTemplateRegistry.clear).toHaveBeenCalledTimes(1);
+    expect(resetTemplateId).toHaveBeenCalledTimes(1);
+    expect(increaseReloadVersion).toHaveBeenCalledTimes(1);
+    expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
+    expect(getMainThreadDynamicAttrState(-2, 0)).toBeUndefined();
+
+    // Also verify re-eval reload branch when subtree ref cleanup throws.
+    const supportsReEvalKey = Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__');
+    const reloaderKey = Symbol.for('__LYNX_MAIN_THREAD_ENTRY_RELOADER__');
+    const host = lynx as unknown as Record<symbol, unknown>;
+    const reloader = vi.fn();
+    vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
+    host[supportsReEvalKey] = true;
+    host[reloaderKey] = reloader;
+    initializeMainThreadDynamicAttrSlots(-1, '_et_first_root', [{ type: 'main-thread-ref', value: firstThrowingRef }]);
+    attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: firstRootRef }]);
+    firstThrowingRef._unmount = vi.fn(() => {
+      throw firstCleanupError;
+    });
+    vi.mocked(__SerializeElementTemplate).mockReturnValueOnce({
+      tag: 'page',
+      attributes: null,
+      childSlots: [[{ templateKey: '_et_first_root', uid: -1 }]],
+      uid: 0,
+    } as ReturnType<typeof __SerializeElementTemplate>);
+    try {
+      expect(() => reloadMainThread(undefined, { reloadTemplate: true })).toThrow(firstCleanupError);
+      expect(onMtsDestruction).toHaveBeenCalledTimes(1);
+      expect(reloader).not.toHaveBeenCalled();
+    } finally {
+      delete host[supportsReEvalKey];
+      delete host[reloaderKey];
+    }
+  });
+
   it('profiles main-thread reload when profiling is enabled', () => {
     vi.stubGlobal('__PROFILE__', true);
     mockedState.root = { __jsx: null };
@@ -646,5 +721,14 @@ describe('ElementTemplate reloadBackground', () => {
 
     expect(lynx.__initData).not.toBe(initData);
     expect(lynx.__initData).toEqual({ stable: true });
+  });
+
+  it('resets background initData when resetPageData is true', () => {
+    mockedState.root = { __jsx: null };
+    lynx.__initData = { stale: 1, value: 1 };
+
+    reloadBackground({ value: 2 }, { resetPageData: true });
+
+    expect(lynx.__initData).toEqual({ value: 2 });
   });
 });
