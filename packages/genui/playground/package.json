@@ -32,8 +32,8 @@
     "idb": "^8.0.4",
     "lucide-react": "^1.51.0",
     "qrcode": "^1.5.4",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "vaul": "^1.1.2",
     "xml-formatter": "^3.7.0"
   },
