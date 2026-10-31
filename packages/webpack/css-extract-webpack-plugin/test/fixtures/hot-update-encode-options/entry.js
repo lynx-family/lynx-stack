@@ -1,2 +1,2 @@
-import('./page.js');
-import(/* webpackChunkName: 'page' */ './page.js');
+import('./page-a.js');
+import('./page-b.js');
