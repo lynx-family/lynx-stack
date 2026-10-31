@@ -29,6 +29,63 @@ export interface CompactA2UISnapshotResult {
   metadata: CompactA2UISnapshotMetadata;
 }
 
+export interface GenerateReactLynxA2UIWrapperSourceOptions {
+  /**
+   * Exported component name in the generated TSX module.
+   *
+   * @default "App"
+   */
+  componentName?: string;
+  /**
+   * Compact the incoming A2UI stream before embedding it.
+   *
+   * @default true
+   */
+  compact?: boolean;
+  /**
+   * Import source for the A2UI renderer APIs.
+   *
+   * @default "@lynx-js/genui/a2ui"
+   */
+  a2uiImportSource?: string;
+  /**
+   * Import source for built-in A2UI catalog components.
+   *
+   * @default "@lynx-js/genui/a2ui/catalog"
+   */
+  catalogImportSource?: string;
+  /**
+   * Import source for the optional default A2UI theme.
+   *
+   * @default "@lynx-js/genui/a2ui/styles/theme.css"
+   */
+  themeImportSource?: string;
+  /**
+   * Include the default A2UI theme stylesheet import.
+   *
+   * @default true
+   */
+  includeThemeImport?: boolean;
+  /**
+   * Class name applied to the generated wrapper root.
+   *
+   * @default "a2ui-light generated-a2ui-app"
+   */
+  rootClassName?: string;
+  /**
+   * Class name passed to the inner A2UI surface root.
+   *
+   * @default "generated-a2ui-surface"
+   */
+  surfaceClassName?: string;
+  /**
+   * Class name used by the generated `wrapSurface` shell.
+   *
+   * @default "generated-a2ui-surface-shell"
+   */
+  surfaceWrapperClassName?: string;
+}
+
 interface SnapshotTemplateInfo {
   componentId: string;
   path: string;
@@ -55,6 +112,32 @@ const CHILD_REFERENCE_FIELDS = [
   'contentChild',
 ] as const;
 
+const BUILTIN_CATALOG_COMPONENTS = [
+  'Button',
+  'Card',
+  'CheckBox',
+  'ChoicePicker',
+  'Column',
+  'DateTimeInput',
+  'Divider',
+  'Icon',
+  'Image',
+  'LazyComponent',
+  'LineChart',
+  'List',
+  'Loading',
+  'Modal',
+  'PieChart',
+  'RadioGroup',
+  'Row',
+  'Slider',
+  'Tabs',
+  'Text',
+  'TextField',
+] as const;
+
+const JS_IDENTIFIER_RE = /^[$A-Z_a-z][$\w]*$/u;
+
 function isObject(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
 }
@@ -62,6 +145,24 @@ function isObject(value: unknown): value is JsonRecord {
 function cloneJson<T>(value: T): T {
   if (value === undefined) return value;
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function serializeJavaScriptLiteral(value: unknown): string {
+  return JSON.stringify(value, null, 2)
+    .replace(/\u2028/gu, '\\u2028')
+    .replace(/\u2029/gu, '\\u2029');
+}
+
+function assertValidComponentName(componentName: string): void {
+  if (JS_IDENTIFIER_RE.test(componentName)) return;
+  throw new Error(
+    `[a2ui] Invalid ReactLynx component name "${componentName}". `
+      + 'Expected a JavaScript identifier.',
+  );
+}
+
+function createBuiltinCatalogImports(): string {
+  return BUILTIN_CATALOG_COMPONENTS.map(name => `  ${name},`).join('\n');
 }
 
 function normalizePath(path: string): string {
@@ -660,3 +761,113 @@ export function compactA2UIMessagesToSnapshot(
   machine.applyAll(messages);
   return machine.serialize(messages.length);
 }
+
+export function generateReactLynxA2UIWrapperSource(
+  messages: readonly ServerToClientMessage[],
+  options: GenerateReactLynxA2UIWrapperSourceOptions = {},
+): string {
+  const componentName = options.componentName ?? 'App';
+  assertValidComponentName(componentName);
+  const propsName = `${componentName}Props`;
+  const a2uiImportSource = options.a2uiImportSource
+    ?? '@lynx-js/genui/a2ui';
+  const catalogImportSource = options.catalogImportSource
+    ?? '@lynx-js/genui/a2ui/catalog';
+  const themeImportSource = options.themeImportSource
+    ?? '@lynx-js/genui/a2ui/styles/theme.css';
+  const includeThemeImport = options.includeThemeImport ?? true;
+  const rootClassName = options.rootClassName
+    ?? 'a2ui-light generated-a2ui-app';
+  const surfaceClassName = options.surfaceClassName
+    ?? 'generated-a2ui-surface';
+  const surfaceWrapperClassName = options.surfaceWrapperClassName
+    ?? 'generated-a2ui-surface-shell';
+  const sourceMessages = options.compact === false
+    ? cloneJson([...messages])
+    : compactA2UIMessagesToSnapshot(messages).messages;
+  const messagesLiteral = serializeJavaScriptLiteral(sourceMessages);
+
+  return [
+    'import { useMemo } from \'@lynx-js/react\';',
+    'import type { ReactNode } from \'@lynx-js/react\';',
+    'import {',
+    '  A2UI,',
+    '  basicFunctions,',
+    '  createMessageStore,',
+    '  defineCatalog,',
+    `} from ${serializeJavaScriptLiteral(a2uiImportSource)};`,
+    'import type {',
+    '  ServerToClientMessage,',
+    '  UserActionPayload,',
+    `} from ${serializeJavaScriptLiteral(a2uiImportSource)};`,
+    'import {',
+    createBuiltinCatalogImports(),
+    '  catalogManifests,',
+    `} from ${serializeJavaScriptLiteral(catalogImportSource)};`,
+    'import type {',
+    '  CatalogComponent,',
+    '  CatalogInput,',
+    '  CatalogManifest,',
+    `} from ${serializeJavaScriptLiteral(catalogImportSource)};`,
+    ...(includeThemeImport
+      ? [`import ${serializeJavaScriptLiteral(themeImportSource)};`]
+      : []),
+    '',
+    `const generatedA2UIMessages: ServerToClientMessage[] = ${messagesLiteral};`,
+    '',
+    'function withManifest(',
+    '  component: CatalogComponent,',
+    '  manifest: CatalogManifest | undefined,',
+    '): CatalogInput {',
+    '  return manifest && Object.keys(manifest).length > 0',
+    '    ? [component, manifest] as const',
+    '    : component;',
+    '}',
+    '',
+    'const generatedA2UICatalogs = defineCatalog([',
+    ...BUILTIN_CATALOG_COMPONENTS.map(name =>
+      `  withManifest(${name} as CatalogComponent, catalogManifests.${name}),`
+    ),
+    '  ...basicFunctions,',
+    ']).components;',
+    '',
+    `export interface ${propsName} {`,
+    '  onAction?: (action: UserActionPayload) => void;',
+    '}',
+    '',
+    `export function ${componentName}(`,
+    `  props: ${propsName},`,
+    '): ReactNode {',
+    '  const messageStore = useMemo(() => {',
+    '    const store = createMessageStore({',
+    '      initialMessages: generatedA2UIMessages,',
+    '    });',
+    '    return store;',
+    '  }, []);',
+    '',
+    '  return (',
+    `    <view className=${serializeJavaScriptLiteral(rootClassName)}>`,
+    '      <A2UI',
+    '        messageStore={messageStore}',
+    '        catalogs={generatedA2UICatalogs}',
+    `        className=${serializeJavaScriptLiteral(surfaceClassName)}`,
+    '        onAction={props.onAction}',
+    '        wrapSurface={(children) => (',
+    `          <view className=${
+      serializeJavaScriptLiteral(surfaceWrapperClassName)
+    }>`,
+    '            {children}',
+    '          </view>',
+    '        )}',
+    '      />',
+    '    </view>',
+    '  );',
+    '}',
+    '',
+    `export default ${componentName};`,
+    '',
+  ].join('\n');
+}
+
+export const generateReactLynx3A2UIWrapperSource =
+  generateReactLynxA2UIWrapperSource;
