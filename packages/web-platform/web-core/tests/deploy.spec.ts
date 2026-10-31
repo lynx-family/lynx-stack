@@ -1,4 +1,5 @@
 import { describe, it, expect, rstest, beforeEach } from '@rstest/core';
+import * as vm from 'vm';
 import { executeTemplate } from '../ts/server/deploy.js';
 import * as decodeModule from '../ts/server/decode.js';
 import type { DecodedTemplate } from '../ts/server/decode.js';
@@ -38,7 +39,7 @@ describe('executeTemplate', () => {
 
     mockCreateElementAPI.mockReturnValue({
       globalThisAPIs: {} as ElementPAPIs,
-      wasmContext: {} as MainThreadServerContext,
+      wasmContext: { free: rstest.fn() } as unknown as MainThreadServerContext,
     });
 
     const dummyBuffer = Buffer.from('test');
@@ -56,5 +57,33 @@ describe('executeTemplate', () => {
     expect(mockCreateElementAPI).toHaveBeenCalled();
     // 3rd arg is viewAttributes
     expect(mockCreateElementAPI.mock.calls[0][2]).toBe('my-view-attr="123"');
+  });
+
+  it('should free the wasm context, including when the root code throws', () => {
+    const mockDecodeTemplate = rstest.mocked(decodeModule.decodeTemplate);
+    const mockCreateElementAPI = rstest.mocked(
+      createElementAPIModule.createElementAPI,
+    );
+    const free = rstest.fn();
+
+    mockDecodeTemplate.mockReturnValue({
+      config: {},
+      lepusCode: { root: new TextEncoder().encode('void 0') },
+    } as unknown as DecodedTemplate);
+    mockCreateElementAPI.mockReturnValue({
+      globalThisAPIs: {} as ElementPAPIs,
+      wasmContext: { free } as unknown as MainThreadServerContext,
+    });
+
+    executeTemplate(Buffer.from('test'), {}, {}, () => {}, false, false);
+    expect(free).toHaveBeenCalledTimes(1);
+
+    rstest.mocked(vm.runInContext).mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    expect(() =>
+      executeTemplate(Buffer.from('test'), {}, {}, () => {}, false, false)
+    ).toThrow('boom');
+    expect(free).toHaveBeenCalledTimes(2);
   });
 });
