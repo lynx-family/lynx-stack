@@ -27,6 +27,7 @@ test.describe('template sync', () => {
     expect(templates.templateXAudioTT).toBe(
       extractConst('TEMPLATE_X_AUDIO_TT'),
     );
+    expect(templates.templateXVideo).toBe(extractConst('TEMPLATE_X_VIDEO'));
     expect(templates.templateXInput).toBe(extractConst('TEMPLATE_X_INPUT'));
     expect(templates.templateXList).toBe(extractConst('TEMPLATE_X_LIST'));
     expect(templates.templateXOverlayNg).toBe(
