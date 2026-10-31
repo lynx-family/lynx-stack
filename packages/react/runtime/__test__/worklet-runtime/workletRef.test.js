@@ -538,9 +538,7 @@ describe('WorkletRef', () => {
         },
         "-5": {
           "_wvid": -5,
-          "current": Element {
-            "element": "background-thread-element-5",
-          },
+          "current": Element {},
         },
         "-6": {
           "_wvid": -6,
