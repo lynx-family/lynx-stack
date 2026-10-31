@@ -11,6 +11,14 @@ import { debug } from '../debug.js'
 const start = Date.now()
 
 const exitPromises: Promise<void>[] = []
+let encodePoolCleanupRegistered = false
+let encodePoolCleanup: Promise<void> | undefined
+
+// Engine commands may create workers while loading the user's configuration.
+// Keep cleanup lazy so --help and --version do not load the engine themselves.
+export function registerEncodePoolCleanup(): void {
+  encodePoolCleanupRegistered = true
+}
 
 const unsubscribe = asyncExitHook(onExit, { wait: 1000 })
 
@@ -71,4 +79,16 @@ async function onExit(signal: number) {
 
   debug(`awaiting exit promises(length: ${exitPromises.length})...`)
   await Promise.allSettled(exitPromises)
+
+  if (encodePoolCleanupRegistered) {
+    // Retain the shared warm pool during rebuilds; only dispose it when the CLI
+    // exits. Its worker stdio pipes must be gone before exit-hook flushes stdio.
+    encodePoolCleanup ??= import('@lynx-js/template-webpack-plugin').then(
+      ({ LynxEncodePlugin }) => LynxEncodePlugin.encodePool.destroy(),
+    )
+    const [result] = await Promise.allSettled([encodePoolCleanup])
+    if (result?.status === 'rejected') {
+      logger.error('Failed to close the Lynx encode worker pool', result.reason)
+    }
+  }
 }
