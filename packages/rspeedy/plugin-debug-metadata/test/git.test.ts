@@ -55,6 +55,13 @@ describe('normalizeRemoteUrl', () => {
     expect(normalizeRemoteUrl('ssh://git@github.com:22/owner/repo.git'))
       .toBe('https://github.com/owner/repo')
   })
+
+  test('drops a URL the parser rejects rather than leaking its userinfo', () => {
+    // Host-less but still carrying an `@`, so `new URL()` throws before the
+    // credential-stripping lines ever run. Falling back to the raw string
+    // here would leak the password into the metadata file.
+    expect(normalizeRemoteUrl('https://user:pass@/owner/repo.git')).toBeNull()
+  })
 })
 
 describe('collectGitMetadata', () => {
