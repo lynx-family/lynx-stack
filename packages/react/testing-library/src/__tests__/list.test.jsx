@@ -1013,3 +1013,55 @@ test('should replace a keyed list in a dynamic slot without corrupting the slot 
   expect(nextList.querySelector('list-item').getAttribute('estimated-height-px')).toBe('20');
   expect(container.textContent).toBe('headerafterfooter');
 });
+
+test('should not update a shown nested list-item when reusing an outer list-item', () => {
+  const Comp = () => (
+    <list>
+      {[0, 1].map((row) => (
+        <list-item key={row} item-key={`row-${row}`} reuse-identifier='row'>
+          <list>
+            <list-item item-key={`cell-${row}`}>
+              <text>{`cell-${row}`}</text>
+            </list-item>
+          </list>
+        </list-item>
+      ))}
+    </list>
+  );
+
+  const show = (list, index) => elementTree.enterListItemAtIndex(list, index);
+  const recycle = (list, sign) => elementTree.leaveListItem(list, sign);
+  const element = (sign) => elementTree.__GetElementByUniqueId(sign);
+  const text = (sign) => element(sign).textContent;
+  const itemKey = (sign) => element(sign).getAttribute('item-key');
+  const innerListOf = (rowSign) => element(rowSign).querySelector('list');
+
+  const { container } = render(<Comp />);
+  const outerList = container.firstChild;
+
+  // row-0: firstRow > firstInnerList > firstCell
+  const firstRow = show(outerList, 0);
+  const firstInnerList = innerListOf(firstRow);
+  const firstCell = show(firstInnerList, 0);
+  expect(itemKey(firstRow)).toBe('row-0');
+  expect(text(firstCell)).toBe('cell-0');
+
+  // row-1 reuses firstRow and firstInnerList; firstCell goes to the pool of firstInnerList
+  recycle(outerList, firstRow);
+  expect(show(outerList, 1)).toBe(firstRow);
+  expect(itemKey(firstRow)).toBe('row-1');
+  expect(innerListOf(firstRow)).toBe(firstInnerList);
+  recycle(firstInnerList, firstCell);
+
+  // row-0 comes back on a new row with a new nested list
+  const secondRow = show(outerList, 0);
+  expect(secondRow).not.toBe(firstRow);
+  expect(itemKey(secondRow)).toBe('row-0');
+  const secondCell = show(innerListOf(secondRow), 0);
+  expect(text(secondCell)).toBe('cell-0');
+
+  // row-1 reuses firstCell for cell-1
+  expect(show(firstInnerList, 0)).toBe(firstCell);
+  expect(text(firstCell)).toBe('cell-1');
+  expect(text(secondCell)).toBe('cell-0');
+});
