@@ -1,6 +1,9 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import type { RspressPlugin } from '@rspress/core';
 import { pluginTypeDoc } from '@rspress/plugin-typedoc';
 import {
@@ -23,6 +26,7 @@ import ts from 'typescript';
 import { escapeEsmLines } from './mdx.ts';
 import { withPackageLinks } from './packages.ts';
 import { rewritePackageReferences } from './references.ts';
+import { ApiGroupRouter } from './router.ts';
 import type { Section } from './sections.ts';
 import type { Site } from './site.ts';
 import { hidePlatformTags } from './tags.ts';
@@ -48,6 +52,7 @@ export function pluginApiSection(
   const name = `${locale}/${section.out}`;
   const byName = new Map(packages.map(pkg => [pkg.name, pkg]));
   let typedoc: Application | undefined;
+  let groupRouter: ApiGroupRouter | undefined;
   const plugin = pluginTypeDoc({
     entryPoints: section.packages,
     outDir: name,
@@ -62,7 +67,13 @@ export function pluginApiSection(
         readme: 'none',
       });
       if (section.name) app.options.setValue('name', section.name);
-      app.options.setValue('router', section.router);
+      if (section.router === 'group') {
+        app.renderer.defineRouter('api-group', ApiGroupRouter);
+      }
+      app.options.setValue(
+        'router',
+        section.router === 'group' ? 'api-group' : section.router,
+      );
       app.options.setValue('fileExtension', '.mdx');
       app.options.setValue('sanitizeComments', true);
       app.options.setValue('expandParameters', true);
@@ -145,6 +156,9 @@ export function pluginApiSection(
       hidePlatformTags(app);
       if (site.wrappers) renameWrappedPackages(app, site.wrappers);
       app.renderer.on(RendererEvent.BEGIN, (event: RendererEvent) => {
+        if (app.renderer.router instanceof ApiGroupRouter) {
+          groupRouter = app.renderer.router;
+        }
         app.validate(event.project);
       });
       app.renderer.on(MarkdownPageEvent.END, page => {
@@ -172,6 +186,19 @@ export function pluginApiSection(
     async config(config, utils, isProd) {
       const result = await plugin.config!(config, utils, isProd);
       assertNoWarnings(typedoc!, name);
+      if (groupRouter) {
+        const meta = join(config.root!, name, '_meta.json');
+        const items = JSON.parse(readFileSync(meta, 'utf8')) as (
+          | string
+          | { type: string; name: string; label: string }
+        )[];
+        const labels = groupRouter.groupLabels;
+        for (const item of items) {
+          if (typeof item === 'string' || item.type !== 'dir') continue;
+          item.label = labels.get(item.name) ?? item.label;
+        }
+        writeFileSync(meta, `${JSON.stringify(items, null, 2)}\n`);
+      }
       return result;
     },
   };
