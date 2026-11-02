@@ -44,10 +44,13 @@ import {
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
   prepareMainThreadDynamicAttrSlotsForNative,
+  updateGestureAttrSlot,
   updateMainThreadEventAttrSlot,
   updateMainThreadRefAttrSlot,
 } from './template/main-thread-dynamic-attr-state.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
+import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
+import type { GestureSlotValue } from '../prop-adapters/gesture.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -129,6 +132,22 @@ export function applyElementTemplateUpdateCommands(
           }
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
+        break;
+      }
+
+      case ElementTemplateUpdateOps.setGesture: {
+        const targetId = stream[i++] as number;
+        const attrSlotIndex = stream[i++] as number;
+        const value = stream[i++] as SerializableValue | null;
+        const nativeRef = resolveTargetHandle(targetId, 'target');
+        if (!nativeRef) {
+          continue;
+        }
+        if (value != null) {
+          retainGestureCallbacks(value as unknown as GestureSlotValue);
+        }
+        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
+        updateGestureAttrSlot(targetId, attrSlotIndex, value, isHydration);
         break;
       }
 

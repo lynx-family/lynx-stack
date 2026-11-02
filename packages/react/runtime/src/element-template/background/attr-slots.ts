@@ -122,6 +122,9 @@ export function getAttributeSlotUpdateOp(
   attrSlotIndex: number,
 ): ElementTemplateUpdateOp {
   const kind = getMainThreadDynamicAttrSlotKinds(templateType)?.get(attrSlotIndex);
+  if (kind === 'gesture') {
+    return ElementTemplateUpdateOps.setGesture;
+  }
   if (kind === 'mt-event') {
     return ElementTemplateUpdateOps.setMainThreadEvent;
   }

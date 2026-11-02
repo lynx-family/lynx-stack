@@ -629,6 +629,9 @@ function shouldForceMainThreadHydrateSlot(
   slotKind: MainThreadDynamicAttrKind | undefined,
   value: SerializableValue | undefined,
 ): boolean {
+  if (slotKind === 'gesture') {
+    return value != null;
+  }
   if (slotKind === 'mt-event') {
     return isMTEventNativeWrapper(value);
   }
