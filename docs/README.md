@@ -38,7 +38,7 @@ The content comes from TSDoc only: a package introduction is its `@packageDocume
 
 ## Chinese
 
-The Chinese pages are rendered again with TypeDoc's `lang: 'zh'`. Their prose is translated through `i18n/zh.json`, which maps each English paragraph or table cell to its Chinese text. A build adds new English strings with an empty value. Existing nonempty translations are retained even when a build does not render them. Commit `i18n/zh.json`; CI fails while a value is empty or the file is out of date.
+Both locales use TypeDoc's `lang: 'en'` so generated category paths, headings and sidebar labels stay consistent (for example, `Functions` and `Interfaces`). Chinese prose is translated through `i18n/zh.json`, which maps each English paragraph or table cell to its Chinese text. A build adds new English strings with an empty value. Existing nonempty translations are retained even when a build does not render them. Commit `i18n/zh.json`; CI fails while a value is empty or the file is out of date. Generation also fails if the sets of English and Chinese API page paths differ.
 
 ## Sync to lynxjs.org
 
