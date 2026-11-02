@@ -4917,6 +4917,60 @@ describe('destroy list after element transfer', () => {
   });
 });
 
+describe('list recycle-pool ownership after hydration with reuse-identifier', () => {
+  const listSnapshot = __SNAPSHOT__(<list>{HOLE}</list>);
+  const itemSnapshot = __SNAPSHOT__(
+    <list-item item-key={HOLE} reuse-identifier={HOLE}>
+      <raw-text text={HOLE} />
+    </list-item>,
+  );
+
+  it.each([
+    { beforeReuseIdentifier: '', afterReuseIdentifier: '' },
+    { beforeReuseIdentifier: 'shared', afterReuseIdentifier: 'shared' },
+    { beforeReuseIdentifier: 'old-group', afterReuseIdentifier: 'new-group' },
+  ])('reuses hydrated content when reuse-identifier changes from $beforeReuseIdentifier to $afterReuseIdentifier', ({
+    beforeReuseIdentifier,
+    afterReuseIdentifier,
+  }) => {
+    function createItem(key, text, reuseIdentifier) {
+      const item = new SnapshotInstance(itemSnapshot);
+      item.setAttribute(0, { 'item-key': key, 'reuse-identifier': reuseIdentifier });
+      item.setAttribute(1, text);
+      return item;
+    }
+
+    const before = new SnapshotInstance(listSnapshot);
+    const oldItem = createItem('item-a', 'before', beforeReuseIdentifier);
+    before.insertBefore(oldItem);
+    before.ensureElements();
+    const list = before.__element_root;
+    const sign = elementTree.triggerComponentAtIndex(list, 0);
+    const element = oldItem.__element_root;
+    elementTree.triggerEnqueueComponent(list, sign);
+
+    const after = new SnapshotInstance(listSnapshot);
+    const updatedItem = createItem('item-a', 'after', afterReuseIdentifier);
+    const nextItem = createItem('item-b', 'before', beforeReuseIdentifier);
+    after.insertBefore(updatedItem);
+    after.insertBefore(nextItem);
+    hydrate(before, after);
+    before.unRenderElements();
+    expect(__GetAttributeByName(element.children[0], 'text')).toBe('after');
+
+    const recycleMap = gRecycleMap[__GetElementUniqueID(list)];
+    const pool = recycleMap.get(itemSnapshot + beforeReuseIdentifier);
+    expect.soft(pool.get(sign) === updatedItem, 'the pool must reference the hydrated instance').toBe(true);
+    if (beforeReuseIdentifier !== afterReuseIdentifier) {
+      expect(recycleMap.get(itemSnapshot + afterReuseIdentifier)?.has(sign) ?? false).toBe(false);
+    }
+
+    expect(elementTree.triggerComponentAtIndex(list, 1)).toBe(sign);
+    expect(nextItem.__element_root).toBe(element);
+    expect(__GetAttributeByName(element.children[0], 'text')).toBe('before');
+  });
+});
+
 describe('list worklet ref lifecycle', () => {
   it('unrefs worklet refs when a list child is logically removed', () => {
     const listSnapshot = __SNAPSHOT__(<list>{HOLE}</list>);
