@@ -82,16 +82,15 @@ export function createCrossThreadEvent(
     }
   } else if (type.startsWith('mouse')) {
     const mouseEvent = domEvent as MouseEvent;
-    // `x/y` are lynx-view-relative (native Lynx parity); `clientX/clientY`
-    // and `pageX/pageY` keep their Web-standard meaning so handlers can
-    // still reach viewport/document coordinates.
+    // `x/y` and `clientX/clientY` are relative to the lynx-view;
+    // `pageX/pageY` retain their document coordinates.
     Object.assign(otherProperties, {
       button: mouseEvent.button,
       buttons: mouseEvent.buttons,
       x: mouseEvent.clientX - lynxViewClientLeft,
       y: mouseEvent.clientY - lynxViewClientTop,
-      clientX: mouseEvent.clientX,
-      clientY: mouseEvent.clientY,
+      clientX: mouseEvent.clientX - lynxViewClientLeft,
+      clientY: mouseEvent.clientY - lynxViewClientTop,
       pageX: mouseEvent.pageX,
       pageY: mouseEvent.pageY,
     });
