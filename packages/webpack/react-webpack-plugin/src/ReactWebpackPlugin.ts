@@ -772,7 +772,12 @@ class ReactWebpackPlugin {
                     continue;
                   }
 
-                  const shouldInjectWrapper = isDynamicImport
+                  // With splitChunks.name: 'main', PageA's async group can
+                  // also contain main. Wrapping main would stop the entry from
+                  // running. A separately built lazy bundle still wraps its
+                  // configured main-thread file, even though it is initial.
+                  const shouldInjectWrapper =
+                    (isDynamicImport && !chunk.canBeInitial())
                     || (options.experimental_isLazyBundle
                       && options.mainThreadChunks?.includes(file));
                   if (!shouldInjectWrapper) {
