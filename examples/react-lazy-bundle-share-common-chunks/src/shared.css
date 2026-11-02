@@ -1,0 +1,106 @@
+.page-card {
+  display: flex;
+  flex-direction: column;
+  padding: 22px;
+  margin-bottom: 14px;
+  border: 1px solid #d9e3d6;
+  border-radius: 22px;
+}
+
+.card-a {
+  background-color: #e7efdf;
+}
+
+.card-b {
+  background-color: #f3e9dc;
+  border-color: #e8ddcd;
+}
+
+.card-top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-number {
+  color: #64755c;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.ready-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: #ffffff99;
+  color: #47623f;
+  font-size: 10px;
+}
+
+.page-title {
+  margin-top: 18px;
+  color: #203b33;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.page-description {
+  margin-top: 6px;
+  color: #6f7967;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.module-panel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 12px;
+  background-color: #ffffff80;
+}
+
+.module-label {
+  color: #697960;
+  font-size: 10px;
+}
+
+.module-value {
+  margin-top: 8px;
+  color: #314b35;
+  font-size: 11px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.module-detail {
+  margin-top: 8px;
+  color: #7f8777;
+  font-size: 10px;
+}
+
+.card-bottom {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.shared-label {
+  color: #737d6a;
+  font-size: 10px;
+}
+
+.tap-button {
+  padding: 9px 12px;
+  border-radius: 18px;
+  background-color: #203b33;
+}
+
+.tap-button-text {
+  color: #f5f4ef;
+  font-size: 11px;
+  font-weight: 600;
+}
