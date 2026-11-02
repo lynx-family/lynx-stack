@@ -57,6 +57,24 @@ function createMainThreadLynx(
     fetchBundle(url: string) {
       return lynxViewInstance.loadExternalBundle(url);
     },
+    loadScriptAsync(
+      sectionPath,
+      callback,
+      bundleName = lynxViewInstance.templateUrl,
+    ) {
+      const blobUrl = lynxViewInstance.lepusCodeUrls.get(bundleName)
+        ?.[sectionPath];
+      if (blobUrl === undefined) {
+        callback(
+          `lynx.loadScriptAsync: section "${sectionPath}" not found in bundle ${bundleName}`,
+        );
+        return;
+      }
+      lynxViewInstance.mtsRealm!.loadScript(blobUrl).then(
+        exports => callback(null, exports),
+        error => callback(String(error)),
+      );
+    },
     loadScript(sectionPath: string, options: { bundleName: string }) {
       // An external bundle's mts chunk rides the `lepusCode` section: the decode
       // worker already wrapped it (with a `module`/`exports` env) into a blob

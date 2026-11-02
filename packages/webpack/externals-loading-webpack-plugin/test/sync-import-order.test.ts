@@ -244,6 +244,132 @@ describe('external import order', () => {
   );
 
   it.each(['main-thread', 'background'])(
+    'prefers loadScriptAsync and waits for exports before applying CSS on %s',
+    async layer => {
+      let finish!: (message: string | null, exports?: unknown) => void;
+      const loadScriptAsync = rstest.fn(
+        (
+          _section: string,
+          callback: (message: string | null, exports?: unknown) => void,
+          _bundleName: string,
+        ) => {
+          finish = callback;
+        },
+      );
+      const loadScript = rstest.fn();
+      const component = { run: rstest.fn() };
+      const globals: Record<string, unknown> = {};
+      const loadStyleSheet = rstest.fn(() => 'stylesheet');
+      const adoptStyleSheet = rstest.fn();
+      const flushElementTree = rstest.fn();
+      runInNewContext(sources.get(`true-${layer}`)!, {
+        __externalOrder: { events: [] },
+        lynx: {
+          fetchBundle: (url: string) => Promise.resolve({ code: 0, url }),
+          loadScriptAsync,
+          loadScript,
+          [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
+        },
+        __LoadStyleSheet: loadStyleSheet,
+        __AdoptStyleSheet: adoptStyleSheet,
+        __FlushElementTree: flushElementTree,
+      });
+      const pending = globals['Component'];
+      expect(globals['Alias']).toBe(pending);
+      await setImmediate();
+      expect(loadScriptAsync).toHaveBeenCalledExactlyOnceWith(
+        'component',
+        expect.any(Function),
+        'component.bundle',
+      );
+      expect(loadScript).not.toHaveBeenCalled();
+      expect(component.run).not.toHaveBeenCalled();
+      expect(loadStyleSheet).not.toHaveBeenCalled();
+      finish(null, component);
+      expect(await pending).toBe(component);
+      await setImmediate();
+      expect(globals['Component']).toBe(pending);
+      expect(component.run).toHaveBeenCalledTimes(2);
+      expect(loadStyleSheet).toHaveBeenCalledTimes(
+        layer === 'main-thread' ? 1 : 0,
+      );
+      expect(adoptStyleSheet).toHaveBeenCalledTimes(
+        layer === 'main-thread' ? 1 : 0,
+      );
+      expect(flushElementTree).toHaveBeenCalledTimes(
+        layer === 'main-thread' ? 1 : 0,
+      );
+    },
+  );
+
+  it.each(
+    ['main-thread', 'background'].flatMap(layer =>
+      ['callback', 'throw', 'fetch'].map(failure => ({ layer, failure }))
+    ),
+  )(
+    'caches asynchronous failures ($layer, $failure)',
+    async ({ layer, failure }) => {
+      const loadScriptAsync = rstest.fn(
+        (
+          _section: string,
+          callback: (message: string | null, exports?: unknown) => void,
+          bundleName: string,
+        ) => {
+          if (bundleName === 'unused.bundle') {
+            if (failure === 'throw') throw new Error('section failed');
+            queueMicrotask(() => callback('section failed'));
+          } else {
+            queueMicrotask(() => callback(null, { run: rstest.fn() }));
+          }
+        },
+      );
+      const loadScript = rstest.fn();
+      const globals: Record<string, unknown> = {};
+      const loadStyleSheet = rstest.fn(() => null);
+      runInNewContext(sources.get(`true-${layer}`)!, {
+        __externalOrder: { events: [] },
+        console: { error: rstest.fn() },
+        lynx: {
+          fetchBundle: (url: string) => ({
+            then: (
+              resolve: (response: { code: number; url: string }) => void,
+              reject: (error: Error) => void,
+            ) =>
+              failure === 'fetch' && url === 'unused.bundle'
+                ? Promise.reject(new Error('fetch failed')).then(
+                  resolve,
+                  reject,
+                )
+                : Promise.resolve({ code: 0, url }).then(resolve, reject),
+          }),
+          loadScriptAsync,
+          loadScript,
+          [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
+        },
+        __LoadStyleSheet: loadStyleSheet,
+      });
+      await setImmediate();
+      loadStyleSheet.mockClear();
+      const rejected = globals['Unused'];
+      expect(globals['Unused']).toBe(rejected);
+      await expect(rejected).rejects.toThrow(
+        failure === 'fetch' ? 'fetch failed' : 'Failed to load script',
+      );
+      if (failure !== 'fetch') {
+        await expect(rejected).rejects.toMatchObject({
+          cause: { message: 'section failed' },
+        });
+      }
+      expect(globals['Unused']).toBe(rejected);
+      expect(loadScriptAsync).toHaveBeenCalledTimes(
+        failure === 'fetch' ? 1 : 2,
+      );
+      expect(loadScript).not.toHaveBeenCalled();
+      expect(loadStyleSheet).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['main-thread', 'background'])(
     'caches a rejected loading Promise on %s',
     async (layer) => {
       const loadScript = rstest.fn((_section, { bundleName }) => {

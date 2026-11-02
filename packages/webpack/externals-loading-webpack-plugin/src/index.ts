@@ -463,10 +463,17 @@ function createRetryingHandler(fetchBundle, retries) {
 
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
-    handler.then((response) => {
+    handler.then(async (response) => {
       if (response.code === 0) {
         try {
-          const result = lynx.loadScript(sectionPath, { bundleName: response.url });
+          const result = typeof lynx.loadScriptAsync === 'function'
+            ? await new Promise((resolve, reject) => {
+                lynx.loadScriptAsync(sectionPath, (message, exports) => {
+                  if (message !== null) reject(new Error(message));
+                  else resolve(exports);
+                }, response.url);
+              })
+            : lynx.loadScript(sectionPath, { bundleName: response.url });
           ${
           isMainThreadLayer
             ? `
@@ -491,7 +498,7 @@ function createLoadExternalAsync(handler, sectionPath) {
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
       }
-    })
+    }, reject)
   })
 }
 

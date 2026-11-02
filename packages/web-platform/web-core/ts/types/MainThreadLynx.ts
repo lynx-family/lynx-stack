@@ -9,6 +9,20 @@ import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { LynxEngineContext } from './LynxEngineContext.js';
 import type { LynxPerformance } from './NativeApp.js';
 export interface MainThreadLynx extends ExternalBundleLynxAPIs {
+  /**
+   * Asynchronously evaluate a script from a previously fetched bundle and pass
+   * its module exports to the callback, using the BTS `loadScriptAsync` signature.
+   * This API is available in the browser main thread, but not during SSR.
+   *
+   * @param sectionPath - The script's path in the bundle.
+   * @param callback - Receives `null` and the exports on success, or an error message on failure.
+   * @param entryName - The bundle URL; defaults to the current view's template URL.
+   */
+  loadScriptAsync?(
+    sectionPath: string,
+    callback: (message: string | null, exports?: unknown) => void,
+    entryName?: string,
+  ): void;
   performance: LynxPerformance;
   getJSContext: () => LynxContextEventTarget;
   /**

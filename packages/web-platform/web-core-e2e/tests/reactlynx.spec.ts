@@ -5757,9 +5757,18 @@ test.describe('reactlynx3 tests', () => {
 
   test.describe('external-bundle', () => {
     test('external-bundle', async ({ page }, { title }) => {
+      await page.addInitScript(() => {
+        const open = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url, async = true) {
+          if (!async) {
+            throw new Error('External scripts must load asynchronously');
+          }
+          return open.call(this, method, url, async);
+        };
+      });
       await goto(page, title);
-      // The external module is fetched + evaluated via lynx.fetchBundle +
-      // lynx.loadScript (background and main-thread layers) and rendered.
+      // The main thread uses lynx.loadScriptAsync without synchronous XHR;
+      // the background thread falls back to lynx.loadScript.
       await expectHasText(page, 'hello-from-external');
       // The external bundle's pre-processed style section is applied through the
       // wasm style engine (push_style_sheet) during lynx.fetchBundle, so the
