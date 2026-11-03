@@ -15,19 +15,31 @@ import {
   updateElementTemplateListItem,
 } from './list/list.js';
 import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
-import { insertElementTemplateSubtree } from './template/handle.js';
+import {
+  createElementTemplateWithReservedHandle,
+  destroyElementTemplateId,
+  insertElementTemplateSubtree,
+} from './template/handle.js';
 import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
+import {
+  isSpreadDynamicAttrSlot,
+  prepareSpreadAttrSlotForNative,
+  reconcileUnhydratedSpreadMTRefSlots,
+  updateGestureAttrSlot,
+  updateMainThreadEventAttrSlot,
+  updateMainThreadRefAttrSlot,
+  updateSpreadAttrSlot,
+} from './template/main-thread-dynamic-attr-state.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
 import type { MTEventNativeWrapper } from './template/main-thread-event-ctx.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
+import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
+import type { GestureSlotValue } from '../prop-adapters/gesture.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
-import {
-  elementTemplateIdentityKey,
-  elementTemplateTypeTag,
-  parseElementTemplateType,
-} from '../protocol/template-type.js';
+import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
@@ -40,21 +52,6 @@ import type {
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
-import {
-  deleteMainThreadDynamicAttrStateForSubtree,
-  initializeMainThreadDynamicAttrSlots,
-  isSpreadDynamicAttrSlot,
-  prepareMainThreadDynamicAttrSlotsForNative,
-  prepareSpreadAttrSlotForNative,
-  reconcileUnhydratedSpreadMTRefSlots,
-  updateGestureAttrSlot,
-  updateMainThreadEventAttrSlot,
-  updateMainThreadRefAttrSlot,
-  updateSpreadAttrSlot,
-} from './template/main-thread-dynamic-attr-state.js';
-import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
-import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
-import type { GestureSlotValue } from '../prop-adapters/gesture.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -93,28 +90,15 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
 
-        const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
-        const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(
-          templateType,
-          attributeSlots,
-        );
-        const nativeRef = __CreateElementTemplate(
+        createElementTemplateWithReservedHandle(
+          handleId,
           templateKey,
           bundleUrl,
-          nativeAttributeSlots,
+          attributeSlots,
           resolvedChildSlots,
-          handleId,
+          true,
+          true,
         );
-
-        if (nativeRef) {
-          elementTemplateRegistry.set(handleId, nativeRef);
-          initializeMainThreadDynamicAttrSlots(
-            handleId,
-            templateType,
-            attributeSlots,
-            true,
-          );
-        }
         break;
       }
 
@@ -392,8 +376,7 @@ function releaseRemovedSubtreeHandles(
 ): void {
   for (const handleId of removedSubtreeHandleIds) {
     const pendingRemovedSubtreeHandleIds = markElementTemplateListDestroyed(handleId);
-    elementTemplateRegistry.delete(handleId);
-    deleteMainThreadDynamicAttrStateForSubtree([handleId]);
+    destroyElementTemplateId(handleId);
     if (pendingRemovedSubtreeHandleIds) {
       releaseRemovedSubtreeHandles(pendingRemovedSubtreeHandleIds);
     }

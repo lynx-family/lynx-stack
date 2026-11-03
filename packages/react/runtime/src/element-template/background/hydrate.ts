@@ -18,9 +18,19 @@ import { isMainThreadFunction } from '../../core/main-thread-function.js';
 import { hydrationMap } from '../hydration-map.js';
 import { isGestureSlotValue } from '../prop-adapters/gesture.js';
 import { isMainThreadEventPropKey, isSpreadRecord } from '../prop-adapters/spread.js';
+import {
+  COMPONENT_AT_INDEXES_ATTR,
+  COMPONENT_AT_INDEX_ATTR,
+  ENQUEUE_COMPONENT_ATTR,
+  UPDATE_LIST_INFO_ATTR,
+} from '../protocol/list.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
-import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
+import {
+  MAIN_BUNDLE_URL_SENTINEL,
+  elementTemplateIdentityKey,
+  parseElementTemplateType,
+} from '../protocol/template-type.js';
 import type {
   SerializableValue,
   SerializedCompiledNode,
@@ -31,12 +41,6 @@ import { getMainThreadDynamicAttrSlotKinds } from '../runtime/template/attr-slot
 import type { MainThreadDynamicAttrKind } from '../runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
 import type { MTRefNativeWrapper } from '../runtime/template/main-thread-ref-ctx.js';
-
-const MAIN_BUNDLE_URL_SENTINEL = '__Card__';
-const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
-const COMPONENT_AT_INDEXES_ATTR = 'component-at-indexes';
-const ENQUEUE_COMPONENT_ATTR = 'enqueue-component';
-const UPDATE_LIST_INFO_ATTR = 'update-list-info';
 
 export function hydrateRootChildrenIntoContext(
   serializedChildren: SerializedEtNode[],
