@@ -229,10 +229,15 @@ describe('mts-destroy', () => {
         },
       ],
     );
+    vi.stubGlobal(
+      'runWorklet',
+      vi.fn(() => () => {
+        throw cleanupError;
+      }),
+    );
     attachMainThreadDynamicAttrRefsForSubtree([{ uid: -1, ref: registryRef }]);
-    throwingRef._unmount = vi.fn(() => {
-      throw cleanupError;
-    });
+    vi.mocked(__GetElementByAttrSlot).mockReturnValue({ id: 'actual-element' } as unknown as ElementRef);
+    applyPendingMainThreadRefAttachments();
 
     expect(() => onMtsDestruction()).toThrow(cleanupError);
     expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
