@@ -14,6 +14,7 @@ import { setupComponentStack } from '../../core/component-stack.js';
 import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
+import { setupSharedLynxEnv } from '../../core/lynx/env.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
 import { lynxQueueMicrotask } from '../../shared/microtask.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
@@ -23,7 +24,6 @@ import { BackgroundPageRootInstance } from '../background/instance.js';
 import { installElementTemplateRenderScopeHooks } from '../background/render-scope.js';
 import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
-import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
 import { installElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
@@ -92,7 +92,7 @@ function init(): void {
     }
   }
 
-  setupLynxEnv();
+  setupSharedLynxEnv();
 }
 
 init();
