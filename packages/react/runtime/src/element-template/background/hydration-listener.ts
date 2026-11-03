@@ -12,9 +12,9 @@ import {
   resetElementTemplateCommitState,
   scheduleElementTemplateRemovedSubtreeCleanup,
 } from './commit-hook.js';
-import type { BackgroundPageRootInstance } from './instance.js';
 import { resetElementTemplateMainThreadFunctionRuntime } from './main-thread-function.js';
 import { hydratePageRootIntoContext } from './page-root-hydrate.js';
+import type { BackgroundPageRootInstance } from './typed-instance.js';
 import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import {
   PerformanceTimingFlags,

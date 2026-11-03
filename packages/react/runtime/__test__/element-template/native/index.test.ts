@@ -32,7 +32,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/background/document.js');
     vi.doUnmock('../../../src/element-template/background/hydration-listener.js');
     vi.doUnmock('../../../src/element-template/background/commit-hook.js');
-    vi.doUnmock('../../../src/element-template/background/instance.js');
+    vi.doUnmock('../../../src/element-template/background/typed-instance.js');
     vi.doUnmock('../../../src/element-template/debug/elementPAPICall.js');
     vi.doUnmock('../../../src/element-template/debug/profile.js');
     vi.doUnmock('../../../src/core/lynx/env.js');
@@ -92,8 +92,7 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
     }));
-    vi.doMock('../../../src/element-template/background/instance.js', () => ({
-      BackgroundElementTemplateInstance: class BackgroundElementTemplateInstance {},
+    vi.doMock('../../../src/element-template/background/typed-instance.js', () => ({
       BackgroundPageRootInstance: class BackgroundPageRootInstance {},
     }));
     vi.doMock('../../../src/element-template/native/reload-background.js', () => ({
@@ -192,8 +191,7 @@ describe('element-template native index wiring', () => {
       publicComponentEvent,
       resetEventStateForRuntime,
     }));
-    vi.doMock('../../../src/element-template/background/instance.js', () => ({
-      BackgroundElementTemplateInstance: MockBackgroundElementTemplateInstance,
+    vi.doMock('../../../src/element-template/background/typed-instance.js', () => ({
       BackgroundPageRootInstance: MockBackgroundPageRootInstance,
     }));
     vi.doMock('../../../src/element-template/native/reload-background.js', () => ({

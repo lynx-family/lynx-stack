@@ -3,7 +3,7 @@ import {
   resetGlobalCommitContext,
 } from '../../../../src/element-template/background/commit-context.js';
 import { hydrateRootChildrenIntoContext } from '../../../../src/element-template/background/hydrate.js';
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
 import type {
   ElementTemplateUpdateCommandStream,
   SerializedEtNode,
