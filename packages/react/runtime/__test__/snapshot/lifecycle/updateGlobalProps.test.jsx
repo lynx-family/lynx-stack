@@ -24,7 +24,7 @@ beforeEach(() => {
 afterEach(() => {
   elementTree.clear();
   vi.restoreAllMocks();
-  globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
+  lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
 });
 
 async function renderWithCurrentPreact(element, root) {
@@ -308,8 +308,8 @@ describe('updateGlobalProps', () => {
     }
   });
 
-  it('should not trigger re-render when __GLOBAL_PROPS_MODE__ is event', async () => {
-    globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+  it('should not trigger re-render when globalPropsMode is event', async () => {
+    lynx.__runtime_configs__ = { globalPropsMode: 'event' };
 
     lynx.__globalProps = { theme: 'dark' };
     const Comp = () => {

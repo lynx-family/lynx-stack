@@ -11,6 +11,7 @@ import type { InitData, InitDataRaw } from '../src/lynx-api.js';
 
 interface ReactLynxRuntimeConfig {
   [key: string]: unknown;
+  globalPropsMode?: 'reactive' | 'event';
   transformBuiltinAttributeNames?:
     | boolean
     | TransformBuiltinAttributeNamesOptions;
@@ -21,6 +22,7 @@ declare global {
   declare const __REF_FIRE_IMMEDIATELY__: boolean;
   declare const __TESTING_FORCE_RENDER_TO_OPCODE__: boolean;
   declare const __FIRST_SCREEN_SYNC_TIMING__: 'immediately' | 'jsReady' | 'manual';
+  declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __DEV__: boolean;
   declare const __JS__: boolean;
   declare const __LEPUS__: boolean;
@@ -32,7 +34,6 @@ declare global {
   declare const __ALOG__: boolean | undefined;
   declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;
-  declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
   declare const __RUNTIME_VERSION__: string | undefined;
   declare const __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: boolean | undefined;

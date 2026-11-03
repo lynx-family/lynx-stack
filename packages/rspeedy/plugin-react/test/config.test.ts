@@ -441,6 +441,7 @@ describe('Config', () => {
         plugins: [
           pluginReactLynx({
             experimental_transformBuiltinAttributeNames: transformConfig,
+            globalPropsMode: 'event',
           }),
           pluginStubRspeedyAPI(),
         ],
@@ -484,6 +485,7 @@ describe('Config', () => {
       ).options,
     ).toEqual({
       transformBuiltinAttributeNames: transformConfig,
+      globalPropsMode: 'event',
     })
   })
 
@@ -493,9 +495,11 @@ describe('Config', () => {
       callerName: 'rspeedy',
       pluginOptions: {
         experimental_transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event' as const,
       },
       expectedRuntimeConfig: {
         transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event',
       },
     },
     {
@@ -504,6 +508,7 @@ describe('Config', () => {
       pluginOptions: {
         experimental_isLazyBundle: true,
         experimental_transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event' as const,
       },
       expectedRuntimeConfig: undefined,
     },
@@ -512,6 +517,7 @@ describe('Config', () => {
       callerName: 'rslib',
       pluginOptions: {
         experimental_transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event' as const,
       },
       expectedRuntimeConfig: undefined,
     },
@@ -554,7 +560,7 @@ describe('Config', () => {
     ).toEqual(expectedRuntimeConfig)
   })
 
-  test('does not apply the runtime config plugin when all runtime configs are disabled', async () => {
+  test('injects the reactive default without disabled attribute-name settings', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -570,11 +576,18 @@ describe('Config', () => {
 
     const [config] = await rsbuild.initConfigs()
 
-    expect(
-      config?.plugins?.find(
-        plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
-      ),
-    ).toBeUndefined()
+    const runtimePlugin = config?.plugins?.find(
+      plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+    )
+    expect(runtimePlugin).toBeDefined()
+    expect((runtimePlugin as unknown as { options: unknown }).options).toEqual({
+      globalPropsMode: 'reactive',
+    })
+    const reactPlugin = config?.plugins?.find(
+      plugin => plugin?.constructor.name === 'ReactWebpackPlugin',
+    )
+    expect((reactPlugin as unknown as { options: unknown }).options)
+      .toHaveProperty('globalPropsMode', 'reactive')
   })
 
   test('experimental_useElementTemplate wires aliases and loader/plugin options', async () => {
@@ -910,34 +923,7 @@ describe('Config', () => {
       expect(firstScreenSyncTiming).toBe('immediately')
     })
 
-    test('globalPropsMode defaults to "reactive"', async () => {
-      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-      const rsbuild = await createRspeedy({
-        rspeedyConfig: {
-          plugins: [
-            pluginReactLynx(),
-            pluginStubRspeedyAPI(),
-          ],
-        },
-      })
-
-      const [config] = await rsbuild.initConfigs()
-
-      const ReactWebpackPlugin = config?.plugins?.find((
-        p,
-      ): p is ReactWebpackPlugin =>
-        p?.constructor.name === 'ReactWebpackPlugin'
-      )
-
-      expect(ReactWebpackPlugin).toBeDefined()
-
-      // @ts-expect-error private field
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
-      expect(globalPropsMode).toBe('reactive')
-    })
-
-    test('globalPropsMode respects configuration', async () => {
+    test('globalPropsMode uses runtime configuration for event mode', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
@@ -949,19 +935,19 @@ describe('Config', () => {
       })
 
       const [config] = await rsbuild.initConfigs()
-
-      const ReactWebpackPlugin = config?.plugins?.find((
-        p,
-      ): p is ReactWebpackPlugin =>
-        p?.constructor.name === 'ReactWebpackPlugin'
+      const runtimePlugin = config?.plugins?.find(
+        plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
       )
-
-      expect(ReactWebpackPlugin).toBeDefined()
-
-      // @ts-expect-error private field
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
-      expect(globalPropsMode).toBe('event')
+      expect(runtimePlugin).toBeDefined()
+      expect((runtimePlugin as unknown as { options: unknown }).options)
+        .toEqual({
+          globalPropsMode: 'event',
+        })
+      const reactPlugin = config?.plugins?.find(
+        plugin => plugin?.constructor.name === 'ReactWebpackPlugin',
+      )
+      expect((reactPlugin as unknown as { options: unknown }).options)
+        .toHaveProperty('globalPropsMode', 'event')
     })
 
     test('environments.lynx.output.inlineScripts: false', async () => {
