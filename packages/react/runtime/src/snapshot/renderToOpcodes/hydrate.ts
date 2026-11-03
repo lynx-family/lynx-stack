@@ -3,13 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 
 import { profileEnd, profileStart } from '../../shared/profile.js';
+import { isEmptyObject } from '../../shared/utils.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { DynamicPartType } from '../snapshot/dynamicPartType.js';
 import type { PlatformInfo } from '../snapshot/platformInfo.js';
 import { unref } from '../snapshot/ref.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
-import { isEmptyObject } from '../../utils.js';
 
 const UNREACHABLE_ITEM_KEY_NOT_FOUND = 'UNREACHABLE_ITEM_KEY_NOT_FOUND';
 

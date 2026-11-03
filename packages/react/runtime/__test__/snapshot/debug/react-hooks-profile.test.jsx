@@ -18,15 +18,15 @@ async function importHooksWithProfileRecording(isRecording) {
   lynx.performance.isProfileRecording = vi.fn(() => isRecording);
   vi.resetModules();
   try {
-    const [hooks, preact, document, utils] = await Promise.all([
+    const [hooks, preact, document, microtask] = await Promise.all([
       import('../../../src/core/hooks/react'),
       import('preact'),
       import('../../../src/document'),
-      import('../../../src/utils'),
+      import('../../../src/shared/microtask'),
     ]);
     document.setupBackgroundDocument();
     preact.options.document = document.document;
-    preact.options.requestAnimationFrame = utils.lynxQueueMicrotask;
+    preact.options.requestAnimationFrame = microtask.lynxQueueMicrotask;
     currentRender = preact.render;
     currentCreateElement = preact.h;
     return hooks;

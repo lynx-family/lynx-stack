@@ -18,7 +18,7 @@ import {
   NEXT_STATE,
   RENDER,
 } from '../../shared/render-constants.js';
-import { getDisplayName } from '../../utils.js';
+import { getDisplayName } from '../../shared/utils.js';
 import { globalCommitContext } from '../background/commit-context.js';
 
 let installed = false;
