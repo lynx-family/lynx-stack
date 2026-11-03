@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { BackgroundElementTemplateInstance } from './instance.js';
+import type { BackgroundElementTemplateInstance } from './shadow-instance.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
 
 export const backgroundElementTemplateInstanceManager: {
@@ -10,6 +10,8 @@ export const backgroundElementTemplateInstanceManager: {
   values: Map<number, BackgroundElementTemplateInstance>;
   register(instance: BackgroundElementTemplateInstance): void;
   registerPageRoot(instance: BackgroundElementTemplateInstance): void;
+  restoreRegistration(instance: BackgroundElementTemplateInstance): void;
+  unregister(instance: BackgroundElementTemplateInstance): void;
   updateId(oldId: number, newId: number): void;
   get(id: number): BackgroundElementTemplateInstance | undefined;
   getRawAttributeValueByEventValue(eventValue: string): unknown;
@@ -27,6 +29,23 @@ export const backgroundElementTemplateInstanceManager: {
     this.values.delete(instance.instanceId);
     instance.instanceId = ELEMENT_TEMPLATE_PAGE_HANDLE_ID;
     this.values.set(ELEMENT_TEMPLATE_PAGE_HANDLE_ID, instance);
+  },
+
+  restoreRegistration(instance: BackgroundElementTemplateInstance): void {
+    const existing = this.values.get(instance.instanceId);
+    if (existing === instance) {
+      return;
+    }
+    if (existing) {
+      throw new Error(`ElementTemplate handleId ${instance.instanceId} is already bound.`);
+    }
+    this.values.set(instance.instanceId, instance);
+  },
+
+  unregister(instance: BackgroundElementTemplateInstance): void {
+    if (this.values.get(instance.instanceId) === instance) {
+      this.values.delete(instance.instanceId);
+    }
   },
 
   updateId(oldId: number, newId: number): void {

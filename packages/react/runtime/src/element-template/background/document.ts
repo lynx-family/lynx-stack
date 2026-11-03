@@ -4,11 +4,8 @@
 
 import { options } from 'preact';
 
-import {
-  BUILTIN_RAW_TEXT_TEMPLATE_KEY,
-  BackgroundElementTemplateInstance,
-  BackgroundListElementTemplateInstance,
-} from './instance.js';
+import { BUILTIN_RAW_TEXT_TEMPLATE_KEY, BackgroundElementTemplateInstance } from './shadow-instance.js';
+import { BackgroundListElementTemplateInstance } from './typed-instance.js';
 
 export interface BackgroundElementTemplateDocument {
   createElement(type: string): BackgroundElementTemplateInstance;
