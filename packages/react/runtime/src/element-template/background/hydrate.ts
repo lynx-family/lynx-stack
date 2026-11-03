@@ -20,7 +20,11 @@ import { isGestureSlotValue } from '../prop-adapters/gesture.js';
 import { isMainThreadEventPropKey, isSpreadRecord } from '../prop-adapters/spread.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
-import { elementTemplateIdentityKey, parseElementTemplateType } from '../protocol/template-type.js';
+import {
+  MAIN_BUNDLE_URL_SENTINEL,
+  elementTemplateIdentityKey,
+  parseElementTemplateType,
+} from '../protocol/template-type.js';
 import type {
   SerializableValue,
   SerializedCompiledNode,
@@ -32,8 +36,6 @@ import { getMainThreadDynamicAttrSlotKinds } from '../runtime/template/attr-slot
 import type { MainThreadDynamicAttrKind } from '../runtime/template/attr-slot-plan.js';
 import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
 import type { MTRefNativeWrapper } from '../runtime/template/main-thread-ref-ctx.js';
-
-const MAIN_BUNDLE_URL_SENTINEL = '__Card__';
 
 export function hydrateRootChildrenIntoContext(
   serializedChildren: SerializedEtNode[],

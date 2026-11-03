@@ -6,12 +6,14 @@ import {
   resetGlobalCommitContext,
   takeRemovedSubtreesForPostDispatchTeardown,
 } from './commit-context.js';
+import { dropDelayedRunOnMainThreadReturnIds, packElementTemplateCommitUpdateEvent } from './commit-event.js';
 import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
   scheduleElementTemplateRemovedSubtreeCleanup,
 } from './commit-hook.js';
 import type { BackgroundPageRootInstance } from './instance.js';
+import { resetElementTemplateMainThreadFunctionRuntime } from './main-thread-function.js';
 import { hydratePageRootIntoContext } from './page-root-hydrate.js';
 import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import {
@@ -27,17 +29,15 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
-import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
-import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
+import { printElementTemplateTreeToString } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { sendMTRefInitValueToMainThread } from '../main-thread-ref-init-value.js';
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateHydrateCommitContext } from '../protocol/types.js';
-import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
+import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
 import { __root } from '../runtime/page/root-instance.js';
-import { resetElementTemplateMainThreadFunctionRuntime } from '../runtime/template/main-thread-function.js';
 
 let listener:
   | ((event: { data: ElementTemplateHydrateCommitContext }) => void)
@@ -115,41 +115,20 @@ export function installElementTemplateHydrationListener(): void {
         const removedSubtreesAwaitingTeardown = globalCommitContext.ops.length > 0
           ? takeRemovedSubtreesForPostDispatchTeardown()
           : [];
-        let hydrateUpdateEvent: ReturnType<typeof createElementTemplateUpdateEvent> | undefined;
+        let hydrateUpdateEvent: ElementTemplateUpdateEvent | undefined;
         if (__PROFILE__) {
           profileStart('ReactLynx::commitChanges');
         }
         markTiming('packChangesStart');
         try {
           sendMTRefInitValueToMainThread();
-          if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-            console.alog?.(
-              '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
-                + JSON.stringify(
-                  {
-                    ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
-                    flushOptions: globalCommitContext.flushOptions,
-                    flowIds: globalCommitContext.flowIds,
-                    isHydration: true,
-                    delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
-                  },
-                  null,
-                  2,
-                ),
-            );
-          }
-          hydrateUpdateEvent = createElementTemplateUpdateEvent({
-            ops: globalCommitContext.ops,
-            flushOptions: globalCommitContext.flushOptions,
+          hydrateUpdateEvent = packElementTemplateCommitUpdateEvent({
+            alogHeader: '[ReactLynxDebug] ElementTemplate hydrate update commands:',
             isHydration: true,
-            reloadVersion: getReloadVersion(),
-            flowIds: globalCommitContext.flowIds,
             delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
           });
         } catch (error) {
-          if (delayedRunOnMainThreadPayload) {
-            dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-          }
+          dropDelayedRunOnMainThreadReturnIds(delayedRunOnMainThreadPayload);
           // Do not expose refs or replay delayed selector ops if the hydrate
           // patch failed to serialize; selectors may still point at stale
           // pre-hydration ids in that case.
