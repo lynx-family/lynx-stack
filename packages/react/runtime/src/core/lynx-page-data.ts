@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { RESET_WITH_INIT_DATA_IN_STATE_ERROR, hasWithInitDataInStateUsage } from './initData.js';
-import { isEmptyObject } from '../utils.js';
+import { isEmptyObject } from '../shared/utils.js';
 
 let hasReportedResetWithInitDataInState = false;
 

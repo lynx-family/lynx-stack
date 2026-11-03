@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { onFunctionCall } from './return-value.js';
-import { isSdkVersionGt } from '../../utils.js';
+import { isSdkVersionGt } from '../../shared/version.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxData } from '../../worklet-runtime/bindings/events.js';
 import type { Worklet } from '../../worklet-runtime/bindings/types.js';

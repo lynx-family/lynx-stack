@@ -28,7 +28,7 @@ import type { SnapshotCreator } from './snapshotCreatorMap.js';
 import { snapshotInstanceManager } from './snapshotInstanceManager.js';
 import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
-import { isDirectOrDeepEqual } from '../../utils.js';
+import { isDirectOrDeepEqual } from '../../core/deep-equal.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';

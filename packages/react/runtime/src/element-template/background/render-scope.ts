@@ -4,8 +4,9 @@
 
 import { options } from 'preact';
 
+import { lynxQueueMicrotask } from '../../shared/microtask.js';
 import { RENDER_COMPONENT, ROOT } from '../../shared/render-constants.js';
-import { hook, lynxQueueMicrotask } from '../../utils.js';
+import { hook } from '../../shared/utils.js';
 
 let installed = false;
 let elementTemplateRendering = false;

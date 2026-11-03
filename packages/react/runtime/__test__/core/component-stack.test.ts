@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DIFF, DIFFED, RENDER, ROOT } from '../../src/shared/render-constants.js';
 
-describe('shared/component-stack', () => {
+describe('core/component-stack', () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -20,7 +20,7 @@ describe('shared/component-stack', () => {
     delete options.vnode;
     delete options[RENDER];
 
-    const { getCurrentVNode, setupComponentStack } = await import('../../src/shared/component-stack.js');
+    const { getCurrentVNode, setupComponentStack } = await import('../../src/core/component-stack.js');
     setupComponentStack();
 
     const installedDiff = options[DIFF];
@@ -74,7 +74,7 @@ describe('shared/component-stack', () => {
     options[RENDER] = oldRender;
 
     const { getCurrentVNode, getOwnerStack, setupComponentStack } = await import(
-      '../../src/shared/component-stack.js'
+      '../../src/core/component-stack.js'
     );
     setupComponentStack();
 
@@ -169,7 +169,7 @@ describe('shared/component-stack', () => {
     const { Component, createElement, render } = await import('preact');
     const { createPortal } = await import('../../src/snapshot/lynx/portals.js');
     const { getCurrentVNode, setupComponentStack } = await import(
-      '../../src/shared/component-stack.js'
+      '../../src/core/component-stack.js'
     );
     setupComponentStack();
 
