@@ -15,7 +15,6 @@ function waitForRender(): Promise<void> {
 
 async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
   vi.resetModules();
-  vi.stubGlobal('__GLOBAL_PROPS_MODE__', mode);
 
   const { ElementTemplateEnvManager } = await import('../../test-utils/debug/envManager.js');
   const { ElementTemplateLifecycleConstant } = await import(
@@ -47,6 +46,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
   const originalGlobalEventEmitter = globalThis.lynx.getApp().GlobalEventEmitter;
   vi.stubGlobal('lynx', {
     ...baseLynx,
+    __runtime_configs__: { globalPropsMode: mode },
     __globalProps: { theme: 'dark', stable: true },
     getJSModule(moduleName: string) {
       if (moduleName === 'GlobalEventEmitter') {
