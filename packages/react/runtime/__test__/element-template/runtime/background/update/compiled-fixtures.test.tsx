@@ -11,11 +11,11 @@ import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
+import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/shadow-instance.js';
 import {
   collectElementTemplateSubtreeHandleIds,
   collectMainThreadRefSubtreeHandleIds,
-  BackgroundElementTemplateInstance,
-} from '../../../../../src/element-template/background/instance.js';
+} from '../../../../../src/element-template/background/subtree-handles.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';

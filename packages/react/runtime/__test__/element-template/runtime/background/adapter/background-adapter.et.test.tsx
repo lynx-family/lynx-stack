@@ -5,7 +5,7 @@ import type { BackgroundElementTemplateDocument } from '../../../../../src/eleme
 import {
   BackgroundElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
-} from '../../../../../src/element-template/background/instance.js';
+} from '../../../../../src/element-template/background/shadow-instance.js';
 
 describe('Background Element Template Adapter', () => {
   let doc: BackgroundElementTemplateDocument;

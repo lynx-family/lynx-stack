@@ -9,7 +9,7 @@ import { clearMainThreadRefLastIdForTesting } from '../../../../src/core/main-th
 import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
 import { resetTimingState } from '../../../../src/core/performance.js';
 import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';
-import { BackgroundPageRootInstance } from '../../../../src/element-template/background/instance.js';
+import { BackgroundPageRootInstance } from '../../../../src/element-template/background/typed-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { __root, setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
