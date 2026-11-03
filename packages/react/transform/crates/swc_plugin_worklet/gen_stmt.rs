@@ -311,18 +311,16 @@ impl StmtGen {
       });
       Expr::Ident(capture_source)
     };
-    let captured = CallExpr {
-      ctxt: Default::default(),
-      span: DUMMY_SP,
-      args: vec![capture_argument.clone().into()],
-      callee: Callee::Expr(quote_expr!("captureMainThreadObject")),
-      type_args: None,
-    }
-    .into();
+    // Older externalized runtimes do not export this helper. Keep ordinary
+    // main-thread function captures working by using the narrowed fallback.
+    let captured = quote!(
+      "captureMainThreadObject?.($source)" as Expr,
+      source: Expr = capture_argument.clone(),
+    );
     let captured_or_fallback: Expr = BinExpr {
       span: DUMMY_SP,
       op: BinaryOp::NullishCoalescing,
-      left: captured,
+      left: captured.into(),
       right: fallback,
     }
     .into();
