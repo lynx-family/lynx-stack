@@ -456,6 +456,166 @@ describe('createPortal (idiomatic ref={setState})', () => {
   });
 });
 
+/**
+ * `Portal` keeps its target in `props._container` and compares it by object
+ * identity. When that changes it calls its own `componentWillUnmount`, which
+ * `render(null, _temp)`s the whole portaled subtree before a fresh one is
+ * mounted (`packages/react/runtime/src/snapshot/lynx/portals.ts`). Changing the
+ * container is therefore a remount, not a reparent.
+ *
+ * These tests read the fiber element PAPI calls off `console.alog` (the testing
+ * environment enables `__ALOG_ELEMENT_API__`, so `initElementPAPICallAlog`
+ * reports every call there) to show exactly which elements are torn down and
+ * rebuilt.
+ */
+const ELEMENT_PAPI_LOG = /^\[ReactLynxDebug\] FiberElement API call #\d+: /;
+
+// `console.alog` also carries background render logs and the BTS -> MTS patch
+// dumps; keep only the element PAPI calls.
+function elementPAPICalls() {
+  return lynxTestingEnv.mainThread.console.alog.mock.calls
+    .map(([line]) => String(line))
+    .filter((line) => ELEMENT_PAPI_LOG.test(line))
+    .map((line) => line.replace(ELEMENT_PAPI_LOG, ''));
+}
+
+describe('createPortal container swap', () => {
+  it('rebuilds the portaled elements when the container changes', () => {
+    vi.spyOn(lynxTestingEnv.mainThread.console, 'alog');
+
+    let swap;
+    let bump;
+    function Counter() {
+      const [n, setN] = useState(0);
+      bump = () => setN(v => v + 1);
+      return <text data-testid='p'>{`count:${n}`}</text>;
+    }
+    function App() {
+      const [aHost, setAHost] = useState(null);
+      const [bHost, setBHost] = useState(null);
+      const [useB, setUseB] = useState(false);
+      swap = () => setUseB(true);
+      const target = useB ? bHost : aHost;
+      return (
+        <view>
+          <view data-testid='a' ref={setAHost} />
+          <view data-testid='b' ref={setBHost} />
+          {target && createPortal(<Counter />, target)}
+        </view>
+      );
+    }
+
+    const { getByTestId, queryByText } = render(<App />);
+
+    act(() => bump());
+    expect(queryByText('count:1')).toBeInTheDocument();
+    const beforeSwap = getByTestId('p');
+
+    lynxTestingEnv.mainThread.console.alog.mockClear();
+    act(() => swap());
+
+    // The element in host A is removed and a brand new one is built for host
+    // B. Nothing reparents the existing element.
+    expect(elementPAPICalls()).toMatchInlineSnapshot(`
+      [
+        "__GetPageElement() => PAGE#0",
+        "__RemoveElement(VIEW#2, TEXT#5)",
+        "__FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+        "__GetPageElement() => PAGE#0",
+        "__CreateText(0) => TEXT#7",
+        "__AddDataset(TEXT#7, "testid", "p")",
+        "__CreateRawText("") => #text#8",
+        "__SetAttribute(#text#8, "text", "count:0")",
+        "__AppendElement(TEXT#7, #text#8)",
+        "__AppendElement(VIEW#3, TEXT#7)",
+        "__FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+        "__FlushElementTree(PAGE#0, {"emptyPatch":true,"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+      ]
+    `);
+
+    const afterSwap = getByTestId('p');
+    expect(afterSwap).not.toBe(beforeSwap);
+    expect(getByTestId('b')).toContainElement(afterSwap);
+    expect(getByTestId('a')).not.toContainElement(afterSwap);
+
+    // The remount resets state inside the portal, matching react-dom.
+    expect(queryByText('count:1')).not.toBeInTheDocument();
+    expect(queryByText('count:0')).toBeInTheDocument();
+  });
+
+  /**
+   * The comparison looks at the `NodesRef` wrapper rather than the element it
+   * points at, and `lynx.createSelectorQuery().select()` returns a new wrapper
+   * on every call. So re-selecting the same host rebuilds the portaled elements
+   * into that same host, even though the target never changed. react-dom does
+   * not do this: passing the same node twice leaves the portal alone.
+   *
+   * `serializeNodesRef` already produces a stable identifier for both
+   * `RefProxy` and selector-backed refs, so the comparison could be made
+   * value-based if this remount turns out to be unwanted.
+   */
+  it('also rebuilds them when a new NodesRef points at the same container', () => {
+    vi.spyOn(lynxTestingEnv.mainThread.console, 'alog');
+
+    let setHostFromOutside;
+    let bump;
+    function Counter() {
+      const [n, setN] = useState(0);
+      bump = () => setN(v => v + 1);
+      return <text data-testid='p'>{`count:${n}`}</text>;
+    }
+    function App() {
+      const [host, setHost] = useState(null);
+      setHostFromOutside = setHost;
+      return (
+        <view>
+          <view id='same-host' data-testid='host' />
+          {host && createPortal(<Counter />, host)}
+        </view>
+      );
+    }
+
+    const { getByTestId, queryByText } = render(<App />);
+
+    act(() => {
+      setHostFromOutside(lynx.createSelectorQuery().select('#same-host'));
+    });
+    act(() => bump());
+    expect(queryByText('count:1')).toBeInTheDocument();
+    const beforeReselect = getByTestId('p');
+
+    lynxTestingEnv.mainThread.console.alog.mockClear();
+    act(() => {
+      setHostFromOutside(lynx.createSelectorQuery().select('#same-host'));
+    });
+
+    // Same parent on both sides: the element is destroyed and rebuilt in place.
+    expect(elementPAPICalls()).toMatchInlineSnapshot(`
+      [
+        "__GetPageElement() => PAGE#0",
+        "__RemoveElement(VIEW#2, TEXT#4)",
+        "__FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+        "__GetPageElement() => PAGE#0",
+        "__CreateText(0) => TEXT#6",
+        "__AddDataset(TEXT#6, "testid", "p")",
+        "__CreateRawText("") => #text#7",
+        "__SetAttribute(#text#7, "text", "count:0")",
+        "__AppendElement(TEXT#6, #text#7)",
+        "__AppendElement(VIEW#2, TEXT#6)",
+        "__FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+        "__FlushElementTree(PAGE#0, {"emptyPatch":true,"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+      ]
+    `);
+
+    const afterReselect = getByTestId('p');
+    expect(afterReselect).not.toBe(beforeReselect);
+    // The host keeps exactly one child, so this is a clean remount rather than
+    // a duplicate or a leak.
+    expect(getByTestId('host').children).toHaveLength(1);
+    expect(queryByText('count:0')).toBeInTheDocument();
+  });
+});
+
 describe('createPortal cleanup ordering', () => {
   it('does not throw when portal container is removed before portaled children', () => {
     vi.spyOn(lynx.getNativeApp(), 'callLepusMethod');
@@ -508,7 +668,7 @@ describe('createPortal cleanup ordering', () => {
           {
             "id": 2,
             "op": "CreateElement",
-            "type": "__snapshot_73047_test_31",
+            "type": "__snapshot_73047_test_35",
           },
           {
             "id": 2,
@@ -527,7 +687,7 @@ describe('createPortal cleanup ordering', () => {
           {
             "id": 3,
             "op": "CreateElement",
-            "type": "__snapshot_73047_test_32",
+            "type": "__snapshot_73047_test_36",
           },
           {
             "id": 4,
@@ -861,7 +1021,7 @@ describe('createPortal with list-item reuse', () => {
           <list
             data-testid="list"
             style="width:100%;height:100%"
-            update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_73047_test_41","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_73047_test_41","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_73047_test_41","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_73047_test_41","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_73047_test_41","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_73047_test_41","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
+            update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_73047_test_45","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_73047_test_45","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_73047_test_45","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_73047_test_45","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_73047_test_45","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_73047_test_45","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]}]"
           />
         </view>
       </page>
@@ -987,7 +1147,7 @@ describe('createPortal with list-item reuse', () => {
           <list
             data-testid="list"
             style="width:100%;height:100%"
-            update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_73047_test_41","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_73047_test_41","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_73047_test_41","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_73047_test_41","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_73047_test_41","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_73047_test_41","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
+            update-list-info="[{"insertAction":[{"position":0,"type":"__snapshot_73047_test_45","item-key":"0","full-span":true},{"position":1,"type":"__snapshot_73047_test_45","item-key":"1","full-span":true},{"position":2,"type":"__snapshot_73047_test_45","item-key":"2","full-span":true},{"position":3,"type":"__snapshot_73047_test_45","item-key":"3","full-span":true},{"position":4,"type":"__snapshot_73047_test_45","item-key":"4","full-span":true},{"position":5,"type":"__snapshot_73047_test_45","item-key":"5","full-span":true}],"removeAction":[],"updateAction":[]},{"insertAction":[],"removeAction":[3],"updateAction":[]}]"
           >
             <list-item
               full-span="true"
