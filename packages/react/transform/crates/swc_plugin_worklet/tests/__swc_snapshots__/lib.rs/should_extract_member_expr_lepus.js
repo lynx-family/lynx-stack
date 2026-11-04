@@ -3,30 +3,30 @@ import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/r
 var captureMainThreadObject = __captureMainThreadObject;
 let onTapLepus = {
     _c: {
-        aaaa: captureMainThreadObject(aaaa) ?? {
+        aaaa: captureMainThreadObject?.(aaaa) ?? {
             bbbb: aaaa.bbbb
         },
-        cccc: captureMainThreadObject(cccc) ?? {
+        cccc: captureMainThreadObject?.(cccc) ?? {
             dddd: cccc.dddd
         },
-        hhhh: captureMainThreadObject(hhhh) ?? {
+        hhhh: captureMainThreadObject?.(hhhh) ?? {
             iiii: hhhh.iiii
         },
         llll,
-        oooo: captureMainThreadObject(oooo) ?? {
+        oooo: captureMainThreadObject?.(oooo) ?? {
             pppp: oooo.pppp,
             qqqq: oooo.qqqq
         },
         rrrr,
-        uuuu: captureMainThreadObject(uuuu) ?? {
+        uuuu: captureMainThreadObject?.(uuuu) ?? {
             "__??__": uuuu["__??__"]
         },
         enabled,
-        handlers: handlers == null ? handlers : captureMainThreadObject(handlers) ?? {
+        handlers: handlers == null ? handlers : captureMainThreadObject?.(handlers) ?? {
             start: handlers.start
         },
-        vvvv: vvvv == null ? vvvv : captureMainThreadObject(vvvv) ?? {
-            wwww: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject(__mainThreadObjectSource) ?? {
+        vvvv: vvvv == null ? vvvv : captureMainThreadObject?.(vvvv) ?? {
+            wwww: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject?.(__mainThreadObjectSource) ?? {
                     xxxx: __mainThreadObjectSource.xxxx
                 })(vvvv.wwww)
         }
