@@ -550,19 +550,23 @@ export function pluginReactLynx(
           return
         }
 
-        api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-          if (config.output?.minify === false) {
-            return config
-          }
+        api.modifyEnvironmentConfig(
+          (config, { name, mergeEnvironmentConfig }) => {
+            const environmentMinify = api.getRsbuildConfig('original')
+              .environments?.[name]?.output?.minify
+            if (config.output?.minify === false || environmentMinify === true) {
+              return config
+            }
 
-          return mergeRsbuildConfig(config, {
-            output: {
-              minify: {
-                css: false,
+            return mergeEnvironmentConfig(config, {
+              output: {
+                minify: {
+                  css: false,
+                },
               },
-            },
-          })
-        })
+            })
+          },
+        )
       },
     },
   ]
