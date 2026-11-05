@@ -11,6 +11,13 @@ export function applyOptimizeBundleSize(
   options: Required<PluginReactLynxOptions>,
 ): void {
   api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+    // If the user explicitly disabled minification, the `pure_funcs`
+    // optimization is a no-op and merging would turn `minify: false` into an
+    // object, silently re-enabling JS minification.
+    if (config.output?.minify === false) {
+      return config
+    }
+
     const optimizeBundleSize = options.optimizeBundleSize
     const optimizeBackground = typeof optimizeBundleSize === 'boolean'
       ? optimizeBundleSize

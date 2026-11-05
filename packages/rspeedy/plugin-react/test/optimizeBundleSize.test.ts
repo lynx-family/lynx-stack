@@ -274,4 +274,25 @@ describe('optimizeBundleSize', () => {
     expect(backgroundCode).toContain('default console.info')
     expect(backgroundCode).not.toContain('default console.warn')
   })
+  test('respect output.minify: false', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        output: {
+          minify: false,
+        },
+        environments: {
+          lynx: {},
+        },
+        plugins: [pluginReactLynx({
+          optimizeBundleSize: true,
+        })],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    expect(config?.optimization?.minimize).toBe(false)
+  })
 })
