@@ -58,6 +58,7 @@ export default defineConfig({
         'packages/webpack/react-webpack-plugin/src/runtime/hmr-load.ts',
         'packages/webpack/react-webpack-plugin/src/runtime/hmr-main-thread.ts',
         'packages/rspeedy/plugin-react/src/splitChunks.ts',
+        'packages/rspeedy/plugin-react/src/optimizeBundleSize.ts',
         'packages/rspeedy/plugin-react/src/compileResult.ts',
         'packages/rspeedy/plugin-react/src/pluginReactLynx.ts',
         'packages/rspeedy/plugin-react/src/entry.ts',
