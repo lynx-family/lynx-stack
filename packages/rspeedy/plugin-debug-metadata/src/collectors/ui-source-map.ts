@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path'
+
 import type { Rspack } from '@rsbuild/core'
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata'
@@ -61,9 +63,15 @@ export function compareUiSourceMapRecord(
  * Build the compact {@link UiSourceMapData} payload emitted under
  * `DebugMetadataAsset.uiSourceMap`. Records without a `filename` are
  * dropped (no source to anchor the entry to).
+ *
+ * `sources` are emitted relative to `baseDir` (the repository root), so a
+ * consumer can join one onto the build's git remote and commit to reach the
+ * authored file. The main-thread loader hands absolute build-machine paths
+ * to the UI source map, which differ per builder and resolve nowhere.
  */
 export function createUiSourceMap(
   records: UiSourceMapRecord[],
+  baseDir: string,
 ): UiSourceMapData {
   const sources: string[] = []
   const sourceIndexes = new Map<string, number>()
@@ -72,17 +80,25 @@ export function createUiSourceMap(
 
   for (const record of records) {
     if (!record.filename) continue
-    let sourceIndex = sourceIndexes.get(record.filename)
+    const source = toRepoRelative(record.filename, baseDir)
+    let sourceIndex = sourceIndexes.get(source)
     if (sourceIndex === undefined) {
       sourceIndex = sources.length
-      sourceIndexes.set(record.filename, sourceIndex)
-      sources.push(record.filename)
+      sourceIndexes.set(source, sourceIndex)
+      sources.push(source)
     }
     mappings.push([sourceIndex, record.lineNumber, record.columnNumber])
     uiMaps.push(record.uiSourceMap)
   }
 
   return { version: 1, sources, mappings, uiMaps }
+}
+
+function toRepoRelative(filename: string, baseDir: string): string {
+  if (!path.isAbsolute(filename)) {
+    return filename.split(path.sep).join('/')
+  }
+  return path.relative(baseDir, filename).split(path.sep).join('/')
 }
 
 /**

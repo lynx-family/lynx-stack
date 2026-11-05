@@ -59,7 +59,14 @@ export function normalizeRemoteUrl(remoteUrl: string | null): string | null {
     url.hash = ''
     return url.toString().replace(/\.git$/, '').replace(/\/$/, '')
   } catch {
-    return normalized.replace(/\.git$/, '')
+    // `normalized` failed to parse as a URL, so there's no `URL` object to
+    // strip userinfo from — and a remote carrying credentials is exactly
+    // the shape most likely to hit this branch (e.g. a host-less
+    // `https://user:pass@/owner/repo`, where the embedded `@` still parses
+    // as userinfo but leaves no host for the URL to require). Returning
+    // `normalized` as-is would leak that userinfo into the metadata file;
+    // `null` costs a browsable link on inputs already this malformed.
+    return null
   }
 }
 
