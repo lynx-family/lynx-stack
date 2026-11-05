@@ -38,7 +38,7 @@ export interface UpdateGlobalPropsOptions {
 }
 
 export function isGlobalPropsEventMode(): boolean {
-  return typeof __GLOBAL_PROPS_MODE__ !== 'undefined' && __GLOBAL_PROPS_MODE__ === 'event';
+  return lynx.__runtime_configs__?.globalPropsMode === 'event';
 }
 
 export function createGlobalProps<Data = GlobalProps>(

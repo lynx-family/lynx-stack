@@ -14,6 +14,7 @@ export default defineConfig({
         '**/*.test-d.*',
         '**/vitest.config.ts',
         '**/rslib.config.ts',
+        '**/rslib.*.config.ts',
         '**/*.bench.js',
         '**/*.bench.ts',
         '**/dist/**',
@@ -23,6 +24,7 @@ export default defineConfig({
         'examples/**',
         'packages/**/lib/**',
         'packages/**/test/**',
+        '**/__tests__/fixtures/**',
         'website/**',
         'docs/**',
 
@@ -40,6 +42,7 @@ export default defineConfig({
         // These modules are covered by Rstest; an unexecuted V8 report would
         // add uncovered lines when Codecov merges the two collectors.
         'packages/rspeedy/plugin-react-alias/src/index.ts',
+        'packages/webpack/externals-loading-webpack-plugin/src/index.ts',
         // These Rstest-owned templates are stringified into generated code and
         // intentionally ignored by Istanbul. V8's untested-file sweep would
         // otherwise invent zero-hit coverage for their original source.

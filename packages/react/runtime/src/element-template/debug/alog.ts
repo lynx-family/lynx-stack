@@ -31,7 +31,7 @@ export type FormattedElementTemplateUpdateCommand =
     value: unknown;
   }
   | {
-    op: 'setMainThreadEvent' | 'setMainThreadRef';
+    op: 'setMainThreadEvent' | 'setMainThreadRef' | 'setGesture';
     targetId: number;
     attrSlotIndex: number;
     value: unknown;
@@ -111,10 +111,13 @@ export function formatElementTemplateUpdateCommands(
 
       case ElementTemplateUpdateOps.setMainThreadEvent:
       case ElementTemplateUpdateOps.setMainThreadRef:
+      case ElementTemplateUpdateOps.setGesture:
         result.push({
           op: op === ElementTemplateUpdateOps.setMainThreadEvent
             ? 'setMainThreadEvent'
-            : 'setMainThreadRef',
+            : (op === ElementTemplateUpdateOps.setMainThreadRef
+              ? 'setMainThreadRef'
+              : 'setGesture'),
           targetId: stream[index++] as number,
           attrSlotIndex: stream[index++] as number,
           value: stream[index++],

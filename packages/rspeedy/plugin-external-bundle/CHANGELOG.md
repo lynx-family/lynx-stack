@@ -1,5 +1,16 @@
 # @lynx-js/external-bundle-rsbuild-plugin
 
+## 0.5.0
+
+### Minor Changes
+
+- Support runtime `async` callbacks for external bundles, allowing applications to select asynchronous fetching on Harmony and synchronous fetching on other platforms in the same bundle. Callback externals use promise module semantics in both modes. ([#4277](https://github.com/lynx-family/lynx-stack/pull/4277))
+
+### Patch Changes
+
+- Updated dependencies [[`b919794`](https://github.com/lynx-family/lynx-stack/commit/b919794957b3cb6ec0dbd2a93a48c4d5b4168f2e), [`9a18b65`](https://github.com/lynx-family/lynx-stack/commit/9a18b657030172f9555048aab08bd5fae2bf3eb3)]:
+  - @lynx-js/externals-loading-webpack-plugin@0.3.0
+
 ## 0.4.3
 
 ### Patch Changes

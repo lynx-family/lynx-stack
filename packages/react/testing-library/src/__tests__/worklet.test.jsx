@@ -674,4 +674,53 @@ describe('worklet', () => {
 
     expect(globalThis.classCaptureCb).toHaveBeenCalledWith(42);
   });
+
+  it('renders and invokes worklets with nullish optional member captures', () => {
+    globalThis.optionalCaptureCb = vi.fn();
+
+    const start = () => {
+      'main thread';
+      globalThis.optionalCaptureCb('started');
+    };
+    const nestedStart = () => {
+      'main thread';
+      globalThis.optionalCaptureCb('nested-started');
+    };
+
+    const Comp = ({ enabled, handlers }) => {
+      return (
+        <view
+          main-thread:bindtap={() => {
+            'main thread';
+            if (enabled && handlers?.start) handlers.start();
+            if (enabled && handlers?.nested?.start) handlers.nested.start();
+          }}
+        />
+      );
+    };
+
+    const { container, rerender } = render(
+      <Comp enabled={false} handlers={null} />,
+      {
+        enableMainThread: true,
+        enableBackgroundThread: true,
+      },
+    );
+    fireEvent.tap(container.firstChild);
+    expect(globalThis.optionalCaptureCb).not.toHaveBeenCalled();
+
+    rerender(<Comp enabled={true} handlers={undefined} />);
+    fireEvent.tap(container.firstChild);
+    expect(globalThis.optionalCaptureCb).not.toHaveBeenCalled();
+
+    rerender(<Comp enabled={true} handlers={{ start, nested: null }} />);
+    fireEvent.tap(container.firstChild);
+    expect(globalThis.optionalCaptureCb).toHaveBeenCalledTimes(1);
+    expect(globalThis.optionalCaptureCb).toHaveBeenLastCalledWith('started');
+
+    rerender(<Comp enabled={true} handlers={{ start, nested: { start: nestedStart } }} />);
+    fireEvent.tap(container.firstChild);
+    expect(globalThis.optionalCaptureCb).toHaveBeenCalledTimes(3);
+    expect(globalThis.optionalCaptureCb).toHaveBeenLastCalledWith('nested-started');
+  });
 });

@@ -43,7 +43,7 @@ pub(crate) async fn fetch_http_resource(
   }
 }
 
-fn parse_http_url(input: &str) -> Result<reqwest::Url, HttpFetchError> {
+pub(crate) fn parse_http_url(input: &str) -> Result<reqwest::Url, HttpFetchError> {
   let url = reqwest::Url::parse(input.trim()).map_err(|_| HttpFetchError::InvalidUrl)?;
   if !matches!(url.scheme(), "http" | "https") || url.host_str().is_none() {
     return Err(HttpFetchError::InvalidUrl);

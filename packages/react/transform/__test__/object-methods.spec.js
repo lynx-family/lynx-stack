@@ -79,4 +79,83 @@ describe('object method captures', () => {
     expect(Object.getOwnPropertyDescriptor(valueType, 'create').get.call(other)._jsFn._jsFn1)
       .toBe(other.callback);
   });
+
+  it('preserves nullish bases and guards when narrowing optional member captures', async () => {
+    const result = await transformReactLynx(
+      `
+      export function create(enabled, handlers) {
+        return () => {
+          'main thread';
+          if (enabled && handlers?.start) handlers.start();
+        };
+      }
+
+      export function createNested(enabled, handlers) {
+        return () => {
+          'main thread';
+          if (enabled && handlers?.nested?.start) handlers.nested.start();
+        };
+      }
+      `,
+      options('LEPUS'),
+    );
+    const functions = new Map();
+    const { create, createNested } = new Function(
+      '__registerWorklet',
+      '__captureMainThreadObject',
+      `${result.code.replace(/^import .*;$/gm, '').replace(/^export /gm, '')}\nreturn { create, createNested };`,
+    )(
+      (_type, id, fn) => functions.set(id, fn),
+      () => undefined,
+    );
+    const invoke = worklet => functions.get(worklet._wkltId).call(worklet);
+
+    const withNullDisabled = create(false, null);
+    expect(withNullDisabled._c.handlers).toBeNull();
+    expect(() => invoke(withNullDisabled)).not.toThrow();
+
+    const withUndefinedDisabled = create(false, undefined);
+    expect(withUndefinedDisabled._c.handlers).toBeUndefined();
+    expect(() => invoke(withUndefinedDisabled)).not.toThrow();
+
+    const withNullEnabled = create(true, null);
+    expect(withNullEnabled._c.handlers).toBeNull();
+    expect(() => invoke(withNullEnabled)).not.toThrow();
+
+    const withUndefinedEnabled = create(true, undefined);
+    expect(withUndefinedEnabled._c.handlers).toBeUndefined();
+    expect(() => invoke(withUndefinedEnabled)).not.toThrow();
+
+    let started = 0;
+    const handlers = {
+      start() {
+        started += 1;
+      },
+      extra: 'unreferenced',
+    };
+    const withHandlersDisabled = create(false, handlers);
+    expect(withHandlersDisabled._c.handlers).toEqual({ start: handlers.start });
+    expect('extra' in withHandlersDisabled._c.handlers).toBe(false);
+    invoke(withHandlersDisabled);
+    expect(started).toBe(0);
+
+    const withHandlersEnabled = create(true, handlers);
+    invoke(withHandlersEnabled);
+    expect(started).toBe(1);
+
+    const withNestedNull = createNested(true, { nested: null, extra: 1 });
+    expect(withNestedNull._c.handlers).toEqual({ nested: null });
+    expect(() => invoke(withNestedNull)).not.toThrow();
+
+    const withNestedUndefined = createNested(true, { nested: undefined, extra: 1 });
+    expect(withNestedUndefined._c.handlers).toEqual({ nested: undefined });
+    expect(() => invoke(withNestedUndefined)).not.toThrow();
+
+    const withNestedHandlers = createNested(true, { nested: handlers, extra: 1 });
+    expect(withNestedHandlers._c.handlers).toEqual({
+      nested: { start: handlers.start },
+    });
+    invoke(withNestedHandlers);
+    expect(started).toBe(2);
+  });
 });

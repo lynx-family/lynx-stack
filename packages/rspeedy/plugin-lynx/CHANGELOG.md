@@ -1,5 +1,17 @@
 # @lynx-js/rsbuild-plugin
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`70bcdf5`](https://github.com/lynx-family/lynx-stack/commit/70bcdf519a83fb2792fcc65ff739d893e96ecdc6), [`7d498ae`](https://github.com/lynx-family/lynx-stack/commit/7d498aece52a20e77abc19e2a4579333861c11da)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.4.3
+  - @lynx-js/webpack-dev-transport@0.4.1
+  - @lynx-js/web-rsbuild-server-middleware@0.26.6
+  - @lynx-js/template-webpack-plugin@0.16.6
+  - @lynx-js/cache-events-webpack-plugin@0.2.2
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.6
+
 ## 0.1.6
 
 ### Patch Changes

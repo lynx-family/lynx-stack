@@ -16,14 +16,16 @@ it('should mount to externals library to globalThis', async () => {
   );
   expect(
     background.split(
-      `globalThis[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"]`
-        + ' = ',
+      'deferExternal' + '("Foo",',
     ).length - 1,
   ).toBe(1);
   expect(
     mainThread.split(
-      `globalThis[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]["Foo"] `
-        + '= ',
+      'deferExternal' + '("Foo",',
     ).length - 1,
   ).toBe(1);
+  expect(mainThread).toContain(
+    'const globals = '
+      + 'globalThis[Symbol.for(\'__LYNX_EXTERNAL_GLOBAL__\')];',
+  );
 });

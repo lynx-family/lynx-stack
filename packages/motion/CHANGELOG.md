@@ -1,5 +1,15 @@
 # @lynx-js/motion
 
+## 0.0.8
+
+### Patch Changes
+
+- Compile Motion dependencies against private Lynx runtime imports instead of installing DOM and microtask polyfills on host globals. ([#4243](https://github.com/lynx-family/lynx-stack/pull/4243))
+
+  Bundle upstream type declarations so upstream Motion packages are only needed as development dependencies.
+
+  Select private DOM and scheduling imports from a predefined Lynx runtime preset, including animation-frame scheduling with a timer fallback.
+
 ## 0.0.7
 
 ### Patch Changes

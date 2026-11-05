@@ -8,6 +8,7 @@ import { delayedEvents } from './event/delayEvents.js';
 import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
 import { globalCommitTaskMap } from './patch/commit.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
+import { delayedUiOps } from './ref/delay.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { withSyncEffectFlush } from '../../utils.js';
 import { resetSnapshotMainThreadFunctionRuntime } from '../worklet/call/runOnMainThread.js';
@@ -20,25 +21,29 @@ function destroyBackground(): void {
 
   deinitGlobalSnapshotPatch();
 
-  withSyncEffectFlush(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    render(null, __root as any);
-  });
+  try {
+    withSyncEffectFlush(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      render(null, __root as any);
+    });
 
-  globalCommitTaskMap.forEach(task => {
-    task();
-  });
-  globalCommitTaskMap.clear();
-  // Clear delayed events which should not be executed after destroyed.
-  // This is important when the page is performing a reload.
-  delayedLifecycleEvents.length = 0;
-  if (delayedEvents) {
-    delayedEvents.length = 0;
-  }
-  resetSnapshotBackgroundFunctionRuntime();
-  resetSnapshotMainThreadFunctionRuntime();
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileEnd();
+    globalCommitTaskMap.forEach(task => {
+      task();
+    });
+  } finally {
+    globalCommitTaskMap.clear();
+    // Clear delayed events which should not be executed after destroyed.
+    // This is important when the page is performing a reload.
+    delayedLifecycleEvents.length = 0;
+    if (delayedEvents) {
+      delayedEvents.length = 0;
+    }
+    delayedUiOps.length = 0;
+    resetSnapshotBackgroundFunctionRuntime();
+    resetSnapshotMainThreadFunctionRuntime();
+    if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+      profileEnd();
+    }
   }
 }
 

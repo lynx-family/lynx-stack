@@ -9,3 +9,5 @@ Events whose Web Components attach native listeners through `enableEvent` must b
 Reactive event registration can arrive before its Web Component is upgraded. Preserve the `enableEvent` and `disableEvent` call order through `customElements.whenDefined()` instead of dropping optional method calls made before the definition loads.
 
 Register the page's actual unique ID with the WASM context in `__CreatePage`. Both ordinary and global cross-thread event dispatch use it to route page children through `publishEvent` rather than `publicComponentEvent`; regression tests must create children with the page's unique ID as their parent component ID, not the sentinel `0`.
+
+Normalize mouse `x/y` and `clientX/clientY` by the host lynx-view's viewport top-left in `createCrossThreadEvent`. Preserve `pageX/pageY` as document coordinates and leave the original DOM event untouched. Coordinate regressions should use different horizontal and vertical host offsets and different page and client coordinates.

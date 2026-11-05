@@ -12,11 +12,13 @@ import { LynxTestEventEmitter } from '../test-utils/lynx-event-emitter.js';
 
 describe('core/globalProps', () => {
   let originalGlobalProps: typeof lynx.__globalProps;
+  let originalRuntimeConfig: typeof lynx.__runtime_configs__;
   let originalEmitter: LynxApp['GlobalEventEmitter'];
   let emitter: LynxTestEventEmitter;
 
   beforeEach(() => {
     originalGlobalProps = lynx.__globalProps;
+    originalRuntimeConfig = lynx.__runtime_configs__;
     originalEmitter = lynx.getApp().GlobalEventEmitter;
     emitter = new LynxTestEventEmitter();
     lynx.__globalProps = {};
@@ -25,6 +27,7 @@ describe('core/globalProps', () => {
 
   afterEach(() => {
     lynx.__globalProps = originalGlobalProps;
+    lynx.__runtime_configs__ = originalRuntimeConfig;
     lynx.getApp().GlobalEventEmitter = originalEmitter;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -40,7 +43,7 @@ describe('core/globalProps', () => {
   }
 
   it('creates the reactive fallback shell with warning and changed listener support', () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
     vi.stubGlobal('__LEPUS__', false);
     vi.stubGlobal('__DEV__', true);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -60,7 +63,7 @@ describe('core/globalProps', () => {
   });
 
   it('keeps the fallback shell quiet and listener-free on lepus', () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
     vi.stubGlobal('__LEPUS__', true);
     vi.stubGlobal('__DEV__', true);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -75,7 +78,7 @@ describe('core/globalProps', () => {
   });
 
   it('creates the event-mode shell through the shared InitData factory', () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
+    lynx.__runtime_configs__ = { globalPropsMode: 'event' };
     const useListener = vi.fn() as unknown as typeof useLynxGlobalEventListener;
 
     const globalProps = createGlobalProps(createDeps(useListener));
@@ -88,13 +91,31 @@ describe('core/globalProps', () => {
   });
 
   it('treats missing mode as reactive mode', () => {
+    lynx.__runtime_configs__ = undefined;
     vi.stubGlobal('__GLOBAL_PROPS_MODE__', undefined);
 
     expect(isGlobalPropsEventMode()).toBe(false);
   });
 
-  it('mutates globalProps in reactive mode, emits current data, and queues force render', async () => {
+  it('ignores the compile-time mode when the host does not provide one', () => {
+    lynx.__runtime_configs__ = undefined;
+    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
+
+    expect(isGlobalPropsEventMode()).toBe(false);
+  });
+
+  it('uses the host mode even when the compile-time mode differs', () => {
+    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
+    lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
+    expect(isGlobalPropsEventMode()).toBe(false);
+
     vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    lynx.__runtime_configs__ = { globalPropsMode: 'event' };
+    expect(isGlobalPropsEventMode()).toBe(true);
+  });
+
+  it('mutates globalProps in reactive mode, emits current data, and queues force render', async () => {
+    lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
     const listener = vi.fn();
     const forceRerender = vi.fn();
     const previousGlobalProps = { theme: 'dark', stable: true };
@@ -114,7 +135,7 @@ describe('core/globalProps', () => {
   });
 
   it('allows reactive updates without a force callback', async () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'reactive');
+    lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
     lynx.__globalProps = { theme: 'dark' };
 
     expect(() => updateGlobalProps({ theme: 'light' })).not.toThrow();
@@ -123,7 +144,7 @@ describe('core/globalProps', () => {
   });
 
   it('COW merges globalProps in event mode and skips force render', async () => {
-    vi.stubGlobal('__GLOBAL_PROPS_MODE__', 'event');
+    lynx.__runtime_configs__ = { globalPropsMode: 'event' };
     const listener = vi.fn();
     const forceRerender = vi.fn();
     const previousGlobalProps = { theme: 'dark', stable: true };

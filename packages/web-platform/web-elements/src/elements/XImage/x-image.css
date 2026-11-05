@@ -57,6 +57,7 @@ x-image[auto-size] {
 }
 
 x-image[auto-size]::part(img) {
+  object-fit: inherit;
   margin: inherit;
   padding: inherit;
   width: inherit;

@@ -1,5 +1,19 @@
 # @lynx-js/react
 
+## 0.129.1
+
+### Patch Changes
+
+- Preserve nullish bases (`null` and `undefined`) when narrowing worklet optional-chain member captures so creating a worklet does not eagerly dereference properties on nullish objects before guards inside the worklet body run. ([#4259](https://github.com/lynx-family/lynx-stack/pull/4259))
+
+- Reset main-thread patch pipeline state on exit and clear leaked component-stack render entries across root renders. ([#4254](https://github.com/lynx-family/lynx-stack/pull/4254))
+
+- Remove the disabled background-to-main-thread worklet HMR transport and its unused function copies from development bundles. ([#4205](https://github.com/lynx-family/lynx-stack/pull/4205))
+
+- Restore the lightweight `loadWorkletRuntime` compatibility export from the internal, lazy internal, and worklet runtime bindings entries for precompiled consumers. ([#4253](https://github.com/lynx-family/lynx-stack/pull/4253))
+
+- Correct the Lepus development JSX runtime export and use explicit JavaScript extensions in lazy runtime entries so they resolve under native ESM. ([#4237](https://github.com/lynx-family/lynx-stack/pull/4237))
+
 ## 0.129.0
 
 ### Minor Changes

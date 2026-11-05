@@ -1,5 +1,9 @@
 # @lynx-js/react-umd
 
+## 0.129.1
+
+No changes in this release.
+
 ## 0.129.0
 
 No changes in this release.

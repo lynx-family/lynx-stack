@@ -68,6 +68,8 @@ export function applyEntry(
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
   const runtimeConfig: RuntimeConfigWebpackPluginOptions = {}
 
+  runtimeConfig['globalPropsMode'] = globalPropsMode ?? 'reactive'
+
   if (experimental_transformBuiltinAttributeNames) {
     runtimeConfig['transformBuiltinAttributeNames'] =
       experimental_transformBuiltinAttributeNames

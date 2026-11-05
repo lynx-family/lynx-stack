@@ -128,6 +128,13 @@ export type SetMainThreadEventCommand = [
   value: SerializableValue | null,
 ];
 
+export type SetGestureCommand = [
+  typeof ElementTemplateUpdateOps.setGesture,
+  targetHandleId: number,
+  attrSlotIndex: number,
+  value: SerializableValue | null,
+];
+
 export type SetMainThreadRefCommand = [
   typeof ElementTemplateUpdateOps.setMainThreadRef,
   targetHandleId: number,
@@ -186,6 +193,7 @@ export type ElementTemplateUpdateCommand =
   | SetAttributeCommand
   | SetMainThreadEventCommand
   | SetMainThreadRefCommand
+  | SetGestureCommand
   | InsertNodeCommand
   | RemoveNodeCommand
   | CreateTypedElementCommand

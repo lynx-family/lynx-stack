@@ -8,7 +8,8 @@ import { isMainThreadObjectHandle } from './main-thread-object-handle-registry.j
  * Preserve opaque main-thread object handles when the worklet transform narrows a
  * captured member expression. Ordinary objects keep the transform's compact
  * fallback shape. The transform evaluates that shape lazily with
- * `captureMainThreadObject(source) ?? fallback`.
+ * `captureMainThreadObject(source) ?? fallback` (and guards optional-chain
+ * bases with `source == null ? source : ...`).
  *
  * @internal
  */

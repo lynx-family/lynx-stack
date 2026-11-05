@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import type { CompiledFixtureModuleExports } from '../../../test-utils/debug/compiledFixtureModule.js';
 
-globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+lynx.__runtime_configs__ = { globalPropsMode: 'event' };
 
 const [
   { installElementTemplateCommitHook, resetElementTemplateCommitState },
@@ -138,13 +138,13 @@ describe('Compiled ET GlobalProps update fixtures', () => {
     resetElementTemplateHydrationListener();
     resetElementTemplateCommitState();
     envManager.setUseElementTemplate(false);
-    globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+    lynx.__runtime_configs__ = { globalPropsMode: 'event' };
     globalThis.lynx.getApp().GlobalEventEmitter = originalGlobalEventEmitter;
     vi.stubGlobal('lynx', originalLynx);
   });
 
   it('reactive updateGlobalProps force-renders direct globalProps reads into native update ops', async () => {
-    globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
+    lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
     const { backgroundModule, mainModule } = await loadCompiledFixturePair<CompiledGlobalPropsModule>(
       DIRECT_READ_FIXTURE,
     );
@@ -166,7 +166,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
   });
 
   it('event mode emits without updating compiled direct globalProps reads', async () => {
-    globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+    lynx.__runtime_configs__ = { globalPropsMode: 'event' };
     const emitted = vi.fn();
     const { backgroundModule, mainModule } = await loadCompiledFixturePair<CompiledGlobalPropsModule>(
       DIRECT_READ_FIXTURE,
@@ -195,7 +195,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
   });
 
   it('event mode updates compiled GlobalProps hook and provider users through the changed event', async () => {
-    globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+    lynx.__runtime_configs__ = { globalPropsMode: 'event' };
     const changed = vi.fn();
     const { backgroundModule, mainModule } = await loadCompiledFixturePair<CompiledGlobalPropsModule>(
       EVENT_HOOK_FIXTURE,

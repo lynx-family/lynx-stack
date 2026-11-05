@@ -2682,6 +2682,8 @@ class App extends Component {
       rrrr.ssss;
       rrrr.ssss.tttt;
       uuuu["__??__"];
+      if (enabled && handlers?.start) handlers.start();
+      vvvv?.wwww?.xxxx;
     }
     "#
   );
@@ -2720,6 +2722,8 @@ class App extends Component {
       rrrr.ssss;
       rrrr.ssss.tttt;
       uuuu["__??__"];
+      if (enabled && handlers?.start) handlers.start();
+      vvvv?.wwww?.xxxx;
     }
     "#
   );
@@ -2756,6 +2760,7 @@ class App extends Component {
       this.hhhh.kkkk;
       this.hhhh.iiii.jjjj;
       this.llll[this.mmmm.nnnn['oooo']];
+      this.pppp?.qqqq?.rrrr;
       aaaa;
       bbbb;
       eeee;
@@ -2796,6 +2801,7 @@ class App extends Component {
       this.hhhh.kkkk;
       this.hhhh.iiii.jjjj;
       this.llll[this.mmmm.nnnn['oooo']];
+      this.pppp?.qqqq?.rrrr;
       aaaa;
       bbbb;
       eeee;

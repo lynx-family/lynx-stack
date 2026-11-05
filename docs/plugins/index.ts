@@ -15,6 +15,7 @@ import type { RspressPlugin } from '@rspress/core';
 
 import { renderConfigReference } from './config.ts';
 import { packageGroups, pluginPackagePages } from './packages.ts';
+import { assertLocaleRoutes } from './routes.ts';
 import { referenceSections } from './sections.ts';
 import { LYNX_STACK, contentDir } from './site.ts';
 import type { Site } from './site.ts';
@@ -313,6 +314,7 @@ export function pluginApiReference(site: Site = LYNX_STACK): RspressPlugin[] {
     {
       name: 'lynx:api-reference-sidebar',
       config(config, _utils, isProd) {
+        assertLocaleRoutes(content);
         for (const locale of LOCALES) {
           for (const section of rendered) {
             const dir = join(content, locale, section.out);

@@ -36,7 +36,7 @@ use tokio::sync::{oneshot, watch, Notify, OwnedSemaphorePermit, Semaphore};
 
 use crate::capture::{shared_workers, CaptureError, CaptureWorkers, WorkerPanicked};
 use crate::headless::{PageLoadOptions, DEFAULT_SCREENSHOT_SETTLE_MS};
-use crate::ssrf::{fetch_http_resource, HttpFetchError};
+use crate::ssrf::{fetch_http_resource, parse_http_url, HttpFetchError};
 pub use crate::tos::TosConfigError;
 use crate::tos::{ScreenshotStore, TosUploadError};
 use crate::visual::{
@@ -1643,6 +1643,7 @@ fn remote_url(body: &[u8]) -> Result<String, ApiError> {
       "The remote URL must not be empty.",
     ));
   }
+  parse_http_url(url).map_err(remote_fetch_api_error)?;
   Ok(url.to_string())
 }
 
@@ -3126,6 +3127,22 @@ mod tests {
     }
   }
 
+  #[test]
+  fn remote_url_part_rejects_non_http_schemes() {
+    for url in [
+      "file:///tmp/template.js",
+      "FiLe:/tmp/template.js",
+      "file://localhost/tmp/template.js",
+      "ftp://example.com/template.js",
+      "data:text/javascript,example",
+      "/tmp/template.js",
+    ] {
+      let error = remote_url(url.as_bytes()).expect_err("reject before downloading");
+      assert_eq!(error.status, StatusCode::BAD_REQUEST, "{url}");
+      assert_eq!(error.message, "URL must be an absolute HTTP(S) URL.");
+    }
+  }
+
   #[tokio::test]
   async fn template_url_requires_a_javascript_entry() {
     let headless = scripted_workers(|_| panic!("invalid entries must not reach capture"));
@@ -4301,7 +4318,7 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn template_screenshot_rejects_direct_file_page_access() {
+  async fn remote_screenshot_routes_reject_file_urls() {
     let headless = Arc::new(
       CaptureWorkers::with_worker_main(0, |_jobs| unreachable!())
         .expect("create an idle headless pool"),
@@ -4316,12 +4333,31 @@ mod tests {
     for url in [
       "file:///tmp/private.lynx.bundle",
       "FILE:///tmp/private.lynx.bundle",
+      " \tFiLe://localhost/tmp/private.lynx.bundle\r\n",
+      "file:/tmp/private.lynx.bundle",
+      "file:tmp/private.lynx.bundle",
+      "fi\nle:///tmp/private.lynx.bundle",
+      "file://remote-host/share/private.lynx.bundle",
     ] {
-      let request = remote_url_request("template.js", url);
-      let error = screenshot_template(State(state.clone()), request)
-        .await
-        .expect_err("the server must reject direct file access");
-      assert_eq!(error.status, StatusCode::BAD_REQUEST);
+      for route in [
+        "/screenshot/template",
+        "/screenshot/template/url",
+        "/screenshot/zip/url",
+      ] {
+        let mut request = remote_url_request("template.js", url);
+        *request.uri_mut() = route.parse().unwrap();
+        let result = match route {
+          "/screenshot/template" => screenshot_template(State(state.clone()), request).await,
+          "/screenshot/template/url" => {
+            screenshot_template_url(State(state.clone()), request).await
+          }
+          "/screenshot/zip/url" => screenshot_zip_url(State(state.clone()), request).await,
+          _ => unreachable!(),
+        };
+        let error = result.expect_err("the server must reject direct file access");
+        assert_eq!(error.status, StatusCode::BAD_REQUEST, "{route}: {url:?}");
+        assert_eq!(error.message, "URL must be an absolute HTTP(S) URL.");
+      }
     }
     headless.shutdown().expect("stop mock headless worker");
   }

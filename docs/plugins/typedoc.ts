@@ -72,8 +72,9 @@ export function pluginApiSection(
         app.options.setValue('readme', section.readme);
         app.options.setValue('mergeReadme', true);
       }
-      app.options.setValue('lang', locale);
-      app.internationalization.setLocale(locale);
+      // Keep generated category paths and labels consistent across locales.
+      app.options.setValue('lang', 'en');
+      app.internationalization.setLocale('en');
       const generated = generatedPackageNames(site);
       const hidden = new Set(
         packages.filter(pkg =>
