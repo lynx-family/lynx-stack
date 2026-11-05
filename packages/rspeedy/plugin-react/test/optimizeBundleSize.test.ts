@@ -392,6 +392,51 @@ describe('optimizeBundleSize', () => {
     expect(backgroundCode).toContain('main-thread-only')
   })
 
+  test('respect an override set by a later environment hook', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const entryName = 'optimizeBundleSize-7'
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            [entryName]: pureFuncsBasicEntry,
+          },
+        },
+        output: {
+          filenameHash: false,
+          minify: false,
+          cleanDistPath: false,
+        },
+        plugins: [
+          {
+            name: 'test:environment-minify',
+            setup(api: RsbuildPluginAPI) {
+              api.modifyEnvironmentConfig({
+                order: 'pre',
+                handler(config, { mergeEnvironmentConfig }) {
+                  return mergeEnvironmentConfig(config, {
+                    output: {
+                      minify: true,
+                    },
+                  })
+                },
+              })
+            },
+          },
+          pluginReactLynx({
+            optimizeBundleSize: true,
+          }),
+        ],
+      },
+    })
+
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
+    expect(mainThreadCode).toContain('background-only')
+    expect(backgroundCode).toContain('main-thread-only')
+  })
+
   test('respect output.minify: false', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     rstest.stubEnv('NODE_ENV', 'production')
