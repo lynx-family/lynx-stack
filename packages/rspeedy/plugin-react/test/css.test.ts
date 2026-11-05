@@ -670,6 +670,27 @@ describe('Plugins - CSS', () => {
       ).toBeUndefined()
     })
 
+    test('with enableRemoveCSSScope: false and output.minify: false', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          output: {
+            minify: false,
+          },
+          plugins: [
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.optimization?.minimize).toBe(false)
+    })
+
     test('with enableRemoveCSSScope: true', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const rspeedy = await createRspeedy({

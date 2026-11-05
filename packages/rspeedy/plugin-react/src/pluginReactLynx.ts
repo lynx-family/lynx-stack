@@ -551,6 +551,13 @@ export function pluginReactLynx(
         }
 
         api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+          // If the user explicitly disabled minification, CSS minification is
+          // already off and merging would turn `minify: false` into an object,
+          // silently re-enabling JS minification.
+          if (config.output?.minify === false) {
+            return config
+          }
+
           return mergeRsbuildConfig(config, {
             output: {
               minify: {
