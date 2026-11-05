@@ -12,7 +12,7 @@ import { installComponentCompat } from '../../../src/core/component';
 import { globalPipelineOptions } from '../../../src/core/performance';
 import { initTimingAPI } from '../../../src/snapshot/lynx/performance';
 import { __root } from '../../../src/root';
-import { setupPage } from '../../../src/snapshot';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { elementTree, nativeMethodQueue } from './utils/nativeMethod';
 import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';
 import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
-import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot';
+import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
 import { __root } from '../../src/root';
 import { globalEnvManager } from './utils/envManager';
 import { gRecycleMap, gSignMap } from '../../src/snapshot/list/list';

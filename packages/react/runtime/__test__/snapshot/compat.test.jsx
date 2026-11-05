@@ -1,7 +1,9 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree } from './utils/nativeMethod';
-import { setupPage, snapshotInstanceManager, backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { backgroundSnapshotInstanceManager } from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
+import { snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
 import { ComponentFromReactRuntime, wrapWithLynxComponent } from '../../src/core/compat/lynxComponent';
 import { setupDocument } from '../../src/document';
 import { Fragment, render } from 'preact';

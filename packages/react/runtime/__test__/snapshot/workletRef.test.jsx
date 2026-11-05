@@ -11,7 +11,7 @@ import { createCompMT1, createCompMTList, createCompMTSpread } from './workletRe
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
-import { setupPage } from '../../src/snapshot';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
 import { injectUpdateMTRefInitValue } from '../../src/snapshot/worklet/ref/updateInitValue';

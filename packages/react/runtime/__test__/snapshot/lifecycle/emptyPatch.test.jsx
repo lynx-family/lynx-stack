@@ -8,7 +8,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { useState } from '../../../src/index';
 import { installComponentCompat } from '../../../src/core/component';
 import { __root } from '../../../src/root';
-import { setupPage } from '../../../src/snapshot';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { globalEnvManager } from '../utils/envManager';

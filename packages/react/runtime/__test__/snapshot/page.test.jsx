@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { __page } from '../../src/snapshot';
+import { __page } from '../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 import { useRef, useState } from '../../src/index';

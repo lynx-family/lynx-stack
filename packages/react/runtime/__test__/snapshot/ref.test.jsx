@@ -14,7 +14,7 @@ import { clearCommitTaskId, replaceCommitHook } from '../../src/snapshot/lifecyc
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
 import { __root } from '../../src/root';
-import { setupPage } from '../../src/snapshot';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, waitSchedule } from './utils/nativeMethod';
 
