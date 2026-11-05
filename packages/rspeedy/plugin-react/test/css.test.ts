@@ -831,6 +831,46 @@ describe('Plugins - CSS', () => {
       ).toBeDefined()
     })
 
+    test('with CSS minification enabled by a later environment hook', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            {
+              name: 'test:environment-css-minify',
+              setup(api: RsbuildPluginAPI) {
+                api.modifyEnvironmentConfig({
+                  order: 'pre',
+                  handler(config, { mergeEnvironmentConfig }) {
+                    return mergeEnvironmentConfig(config, {
+                      output: {
+                        minify: {
+                          css: true,
+                        },
+                      },
+                    })
+                  },
+                })
+              },
+            },
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeDefined()
+    })
+
     test('with enableRemoveCSSScope: true', async () => {
       rstest.stubEnv('NODE_ENV', 'production')
       const rspeedy = await createRspeedy({

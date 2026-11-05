@@ -550,29 +550,48 @@ export function pluginReactLynx(
           return
         }
 
-        api.modifyEnvironmentConfig((config, utils) => {
-          const { name, mergeEnvironmentConfig } = utils
-          const environmentMinify = api.getRsbuildConfig('current')
-            .environments?.[name]?.output?.minify
-          const environmentCSSMinify = typeof environmentMinify === 'object'
-            ? environmentMinify.css
-            : undefined
-          if (
-            config.output?.minify === false
-            || environmentMinify === true
-            || environmentCSSMinify === true
-            || environmentCSSMinify === 'always'
-          ) {
-            return config
-          }
+        api.modifyEnvironmentConfig({
+          order: 'pre',
+          handler(config, utils) {
+            const { name, mergeEnvironmentConfig } = utils
+            const currentConfig = api.getRsbuildConfig('current')
+            const environmentMinify = currentConfig
+              .environments?.[name]?.output?.minify
+            const environmentCSSMinify = typeof environmentMinify === 'object'
+              ? environmentMinify.css
+              : undefined
+            const rootMinify = currentConfig.output?.minify
+            const rootCSSMinify = typeof rootMinify === 'object'
+              ? rootMinify.css
+              : undefined
+            const mergedMinify = config.output?.minify
+            const mergedCSSMinify = typeof mergedMinify === 'object'
+              ? mergedMinify.css
+              : undefined
+            const hookEnabledMinify = rootMinify === false
+              && mergedMinify === true
+            const hookEnabledCSSMinify = rootCSSMinify !== true
+              && rootCSSMinify !== 'always'
+              && (mergedCSSMinify === true || mergedCSSMinify === 'always')
+            if (
+              mergedMinify === false
+              || environmentMinify === true
+              || environmentCSSMinify === true
+              || environmentCSSMinify === 'always'
+              || hookEnabledMinify
+              || hookEnabledCSSMinify
+            ) {
+              return config
+            }
 
-          return mergeEnvironmentConfig(config, {
-            output: {
-              minify: {
-                css: false,
+            return mergeEnvironmentConfig(config, {
+              output: {
+                minify: {
+                  css: false,
+                },
               },
-            },
-          })
+            })
+          },
         })
       },
     },
