@@ -552,9 +552,17 @@ export function pluginReactLynx(
 
         api.modifyEnvironmentConfig((config, utils) => {
           const { name, mergeEnvironmentConfig } = utils
-          const environmentMinify = api.getRsbuildConfig('original')
+          const environmentMinify = api.getRsbuildConfig('current')
             .environments?.[name]?.output?.minify
-          if (config.output?.minify === false || environmentMinify === true) {
+          const environmentCSSMinify = typeof environmentMinify === 'object'
+            ? environmentMinify.css
+            : undefined
+          if (
+            config.output?.minify === false
+            || environmentMinify === true
+            || environmentCSSMinify === true
+            || environmentCSSMinify === 'always'
+          ) {
             return config
           }
 
