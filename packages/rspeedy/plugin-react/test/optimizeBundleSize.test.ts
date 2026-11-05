@@ -144,6 +144,8 @@ describe('optimizeBundleSize', () => {
     expect(await handler(hookEnabled, utils)).toBe(hookEnabled)
 
     currentConfig = {}
+    expect(await handler(hookEnabled, utils)).toBe(hookEnabled)
+
     const minified = {
       output: { minify: { js: true } },
     } as MergedEnvironmentConfig
@@ -463,7 +465,7 @@ describe('optimizeBundleSize', () => {
     expect(backgroundCode).toContain('main-thread-only')
   })
 
-  test('respect an override set by a later environment hook', async () => {
+  test('respect an override set by an earlier pre environment hook', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     rstest.stubEnv('NODE_ENV', 'production')
 
@@ -477,7 +479,6 @@ describe('optimizeBundleSize', () => {
         },
         output: {
           filenameHash: false,
-          minify: false,
           cleanDistPath: false,
         },
         plugins: [

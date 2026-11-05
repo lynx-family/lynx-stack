@@ -15,7 +15,7 @@ export function applyOptimizeBundleSize(
     const currentConfig = api.getRsbuildConfig('current')
     const environmentMinify = currentConfig.environments?.[name]?.output
       ?.minify
-    const hookEnabledMinify = currentConfig.output?.minify === false
+    const hookEnabledMinify = currentConfig.output?.minify !== true
       && config.output?.minify === true
     if (
       config.output?.minify === false
