@@ -1,0 +1,18 @@
+.a {
+  color: red;
+  .b {
+    color: blue;
+  }
+  .c {
+    color: green;
+    .d {
+      order: 1;
+    }
+    .e {
+      order: 2;
+    }
+  }
+  .f, .g {
+    order: 3;
+  }
+}
