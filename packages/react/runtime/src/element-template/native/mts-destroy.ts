@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { onDestroy } from '@lynx-js/lynx-runtime/mts';
+import type { Unsubscribe } from '@lynx-js/lynx-runtime/mts';
+
 import { resetElementTemplatePatchListener } from './patch-listener.js';
 import { resetElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
@@ -10,18 +13,21 @@ import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../runt
 import { clearMainThreadDynamicAttrState } from '../runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../runtime/template/registry.js';
 
+let unsubscribe: Unsubscribe | undefined;
+
 export function installOnMtsDestruction(): void {
-  lynx.getNative?.().addEventListener('__DestroyLifetime', onMtsDestruction);
+  unsubscribe = onDestroy(onMtsDestruction);
 }
 
 export function onMtsDestruction(): void {
+  unsubscribe?.();
+  unsubscribe = undefined;
   const performance = lynx.performance;
   performance?.profileStart?.('ReactLynx::onMtsDestruction');
   try {
     destroyElementTemplateMainThreadRuntime();
   } finally {
     performance?.profileEnd?.();
-    lynx.getNative?.().removeEventListener('__DestroyLifetime', onMtsDestruction);
   }
 }
 

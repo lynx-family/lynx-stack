@@ -60,14 +60,14 @@ describe('Compiled ET InitData updateData fixture', () => {
 
   function installInitData(initData: Record<string, unknown>): void {
     const baseLynx = globalThis.lynx;
-    vi.stubGlobal('lynx', {
-      ...baseLynx,
+    const getJSModule = baseLynx.getJSModule;
+    Object.assign(baseLynx, {
       __initData: initData,
       getJSModule(moduleName: string) {
         if (moduleName === 'GlobalEventEmitter') {
           return emitter;
         }
-        return baseLynx.getJSModule?.(moduleName);
+        return getJSModule?.(moduleName);
       },
     });
   }
@@ -115,7 +115,7 @@ describe('Compiled ET InitData updateData fixture', () => {
 
     envManager.switchToBackground();
     updateEvents = [];
-    updateCardData({ msg: 'update' });
+    updateCardData({ msg: 'update' }, { resetPageData: false });
     await waitForRender();
 
     envManager.switchToMainThread();

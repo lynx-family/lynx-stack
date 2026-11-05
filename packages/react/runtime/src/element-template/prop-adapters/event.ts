@@ -67,14 +67,6 @@ export function publishEvent(eventValue: string, data: EventDataType): void {
   }
 }
 
-export function publicComponentEvent(
-  _componentId: string,
-  eventValue: string,
-  data: EventDataType,
-): void {
-  publishEvent(eventValue, data);
-}
-
 export function flushPendingEvents(): void {
   queuePendingEvents = false;
   if (pendingEvents.length === 0) {

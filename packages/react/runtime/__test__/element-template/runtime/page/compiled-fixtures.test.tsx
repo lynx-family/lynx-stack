@@ -47,6 +47,7 @@ const __dirname = path.dirname(__filename);
 const AUTHORED_PAGE_FIXTURE = path.resolve(__dirname, '../../fixtures/page-compiled/authored-page/index.tsx');
 
 interface AuthoredPageProps {
+  onCleanup?: () => void;
   onTap?: () => void;
   pageId?: string;
   pageKey?: string;
@@ -58,6 +59,7 @@ interface AuthoredPageProps {
 
 interface CompiledAuthoredPageModule extends CompiledFixtureModuleExports {
   App: (props: AuthoredPageProps) => JSX.Element;
+  AppWithCleanup: (props: AuthoredPageProps) => JSX.Element;
 }
 
 describe('Compiled authored ET page fixtures', () => {
@@ -90,8 +92,14 @@ describe('Compiled authored ET page fixtures', () => {
     mainThreadProps: AuthoredPageProps = backgroundProps,
   ): Promise<CompiledAuthoredPageModule> {
     const modules = await loadCompiledFixturePair<CompiledAuthoredPageModule>(AUTHORED_PAGE_FIXTURE);
-    renderOnBackground(modules.backgroundModule, backgroundProps);
-    renderCompiledFixtureOnMainThread(modules.mainModule, envManager, mainThreadProps);
+    const backgroundModule = backgroundProps.onCleanup
+      ? { ...modules.backgroundModule, App: modules.backgroundModule.AppWithCleanup }
+      : modules.backgroundModule;
+    const mainModule = mainThreadProps.onCleanup
+      ? { ...modules.mainModule, App: modules.mainModule.AppWithCleanup }
+      : modules.mainModule;
+    renderOnBackground(backgroundModule, backgroundProps);
+    renderCompiledFixtureOnMainThread(mainModule, envManager, mainThreadProps);
     expect(isElementTemplateHydrated()).toBe(true);
     envManager.switchToMainThread();
     envManager.switchToBackground();
@@ -508,15 +516,24 @@ describe('Compiled authored ET page fixtures', () => {
   });
 
   it('clears compiled page event and ref state on background destroy', async () => {
+    const entry = '../../../../src/element-template/native/index.js?destroy-card';
+    await import(entry);
+    envManager.resetEnv('background');
     const onTap = vi.fn();
     const pageRef = vi.fn();
-    await renderHydratedPair({ onTap, pageId: 'screen', pageRef, withPage: true });
+    const onCleanup = vi.fn();
+    await renderHydratedPair({ onTap, onCleanup, pageId: 'screen', pageRef, withPage: true });
 
     expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0:bindtap')).toBe(onTap);
     pageRef.mockClear();
+    const dispatch = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    dispatch.mockClear();
 
-    callDestroyLifetimeFun();
+    lynx.getApp().callDestroyLifetimeFun();
 
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(onCleanup).toHaveBeenCalledExactlyOnceWith();
+    expect(lynx.reportError).not.toHaveBeenCalled();
     expect(isElementTemplateHydrated()).toBe(false);
     expect(backgroundElementTemplateInstanceManager.getRawAttributeValueByEventValue('0:0:bindtap')).toBeNull();
     expect(pageRef).toHaveBeenCalledWith(null);

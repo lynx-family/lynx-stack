@@ -5,6 +5,8 @@ import '@lynx-js/react/hooks';
 import type { ComponentChild, ContainerNode, VNode } from 'preact';
 import { options, render } from 'preact';
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+
 import { callDestroyLifetimeFun } from './callDestroyLifetimeFun.js';
 import { injectCalledByNative } from './main-thread-api.js';
 import { installOnMtsDestruction } from './mts-destroy.js';
@@ -26,7 +28,7 @@ import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
 import { installElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
-import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
+import { publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 
 function forceRootRender(): void {
@@ -76,12 +78,12 @@ function init(): void {
     setupBackgroundElementTemplateDocument();
     installElementTemplateHydrationListener();
     resetEventStateForRuntime();
-    lynx.getApp().callDestroyLifetimeFun = callDestroyLifetimeFun;
-    lynx.getApp().publishEvent = publishEvent;
-    lynx.getApp().publicComponentEvent = publicComponentEvent;
-    lynx.getApp().updateGlobalProps = updateGlobalProps;
-    lynx.getApp().updateCardData = updateCardData;
-    lynx.getApp().onAppReload = reloadBackground;
+    const page = bindPage();
+    page.onDestroy(callDestroyLifetimeFun);
+    page.setEventHandler(publishEvent);
+    page.onGlobalPropsChanged(updateGlobalProps);
+    page.onUpdateData(updateCardData);
+    page.onReload(reloadBackground);
     installElementTemplateRenderScopeHooks();
     installElementTemplateCommitHook();
     if (process.env['NODE_ENV'] !== 'test') {

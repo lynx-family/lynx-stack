@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { sendMessage } from '@lynx-js/lynx-runtime/mts';
 /**
  * Implements the IFR (Instant First-Frame Rendering) on main thread.
  */
@@ -61,10 +62,7 @@ function renderMainThread(): void {
       reloadVersion: getReloadVersion(),
     };
 
-    lynx.getJSContext().dispatchEvent({
-      type: ElementTemplateLifecycleConstant.hydrate,
-      data: payload,
-    });
+    sendMessage(ElementTemplateLifecycleConstant.hydrate, payload);
   } finally {
     profileEnd();
   }

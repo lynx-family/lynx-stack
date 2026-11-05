@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+
 import { onFunctionCall } from './return-value.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
@@ -10,7 +12,7 @@ import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { registerBackgroundFunctionCtx } from '../background-function/run-on-background.js';
 import { isMainThreadFunction } from '../main-thread-function.js';
 import { isMtsEnabled } from '../mts-capability.js';
-import { dispatchReloadScopedEvent } from '../reload-scoped-event.js';
+import { sendReloadScopedMessage } from '../reload-scoped-event.js';
 import { isRuntimeDestroyed } from '../runtime-destroy.js';
 
 interface RunOnMainThreadOptions {
@@ -46,7 +48,7 @@ export function createRunOnMainThread(
     }
     return async (...params: Parameters<Fn>): Promise<R> => {
       return new Promise((resolve) => {
-        if (isRuntimeDestroyed()) return;
+        if (isRuntimeDestroyed() || (/* v8 ignore next */ __JS__ && bindPage().isDestroyed())) return;
         const worklet = fn as unknown as Worklet;
         prepareMainThreadFunctionCtx(worklet);
         const data = {
@@ -77,5 +79,8 @@ function prepareMainThreadFunctionCtx(worklet: unknown): void {
 }
 
 function dispatchRunOnMainThreadEvent(data: RunWorkletCtxData): void {
-  dispatchReloadScopedEvent(lynx.getCoreContext(), { type: WorkletEvents.runWorkletCtx, data });
+  /* v8 ignore next */
+  if (__JS__) {
+    sendReloadScopedMessage(bindPage().sendMessage, WorkletEvents.runWorkletCtx, data);
+  }
 }

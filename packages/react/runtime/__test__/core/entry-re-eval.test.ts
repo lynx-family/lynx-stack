@@ -48,11 +48,12 @@ function lastDispatched(type: string) {
 
 beforeEach(() => {
   context = createEventHost();
+  const app = {};
   vi.stubGlobal('__EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__', true);
   vi.stubGlobal('__JS__', true);
   vi.stubGlobal('__LEPUS__', false);
   vi.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
-  vi.stubGlobal('lynx', { getCoreContext: () => context, getJSContext: () => context });
+  vi.stubGlobal('lynx', { getApp: () => app, getCoreContext: () => context, getJSContext: () => context });
 });
 
 afterEach(() => {
@@ -100,6 +101,7 @@ describe('cross-thread calls across an entry re-evaluation', () => {
 
   it('does not let a retired main-thread entry call the background', async () => {
     vi.stubGlobal('__JS__', false);
+    vi.stubGlobal('__LEPUS__', true);
     const oldEntry = await evaluateEntry();
     const fn = oldEntry.runOnBackground(Object.assign(() => undefined, { _jsFnId: 1, _execId: 1 }));
     oldEntry.destroyRuntime();

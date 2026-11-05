@@ -78,7 +78,7 @@ describe('injectCalledByNative', () => {
     globalAny.updateGlobalProps({ theme: 'light' }, options);
 
     expect(__FlushElementTree).toHaveBeenCalledWith(undefined, options);
-    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
+    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'light' });
     expect(globalThis.lynx.__initData).toEqual({ msg: 'init' });
     expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
     expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
@@ -94,8 +94,8 @@ describe('injectCalledByNative', () => {
 
     globalAny.updateGlobalProps({ theme: 'light' });
 
-    expect(__FlushElementTree).toHaveBeenCalledWith(undefined, {});
-    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
+    expect(__FlushElementTree).toHaveBeenCalledWith();
+    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'light' });
     expect(vi.mocked(renderMainThread)).not.toHaveBeenCalled();
     expect(vi.mocked(reloadMainThread)).not.toHaveBeenCalled();
   });

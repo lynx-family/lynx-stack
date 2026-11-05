@@ -2,9 +2,15 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { MTSFlushOptions } from '@lynx-js/lynx-runtime';
+
+export type CommitFlushOptions = MTSFlushOptions & {
+  __lynx_timing_flag?: string | undefined;
+};
+
 export interface GlobalCommitContext<Ops = unknown[]> {
   ops: Ops;
-  flushOptions: FlushOptions;
+  flushOptions: CommitFlushOptions;
   flowIds?: number[];
 }
 
@@ -19,7 +25,7 @@ export function resetGlobalCommitContext(): void {
   delete globalCommitContext.flowIds;
 }
 
-export function takeGlobalFlushOptions(): FlushOptions {
+export function takeGlobalFlushOptions(): CommitFlushOptions {
   const flushOptions = globalCommitContext.flushOptions;
   globalCommitContext.flushOptions = {};
   return flushOptions;

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
 import { WorkletEvents, registerMainThreadObjectType } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet, WorkletRefImpl } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -95,11 +96,12 @@ export abstract class MainThreadObjectHandle<I, O extends object> {
       );
 
       const id = this._wvid;
+      const page = bindPage();
+      let released = false;
       this._releaseObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext?.().dispatchEvent({
-          type: WorkletEvents.releaseWorkletRef,
-          data: { id },
-        });
+        if (released || page.isDestroyed()) return;
+        released = true;
+        page.sendMessage(WorkletEvents.releaseWorkletRef, { id });
       });
     }
   }

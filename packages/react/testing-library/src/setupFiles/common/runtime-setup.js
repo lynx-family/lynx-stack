@@ -66,6 +66,14 @@ globalThis.onInjectMainThreadGlobals = (target) => {
 
   target.globalPipelineOptions = undefined;
 
+  const oldLynx = globalThis.lynx;
+  globalThis.lynx = target.lynx;
+  try {
+    injectCalledByNative();
+  } finally {
+    globalThis.lynx = oldLynx;
+  }
+
   if (
     typeof target.__ALOG_ELEMENT_API__ !== 'undefined' && target.__ALOG_ELEMENT_API__
     && !target.__initElementPAPICallAlogInjected
@@ -111,6 +119,7 @@ globalThis.onResetLynxTestingEnv = () => {
   destroyWorklet();
 
   lynxTestingEnv.switchToMainThread();
+  injectCalledByNative();
   initEventListeners();
   lynxTestingEnv.switchToBackgroundThread();
   injectTt();

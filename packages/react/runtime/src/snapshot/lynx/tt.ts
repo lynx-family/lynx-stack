@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { process, render } from 'preact';
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+
 import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
@@ -25,7 +27,7 @@ import { commitPatchUpdate, genCommitTaskId, globalCommitTaskMap } from '../life
 import type { PatchList } from '../lifecycle/patch/commit.js';
 import { removeCtxNotFoundEventListener } from '../lifecycle/patch/error.js';
 import { runDelayedUiOps } from '../lifecycle/ref/delay.js';
-import { reloadBackground } from '../lifecycle/reload.js';
+import { reloadBackground } from '../lifecycle/reload-background.js';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
@@ -37,19 +39,24 @@ import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.j
 
 export { runWithForce };
 
+let currentPublishEvent = delayedPublishEvent;
+
 function injectTt(): void {
+  'background only';
+  const page = bindPage();
+  currentPublishEvent = delayedPublishEvent;
   const tt = lynx.getApp();
   tt.OnLifecycleEvent = onLifecycleEvent;
-  tt.publishEvent = delayedPublishEvent;
-  tt.publicComponentEvent = delayedPublicComponentEvent;
-  tt.callDestroyLifetimeFun = () => {
+  page.setEventHandler(dispatchEvent);
+  page.onDestroy(() => {
+    currentPublishEvent = () => {};
     removeCtxNotFoundEventListener();
     destroyWorklet();
-    destroyBackground();
-  };
-  tt.updateGlobalProps = updateGlobalProps;
-  tt.updateCardData = updateCardData;
-  tt.onAppReload = reloadBackground;
+    destroyBackground(true);
+  });
+  page.onGlobalPropsChanged(updateGlobalProps);
+  page.onUpdateData(updateCardData);
+  page.onReload(reloadBackground);
   tt.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
@@ -150,8 +157,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      lynx.getApp().publishEvent = publishEvent;
-      lynx.getApp().publicComponentEvent = publicComponentEvent;
+      currentPublishEvent = publishEvent;
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -187,7 +193,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
     }
     case LifecycleConstant.publishEvent: {
       const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
-      lynx.getApp().publishEvent(handlerName, d);
+      dispatchEvent(handlerName, d);
       break;
     }
   }
@@ -205,6 +211,10 @@ function flushDelayedLifecycleEvents(): void {
     delayedLifecycleEvents.length = 0;
   }
   flushingDelayedLifecycleEvents = false;
+}
+
+function dispatchEvent(handlerName: string, data: EventDataType): void {
+  currentPublishEvent(handlerName, data);
 }
 
 function publishEvent(handlerName: string, data: EventDataType) {
@@ -257,14 +267,6 @@ function publishEvent(handlerName: string, data: EventDataType) {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileEnd();
   }
-}
-
-function publicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
-  publishEvent(handlerName, data);
-}
-
-function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
-  delayedPublishEvent(handlerName, data);
 }
 
 function updateGlobalProps(newData: Record<string, any>): void {

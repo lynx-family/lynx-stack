@@ -1,8 +1,19 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import {
+  flushElementTree,
+  onGlobalPropsChanged,
+  onReload,
+  onRenderPage,
+  onUpdateData,
+  setPageDataGetter,
+} from '@lynx-js/lynx-runtime/mts';
+import type { MTSFlushContext, MTSFlushOptions, MTSUpdateOptions } from '@lynx-js/lynx-runtime/mts';
+
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { markTiming, setPipeline } from '../../core/performance.js';
+import { registerDestroyTask } from '../../core/runtime-destroy.js';
 import { __root, setRoot } from '../../root.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import {
@@ -18,7 +29,7 @@ import { renderMainThread } from '../lifecycle/render.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
 import { ssrHydrateByOpcodes } from '../renderToOpcodes/opcodes.js';
-import { __page, setupPage } from '../snapshot/definition.js';
+import { setupPage } from '../snapshot/definition.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 
@@ -77,25 +88,27 @@ function injectCalledByNative(): void {
     throw new Error('`firstScreenSyncTiming` must be `jsReady` when SSR is enabled');
   }
 
-  const calledByNative: LynxCallByNative = {
-    renderPage,
-    updatePage,
-    updateGlobalProps,
-    getPageData: function() {
-      return null;
-    },
-    removeComponents: function(): void {},
-    ...(__ENABLE_SSR__ ? { ssrEncode, ssrHydrate } : {}),
-  };
+  const unsubRenderPage = onRenderPage(renderPage);
+  const unsubUpdateData = onUpdateData(updatePage);
+  const unsubReload = onReload(reloadMainThread);
+  const unsubGlobalProps = onGlobalPropsChanged(updateGlobalProps);
+  const unsubPageDataGetter = setPageDataGetter(() => null);
+  registerDestroyTask(() => {
+    unsubRenderPage();
+    unsubUpdateData();
+    unsubReload();
+    unsubGlobalProps();
+    unsubPageDataGetter();
+  });
 
-  Object.assign(globalThis, calledByNative);
   Object.assign(globalThis, {
+    ...(__ENABLE_SSR__ ? { ssrEncode, ssrHydrate } : {}),
     [LifecycleConstant.firstScreenSyncReady]: onFirstScreenSyncReady,
   });
 }
 
-function renderPage(data: Record<string, unknown> | undefined): void {
-  lynx.__initData = data ?? {};
+function renderPage(data: Readonly<Record<string, unknown>> | undefined): void {
+  lynx.__initData = { ...data };
 
   setupPage(__CreatePage('0', 0));
   (__root as SnapshotInstance).ensureElements();
@@ -116,15 +129,13 @@ function renderPage(data: Record<string, unknown> | undefined): void {
   }
 }
 
-function updatePage(data: Record<string, unknown> | undefined, options?: UpdatePageOption): void {
-  if (options?.reloadTemplate) {
-    reloadMainThread(data, options);
-    return;
-  }
-
+function updatePage(
+  data: Readonly<Record<string, unknown>> | undefined,
+  options: Readonly<MTSUpdateOptions>,
+): void {
   applyUpdatePageData(data, options);
 
-  const flushOptions = options ?? {};
+  let flushOptions: Readonly<MTSFlushOptions> = options;
   if (!firstScreenSync.isSynced) {
     if (__FIRST_SCREEN_SYNC_TIMING__ === 'manual') {
       // a `markFirstScreenSyncReady` call during the re-render below must not
@@ -157,7 +168,7 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
         onFirstScreenTreeReady();
       }
 
-      flushOptions.triggerDataUpdated = true;
+      flushOptions = { ...options, triggerDataUpdated: true };
       markTiming('updateDiffVdomEnd');
 
       if (typeof lepusng_gc === 'function') {
@@ -168,15 +179,11 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
     }
   }
 
-  __FlushElementTree(__page, flushOptions);
+  flushElementTree(flushOptions);
 }
 
-function updateGlobalProps(_data: any, options?: UpdatePageOption): void {
-  if (options) {
-    __FlushElementTree(__page, options);
-  } else {
-    __FlushElementTree();
-  }
+function updateGlobalProps(_data: unknown, options?: Readonly<MTSFlushContext>): void {
+  flushElementTree(options);
 }
 
 /**

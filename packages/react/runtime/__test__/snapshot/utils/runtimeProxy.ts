@@ -47,11 +47,14 @@ class EventEmitter {
     }
     const context = eventEmitters[currentContextName];
     const realType = getType(this.name, event.type);
-    switchContext();
-    if (context.listeners[realType]) {
-      context.listeners[realType].forEach((listener) => listener(event));
+    if (context.listeners[realType]?.length) {
+      switchContext();
+      try {
+        context.listeners[realType].forEach((listener) => listener(event));
+      } finally {
+        switchContext();
+      }
     }
-    switchContext();
   };
 
   constructor(name: string) {

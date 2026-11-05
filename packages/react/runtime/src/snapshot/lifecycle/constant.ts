@@ -16,6 +16,23 @@ export const LifecycleConstant = {
 
 export type LifecycleConstant = (typeof LifecycleConstant)[keyof typeof LifecycleConstant];
 
+export const ctxNotFoundType = 'Lynx.Error.CtxNotFound';
+
+export interface CtxNotFoundOptions {
+  operation: string;
+  commitId: number;
+  isHydration: boolean;
+  parent?: number;
+  child?: number;
+  /** Missing main-thread contexts: 1 for parent, 2 for child, 3 for both. */
+  missingNode?: 1 | 2 | 3;
+}
+
+export interface CtxNotFoundData {
+  id: number;
+  options: CtxNotFoundOptions;
+}
+
 export interface FirstScreenData {
   root: string;
   firstScreenEventIdSwap: Record<string | number, number>;

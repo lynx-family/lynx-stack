@@ -26,10 +26,13 @@ function createLynxMock() {
     dispatchEvent: vi.fn(),
   };
 
-  globalThis.lynx = {
+  const app = {};
+  vi.stubGlobal('tt', app);
+  vi.stubGlobal('lynx', {
+    getApp: () => app,
     getCoreContext: vi.fn(() => coreContext),
     getJSContext: vi.fn(() => jsContext),
-  } as unknown as typeof lynx;
+  });
 
   return { coreContext, jsContext };
 }
@@ -38,9 +41,7 @@ describe('thread-function-call main-thread primitives', () => {
   beforeEach(() => {
     vi.stubGlobal('__JS__', true);
     vi.stubGlobal('__LEPUS__', false);
-    globalThis.SystemInfo = {
-      lynxSdkVersion: '999.999',
-    } as SystemInfo;
+    vi.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
     clearMtsConfigCacheForTesting();
   });
 
@@ -179,5 +180,20 @@ describe('thread-function-call main-thread primitives', () => {
     expect(() => runOnMainThread({ _wkltId: 'unsupported' } as unknown as () => void)).toThrowError(
       'runOnMainThread requires Lynx sdk version 2.14.',
     );
+  });
+
+  it('drops main-thread calls once the BTS page is destroyed', async () => {
+    const { bindPage } = await import('@lynx-js/lynx-runtime/bts');
+    const { coreContext } = createLynxMock();
+    bindPage();
+    (lynx.getApp() as { callDestroyLifetimeFun?: () => void }).callDestroyLifetimeFun?.();
+    const runOnMainThread = createRunOnMainThread({
+      shouldDispatchRunOnMainThreadDirectly: () => true,
+    });
+
+    void runOnMainThread({ _wkltId: 'after-destroy' } as unknown as () => void)();
+
+    expect(coreContext.addEventListener).not.toHaveBeenCalled();
+    expect(coreContext.dispatchEvent).not.toHaveBeenCalled();
   });
 });

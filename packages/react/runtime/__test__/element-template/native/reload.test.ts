@@ -149,6 +149,8 @@ describe('ElementTemplate reloadMainThread', () => {
       __initData: {},
       reportError: vi.fn(),
       getJSContext: vi.fn(() => ({
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
         dispatchEvent: vi.fn(),
       })),
     } as typeof lynx;
@@ -235,6 +237,8 @@ describe('ElementTemplate reloadMainThread', () => {
       );
       (globalThis.lynx as typeof lynx & { getJSContext?: () => { dispatchEvent: typeof dispatchEvent } })
         .getJSContext = vi.fn(() => ({
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
           dispatchEvent,
         }));
       renderMainThread();

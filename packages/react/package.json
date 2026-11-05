@@ -220,6 +220,7 @@
     "api-extractor": "api-extractor run --verbose"
   },
   "dependencies": {
+    "@lynx-js/lynx-runtime": "workspace:*",
     "preact": "catalog:lynxjs"
   },
   "devDependencies": {

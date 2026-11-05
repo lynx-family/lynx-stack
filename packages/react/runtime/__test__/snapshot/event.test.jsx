@@ -37,7 +37,7 @@ describe('eventUpdate', () => {
     const handleTap1 = vi.fn().mockImplementation(() => {
       throw new Error('error');
     });
-    const handleTap2 = vi.fn();
+    const handleTap2 = vi.fn(() => false);
     function Comp() {
       return (
         <view>
@@ -82,6 +82,8 @@ describe('eventUpdate', () => {
 
     globalEnvManager.switchToBackground();
     render(<Comp />, __root);
+    const pageEntry = lynx.getApp().publishEvent;
+    const componentEntry = lynx.getApp().publicComponentEvent;
 
     // LifecycleConstant.firstScreen
     {
@@ -110,10 +112,16 @@ describe('eventUpdate', () => {
       `);
     }
 
-    lynx.getApp().publishEvent('-2:1:', 'data');
+    expect(lynx.getApp().publishEvent).toBe(pageEntry);
+    expect(lynx.getApp().publicComponentEvent).toBe(componentEntry);
+    expect(pageEntry('-2:1:', 'data')).toBeUndefined();
     expect(handleTap1).toHaveBeenCalledTimes(0);
     expect(handleTap2).toHaveBeenCalledTimes(1);
     expect(handleTap2).toHaveBeenCalledWith('data');
+    handleTap2.mockClear();
+
+    expect(componentEntry('component-7', '-2:1:', 'component data')).toBeUndefined();
+    expect(handleTap2).toHaveBeenCalledExactlyOnceWith('component data');
     handleTap2.mockClear();
 
     const reportError = lynx.reportError;
@@ -993,6 +1001,8 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
   it('event before jsReady should works', async function() {
     // resetup
     injectTt();
+    const pageEntry = lynx.getApp().publishEvent;
+    const componentEntry = lynx.getApp().publicComponentEvent;
 
     const handleTouchStart = vi.fn();
 
@@ -1115,9 +1125,12 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
       `);
     }
 
-    lynx.getApp().publishEvent('-3:0:', 'event 1');
-    lynx.getApp().publishEvent('-6:0:', 'event 2');
-    lynx.getApp().publishEvent('-9:0:', 'event 3');
+    expect(pageEntry('-3:0:', 'event 1')).toBeUndefined();
+    expect(componentEntry('component-7', '-6:0:', 'event 2')).toBeUndefined();
+    const privateEntry = vi.spyOn(lynx.getApp(), 'publishEvent');
+    lynx.getApp().OnLifecycleEvent(['rLynxPublishEvent', { handlerName: '-9:0:', data: 'event 3' }]);
+    expect(privateEntry).not.toHaveBeenCalled();
+    privateEntry.mockRestore();
 
     // background render
     {
@@ -1143,6 +1156,8 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
       globalEnvManager.switchToBackground();
       const rLynxFirstScreen = globalThis.__OnLifecycleEvent.mock.calls[0];
       lynx.getApp().OnLifecycleEvent(...rLynxFirstScreen);
+      expect(lynx.getApp().publishEvent).toBe(pageEntry);
+      expect(lynx.getApp().publicComponentEvent).toBe(componentEntry);
       expect(rLynxFirstScreen).toMatchInlineSnapshot(`
         [
           [

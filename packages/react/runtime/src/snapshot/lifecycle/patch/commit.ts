@@ -21,10 +21,12 @@
 
 import { options } from 'preact';
 
+import type { MTSFlushOptions, PipelineOptions } from '@lynx-js/lynx-runtime';
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
 import {
   globalBackgroundSnapshotInstancesToRemove,
+  isBackgroundDestroying,
   setGlobalBackgroundSnapshotInstancesToRemove,
 } from './globalState.js';
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
@@ -63,7 +65,7 @@ interface Patch {
 interface PatchList {
   patchList: Patch[];
   delayedRunOnMainThreadData?: RunWorkletCtxData[];
-  flushOptions?: FlushOptions;
+  flushOptions?: MTSFlushOptions;
 }
 
 /**
@@ -140,7 +142,10 @@ function replaceCommitHook(): void {
         }
       });
 
-      sendMTRefInitValueToMainThread();
+      // Unmount still collects removals and runs refs/effects without MTS work.
+      if (!isBackgroundDestroying) {
+        sendMTRefInitValueToMainThread();
+      }
 
       // Collect patches for this update
       const snapshotPatch = takeGlobalSnapshotPatch();

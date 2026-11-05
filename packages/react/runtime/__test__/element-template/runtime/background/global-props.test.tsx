@@ -73,6 +73,8 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
       envManager.switchToMainThread();
       lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
       envManager.switchToBackground();
+      // Unmount while the card still exposes this test's GlobalEventEmitter.
+      lynx.getApp().callDestroyLifetimeFun();
       resetElementTemplateHydrationListener();
       resetElementTemplateCommitState();
       globalThis.lynx.getApp().GlobalEventEmitter = originalGlobalEventEmitter;

@@ -40,10 +40,13 @@ function createCrossThreadLynxMock() {
     }),
   };
 
-  globalThis.lynx = {
+  const app = {};
+  vi.stubGlobal('tt', app);
+  vi.stubGlobal('lynx', {
+    getApp: () => app,
     getCoreContext: vi.fn(() => coreContext),
     getJSContext: vi.fn(() => jsContext),
-  } as unknown as typeof lynx;
+  });
 
   return { coreContext, jsContext };
 }
@@ -51,9 +54,7 @@ function createCrossThreadLynxMock() {
 describe('background-function core primitives', () => {
   beforeEach(() => {
     vi.stubGlobal('__JS__', false);
-    globalThis.SystemInfo = {
-      lynxSdkVersion: '999.999',
-    } as SystemInfo;
+    vi.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
     resetBackgroundFunctionHandleIdForTesting();
   });
 
@@ -129,5 +130,32 @@ describe('background-function core primitives', () => {
     resetFunctionCallReturnListener();
     expect(coreContext.removeEventListener).toHaveBeenCalledTimes(2);
     expect(jsContext.removeEventListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops registrations and calls once BTS or MTS host destruction is observed', async () => {
+    const { bindPage } = await import('@lynx-js/lynx-runtime/bts');
+    const { onDestroy } = await import('@lynx-js/lynx-runtime/mts');
+    const { onFunctionCall } = await import('../../src/core/thread-function-call/return-value.js');
+    const nativeListeners = new Map<string, () => void>();
+    const native = {
+      addEventListener: vi.fn((type: string, cb: () => void) => nativeListeners.set(type, cb)),
+      removeEventListener: vi.fn((type: string) => nativeListeners.delete(type)),
+    };
+    const { coreContext, jsContext } = createCrossThreadLynxMock();
+    Object.assign(lynx, { getNative: () => native });
+
+    bindPage();
+    (lynx.getApp() as { callDestroyLifetimeFun?: () => void }).callDestroyLifetimeFun?.();
+    const deadCtx = { _wkltId: 'dead-ctx' };
+    registerBackgroundFunctionCtx(deadCtx);
+    expect(deadCtx).not.toHaveProperty('_execId');
+    expect(coreContext.addEventListener).not.toHaveBeenCalled();
+
+    onDestroy(() => {});
+    nativeListeners.get('__DestroyLifetime')?.();
+    expect(onFunctionCall(vi.fn())).toBe(0);
+    void runOnBackground({ _jsFnId: 1, _execId: 1 } as unknown as () => void)();
+    expect(jsContext.addEventListener).not.toHaveBeenCalled();
+    expect(jsContext.dispatchEvent).not.toHaveBeenCalled();
   });
 });

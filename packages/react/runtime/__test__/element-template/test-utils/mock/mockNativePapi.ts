@@ -402,8 +402,7 @@ export function installMockNativePapi(
   const baseGetNativeApp = typeof baseLynx.getNativeApp === 'function'
     ? baseLynx.getNativeApp
     : undefined;
-  vi.stubGlobal('lynx', {
-    ...baseLynx,
+  Object.assign(baseLynx, {
     getNativeApp: () => ({
       ...baseGetNativeApp?.call(baseLynx),
       createJSObjectDestructionObserver: mockCreateJSObjectDestructionObserver,

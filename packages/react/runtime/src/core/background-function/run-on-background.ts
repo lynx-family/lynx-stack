@@ -2,13 +2,16 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+import { isDestroyed as isMtsDestroyed, sendMessage as sendMtsMessage } from '@lynx-js/lynx-runtime/mts';
+
 import { BackgroundFunctionExecMap } from './exec-map.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import type { ClosureValueType, JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
-import { addReloadScopedEventListener, dispatchReloadScopedEvent } from '../reload-scoped-event.js';
+import { onReloadScopedMessage, sendReloadScopedMessage } from '../reload-scoped-event.js';
 import { isRuntimeDestroyed, registerDestroyTask } from '../runtime-destroy.js';
 import { onFunctionCall } from '../thread-function-call/return-value.js';
 
@@ -32,13 +35,16 @@ function initBackgroundFunctionRuntime(): void {
   }
 
   execIdMap ??= new BackgroundFunctionExecMap();
-  const context = lynx.getCoreContext();
-  const removeListener = addReloadScopedEventListener(context, WorkletEvents.runOnBackground, runBackgroundFunction);
-  context.addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
+  const page = bindPage();
+  const unsubRun = onReloadScopedMessage(page.onMessage, WorkletEvents.runOnBackground, runBackgroundFunction);
+  const unsubRelease = page.onMessage<number[]>(
+    WorkletEvents.releaseBackgroundWorkletCtx,
+    releaseBackgroundFunctionCtx,
+  );
 
   cleanupBackgroundFunctionRuntime = () => {
-    removeListener();
-    context.removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
+    unsubRun();
+    unsubRelease();
     execIdMap!.clear();
     cleanupBackgroundFunctionRuntime = undefined;
   };
@@ -55,16 +61,20 @@ export function runBackgroundFunction(data: RunOnBackgroundData): void {
     throw new Error('runOnBackground: JS function not found: ' + JSON.stringify(data.obj));
   }
   const returnValue = f(...data.params);
-  dispatchReloadScopedEvent(lynx.getCoreContext(), {
-    type: WorkletEvents.FunctionCallRet,
-    data: { resolveId: data.resolveId, returnValue } satisfies RunWorkletCtxRetData,
-  });
+  sendReloadScopedMessage(
+    bindPage().sendMessage,
+    WorkletEvents.FunctionCallRet,
+    {
+      resolveId: data.resolveId,
+      returnValue,
+    } satisfies RunWorkletCtxRetData,
+  );
 }
 
-function releaseBackgroundFunctionCtx(event: RuntimeProxy.Event): void {
+function releaseBackgroundFunctionCtx(ids: number[]): void {
   'background only';
-  for (const id of event.data) {
-    execIdMap!.remove(id as number);
+  for (const id of ids) {
+    execIdMap!.remove(id);
   }
 }
 
@@ -73,6 +83,9 @@ function releaseBackgroundFunctionCtx(event: RuntimeProxy.Event): void {
  */
 export function registerBackgroundFunctionCtx(ctx: Worklet): void {
   'background only';
+  if (bindPage().isDestroyed()) {
+    return;
+  }
   initBackgroundFunctionRuntime();
   ensureBackgroundFunctionCleanup();
   execIdMap!.add(ctx);
@@ -130,7 +143,7 @@ export function runOnBackground<R, Fn extends (...args: any[]) => R>(
   }
   return async (...params: ClosureValueType[]): Promise<R> => {
     return new Promise((resolve) => {
-      if (isRuntimeDestroyed()) return;
+      if (isRuntimeDestroyed() || (/* v8 ignore next */ __LEPUS__ && isMtsDestroyed())) return;
       const resolveId = onFunctionCall(resolve);
 
       if (obj._isFirstScreen) {
@@ -151,15 +164,19 @@ function dispatchRunBackgroundFunctionEvent(
   execId: number,
   resolveId: number,
 ): void {
-  dispatchReloadScopedEvent(lynx.getJSContext(), {
-    type: WorkletEvents.runOnBackground,
-    data: {
-      obj: {
-        _jsFnId: fnId,
-        _execId: execId,
-      },
-      params,
-      resolveId,
-    } as RunOnBackgroundData,
-  });
+  /* v8 ignore next */
+  if (__LEPUS__) {
+    sendReloadScopedMessage(
+      sendMtsMessage,
+      WorkletEvents.runOnBackground,
+      {
+        obj: {
+          _jsFnId: fnId,
+          _execId: execId,
+        },
+        params,
+        resolveId,
+      } satisfies RunOnBackgroundData,
+    );
+  }
 }

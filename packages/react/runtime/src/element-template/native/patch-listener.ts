@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { flushElementTree, onMessage } from '@lynx-js/lynx-runtime/mts';
+import type { Unsubscribe } from '@lynx-js/lynx-runtime/mts';
 import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
 import {
   clearFirstScreenMainThreadRefs,
@@ -15,19 +17,17 @@ import { getReloadVersion } from '../../core/reload-version.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant.js';
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
-import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
+import type { ElementTemplateUpdateEventData } from '../protocol/update-event.js';
 import { applyElementTemplateUpdateCommands } from '../runtime/patch.js';
 import { applyPendingMainThreadRefAttachments } from '../runtime/template/main-thread-dynamic-attr-state.js';
 
-let listener:
-  | ((event: Pick<ElementTemplateUpdateEvent, 'data'>) => void)
-  | undefined;
+let unsubscribe: Unsubscribe | undefined;
 
 export function installElementTemplatePatchListener(): void {
   resetElementTemplatePatchListener();
 
-  listener = (event: Pick<ElementTemplateUpdateEvent, 'data'>) => {
-    const { patchOptions } = event.data;
+  unsubscribe = onMessage<ElementTemplateUpdateEventData>(ElementTemplateLifecycleConstant.update, (data) => {
+    const { patchOptions } = data;
     const { flowIds, pipelineOptions } = patchOptions;
     const shouldProfilePatch = !!flowIds
       && typeof lynx.performance?.profileStart === 'function'
@@ -43,7 +43,7 @@ export function installElementTemplatePatchListener(): void {
       markTiming('mtsRenderStart');
       markTiming('parseChangesStart');
 
-      const payload = JSON.parse(event.data.payload) as ElementTemplateUpdateCommitContext;
+      const payload = JSON.parse(data.payload) as ElementTemplateUpdateCommitContext;
       markTiming('parseChangesEnd');
 
       if (
@@ -109,7 +109,7 @@ export function installElementTemplatePatchListener(): void {
         }
       }
 
-      __FlushElementTree(undefined, flushOptions);
+      flushElementTree(flushOptions);
 
       if (shouldProfilePatch) {
         lynx.performance.profileEnd();
@@ -117,20 +117,10 @@ export function installElementTemplatePatchListener(): void {
     } finally {
       setPipeline(undefined);
     }
-  };
-
-  lynx.getJSContext().addEventListener(
-    ElementTemplateLifecycleConstant.update,
-    listener,
-  );
+  });
 }
 
 export function resetElementTemplatePatchListener(): void {
-  if (listener) {
-    lynx.getJSContext().removeEventListener(
-      ElementTemplateLifecycleConstant.update,
-      listener,
-    );
-  }
-  listener = undefined;
+  unsubscribe?.();
+  unsubscribe = undefined;
 }

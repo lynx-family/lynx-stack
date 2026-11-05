@@ -18,6 +18,7 @@ import { hydrationMap } from '../../../src/snapshot/snapshot/snapshotInstanceHyd
 import { snapshotManager } from '../../../src/snapshot/snapshot/definition.js';
 import { takeMainThreadRefInitValuePatch } from '../../../src/core/main-thread-ref-init-value.js';
 import { clearMainThreadRefLastIdForTesting } from '../../../src/core/main-thread-ref.js';
+import { injectCalledByNative } from '../../../src/snapshot/lynx/calledByNative.js';
 
 export class EnvManager {
   root: typeof __root | undefined;
@@ -103,6 +104,7 @@ export class EnvManager {
     getJSModule('GlobalEventEmitter')?.clear();
     this.switchToBackground();
     this.switchToMainThread();
+    injectCalledByNative();
   }
 }
 

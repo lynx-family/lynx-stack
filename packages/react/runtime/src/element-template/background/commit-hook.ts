@@ -4,6 +4,8 @@
 
 import { options } from 'preact';
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+
 import {
   globalCommitContext,
   resetGlobalCommitContext,
@@ -144,7 +146,7 @@ function flushElementTemplateCommitChanges(): void {
       throw error;
     }
 
-    lynx.getCoreContext().dispatchEvent(updateEvent);
+    bindPage().sendMessage(updateEvent.type, updateEvent.data);
   }
   // When native ops exist, patch first so a newly attached ref observes the
   // committed native state. Ref-only commits still flush through this path.

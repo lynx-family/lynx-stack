@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { flushElementTree } from '@lynx-js/lynx-runtime/mts';
+
 import { Animation } from './animation/animation.js';
 import { KeyframeEffect } from './animation/effect.js';
 import {
@@ -146,7 +148,7 @@ export class Element {
           return;
         }
       }
-      __FlushElementTree();
+      flushElementTree();
     });
   }
 }

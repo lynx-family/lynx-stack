@@ -4,6 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 */
 import { render } from 'preact';
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
@@ -46,6 +47,7 @@ beforeEach(() => {
 
 afterEach(() => {
   destroyWorklet();
+  vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
 
@@ -61,6 +63,21 @@ function renderTestMainThreadObject(initialValue) {
   };
   render(<App />, __root);
   return value;
+}
+
+function installReleaseObserverCard() {
+  const app = {};
+  const dispatchEvent = vi.fn();
+  const createJSObjectDestructionObserver = vi.fn(() => ({}));
+  const nativeApp = { ...lynx.getNativeApp(), createJSObjectDestructionObserver };
+  vi.stubGlobal('tt', app);
+  vi.stubGlobal('lynx', {
+    ...lynx,
+    getApp: () => app,
+    getCoreContext: () => ({ dispatchEvent }),
+    getNativeApp: () => nativeApp,
+  });
+  return { app, dispatchEvent, createJSObjectDestructionObserver };
 }
 
 describe('MainThreadObject', () => {
@@ -85,6 +102,51 @@ describe('MainThreadObject', () => {
       type: 'Lynx.Worklet.releaseWorkletRef',
       data: { id: 1 },
     });
+  });
+
+  it('keeps GC releases bound to the creating card and releases only once', () => {
+    globalEnvManager.switchToBackground();
+    const first = installReleaseObserverCard();
+    renderTestMainThreadObject(42);
+    const release = first.createJSObjectDestructionObserver.mock.calls[0][0];
+    const second = installReleaseObserverCard();
+    bindPage();
+
+    release();
+    release();
+
+    expect(first.dispatchEvent).toHaveBeenCalledTimes(1);
+    expect(first.dispatchEvent).toHaveBeenCalledWith({
+      type: 'Lynx.Worklet.releaseWorkletRef',
+      data: { id: 1 },
+    });
+    expect(second.dispatchEvent).not.toHaveBeenCalled();
+    first.app.callDestroyLifetimeFun();
+    second.app.callDestroyLifetimeFun();
+    expect(() => release()).not.toThrow();
+    expect(first.dispatchEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores GC releases during and after destruction even after another card becomes active', () => {
+    globalEnvManager.switchToBackground();
+    const first = installReleaseObserverCard();
+    renderTestMainThreadObject(42);
+    const release = first.createJSObjectDestructionObserver.mock.calls[0][0];
+    const card = bindPage();
+    const duringDestroy = vi.fn(() => {
+      expect(() => release()).not.toThrow();
+    });
+    card.onDestroy(duringDestroy);
+
+    first.app.callDestroyLifetimeFun();
+    expect(duringDestroy).toHaveBeenCalledTimes(1);
+    const second = installReleaseObserverCard();
+    bindPage();
+    expect(() => release()).not.toThrow();
+
+    expect(first.dispatchEvent).not.toHaveBeenCalled();
+    expect(second.dispatchEvent).not.toHaveBeenCalled();
+    second.app.callDestroyLifetimeFun();
   });
 
   it('preserves opaque handles without changing ordinary member captures', () => {

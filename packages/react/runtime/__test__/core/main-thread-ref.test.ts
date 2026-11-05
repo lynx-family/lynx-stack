@@ -10,7 +10,10 @@ describe('core/main-thread-ref primitive', () => {
     vi.stubGlobal('__JS__', true);
     vi.stubGlobal('__LEPUS__', false);
     vi.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
+    const app = {};
+    vi.stubGlobal('tt', app);
     vi.stubGlobal('lynx', {
+      getApp: () => app,
       getNativeApp: vi.fn(() => ({
         createJSObjectDestructionObserver: vi.fn(),
       })),
@@ -67,20 +70,37 @@ describe('core/main-thread-ref primitive', () => {
       release = callback;
       return {};
     });
+    const app: { callDestroyLifetimeFun?: () => void } = {};
+    vi.stubGlobal('tt', app);
     vi.stubGlobal('lynx', {
+      getApp: () => app,
       getNativeApp: vi.fn(() => ({ createJSObjectDestructionObserver })),
       getCoreContext: vi.fn(() => ({ dispatchEvent })),
     });
 
     new MainThreadRef('value');
     release!();
+    release!();
 
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
     expect(dispatchEvent).toHaveBeenCalledWith({
       type: 'Lynx.Worklet.releaseWorkletRef',
       data: {
         id: 1,
       },
     });
+
+    const destroyedApp: { callDestroyLifetimeFun?: () => void } = {};
+    vi.stubGlobal('tt', destroyedApp);
+    vi.stubGlobal('lynx', {
+      getApp: () => destroyedApp,
+      getNativeApp: vi.fn(() => ({ createJSObjectDestructionObserver })),
+      getCoreContext: vi.fn(() => ({ dispatchEvent })),
+    });
+    new MainThreadRef('after-destroy');
+    destroyedApp.callDestroyLifetimeFun!();
+    expect(() => release!()).not.toThrow();
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the DEV access errors from the public MainThreadRef contract', () => {

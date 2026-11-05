@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
 const envManager = new ElementTemplateEnvManager();
 
 describe('initProfileHook installation', () => {
+  let restoreHooks: (() => void) | undefined;
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
@@ -12,6 +13,8 @@ describe('initProfileHook installation', () => {
   });
 
   afterEach(() => {
+    restoreHooks?.();
+    restoreHooks = undefined;
     vi.resetModules();
   });
 
@@ -27,10 +30,10 @@ describe('initProfileHook installation', () => {
       [RENDER]: options[RENDER],
     };
     const previousSetState = Component.prototype.setState;
-    onTestFinished(() => {
+    restoreHooks = () => {
       Object.assign(options, previousHooks);
       Component.prototype.setState = previousSetState;
-    });
+    };
     const events: string[] = [];
     const performance = lynx.performance;
     const oldSetState = Component.prototype.setState = vi.fn(function(state, callback) {

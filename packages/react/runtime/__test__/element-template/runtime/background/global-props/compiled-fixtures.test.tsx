@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { updateGlobalProps } from '../../../../../src/core/globalProps.js';
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import type { CompiledFixtureModuleExports } from '../../../test-utils/debug/compiledFixtureModule.js';
 
@@ -81,14 +82,14 @@ describe('Compiled ET GlobalProps update fixtures', () => {
 
   function installGlobalProps(globalProps: Record<string, unknown>): void {
     const baseLynx = globalThis.lynx;
-    vi.stubGlobal('lynx', {
-      ...baseLynx,
+    const getJSModule = baseLynx.getJSModule;
+    Object.assign(baseLynx, {
       __globalProps: globalProps,
       getJSModule(moduleName: string) {
         if (moduleName === 'GlobalEventEmitter') {
           return emitter;
         }
-        return baseLynx.getJSModule?.(moduleName);
+        return getJSModule?.(moduleName);
       },
     });
     globalThis.lynx.getApp().GlobalEventEmitter = emitter as LynxApp['GlobalEventEmitter'];
@@ -145,6 +146,10 @@ describe('Compiled ET GlobalProps update fixtures', () => {
 
   it('reactive updateGlobalProps force-renders direct globalProps reads into native update ops', async () => {
     lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
+    // Evaluate the real entry against this test's fresh App, while retaining the
+    // backend modules used by the compiled fixture pair.
+    const entry = '../../../../../src/element-template/native/index.js?global-props-card';
+    await import(entry);
     const { backgroundModule, mainModule } = await loadCompiledFixturePair<CompiledGlobalPropsModule>(
       DIRECT_READ_FIXTURE,
     );
@@ -182,7 +187,9 @@ describe('Compiled ET GlobalProps update fixtures', () => {
     updateEvents = [];
 
     const previousGlobalProps = lynx.__globalProps;
-    lynx.getApp().updateGlobalProps({ theme: 'light' });
+    // These event-mode fixtures reuse modules after host teardown. Exercise the
+    // DSL update policy directly; native/index.test.ts covers host registration.
+    updateGlobalProps({ theme: 'light' });
     await waitForRender();
 
     expect(lynx.__globalProps).not.toBe(previousGlobalProps);
@@ -209,7 +216,7 @@ describe('Compiled ET GlobalProps update fixtures', () => {
     await settleInitialHydration(envManager);
     updateEvents = [];
 
-    lynx.getApp().updateGlobalProps({ theme: 'light' });
+    updateGlobalProps({ theme: 'light' });
     await waitForRender();
 
     expect(changed).toHaveBeenCalledWith(lynx.__globalProps);

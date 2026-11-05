@@ -3,8 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import { options } from 'preact';
 
+import type { PipelineOptions } from '@lynx-js/lynx-runtime';
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+import { markTiming as markMtsTiming } from '@lynx-js/lynx-runtime/mts';
+
 import { RENDER_COMPONENT, ROOT } from '../shared/render-constants.js';
-import { hook, isSdkVersionGt } from '../utils.js';
+import { hook } from '../utils.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',
@@ -89,28 +93,24 @@ function beginPipeline(
   pipelineOrigin: PipelineOrigin,
   timingFlag?: string,
 ): void {
-  globalPipelineOptions = lynx.performance?._generatePipelineOptions?.();
-  if (globalPipelineOptions) {
-    globalPipelineOptions.needTimestamps = needTimestamps;
-    globalPipelineOptions.pipelineOrigin = pipelineOrigin;
-    globalPipelineOptions.dsl = 'reactLynx';
+  /* v8 ignore next */
+  if (__JS__) {
+    let stage: string | undefined;
     switch (pipelineOrigin) {
       case PipelineOrigins.reactLynxHydrate:
-        globalPipelineOptions.stage = 'hydrate';
+        stage = 'hydrate';
         break;
       case PipelineOrigins.updateTriggeredByBts:
-        globalPipelineOptions.stage = 'update';
+        stage = 'update';
         break;
     }
-
-    if (isSdkVersionGt(3, 0)) {
-      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, globalPipelineOptions);
-    } else {
-      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID);
-    }
-    if (timingFlag) {
-      lynx.performance?._bindPipelineIdWithTimingFlag?.(globalPipelineOptions.pipelineID, timingFlag);
-    }
+    globalPipelineOptions = bindPage().createPipeline({
+      needTimestamps,
+      pipelineOrigin,
+      dsl: 'reactLynx',
+      stage,
+      timingFlag,
+    });
   }
 }
 
@@ -126,8 +126,12 @@ function resetTimingState(): void {
 }
 
 function markTiming(timestampKey: PerformanceTimingKey, force?: boolean): void {
-  if (globalPipelineOptions && (force || globalPipelineOptions.needTimestamps)) {
-    lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, timestampKey);
+  if (globalPipelineOptions?.pipelineID !== undefined && (force || globalPipelineOptions.needTimestamps)) {
+    if (__LEPUS__) {
+      markMtsTiming(globalPipelineOptions, timestampKey);
+    } else {
+      bindPage().markTiming(globalPipelineOptions, timestampKey);
+    }
   }
 }
 

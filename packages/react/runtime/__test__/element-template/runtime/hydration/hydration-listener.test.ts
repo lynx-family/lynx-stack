@@ -20,6 +20,7 @@ import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
 } from '../../../../src/element-template/native/patch-listener.js';
+import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
 import {
   BackgroundElementTemplateInstance,
   BackgroundListElementTemplateInstance,
@@ -78,10 +79,6 @@ function createSerializedTemplate(handleId: number, templateKey: string): Serial
 
 interface LynxMock {
   getJSContext(): { dispatchEvent(event: { type: string; data: unknown }): number };
-}
-
-interface TTMock {
-  callDestroyLifetimeFun?: () => void;
 }
 
 function parseUpdateEventData(data: unknown): unknown {
@@ -722,7 +719,7 @@ describe('ElementTemplate hydration listener', () => {
     expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(after);
   });
 
-  it('cleans up hydrate listener via tt.callDestroyLifetimeFun', () => {
+  it('cleans up hydrate listener on background destroy', () => {
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
 
@@ -731,8 +728,7 @@ describe('ElementTemplate hydration listener', () => {
     backgroundRoot.appendChild(after);
     const oldId = after.instanceId;
 
-    const tt = lynx.getApp() as unknown as TTMock;
-    tt.callDestroyLifetimeFun?.();
+    callDestroyLifetimeFun();
 
     envManager.switchToMainThread();
     const instances: SerializedCompiledNode[] = [createSerializedTemplate(-1, '_et_test')];

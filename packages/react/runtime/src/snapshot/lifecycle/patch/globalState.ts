@@ -14,3 +14,9 @@ export let globalBackgroundSnapshotInstancesToRemove: number[] = [];
 export function setGlobalBackgroundSnapshotInstancesToRemove(ids: number[]): void {
   globalBackgroundSnapshotInstancesToRemove = ids;
 }
+
+export let isBackgroundDestroying = false;
+
+export function setBackgroundDestroying(value: boolean): void {
+  isBackgroundDestroying = value;
+}

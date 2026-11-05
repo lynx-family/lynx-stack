@@ -1,5 +1,7 @@
 import { afterEach, vi } from 'vitest';
 
+import { LynxTestEventEmitter } from '../../../../test-utils/lynx-event-emitter.js';
+
 export interface ContextEvent {
   type: string;
   data: unknown;
@@ -275,6 +277,7 @@ export function createCrossThreadContextPair(): {
 }
 
 let isThreadContextInstalled = false;
+let currentDestroyHost: (() => void) | undefined;
 let currentCheckListenerLeaks: (() => void) | undefined;
 
 type GlobalWithLynx = typeof globalThis & { lynx?: unknown };
@@ -288,8 +291,42 @@ export function installThreadContexts(): void {
     ? (currentLynx as Record<string, unknown>)
     : {};
 
+  const nativeListeners = new Map<string, Set<ContextListener>>();
+  const nativeContext = {
+    addEventListener(type: string, listener: ContextListener): void {
+      let listeners = nativeListeners.get(type);
+      if (!listeners) {
+        listeners = new Set();
+        nativeListeners.set(type, listeners);
+      }
+      listeners.add(listener);
+    },
+    removeEventListener(type: string, listener: ContextListener): void {
+      nativeListeners.get(type)?.delete(listener);
+    },
+    dispatchEvent(event: ContextEvent): void {
+      for (const listener of [...(nativeListeners.get(event.type) ?? [])]) {
+        listener(event);
+      }
+    },
+  };
+
+  currentDestroyHost = () => {
+    // Tests may replace/remove getNative to exercise absent capabilities; the
+    // harness still owns and destroys the original native context it created.
+    nativeContext.dispatchEvent({ type: '__DestroyLifetime', data: undefined });
+  };
+
+  // Each proxy pair represents a fresh card, including helpers that replace a
+  // pair within a test after resetting globals.
+  const emitter = new LynxTestEventEmitter();
+  const app = { GlobalEventEmitter: emitter };
+  const getJSModule = baseLynx['getJSModule'] as ((name: string) => unknown) | undefined;
   vi.stubGlobal('lynx', {
     ...baseLynx,
+    getApp: () => app,
+    getJSModule: (name: string) => name === 'GlobalEventEmitter' ? emitter : getJSModule?.(name),
+    getNative: () => nativeContext,
     getJSContext: () => jsContext,
     getCoreContext: () => coreContext,
   });
@@ -300,6 +337,8 @@ export function installThreadContexts(): void {
 
   isThreadContextInstalled = true;
   afterEach(() => {
+    Object.assign(globalThis, { __JS__: false, __LEPUS__: true, __MAIN_THREAD__: true, __BACKGROUND__: false });
+    currentDestroyHost?.();
     currentCheckListenerLeaks?.();
   });
 }

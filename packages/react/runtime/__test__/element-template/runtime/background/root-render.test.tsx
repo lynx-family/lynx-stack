@@ -1,4 +1,7 @@
 import { options } from 'preact';
+
+import { MainThreadRef } from '../../../../src/core/main-thread-ref.js';
+import { takeMainThreadRefInitValuePatch } from '../../../../src/core/main-thread-ref-init-value.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
@@ -112,6 +115,25 @@ describe('ElementTemplate root render timing', () => {
 
     await Promise.resolve();
     expect(cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it('discards MainThreadRef init values created by unmount cleanup', async () => {
+    const cleanup = vi.fn(() => {
+      new MainThreadRef({ retained: 'unmount' });
+    });
+    function App() {
+      useEffect(() => cleanup, []);
+      return null;
+    }
+
+    root.render(<App />);
+    await Promise.resolve();
+    takeMainThreadRefInitValuePatch();
+
+    callDestroyLifetimeFun();
+
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    expect(takeMainThreadRefInitValuePatch()).toEqual([]);
   });
 
   it('keeps render scope hook installation idempotent', () => {

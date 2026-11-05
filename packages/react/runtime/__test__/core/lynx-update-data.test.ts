@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { NativeUpdateDataType, updateCardData } from '../../src/core/lynx-update-data.js';
+import { updateCardData } from '../../src/core/lynx-update-data.js';
 import { LynxTestEventEmitter } from '../test-utils/lynx-event-emitter.js';
 
 describe('updateCardData', () => {
@@ -39,7 +39,7 @@ describe('updateCardData', () => {
     updateCardData({
       msg: 'update',
       next: 1,
-    });
+    }, { resetPageData: false });
 
     expect(lynx.__initData).toEqual({ msg: 'update', stable: true, next: 1 });
     expect(lynx.__initData).not.toBe(previousInitData);
@@ -54,21 +54,7 @@ describe('updateCardData', () => {
 
     updateCardData(
       { msg: 'reset' },
-      { type: NativeUpdateDataType.RESET },
-    );
-
-    expect(lynx.__initData).toEqual({ msg: 'reset' });
-    expect(listener).toHaveBeenCalledWith({ msg: 'reset' });
-  });
-
-  it('keeps Snapshot-compatible loose RESET matching', () => {
-    const listener = vi.fn();
-    lynx.__initData = { stale: true, msg: 'init' };
-    emitter.addListener('onDataChanged', listener);
-
-    updateCardData(
-      { msg: 'reset' },
-      { type: '1' as unknown as NativeUpdateDataType },
+      { resetPageData: true },
     );
 
     expect(lynx.__initData).toEqual({ msg: 'reset' });
@@ -83,7 +69,7 @@ describe('updateCardData', () => {
     updateCardData({
       msg: 'update',
       __lynx_timing_flag: '__lynx_timing_actual_fmp',
-    });
+    }, { resetPageData: false });
 
     expect(lynx.__initData).toEqual({ msg: 'update' });
     expect(listener).toHaveBeenCalledWith({ msg: 'update' });

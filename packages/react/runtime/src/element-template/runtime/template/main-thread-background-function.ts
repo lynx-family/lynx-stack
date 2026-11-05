@@ -11,7 +11,8 @@ import {
   runOnBackground,
 } from '../../../core/background-function/run-on-background.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
-import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
+import { isSdkVersionGt } from '../../../utils.js';
+import { JsFunctionLifecycleManager } from '../../../worklet-runtime/jsFunctionLifecycle.js';
 
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
 type RetainableMainThreadCtx = Parameters<typeof retainWorkletCtx>[0];
@@ -28,7 +29,7 @@ export const transformToWorklet = createBackgroundFunctionHandle;
 export { runOnBackground };
 
 export function registerMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
-  if (__JS__ && isRunOnBackgroundEnabled()) {
+  if (__JS__ && isSdkVersionGt(2, 15)) {
     registerBackgroundFunctionCtx(ctx as BackgroundFunctionCtx);
   }
 }
@@ -45,10 +46,13 @@ export function resetElementTemplateBackgroundFunctionRuntime(): void {
 }
 
 export function resetElementTemplateMainThreadBackgroundFunctionRuntime(): void {
-  const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
-  if (manager) {
-    manager.dispose();
-    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
+  /* v8 ignore next */
+  if (__LEPUS__) {
+    const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
+    if (manager) {
+      manager.dispose();
+      globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
+    }
   }
   clearDelayedRunOnBackgroundFunctions();
   resetFunctionCallReturnListener();

@@ -11,12 +11,14 @@ import {
   initGlobalSnapshotPatch,
 } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { LifecycleConstant } from '../../src/snapshot/lifecycle/constant';
+import { destroyBackground } from '../../src/snapshot/lifecycle/destroy';
 import { CATCH_ERROR } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
 import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
 import { onFunctionCall, resetFunctionCallReturnListener } from '../../src/core/thread-function-call/return-value.js';
 import { getReloadVersion } from '../../src/core/reload-version.js';
-import { reloadBackground } from '../../src/snapshot/lifecycle/reload.js';
+import { reloadBackground } from '../../src/snapshot/lifecycle/reload-background.js';
+import { injectTt } from '../../src/snapshot/lynx/tt.js';
 import { WorkletEvents } from '../../src/worklet-runtime/bindings/events.js';
 
 beforeAll(() => {
@@ -375,7 +377,9 @@ describe('componentWillUnmount', () => {
 
     expect(willUnmount).toHaveBeenCalledTimes(1);
 
-    lynx.getApp().callDestroyLifetimeFun();
+    // This hook test shares an App with later cases; only unmount the RL tree.
+    // Host destruction is covered with a fresh App in lifecycle/destroy.test.jsx.
+    destroyBackground();
     expect(willUnmount).toHaveBeenCalledTimes(2);
   });
 });
@@ -684,6 +688,9 @@ describe('componentDidUpdate', () => {
 
 it.each(['page close', 'reload'])('cleans Snapshot patches and return listeners on %s', (boundary) => {
   globalEnvManager.switchToBackground();
+  const previousApp = lynx.getApp();
+  vi.spyOn(lynx, 'getApp').mockReturnValue({ GlobalEventEmitter: previousApp.GlobalEventEmitter });
+  injectTt();
   const context = lynx.getCoreContext();
   const addListener = vi.spyOn(context, 'addEventListener').mockClear();
   const removeListener = vi.spyOn(context, 'removeEventListener').mockClear();
@@ -723,6 +730,9 @@ it.each(['page close', 'reload'])('cleans Snapshot patches and return listeners 
       }
     }
 
+    if (boundary === 'page close') {
+      vi.spyOn(lynx, 'getApp').mockReturnValue({ GlobalEventEmitter: previousApp.GlobalEventEmitter });
+    }
     const newResolve = vi.fn();
     const resolveId = onFunctionCall(newResolve);
     const listener = addListener.mock.lastCall[1];

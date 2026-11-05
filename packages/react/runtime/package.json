@@ -21,6 +21,7 @@
     "test:snapshot": "vitest run --coverage __test__/snapshot __test__/core __test__/shared __test__/worklet-runtime __test__/guardrails"
   },
   "devDependencies": {
+    "@lynx-js/lynx-runtime": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-signals": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",

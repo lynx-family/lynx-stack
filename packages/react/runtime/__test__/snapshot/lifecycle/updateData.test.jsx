@@ -724,6 +724,17 @@ describe('triggerDataUpdated', () => {
 });
 
 describe('triggerDataUpdated when jsReady is enabled', () => {
+  it('does not mutate shared host options while adding the first-screen data-updated receipt', () => {
+    renderPage({ msg: 'init' });
+    const options = Object.freeze({ pipelineOptions: { pipelineID: 'shared-update' } });
+    updatePage({ msg: 'update' }, options);
+    const flushOptions = __FlushElementTree.mock.calls.at(-1)[1];
+    expect(options).toEqual({ pipelineOptions: { pipelineID: 'shared-update' } });
+    expect(flushOptions).toEqual({ ...options, triggerDataUpdated: true });
+    expect(flushOptions).not.toBe(options);
+    expect(flushOptions.pipelineOptions).toBe(options.pipelineOptions);
+  });
+
   beforeEach(() => {
     globalThis.__FIRST_SCREEN_SYNC_TIMING__ = 'jsReady';
   });
@@ -780,15 +791,7 @@ describe('triggerDataUpdated when jsReady is enabled', () => {
       expect(__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
         [
           [
-            <page
-              cssId="default-entry-from-native:0"
-            >
-              <text>
-                <raw-text
-                  text="update"
-                />
-              </text>
-            </page>,
+            undefined,
             {
               "triggerDataUpdated": true,
             },
@@ -881,15 +884,7 @@ describe('triggerDataUpdated when jsReady is enabled', () => {
       expect(globalThis.__FlushElementTree.mock.calls).toMatchInlineSnapshot(`
         [
           [
-            <page
-              cssId="default-entry-from-native:0"
-            >
-              <text>
-                <raw-text
-                  text="init"
-                />
-              </text>
-            </page>,
+            undefined,
             {},
           ],
         ]

@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import type { RefObject } from 'react';
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+
 import { useMemo } from './hooks/react.js';
 import { allocateMainThreadRefId, clearMainThreadRefIdsForTesting } from './main-thread-ref-id.js';
 import { addMainThreadRefInitValue } from './main-thread-ref-init-value.js';
@@ -53,12 +55,13 @@ export class MainThreadRef<T> {
     if (__JS__) {
       addMainThreadRefInitValue(this._wvid, initValue);
       const id = this._wvid;
+      const page = bindPage();
+      let released = false;
       this._lifecycleObserver = lynx.getNativeApp().createJSObjectDestructionObserver?.(() => {
-        lynx.getCoreContext().dispatchEvent({
-          type: WorkletEvents.releaseWorkletRef,
-          data: {
-            id,
-          },
+        if (released || page.isDestroyed()) return;
+        released = true;
+        page.sendMessage(WorkletEvents.releaseWorkletRef, {
+          id,
         });
       });
     }

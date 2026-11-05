@@ -8,10 +8,25 @@ import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot';
 import { __root } from '../../src/root';
 import { globalEnvManager } from './utils/envManager';
 import { gRecycleMap, gSignMap } from '../../src/snapshot/list/list';
+import { injectCalledByNative } from '../../src/snapshot/lynx/calledByNative';
 
 const HOLE = null;
+let originalLynx;
 
 beforeEach(() => {
+  originalLynx = globalThis.lynx;
+  // Each test models a new MTS host lifetime, while keeping the shared PAPI mocks.
+  const listeners = new Set();
+  const native = {
+    addEventListener: vi.fn((_type, listener) => listeners.add(listener)),
+    removeEventListener: vi.fn((_type, listener) => listeners.delete(listener)),
+    dispatchEvent: vi.fn(event => {
+      for (const listener of [...listeners]) listener(event);
+    }),
+  };
+  globalThis.lynx = { ...originalLynx, getNative: () => native };
+  globalEnvManager.switchToMainThread();
+  injectCalledByNative();
   // snapshotManager.values.clear();
   __pendingListUpdates.clearAttachedLists();
   snapshotInstanceManager.clear();
@@ -19,6 +34,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  lynx.getNative().dispatchEvent({ type: '__DestroyLifetime', data: {} });
+  globalThis.lynx = originalLynx;
   elementTree.clear();
 });
 
@@ -4837,7 +4854,7 @@ describe('clear __UpdateListCallbacks', () => {
     expect(listElement.componentAtIndexes).toBeNull();
   });
 
-  it('should remove __DestroyLifetime listener when list is destroyed via removeChild', () => {
+  it('should unsubscribe list cleanup while retaining the Runtime host listener', () => {
     const s0 = __SNAPSHOT__(
       <view>
         {HOLE}
@@ -4874,10 +4891,8 @@ describe('clear __UpdateListCallbacks', () => {
 
     root.removeChild(a);
 
-    expect(lynx.getNative().removeEventListener).toHaveBeenCalledWith(
-      '__DestroyLifetime',
-      expect.any(Function),
-    );
+    expect(lynx.getNative().removeEventListener).not.toHaveBeenCalled();
+    lynx.getNative().dispatchEvent({ type: '__DestroyLifetime', data: {} });
 
     expect(listElement.componentAtIndex()).toBe(-1);
     expect(listElement.enqueueComponent()).toBeUndefined();

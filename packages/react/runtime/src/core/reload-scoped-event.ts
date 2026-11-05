@@ -2,34 +2,33 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { Unsubscribe } from '@lynx-js/lynx-runtime';
+
 import { getReloadVersion } from './reload-version.js';
 
 interface ReloadScope {
   reloadVersion?: number | undefined;
 }
 
-export function dispatchReloadScopedEvent(context: RuntimeProxy, event: { type: string; data: object }): void {
-  context.dispatchEvent({
-    type: event.type,
-    data: JSON.stringify({ ...event.data, reloadVersion: getReloadVersion() }),
-  });
+export function sendReloadScopedMessage(
+  send: (type: string, data: string) => void,
+  type: string,
+  data: object,
+): void {
+  send(type, JSON.stringify({ ...data, reloadVersion: getReloadVersion() }));
 }
 
 // Deliver parsed payloads only while their page is current. Return cleanup for
 // the actual registered wrapper, so callers need no listener identity registry.
-export function addReloadScopedEventListener<T>(
-  context: RuntimeProxy,
+export function onReloadScopedMessage<T>(
+  subscribe: (type: string, listener: (raw: string) => void) => Unsubscribe,
   type: string,
   listener: (data: T) => void,
-): () => void {
-  const handle = (event: RuntimeProxy.Event): void => {
-    const data = JSON.parse(event.data as string) as T & ReloadScope;
+): Unsubscribe {
+  return subscribe(type, (raw: string): void => {
+    const data = JSON.parse(raw) as T & ReloadScope;
     // Unversioned events belong to the initial page only.
     if ((data.reloadVersion ?? 0) !== getReloadVersion()) return;
     listener(data);
-  };
-  context.addEventListener(type, handle);
-  return () => {
-    context.removeEventListener(type, handle);
-  };
+  });
 }

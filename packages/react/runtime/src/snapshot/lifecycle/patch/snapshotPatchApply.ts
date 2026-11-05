@@ -13,8 +13,8 @@
  * order and with proper error handling.
  */
 
-import { sendCtxNotFoundEventToBackground } from './error.js';
 import { applyNodesRefInsertBefore, applyNodesRefRemoveChild } from './nodesRefApply.js';
+import { sendCtxNotFoundEventToBackground } from './sendError.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { SnapshotOperation } from './snapshotPatch.js';
 import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '../../snapshot/snapshot.js';

@@ -46,6 +46,8 @@ describe('renderMainThread', () => {
       ...(globalThis.lynx ?? {}),
       reportError: vi.fn(),
       getJSContext: vi.fn(() => ({
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
         dispatchEvent,
       })),
     } as typeof lynx;
@@ -130,6 +132,8 @@ describe('renderMainThread', () => {
     });
     (globalThis.lynx as typeof lynx & { getJSContext?: () => { dispatchEvent: typeof dispatchEvent } })
       .getJSContext = vi.fn(() => ({
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
         dispatchEvent,
       }));
     vi.mocked(__SerializeElementTemplate).mockReturnValue(

@@ -1,0 +1,55 @@
+{
+  "name": "@lynx-js/lynx-runtime",
+  "version": "0.0.1",
+  "description": "DSL-neutral Lynx host runtime primitives for main thread (MTS) and background thread (BTS).",
+  "keywords": [
+    "lynx",
+    "runtime",
+    "mts",
+    "bts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/lynx/lynx-runtime"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./mts": {
+      "types": "./dist/mts.d.ts",
+      "default": "./dist/mts.js"
+    },
+    "./bts": {
+      "types": "./dist/bts.d.ts",
+      "default": "./dist/bts.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "README.md",
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rslib",
+    "dev": "rslib --watch",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "rsbuild-plugin-publint": "1.0.0",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^20 || ^22 || ^24"
+  }
+}

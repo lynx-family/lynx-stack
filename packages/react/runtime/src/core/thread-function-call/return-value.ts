@@ -2,11 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+import { isDestroyed as isMtsDestroyed, onMessage as onMtsMessage } from '@lynx-js/lynx-runtime/mts';
+
 import { IndexMap } from '../../shared/index-map.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import { cardLifetime } from '../card-lifetime.js';
-import { addReloadScopedEventListener } from '../reload-scoped-event.js';
+import { onReloadScopedMessage } from '../reload-scoped-event.js';
 import { registerDestroyTask } from '../runtime-destroy.js';
 
 let resolveMap: IndexMap<(value: any) => void> | undefined;
@@ -14,13 +17,12 @@ let cleanupReturnValueListener: (() => void) | undefined;
 let unregisterReturnValueCleanup: (() => void) | undefined;
 
 function initReturnValueListener(): void {
-  const context: RuntimeProxy = __JS__ ? lynx.getCoreContext() : lynx.getJSContext();
-
+  const subscribe = __JS__ ? bindPage().onMessage : onMtsMessage;
   resolveMap = new IndexMap(cardLifetime('functionCallId', () => ({ lastIndex: 0 })));
-  const removeListener = addReloadScopedEventListener(context, WorkletEvents.FunctionCallRet, onFunctionCallRet);
+  const unsub = onReloadScopedMessage(subscribe, WorkletEvents.FunctionCallRet, onFunctionCallRet);
 
   cleanupReturnValueListener = () => {
-    removeListener();
+    unsub();
     resolveMap = undefined;
     cleanupReturnValueListener = undefined;
   };
@@ -30,6 +32,9 @@ function initReturnValueListener(): void {
  * @internal
  */
 export function onFunctionCall(resolve: (value: any) => void): number {
+  if (__JS__ ? bindPage().isDestroyed() : isMtsDestroyed()) {
+    return 0;
+  }
   ensureFunctionCallReturnCleanup();
   if (!resolveMap) {
     initReturnValueListener();
@@ -65,14 +70,10 @@ export function dropFunctionCallReturnIds(resolveIds: readonly number[]): void {
 }
 
 function onFunctionCallRet(data: RunWorkletCtxRetData): void {
-  const map = resolveMap;
-  if (!map) {
-    return;
-  }
-  const resolve = map.get(data.resolveId);
+  const resolve = resolveMap!.get(data.resolveId);
   if (!resolve) {
     return;
   }
-  map.remove(data.resolveId);
+  resolveMap!.remove(data.resolveId);
   resolve(data.returnValue);
 }

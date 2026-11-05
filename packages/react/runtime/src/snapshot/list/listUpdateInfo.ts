@@ -1,6 +1,8 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getSystemInfo } from '@lynx-js/lynx-runtime/mts';
+
 import { componentAtIndexFactory, enqueueComponentFactory } from './list.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
@@ -172,12 +174,14 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     insertions.sort((a, b) => a.position - b.position);
     removals.sort((a, b) => a - b);
 
+    /* v8 ignore next */
+    const lynxSdkVersion = __LEPUS__ ? getSystemInfo().lynxSdkVersion : undefined;
     if (
-      SystemInfo.lynxSdkVersion === '2.14'
-      || SystemInfo.lynxSdkVersion === '2.15'
-      || SystemInfo.lynxSdkVersion === '2.16'
-      || SystemInfo.lynxSdkVersion === '2.17'
-      || SystemInfo.lynxSdkVersion === '2.18'
+      lynxSdkVersion === '2.14'
+      || lynxSdkVersion === '2.15'
+      || lynxSdkVersion === '2.16'
+      || lynxSdkVersion === '2.17'
+      || lynxSdkVersion === '2.18'
     ) {
       const elementIndex = this.list.__snapshot_def.slot[0]![1];
       const listElement = this.list.__elements![elementIndex]!;

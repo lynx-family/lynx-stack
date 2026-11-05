@@ -176,8 +176,8 @@ export default defineConfig({
     },
     setupFiles: [
       path.join(__dirname, './__test__/snapshot/utils/globals.js'),
-      path.join(__dirname, './__test__/snapshot/utils/setup.js'),
       path.join(__dirname, './__test__/snapshot/utils/runtimeProxy.ts'),
+      path.join(__dirname, './__test__/snapshot/utils/setup.js'),
     ],
   },
 });

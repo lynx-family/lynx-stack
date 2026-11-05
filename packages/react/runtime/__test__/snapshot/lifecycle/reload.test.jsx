@@ -12,7 +12,7 @@ import { root } from '../../../src/index';
 import { delayedEvents, delayedPublishEvent } from '../../../src/snapshot/lifecycle/event/delayEvents';
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
-import { reloadBackground } from '../../../src/snapshot/lifecycle/reload';
+import { reloadBackground } from '../../../src/snapshot/lifecycle/reload-background';
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
 import { globalEnvManager } from '../utils/envManager';

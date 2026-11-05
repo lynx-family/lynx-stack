@@ -200,6 +200,7 @@ function injectGlobals() {
 }
 
 beforeEach(() => {
+  globalThis.lynx.getJSContext?.().dispatchEvent?.mockClear?.();
   performance.profileStart.mockClear();
   performance.profileEnd.mockClear();
   native._clear();

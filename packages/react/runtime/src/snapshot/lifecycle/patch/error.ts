@@ -2,38 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+import type { Unsubscribe } from '@lynx-js/lynx-runtime/bts';
 
-export const ctxNotFoundType = 'Lynx.Error.CtxNotFound';
+import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
+import { ctxNotFoundType } from '../constant.js';
+import type { CtxNotFoundData, CtxNotFoundOptions } from '../constant.js';
+
+export { ctxNotFoundType };
+export type { CtxNotFoundData, CtxNotFoundOptions };
 
 const errorMsg = 'snapshotPatchApply failed: ctx not found';
 
-let ctxNotFoundEventListener: ((e: RuntimeProxy.Event) => void) | null = null;
-
-export interface CtxNotFoundOptions {
-  operation: string;
-  commitId: number;
-  isHydration: boolean;
-  parent?: number;
-  child?: number;
-  /** Missing main-thread contexts: 1 for parent, 2 for child, 3 for both. */
-  missingNode?: 1 | 2 | 3;
-}
-
-export interface CtxNotFoundData {
-  id: number;
-  options: CtxNotFoundOptions;
-}
-
-export function sendCtxNotFoundEventToBackground(id: number, options: CtxNotFoundOptions): void {
-  if (!lynx.getJSContext) {
-    throw new Error(errorMsg);
-  }
-  lynx.getJSContext().dispatchEvent({
-    type: ctxNotFoundType,
-    data: { id, options },
-  });
-}
+let unsubscribe: Unsubscribe | undefined;
 
 export function reportCtxNotFound(data: CtxNotFoundData): void {
   const { id, options } = data;
@@ -68,16 +49,16 @@ export function reportCtxNotFound(data: CtxNotFoundData): void {
 }
 
 export function addCtxNotFoundEventListener(): void {
-  ctxNotFoundEventListener = (e) => {
-    reportCtxNotFound(e.data as CtxNotFoundData);
-  };
-  lynx.getCoreContext?.().addEventListener(ctxNotFoundType, ctxNotFoundEventListener);
+  removeCtxNotFoundEventListener();
+  /* v8 ignore start */
+  if (!lynx.getCoreContext) {
+    return;
+  }
+  /* v8 ignore stop */
+  unsubscribe = bindPage().onMessage(ctxNotFoundType, reportCtxNotFound);
 }
 
 export function removeCtxNotFoundEventListener(): void {
-  const coreContext = lynx.getCoreContext?.();
-  if (coreContext && ctxNotFoundEventListener) {
-    coreContext.removeEventListener(ctxNotFoundType, ctxNotFoundEventListener);
-    ctxNotFoundEventListener = null;
-  }
+  unsubscribe?.();
+  unsubscribe = undefined;
 }

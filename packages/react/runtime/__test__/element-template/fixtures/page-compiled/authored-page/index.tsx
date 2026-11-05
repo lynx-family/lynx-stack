@@ -1,4 +1,7 @@
+import { useEffect } from '@lynx-js/react';
+
 interface AppProps {
+  onCleanup?: () => void;
   onTap?: () => void;
   pageId?: string;
   pageKey?: string;
@@ -64,4 +67,9 @@ export function App({
       {child}
     </page>
   );
+}
+
+export function AppWithCleanup(props: AppProps) {
+  useEffect(() => props.onCleanup, [props.onCleanup]);
+  return <App {...props} />;
 }

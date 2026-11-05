@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { Unsubscribe } from '@lynx-js/lynx-runtime/mts';
+import { onDestroy } from '@lynx-js/lynx-runtime/mts';
+
 import { cardLifetime } from '../../core/card-lifetime.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
@@ -9,7 +12,7 @@ import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 const destroyLifetimeHandlerMap = /*#__PURE__*/ cardLifetime(
   'listDestroyLifetimeHandlerMap',
-  () => new Map<number, () => void>(),
+  () => new Map<number, Unsubscribe>(),
 );
 
 export function snapshotCreateList(
@@ -29,14 +32,11 @@ export function snapshotCreateList(
   );
   const listID = __GetElementUniqueID(list);
 
-  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
-    const cb = () => {
-      __UpdateListCallbacks(list, null, null, null);
-      destroyLifetimeHandlerMap.delete(listID);
-    };
-    lynx.getNative()?.addEventListener('__DestroyLifetime', cb);
-    destroyLifetimeHandlerMap.set(listID, cb);
-  }
+  const unsubscribe = onDestroy(() => {
+    __UpdateListCallbacks(list, null, null, null);
+    destroyLifetimeHandlerMap.delete(listID);
+  });
+  destroyLifetimeHandlerMap.set(listID, unsubscribe);
 
   gSignMap[listID] = signMap;
   gRecycleMap[listID] = recycleMap;
@@ -57,13 +57,8 @@ export function snapshotDestroyList(si: SnapshotInstance): void {
 
   __UpdateListCallbacks(list, () => -1, () => {}, () => {});
 
-  if (typeof lynx !== 'undefined' && typeof lynx.getNative === 'function') {
-    const cb = destroyLifetimeHandlerMap.get(listID);
-    if (cb) {
-      lynx.getNative()?.removeEventListener('__DestroyLifetime', cb);
-      destroyLifetimeHandlerMap.delete(listID);
-    }
-  }
+  destroyLifetimeHandlerMap.get(listID)?.();
+  destroyLifetimeHandlerMap.delete(listID);
 
   delete gSignMap[listID];
   delete gRecycleMap[listID];

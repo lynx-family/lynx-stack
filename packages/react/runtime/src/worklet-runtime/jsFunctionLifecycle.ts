@@ -1,6 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { isDestroyed, onDestroy, sendMessage } from '@lynx-js/lynx-runtime/mts';
+
 import { WorkletEvents } from './bindings/events.js';
 import { profile } from './utils/profile.js';
 import { isSdkVersionGt } from './utils/version.js';
@@ -21,9 +23,16 @@ class JsFunctionLifecycleManager {
 
   constructor() {
     this.registry = new FinalizationRegistry<number>(this.removeRef.bind(this));
+    onDestroy(() => {
+      this.active = false;
+      this.execIdRefCount.clear();
+      this.execIdSetToFire.clear();
+      this.willFire = false;
+    });
   }
 
   addRef(execId: number, objToRef: object): void {
+    if (!this.active || isDestroyed()) return;
     if (this.retainedObjects.has(objToRef)) {
       return;
     }
@@ -37,6 +46,7 @@ class JsFunctionLifecycleManager {
   }
 
   removeRef(execId: number): void {
+    if (!this.active || isDestroyed()) return;
     const rc = this.execIdRefCount.get(execId)!;
     if (rc > 1) {
       this.execIdRefCount.set(execId, rc - 1);
@@ -57,14 +67,17 @@ class JsFunctionLifecycleManager {
   }
 
   fire(): void {
-    if (!this.active) return;
+    if (!this.active || isDestroyed()) return;
     profile('JsFunctionLifecycleManager.fire', () => {
-      lynx.getJSContext().dispatchEvent({
-        type: WorkletEvents.releaseBackgroundWorkletCtx,
-        data: Array.from(this.execIdSetToFire),
-      });
-      this.execIdSetToFire.clear();
-      this.willFire = false;
+      try {
+        sendMessage(
+          WorkletEvents.releaseBackgroundWorkletCtx,
+          Array.from(this.execIdSetToFire),
+        );
+      } finally {
+        this.execIdSetToFire.clear();
+        this.willFire = false;
+      }
     });
   }
 }

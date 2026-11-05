@@ -1888,6 +1888,18 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.2.9(core-js@3.50.0))
 
+  packages/lynx/lynx-runtime:
+    devDependencies:
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.2(@microsoft/api-extractor@7.59.4(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      rsbuild-plugin-publint:
+        specifier: 1.0.0
+        version: 1.0.0(@rsbuild/core@2.2.9(core-js@3.50.0))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   packages/motion:
     devDependencies:
       '@lynx-js/react':
@@ -1914,6 +1926,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@lynx-js/lynx-runtime':
+        specifier: workspace:*
+        version: link:../lynx/lynx-runtime
       preact:
         specifier: catalog:lynxjs
         version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
@@ -1982,6 +1997,9 @@ importers:
 
   packages/react/runtime:
     devDependencies:
+      '@lynx-js/lynx-runtime':
+        specifier: workspace:*
+        version: link:../../lynx/lynx-runtime
       '@lynx-js/react':
         specifier: workspace:*
         version: link:..

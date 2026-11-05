@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerDestroyTask } from '../../../src/core/runtime-destroy';
 import { __root, setRoot } from '../../../src/root';
 import { completeMainThreadReload } from '../../../src/snapshot/lifecycle/reload';
+import { injectTt } from '../../../src/snapshot/lynx/tt';
 import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
@@ -79,7 +80,12 @@ describe('re-evaluating the background entry on reload', () => {
     globalEnvManager.switchToBackground();
     lynx[supportsReEvalKey] = true;
     reloadCard = vi.fn();
-    lynx.getApp().reloadCard = reloadCard;
+    const previousApp = lynx.getApp();
+    vi.spyOn(lynx, 'getApp').mockReturnValue({
+      GlobalEventEmitter: previousApp.GlobalEventEmitter,
+      reloadCard,
+    });
+    injectTt();
     lynx.__globalProps = {};
     __root.__jsx = <App />;
     render(<App />, __root);
@@ -87,7 +93,7 @@ describe('re-evaluating the background entry on reload', () => {
 
   afterEach(() => {
     delete lynx[supportsReEvalKey];
-    delete lynx.getApp().reloadCard;
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     globalEnvManager.resetEnv();
     elementTree.clear();

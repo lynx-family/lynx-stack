@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { flushElementTree } from '@lynx-js/lynx-runtime/mts';
 import type { ClosureValueType } from '@lynx-js/react/worklet-runtime/bindings';
 import { runRunOnMainThreadTask, setEomShouldFlushElementTree } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -13,7 +14,6 @@ import { getReloadVersion } from '../../../core/reload-version.js';
 import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { __pendingListUpdates } from '../../list/pendingListUpdates.js';
-import { __page } from '../../snapshot/definition.js';
 import { applyRefQueue } from '../../snapshot/workletRef.js';
 import { isMtsEnabled } from '../../worklet/functionality.js';
 
@@ -99,7 +99,7 @@ function updateMainThread(
     if (patchOptions.pipelineOptions) {
       flushOptions.pipelineOptions = patchOptions.pipelineOptions;
     }
-    __FlushElementTree(__page, flushOptions);
+    flushElementTree(flushOptions);
 
     if (flowIds) {
       lynx.performance.profileEnd();

@@ -33,16 +33,11 @@ declare global {
 
   const __USE_ELEMENT_TEMPLATE__: boolean;
 
-  // Passing undefined selects the default ordinary Element root while retaining
-  // explicit flush options. It is not an Element Template handle.
-  function __FlushElementTree(element: undefined, options: FlushOptions): void;
-
   // Materializes the instance on demand; parent mounting and layout may still be pending.
   function __GetElementByAttrSlot(
     templateInstance: ElementTemplateHandle,
     attrSlotIndex: number,
   ): ElementRef | null;
-
   function __CreateElementTemplate(
     templateKey: string,
     bundleUrl: string | null | undefined,

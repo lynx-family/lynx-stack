@@ -7,19 +7,22 @@ import { __root } from '../../root.js';
 import { delayedEvents } from './event/delayEvents.js';
 import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
 import { globalCommitTaskMap } from './patch/commit.js';
+import { setBackgroundDestroying } from './patch/globalState.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { delayedUiOps } from './ref/delay.js';
+import { takeMainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { withSyncEffectFlush } from '../../utils.js';
 import { resetSnapshotMainThreadFunctionRuntime } from '../worklet/call/runOnMainThread.js';
 import { resetSnapshotBackgroundFunctionRuntime } from '../worklet/ctx.js';
 
-function destroyBackground(): void {
+function destroyBackground(isHostDestroying = false): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::destroyBackground');
   }
 
   deinitGlobalSnapshotPatch();
+  setBackgroundDestroying(isHostDestroying);
 
   try {
     withSyncEffectFlush(() => {
@@ -31,6 +34,9 @@ function destroyBackground(): void {
       task();
     });
   } finally {
+    // Reload keeps refs alive; only host destruction discards their pending sync.
+    if (isHostDestroying) takeMainThreadRefInitValuePatch();
+    setBackgroundDestroying(false);
     globalCommitTaskMap.clear();
     // Clear delayed events which should not be executed after destroyed.
     // This is important when the page is performing a reload.

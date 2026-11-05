@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RESET_WITH_INIT_DATA_IN_STATE_ERROR } from '../../../src/core/initData';
 import { applyUpdatePageData } from '../../../src/core/lynx-page-data';
-import { NativeUpdateDataType, updateCardData } from '../../../src/core/lynx-update-data';
+import { updateCardData } from '../../../src/core/lynx-update-data';
 import { withInitDataInState } from '../../../src/lynx-api';
 import { globalEnvManager } from '../utils/envManager';
 
@@ -45,7 +45,7 @@ describe('data reset + withInitDataInState dev error', () => {
     globalEnvManager.switchToBackground();
     const spy = vi.spyOn(lynx, 'reportError');
 
-    updateCardData({ msg: 'reset' }, { type: NativeUpdateDataType.RESET });
+    updateCardData({ msg: 'reset' }, { resetPageData: true });
 
     expect(spy).not.toHaveBeenCalled();
   });
@@ -68,12 +68,12 @@ describe('data reset + withInitDataInState dev error', () => {
     globalEnvManager.switchToBackground();
     const spy = vi.spyOn(lynx, 'reportError');
 
-    updateCardData({ msg: 'reset' }, { type: NativeUpdateDataType.RESET });
+    updateCardData({ msg: 'reset' }, { resetPageData: true });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(String(spy.mock.calls[0]?.[0]?.message ?? '')).toBe(RESET_WITH_INIT_DATA_IN_STATE_ERROR);
 
     // report-once: a later reset does not report again
-    updateCardData({ msg: 'reset again' }, { type: NativeUpdateDataType.RESET });
+    updateCardData({ msg: 'reset again' }, { resetPageData: true });
     expect(spy).toHaveBeenCalledTimes(1);
   });
 });

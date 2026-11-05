@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { MTSFlushOptions } from '@lynx-js/lynx-runtime';
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { ElementTemplateUpdateOps } from './opcodes.js';
@@ -206,11 +207,7 @@ export type ElementTemplateUpdateCommand =
 // existing flat buffer ergonomics while making command contracts explicit.
 export type ElementTemplateUpdateCommandStream = ElementTemplateUpdateCommand[number][];
 
-export interface ElementTemplateFlushOptions {
-  pipelineOptions?: PipelineOptions;
-  triggerDataUpdated?: boolean;
-  emptyPatch?: boolean;
-}
+export type ElementTemplateFlushOptions = MTSFlushOptions;
 
 export interface ElementTemplateUpdateCommitContext {
   ops: ElementTemplateUpdateCommandStream;

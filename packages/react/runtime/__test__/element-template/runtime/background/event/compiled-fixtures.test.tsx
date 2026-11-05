@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { resetFunctionCallReturnListener } from '../../../../../src/core/thread-function-call/return-value.js';
+
 import {
   installElementTemplateCommitHook,
   resetElementTemplateCommitState,
@@ -400,6 +402,7 @@ describe('Compiled direct event background updates', () => {
 
   afterEach(() => {
     envManager.switchToMainThread();
+    resetFunctionCallReturnListener();
     lynx.getJSContext().removeEventListener(ElementTemplateLifecycleConstant.update, onUpdate);
     resetElementTemplatePatchListener();
     envManager.switchToBackground();
@@ -448,7 +451,10 @@ describe('Compiled direct event background updates', () => {
     expect(firstScreenCtx._c).toEqual({ label: 'first' });
     expect(typeof firstScreenWrapper).toBe('object');
     expect(typeof firstScreenWrapper).not.toBe('function');
-    expect(host.attributeSlots[0]).toEqual(firstScreenWrapper);
+    expect(host.attributeSlots[0]).toEqual({
+      ...firstScreenWrapper,
+      value: { ...firstScreenCtx, _execId: expect.any(Number) },
+    });
     expect(getMainThreadDynamicAttrState(host.instanceId, 0)).toEqual({
       kind: 'mt-event',
       nativeHeldValue: firstScreenCtx,

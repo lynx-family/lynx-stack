@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { MTSReloadOptions } from '@lynx-js/lynx-runtime/mts';
+
 import { flushElementTemplate } from './flush.js';
 import { onMtsDestruction } from './mts-destroy.js';
 import {
@@ -26,7 +28,7 @@ import {
 } from '../runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../runtime/template/registry.js';
 
-export function reloadMainThread(data: unknown, options: UpdatePageOption): void {
+export function reloadMainThread(data: unknown, options: Readonly<MTSReloadOptions>): void {
   if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
     profileStart('ReactLynx::reloadMainThread');
   }
@@ -97,13 +99,13 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
 
 interface MainThreadReloadHandoff {
   page: ElementTemplateHandle;
-  options: UpdatePageOption;
+  options: Readonly<MTSReloadOptions>;
 }
 
 export function completeMainThreadReload({ page, options }: MainThreadReloadHandoff): void {
   setupPage(page);
   renderMainThread();
-  __FlushElementTree(undefined, options);
+  flushElementTemplate(options);
 }
 
 installMainThreadReloadCompleter(completeMainThreadReload);

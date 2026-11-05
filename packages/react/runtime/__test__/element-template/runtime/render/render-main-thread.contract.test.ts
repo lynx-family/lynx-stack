@@ -57,7 +57,7 @@ describe('renderMainThread contract', () => {
     const dispatchEvent = vi.fn();
     (globalThis.lynx as typeof lynx & {
       getJSContext?: () => { dispatchEvent: typeof dispatchEvent };
-    }).getJSContext = vi.fn(() => ({ dispatchEvent }));
+    }).getJSContext = vi.fn(() => ({ dispatchEvent, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
 
     renderMainThread();
 
@@ -79,7 +79,7 @@ describe('renderMainThread contract', () => {
       -2,
     ]);
 
-    const dispatched = dispatchEvent.mock.calls[0]?.[0] as
+    const dispatched = dispatchEvent.mock.calls.find(([event]) => event.type === 'rLynxElementTemplateHydrate')?.[0] as
       | { type: string; data: ElementTemplateHydrateCommitContext }
       | undefined;
     expect(dispatched?.type).toBe('rLynxElementTemplateHydrate');

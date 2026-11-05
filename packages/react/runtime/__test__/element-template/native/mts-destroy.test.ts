@@ -52,22 +52,22 @@ describe('mts-destroy', () => {
     const addEventListener = vi.fn();
     const removeEventListener = vi.fn();
 
-    g.lynx.getNative = () => ({ addEventListener, removeEventListener });
+    const native = { addEventListener, removeEventListener };
+    g.lynx.getNative = () => native;
 
     installOnMtsDestruction();
-    expect(addEventListener).toHaveBeenCalledWith('__DestroyLifetime', onMtsDestruction);
-
-    onMtsDestruction();
-    expect(removeEventListener).toHaveBeenCalledWith('__DestroyLifetime', onMtsDestruction);
+    const listener = addEventListener.mock.calls.find(([type]) => type === '__DestroyLifetime')![1];
+    listener();
+    expect(removeEventListener).toHaveBeenCalledWith('__DestroyLifetime', listener);
 
     g.lynx.getNative = originalGetNative;
   });
 
-  it('does not throw when native is missing', () => {
+  it('degrades to a no-op when Native destruction is unavailable', () => {
     const g = globalThis as LynxWithNative;
     const originalGetNative = g.lynx.getNative;
 
-    // Simulate missing native bridge
+    // Simulate legacy SDK (< 3.4) without lynx.getNative()
     g.lynx.getNative = undefined;
 
     expect(() => installOnMtsDestruction()).not.toThrow();
@@ -82,18 +82,13 @@ describe('mts-destroy', () => {
         performance: Partial<typeof lynx.performance>;
       };
     };
-    const originalGetNative = g.lynx.getNative;
     const originalPerformance = g.lynx.performance;
-    const removeEventListener = vi.fn();
 
     try {
-      g.lynx.getNative = () => ({ addEventListener: vi.fn(), removeEventListener });
       g.lynx.performance = {};
 
       expect(() => onMtsDestruction()).not.toThrow();
-      expect(removeEventListener).toHaveBeenCalledWith('__DestroyLifetime', onMtsDestruction);
     } finally {
-      g.lynx.getNative = originalGetNative;
       g.lynx.performance = originalPerformance;
     }
   });
@@ -280,6 +275,7 @@ describe('mts-destroy', () => {
     vi.resetModules();
     const resetError = new Error('patch listener reset failed');
     const clear = vi.fn();
+    const addEventListener = vi.fn();
     const removeEventListener = vi.fn();
     const g = globalThis as LynxWithNative;
     const originalGetNative = g.lynx.getNative;
@@ -296,16 +292,19 @@ describe('mts-destroy', () => {
     }));
 
     try {
-      g.lynx.getNative = () => ({ addEventListener: vi.fn(), removeEventListener });
-      const { onMtsDestruction: onMtsDestructionWithThrowingReset } = await import(
+      const native = { addEventListener, removeEventListener };
+      g.lynx.getNative = () => native;
+      const { installOnMtsDestruction: installWithThrowingReset } = await import(
         '../../../src/element-template/native/mts-destroy.js'
       );
 
-      expect(() => onMtsDestructionWithThrowingReset()).toThrow(resetError);
+      installWithThrowingReset();
+      const listener = addEventListener.mock.calls.find(([type]) => type === '__DestroyLifetime')![1];
+      expect(() => listener()).toThrow(resetError);
       expect(clear).toHaveBeenCalledTimes(1);
       expect(removeEventListener).toHaveBeenCalledWith(
         '__DestroyLifetime',
-        onMtsDestructionWithThrowingReset,
+        listener,
       );
     } finally {
       g.lynx.getNative = originalGetNative;

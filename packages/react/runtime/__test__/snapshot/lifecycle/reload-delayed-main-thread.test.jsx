@@ -14,7 +14,7 @@ import { root } from '../../../src/lynx-api.js';
 import { __root } from '../../../src/root.js';
 import { destroyBackground } from '../../../src/snapshot/lifecycle/destroy.js';
 import { globalCommitTaskMap } from '../../../src/snapshot/lifecycle/patch/commit.js';
-import { reloadBackground } from '../../../src/snapshot/lifecycle/reload.js';
+import { reloadBackground } from '../../../src/snapshot/lifecycle/reload-background.js';
 import { setupPage } from '../../../src/snapshot/index.js';
 import { runOnMainThread } from '../../../src/snapshot/worklet/call/runOnMainThread.js';
 import { registerWorklet } from '../../../src/worklet-runtime/bindings/index.js';

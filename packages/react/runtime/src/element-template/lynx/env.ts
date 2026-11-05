@@ -1,23 +1,16 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+import { getSystemInfo, setDataProcessor } from '@lynx-js/lynx-runtime/mts';
+
 import { createProcessData } from '../../core/lynx-data-processors.js';
 import type { DataProcessorDefinition } from '../../core/lynx-data-processors.js';
 
 export function setupLynxEnv(): void {
   if (!__LEPUS__) {
-    let initData: Record<string, unknown> = {};
-    let updateData: Record<string, unknown> = {};
-
-    try {
-      const params = lynx.getApp()._params;
-      if (params) {
-        initData = params.initData ?? {};
-        updateData = params.updateData ?? {};
-      }
-    } catch {}
-
-    lynx.__initData = { ...initData, ...updateData };
+    // RL owns its mutable state; the host's initial snapshot stays isolated.
+    lynx.__initData = { ...bindPage().getInitData() };
     lynx.registerDataProcessors = function() {};
   }
 
@@ -25,8 +18,7 @@ export function setupLynxEnv(): void {
     lynx.__initData = {
       /* available only in renderPage */
     };
-    (globalThis as typeof globalThis & { SystemInfo?: unknown }).SystemInfo =
-      (lynx as typeof lynx & { SystemInfo?: unknown }).SystemInfo ?? {};
+    (globalThis as typeof globalThis & { SystemInfo?: unknown }).SystemInfo = getSystemInfo();
 
     lynx.triggerGlobalEventFromLepus = function(
       eventName: string,
@@ -51,7 +43,7 @@ export function setupLynxEnv(): void {
     lynx.registerDataProcessors = function(
       dataProcessorDefinition?: DataProcessorDefinition,
     ) {
-      globalThis.processData = createProcessData(dataProcessorDefinition);
+      setDataProcessor(createProcessData(dataProcessorDefinition));
     };
 
     lynx.registerDataProcessors();

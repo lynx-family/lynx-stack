@@ -1,13 +1,16 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
+import { getSystemInfo, setDataProcessor } from '@lynx-js/lynx-runtime/mts';
+
 import { createProcessData } from '../../core/lynx-data-processors.js';
 import type { DataProcessorDefinition } from '../../lynx-api.js';
 
 export function setupLynxEnv(): void {
   if (!__LEPUS__) {
-    const { initData, updateData } = lynx.getApp()._params;
-    lynx.__initData = { ...initData, ...updateData };
+    // RL owns its mutable state; the host's initial snapshot stays isolated.
+    lynx.__initData = { ...bindPage().getInitData() };
     lynx.registerDataProcessors = function() {};
   }
 
@@ -15,9 +18,7 @@ export function setupLynxEnv(): void {
     lynx.__initData = {
       /* available only in renderPage */
     };
-    // @ts-expect-error no type for lynx.SystemInfo
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    globalThis.SystemInfo = lynx.SystemInfo ?? {};
+    (globalThis as typeof globalThis & { SystemInfo?: unknown }).SystemInfo = getSystemInfo();
 
     lynx.reportError = function(e: Error | string) {
       const error = e instanceof Error ? e : new Error(JSON.stringify(e));
@@ -49,10 +50,10 @@ export function setupLynxEnv(): void {
     lynx.registerDataProcessors = function(
       dataProcessorDefinition?: DataProcessorDefinition,
     ) {
-      globalThis.processData = createProcessData(dataProcessorDefinition);
+      setDataProcessor(createProcessData(dataProcessorDefinition));
     };
 
-    // register empty DataProcessors to make sure `globalThis.processData` is set
+    // Install the default DSL processor before Native delivers its first input.
     lynx.registerDataProcessors();
   }
 }

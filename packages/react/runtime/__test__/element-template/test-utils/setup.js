@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, expect } from 'vitest';
+import { afterEach, beforeEach, expect, vi } from 'vitest';
 
 import { injectGlobals } from './mock/globals.js';
 import { resetReportErrorState } from './debug/fixtureRunner.ts';
@@ -10,6 +10,23 @@ import { registerTemplates } from './debug/registry.ts';
 import { installMockNativePapi } from './mock/mockNativePapi.ts';
 import { installThreadContexts } from './mock/mockNativePapi/context.ts';
 import { checkPerformanceLeaks, resetPerformanceMocks } from './mock/performance.js';
+
+// Vitest evaluates both thread graphs together, including after resetModules.
+// Evaluate the real MTS module under MTS flags, as production's DCE entry does.
+vi.mock('@lynx-js/lynx-runtime/mts', async importOriginal => {
+  const flags = {
+    __JS__: globalThis.__JS__,
+    __LEPUS__: globalThis.__LEPUS__,
+    __MAIN_THREAD__: globalThis.__MAIN_THREAD__,
+    __BACKGROUND__: globalThis.__BACKGROUND__,
+  };
+  Object.assign(globalThis, { __JS__: false, __LEPUS__: true, __MAIN_THREAD__: true, __BACKGROUND__: false });
+  try {
+    return await importOriginal();
+  } finally {
+    Object.assign(globalThis, flags);
+  }
+});
 
 globalThis.__REGISTER_ELEMENT_TEMPLATES__ = registerTemplates;
 
@@ -21,9 +38,9 @@ installThreadContexts();
 
 const { onMtsDestruction } = await import('../../../src/element-template/native/mts-destroy.ts');
 
-afterEach(() => {
-  // Ensure element-template background listeners are always cleaned up
-  // (tt.callDestroyLifetimeFun is injected in background thread)
+afterEach(async () => {
+  // Drain registered lifetimes before resetting reused modules. Tests that keep
+  // the same App after its first destruction still need their RL state reset.
   const g = globalThis;
 
   g.__LEPUS__ = false;
@@ -32,8 +49,16 @@ afterEach(() => {
   g.__BACKGROUND__ = true;
 
   try {
-    g.lynx?.getApp?.().callDestroyLifetimeFun?.();
-  } catch {}
+    const app = g.lynx?.getApp?.();
+    if (app?.callDestroyLifetimeFun) {
+      app.callDestroyLifetimeFun();
+    }
+  } finally {
+    // Some tests install individual capabilities without evaluating the RL entry.
+    // Host destruction alone then has no DSL cleanup listener to invoke.
+    const { callDestroyLifetimeFun } = await import('../../../src/element-template/native/callDestroyLifetimeFun.ts');
+    callDestroyLifetimeFun();
+  }
 
   g.__LEPUS__ = true;
   g.__JS__ = false;
@@ -41,17 +66,22 @@ afterEach(() => {
   g.__BACKGROUND__ = false;
 
   try {
+    g.lynx?.getNative?.().dispatchEvent?.({ type: '__DestroyLifetime', data: undefined });
     onMtsDestruction();
   } catch {}
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   // Reset reportError state for current test.
   resetReportErrorState();
 
   // Ensure mocks are installed and fresh for each test
   installMockNativePapi();
   installThreadContexts();
+
+  // Each mock host starts with the same MTS subscriptions as a fresh native context.
+  const { injectCalledByNative } = await import('../../../src/element-template/native/main-thread-api.ts');
+  injectCalledByNative();
 
   // Compiled main-thread templates reference `globDynamicComponentEntry`
   // (Element Template always tags template types with it). Real builds define

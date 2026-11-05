@@ -1,9 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": [],
+      "dependsOn": [
+        "@lynx-js/lynx-runtime#build"
+      ],
       "inputs": [
         "debug/**",
         "jsx-dev-runtime/**",

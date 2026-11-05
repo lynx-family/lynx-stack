@@ -38,10 +38,11 @@ async function loadRuntime() {
 beforeEach(() => {
   vi.resetModules();
   context = createEventHost();
+  const app = {};
   vi.stubGlobal('__JS__', true);
   vi.stubGlobal('__LEPUS__', false);
   vi.stubGlobal('SystemInfo', { lynxSdkVersion: '999.999' });
-  vi.stubGlobal('lynx', { getCoreContext: () => context, getJSContext: () => context });
+  vi.stubGlobal('lynx', { getApp: () => app, getCoreContext: () => context, getJSContext: () => context });
 });
 afterEach(async () => {
   (await loadRuntime()).destroyRuntime();

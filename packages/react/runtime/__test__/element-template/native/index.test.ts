@@ -40,6 +40,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/core/lynx-update-data.js');
     vi.doUnmock('../../../src/core/globalProps.js');
     vi.doUnmock('../../../src/element-template/runtime/page/root-instance.js');
+    vi.restoreAllMocks();
   });
 
   it('installs main-thread wiring only on main thread', async () => {
@@ -119,6 +120,14 @@ describe('element-template native index wiring', () => {
 
   it('installs background wiring only on background thread', async () => {
     envManager.resetEnv('background');
+    vi.spyOn(globalThis.lynx, 'getApp').mockReturnValue({
+      _params: { initData: { value: 1 }, updateData: {} },
+    });
+    const app = globalThis.lynx.getApp();
+    const legacyPageHandler = vi.fn();
+    const legacyComponentHandler = vi.fn();
+    app.publishEvent = legacyPageHandler;
+    app.publicComponentEvent = legacyComponentHandler;
     process.env['NODE_ENV'] = 'production';
     globalThis.lynx.performance.isProfileRecording = vi.fn(() => true);
 
@@ -133,8 +142,8 @@ describe('element-template native index wiring', () => {
     const initTimingAPI = vi.fn();
     const setRoot = vi.fn();
     const callDestroyLifetimeFun = vi.fn();
-    const publishEvent = vi.fn();
-    const publicComponentEvent = vi.fn();
+    const pageResult = { handled: true };
+    const publishEvent = vi.fn(() => pageResult);
     const resetEventStateForRuntime = vi.fn();
     const updateCardData = vi.fn();
     const updateGlobalProps = vi.fn();
@@ -189,7 +198,6 @@ describe('element-template native index wiring', () => {
     }));
     vi.doMock('../../../src/element-template/prop-adapters/event.js', () => ({
       publishEvent,
-      publicComponentEvent,
       resetEventStateForRuntime,
     }));
     vi.doMock('../../../src/element-template/background/instance.js', () => ({
@@ -211,14 +219,41 @@ describe('element-template native index wiring', () => {
     expect(initProfileHook).toHaveBeenCalledTimes(1);
     expect(setupLynxEnv).toHaveBeenCalledTimes(1);
     expect(resetEventStateForRuntime).toHaveBeenCalledTimes(1);
-    expect(globalThis.lynx.getApp().callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
-    expect(globalThis.lynx.getApp().publishEvent).toBe(publishEvent);
-    expect(globalThis.lynx.getApp().publicComponentEvent).toBe(publicComponentEvent);
-    expect(globalThis.lynx.getApp().updateGlobalProps).toEqual(expect.any(Function));
-    expect(globalThis.lynx.getApp().updateCardData).toBe(updateCardData);
-    expect(globalThis.lynx.getApp().onAppReload).toBe(reloadBackground);
+    const pageEntry = app.publishEvent;
+    const componentEntry = app.publicComponentEvent;
+    const eventData = { type: 'tap' };
+    expect(pageEntry('page-handler', eventData, 0)).toBe(pageResult);
+    expect(publishEvent).toHaveBeenCalledExactlyOnceWith('page-handler', eventData, undefined);
+    expect(componentEntry('component-7', 'component-handler', eventData)).toBe(pageResult);
+    expect(publishEvent).toHaveBeenLastCalledWith('component-handler', eventData, 'component-7');
+    expect(legacyPageHandler).not.toHaveBeenCalled();
+    expect(legacyComponentHandler).not.toHaveBeenCalled();
+    expect(app.updateGlobalProps).toEqual(expect.any(Function));
 
-    globalThis.lynx.getApp().updateGlobalProps({ theme: 'light' });
+    app.updateCardData({ value: 2 });
+    expect(updateCardData).toHaveBeenLastCalledWith(
+      { value: 2 },
+      { resetPageData: false, processorName: undefined },
+    );
+    app.updateCardData({ value: 3 }, { type: 1, processorName: 'reset' });
+    expect(updateCardData).toHaveBeenLastCalledWith(
+      { value: 3 },
+      { resetPageData: true, processorName: 'reset' },
+    );
+    expect(updateCardData).toHaveBeenCalledTimes(2);
+
+    app.onAppReload({ value: 4 });
+    expect(reloadBackground).toHaveBeenLastCalledWith({ value: 4 }, {});
+    app.onAppReload({ value: 5 }, { processorName: 'reload' });
+    expect(reloadBackground).toHaveBeenLastCalledWith(
+      { value: 5 },
+      { processorName: 'reload' },
+    );
+    expect(reloadBackground).toHaveBeenCalledTimes(2);
+    expect(app.publishEvent).toBe(pageEntry);
+    expect(app.publicComponentEvent).toBe(componentEntry);
+
+    app.updateGlobalProps({ theme: 'light' });
     expect(updateGlobalProps).toHaveBeenCalledWith(
       { theme: 'light' },
       { forceRerender: expect.any(Function) },
@@ -228,5 +263,16 @@ describe('element-template native index wiring', () => {
     expect(installElementTemplateRefInitValueListener).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();
     expect(installOnMtsDestruction).not.toHaveBeenCalled();
+
+    app.callDestroyLifetimeFun();
+    expect(callDestroyLifetimeFun).toHaveBeenCalledTimes(1);
+    expect(app.updateCardData).toBeUndefined();
+    expect(app.onAppReload).toBeUndefined();
+    expect(app.callDestroyLifetimeFun).toBeUndefined();
+    expect(pageEntry('page-handler', eventData)).toBeUndefined();
+    expect(componentEntry('component-7', 'component-handler', eventData)).toBeUndefined();
+    expect(publishEvent).toHaveBeenCalledTimes(2);
+    expect(legacyPageHandler).not.toHaveBeenCalled();
+    expect(legacyComponentHandler).not.toHaveBeenCalled();
   });
 });

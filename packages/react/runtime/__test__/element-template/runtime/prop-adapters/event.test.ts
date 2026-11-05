@@ -6,7 +6,6 @@ import { backgroundElementTemplateInstanceManager } from '../../../../src/elemen
 import {
   clearEventState,
   flushPendingEvents,
-  publicComponentEvent,
   publishEvent,
   resetEventStateForRuntime,
 } from '../../../../src/element-template/prop-adapters/event.js';
@@ -44,11 +43,11 @@ describe('ElementTemplate event bridge', () => {
   });
 
   it('dispatches publishEvent to the current handler', () => {
-    const handler = vi.fn();
+    const handler = vi.fn(() => false);
     const eventData = { type: 'tap', detail: { x: 1 } };
     createEventInstance(-1, [0, adaptEventAttrSlot], [handler]);
 
-    publishEvent('-1:0:', eventData);
+    expect(publishEvent('-1:0:', eventData)).toBeUndefined();
 
     expect(handler).toHaveBeenCalledWith(eventData);
   });
@@ -84,16 +83,6 @@ describe('ElementTemplate event bridge', () => {
 
     expect(handler).toHaveBeenCalledWith({ type: 'tap' });
     expect(alog.mock.calls).toHaveLength(0);
-  });
-
-  it('dispatches publicComponentEvent through the same handler lookup', () => {
-    const handler = vi.fn();
-    const eventData = { type: 'tap' };
-    createEventInstance(-2, [0, adaptEventAttrSlot], [handler]);
-
-    publicComponentEvent('component-id', '-2:0:', eventData);
-
-    expect(handler).toHaveBeenCalledWith(eventData);
   });
 
   it('dispatches spread event values through the same handler lookup', () => {

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import type { MTSReloadOptions, PipelineOptions as RuntimePipelineOptions } from '@lynx-js/lynx-runtime';
 import { EventEmitter } from '@lynx-js/types';
 import type { TransformBuiltinAttributeNamesOptions } from '@lynx-js/react-transform';
 
@@ -174,14 +175,14 @@ declare global {
     triggerLayout?: boolean;
     operationID?: any;
     __lynx_timing_flag?: string;
-    nativeUpdateDataOrder?: number;
+    nativeUpdateDataOrder?: number | undefined;
     elementID?: number;
     listID?: number;
     listReuseNotification?: {
       listElement: FiberElement;
       itemKey: string;
     };
-    pipelineOptions?: PipelineOptions;
+    pipelineOptions?: RuntimePipelineOptions | undefined;
     elementIDs?: number[];
     operationIDs?: any[];
     asyncFlush?: boolean;
@@ -189,12 +190,7 @@ declare global {
     emptyPatch?: boolean;
   }
 
-  declare interface UpdatePageOption {
-    nativeUpdateDataOrder?: number;
-    reloadTemplate?: boolean;
-    reloadFromJS?: boolean;
-    resetPageData?: boolean;
-    pipelineOptions?: PipelineOptions;
+  declare interface UpdatePageOption extends MTSReloadOptions {
     triggerDataUpdated?: boolean;
   }
 
@@ -232,12 +228,14 @@ declare global {
     GlobalEventEmitter: EventEmitter;
   }
 
-  declare interface PipelineOptions {
+  // Native pipeline creation guarantees an ID; incoming update metadata may be partial.
+  declare interface NativePipelineOptions extends RuntimePipelineOptions {
     pipelineID: string; // Returned by native when calling `onPipelineStart()`
-    pipelineOrigin: string; // The origin of the pipeline
-    needTimestamps: boolean; // Whether timing points should be reported
-    dsl: string;
-    stage: string;
+  }
+
+  declare interface PipelineOptions extends NativePipelineOptions {
+    dsl?: string;
+    stage?: string;
   }
 
   interface ISystemInfo {
@@ -328,7 +326,7 @@ declare module '@lynx-js/types/background' {
   }
 
   interface Performance {
-    _generatePipelineOptions?(): PipelineOptions;
+    _generatePipelineOptions?(): NativePipelineOptions;
     /**
      * @param pipelineID - Returned by native when calling {@link _generatePipelineOptions}.
      * @param options - Added since 3.1. See {@link PipelineOptions} for more details.

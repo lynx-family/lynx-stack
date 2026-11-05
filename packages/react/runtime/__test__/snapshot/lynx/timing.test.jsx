@@ -9,7 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { installComponentCompat } from '../../../src/core/component';
-import { globalPipelineOptions } from '../../../src/core/performance';
+import { globalPipelineOptions, markTiming, setPipeline } from '../../../src/core/performance';
 import { initTimingAPI } from '../../../src/snapshot/lynx/performance';
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
@@ -36,6 +36,20 @@ afterEach(() => {
 });
 
 describe('setState timing api', () => {
+  it('accepts host pipeline metadata without React timing fields', () => {
+    const mark = vi.spyOn(lynx.performance, '_markTiming');
+    setPipeline({ needTimestamps: true });
+    markTiming('mtsRenderStart');
+    expect(mark).not.toHaveBeenCalled();
+
+    const pipeline = { pipelineID: 'host-pipeline', needTimestamps: true };
+    setPipeline(pipeline);
+    markTiming('mtsRenderStart');
+    expect(mark).toHaveBeenCalledWith('host-pipeline', 'mtsRenderStart');
+    expect(pipeline).toEqual({ pipelineID: 'host-pipeline', needTimestamps: true });
+    setPipeline(undefined);
+  });
+
   it('does not stack timing hooks on repeated init', () => {
     const renderHook = options.__r;
     const rootHook = options.__;

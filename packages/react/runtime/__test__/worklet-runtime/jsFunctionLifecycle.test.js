@@ -1,7 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { onDestroy } from '@lynx-js/lynx-runtime/mts';
 
 import { JsFunctionLifecycleManager } from '../../src/worklet-runtime/jsFunctionLifecycle';
 
@@ -9,11 +11,17 @@ let events = [];
 beforeEach(() => {
   events = [];
   const context = {
-    dispatchEvent: (x) => events.push(x),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: (x) => {
+      if (x.type === 'Lynx.Worklet.releaseBackgroundWorkletCtx') events.push(x);
+    },
   };
-  globalThis.lynx = {
-    getJSContext: () => context,
-  };
+  vi.stubGlobal('lynx', { getJSContext: () => context });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('jsFunctionLifecycle', () => {
@@ -68,6 +76,84 @@ describe('jsFunctionLifecycle', () => {
         "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
       }
     `);
+  });
+
+  it.each(['native', 'web'])('drops queued GC releases when the %s MTS host is destroyed', async platform => {
+    const listeners = new Map();
+    const proxy = {
+      addEventListener: (type, listener) => listeners.set(type, listener),
+      removeEventListener: type => listeners.delete(type),
+    };
+    let finalize;
+    vi.stubGlobal(
+      'FinalizationRegistry',
+      class {
+        constructor(callback) {
+          finalize = callback;
+        }
+        register() {}
+      },
+    );
+    vi.stubGlobal('SystemInfo', { platform });
+    const jsContext = {
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: event => {
+        if (event.type === 'Lynx.Worklet.releaseBackgroundWorkletCtx') events.push(event);
+      },
+    };
+    vi.stubGlobal('lynx', {
+      getJSContext: () => jsContext,
+      ...(platform === 'web' ? { getEngine: () => proxy } : { getNative: () => proxy }),
+    });
+    const manager = new JsFunctionLifecycleManager();
+    manager.addRef(3, {});
+    manager.addRef(4, {});
+    finalize(3);
+    expect(manager.willFire).toBe(true);
+    onDestroy(() => finalize(4));
+
+    listeners.get('__DestroyLifetime')();
+
+    expect(manager.execIdRefCount.size).toBe(0);
+    expect(manager.execIdSetToFire.size).toBe(0);
+    expect(manager.willFire).toBe(false);
+    await Promise.resolve();
+    expect(events).toEqual([]);
+
+    expect(() => {
+      finalize(4);
+      manager.addRef(5, {});
+      manager.fire();
+    }).not.toThrow();
+    await Promise.resolve();
+    expect(manager.execIdRefCount.size).toBe(0);
+    expect(manager.execIdSetToFire.size).toBe(0);
+    expect(manager.willFire).toBe(false);
+    expect(events).toEqual([]);
+  });
+
+  it('supports a lightweight Web host without a destruction proxy', () => {
+    vi.stubGlobal('SystemInfo', { platform: 'web' });
+    const manager = new JsFunctionLifecycleManager();
+    manager.addRef(3, {});
+    expect(() => manager.fire()).not.toThrow();
+    expect(events).toHaveLength(1);
+  });
+
+  it('clears pending release state while propagating host send failures', () => {
+    const failure = new Error('peer dispatch failed');
+    const context = lynx.getJSContext();
+    const manager = new JsFunctionLifecycleManager();
+    context.dispatchEvent = () => {
+      throw failure;
+    };
+    manager.execIdSetToFire.add(3);
+    manager.willFire = true;
+
+    expect(() => manager.fire()).toThrow(failure);
+    expect(manager.execIdSetToFire.size).toBe(0);
+    expect(manager.willFire).toBe(false);
   });
 
   it('should skip duplicated addRef() for the same object', () => {

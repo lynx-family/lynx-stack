@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { getSystemInfo } from '@lynx-js/lynx-runtime/mts';
+
 import { runRunOnMainThreadTask } from '../../src/worklet-runtime/runOnMainThread';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
@@ -10,17 +12,17 @@ beforeEach(() => {
   globalThis.SystemInfo = {
     lynxSdkVersion: '2.16',
   };
-  initWorklet();
   const dispatchEvent = vi.fn();
-  globalThis.lynx = {
-    getJSContext: vi.fn(() => ({
-      dispatchEvent,
-    })),
-  };
+  const context = { dispatchEvent, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+  vi.stubGlobal('lynx', { getJSContext: () => context });
+  initWorklet();
+  getSystemInfo();
+  dispatchEvent.mockClear();
 });
 
 afterEach(() => {
   delete globalThis.lynxWorkletImpl;
+  vi.unstubAllGlobals();
 });
 
 describe('runOnMainThread', () => {

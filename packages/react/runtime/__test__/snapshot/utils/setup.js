@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { __injectElementApi } from './inject.ts';
-import '../../../src/lynx.ts';
+import { getInitData } from '@lynx-js/lynx-runtime/mts';
 import { document } from '../../../src/document.ts';
 import { SnapshotInstance } from '../../../src/snapshot/index.ts';
 
@@ -16,6 +16,19 @@ function inject() {
 }
 
 inject();
+
+// This mixed-thread harness loads both DSL backends together. Activate the MTS
+// host transport in its actual context before evaluating the combined entry.
+const bootstrapFlags = {
+  __JS__,
+  __LEPUS__,
+  __MAIN_THREAD__,
+  __BACKGROUND__,
+};
+globalThis.__JS__ = false;
+getInitData();
+Object.assign(globalThis, bootstrapFlags);
+await import('../../../src/lynx.ts');
 
 // A SnapshotInstance carries `$$typeof` so that `isValidElement` accepts it,
 // which would otherwise make pretty-format print it as a React element and hide
