@@ -12,7 +12,7 @@ export function applyOptimizeBundleSize(
 ): void {
   api.modifyEnvironmentConfig((config, utils) => {
     const { name, mergeEnvironmentConfig } = utils
-    const environmentMinify = api.getRsbuildConfig('original')
+    const environmentMinify = api.getRsbuildConfig('current')
       .environments?.[name]?.output?.minify
     if (config.output?.minify === false || environmentMinify === true) {
       return config

@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
 import type { RspeedyInstance } from '@lynx-js/rspeedy'
@@ -338,6 +339,51 @@ describe('optimizeBundleSize', () => {
         plugins: [pluginReactLynx({
           optimizeBundleSize: true,
         })],
+      },
+    })
+
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
+    expect(mainThreadCode).toContain('background-only')
+    expect(backgroundCode).toContain('main-thread-only')
+  })
+
+  test('respect an environment override set by another plugin', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const entryName = 'optimizeBundleSize-6'
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            [entryName]: pureFuncsBasicEntry,
+          },
+        },
+        output: {
+          filenameHash: false,
+          cleanDistPath: false,
+        },
+        plugins: [
+          {
+            name: 'test:environment-minify',
+            setup(api: RsbuildPluginAPI) {
+              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+                mergeRsbuildConfig(config, {
+                  environments: {
+                    lynx: {
+                      output: {
+                        minify: true,
+                      },
+                    },
+                  },
+                })
+              )
+            },
+          },
+          pluginReactLynx({
+            optimizeBundleSize: true,
+          }),
+        ],
       },
     })
 
