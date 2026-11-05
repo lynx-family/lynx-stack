@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BackgroundSnapshotInstance } from '../../src/snapshot';
+import { BackgroundSnapshotInstance } from '../../src/snapshot/snapshot/backgroundSnapshot.js';
 
 describe('BackgroundSnapshotInstance', () => {
   let root, child1, child2, child3;

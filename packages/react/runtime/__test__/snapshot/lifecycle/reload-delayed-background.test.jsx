@@ -8,7 +8,7 @@ import { runOnBackground } from '../../../src/core/background-function/run-on-ba
 import { getReloadVersion } from '../../../src/core/reload-version.js';
 import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value.js';
 import { __root } from '../../../src/root.js';
-import { setupPage } from '../../../src/snapshot/index.js';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { initEventDelay } from '../../../src/worklet-runtime/delayWorkletEvent.js';
 import { initRunOnBackgroundDelay } from '../../../src/worklet-runtime/run-on-background/index.js';
 import {

@@ -12,14 +12,13 @@ import {
 } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { runWithForce } from '../../src/snapshot/lynx/tt';
 import {
-  SnapshotInstance,
-  setupPage,
-  snapshotInstanceManager,
-  traverseSnapshotInstance,
   backgroundSnapshotInstanceManager,
   BackgroundSnapshotInstance,
   hydrate,
-} from '../../src/snapshot';
+} from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
+import { traverseSnapshotInstance } from '../../src/snapshot/snapshot/utils.js';
 import { backgroundSnapshotInstanceToJSON, snapshotInstanceToJSON } from './utils/debug.js';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, options } from './utils/nativeMethod';
 import { __root } from '../../src/root';
-import { clearPage } from '../../src/snapshot';
+import { clearPage } from '../../src/snapshot/snapshot/definition.js';
 import { gRecycleMap, gSignMap } from '../../src/snapshot/list/list';
 import { DynamicPartType } from '../../src/snapshot/snapshot/dynamicPartType';
 

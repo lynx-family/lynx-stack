@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createPortal, root, useEffect, useState } from '../../../src/index';
 import { __root } from '../../../src/root';
-import { BackgroundSnapshotInstance } from '../../../src/snapshot';
+import { BackgroundSnapshotInstance } from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
 import { clearPendingPortalInsertBefore } from '../../../src/snapshot/lynx/portalsPending';
 import { globalEnvManager } from '../utils/envManager';
 
