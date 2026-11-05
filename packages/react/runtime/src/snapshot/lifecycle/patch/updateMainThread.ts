@@ -116,4 +116,4 @@ function injectUpdateMainThread(): void {
 /**
  * @internal
  */
-export { injectUpdateMainThread };
+export { injectUpdateMainThread, updateMainThread };
