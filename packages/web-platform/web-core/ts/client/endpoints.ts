@@ -256,3 +256,13 @@ export const reloadEndpoint = createRpcEndpoint<
   [],
   void
 >('reload', false, false);
+
+/**
+ * Backs the background-thread `lynx.accessibilityAnnounce()` call: announces
+ * `content` to screen readers via an ARIA live region owned by the main
+ * thread (where the actual DOM lives).
+ */
+export const accessibilityAnnounceEndpoint = createRpcEndpoint<
+  [content: string],
+  InvokeCallbackRes
+>('accessibilityAnnounce', false, true);
