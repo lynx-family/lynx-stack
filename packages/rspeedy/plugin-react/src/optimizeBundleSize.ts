@@ -10,49 +10,53 @@ export function applyOptimizeBundleSize(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
 ): void {
-  api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
-    if (config.output?.minify === false) {
+  api.modifyEnvironmentConfig(
+    (config, { name, mergeEnvironmentConfig }) => {
+      const environmentMinify = api.getRsbuildConfig('original')
+        .environments?.[name]?.output?.minify
+      if (config.output?.minify === false || environmentMinify === true) {
+        return config
+      }
+
+      const optimizeBundleSize = options.optimizeBundleSize
+      const optimizeBackground = typeof optimizeBundleSize === 'boolean'
+        ? optimizeBundleSize
+        : optimizeBundleSize?.background
+      const optimizeMainThread = typeof optimizeBundleSize === 'boolean'
+        ? optimizeBundleSize
+        : optimizeBundleSize?.mainThread
+
+      if (optimizeBackground || optimizeMainThread) {
+        const minifyConfig: Record<string, unknown> = {}
+
+        if (optimizeBackground) {
+          minifyConfig['backgroundOptions'] = {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['lynx.registerDataProcessors'],
+              },
+            },
+          }
+        }
+
+        if (optimizeMainThread) {
+          minifyConfig['mainThreadOptions'] = {
+            minimizerOptions: {
+              compress: {
+                pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
+              },
+            },
+          }
+        }
+
+        return mergeEnvironmentConfig(config, {
+          output: {
+            minify: minifyConfig,
+          },
+        })
+      }
+
       return config
-    }
-
-    const optimizeBundleSize = options.optimizeBundleSize
-    const optimizeBackground = typeof optimizeBundleSize === 'boolean'
-      ? optimizeBundleSize
-      : optimizeBundleSize?.background
-    const optimizeMainThread = typeof optimizeBundleSize === 'boolean'
-      ? optimizeBundleSize
-      : optimizeBundleSize?.mainThread
-
-    if (optimizeBackground || optimizeMainThread) {
-      const minifyConfig: Record<string, unknown> = {}
-
-      if (optimizeBackground) {
-        minifyConfig['backgroundOptions'] = {
-          minimizerOptions: {
-            compress: {
-              pure_funcs: ['lynx.registerDataProcessors'],
-            },
-          },
-        }
-      }
-
-      if (optimizeMainThread) {
-        minifyConfig['mainThreadOptions'] = {
-          minimizerOptions: {
-            compress: {
-              pure_funcs: ['NativeModules.call', 'lynx.getJSModule'],
-            },
-          },
-        }
-      }
-
-      return mergeRsbuildConfig(config, {
-        output: {
-          minify: minifyConfig,
-        },
-      })
-    }
-
-    return config
-  })
+    },
+  )
 }
