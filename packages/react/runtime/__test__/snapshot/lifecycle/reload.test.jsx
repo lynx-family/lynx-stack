@@ -14,7 +14,7 @@ import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit'
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { reloadBackground } from '../../../src/snapshot/lifecycle/reload';
 import { __root } from '../../../src/root';
-import { setupPage } from '../../../src/snapshot';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 

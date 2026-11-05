@@ -10,7 +10,7 @@ import { __root } from '@lynx-js/react/internal';
 import { clearDelayedRunOnBackgroundFunctions } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { flushDelayedLifecycleEvents } from '../../runtime/lib/snapshot/lynx/tt.js';
-import { clearPage } from '../../runtime/lib/snapshot/index.js';
+import { clearPage } from '../../runtime/lib/snapshot/snapshot/definition.js';
 
 export function waitSchedule() {
   return new Promise(resolve => {

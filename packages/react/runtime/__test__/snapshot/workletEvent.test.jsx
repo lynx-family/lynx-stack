@@ -10,7 +10,7 @@ import { Component, useState } from '../../src/index';
 import { replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __root } from '../../src/root';
-import { setupPage } from '../../src/snapshot';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
 import { updateWorkletEvent } from '../../src/snapshot/snapshot/workletEvent';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, waitSchedule } from './utils/nativeMethod';

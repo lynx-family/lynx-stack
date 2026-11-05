@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { elementTree } from './utils/nativeMethod';
 import {
-  SnapshotInstance,
-  snapshotInstanceManager,
   backgroundSnapshotInstanceManager,
   BackgroundSnapshotInstance,
   hydrate,
-} from '../../src/snapshot';
+} from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
 
 const HOLE = null;
 

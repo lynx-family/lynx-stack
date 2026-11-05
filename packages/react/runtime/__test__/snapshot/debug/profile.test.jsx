@@ -7,7 +7,8 @@ import { render, options, Component, createElement } from 'preact';
 import { beforeAll, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { setupDocument } from '../../../src/document';
-import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
+import { snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { initProfileHook } from '../../../src/snapshot/debug/profileHooks';
 import { useState } from '../../../src/index';
 import {

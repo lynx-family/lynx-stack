@@ -8,9 +8,8 @@ import { elementTree } from '../utils/nativeMethod';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
-  SnapshotInstance,
-  snapshotInstanceManager,
-} from '../../../src/snapshot';
+} from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { printSerializedSnapshotInstance, printSnapshotInstance } from '../../../src/snapshot/debug/printSnapshot';
 
 const HOLE = null;

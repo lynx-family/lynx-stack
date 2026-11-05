@@ -7,7 +7,7 @@ import { elementTree, options } from './utils/nativeMethod';
 import { __page as __internalPage } from '../../src/internal';
 import { firstScreenSync } from '../../src/snapshot/lifecycle/event/firstScreenSync';
 import { __root } from '../../src/root';
-import { clearPage } from '../../src/snapshot';
+import { clearPage } from '../../src/snapshot/snapshot/definition.js';
 
 const ssrIDMap = new Map();
 

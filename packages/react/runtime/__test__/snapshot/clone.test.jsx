@@ -6,7 +6,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
-import { setupPage } from '../../src/snapshot';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
 import { cloneElement, createElement, createRef } from '../../src/index';
 import { __root } from '../../src/root';
 import { globalEnvManager } from './utils/envManager';
