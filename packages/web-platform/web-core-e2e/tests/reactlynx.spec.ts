@@ -1398,6 +1398,101 @@ test.describe('reactlynx3 tests', () => {
       });
       expect(computedStyle.backgroundColor).toBe('rgb(255, 192, 203)');
     });
+    test.describe('basic-css-media-query', () => {
+      const title = 'basic-css-media-query';
+      const breakpoints = ['narrow', 'regular', 'large'];
+      const expectOnlyShown = async (
+        page: Page,
+        ids: string[],
+        shown: string,
+      ) => {
+        for (const id of ids) {
+          await expect(page.locator(`#${id}`)).toHaveCSS(
+            'display',
+            id === shown ? 'flex' : 'none',
+          );
+        }
+      };
+
+      test('width', async ({ page }) => {
+        await page.setViewportSize({ width: 320, height: 600 });
+        await goto(page, title);
+        await expectOnlyShown(page, breakpoints, 'narrow');
+        // `(360px <= width < 400px)`, a Level 4 range, and `(min-width: 400px)`,
+        // evaluated again on every viewport change without a reload.
+        for (
+          const [width, shown] of [
+            [359, 'narrow'],
+            [360, 'regular'],
+            [399, 'regular'],
+            [400, 'large'],
+            [1024, 'large'],
+            [380, 'regular'],
+            [320, 'narrow'],
+          ] as const
+        ) {
+          await page.setViewportSize({ width, height: 600 });
+          await expectOnlyShown(page, breakpoints, shown);
+        }
+      });
+
+      test('height', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 699 });
+        await goto(page, title);
+        const tall = page.locator('#tall');
+        await expect(tall).toHaveCSS('display', 'none');
+        await page.setViewportSize({ width: 390, height: 700 });
+        await expect(tall).toHaveCSS('display', 'flex');
+        await expect(tall.locator('x-text')).toHaveCSS(
+          'color',
+          'rgb(34, 113, 179)',
+        );
+        await page.setViewportSize({ width: 390, height: 600 });
+        await expect(tall).toHaveCSS('display', 'none');
+      });
+
+      test('prefers-color-scheme', async ({ page }) => {
+        await page.emulateMedia({ colorScheme: 'light' });
+        await goto(page, title);
+        const demo = page.locator('#demo');
+        await expect(demo).toHaveCSS('background-color', 'rgb(243, 245, 247)');
+        await expect(page.locator('#light')).not.toHaveCSS('display', 'none');
+        await expect(page.locator('#dark')).toHaveCSS('display', 'none');
+
+        await page.emulateMedia({ colorScheme: 'dark' });
+        await expect(demo).toHaveCSS('background-color', 'rgb(17, 19, 24)');
+        await expect(page.locator('#light')).toHaveCSS('display', 'none');
+        await expect(page.locator('#dark')).not.toHaveCSS('display', 'none');
+
+        await page.emulateMedia({ colorScheme: 'light' });
+        await expect(demo).toHaveCSS('background-color', 'rgb(243, 245, 247)');
+      });
+
+      for (const deviceScaleFactor of [1, 3]) {
+        test.describe(`resolution at ${deviceScaleFactor}dppx`, () => {
+          test.use({ deviceScaleFactor });
+          test('resolution', async ({ page }) => {
+            // The dark scheme recolors the indicator too, so pin the light one.
+            await page.emulateMedia({ colorScheme: 'light' });
+            await goto(page, title);
+            const highDensity = deviceScaleFactor >= 2;
+            expect(
+              await page.evaluate(() =>
+                matchMedia('(min-resolution: 2dppx)').matches
+              ),
+            ).toBe(highDensity);
+            await expect(page.locator('#density')).toHaveCSS(
+              'display',
+              highDensity ? 'flex' : 'none',
+            );
+            await expect(page.locator('#indicator')).toHaveCSS(
+              'background-color',
+              highDensity ? 'rgb(0, 135, 90)' : 'rgb(34, 113, 179)',
+            );
+          });
+        });
+      }
+    });
     test('basic-color-not-inherit', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(100);
@@ -2452,6 +2547,26 @@ test.describe('reactlynx3 tests', () => {
         await expect(
           page.locator('#target'),
         ).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+      },
+    );
+    test(
+      'config-css-selector-false-media-query',
+      async ({ page }, { title }) => {
+        // The unconditional single-class rules are applied through the CSS OG
+        // map; the ones inside `@media` have to override them.
+        await page.setViewportSize({ width: 320, height: 600 });
+        await goto(page, title);
+        const target = page.locator('#target');
+        const wideOnly = page.locator('#wide-only');
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+        await expect(wideOnly).toHaveCSS('display', 'none');
+        await page.setViewportSize({ width: 400, height: 600 });
+        await expect(target).toHaveCSS('background-color', 'rgb(0, 128, 0)');
+        await expect(wideOnly).toHaveCSS('display', 'flex');
+        await expect(wideOnly).toHaveCSS('background-color', 'rgb(0, 0, 255)');
+        await page.setViewportSize({ width: 399, height: 600 });
+        await expect(target).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+        await expect(wideOnly).toHaveCSS('display', 'none');
       },
     );
     test(

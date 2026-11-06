@@ -12,6 +12,17 @@ exports[`encodeCSS > font-family-at-rule 1`] = `"@font-face{font-family:"MyFont"
 
 exports[`encodeCSS > keyframes-rule 1`] = `"@keyframes my-animation{from{opacity:0;}to{opacity:1;}}"`;
 
+exports[`encodeCSS > media-rule preludes 1`] = `
+[
+  "(min-resolution:2dppx)",
+  "(360px<=width<400px)",
+  "(min-width:400px)",
+  "(min-height:700px)",
+  "(prefers-color-scheme:dark)",
+  "screen and (orientation:portrait),print",
+]
+`;
+
 exports[`encodeCSS > non ascii characters 1`] = `".class145[[data-status="complete"]]:before:not([l-e-name]){content:"✓ ";}"`;
 
 exports[`encodeCSS > normal css 1`] = `".foo:not([l-e-name]){background:red;}"`;

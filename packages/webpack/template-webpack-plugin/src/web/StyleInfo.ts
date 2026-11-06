@@ -6,9 +6,16 @@ export interface CSSRule {
   sel: string[][][];
   decl: [string, string][];
 }
+/**
+ * A `@media` group: `rules` apply only while the `media` query list matches.
+ */
+export interface CSSMediaRule {
+  media: string;
+  rules: (CSSRule | CSSMediaRule)[];
+}
 export interface OneInfo {
   content: string[];
-  rules: CSSRule[];
+  rules: (CSSRule | CSSMediaRule)[];
   imports?: string[];
 }
 export type StyleInfo = Record<string, OneInfo>;
