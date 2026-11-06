@@ -67,6 +67,8 @@ minimumReleaseAgeExclude:
   - "@rsdoctor/shared"
   # Changesets v3 packages were released as one coordinated set.
   - "@changesets/*"
+  # Renovate security update: dompurify@3.4.17
+  - dompurify@3.4.17
 minimumReleaseAgeExcludePrune: true
 # Some registry metadata omits the `time` field. Skip only those packages;
 # otherwise fail rather than falling back to a release younger than three days.
