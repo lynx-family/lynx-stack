@@ -12,7 +12,7 @@ type RuntimeConfigRuntimeModule = new(
   config: Readonly<RuntimeConfigWebpackPluginOptions>,
 ) => RuntimeModule;
 
-/** Merge runtime-readable build configuration before application startup. */
+/** Reset runtime-readable build configuration before application startup. */
 export function createRuntimeConfigRuntimeModule(
   webpack: typeof import('@rspack/core').rspack,
 ): RuntimeConfigRuntimeModule {
@@ -30,11 +30,10 @@ export function createRuntimeConfigRuntimeModule(
 
     override generate(): string {
       // `lynxRuntimeConfig` is the page-scoped `lynx.__runtime_configs__`.
-      // The host overwrites earlier top-level values while preserving the
-      // shared object reference, then shallow-freezes the merged config.
-      return `${LynxRuntimeGlobals.lynxRuntimeConfig} = Object.freeze(Object.assign(${LynxRuntimeGlobals.lynxRuntimeConfig} || {}, ${
-        JSON.stringify(this.config)
-      }));`;
+      // Reset stale configuration whenever the host entry is re-evaluated.
+      const runtimeConfig = LynxRuntimeGlobals.lynxRuntimeConfig;
+      const config = JSON.stringify(this.config);
+      return `${runtimeConfig} = ${config};`;
     }
   };
 }
