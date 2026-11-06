@@ -9,6 +9,7 @@ import { isRegExp } from 'node:util/types'
 import type {
   CSSLoaderOptions,
   PostCSSLoaderOptions,
+  RsbuildPluginAPI,
   Rspack,
 } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
@@ -668,6 +669,206 @@ describe('Plugins - CSS', () => {
           && minimizer.constructor.name === 'CssMinimizerPlugin'
         ),
       ).toBeUndefined()
+    })
+
+    test('with enableRemoveCSSScope: false and output.minify: false', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          output: {
+            minify: false,
+          },
+          plugins: [
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(config?.optimization?.minimize).toBe(false)
+    })
+
+    test('with output.minify: false overridden by an environment', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          output: {
+            minify: false,
+          },
+          environments: {
+            lynx: {
+              output: {
+                minify: {
+                  js: true,
+                },
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeUndefined()
+    })
+
+    test('with an environment output.minify: true override', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          environments: {
+            lynx: {
+              output: {
+                minify: true,
+              },
+            },
+          },
+          plugins: [
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeDefined()
+    })
+
+    test.each([true, 'always'] as const)(
+      'with an environment output.minify.css: %s override',
+      async (css) => {
+        rstest.stubEnv('NODE_ENV', 'production')
+        const rspeedy = await createRspeedy({
+          rspeedyConfig: {
+            environments: {
+              lynx: {
+                output: {
+                  minify: {
+                    css,
+                  },
+                },
+              },
+            },
+            plugins: [
+              pluginReactLynx({
+                enableRemoveCSSScope: false,
+              }),
+              pluginStubRspeedyAPI(),
+            ],
+          },
+        })
+
+        const [config] = await rspeedy.initConfigs()
+
+        expect(
+          config?.optimization?.minimizer?.find(minimizer =>
+            minimizer && minimizer !== '...'
+            && minimizer.constructor.name === 'CssMinimizerPlugin'
+          ),
+        ).toBeDefined()
+      },
+    )
+
+    test('with an environment override set by another plugin', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            {
+              name: 'test:environment-minify',
+              setup(api: RsbuildPluginAPI) {
+                api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+                  mergeRsbuildConfig(config, {
+                    environments: {
+                      lynx: {
+                        output: {
+                          minify: true,
+                        },
+                      },
+                    },
+                  })
+                )
+              },
+            },
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeDefined()
+    })
+
+    test('with CSS minification enabled by a later environment hook', async () => {
+      rstest.stubEnv('NODE_ENV', 'production')
+      const rspeedy = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            {
+              name: 'test:environment-css-minify',
+              setup(api: RsbuildPluginAPI) {
+                api.modifyEnvironmentConfig({
+                  order: 'pre',
+                  handler(config, { mergeEnvironmentConfig }) {
+                    return mergeEnvironmentConfig(config, {
+                      output: {
+                        minify: {
+                          css: true,
+                        },
+                      },
+                    })
+                  },
+                })
+              },
+            },
+            pluginReactLynx({
+              enableRemoveCSSScope: false,
+            }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rspeedy.initConfigs()
+
+      expect(
+        config?.optimization?.minimizer?.find(minimizer =>
+          minimizer && minimizer !== '...'
+          && minimizer.constructor.name === 'CssMinimizerPlugin'
+        ),
+      ).toBeDefined()
     })
 
     test('with enableRemoveCSSScope: true', async () => {
