@@ -30,36 +30,4 @@ describe('Background Element Template Adapter', () => {
     expect(node.text).toBe('hello');
     expect(node.nodeType).toBe(3);
   });
-
-  describe('BackgroundElementTemplateInstance', () => {
-    it('supports setAttribute (attributeSlots)', () => {
-      const el = new BackgroundElementTemplateInstance('view');
-      el.setAttribute('attributeSlots', [{ id: 'test' }]);
-      expect(el.attributeSlots[0]).toEqual({ id: 'test' });
-    });
-
-    it('supports hierarchy operations', () => {
-      const parent = new BackgroundElementTemplateInstance('parent');
-      const child1 = new BackgroundElementTemplateInstance('child1');
-      const child2 = new BackgroundElementTemplateInstance('child2');
-
-      // Append
-      parent.appendChild(child1);
-      expect(child1.parent).toBe(parent);
-      expect(parent.firstChild).toBe(child1);
-      expect(parent.lastChild).toBe(child1);
-
-      // InsertBefore
-      parent.insertBefore(child2, child1); // [child2, child1]
-      expect(parent.firstChild).toBe(child2);
-      expect(parent.lastChild).toBe(child1);
-      expect(child2.nextSibling).toBe(child1);
-      expect(child1.previousSibling).toBe(child2);
-
-      // Remove
-      parent.removeChild(child2);
-      expect(parent.firstChild).toBe(child1);
-      expect(child2.parent).toBeNull();
-    });
-  });
 });

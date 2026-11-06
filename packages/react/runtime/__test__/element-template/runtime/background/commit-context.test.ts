@@ -24,20 +24,6 @@ describe('ElementTemplate commit context', () => {
     resetGlobalCommitContext();
   });
 
-  it('keeps removed subtree roots outside the update payload', () => {
-    const root = new BackgroundElementTemplateInstance('view');
-
-    markRemovedSubtreeForPostDispatchTeardown(root);
-    markRemovedSubtreeForPostDispatchTeardown(root);
-
-    expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([root]);
-    expect({
-      ops: globalCommitContext.ops,
-      flushOptions: globalCommitContext.flushOptions,
-      flowIds: globalCommitContext.flowIds,
-    }).not.toHaveProperty('removedSubtreesAwaitingTeardown');
-  });
-
   it('takes removed subtree roots from the current commit once', () => {
     const root = new BackgroundElementTemplateInstance('view');
     markRemovedSubtreeForPostDispatchTeardown(root);

@@ -205,16 +205,6 @@ macro_rules! et_snapshot_test {
 }
 
 et_snapshot_test!(
-  should_output_element_template_simple_lepus,
-  element_template_config_for_target(TransformTarget::LEPUS),
-  r#"
-    <view class="container">
-      <text>Hello</text>
-    </view>
-    "#
-);
-
-et_snapshot_test!(
   should_output_template_with_static_attributes,
   r#"
     <view class="container" id="main" style="color: red;">
@@ -668,14 +658,15 @@ fn verify_code_and_template_json_with_config(
 }
 
 #[test]
-fn should_not_emit_element_template_map_in_element_template_mode() {
-  let (code, templates) = transform_to_code_and_templates(
+fn should_output_element_template_simple_lepus() {
+  let (code, templates) = verify_code_and_template_json_with_config(
     r#"
       <view class="container">
         <text>Hello</text>
       </view>
     "#,
-    element_template_config(),
+    "should_output_element_template_simple_lepus",
+    element_template_config_for_target(TransformTarget::LEPUS),
   );
 
   assert_has_single_builtin_raw_text_template(&templates);
@@ -729,10 +720,9 @@ fn should_collect_element_templates_for_dynamic_component_in_element_template_mo
   assert!(!code.contains("templateKey"));
   assert!(!code.contains("bundleUrl"));
 
-  for template in templates {
-    assert!(template.template_id.starts_with("_et_"));
-    assert!(!template.template_id.contains(':'));
-  }
+  let user_templates = user_templates(&templates);
+  assert_eq!(user_templates.len(), 1);
+  assert_content_addressed_template_id(&user_templates[0].template_id);
 }
 
 #[test]
@@ -820,28 +810,6 @@ fn should_emit_one_attr_plan_for_interned_event_ref_and_spread_template() {
   assert!(code.contains("adaptRefAttrSlot"), "{code}");
   assert!(code.contains("adaptSpreadAttrSlot"), "{code}");
   assert_attribute_slots_match_template(&code, &templates);
-}
-
-#[test]
-fn should_keep_dynamic_component_asset_id_content_addressed_without_entry_prefix() {
-  let (code, templates) = transform_to_code_and_templates(
-    r#"
-      <view class="container">
-        <text>Hello</text>
-      </view>
-    "#,
-    dynamic_component_element_template_config(),
-  );
-
-  assert!(code.contains("globDynamicComponentEntry"), "{code}");
-  for template in user_templates(&templates) {
-    assert_content_addressed_template_id(&template.template_id);
-    assert!(
-      !template.template_id.contains(':'),
-      "asset id must not include dynamic entry prefix: {}",
-      template.template_id
-    );
-  }
 }
 
 #[test]
@@ -1150,12 +1118,15 @@ fn should_warn_and_override_dynamic_user_css_id_attr_without_reserving_slot() {
   );
 
   assert_css_id_override_diagnostic(&diagnostics, "expected direct css-id override diagnostic");
-  assert!(
-    !code.contains("attributeSlots"),
-    "overridden dynamic css-id should not reserve an ET attribute slot, got: {code}"
+  assert_eq!(
+    first_attribute_slots_len(&code).unwrap_or_default(),
+    0,
+    "overridden css-id should not reserve an ET attribute slot, got: {code}"
   );
+  assert!(!code.contains("userCssId"), "{code}");
 
   let template = first_user_template_json_from_templates(&templates);
+  assert_eq!(max_attr_slot_index(&template), None, "{template}");
   assert_single_framework_css_id_attr(
     &template,
     100.0,
@@ -1181,12 +1152,15 @@ fn should_warn_and_override_nested_dynamic_user_css_id_attr_without_reserving_sl
     &diagnostics,
     "expected nested dynamic css-id override diagnostic",
   );
-  assert!(
-    !code.contains("attributeSlots"),
-    "overridden nested dynamic css-id should not reserve an ET attribute slot, got: {code}"
+  assert_eq!(
+    first_attribute_slots_len(&code).unwrap_or_default(),
+    0,
+    "overridden css-id should not reserve an ET attribute slot, got: {code}"
   );
+  assert!(!code.contains("userCssId"), "{code}");
 
   let template = first_user_template_json_from_templates(&templates);
+  assert_eq!(max_attr_slot_index(&template), None, "{template}");
   assert_single_framework_css_id_attr(
     &template["children"][0],
     100.0,

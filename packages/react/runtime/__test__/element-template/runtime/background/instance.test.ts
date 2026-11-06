@@ -787,7 +787,8 @@ describe('BackgroundElementTemplateInstance', () => {
     it('supports silent append on regular parents', () => {
       const parent = new BackgroundElementTemplateInstance('view');
       const child = new BackgroundElementTemplateInstance('text');
-      globalCommitContext.ops = [];
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
 
       parent.insertBefore(child, null, true);
 
@@ -1747,18 +1748,18 @@ describe('BackgroundElementTemplateInstance', () => {
       const child = new BackgroundElementTemplateInstance('text');
       parent.appendChild(child);
 
-      globalCommitContext.ops = [];
+      markElementTemplateHydrated();
+      parent.markMaterializedByHydration();
+      child.markMaterializedByHydration();
+
       parent.removeChild(child, true);
 
       expect(parent.childSlots[0]).toBeUndefined();
+      expect(child.parent).toBeNull();
       expect(globalCommitContext.ops).toEqual([]);
       expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
+      expect(backgroundElementTemplateInstanceManager.get(child.instanceId)).toBe(child);
     });
-  });
-
-  it('should be registered with manager upon creation', () => {
-    const instance = new BackgroundElementTemplateInstance('view');
-    expect(backgroundElementTemplateInstanceManager.get(instance.instanceId)).toBe(instance);
   });
 
   it('should tear down correctly', () => {
@@ -2341,14 +2342,6 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
     expect(instance.attributeSlots).toEqual(slots);
   });
 
-  it('should update attributeSlots when setAttribute("attributeSlots", ...) is called', () => {
-    const instance = new BackgroundElementTemplateInstance('view');
-    const slots = [{ id: 'a' }, { class: 'foo' }] as const;
-    instance.setAttribute('attributeSlots', [...slots]);
-
-    expect(instance.attributeSlots).toEqual(slots);
-  });
-
   it.each([false, true])('does not serialize attributes before materialization (hydrated=%s)', (isHydrated) => {
     const instance = new BackgroundElementTemplateInstance('view', [{ id: 'before' }]);
     if (isHydrated) {
@@ -2694,28 +2687,6 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
 
     expect(root.childSlots[0]).toBeUndefined();
     expect(root.childSlots[1]).toEqual([text]);
-  });
-
-  it('should keep childSlots in sync when slot is attached after children exist', () => {
-    const root = new BackgroundElementTemplateInstance('element-template-view');
-    const text = createTextNode('late');
-
-    text.__slotIndex = 2;
-    root.appendChild(text);
-
-    expect(root.childSlots[2]).toEqual([text]);
-  });
-
-  it('should move slot children to the new slot index when partId changes', () => {
-    const root = new BackgroundElementTemplateInstance('element-template-view');
-    const text = createTextNode('move');
-
-    text.__slotIndex = 0;
-    root.appendChild(text);
-    text.__slotIndex = 3;
-
-    expect(root.childSlots[0]).toBeUndefined();
-    expect(root.childSlots[3]).toEqual([text]);
   });
 
   it('should detach a moved child from the old slot shadow state when silent reparenting', () => {
