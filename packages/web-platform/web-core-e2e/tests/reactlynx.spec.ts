@@ -3114,12 +3114,18 @@ test.describe('reactlynx3 tests', () => {
       test(
         'basic-element-x-blur-view-blur-radius',
         async ({ page, browserName }, { title }) => {
-          test.skip(
-            browserName !== 'chromium',
-            'only chrome can show the blurred image in screenshot',
-          );
           await goto(page, title);
-          await diffScreenShot(page, elementName, title);
+          await expect(page.locator('x-blur-view')).toHaveCSS(
+            'backdrop-filter',
+            'blur(25px)',
+          );
+          await expect(page.locator('x-blur-view')).toHaveCSS(
+            '--blur-tag-selector',
+            'matched',
+          );
+          if (browserName === 'chromium') {
+            await diffScreenShot(page, elementName, title);
+          }
         },
       );
       test(
