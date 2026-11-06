@@ -347,12 +347,7 @@ function createTransferRenderContext(): TransferRenderContext {
     }));
     const core = lynx.getCoreContext();
     listen(core, '__CreateTransfer', data => create(data as Create));
-    listen(core, '__TransferFirstFrame', data => {
-      const frame = data as Frame;
-      const record = records.get(identity(frame.key));
-      if (record) acceptFrame(frame);
-      else frames.set(identity(frame.key), frame);
-    });
+    listen(core, '__TransferFirstFrame', data => acceptFrame(data as Frame));
     listen(core, '__SetTransferProps', data => setProps(data as Update));
     listen(core, '__DestroyTransfer', data => dispose(data as Scope));
     listen(core, '__TransferCommitResult', data => {
@@ -397,7 +392,7 @@ let context: TransferRenderContext | undefined;
 /**
  * Registers transfer component types for the current page.
  * The first registration initializes transfer rendering on the current thread.
- * @internal
+ * Experimental entry for the native chat fixture; not exported by the public package.
  */
 export const TransferRegistry = {
   registerComponent(name: string, provider: () => ComponentType<Props>): void {
@@ -406,7 +401,7 @@ export const TransferRegistry = {
   },
 };
 
-/** Read-only counters and render instrumentation for the chat fixture. @internal */
+/** Experimental read-only counters and render instrumentation for the chat fixture. */
 export const transferDiagnostics = {
   get debug(): TransferRenderContext['debug'] | undefined {
     return context?.debug;

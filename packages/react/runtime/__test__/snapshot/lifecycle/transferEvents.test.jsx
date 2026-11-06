@@ -35,6 +35,29 @@ it('dispatches native events without ordinary page first-screen hydration', () =
   expect(app.publicComponentEvent).toBe(oldComponent);
 });
 
+it('runs before-publish hooks and reports handler errors without queueing', () => {
+  const beforePublish = vi.fn();
+  const app = { publishEvent: vi.fn(), publicComponentEvent: vi.fn(), callBeforePublishEvent: beforePublish };
+  const reportError = vi.fn();
+  vi.stubGlobal('lynx', { ...lynx, getApp: () => app, reportError });
+  const throwing = vi.fn(() => {
+    throw new Error('event handler boom');
+  });
+  const resolve = vi.spyOn(backgroundSnapshotInstanceManager, 'getValueBySign').mockReturnValue(throwing);
+  events = installTransferEventHandlers();
+  const event = { type: 'tap' };
+  app.publishEvent('10:1:', event);
+  expect(beforePublish).toHaveBeenCalledOnce();
+  expect(beforePublish).toHaveBeenCalledWith(event);
+  expect(throwing).toHaveBeenCalledOnce();
+  expect(reportError).toHaveBeenCalledOnce();
+  expect(reportError.mock.calls[0][0]).toBeInstanceOf(Error);
+  // The event was dispatched (despite the error), so it is not queued for a
+  // later flush.
+  events.flush();
+  expect(resolve).toHaveBeenCalledTimes(1);
+});
+
 it('replays events queued before the transfer snapshot is hydrated', () => {
   const app = { publishEvent: delayedPublishEvent, publicComponentEvent: vi.fn() };
   vi.stubGlobal('lynx', { ...lynx, getApp: () => app });
