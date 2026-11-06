@@ -33,7 +33,6 @@ export {
 } from './shared/render-constants.js';
 
 export { __page, __pageId, __root };
-export { createTransferRenderContext } from './snapshot/transfer-context.js';
 
 export {
   BackgroundSnapshotInstance,

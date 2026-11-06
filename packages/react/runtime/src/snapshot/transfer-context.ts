@@ -1,12 +1,12 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createElement, render } from 'preact';
+import { createElement, options as preactOptions, render } from 'preact';
 import type { ComponentType, ContainerNode, VNode } from 'preact';
 
 import { __root } from '../root.js';
-import { CHILDREN, PARENT } from '../shared/render-constants.js';
-import { genCommitTaskId, setTransferCommitTransport } from './lifecycle/patch/commit.js';
+import { CHILDREN, PARENT, RENDER } from '../shared/render-constants.js';
+import { genCommitTaskId } from './lifecycle/patch/commit.js';
 import type { PatchList, PatchOptions } from './lifecycle/patch/commit.js';
 import { takeGlobalSnapshotPatch } from './lifecycle/patch/snapshotPatch.js';
 import { updateMainThread } from './lifecycle/patch/updateMainThread.js';
@@ -16,6 +16,8 @@ import { __page, __pageId, setupPage } from './snapshot/definition.js';
 import { SnapshotInstance } from './snapshot/snapshot.js';
 import { snapshotInstanceManager } from './snapshot/snapshotInstanceManager.js';
 import type { SerializedSnapshotInstance } from './snapshot/types.js';
+import { installTransferCommitHook } from './transfer-commit.js';
+import { installTransferEventHandlers } from './transfer-events.js';
 
 type Props = Record<string, unknown>;
 interface Key {
@@ -61,7 +63,7 @@ const decode = <T>(data: unknown): T => (typeof data === 'string' ? JSON.parse(d
  * Each transfer owns a first-frame snapshot, a background render container and a commit queue.
  * @internal
  */
-export function createTransferRenderContext(options: { hydrationDelayMs?: number } = {}): TransferRenderContext {
+function createTransferRenderContext(): TransferRenderContext {
   const mts = typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__;
   const definitions = new Map<string, () => ComponentType<Props>>();
   const records = new Map<string, RecordState>();
@@ -69,12 +71,14 @@ export function createTransferRenderContext(options: { hydrationDelayMs?: number
   const dead = new Set<string>();
   const owners = new WeakMap<object, RecordState>();
   const removers: (() => void)[] = [];
-  const timers = new Set<ReturnType<typeof setTimeout>>();
+  const events = mts ? undefined : installTransferEventHandlers();
+  if (events) removers.push(() => events.dispose());
   const debug = {
     thread: mts ? 'MTS' : 'BTS',
     records: {} as Record<string, { renders: number; version: number; phase: string; seq: number }>,
   };
   let active: RecordState | undefined;
+  let rendering: VNode | undefined;
   let pageReady = !mts;
   const pendingCreates: Create[] = [];
 
@@ -175,18 +179,8 @@ export function createTransferRenderContext(options: { hydrationDelayMs?: number
     }, () => {
       if (record.phase !== 'disposed') record.phase = 'live';
       log('owned-by-background', record);
+      if (record.phase === 'live') events?.flush();
     }, 'hydrate');
-  }
-  function scheduleFrame(frame: Frame) {
-    if (!options.hydrationDelayMs) {
-      acceptFrame(frame);
-      return;
-    }
-    const timer = setTimeout(() => {
-      timers.delete(timer);
-      acceptFrame(frame);
-    }, options.hydrationDelayMs);
-    timers.add(timer);
   }
   function create(init: Create) {
     const id = identity(init.key);
@@ -235,7 +229,7 @@ export function createTransferRenderContext(options: { hydrationDelayMs?: number
       const frame = frames.get(id);
       if (frame) {
         frames.delete(id);
-        scheduleFrame(frame);
+        acceptFrame(frame);
       }
     }
   }
@@ -326,22 +320,37 @@ export function createTransferRenderContext(options: { hydrationDelayMs?: number
       dispose(scope);
     });
   } else {
-    setTransferCommitTransport((vnode, patchList, patchOptions, finish) => {
+    // Scheduled useState renders run outside renderBackground's synchronous scope.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const previousRender = preactOptions[RENDER];
+    const trackRender: NonNullable<typeof previousRender> = vnode => {
+      rendering = vnode;
+      previousRender?.(vnode);
+    };
+    preactOptions[RENDER] = trackRender;
+    removers.push(() => {
+      if (preactOptions[RENDER] !== trackRender) return;
+      if (previousRender) preactOptions[RENDER] = previousRender;
+      else delete preactOptions[RENDER];
+    });
+    removers.push(installTransferCommitHook((vnode, patchList, patchOptions, finish) => {
       const record = findOwner(vnode);
-      if (!record) return false;
+      if (!record) {
+        finish();
+        throw new Error('Ordinary page commits are not supported in transfer mode');
+      }
       if (record.phase === 'waiting' || record.phase === 'disposed') {
         finish();
-        return true;
+        return;
       }
       enqueue(record, patchList, patchOptions, finish, 'update');
-      return true;
-    });
+    }));
     const core = lynx.getCoreContext();
     listen(core, '__CreateTransfer', data => create(data as Create));
     listen(core, '__TransferFirstFrame', data => {
       const frame = data as Frame;
       const record = records.get(identity(frame.key));
-      if (record) scheduleFrame(frame);
+      if (record) acceptFrame(frame);
       else frames.set(identity(frame.key), frame);
     });
     listen(core, '__SetTransferProps', data => setProps(data as Update));
@@ -364,9 +373,7 @@ export function createTransferRenderContext(options: { hydrationDelayMs?: number
     if (contextDisposed) return;
     contextDisposed = true;
     records.forEach(record => dispose(record.init, false));
-    timers.forEach(timer => clearTimeout(timer));
     removers.forEach(remove => remove());
-    if (!mts) setTransferCommitTransport(undefined);
   }
   listen(lynx.getNative(), '__DestroyLifetime', disposeContext);
 
@@ -377,9 +384,35 @@ export function createTransferRenderContext(options: { hydrationDelayMs?: number
     },
     /** Records actual component execution for cross-root isolation checks. @internal */
     recordRender() {
-      if (!active) throw new Error('Transfer component rendered without its context');
-      log('component-render', active, ++active.renders);
+      const record = active ?? findOwner(rendering);
+      if (!record) throw new Error('Transfer component rendered without its context');
+      log('component-render', record, ++record.renders);
     },
     dispose: disposeContext,
   };
 }
+
+let context: TransferRenderContext | undefined;
+
+/**
+ * Registers transfer component types for the current page.
+ * The first registration initializes transfer rendering on the current thread.
+ * @internal
+ */
+export const TransferRegistry = {
+  registerComponent(name: string, provider: () => ComponentType<Props>): void {
+    context ??= createTransferRenderContext();
+    context.registerComponent(name, provider);
+  },
+};
+
+/** Read-only counters and render instrumentation for the chat fixture. @internal */
+export const transferDiagnostics = {
+  get debug(): TransferRenderContext['debug'] | undefined {
+    return context?.debug;
+  },
+  recordRender(): void {
+    if (!context) throw new Error('Transfer rendering has not been initialized');
+    context.recordRender();
+  },
+};

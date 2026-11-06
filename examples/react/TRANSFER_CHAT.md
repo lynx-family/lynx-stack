@@ -4,7 +4,8 @@ This example runs one shared LynxView, with each message mounted as a real
 `transfer-view` in a native Android chat row. The composer and scroll container
 are native; message text and bubble backgrounds are rendered by ReactLynx.
 Replies are deterministic local streams, not calls to a model or external chat
-service.
+service. Each bubble also has its own `useState` counter: tap anywhere on the
+bubble to increment the `Count` shown at the bottom.
 
 ## Build and run
 
@@ -62,8 +63,18 @@ emulator -avd Pixel_9_Reeval -port 5556 -no-snapshot \
   gated until per-instance hydration against the MTS snapshot.
 - Normal updates and ACKs use ContextProxy events, with a per-instance ordered
   queue. The shared main-thread patch executor and native Page are reused.
-- The demo deliberately delays hydration by 800ms to expose the first frame and
-  exercise updates that arrive before ownership handoff.
+- Transfer mode installs native event handlers independently of ordinary page
+  hydration, so `bindtap` can trigger per-instance `useState` updates. Events
+  whose snapshot handlers are not ready are retried after transfer hydration.
+- The transfer entry explicitly installs its own commit hook, replacing (not
+  chaining) the ordinary page hook installed by bootstrap. Ordinary `commit.ts`
+  is unchanged from the pre-demo baseline, with no transfer branch or transport
+  lookup. The ordinary internal entry does not import the transfer module.
+- Business code calls `TransferRegistry.registerComponent(name, provider)`.
+  The first registration initializes the page-bound listeners and commit hook;
+  later registrations reuse that context. Native commands create instances.
+  The render context is private to the runtime, and hydration has no artificial
+  delay.
 
 Read diagnostic data with `Runtime.evaluate` on the appropriate thread:
 
@@ -76,14 +87,17 @@ The object is diagnostic data, not an Engine protocol entry point.
 
 ## Verification
 
-The interactive simulator run created four real transfer nodes. During the
-local streamed answer, the updating bubble had 39 BTS renders; the other three
-remained at one render each. Every MTS component remained at one render. Native
-Clear removed all four views and completed background unmounts. A screenshot
-captured the new user bubble before the delayed hydration completed.
+The interactive simulator run using the registry entry created four real
+transfer nodes. During the local streamed answer, the updating bubble had 40
+BTS renders; the other three remained at one render each. Every MTS component
+remained at one render.
 
-The complete Stack build and ARM64 Explorer build passed. The targeted commit,
-hydration and ref regression suite passed 66 tests with one existing skip.
+Native tap verification incremented the first bubble twice and the second once,
+producing independent counts of 2 and 1. BTS renders progressed from [1, 1] to
+[3, 1] to [3, 2], confirming that each tap updated only its own root.
+
+The complete Stack build and ARM64 Explorer build passed. The targeted registry,
+event, commit, hydration and ref regression suite passed 69 tests with one existing skip.
 
 ## Limits
 

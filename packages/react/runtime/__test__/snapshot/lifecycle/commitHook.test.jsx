@@ -8,11 +8,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { useState } from '../../../src/index';
 import { __root } from '../../../src/root';
 import { setupPage } from '../../../src/snapshot';
-import {
-  removeCommitHookForTesting,
-  replaceCommitHook,
-  setTransferCommitTransport,
-} from '../../../src/snapshot/lifecycle/patch/commit';
+import { removeCommitHookForTesting, replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
@@ -27,7 +23,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  setTransferCommitTransport(undefined);
   removeCommitHookForTesting();
   vi.restoreAllMocks();
   elementTree.clear();
@@ -77,46 +72,6 @@ describe('replaceCommitHook', () => {
     await waitSchedule();
 
     expect(lynx.getNativeApp().callLepusMethod.mock.calls.length).toBe(callsBeforeUpdate + 1);
-  });
-
-  it('allows a transfer transport to own a commit without using the legacy call', async () => {
-    replaceCommitHook();
-    let setText;
-    function App() {
-      const [text, setState] = useState('a');
-      setText = setState;
-      return <text>{text}</text>;
-    }
-    mountAndHydrate(<App />);
-    const before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
-    const transport = vi.fn((_vnode, patchList, _options, finish) => {
-      expect(patchList.patchList).toHaveLength(1);
-      finish();
-      return true;
-    });
-    setTransferCommitTransport(transport);
-    setText('b');
-    await waitSchedule();
-    expect(transport).toHaveBeenCalledOnce();
-    expect(lynx.getNativeApp().callLepusMethod.mock.calls.length).toBe(before);
-  });
-
-  it('preserves the legacy transport when the transfer handler declines a commit', async () => {
-    replaceCommitHook();
-    let setText;
-    function App() {
-      const [text, setState] = useState('a');
-      setText = setState;
-      return <text>{text}</text>;
-    }
-    mountAndHydrate(<App />);
-    const before = lynx.getNativeApp().callLepusMethod.mock.calls.length;
-    const transport = vi.fn(() => false);
-    setTransferCommitTransport(transport);
-    setText('b');
-    await waitSchedule();
-    expect(transport).toHaveBeenCalledOnce();
-    expect(lynx.getNativeApp().callLepusMethod.mock.calls.length).toBe(before + 1);
   });
 
   it('can be removed and reinstalled', () => {

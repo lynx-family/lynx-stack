@@ -48,14 +48,6 @@ import { isRendering } from '../isRendering.js';
 const globalCommitTaskMap: Map<number, () => void> = /*@__PURE__*/ new Map<number, () => void>();
 let nextCommitTaskId = 1;
 
-// Experimental transfer containers can own their event-based commit transport.
-let transferCommitTransport:
-  | ((vnode: unknown, patchList: PatchList, patchOptions: PatchOptions, finish: () => void) => boolean)
-  | undefined;
-export function setTransferCommitTransport(transport: typeof transferCommitTransport): void {
-  transferCommitTransport = transport;
-}
-
 /**
  * A single patch operation.
  */
@@ -156,15 +148,6 @@ function replaceCommitHook(): void {
       const patchOptions = takeGlobalPatchOptions();
       if (!snapshotPatch) {
         // before hydration, skip patch
-        transferCommitTransport?.(
-          vnode,
-          { patchList: [] },
-          { ...patchOptions, reloadVersion: getReloadVersion() },
-          () => {
-            globalCommitTaskMap.get(commitTaskId)?.();
-            globalCommitTaskMap.delete(commitTaskId);
-          },
-        );
         applyQueuedRefs();
         originalPreactCommit?.(vnode, commitQueue);
         return;
@@ -189,17 +172,16 @@ function replaceCommitHook(): void {
       if (delayedRunOnMainThreadData.length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
-      const finish = () => {
-        globalCommitTaskMap.get(commitTaskId)?.();
-        globalCommitTaskMap.delete(commitTaskId);
-      };
-      if (
-        !transferCommitTransport?.(vnode, patchList, { ...patchOptions, reloadVersion: getReloadVersion() }, finish)
-      ) {
-        const obj = commitPatchUpdate(patchList, patchOptions);
-        // Keep the ordinary page transport unchanged.
-        lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, finish);
-      }
+      const obj = commitPatchUpdate(patchList, patchOptions);
+
+      // Send the update to the native layer
+      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+        const commitTask = globalCommitTaskMap.get(commitTaskId);
+        if (commitTask) {
+          commitTask();
+          globalCommitTaskMap.delete(commitTaskId);
+        }
+      });
 
       applyQueuedRefs();
       originalPreactCommit?.(vnode, commitQueue);

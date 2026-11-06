@@ -21,6 +21,19 @@
   white-space: pre-wrap;
 }
 
-.chat-user .chat-text {
+.chat-counter {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 2px;
+  height: 22px;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  color: #0f172a;
+}
+
+.chat-user .chat-text,
+.chat-user .chat-counter {
   color: #ffffff;
 }

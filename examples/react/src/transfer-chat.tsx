@@ -1,26 +1,37 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createTransferRenderContext } from '@lynx-js/react/internal';
+import { useState } from '@lynx-js/react';
+
+import {
+  TransferRegistry,
+  transferDiagnostics,
+} from '../../../packages/react/runtime/lib/snapshot/transfer-context.js';
 
 import './transfer-chat.css';
 
-// Delay only ownership handoff, so the real native first frame is observable.
-const transfers = createTransferRenderContext({ hydrationDelayMs: 800 });
-
 export function ChatBubble(props: Record<string, unknown>) {
-  transfers.recordRender();
+  transferDiagnostics.recordRender();
+  const [count, setCount] = useState(0);
   const user = props['role'] === 'user';
   const text = typeof props['text'] === 'string' ? props['text'] : '';
   return (
-    <view className={`chat-bubble ${user ? 'chat-user' : 'chat-assistant'}`}>
+    <view
+      className={`chat-bubble ${user ? 'chat-user' : 'chat-assistant'}`}
+      bindtap={() => setCount(value => value + 1)}
+    >
       <text className='chat-text'>{text}</text>
+      <text className='chat-counter'>
+        Count: {count} (+1)
+      </text>
     </view>
   );
 }
 
-transfers.registerComponent('ChatBubble', () => ChatBubble);
+TransferRegistry.registerComponent('ChatBubble', () => ChatBubble);
 
 // Read-only diagnostic data for the simulator validation, not a protocol entry.
-(globalThis as unknown as { transferChatDebug: typeof transfers.debug })
-  .transferChatDebug = transfers.debug;
+(globalThis as unknown as {
+  transferChatDebug: typeof transferDiagnostics.debug;
+})
+  .transferChatDebug = transferDiagnostics.debug;
