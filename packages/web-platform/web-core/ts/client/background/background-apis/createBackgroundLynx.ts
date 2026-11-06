@@ -13,8 +13,14 @@ import {
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
 import { createElement } from './createElement.js';
-import type { Cloneable, NativeApp } from '../../../types/index.js';
+import type {
+  Cloneable,
+  FetchBundleOptions,
+  NativeApp,
+} from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
+
+const PREPARE_LAZY_BUNDLE_MTS = 'rLynxPrepareLazyBundleMTS';
 
 export function createBackgroundLynx(
   globalProps: Cloneable,
@@ -35,6 +41,67 @@ export function createBackgroundLynx(
   const fetchExternalBundle = mainThreadRpc.createCall(
     fetchExternalBundleEndpoint,
   );
+  const lazyBundleLoads = new Map<string, Promise<unknown>>();
+  const loadLazyBundle = (
+    source: string,
+    _mode?: 'sync' | 'async',
+    host?: string,
+  ): Promise<unknown> => {
+    const cached = lazyBundleLoads.get(source);
+    if (cached) {
+      return cached;
+    }
+    const pending = Promise.resolve(
+      fetchExternalBundle(source, { isLazyBundle: true }),
+    ).then(
+      response => {
+        if (response.code !== 0) {
+          const error = new Error(
+            `Lazy bundle load failed, schema: ${source}`,
+          );
+          error.cause = response.errorMsg;
+          throw error;
+        }
+        const runtimeLynx = nativeApp.tt?.lynx;
+        if (!runtimeLynx?.loadScript) {
+          throw new Error('lynx.loadScript is unavailable');
+        }
+        const runtimeGlobal = globalThis as {
+          globDynamicComponentEntry?: string;
+        };
+        const previousEntry = runtimeGlobal.globDynamicComponentEntry;
+        runtimeGlobal.globDynamicComponentEntry = source;
+        let exports: unknown;
+        try {
+          exports = runtimeLynx.loadScript('background', {
+            bundleName: response.url,
+          });
+        } finally {
+          runtimeGlobal.globDynamicComponentEntry = previousEntry;
+        }
+        return new Promise((resolve, reject) => {
+          try {
+            const payload = host === undefined
+              ? { url: source }
+              : { url: source, host };
+            nativeApp.callLepusMethod(
+              PREPARE_LAZY_BUNDLE_MTS,
+              payload,
+              () => resolve(exports),
+            );
+          } catch (error) {
+            reject(error);
+          }
+        });
+      },
+    );
+    const retryable = pending.catch(error => {
+      lazyBundleLoads.delete(source);
+      throw error;
+    });
+    lazyBundleLoads.set(source, retryable);
+    return retryable;
+  };
   return {
     __globalProps: globalProps,
     getJSModule(_moduleName: string): any {
@@ -74,9 +141,10 @@ export function createBackgroundLynx(
     reload: () => {
       mainThreadRpc.invoke(reloadEndpoint, []);
     },
-    fetchBundle(url: string) {
-      return fetchExternalBundle(url);
+    fetchBundle(url: string, options?: FetchBundleOptions) {
+      return fetchExternalBundle(url, options);
     },
+    loadLazyBundle,
     loadScript(sectionPath: string, options: { bundleName: string }) {
       // `fetchBundle` registered the bundle's raw sections with the worker as
       // bts chunks (updateBTSChunk -> templateCache); hand the section's init

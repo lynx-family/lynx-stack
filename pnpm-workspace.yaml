@@ -38,6 +38,9 @@ publicHoistPattern: []
 resolutionMode: "lowest-direct"
 strictPeerDependencies: true
 
+# Temporary for PR #3043 preview validation; remove before merge.
+blockExoticSubdeps: false
+
 # Treat workspace topology and filter mistakes as hard errors.
 disallowWorkspaceCycles: true
 failIfNoMatch: true
@@ -75,6 +78,10 @@ minimumReleaseAgeStrict: true
 
 peerDependencyRules:
   allowedVersions:
+    # Temporary compatibility exceptions for the PR #3043 Rspack preview.
+    "sass-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@44017e21f108fa7abec1c3631a3a7efc7a8f334b"
+    "css-loader>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@44017e21f108fa7abec1c3631a3a7efc7a8f334b"
+    "@rspack/test-tools>@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@44017e21f108fa7abec1c3631a3a7efc7a8f334b"
     # These unreleased workspace implementations still carry their previous
     # release versions. Remove the scoped exceptions after release versioning;
     # the published peers must continue to require React ^0.128.0.
@@ -146,8 +153,8 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.2.7"
-    "@rspack/core": "2.2.7"
+    "@rspack/cli": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/cli@44017e21f108fa7abec1c3631a3a7efc7a8f334b"
+    "@rspack/core": "https://pkg.pr.new/web-infra-dev/rspack/@rspack/core@44017e21f108fa7abec1c3631a3a7efc7a8f334b"
     "@rspack/dev-server": "2.2.1"
     "@rspack/test-tools": "2.2.7"
 

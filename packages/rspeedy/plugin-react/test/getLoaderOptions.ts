@@ -62,7 +62,7 @@ export function getLoaderOptions<T>(
 
     if (Array.isArray(rule.use)) {
       rule.use.some(u => {
-        if (typeof u === 'string') {
+        if (!u || typeof u === 'string') {
           return false
         }
         if (check(u.loader)) {

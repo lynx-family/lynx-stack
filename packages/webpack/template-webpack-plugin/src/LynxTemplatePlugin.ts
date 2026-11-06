@@ -104,6 +104,7 @@ export interface TemplateHooks {
    */
   beforeEncode: AsyncSeriesWaterfallHook<{
     encodeData: EncodeRawData;
+    lazyBundleFetcher?: 'FetchBundle' | 'QueryComponent';
     filenameTemplate: string;
     /**
      * The chunk groups covered by this template.
@@ -971,6 +972,36 @@ class LynxTemplatePluginImpl {
     Record<string, ChunkGroup[]>
   >();
 
+  static #getChunkGroupFiles(
+    compilation: Compilation,
+    chunkGroups: ChunkGroup[],
+  ) {
+    // Merged chunk groups may share chunks, so dedupe the files.
+    return Array.from(new Set(chunkGroups.flatMap(cg => cg.getFiles())))
+      .filter(chunkFile =>
+        predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+      );
+  }
+
+  static #chunkGroupCanEmitJavaScript(
+    compilation: Compilation,
+    chunkGroup: ChunkGroup,
+  ) {
+    return chunkGroup.chunks.some(chunk => {
+      if (compilation.chunkGraph.getNumberOfEntryModules(chunk) > 0) {
+        return true;
+      }
+      const modules = compilation.chunkGraph
+        .getChunkModulesIterableBySourceType(chunk, 'javascript');
+      // Rspack exposes Module Federation remote placeholders as JavaScript
+      // modules even though they are fulfilled by the remotes runtime and do
+      // not emit a chunk asset.
+      return Array.from(modules ?? []).some(
+        module => module.type !== 'remote-module',
+      );
+    });
+  }
+
   static #getAsyncChunkGroups(compilation: Compilation) {
     let asyncChunkGroups = LynxTemplatePluginImpl.#asyncChunkGroups.get(
       compilation,
@@ -1067,7 +1098,16 @@ class LynxTemplatePluginImpl {
         for (
           const chunk of new Set(chunkGroups.flatMap(group => group.chunks))
         ) {
-          if (chunk.id == null) {
+          if (
+            chunk.id == null
+            || chunkGroups.some(group =>
+              group.chunks.includes(chunk)
+              && !LynxTemplatePluginImpl.#chunkGroupCanEmitJavaScript(
+                compilation,
+                group,
+              )
+            )
+          ) {
             continue;
           }
           // When checking PageA:
@@ -1195,6 +1235,14 @@ class LynxTemplatePluginImpl {
         ([filename, chunkGroups]): Promise<void> => {
           // If no filename is found, avoid generating async template
           if (!filename) {
+            return Promise.resolve();
+          }
+
+          const chunkFiles = LynxTemplatePluginImpl.#getChunkGroupFiles(
+            compilation,
+            chunkGroups,
+          );
+          if (chunkFiles.length === 0) {
             return Promise.resolve();
           }
 
@@ -1368,6 +1416,7 @@ class LynxTemplatePluginImpl {
 
     const { encodeData } = await hooks.beforeEncode.promise({
       encodeData: encodeRawData,
+      lazyBundleFetcher: this.#options.lazyBundleFetcher,
       filenameTemplate,
       chunkGroups,
       intermediate,

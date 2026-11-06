@@ -7,6 +7,7 @@ import type { CloneableObject } from './Cloneable.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { PerformancePipelineOptions } from './TimingAPIs.js';
 import type { II18nResource } from './I18nTypes.js';
+import type { ExternalBundleLynxAPIs } from './ExternalBundle.js';
 import type { LynxIntersectionObserverEntry } from './IntersectionObserver.js';
 
 export type LynxKernelInject = {
@@ -35,7 +36,7 @@ export interface EventEmitter {
   toggle(eventName: string, ...data: unknown[]): void;
 }
 
-export type NativeLynx = {
+export type NativeLynx = ExternalBundleLynxAPIs & {
   __globalProps: CloneableObject;
   getJSModule(_moduleName: string): unknown;
   getNativeApp(): NativeApp;

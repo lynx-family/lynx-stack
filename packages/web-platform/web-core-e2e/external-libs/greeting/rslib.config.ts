@@ -29,6 +29,13 @@ export default defineExternalBundleRslibConfig(
         ),
       },
     },
+    tools: {
+      rspack: {
+        output: {
+          publicPath: 'auto',
+        },
+      },
+    },
     plugins: [pluginReactLynx()],
   },
   { target: 'web', engineVersion: '3.5' },
