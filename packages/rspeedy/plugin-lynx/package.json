@@ -47,7 +47,8 @@
     "@lynx-js/web-rsbuild-server-middleware": "workspace:*",
     "@lynx-js/webpack-dev-transport": "workspace:^",
     "@lynx-js/websocket": "workspace:^",
-    "@rsbuild/plugin-css-minimizer": "2.0.1"
+    "@rsbuild/plugin-css-minimizer": "2.0.1",
+    "core-js": "^3.50.0"
   },
   "devDependencies": {
     "@lynx-js/test-tools": "workspace:*",

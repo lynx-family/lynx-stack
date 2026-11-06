@@ -42,6 +42,7 @@ describe('Plugins - SWC', () => {
               "transform-class-static-block",
               "transform-private-methods",
               "transform-private-property-in-object",
+              "es.object.has-own",
             ],
             "targets": {
               "chrome": "120",
@@ -103,6 +104,7 @@ describe('Plugins - SWC', () => {
               "transform-class-static-block",
               "transform-private-methods",
               "transform-private-property-in-object",
+              "es.object.has-own",
             ],
             "targets": {
               "chrome": "120",
@@ -254,6 +256,7 @@ describe('Plugins - SWC', () => {
               "transform-class-static-block",
               "transform-private-methods",
               "transform-private-property-in-object",
+              "es.object.has-own",
             ],
             "targets": {
               "chrome": "120",

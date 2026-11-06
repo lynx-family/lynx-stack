@@ -45,6 +45,9 @@ describe('Plugins - Resolve', () => {
           ".json",
           ".cjs",
         ],
+        "fallback": {
+          "core-js/modules/es.object.has-own.js": "<PNPM_INNER>/core-js/modules/es.object.has-own.js",
+        },
         "mainFields": [
           "lynx",
           "module",
