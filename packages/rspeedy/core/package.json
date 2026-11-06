@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsdoctor/core": "2.0.0"
   },
