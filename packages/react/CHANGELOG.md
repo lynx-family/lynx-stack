@@ -1,5 +1,15 @@
 # @lynx-js/react
 
+## 0.129.2
+
+### Patch Changes
+
+- Clear pre-hydration delayed ref UI operations on Snapshot background destroy and reset Element Template commit state before unmounting on background teardown. ([#4251](https://github.com/lynx-family/lynx-stack/pull/4251))
+
+- Read GlobalProps mode from the host page's runtime configuration so lazy and external bundles use the host's mode. Preserve the `__GLOBAL_PROPS_MODE__` definition for historical consumers and retain the existing `globalPropsMode` build option. Hosts must inject the runtime mode to enable event mode in the new runtime. ([#4300](https://github.com/lynx-family/lynx-stack/pull/4300))
+
+- Keep ordinary Main Thread Function member captures working with older externalized ReactLynx runtimes that do not export `captureMainThreadObject`. MainThreadObject usage still requires a runtime that supports it. ([#4302](https://github.com/lynx-family/lynx-stack/pull/4302))
+
 ## 0.129.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/runtime-config-webpack-plugin
 
+## 0.0.3
+
+### Patch Changes
+
+- Reset the page-scoped runtime configuration to the current host bundle's configuration on every entry evaluation. Replace the previous object without freezing the new one, preventing read-only property errors and stale configuration after reload. ([#4312](https://github.com/lynx-family/lynx-stack/pull/4312))
+
 ## 0.0.2
 
 ### Patch Changes

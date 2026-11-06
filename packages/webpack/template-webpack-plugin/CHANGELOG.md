@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.7
+
+### Patch Changes
+
+- Support lazy bundles when `splitChunks` creates common async chunks. ([#4079](https://github.com/lynx-family/lynx-stack/pull/4079))
+- Updated dependencies [[`62e0a54`](https://github.com/lynx-family/lynx-stack/commit/62e0a5456040e942967a10dbc6d10d7d1f712b66)]:
+  - @lynx-js/web-core@0.26.7
+
 ## 0.16.6
 
 ### Patch Changes

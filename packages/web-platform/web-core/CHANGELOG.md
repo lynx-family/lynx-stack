@@ -1,5 +1,14 @@
 # @lynx-js/web-core
 
+## 0.26.7
+
+### Patch Changes
+
+- Subtract the lynx-view top-left offset from mouse event clientX/clientY, matching the normalization already applied to x/y. Preserve pageX/pageY as document coordinates. ([#4273](https://github.com/lynx-family/lynx-stack/pull/4273))
+- Updated dependencies [[`27d5db9`](https://github.com/lynx-family/lynx-stack/commit/27d5db9e179f4d782f4aa96136dcf51446a9b17a)]:
+  - @lynx-js/web-elements@0.12.17
+  - @lynx-js/web-worker-rpc@0.26.7
+
 ## 0.26.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/lynx-stack-docs
 
+## 0.0.5
+
+### Patch Changes
+
+- Use English TypeDoc category names in both locales so API paths align and default categories merge with existing English groups. Keep Chinese prose translated, and fail generation when English and Chinese API page paths differ. ([#4289](https://github.com/lynx-family/lynx-stack/pull/4289))
+
 ## 0.0.4
 
 ### Patch Changes

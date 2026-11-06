@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.17
+
+### Patch Changes
+
+- Fix `x-image` ignoring `object-fit` and the `aspectFit`/`aspectFill` modes when `auto-size` is enabled. ([#4288](https://github.com/lynx-family/lynx-stack/pull/4288))
+
 ## 0.12.16
 
 ### Patch Changes

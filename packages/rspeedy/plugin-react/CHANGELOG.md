@@ -1,5 +1,20 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.22.2
+
+### Patch Changes
+
+- Read GlobalProps mode from the host page's runtime configuration so lazy and external bundles use the host's mode. Preserve the `__GLOBAL_PROPS_MODE__` definition for historical consumers and retain the existing `globalPropsMode` build option. Hosts must inject the runtime mode to enable event mode in the new runtime. ([#4300](https://github.com/lynx-family/lynx-stack/pull/4300))
+- Updated dependencies [[`7813f88`](https://github.com/lynx-family/lynx-stack/commit/7813f88fa2699abd239fb699e9500ae530c6e44e), [`a5159b3`](https://github.com/lynx-family/lynx-stack/commit/a5159b333471d821daf2c1707a0cffd4411bc301), [`018ad6c`](https://github.com/lynx-family/lynx-stack/commit/018ad6c894b8eaf450db40b2b4c08157a4a0a902)]:
+  - @lynx-js/react-webpack-plugin@0.15.1
+  - @lynx-js/css-extract-webpack-plugin@0.11.2
+  - @lynx-js/template-webpack-plugin@0.16.7
+  - @lynx-js/runtime-config-webpack-plugin@0.0.3
+  - @lynx-js/react-alias-rsbuild-plugin@0.22.2
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.6
+  - @lynx-js/rsbuild-plugin@0.1.8
+
 ## 0.22.1
 
 ### Patch Changes
