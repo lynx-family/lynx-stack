@@ -3,12 +3,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
 import { render } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerDestroyTask } from '../../../src/core/runtime-destroy';
 import { __root, setRoot } from '../../../src/root';
 import { completeMainThreadReload } from '../../../src/snapshot/lifecycle/reload';
+import { setupLynxEnv } from '../../../src/snapshot/lynx/env';
 import { injectTt } from '../../../src/snapshot/lynx/tt';
 import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot';
 import { globalEnvManager } from '../utils/envManager';
@@ -116,5 +118,52 @@ describe('re-evaluating the background entry on reload', () => {
     await Promise.resolve();
 
     expect(__root.childNodes).toEqual([]);
+  });
+
+  it('retires the old bindPage() scope and isolates the reloaded card when reloadCard rebinds lynx.getApp()', () => {
+    const emitter = lynx.getApp().GlobalEventEmitter;
+    let reloadedPage;
+    const oldApp = {
+      GlobalEventEmitter: emitter,
+      _params: {
+        initData: { kept: 'yes', count: 1 },
+        updateData: {},
+      },
+      reloadCard: vi.fn((data) => {
+        expect(oldPage.isDestroyed()).toBe(true);
+        currentApp = {
+          GlobalEventEmitter: emitter,
+          _params: {
+            initData: data,
+            updateData: {},
+          },
+        };
+        setupLynxEnv();
+        injectTt();
+        reloadedPage = bindPage();
+        expect(reloadedPage).not.toBe(oldPage);
+        expect(reloadedPage.isDestroyed()).toBe(false);
+        expect(reloadedPage.getInitData()).toEqual({ kept: 'yes', count: 2 });
+        expect(lynx.__initData).toEqual({ kept: 'yes', count: 2 });
+        return true;
+      }),
+    };
+    let currentApp = oldApp;
+    vi.spyOn(lynx, 'getApp').mockImplementation(() => currentApp);
+
+    setupLynxEnv();
+    injectTt();
+    const oldPage = bindPage();
+    const oldUpdateSpy = vi.fn();
+    oldPage.onUpdateData(oldUpdateSpy);
+
+    oldApp.onAppReload({ count: 2 }, { source: 'test' });
+
+    expect(oldApp.reloadCard).toHaveBeenCalledExactlyOnceWith({ kept: 'yes', count: 2 }, { source: 'test' });
+    expect(oldPage.isDestroyed()).toBe(true);
+    expect(oldApp.onAppReload).toBeUndefined();
+    expect(oldApp.updateCardData).toBeUndefined();
+    expect(oldUpdateSpy).not.toHaveBeenCalled();
+    expect(reloadedPage.isDestroyed()).toBe(false);
   });
 });

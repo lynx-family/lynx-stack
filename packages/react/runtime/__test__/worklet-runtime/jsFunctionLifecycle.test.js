@@ -187,15 +187,37 @@ describe('jsFunctionLifecycle', () => {
     expect(manager.execIdRefCount.get(3)).toBe(1);
   });
 
-  it('does not release a new runtime execution when retired finalizers run', () => {
+  it('does not release a new runtime execution or retain onDestroy listeners when retired', async () => {
+    const listeners = new Map();
+    const proxy = {
+      addEventListener: (type, listener) => listeners.set(type, listener),
+      removeEventListener: type => listeners.delete(type),
+    };
+    const context = lynx.getJSContext();
+    vi.stubGlobal('lynx', {
+      getJSContext: () => context,
+      getNative: () => proxy,
+    });
+
     const previous = new JsFunctionLifecycleManager();
     previous.addRef(3, {});
     previous.removeRef(3);
+    expect(previous.willFire).toBe(true);
     previous.dispose();
+    expect(previous.execIdRefCount.size).toBe(0);
+    expect(previous.execIdSetToFire.size).toBe(0);
+    expect(previous.willFire).toBe(false);
+
+    const retiredDispose = vi.spyOn(previous, 'dispose');
     const current = new JsFunctionLifecycleManager();
     current.addRef(3, {});
+    await Promise.resolve();
     previous.fire();
     expect(events).toEqual([]);
     expect(current.execIdRefCount.get(3)).toBe(1);
+
+    listeners.get('__DestroyLifetime')();
+    expect(retiredDispose).not.toHaveBeenCalled();
+    expect(current.execIdRefCount.size).toBe(0);
   });
 });

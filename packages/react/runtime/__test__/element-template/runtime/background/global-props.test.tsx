@@ -44,10 +44,11 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
 
   const baseLynx = globalThis.lynx;
   const originalGlobalEventEmitter = globalThis.lynx.getApp().GlobalEventEmitter;
+  const hostGlobalProps = { theme: 'dark', stable: true };
   vi.stubGlobal('lynx', {
     ...baseLynx,
     __runtime_configs__: { globalPropsMode: mode },
-    __globalProps: { theme: 'dark', stable: true },
+    __globalProps: hostGlobalProps,
     getJSModule(moduleName: string) {
       if (moduleName === 'GlobalEventEmitter') {
         return emitter;
@@ -68,6 +69,7 @@ async function setupGlobalPropsRuntime(mode: 'reactive' | 'event') {
     ...et,
     emitter,
     envManager,
+    hostGlobalProps,
     updateEvents,
     cleanup() {
       envManager.switchToMainThread();
@@ -104,9 +106,14 @@ describe('ElementTemplate background GlobalProps', () => {
       runtime.root.render(createElement(App));
       runtime.updateEvents.length = 0;
 
+      const runtimeGlobalProps = lynx.__globalProps;
+      expect(runtimeGlobalProps).not.toBe(runtime.hostGlobalProps);
+
       lynx.getApp().updateGlobalProps({ theme: 'light' });
       await waitForRender();
 
+      expect(lynx.__globalProps).toBe(runtimeGlobalProps);
+      expect(runtime.hostGlobalProps).toEqual({ theme: 'dark', stable: true });
       expect(lynx.__globalProps).toEqual({ theme: 'light', stable: true });
       expect(renderedThemes).toEqual(['dark', 'light']);
       expect(emitted).toHaveBeenCalledWith(lynx.__globalProps);

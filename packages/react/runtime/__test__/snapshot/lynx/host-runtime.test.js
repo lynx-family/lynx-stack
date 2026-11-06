@@ -7,10 +7,16 @@ import { globalEnvManager } from '../utils/envManager.js';
 
 const originalSystemInfo = globalThis.SystemInfo;
 const originalGlobalPropsMode = globalThis.__GLOBAL_PROPS_MODE__;
+const originalRuntimeConfigs = globalThis.lynx?.__runtime_configs__;
+const originalGlobalProps = globalThis.lynx?.__globalProps;
 
 afterEach(() => {
   globalThis.SystemInfo = originalSystemInfo;
   globalThis.__GLOBAL_PROPS_MODE__ = originalGlobalPropsMode;
+  if (globalThis.lynx) {
+    globalThis.lynx.__runtime_configs__ = originalRuntimeConfigs;
+    globalThis.lynx.__globalProps = originalGlobalProps;
+  }
   vi.restoreAllMocks();
   globalEnvManager.resetEnv();
 });
@@ -19,6 +25,9 @@ it.each([false, true])('keeps Snapshot state semantics through host runtime noti
   globalThis.SystemInfo = isWeb ? { platform: 'web' } : undefined;
   globalEnvManager.resetEnv();
   globalEnvManager.switchToBackground();
+  const hostGlobalProps = { theme: 'light', locale: 'en' };
+  lynx.__globalProps = hostGlobalProps;
+  lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
   const app = {
     GlobalEventEmitter: lynx.getJSModule('GlobalEventEmitter'),
     _params: {
@@ -36,6 +45,9 @@ it.each([false, true])('keeps Snapshot state semantics through host runtime noti
   const card = bindPage();
   expect(lynx.__initData).toEqual({ count: 2, static: true });
   expect(lynx.__initData).not.toBe(card.getInitData());
+  expect(lynx.__globalProps).toEqual({ theme: 'light', locale: 'en' });
+  expect(lynx.__globalProps).not.toBe(hostGlobalProps);
+  expect(lynx.__globalProps).not.toBe(card.getGlobalProps());
 
   const initialState = lynx.__initData;
   app.updateCardData({ count: 3 });
@@ -52,10 +64,19 @@ it.each([false, true])('keeps Snapshot state semantics through host runtime noti
   expect(lynx.__initData).toEqual({ count: 5 });
   expect(card.getInitData()).toEqual({ count: 5, static: true });
 
-  // RL adopts GlobalProps capture at startup but retains its own COW merge policy.
+  // RL isolates its root GlobalProps object so reactive updates preserve root identity without mutating the host's object.
+  const reactiveRoot = lynx.__globalProps;
+  app.updateGlobalProps({ theme: 'warm' });
+  expect(lynx.__globalProps).toBe(reactiveRoot);
+  expect(lynx.__globalProps).toEqual({ theme: 'warm', locale: 'en' });
+  expect(hostGlobalProps).toEqual({ theme: 'light', locale: 'en' });
+  expect(card.getGlobalProps()).toEqual({ theme: 'warm' });
+
+  // RL retains its COW merge policy in event mode.
   globalThis.__GLOBAL_PROPS_MODE__ = 'event';
-  lynx.__globalProps = { theme: 'light', locale: 'en' };
+  lynx.__runtime_configs__ = { globalPropsMode: 'event' };
   app.updateGlobalProps({ theme: 'dark' });
+  expect(lynx.__globalProps).not.toBe(reactiveRoot);
   expect(lynx.__globalProps).toEqual({ theme: 'dark', locale: 'en' });
   expect(card.getGlobalProps()).toEqual({ theme: 'dark' });
   const globalPropsChanged = vi.fn();

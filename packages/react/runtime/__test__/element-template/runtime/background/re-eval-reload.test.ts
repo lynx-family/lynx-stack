@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { bindPage } from '@lynx-js/lynx-runtime/bts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElement, render } from 'preact';
 import { Component } from 'preact/compat';
@@ -10,6 +11,7 @@ import {
   markElementTemplateHydrated,
   uninstallElementTemplateCommitHookForTesting,
 } from '../../../../src/element-template/background/commit-hook.js';
+import { setupLynxEnv } from '../../../../src/element-template/lynx/env.js';
 import { callDestroyLifetimeFun } from '../../../../src/element-template/native/callDestroyLifetimeFun.js';
 import { reloadBackground } from '../../../../src/element-template/native/reload-background.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
@@ -65,5 +67,58 @@ describe('ElementTemplate entry reload', () => {
     render(oldRoot.__jsx, oldRoot as never);
     expect(dispatch).not.toHaveBeenCalled();
     expect(cleanup).toHaveBeenCalledOnce();
+  });
+
+  it('retires the bound BTS page scope before reloadCard rebinds lynx.getApp() to a fresh card', () => {
+    type ReloadableApp = {
+      _params: { initData: Record<string, unknown>; updateData: Record<string, unknown> };
+      callDestroyLifetimeFun?: () => void;
+      onAppReload?: (data: Record<string, unknown>, options?: Record<string, unknown>) => void;
+      updateCardData?: (data: Record<string, unknown>) => void;
+      reloadCard?: (data: Record<string, unknown>, options?: Record<string, unknown>) => boolean;
+    };
+
+    let reloadedPage: ReturnType<typeof bindPage> | undefined;
+    const oldApp: ReloadableApp = {
+      _params: {
+        initData: { retained: 'initial', count: 1 },
+        updateData: {},
+      },
+      reloadCard: vi.fn((data: Record<string, unknown>) => {
+        expect(oldPage.isDestroyed()).toBe(true);
+        currentApp = {
+          _params: {
+            initData: data,
+            updateData: {},
+          },
+        };
+        setupLynxEnv();
+        reloadedPage = bindPage();
+        expect(reloadedPage).not.toBe(oldPage);
+        expect(reloadedPage.isDestroyed()).toBe(false);
+        expect(reloadedPage.getInitData()).toEqual({ retained: 'initial', count: 2 });
+        expect(lynx.__initData).toEqual({ retained: 'initial', count: 2 });
+        return true;
+      }),
+    };
+    let currentApp: ReloadableApp = oldApp;
+    vi.spyOn(lynx, 'getApp').mockImplementation(() => currentApp as never);
+
+    setupLynxEnv();
+    const oldPage = bindPage();
+    const oldUpdateSpy = vi.fn();
+    oldPage.onDestroy(callDestroyLifetimeFun);
+    oldPage.onReload(reloadBackground);
+    oldPage.onUpdateData(oldUpdateSpy);
+
+    const options = { processorName: 'reload' };
+    oldApp.onAppReload!({ count: 2 }, options);
+
+    expect(oldApp.reloadCard).toHaveBeenCalledExactlyOnceWith({ retained: 'initial', count: 2 }, options);
+    expect(oldPage.isDestroyed()).toBe(true);
+    expect(oldApp.onAppReload).toBeUndefined();
+    expect(oldApp.updateCardData).toBeUndefined();
+    expect(oldUpdateSpy).not.toHaveBeenCalled();
+    expect(reloadedPage?.isDestroyed()).toBe(false);
   });
 });

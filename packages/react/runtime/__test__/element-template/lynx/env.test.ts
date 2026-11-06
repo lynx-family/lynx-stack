@@ -31,6 +31,7 @@ describe('setupLynxEnv', () => {
   let originalExtractStr: typeof g.__EXTRACT_STR__;
   let originalExtractStrFlag: typeof g.__EXTRACT_STR_IDENT_FLAG__;
   let originalReportError: typeof globalThis.lynx.reportError;
+  let originalGlobalProps: typeof globalThis.lynx.__globalProps;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -43,6 +44,7 @@ describe('setupLynxEnv', () => {
     originalExtractStr = g.__EXTRACT_STR__;
     originalExtractStrFlag = g.__EXTRACT_STR_IDENT_FLAG__;
     originalReportError = globalThis.lynx.reportError;
+    originalGlobalProps = globalThis.lynx.__globalProps;
     g.__EXTRACT_STR__ = false;
     g.__EXTRACT_STR_IDENT_FLAG__ = undefined;
   });
@@ -93,11 +95,14 @@ describe('setupLynxEnv', () => {
     }
 
     globalThis.lynx.reportError = originalReportError;
+    globalThis.lynx.__globalProps = originalGlobalProps;
     vi.restoreAllMocks();
   });
 
   it('merges initData and updateData in JS env', () => {
     envManager.resetEnv('background');
+    const hostGlobalProps = { theme: 'dark' };
+    globalThis.lynx.__globalProps = hostGlobalProps;
     vi.spyOn(globalThis.lynx, 'getApp').mockReturnValue({
       _params: {
         initData: { answer: 41, stale: true },
@@ -119,6 +124,14 @@ describe('setupLynxEnv', () => {
     expect(globalThis.lynx.__initData).not.toBe(snapshot);
     globalThis.lynx.__initData.answer = 43;
     expect(snapshot).toEqual({ answer: 42, stale: true, fresh: true });
+
+    const globalPropsSnapshot = bindPage().getGlobalProps();
+    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
+    expect(globalThis.lynx.__globalProps).not.toBe(hostGlobalProps);
+    expect(globalThis.lynx.__globalProps).not.toBe(globalPropsSnapshot);
+    globalThis.lynx.__globalProps.theme = 'light';
+    expect(hostGlobalProps).toEqual({ theme: 'dark' });
+    expect(globalPropsSnapshot).toEqual({ theme: 'dark' });
   });
 
   it('propagates invalid host params access', () => {
@@ -135,6 +148,7 @@ describe('setupLynxEnv', () => {
   it('treats missing initData and updateData params as empty objects in JS env', () => {
     envManager.resetEnv('background');
     globalThis.lynx.__initData = {};
+    globalThis.lynx.__globalProps = undefined as never;
     vi.spyOn(globalThis.lynx, 'getApp').mockReturnValue({
       _params: {
         initData: undefined,
@@ -145,6 +159,7 @@ describe('setupLynxEnv', () => {
     setupLynxEnv();
 
     expect(globalThis.lynx.__initData).toEqual({});
+    expect(globalThis.lynx.__globalProps).toEqual({});
   });
 
   it('uses the bound card snapshot when another card is initialized', () => {
@@ -164,9 +179,16 @@ describe('setupLynxEnv', () => {
 
   it('installs lepus event bridge and processData handlers', () => {
     envManager.resetEnv('main');
+    const hostGlobalProps = { theme: 'dark' };
+    globalThis.lynx.__globalProps = hostGlobalProps;
     g.__OnLifecycleEvent = vi.fn();
 
     setupLynxEnv();
+
+    expect(globalThis.lynx.__globalProps).toEqual({ theme: 'dark' });
+    expect(globalThis.lynx.__globalProps).not.toBe(hostGlobalProps);
+    globalThis.lynx.__globalProps.theme = 'light';
+    expect(hostGlobalProps).toEqual({ theme: 'dark' });
 
     globalThis.lynx.triggerGlobalEventFromLepus?.('ready', { ok: true });
     expect(g.__OnLifecycleEvent).toHaveBeenCalledWith([

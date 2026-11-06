@@ -20,14 +20,12 @@ class JsFunctionLifecycleManager {
   private willFire = false;
   private active = true;
   private registry: FinalizationRegistry<number>;
+  private unsubDestroy: () => void;
 
   constructor() {
     this.registry = new FinalizationRegistry<number>(this.removeRef.bind(this));
-    onDestroy(() => {
-      this.active = false;
-      this.execIdRefCount.clear();
-      this.execIdSetToFire.clear();
-      this.willFire = false;
+    this.unsubDestroy = onDestroy(() => {
+      this.dispose();
     });
   }
 
@@ -64,6 +62,10 @@ class JsFunctionLifecycleManager {
 
   dispose(): void {
     this.active = false;
+    this.execIdRefCount.clear();
+    this.execIdSetToFire.clear();
+    this.willFire = false;
+    this.unsubDestroy();
   }
 
   fire(): void {

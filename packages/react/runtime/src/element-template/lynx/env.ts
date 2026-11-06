@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { bindPage } from '@lynx-js/lynx-runtime/bts';
-import { getSystemInfo, setDataProcessor } from '@lynx-js/lynx-runtime/mts';
+import { getGlobalProps, getSystemInfo, setDataProcessor } from '@lynx-js/lynx-runtime/mts';
 
 import { createProcessData } from '../../core/lynx-data-processors.js';
 import type { DataProcessorDefinition } from '../../core/lynx-data-processors.js';
@@ -10,7 +10,9 @@ import type { DataProcessorDefinition } from '../../core/lynx-data-processors.js
 export function setupLynxEnv(): void {
   if (!__LEPUS__) {
     // RL owns its mutable state; the host's initial snapshot stays isolated.
-    lynx.__initData = { ...bindPage().getInitData() };
+    const page = bindPage();
+    lynx.__initData = { ...page.getInitData() };
+    lynx.__globalProps = { ...page.getGlobalProps() };
     lynx.registerDataProcessors = function() {};
   }
 
@@ -18,6 +20,7 @@ export function setupLynxEnv(): void {
     lynx.__initData = {
       /* available only in renderPage */
     };
+    lynx.__globalProps = { ...getGlobalProps() };
     (globalThis as typeof globalThis & { SystemInfo?: unknown }).SystemInfo = getSystemInfo();
 
     lynx.triggerGlobalEventFromLepus = function(
