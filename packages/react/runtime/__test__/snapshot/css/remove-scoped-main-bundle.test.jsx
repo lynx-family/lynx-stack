@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { expect, it } from 'vitest';
 
-import { SnapshotInstance } from '../../../src/snapshot';
+import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot.js';
 
 const snapshot1 = __SNAPSHOT__(
   <view>

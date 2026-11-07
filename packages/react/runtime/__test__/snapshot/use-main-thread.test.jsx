@@ -12,7 +12,8 @@ import { elementTree } from './utils/nativeMethod';
 import { globalEnvManager } from './utils/envManager';
 import { setupDocument } from '../../src/document';
 import renderToStringBase from '../../src/snapshot/renderToOpcodes';
-import { setupPage, snapshotInstanceManager } from '../../src/snapshot';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
+import { snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
 import { __root } from '../../src/root';
 
 const renderToString = element => renderToStringBase(element, null, __root);

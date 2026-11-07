@@ -12,13 +12,12 @@ import { SnapshotOperation, SnapshotOperationParams } from '../../../src/snapsho
 import { DIFFED, DOM } from '../../../src/shared/render-constants';
 import { __root } from '../../../src/root';
 import {
-  setupPage,
-  SnapshotInstance,
-  snapshotInstanceManager,
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
   hydrate,
-} from '../../../src/snapshot';
+} from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { elementTree } from '../utils/nativeMethod';
 
 const HOLE = null;

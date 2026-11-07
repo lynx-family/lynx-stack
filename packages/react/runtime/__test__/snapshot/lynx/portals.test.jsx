@@ -7,7 +7,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { createContext, createPortal, useContext, useState } from '../../../src/index';
 import { __root } from '../../../src/root';
-import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 
 const HOLE = null;
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
@@ -23,7 +24,7 @@ import { serializeNodesRef } from '../../../src/snapshot/lynx/nodesRef';
 import { clearPendingPortalInsertBefore } from '../../../src/snapshot/lynx/portalsPending';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
-import { backgroundSnapshotInstanceManager } from '../../../src/snapshot';
+import { backgroundSnapshotInstanceManager } from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../../../src/snapshot/lifecycle/patch/globalState';
 
 beforeAll(() => {

@@ -13,7 +13,8 @@ import {
 import { LifecycleConstant } from '../../src/snapshot/lifecycle/constant';
 import { CATCH_ERROR } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
-import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { backgroundSnapshotInstanceManager } from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
 import { onFunctionCall, resetFunctionCallReturnListener } from '../../src/core/thread-function-call/return-value.js';
 import { getReloadVersion } from '../../src/core/reload-version.js';
 import { reloadBackground } from '../../src/snapshot/lifecycle/reload.js';

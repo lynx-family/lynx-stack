@@ -4,7 +4,7 @@
 import { __injectElementApi } from './inject.ts';
 import '../../../src/lynx.ts';
 import { document } from '../../../src/document.ts';
-import { SnapshotInstance } from '../../../src/snapshot/index.ts';
+import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot.js';
 
 import { afterEach, expect } from 'vitest';
 

@@ -15,9 +15,9 @@ import { useLynxGlobalEventListener } from '../../../src/core/hooks/useLynxGloba
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
-  SnapshotInstance,
-  setupPage,
-} from '../../../src/snapshot';
+} from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot.js';
 import { backgroundSnapshotInstanceToJSON } from '../../snapshot/utils/debug.js';
 import { elementTree } from '../../snapshot/utils/nativeMethod';
 

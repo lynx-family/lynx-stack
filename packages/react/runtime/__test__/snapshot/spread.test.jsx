@@ -9,7 +9,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { useState } from '../../src/index';
 import { initGlobalSnapshotPatch, takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
-import { setupPage, snapshotInstanceManager, hydrate, backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { hydrate, backgroundSnapshotInstanceManager } from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
+import { snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
 import { transformSpread } from '../../src/snapshot/snapshot/spread';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';

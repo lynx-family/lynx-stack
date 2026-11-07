@@ -3,7 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { createSnapshot, SnapshotInstance } from '../../../src/snapshot';
+import { createSnapshot } from '../../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot.js';
 
 afterEach(() => {
   vi.unstubAllGlobals();
