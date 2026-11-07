@@ -1643,6 +1643,89 @@ describe('pluginDev', () => {
     }
   })
 
+  test('dev.client.port and dev.client.host in user config are preserved and passed to HMR client', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      dev: {
+        client: {
+          host: 'custom-hmr.example.com',
+          port: 41823,
+        },
+      },
+    })
+
+    const config = await rsbuild.unwrapConfig()
+
+    expect(rsbuild.getRsbuildConfig().dev!.client!.host).toBe(
+      'custom-hmr.example.com',
+    )
+    expect(rsbuild.getRsbuildConfig().dev!.client!.port).toBe(41823)
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('hostname=custom-hmr.example.com&port=41823'),
+    )
+  })
+
+  test('dev.client.port set via modifyRsbuildConfig is passed to HMR client', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      server: {
+        port: 8104,
+      },
+      plugins: [
+        {
+          name: 'test:client-port',
+          setup(api) {
+            api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+              mergeRsbuildConfig(config, {
+                dev: {
+                  client: {
+                    port: '41823',
+                  },
+                },
+              })
+            )
+          },
+        } satisfies RsbuildPlugin,
+      ],
+    })
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+
+    const config = await rsbuild.unwrapConfig()
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining('port=41823'),
+    )
+  })
+
+  test('default dev.client.port (<port>) falls back to devServer.port in HMR client', async () => {
+    const rsbuild = await createDevStubRsbuild({
+      source: {
+        entry: {
+          main: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+        },
+      },
+      server: {
+        port: 8105,
+      },
+    })
+
+    await using server = await rsbuild.usingDevServer()
+    await server.waitDevCompileDone()
+
+    const config = await rsbuild.unwrapConfig()
+    expect(rsbuild.getRsbuildConfig().dev!.client!.port).toBe('<port>')
+    expect(config.resolve?.alias).toHaveProperty(
+      '@lynx-js/webpack-dev-transport/client',
+      expect.stringContaining(`port=${server.port}`),
+    )
+  })
+
   test('filename.bundle is used for dev routes', async () => {
     const rsbuild = await createDevStubRsbuild({
       source: {
