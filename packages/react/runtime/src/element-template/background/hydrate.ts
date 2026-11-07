@@ -2,41 +2,25 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { getAttributeSlotUpdateOp } from './attr-slots.js';
-import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from './commit-context.js';
-import { backgroundElementTemplateInstanceManager } from './manager.js';
-import { BUILTIN_RAW_TEXT_TEMPLATE_KEY, getContainingListItem } from './shadow-instance.js';
+import { hydrateListInstance } from './hydrate-list.js';
+import {
+  arePairwiseHydrateKeysEqual,
+  clearHydrateKeyCache,
+  diffHydrateSlotChildren,
+  isSerializedCompiledNode,
+  isSerializedTypedListNode,
+} from './hydrate-matcher.js';
+import {
+  bindHydrationHandleId,
+  emitHydrateSlotDiffPatches,
+  emitSerializedSubtreeRemove,
+  hydrateAttributeSlots,
+} from './hydrate-patch.js';
+import { BUILTIN_RAW_TEXT_TEMPLATE_KEY } from './shadow-instance.js';
 import type { BackgroundElementTemplateInstance } from './shadow-instance.js';
-import { collectMainThreadRefSubtreeHandleIds } from './subtree-handles.js';
-import { BackgroundListElementTemplateInstance, toUpdateTypedListItemCommand } from './typed-instance.js';
-import { isDirectOrDeepEqual } from '../../core/deep-equal.js';
-import { isMainThreadFunction } from '../../core/main-thread-function.js';
-import { hydrationMap } from '../hydration-map.js';
-import { isGestureSlotValue } from '../prop-adapters/gesture.js';
-import { isMainThreadEventPropKey, isSpreadRecord } from '../prop-adapters/spread.js';
-import {
-  COMPONENT_AT_INDEXES_ATTR,
-  COMPONENT_AT_INDEX_ATTR,
-  ENQUEUE_COMPONENT_ATTR,
-  UPDATE_LIST_INFO_ATTR,
-} from '../protocol/list.js';
-import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
+import type { BackgroundListElementTemplateInstance } from './typed-instance.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
-import {
-  MAIN_BUNDLE_URL_SENTINEL,
-  elementTemplateIdentityKey,
-  parseElementTemplateType,
-} from '../protocol/template-type.js';
-import type {
-  SerializableValue,
-  SerializedCompiledNode,
-  SerializedEtNode,
-  SerializedTypedListNode,
-} from '../protocol/types.js';
-import { getMainThreadDynamicAttrSlotKinds } from '../runtime/template/attr-slot-plan.js';
-import type { MainThreadDynamicAttrKind } from '../runtime/template/attr-slot-plan.js';
-import { isMTEventNativeWrapper } from '../runtime/template/main-thread-event-ctx.js';
-import type { MTRefNativeWrapper } from '../runtime/template/main-thread-ref-ctx.js';
+import type { SerializedCompiledNode, SerializedEtNode, SerializedTypedListNode } from '../protocol/types.js';
 
 export function hydrateRootChildrenIntoContext(
   serializedChildren: SerializedEtNode[],
@@ -51,84 +35,8 @@ export function hydrateRootChildrenIntoContext(
     );
   } finally {
     // Template identities only need caching for this synchronous hydration pass.
-    backgroundHydrateKeys.clear();
+    clearHydrateKeyCache();
   }
-}
-
-function isSerializedCompiledNode(serialized: SerializedEtNode): serialized is SerializedCompiledNode {
-  return typeof (serialized as { templateKey?: unknown }).templateKey === 'string';
-}
-
-function isSerializedTypedListNode(serialized: SerializedEtNode): serialized is SerializedTypedListNode {
-  return !isSerializedCompiledNode(serialized) && serialized.tag === 'list';
-}
-
-interface HydrateChildListDiff {
-  // Background child at a new slot index that has no matching serialized child.
-  insertions: Record<number, BackgroundElementTemplateInstance>;
-  insertionCount: number;
-  // Serialized child indexes that no longer exist in the background slot.
-  removals: number[];
-  // Serialized child old index -> same-slot reorder target.
-  moves: Record<number, { toIndex: number; instance: BackgroundElementTemplateInstance }>;
-}
-
-function hydrateMatchingChildrenAndDiffSlot(
-  serializedChildren: SerializedEtNode[],
-  backgroundChildren: BackgroundElementTemplateInstance[],
-): HydrateChildListDiff | null {
-  let lastPlacedIndex = 0;
-  const result: HydrateChildListDiff = {
-    insertions: {},
-    insertionCount: 0,
-    removals: [],
-    moves: {},
-  };
-  const serializedByNodeKey: Record<string, [SerializedEtNode, number][]> = {};
-  const serializedCursorByNodeKey: Record<string, number> = {};
-
-  for (let i = 0; i < serializedChildren.length; i += 1) {
-    const node = serializedChildren[i]!;
-    const key = getSerializedNodeHydrateKey(node);
-    (serializedByNodeKey[key] ??= []).push([node, i]);
-  }
-
-  for (let i = 0; i < backgroundChildren.length; i += 1) {
-    const backgroundChild = backgroundChildren[i]!;
-    // Normalize the background instance's full `${entry}:${key}` type tag to the
-    // same native identity the serialized side uses (sentinel folded to the main
-    // card), so main-card nodes match regardless of the `__Card__` prefix.
-    const backgroundKey = getBackgroundNodeHydrateKey(backgroundChild.type);
-    const serializedCandidates = serializedByNodeKey[backgroundKey];
-    const candidateCursor = serializedCursorByNodeKey[backgroundKey] ?? 0;
-    const matchedSerialized = serializedCandidates?.[candidateCursor];
-
-    if (matchedSerialized) {
-      serializedCursorByNodeKey[backgroundKey] = candidateCursor + 1;
-      const oldIndex = matchedSerialized[1];
-      if (!hydrateInstance(matchedSerialized[0], backgroundChild)) {
-        return null;
-      }
-      if (oldIndex < lastPlacedIndex) {
-        result.moves[oldIndex] = { toIndex: i, instance: backgroundChild };
-      } else {
-        lastPlacedIndex = oldIndex;
-      }
-    } else {
-      result.insertions[i] = backgroundChild;
-      result.insertionCount += 1;
-    }
-  }
-
-  for (const key in serializedByNodeKey) {
-    const candidates = serializedByNodeKey[key]!;
-    const candidateCursor = serializedCursorByNodeKey[key] ?? 0;
-    for (let i = candidateCursor; i < candidates.length; i += 1) {
-      result.removals.push(candidates[i]![1]);
-    }
-  }
-
-  return result;
 }
 
 function hydrateInstance(
@@ -147,6 +55,7 @@ function hydrateInstance(
   return hydrateListInstance(
     serialized as SerializedTypedListNode,
     instance as BackgroundListElementTemplateInstance,
+    hydrateInstance,
   );
 }
 
@@ -197,109 +106,6 @@ function hydrateCompiledInstance(
   return true;
 }
 
-const backgroundHydrateKeys = new Map<string, string>();
-
-function getBackgroundNodeHydrateKey(type: string): string {
-  const cached = backgroundHydrateKeys.get(type);
-  if (cached !== undefined) {
-    return cached;
-  }
-  const parsed = parseElementTemplateType(type);
-  const key = elementTemplateIdentityKey(parsed.templateKey, parsed.bundleUrl);
-  backgroundHydrateKeys.set(type, key);
-  return key;
-}
-
-function getSerializedNodeHydrateKey(serialized: SerializedEtNode): string {
-  if (!isSerializedCompiledNode(serialized)) {
-    return serialized.tag;
-  }
-  return elementTemplateIdentityKey(
-    serialized.templateKey,
-    normalizeSerializedBundleUrl(serialized.bundleUrl),
-  );
-}
-
-function normalizeSerializedBundleUrl(bundleUrl: string | undefined): string | null {
-  return bundleUrl === undefined || bundleUrl === MAIN_BUNDLE_URL_SENTINEL ? null : bundleUrl;
-}
-
-function getSerializedTypedListChildren(serialized: SerializedTypedListNode): SerializedEtNode[] {
-  return (__DEV__ ? serialized.options?.listChildren : serialized.options!.listChildren)!;
-}
-
-function hydrateListInstance(
-  serialized: SerializedTypedListNode,
-  instance: BackgroundListElementTemplateInstance,
-): boolean {
-  if (__DEV__ && (serialized.childSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
-    return false;
-  }
-
-  const listChildren = getSerializedTypedListChildren(serialized);
-  if (__DEV__ && !Array.isArray(listChildren)) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
-    return false;
-  }
-
-  const backgroundChildren = instance.childNodes;
-  const handleId = serialized.uid;
-  if (!bindHydrationHandleId(instance, handleId, serialized.tag)) {
-    return false;
-  }
-  instance.prepareAttributeSlotsForHydration();
-  hydrateAttributeSlots(
-    serialized.tag,
-    handleId,
-    [getStableSerializedListAttributes(serialized.attributes)],
-    instance.attributeSlots,
-  );
-
-  const listDiff = hydrateMatchingChildrenAndDiffSlot(listChildren, backgroundChildren);
-  if (listDiff === null) {
-    return false;
-  }
-
-  return emitHydrateTypedListReconciliation(
-    instance,
-    listChildren,
-    backgroundChildren,
-    listDiff,
-  );
-}
-
-function getStableSerializedListAttributes(
-  attributes: SerializedTypedListNode['attributes'],
-): SerializableValue {
-  if (attributes == null) {
-    return null;
-  }
-  if (
-    !(COMPONENT_AT_INDEX_ATTR in attributes)
-    && !(COMPONENT_AT_INDEXES_ATTR in attributes)
-    && !(ENQUEUE_COMPONENT_ATTR in attributes)
-    && !(UPDATE_LIST_INFO_ATTR in attributes)
-  ) {
-    return attributes;
-  }
-  const stableAttributes: Record<string, SerializableValue> = {};
-  let hasStableAttribute = false;
-  for (const key in attributes) {
-    if (
-      key === COMPONENT_AT_INDEX_ATTR
-      || key === COMPONENT_AT_INDEXES_ATTR
-      || key === ENQUEUE_COMPONENT_ATTR
-      || key === UPDATE_LIST_INFO_ATTR
-    ) {
-      continue;
-    }
-    stableAttributes[key] = attributes[key]!;
-    hasStableAttribute = true;
-  }
-  return hasStableAttribute ? stableAttributes : null;
-}
-
 function hydrateChildListIntoContext(
   targetHandleId: number,
   slotId: number,
@@ -317,344 +123,19 @@ function hydrateChildListIntoContext(
 
   // Preserve the full matcher’s FIFO pairing while avoiding its temporary
   // structures when every child already occupies the matching slot position.
-  const length = serializedChildren.length;
-  if (length === backgroundChildren.length) {
-    let samePairwise = true;
-    for (let i = 0; i < length; i += 1) {
-      if (
-        getSerializedNodeHydrateKey(serializedChildren[i]!)
-          !== getBackgroundNodeHydrateKey(backgroundChildren[i]!.type)
-      ) {
-        samePairwise = false;
-        break;
-      }
-    }
-    if (samePairwise) {
-      for (let i = 0; i < length; i += 1) {
-        if (!hydrateInstance(serializedChildren[i]!, backgroundChildren[i]!)) {
-          return false;
-        }
-      }
-      return true;
-    }
-  }
-
-  const listDiff = hydrateMatchingChildrenAndDiffSlot(serializedChildren, backgroundChildren);
-  if (listDiff === null) {
-    return false;
-  }
-
-  // Hydrate emits patches directly here. Replaying against serialized order
-  // keeps insert targets in the main-thread slot without reshaping background.
-  const removalIndexes = new Set(listDiff.removals);
-  const { insertions, moves } = listDiff;
-  const movesWaitingForInsertionPoint = new Map<number, BackgroundElementTemplateInstance>();
-  let serializedCursor = 0;
-  let currentSerializedChild = serializedChildren[serializedCursor];
-  let newIndex = 0;
-  let oldIndex = 0;
-  // Insertions are known before replay starts. Moves are counted only when their
-  // old serialized position is reached, so the cursor can keep emitting patches
-  // even after all serialized children have been consumed.
-  let insertOrMovePatchesWaitingForInsertionPoint = listDiff.insertionCount;
-  while (currentSerializedChild || insertOrMovePatchesWaitingForInsertionPoint > 0) {
-    let keepCurrentSerializedChild = false;
-    if (currentSerializedChild && removalIndexes.has(oldIndex)) {
-      if (!emitSerializedSubtreeRemove(targetHandleId, slotId, currentSerializedChild)) {
+  if (arePairwiseHydrateKeysEqual(serializedChildren, backgroundChildren)) {
+    for (let i = 0; i < serializedChildren.length; i += 1) {
+      if (!hydrateInstance(serializedChildren[i]!, backgroundChildren[i]!)) {
         return false;
-      }
-    } else if (currentSerializedChild && moves[oldIndex] !== undefined) {
-      const move = moves[oldIndex]!;
-      movesWaitingForInsertionPoint.set(move.toIndex, move.instance);
-      insertOrMovePatchesWaitingForInsertionPoint += 1;
-    } else {
-      const beforeChildId = currentSerializedChild ? currentSerializedChild.uid : 0;
-      const movedChild = movesWaitingForInsertionPoint.get(newIndex);
-      if (movedChild) {
-        keepCurrentSerializedChild = true;
-        globalCommitContext.ops.push(
-          ElementTemplateUpdateOps.insertNode,
-          targetHandleId,
-          slotId,
-          movedChild.instanceId,
-          beforeChildId,
-          getContainingListItem(movedChild) ? null : collectMainThreadRefSubtreeHandleIds(movedChild),
-        );
-        insertOrMovePatchesWaitingForInsertionPoint -= 1;
-      } else if (insertions[newIndex] !== undefined) {
-        const insertedChild = insertions[newIndex]!;
-        keepCurrentSerializedChild = true;
-        emitCreateSubtree(insertedChild);
-        globalCommitContext.ops.push(
-          ElementTemplateUpdateOps.insertNode,
-          targetHandleId,
-          slotId,
-          insertedChild.instanceId,
-          beforeChildId,
-          getContainingListItem(insertedChild) ? null : collectMainThreadRefSubtreeHandleIds(insertedChild),
-        );
-        insertOrMovePatchesWaitingForInsertionPoint -= 1;
-      }
-
-      newIndex += 1;
-    }
-    if (currentSerializedChild && !keepCurrentSerializedChild) {
-      currentSerializedChild = serializedChildren[++serializedCursor];
-      oldIndex += 1;
-    }
-  }
-  return true;
-}
-
-function emitSerializedSubtreeRemove(
-  targetHandleId: number,
-  slotId: number,
-  serialized: SerializedEtNode,
-): boolean {
-  // The removed child may no longer have a live background instance in this
-  // slot, so serialized data is the source of truth for registry cleanup.
-  const removedSubtreeHandleIds: number[] = [];
-  if (!collectRemovableSerializedSubtreeHandleIdsInto(serialized, removedSubtreeHandleIds)) {
-    return false;
-  }
-  const childId = removedSubtreeHandleIds[0]!;
-  const existing = backgroundElementTemplateInstanceManager.get(childId);
-  globalCommitContext.ops.push(
-    ElementTemplateUpdateOps.removeNode,
-    targetHandleId,
-    slotId,
-    childId,
-    removedSubtreeHandleIds,
-  );
-  if (existing && !existing.parent) {
-    markRemovedSubtreeForPostDispatchTeardown(existing);
-  }
-  return true;
-}
-
-function collectRemovableSerializedSubtreeHandleIdsInto(
-  serialized: SerializedEtNode,
-  handles: number[],
-): boolean {
-  const handleId = getRemovableSerializedHandleId(serialized);
-  if (handleId === null) {
-    return false;
-  }
-  handles.push(handleId);
-
-  if (isSerializedCompiledNode(serialized)) {
-    for (const slotChildren of serialized.childSlots ?? []) {
-      if (!slotChildren) {
-        continue;
-      }
-      for (const child of slotChildren) {
-        if (!collectRemovableSerializedSubtreeHandleIdsInto(child, handles)) {
-          return false;
-        }
       }
     }
     return true;
   }
 
-  if (__DEV__ && !isSerializedTypedListNode(serialized)) {
-    lynx.reportError(
-      new Error(`ElementTemplate hydrate does not support serialized typed node '${serialized.tag}'.`),
-    );
+  const listDiff = diffHydrateSlotChildren(serializedChildren, backgroundChildren, hydrateInstance);
+  if (listDiff === null) {
     return false;
   }
-  const serializedList = serialized as SerializedTypedListNode;
-  if (__DEV__ && (serializedList.childSlots?.length ?? 0) > 0) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list does not support childSlots.'));
-    return false;
-  }
-  const listChildren = getSerializedTypedListChildren(serializedList);
-  if (__DEV__ && !Array.isArray(listChildren)) {
-    lynx.reportError(new Error('ElementTemplate hydrate typed list requires options.listChildren.'));
-    return false;
-  }
-  for (const child of listChildren) {
-    if (!collectRemovableSerializedSubtreeHandleIdsInto(child, handles)) {
-      return false;
-    }
-  }
-  return true;
-}
 
-function getRemovableSerializedHandleId(serialized: SerializedEtNode): number | null {
-  const handleId = serialized.uid;
-  if (
-    __DEV__
-    && (typeof handleId !== 'number'
-      || !Number.isInteger(handleId)
-      || handleId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID)
-  ) {
-    lynx.reportError(
-      new Error(`ElementTemplate hydrate remove received invalid uid ${String(handleId)}.`),
-    );
-    return null;
-  }
-  return handleId;
-}
-
-function emitHydrateTypedListReconciliation(
-  instance: BackgroundListElementTemplateInstance,
-  serializedChildren: SerializedEtNode[],
-  backgroundChildren: BackgroundElementTemplateInstance[],
-  listDiff: HydrateChildListDiff,
-): boolean {
-  const movedOldIndexes = Object.keys(listDiff.moves).map(Number);
-  const removalIndexes = listDiff.removals.concat(movedOldIndexes).sort((a, b) => a - b);
-  for (let index = 0; index < removalIndexes.length; index += 1) {
-    const oldIndex = removalIndexes[index]!;
-    const serialized = serializedChildren[oldIndex]!;
-    let itemId: number;
-    const removedSubtreeHandleIds: number[] = [];
-    if (listDiff.moves[oldIndex] === undefined) {
-      if (!collectRemovableSerializedSubtreeHandleIdsInto(serialized, removedSubtreeHandleIds)) {
-        return false;
-      }
-      itemId = removedSubtreeHandleIds[0]!;
-    } else {
-      itemId = serialized.uid;
-    }
-    globalCommitContext.ops.push(
-      ElementTemplateUpdateOps.removeTypedListItem,
-      instance.instanceId,
-      itemId,
-      removedSubtreeHandleIds,
-    );
-  }
-
-  const insertedIndexes = Object.keys(listDiff.insertions).map(Number);
-  let movedToIndexes: Set<number> | null = null;
-  for (let index = 0; index < movedOldIndexes.length; index += 1) {
-    const toIndex = listDiff.moves[movedOldIndexes[index]!]!.toIndex;
-    insertedIndexes.push(toIndex);
-    (movedToIndexes ??= new Set()).add(toIndex);
-  }
-  insertedIndexes.sort((a, b) => b - a);
-  for (let index = 0; index < insertedIndexes.length; index += 1) {
-    const insertedIndex = insertedIndexes[index]!;
-    const child = backgroundChildren[insertedIndex]!;
-    emitCreateSubtree(child);
-    globalCommitContext.ops.push(
-      ElementTemplateUpdateOps.insertTypedListItem,
-      instance.instanceId,
-      toUpdateTypedListItemCommand(child),
-      backgroundChildren[insertedIndex + 1]?.instanceId ?? 0,
-    );
-  }
-
-  for (let index = 0; index < backgroundChildren.length; index += 1) {
-    if (listDiff.insertions[index] || movedToIndexes?.has(index)) {
-      continue;
-    }
-    globalCommitContext.ops.push(
-      ElementTemplateUpdateOps.updateTypedListItem,
-      instance.instanceId,
-      toUpdateTypedListItemCommand(backgroundChildren[index]!),
-    );
-  }
-  return true;
-}
-
-function emitCreateSubtree(node: BackgroundElementTemplateInstance): void {
-  // Linked-list walk: slot grouping would be discarded since we recurse into
-  // every child regardless of slot. `emitCreate` does its own single-walk
-  // serialization of `instanceId`s grouped by slot.
-  let child = node.firstChild;
-  while (child) {
-    emitCreateSubtree(child);
-    child = child.nextSibling;
-  }
-  node.prepareAttributeSlotsForHydration();
-  node.emitCreate();
-}
-
-function bindHydrationHandleId(
-  instance: BackgroundElementTemplateInstance,
-  handleId: number,
-  templateKey: string,
-): boolean {
-  const oldHandleId = instance.instanceId;
-  if (__DEV__) {
-    try {
-      backgroundElementTemplateInstanceManager.updateId(instance.instanceId, handleId);
-      // Ref proxies created before hydrate keep the old background id; resolve it
-      // lazily so user-held proxies continue selecting the hydrated native node.
-      hydrationMap.set(oldHandleId, handleId);
-      instance.markMaterializedByHydration();
-      return true;
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      lynx.reportError(
-        new Error(`ElementTemplate hydrate received invalid uid ${handleId} for '${templateKey}': ${reason}`),
-      );
-      return false;
-    }
-  }
-
-  backgroundElementTemplateInstanceManager.updateId(instance.instanceId, handleId);
-  hydrationMap.set(oldHandleId, handleId);
-  instance.markMaterializedByHydration();
-  return true;
-}
-
-function hydrateAttributeSlots(
-  templateType: string,
-  handleId: number,
-  beforeSlots: SerializableValue[],
-  afterSlots: SerializableValue[],
-): void {
-  const slotCount = Math.max(beforeSlots.length, afterSlots.length);
-  const slotKinds = getMainThreadDynamicAttrSlotKinds(templateType);
-  for (let slotIndex = 0; slotIndex < slotCount; slotIndex += 1) {
-    // Native serialization and background preparation may represent an absent slot differently.
-    const beforeValue = beforeSlots[slotIndex] ?? null;
-    const afterValue = afterSlots[slotIndex] ?? null;
-    if (
-      !shouldForceMainThreadHydrateSlot(slotKinds?.get(slotIndex), afterValue)
-      && isDirectOrDeepEqual(beforeValue, afterValue)
-    ) {
-      continue;
-    }
-    globalCommitContext.ops.push(
-      getAttributeSlotUpdateOp(templateType, slotIndex),
-      handleId,
-      slotIndex,
-      afterValue,
-    );
-  }
-}
-
-function shouldForceMainThreadHydrateSlot(
-  slotKind: MainThreadDynamicAttrKind | undefined,
-  value: SerializableValue | undefined,
-): boolean {
-  if (slotKind === 'gesture') {
-    return value != null;
-  }
-  if (slotKind === 'mt-event') {
-    return isMTEventNativeWrapper(value);
-  }
-  if (slotKind === 'spread') {
-    if (!isSpreadRecord(value)) {
-      return false;
-    }
-    for (const key of Object.keys(value)) {
-      if (key === 'main-thread:ref') {
-        return true;
-      }
-      const entry = value[key];
-      if (key === 'main-thread:gesture' && isGestureSlotValue(entry)) {
-        return true;
-      }
-      if (isMainThreadEventPropKey(key) && isMTEventNativeWrapper(entry)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  return slotKind === 'mt-ref'
-    && (value == null || isMainThreadFunction((value as unknown as MTRefNativeWrapper).value));
+  return emitHydrateSlotDiffPatches(targetHandleId, slotId, serializedChildren, listDiff);
 }
