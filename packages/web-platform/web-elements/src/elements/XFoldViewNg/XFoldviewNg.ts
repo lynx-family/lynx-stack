@@ -11,6 +11,13 @@ import type { XFoldviewSlotNg } from './XFoldviewSlotNg.js';
 
 import { LinearContainer } from '../../compat/index.js';
 
+/**
+ * Whether the slot is positioned by CSS anchor positioning. Keep the condition
+ * in sync with the `@supports` rule in `x-foldview-ng.css`.
+ */
+export const supportsAnchorPositioning: boolean = typeof CSS !== 'undefined'
+  && CSS.supports('(top: anchor(--a bottom)) and (anchor-scope: all)');
+
 export const scrollableLength = Symbol('scrollableLength');
 export const isHeaderShowing = Symbol('isHeaderShowing');
 export const resizeObserver = Symbol('resizeObserver');
@@ -24,22 +31,31 @@ export const slotKid = Symbol('slotKid');
 export class XFoldviewNg extends HTMLElement {
   static readonly notToFilterFalseAttributes = new Set(['scroll-enable']);
   [slotKid]?: XFoldviewSlotNg;
-  [resizeObserver]?: ResizeObserver = new ResizeObserver((resizeEntries) => {
-    for (const resize of resizeEntries) {
-      if (resize.target.tagName === 'X-FOLDVIEW-HEADER-NG') {
-        this.#headerHeight = resize.contentRect.height;
-      } else if (resize.target.tagName === 'X-FOLDVIEW-TOOLBAR-NG') {
-        this.#toolbarHeight = resize.contentRect.height;
+  // The header and the toolbar are only measured when the slot cannot be
+  // anchored to them by CSS.
+  [resizeObserver]?: ResizeObserver = supportsAnchorPositioning
+    ? undefined
+    : new ResizeObserver((resizeEntries) => {
+      for (const resize of resizeEntries) {
+        if (resize.target.tagName === 'X-FOLDVIEW-HEADER-NG') {
+          this.#headerHeight = resize.contentRect.height;
+        } else if (resize.target.tagName === 'X-FOLDVIEW-TOOLBAR-NG') {
+          this.#toolbarHeight = resize.contentRect.height;
+        }
       }
-    }
-    if (this[slotKid]) {
-      this[slotKid].style.top = `${this.#headerHeight - this.#toolbarHeight}px`;
-    }
-  });
+      if (this[slotKid]) {
+        this[slotKid].style.top = `${
+          this.#headerHeight - this.#toolbarHeight
+        }px`;
+      }
+    });
   #headerHeight: number = 0;
   #toolbarHeight: number = 0;
 
   get [scrollableLength](): number {
+    if (supportsAnchorPositioning) {
+      return this.scrollHeight - this.clientHeight;
+    }
     return this.#headerHeight - this.#toolbarHeight;
   }
   get [isHeaderShowing](): boolean {

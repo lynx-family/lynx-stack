@@ -899,11 +899,13 @@ test.describe('web-elements test suite', () => {
     }, { title }) => {
       await gotoWebComponentPage(page, title);
       await wait(500);
+      // The slot starts below the 400px header, whether it is anchored to it
+      // or offset by script.
       await expect.poll(() =>
         page.locator('x-foldview-slot-ng').evaluate((slot) =>
-          (slot as HTMLElement).style.top
+          (slot as HTMLElement).offsetTop
         )
-      ).toBe('200px');
+      ).toBe(400);
     });
     test('x-foldview-ng/size-parent-grow-children-specific', async ({
       page,
