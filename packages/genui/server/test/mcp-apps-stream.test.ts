@@ -62,6 +62,13 @@ describe('MCP Apps stream', () => {
     global.__MCP_APPS_AGENT_SERVICE__ = {
       generateRaw(_messages, opts) {
         opts.onReasoning?.('Routing reasoning');
+        expect(opts.streamRawGeneration).toBe(true);
+        opts.onModelOutput?.({
+          invocationId: 'mcp-call',
+          step: 1,
+          type: 'reasoning-delta',
+          payload: { text: 'Routing reasoning' },
+        });
         opts.onPerformanceEvent?.('agent.model.first_text_token', {
           invocationId: 'mcp-routing',
           durationMs: 40,
@@ -95,6 +102,7 @@ describe('MCP Apps stream', () => {
         body: JSON.stringify(requestBody()),
       });
       const body = await response.text();
+      expect(body).toContain('event: model-output');
       expect(body).toContain('event: error');
       expect(body).toContain(
         '"reasoning":{"text":"Routing reasoning","truncated":false}',

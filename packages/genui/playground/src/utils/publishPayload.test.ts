@@ -8,7 +8,10 @@ import { publishA2UIPayload, publishOpenUIPayload } from './publishPayload.js';
 
 describe('payload publishing', () => {
   test('uploads through GenUI Server PUT endpoints and uses returned URLs', async () => {
-    const fetchPayload = rs.fn(async () => ({
+    const fetchPayload = rs.fn(async (
+      _input: RequestInfo | URL,
+      _init?: RequestInit,
+    ) => ({
       ok: true,
       json: async () => ({
         preview: {
@@ -45,7 +48,11 @@ describe('payload publishing', () => {
         'http://localhost:3060/a2ui/payload',
       );
       expect(fetchPayload.mock.calls[0]?.[1]).toMatchObject({ method: 'PUT' });
-      expect(JSON.parse(String(fetchPayload.mock.calls[0]?.[1]?.body))).toEqual(
+      const a2uiBody = fetchPayload.mock.calls[0]?.[1]?.body;
+      if (typeof a2uiBody !== 'string') {
+        throw new Error('Expected a JSON request body');
+      }
+      expect(JSON.parse(a2uiBody)).toEqual(
         {
           messages: ['message'],
           actionMocks: { tap: 'action' },
@@ -57,7 +64,11 @@ describe('payload publishing', () => {
         'http://localhost:3060/openui/payload',
       );
       expect(fetchPayload.mock.calls[1]?.[1]).toMatchObject({ method: 'PUT' });
-      expect(JSON.parse(String(fetchPayload.mock.calls[1]?.[1]?.body))).toEqual(
+      const openuiBody = fetchPayload.mock.calls[1]?.[1]?.body;
+      if (typeof openuiBody !== 'string') {
+        throw new Error('Expected a JSON request body');
+      }
+      expect(JSON.parse(openuiBody)).toEqual(
         {
           rawText: 'root = Text("Hello")',
         },

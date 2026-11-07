@@ -196,6 +196,7 @@ describe('local historical Bench reports', () => {
       onNew: noop,
       onOpenReport: noop,
       onRestore: noop,
+      onRename: noop,
     }));
     expect(history).toContain('Total time: 1m 28s');
   });
@@ -564,6 +565,7 @@ describe('fixed read-only report template', () => {
         onDelete: noop,
         onNew: noop,
         onRestore: noop,
+        onRename: noop,
       }));
     expect(render(entry.report)).not.toContain(
       'View report details for History result (opens in a new tab)',

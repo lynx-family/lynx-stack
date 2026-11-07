@@ -278,6 +278,9 @@ async function postA2UIActionStream(req: Request) {
         observeGenerationTiming = timing.observe;
         const streamOptions: A2UIChatOptions = {
           ...optsWithCatalog,
+          onModelOutput: event => {
+            enqueue('model-output', event);
+          },
           onModelInteraction: event => {
             enqueue('model', event);
           },

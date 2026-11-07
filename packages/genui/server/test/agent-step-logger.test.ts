@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import { createAgentStepLogger } from '../service/common/agent-step-logger.js';
 import { extractGenerationResult } from '../service/common/result.js';
+import type { ModelOutputEvent } from '../service/common/types.js';
 
 test.each([
   {
@@ -469,4 +470,84 @@ test('redacts credentials and schema input dumps from tool errors', () => {
   expect(output).toContain('expected string');
   expect(output).not.toContain('private source');
   expect(output).not.toContain('test-secret-key');
+});
+
+test('streams all model steps without repeating completed text or tool calls', () => {
+  const onModelOutput = rstest.fn<(event: ModelOutputEvent) => void>();
+  const onPerformanceEvent = rstest.fn();
+  const callbacks = createAgentStepLogger(
+    { onModelOutput, onPerformanceEvent },
+    'test',
+  );
+  const tool = {
+    toolCallId: 'call-1',
+    toolName: 'search',
+    args: { query: 'example' },
+  };
+  callbacks.onChunk(
+    {
+      type: 'reasoning-delta',
+      payload: { id: 'r1', text: 'Think first' },
+    } as never,
+  );
+  callbacks.onChunk(
+    {
+      type: 'text-delta',
+      payload: { id: 't1', text: 'I will search.' },
+    } as never,
+  );
+  callbacks.onChunk({ type: 'tool-call', payload: tool } as never);
+  callbacks.onStepFinish({
+    reasoningText: 'Think first',
+    text: 'I will search.',
+    toolCalls: [{ payload: tool }],
+    toolResults: [{ payload: { ...tool, result: 'Found it' } }],
+  } as never);
+  callbacks.onChunk(
+    { type: 'text-delta', payload: { id: 't2', text: '' } } as never,
+  );
+  callbacks.onStepFinish(
+    {
+      reasoningText: 'Now compose',
+      text: 'Final artifact',
+      toolCalls: [],
+      toolResults: [],
+    } as never,
+  );
+  const events = onModelOutput.mock.calls.map(([event]) => event);
+  expect(
+    events.filter((event, index) =>
+      event.type !== events[index - 1]?.type
+      || event.step !== events[index - 1]?.step
+    ).map(event => [event.step, event.type]),
+  ).toEqual([
+    [1, 'reasoning-delta'],
+    [1, 'text-delta'],
+    [1, 'tool-call'],
+    [1, 'tool-result'],
+    [2, 'reasoning-delta'],
+    [2, 'text-delta'],
+  ]);
+  expect(events.filter(event => event.type === 'tool-call')).toHaveLength(1);
+  expect(events.find(event => event.type === 'tool-call')?.payload.args)
+    .toEqual(tool.args);
+  expect(events.find(event => event.type === 'tool-result')?.payload.result)
+    .toBe('Found it');
+  expect(
+    events.filter(event => event.type === 'reasoning-delta').map(event =>
+      event.payload.text
+    ).join(''),
+  ).toBe('Think firstNow compose');
+  expect(
+    events.filter(event => event.type === 'text-delta').map(event =>
+      event.payload.text
+    ).join(''),
+  ).toBe('I will search.Final artifact');
+  expect(new Set(events.map(event => event.invocationId)).size).toBe(1);
+  expect(JSON.stringify(onPerformanceEvent.mock.calls)).not.toContain(
+    'Think first',
+  );
+  expect(JSON.stringify(onPerformanceEvent.mock.calls)).not.toContain(
+    'Final artifact',
+  );
 });

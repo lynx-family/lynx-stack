@@ -490,10 +490,20 @@ test('does not replay a streamed action response at completion', async () => {
   )!;
   expect(generationMetric.querySelector('.previewMetricValuePending')).not
     .toBeNull();
+  const beforeModelOutput = post.mock.calls.length;
+  await emit('model-output', {
+    invocationId: 'action-run',
+    step: 1,
+    type: 'reasoning-delta',
+    payload: { text: 'Thinking about the action' },
+  });
+  expect(container.textContent).toContain('Thinking about the action');
+  expect(post.mock.calls).toHaveLength(beforeModelOutput);
   await emit('metrics', { metrics: { generationMs: 35 } });
   await emit('message', { messages: [update('Updated')] });
   const delivered = post.mock.calls.length;
   await done([update('Updated')], { generationMs: 35 });
+  expect(container.textContent).toContain('Thinking about the action');
   expect(generationMetric.querySelector('.previewMetricValue')?.textContent)
     .toBe('35ms');
   expect(container.querySelector('iframe')).toBe(frame);

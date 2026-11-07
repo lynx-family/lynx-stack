@@ -224,6 +224,9 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             validated.messages,
             {
               ...opts,
+              onModelOutput: event => {
+                enqueue('model-output', event);
+              },
               onModelInteraction: event => {
                 enqueue('model', event);
               },
