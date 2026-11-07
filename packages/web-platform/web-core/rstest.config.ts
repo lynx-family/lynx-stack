@@ -15,6 +15,11 @@ const config: RstestConfig = defineConfig({
   include: ['./tests/*.spec.ts'],
   exclude: ['./tests/*.bench.spec.ts'],
   testTimeout: 10_000,
+  output: {
+    // Load jsdom with `require()` to avoid a Node 22 module linking race
+    // (nodejs/node#58598, fixed in Node 24 by nodejs/node#60380).
+    externals: { jsdom: 'commonjs jsdom' },
+  },
   coverage: {
     include: ['ts/**', 'src/**'],
   },
