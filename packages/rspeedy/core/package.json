@@ -62,7 +62,7 @@
     "@rsbuild/plugin-css-minimizer": "2.0.1",
     "@rstest/core": "catalog:rstest",
     "@swc/core": "^1.15.47",
-    "chokidar": "^5.0.0",
+    "chokidar": "^6.0.0",
     "commander": "^15.0.0",
     "eventemitter3": "^5.0.4",
     "exit-hook": "^5.1.0",
