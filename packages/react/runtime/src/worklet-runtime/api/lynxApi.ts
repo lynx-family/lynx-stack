@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { querySelector, querySelectorAll } from './lepusQuerySelector.js';
-import { isSdkVersionGt } from '../utils/version.js';
+import { isSdkVersionGt } from '../../shared/version.js';
 
 function initApiEnv(): void {
   // @ts-expect-error type

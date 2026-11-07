@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { WorkletEvents } from './bindings/events.js';
 import { profile } from './utils/profile.js';
-import { isSdkVersionGt } from './utils/version.js';
+import { isSdkVersionGt } from '../shared/version.js';
 
 /**
  * `JsFunctionLifecycleManager` monitors references to JS function handles to be called by `runOnBackground()`.

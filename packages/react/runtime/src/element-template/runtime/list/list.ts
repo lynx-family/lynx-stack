@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { isDirectOrDeepEqual } from '../../../utils.js';
+import { isDirectOrDeepEqual } from '../../../core/deep-equal.js';
 import type {
   RuntimeAttributeSlotValue,
   RuntimeTypedElementAttributes,

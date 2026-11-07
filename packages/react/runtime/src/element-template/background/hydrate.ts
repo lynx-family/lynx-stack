@@ -13,8 +13,8 @@ import {
 } from './instance.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { isDirectOrDeepEqual } from '../../core/deep-equal.js';
 import { isMainThreadFunction } from '../../core/main-thread-function.js';
-import { isDirectOrDeepEqual } from '../../utils.js';
 import { hydrationMap } from '../hydration-map.js';
 import { isGestureSlotValue } from '../prop-adapters/gesture.js';
 import { isMainThreadEventPropKey, isSpreadRecord } from '../prop-adapters/spread.js';

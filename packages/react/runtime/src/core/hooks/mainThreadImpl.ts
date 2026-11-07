@@ -35,7 +35,7 @@ import {
   VALUE,
   VNODE,
 } from '../../shared/render-constants.js';
-import { noop } from '../../utils.js';
+import { noop } from '../../shared/utils.js';
 
 let currentIndex: number;
 let currentComponent: Component | null | undefined;

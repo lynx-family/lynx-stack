@@ -3,14 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import { render } from 'preact';
 
-import { __root } from '../../root.js';
 import { delayedEvents } from './event/delayEvents.js';
 import { delayedLifecycleEvents } from './event/delayLifecycleEvents.js';
 import { globalCommitTaskMap } from './patch/commit.js';
 import { deinitGlobalSnapshotPatch } from './patch/snapshotPatch.js';
 import { delayedUiOps } from './ref/delay.js';
+import { withSyncEffectFlush } from '../../core/sync-effect-flush.js';
+import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
-import { withSyncEffectFlush } from '../../utils.js';
 import { resetSnapshotMainThreadFunctionRuntime } from '../worklet/call/runOnMainThread.js';
 import { resetSnapshotBackgroundFunctionRuntime } from '../worklet/ctx.js';
 

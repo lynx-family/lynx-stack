@@ -22,7 +22,7 @@ import {
   VALUE,
   VNODE,
 } from '../../shared/render-constants.js';
-import { getDisplayName } from '../../utils.js';
+import { getDisplayName } from '../../shared/utils.js';
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
