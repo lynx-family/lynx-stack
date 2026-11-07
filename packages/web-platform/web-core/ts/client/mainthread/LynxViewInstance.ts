@@ -3,6 +3,7 @@
  * Licensed under the Apache License Version 2.0 that can be found in the
  * LICENSE file in the root directory of this source tree.
  */
+import { refreshStyleReactiveElements } from '@lynx-js/web-elements/internal/refresh-style-reactive-elements';
 import type {
   Cloneable,
   ExternalBundleResponse,
@@ -124,7 +125,13 @@ export class LynxViewInstance implements AsyncDisposable {
   ) {
     this.systemInfo = createSystemInfo(browserConfig);
     if (!isSSR) {
-      this.rootDom.append(linkElement.cloneNode(false));
+      const baseStyleLink = linkElement.cloneNode(false) as HTMLLinkElement;
+      baseStyleLink.addEventListener(
+        'load',
+        () => refreshStyleReactiveElements(this.rootDom),
+        { once: true },
+      );
+      this.rootDom.append(baseStyleLink);
     }
     this.#nativeModulesMap = nativeModulesMap;
     this.#napiModulesMap = napiModulesMap;
@@ -188,6 +195,7 @@ export class LynxViewInstance implements AsyncDisposable {
           resource,
           this.templateUrl === currentUrl ? undefined : currentUrl,
         );
+        refreshStyleReactiveElements(this.rootDom);
       }
     }
   }

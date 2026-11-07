@@ -3,10 +3,14 @@ import '@lynx-js/web-elements/plugins/scroll-view-mouse-drag';
 import '../../src/elements/all.js';
 import '../../index.css';
 import '@lynx-js/playwright-fixtures/common.css';
-import { Component } from '../../src/element-reactive/component.js';
+import {
+  Component,
+  refreshStyleReactiveElements,
+} from '../../src/element-reactive/component.js';
 import { registerEventEnableStatusChangeHandler } from '../../src/element-reactive/registerEventStatusChangedHandler.js';
 
 (globalThis as any).Component = Component;
+(globalThis as any).refreshStyleReactiveElements = refreshStyleReactiveElements;
 (globalThis as any).registerEventEnableStatusChangeHandler =
   registerEventEnableStatusChangeHandler;
 // Trigger rebuild
