@@ -1,5 +1,12 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-core@0.26.8
+
 ## 0.16.7
 
 ### Patch Changes

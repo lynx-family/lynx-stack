@@ -1,5 +1,14 @@
 # @lynx-js/genui
 
+## 0.7.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/config-rsbuild-plugin@0.2.5
+  - @lynx-js/react-rsbuild-plugin@0.22.3
+  - @lynx-js/rsbuild-plugin@0.1.9
+
 ## 0.7.3
 
 ### Patch Changes
