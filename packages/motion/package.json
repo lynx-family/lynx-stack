@@ -48,10 +48,10 @@
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/types": "4.4.2",
     "@rslib/core": "catalog:rslib",
-    "motion": "13.4.3",
-    "motion-dom": "13.4.2",
+    "motion": "13.5.1",
+    "motion-dom": "13.5.1",
     "motion-utils": "13.5.0",
     "rsbuild-plugin-publint": "1.0.0"
   },
