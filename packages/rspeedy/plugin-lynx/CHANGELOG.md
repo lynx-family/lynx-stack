@@ -1,5 +1,13 @@
 # @lynx-js/rsbuild-plugin
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.26.8
+  - @lynx-js/template-webpack-plugin@0.16.8
+
 ## 0.1.8
 
 ### Patch Changes

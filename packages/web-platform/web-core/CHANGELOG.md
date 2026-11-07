@@ -1,5 +1,13 @@
 # @lynx-js/web-core
 
+## 0.26.8
+
+### Patch Changes
+
+- Updated dependencies [[`a619bb3`](https://github.com/lynx-family/lynx-stack/commit/a619bb3344a4cdf0f145a34f3dca44ef71ee05d2)]:
+  - @lynx-js/web-elements@0.12.18
+  - @lynx-js/web-worker-rpc@0.26.8
+
 ## 0.26.7
 
 ### Patch Changes
