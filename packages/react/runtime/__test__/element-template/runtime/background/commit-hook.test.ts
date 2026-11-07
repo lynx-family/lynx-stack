@@ -614,6 +614,13 @@ describe('ElementTemplate commit hook', () => {
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       options.__c?.({} as unknown as object, []);
+      envManager.switchToMainThread();
+      expect(updateEvents).toEqual([{
+        ops: createRawTextOps(1, 'flush'),
+        flushOptions: {},
+        reloadVersion: getReloadVersion(),
+      }]);
+      envManager.switchToBackground();
       expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       vi.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
