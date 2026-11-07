@@ -59,7 +59,7 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@types/react": "^19.2.18",
-    "happy-dom": "20.14.0",
+    "happy-dom": "21.0.4",
     "jsdom": "^27.4.0",
     "typescript": "catalog:"
   },
