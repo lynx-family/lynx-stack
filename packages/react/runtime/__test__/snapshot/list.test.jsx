@@ -4917,6 +4917,115 @@ describe('destroy list after element transfer', () => {
   });
 });
 
+describe('nested list element ownership after outer row reuse', () => {
+  function createRows() {
+    const listSnapshot = __SNAPSHOT__(<list>{HOLE}</list>);
+    const rowSnapshot = __SNAPSHOT__(<list-item item-key={HOLE} reuse-identifier='row'>{HOLE}</list-item>);
+    const cellSnapshot = __SNAPSHOT__(
+      <list-item item-key={HOLE}>
+        <raw-text text={HOLE} />
+      </list-item>,
+    );
+    const outer = new SnapshotInstance(listSnapshot);
+    const rows = [0, 1].map((index) => {
+      const row = new SnapshotInstance(rowSnapshot);
+      row.setAttribute(0, { 'item-key': `row-${index}` });
+      const inner = new SnapshotInstance(listSnapshot);
+      const cell = new SnapshotInstance(cellSnapshot);
+      cell.setAttribute(0, { 'item-key': `cell-${index}` });
+      cell.setAttribute(1, `cell-${index}`);
+      inner.insertBefore(cell);
+      row.insertBefore(inner);
+      outer.insertBefore(row);
+      return { inner, cell };
+    });
+    outer.ensureElements();
+    return { outerList: outer.__element_root, row0: rows[0], row1: rows[1] };
+  }
+
+  const show = (list, index) => elementTree.triggerComponentAtIndex(list, index);
+  const recycle = (list, sign) => elementTree.triggerEnqueueComponent(list, sign);
+  const text = (element) => __GetAttributeByName(element.children[0], 'text');
+
+  it('redirects the old recycle-pool entry to the copy that keeps the old element', () => {
+    const { outerList, row0, row1 } = createRows();
+    const cell0Instance = row0.cell;
+    const oldRowSign = show(outerList, 0);
+    const oldInnerList = row0.inner.__element_root;
+    const oldCellSign = show(oldInnerList, 0);
+    const oldCellElement = cell0Instance.__element_root;
+    expect(text(oldCellElement)).toBe('cell-0');
+
+    recycle(outerList, oldRowSign);
+    expect(show(outerList, 1)).toBe(oldRowSign);
+    expect(row1.inner.__element_root).toBe(oldInnerList);
+    recycle(oldInnerList, oldCellSign);
+    const oldCellPool = gRecycleMap[__GetElementUniqueID(oldInnerList)].get(cell0Instance.type);
+    expect(oldCellPool.get(oldCellSign)).toBe(cell0Instance);
+    expect(cell0Instance.__element_root).toBe(oldCellElement);
+
+    expect(show(outerList, 0)).not.toBe(oldRowSign);
+    expect(row0.inner.__element_root).not.toBe(oldInnerList);
+    const newCellSign = show(row0.inner.__element_root, 0);
+    const newCellElement = cell0Instance.__element_root;
+    expect(newCellSign).toBe(__GetElementUniqueID(newCellElement));
+    expect(newCellSign).not.toBe(oldCellSign);
+    expect(newCellElement).not.toBe(oldCellElement);
+    expect(text(newCellElement)).toBe('cell-0');
+
+    const recycledCellInstance = oldCellPool.get(oldCellSign);
+    expect(
+      recycledCellInstance === cell0Instance,
+      'the old recycle-pool entry must stop pointing at the logical cell that now owns a new element',
+    ).toBe(false);
+    expect(recycledCellInstance.__element_root).toBe(oldCellElement);
+    expect(cell0Instance.__element_root).toBe(newCellElement);
+
+    expect(show(oldInnerList, 0)).toBe(oldCellSign);
+    expect(row1.cell.__element_root).toBe(oldCellElement);
+    expect(text(oldCellElement)).toBe('cell-1');
+    expect(cell0Instance.__element_root).toBe(newCellElement);
+    expect(text(newCellElement)).toBe('cell-0');
+  });
+
+  it('uses the redirected sign-map entry when the old cell is enqueued after element transfer', () => {
+    const { outerList, row0, row1 } = createRows();
+    const cell0Instance = row0.cell;
+    const oldRowSign = show(outerList, 0);
+    const oldInnerList = row0.inner.__element_root;
+    const oldCellSign = show(oldInnerList, 0);
+    const oldCellElement = cell0Instance.__element_root;
+    const oldSignMap = gSignMap[__GetElementUniqueID(oldInnerList)];
+    expect(oldSignMap.get(oldCellSign)).toBe(cell0Instance);
+
+    recycle(outerList, oldRowSign);
+    expect(show(outerList, 1)).toBe(oldRowSign);
+    expect(row1.inner.__element_root).toBe(oldInnerList);
+    expect(show(outerList, 0)).not.toBe(oldRowSign);
+    const newCellSign = show(row0.inner.__element_root, 0);
+    const newCellElement = cell0Instance.__element_root;
+    expect(newCellSign).toBe(__GetElementUniqueID(newCellElement));
+    expect(newCellSign).not.toBe(oldCellSign);
+
+    const transferredCellInstance = oldSignMap.get(oldCellSign);
+    expect(
+      transferredCellInstance === cell0Instance,
+      'a delayed enqueue must find the copy holding the old element in the old sign map',
+    ).toBe(false);
+    expect(transferredCellInstance.__element_root).toBe(oldCellElement);
+    expect(cell0Instance.__element_root).toBe(newCellElement);
+
+    recycle(oldInnerList, oldCellSign);
+    const recycledInstances = [...gRecycleMap[__GetElementUniqueID(oldInnerList)].values()]
+      .flatMap(pool => [...pool.values()]);
+    expect(recycledInstances).toContain(transferredCellInstance);
+    expect(recycledInstances).not.toContain(cell0Instance);
+    expect(transferredCellInstance.__element_root).toBe(oldCellElement);
+    expect(cell0Instance.__element_root).toBe(newCellElement);
+    expect(text(newCellElement)).toBe('cell-0');
+  });
+});
+
 describe('list worklet ref lifecycle', () => {
   it('unrefs worklet refs when a list child is logically removed', () => {
     const listSnapshot = __SNAPSHOT__(<list>{HOLE}</list>);
