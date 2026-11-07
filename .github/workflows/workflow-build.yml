@@ -167,14 +167,35 @@ jobs:
           github.event_name == 'pull_request'
         env:
           MERGE_BASE: ${{ needs.get-merge-base.outputs.merge-base }}
-        # The merge base is already computed by the `get-merge-base` job, so
-        # pass that SHA straight to `--since` instead of resolving `origin/<base>`
-        # here. History comes from the `fetch-depth` above.
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # The checkout is GitHub's synthetic merge ref. Select changesets from
+        # the immutable PR head so later base-branch changesets are excluded.
         run: |
-          pnpm changeset status --since="$MERGE_BASE" --output .changeset-status.json
-          PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs .changeset-status.json | tr '\n' ' ')
+          PR_HEAD_DIR="$RUNNER_TEMP/pkg-pr-new-head-$PR_HEAD_SHA"
+          STATUS_FILE="$RUNNER_TEMP/pkg-pr-new-changeset-status-$PR_HEAD_SHA.json"
+          git worktree add --detach "$PR_HEAD_DIR" "$PR_HEAD_SHA"
+          trap 'git worktree remove --force "$PR_HEAD_DIR"' EXIT
+
+          CHANGESET_FILES="$(
+            cd "$PR_HEAD_DIR"
+            node "$GITHUB_WORKSPACE/.github/scripts/list-changeset-files.cjs" "$MERGE_BASE"
+          )"
+          if [ -z "$CHANGESET_FILES" ]; then
+            echo "No PR changesets found; skipping pkg.pr.new publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          (
+            cd "$PR_HEAD_DIR"
+            "$GITHUB_WORKSPACE/node_modules/.bin/changeset" status \
+              --since="$MERGE_BASE" \
+              --output "$STATUS_FILE"
+          )
+          # Resolve the PR release selection against the synthetic merge workspace.
+          PACKAGE_DIRS=$(node .github/scripts/list-changeset-packages.cjs "$STATUS_FILE" | tr '\n' ' ')
           if [ -z "$(echo "$PACKAGE_DIRS" | tr -d '[:space:]')" ]; then
-            echo "No publishable packages affected by changesets; skipping pkg.pr.new publish."
+            echo "No publishable packages affected by PR changesets; skipping pkg.pr.new publish."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
