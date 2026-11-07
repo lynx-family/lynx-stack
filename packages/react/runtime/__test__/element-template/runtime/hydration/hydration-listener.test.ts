@@ -61,7 +61,7 @@ import {
   enqueueDelayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../../../src/core/thread-function-call/main-thread.js';
-import { runOnMainThread } from '../../../../src/element-template/runtime/template/main-thread-function.js';
+import { runOnMainThread } from '../../../../src/element-template/background/main-thread-function.js';
 import { resetFunctionCallReturnListener } from '../../../../src/core/thread-function-call/return-value.js';
 import { ElementTemplateEnvManager } from '../../test-utils/debug/envManager.js';
 

@@ -26,7 +26,7 @@ import { ElementTemplateUpdateOps } from '../../../../../src/element-template/pr
 import type { ElementTemplateUpdateCommitContext } from '../../../../../src/element-template/protocol/types.js';
 import { parseElementTemplateUpdateEventPayload } from '../../../../../src/element-template/protocol/update-event.js';
 import { clearEtAttrPlanMap } from '../../../../../src/element-template/runtime/template/attr-slot-plan.js';
-import { resetElementTemplateMainThreadFunctionRuntime } from '../../../../../src/element-template/runtime/template/main-thread-function.js';
+import { resetElementTemplateMainThreadFunctionRuntime } from '../../../../../src/element-template/background/main-thread-function.js';
 import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
