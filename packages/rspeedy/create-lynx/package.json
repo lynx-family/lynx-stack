@@ -38,7 +38,7 @@
     "test": "rstest run"
   },
   "dependencies": {
-    "@rstackjs/create-toolkit": "2.2.7"
+    "@rstackjs/create-toolkit": "2.2.11"
   },
   "devDependencies": {
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
