@@ -5,9 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree, options } from './utils/nativeMethod';
 import { __root } from '../../src/root';
-import { clearPage } from '../../src/snapshot';
+import { clearPage, SnapshotInstance } from '../../src/snapshot';
 import { gRecycleMap, gSignMap } from '../../src/snapshot/list/list';
+import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';
 import { DynamicPartType } from '../../src/snapshot/snapshot/dynamicPartType';
+import { nestedListBridge } from '../../src/worklet-runtime/listEvent';
 
 const ssrIDMap = new Map();
 
@@ -165,4 +167,124 @@ describe.each([
     expect(removeElement).toHaveBeenCalledWith(page, view);
     expect(page.children).toEqual([]);
   });
+});
+
+describe('coalesced nested-list cells', () => {
+  const HOLE = null;
+  const outerType = __SNAPSHOT__(<list id='coalesced-outer'>{HOLE}</list>);
+  const holderType = __SNAPSHOT__(
+    <list-item item-key={HOLE} className='coalesced-cell' style='min-height:17px'>
+      <list id={HOLE} scroll-orientation='horizontal'>{HOLE}</list>
+    </list-item>,
+  );
+  const leafType = __SNAPSHOT__(
+    <list-item item-key={HOLE}>
+      <text>Leaf</text>
+    </list-item>,
+  );
+
+  it.each([2, 3])('keeps native cell signs and static styles while hydrating %i list levels', levels => {
+    vi.stubGlobal('__InvokeUIMethod', vi.fn());
+    const makeTree = () => {
+      const outer = new SnapshotInstance(outerType);
+      let parent = outer;
+      for (let level = 1; level < levels; level++) {
+        const holder = new SnapshotInstance(holderType);
+        holder.setAttribute('values', [{ 'item-key': `row-${level}` }, `coalesced-inner-${level}`]);
+        parent.insertBefore(holder);
+        parent = holder;
+      }
+      const leaf = new SnapshotInstance(leafType);
+      leaf.setAttribute(0, { 'item-key': 'leaf' });
+      parent.insertBefore(leaf);
+      return outer;
+    };
+    const before = makeTree();
+    const after = makeTree();
+    before.ensureElements();
+    const retained = [];
+    let owner = before;
+    for (let level = 0; level < levels; level++) {
+      const list = owner.__elements[owner.__snapshot_def.slot[0][1]];
+      const sign = elementTree.triggerComponentAtIndex(list, 0);
+      const child = owner.childNodes[0];
+      retained.push({ list, sign, root: child.__element_root });
+      if (child.__snapshot_def.isListHolder) {
+        expect(child.__snapshot_def.slot).toEqual([[DynamicPartType.ListChildren, 1]]);
+        expect(child.__element_root.props.class).toBe('coalesced-cell');
+        expect(child.__element_root.props.style).toBe('min-height:17px');
+      }
+      owner = child;
+    }
+
+    expect(() => hydrate(before, after)).not.toThrow();
+    owner = after;
+    for (const { list, sign, root } of retained) {
+      const listID = __GetElementUniqueID(list);
+      const child = owner.childNodes[0];
+      expect(owner.__elements[owner.__snapshot_def.slot[0][1]]).toBe(list);
+      expect(child.__element_root).toBe(root);
+      expect(list.children).toEqual([root]);
+      expect(gSignMap[listID].get(sign)).toBe(child);
+      if (child.__snapshot_def.isListHolder) {
+        expect(root.props.class).toBe('coalesced-cell');
+        expect(root.props.style).toBe('min-height:17px');
+      }
+      elementTree.triggerEnqueueComponent(list, sign);
+      const key = child.type + (child.__listItemPlatformInfo?.['reuse-identifier'] ?? '');
+      expect(gRecycleMap[listID].get(key).get(sign)).toBe(child);
+      expect(elementTree.triggerComponentAtIndex(list, 0)).toBe(sign);
+      owner = child;
+    }
+  });
+});
+
+it.each(['named', 'spread'])('forwards a legacy nested-list scroll handler after real SSR adoption (%s)', kind => {
+  vi.stubGlobal('__InvokeUIMethod', vi.fn());
+  const handler = { _lepusWorkletHash: 'legacy-ssr-scroll' };
+  const children = [];
+  function NestedList() {
+    return kind === 'spread'
+      ? <list id='ssr-event-inner' {...{ 'main-thread:bindscroll': handler }}>{children}</list>
+      : <list id='ssr-event-inner' main-thread:bindscroll={handler}>{children}</list>;
+  }
+  __root.__jsx = (
+    <list id='ssr-event-outer'>
+      <list-item item-key='row'>
+        <NestedList />
+      </list-item>
+    </list>
+  );
+  renderPage();
+  const outer = elementTree.getElementById('ssr-event-outer');
+  elementTree.triggerComponentAtIndex(outer, 0);
+  const inner = elementTree.getElementById('ssr-event-inner');
+  const page = __root.__element_root;
+  const info = ssrEncode();
+  expect(info).toContain('legacy-ssr-scroll');
+
+  clearPage();
+  globalEnvManager.resetEnv();
+  for (const list of [outer, inner]) {
+    delete list.componentAtIndex;
+    delete list.enqueueComponent;
+    delete list.componentAtIndexes;
+  }
+  vi.stubGlobal('__GetPageElement', () => page);
+  vi.stubGlobal('__GetTemplateParts', () => Object.fromEntries(ssrIDMap));
+  ssrHydrate(info);
+
+  const run = vi.fn();
+  nestedListBridge().dispatch(
+    {
+      listID: __GetElementUniqueID(inner),
+      eventType: 'bindEvent',
+      eventName: 'scroll',
+    },
+    [{ detail: { eventSource: 2, scrollLeft: 10, scrollTop: 0 } }],
+    undefined,
+    run,
+  );
+  expect(run).toHaveBeenCalledTimes(1);
+  expect(run.mock.calls[0][0]).toMatchObject({ _lepusWorkletHash: 'legacy-ssr-scroll' });
 });

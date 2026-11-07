@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { retainNestedListEvent } from '../list/nativeState.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function updateEvent(
@@ -27,6 +28,7 @@ function updateEvent(
   snapshot.__values![expIndex] = event;
   if (snapshot.__elements) {
     __AddEvent(snapshot.__elements[elementIndex]!, eventType, eventName, event);
+    if (!event) retainNestedListEvent(snapshot.__elements[elementIndex]!, eventType, eventName);
   }
 }
 

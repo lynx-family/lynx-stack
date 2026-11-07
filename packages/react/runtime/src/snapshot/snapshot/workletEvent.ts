@@ -6,6 +6,7 @@ import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { describeInvalidValue } from '../debug/describeInvalidValue.js';
 import { isMainThreadHydrating } from '../lifecycle/patch/isMainThreadHydrating.js';
+import { bindNestedListEvent, recordNestedListEvent } from '../list/nativeState.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function formatEventAttribute(workletType: string, eventType: string, eventName: string): string {
@@ -54,6 +55,7 @@ function updateWorkletEvent(
 
   if (workletType === 'main-thread') {
     retainWorkletCtx(value);
+    recordNestedListEvent(snapshot, elementIndex, eventType, eventName, rawValue == null ? undefined : value);
   }
 
   if (!snapshot.__elements) {
@@ -66,7 +68,16 @@ function updateWorkletEvent(
       type: 'worklet',
       value,
     };
-    __AddEvent(snapshot.__elements[elementIndex]!, eventType, eventName, event);
+    if (
+      !bindNestedListEvent(
+        snapshot.__elements[elementIndex]!,
+        eventType,
+        eventName,
+        rawValue == null ? undefined : value,
+      )
+    ) {
+      __AddEvent(snapshot.__elements[elementIndex]!, eventType, eventName, event);
+    }
   }
 }
 

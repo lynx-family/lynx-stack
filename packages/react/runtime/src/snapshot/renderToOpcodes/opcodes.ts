@@ -5,6 +5,7 @@ import { hydrate } from './hydrate.js';
 import { componentAtIndexFactory, enqueueComponentFactory, gRecycleMap, gSignMap } from '../list/list.js';
 import { CHILDREN } from '../../shared/render-constants.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
+import { snapshotInitializeList } from '../snapshot/list.js';
 
 const OpcodeBegin = 0;
 const OpcodeEnd = 1;
@@ -49,12 +50,14 @@ export function ssrHydrateByOpcodes(
         if (top.__snapshot_def.isListHolder) {
           const [, elementIndex] = top.__snapshot_def.slot[0]!;
           const listElement = top.__elements[elementIndex]!;
+          const children = top.childNodes;
+          snapshotInitializeList(top, listElement, children);
           const listElementUniqueID = __GetElementUniqueID(listElement);
           const signMap = gSignMap[listElementUniqueID] = new Map();
           gRecycleMap[listElementUniqueID] = new Map();
-          const enqueueFunc = enqueueComponentFactory();
-          const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(top.childNodes, hydrate);
-          for (const child of top.childNodes) {
+          const enqueueFunc = enqueueComponentFactory(children);
+          const [componentAtIndex, componentAtIndexes] = componentAtIndexFactory(children, hydrate);
+          for (const child of children) {
             if (child.__element_root) {
               const childElementUniqueID = __GetElementUniqueID(child.__element_root);
               signMap.set(childElementUniqueID, child);

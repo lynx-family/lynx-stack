@@ -28,6 +28,7 @@ import { isDirectOrDeepEqual, isEmptyObject } from '../../utils.js';
 import { retainGestureWorkletCtx } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
+import { recordNestedListEvent } from '../list/nativeState.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
@@ -40,7 +41,12 @@ const eventTypeMap: Record<string, string> = {
   'capture-catch': 'capture-catch',
   'global-bind': 'global-bindEvent',
 };
-function retainSpreadWorkletCtx(newValue: Record<string, unknown>, oldValue: Record<string, unknown>): void {
+function retainSpreadWorkletCtx(
+  snapshot: SnapshotInstance,
+  elementIndex: number,
+  newValue: Record<string, unknown>,
+  oldValue: Record<string, unknown>,
+): void {
   let match: RegExpMatchArray | null = null;
   for (const key in newValue) {
     const value = newValue[key];
@@ -56,11 +62,18 @@ function retainSpreadWorkletCtx(newValue: Record<string, unknown>, oldValue: Rec
       if (key.slice(0, -8) === 'main-thread') {
         retainGestureWorkletCtx(value as GestureKind);
       }
-    } else if (
-      (match = eventRegExp.exec(key)) && match[2] === 'main-thread' && value !== null && value !== undefined
-      && typeof value === 'object'
-    ) {
-      retainWorkletCtx(value as Worklet);
+    } else if ((match = eventRegExp.exec(key)) && match[2] === 'main-thread') {
+      if (value !== null && value !== undefined && typeof value === 'object') {
+        retainWorkletCtx(value as Worklet);
+        recordNestedListEvent(snapshot, elementIndex, eventTypeMap[match[3]!]!, match[4]!, value as Worklet);
+      } else if (value === null || value === undefined) {
+        recordNestedListEvent(snapshot, elementIndex, eventTypeMap[match[3]!]!, match[4]!, undefined);
+      }
+    }
+  }
+  for (const key in oldValue) {
+    if (!(key in newValue) && (match = eventRegExp.exec(key)) && match[2] === 'main-thread') {
+      recordNestedListEvent(snapshot, elementIndex, eventTypeMap[match[3]!]!, match[4]!, undefined);
     }
   }
 }
@@ -115,7 +128,7 @@ function updateSpread(
   }
 
   if (!snapshot.__elements) {
-    retainSpreadWorkletCtx(newValue, oldValue);
+    retainSpreadWorkletCtx(snapshot, elementIndex, newValue, oldValue);
     return;
   }
 
