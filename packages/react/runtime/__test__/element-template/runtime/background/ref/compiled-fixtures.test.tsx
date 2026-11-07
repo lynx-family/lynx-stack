@@ -11,7 +11,7 @@ import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../../../src/element-template/background/hydration-listener.js';
-import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../../src/element-template/background/shadow-instance.js';
 import { clearRefState } from '../../../../../src/element-template/prop-adapters/ref.js';
 import { ElementTemplateLifecycleConstant } from '../../../../../src/element-template/protocol/lifecycle-constant.js';
 import { ElementTemplateUpdateOps } from '../../../../../src/element-template/protocol/opcodes.js';

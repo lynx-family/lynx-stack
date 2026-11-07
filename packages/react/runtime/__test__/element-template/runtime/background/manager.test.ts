@@ -3,10 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundPageRootInstance,
-} from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
+import { BackgroundPageRootInstance } from '../../../../src/element-template/background/typed-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 
 describe('BackgroundElementTemplateInstanceManager', () => {

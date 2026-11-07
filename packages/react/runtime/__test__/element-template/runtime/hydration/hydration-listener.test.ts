@@ -20,10 +20,8 @@ import {
   installElementTemplatePatchListener,
   resetElementTemplatePatchListener,
 } from '../../../../src/element-template/native/patch-listener.js';
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundListElementTemplateInstance,
-} from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
+import { BackgroundListElementTemplateInstance } from '../../../../src/element-template/background/typed-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { PerformanceTimingFlags, PipelineOrigins, globalPipelineOptions } from '../../../../src/core/performance.js';
 import {

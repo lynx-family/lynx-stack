@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/shadow-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../src/element-template/background/manager.js';
 import {
   formatElementTemplateUpdateCommands,

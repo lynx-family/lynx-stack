@@ -13,11 +13,13 @@ import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element
 import { setupBackgroundElementTemplateDocument } from '../../../../src/element-template/background/document.js';
 import {
   BackgroundElementTemplateInstance,
+  BUILTIN_RAW_TEXT_TEMPLATE_KEY,
+} from '../../../../src/element-template/background/shadow-instance.js';
+import {
   BackgroundListElementTemplateInstance,
   BackgroundPageRootInstance,
   BackgroundTypedElementTemplateInstance,
-  BUILTIN_RAW_TEXT_TEMPLATE_KEY,
-} from '../../../../src/element-template/background/instance.js';
+} from '../../../../src/element-template/background/typed-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { clearEventState, getEventHandlerForEventValue } from '../../../../src/element-template/prop-adapters/event.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';

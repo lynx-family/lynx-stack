@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { hydrateRootChildrenIntoContext } from './hydrate.js';
-import type { BackgroundPageRootInstance } from './instance.js';
+import type { BackgroundPageRootInstance } from './typed-instance.js';
 import { ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../protocol/page.js';
 import type { SerializedPageRoot } from '../protocol/types.js';
 

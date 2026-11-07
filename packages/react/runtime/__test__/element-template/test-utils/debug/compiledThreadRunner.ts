@@ -2,7 +2,7 @@ import { createElement } from 'preact';
 
 import { root } from '../../../../src/element-template/index.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';
-import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
 import { ElementTemplateEnvManager } from './envManager.js';
 import type { CompiledFixtureModuleExports } from './compiledFixtureModule.js';
 

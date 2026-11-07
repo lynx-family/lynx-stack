@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
 import { ElementTemplateLifecycleConstant } from '../../../../src/element-template/protocol/lifecycle-constant.js';
 import type {
   ElementTemplateHydrateCommitContext,

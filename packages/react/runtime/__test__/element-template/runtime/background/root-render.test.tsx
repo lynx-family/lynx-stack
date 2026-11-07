@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetElementTemplateCommitState } from '../../../../src/element-template/background/commit-hook.js';
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundPageRootInstance,
-} from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
+import { BackgroundPageRootInstance } from '../../../../src/element-template/background/typed-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import {
   installElementTemplateRenderScopeHooks,

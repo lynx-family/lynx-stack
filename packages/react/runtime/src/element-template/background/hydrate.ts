@@ -4,15 +4,11 @@
 
 import { getAttributeSlotUpdateOp } from './attr-slots.js';
 import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from './commit-context.js';
-import {
-  BUILTIN_RAW_TEXT_TEMPLATE_KEY,
-  BackgroundListElementTemplateInstance,
-  collectMainThreadRefSubtreeHandleIds,
-  getContainingListItem,
-  toUpdateTypedListItemCommand,
-} from './instance.js';
-import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { BUILTIN_RAW_TEXT_TEMPLATE_KEY, getContainingListItem } from './shadow-instance.js';
+import type { BackgroundElementTemplateInstance } from './shadow-instance.js';
+import { collectMainThreadRefSubtreeHandleIds } from './subtree-handles.js';
+import { BackgroundListElementTemplateInstance, toUpdateTypedListItemCommand } from './typed-instance.js';
 import { isDirectOrDeepEqual } from '../../core/deep-equal.js';
 import { isMainThreadFunction } from '../../core/main-thread-function.js';
 import { hydrationMap } from '../hydration-map.js';

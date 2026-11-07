@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
 import { formatElementTemplateUpdateCommands } from '../../../../src/element-template/debug/alog.js';
 import type { FormattedElementTemplateUpdateCommand } from '../../../../src/element-template/debug/alog.js';
 import { root } from '../../../../src/element-template/index.js';

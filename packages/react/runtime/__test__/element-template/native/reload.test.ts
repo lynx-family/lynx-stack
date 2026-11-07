@@ -4,7 +4,7 @@ import { increaseReloadVersion } from '../../../src/core/reload-version.js';
 import { setupBackgroundElementTemplateDocument } from '../../../src/element-template/background/document.js';
 import { destroyElementTemplateBackgroundRuntime } from '../../../src/element-template/background/destroy.js';
 import { installElementTemplateHydrationListener } from '../../../src/element-template/background/hydration-listener.js';
-import { BackgroundPageRootInstance } from '../../../src/element-template/background/instance.js';
+import { BackgroundPageRootInstance } from '../../../src/element-template/background/typed-instance.js';
 import { profileEnd, profileStart } from '../../../src/element-template/debug/profile.js';
 import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
 import { onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
@@ -98,12 +98,11 @@ vi.mock('../../../src/element-template/prop-adapters/event.js', () => ({
   resetEventStateForRuntime: vi.fn(),
 }));
 
-vi.mock('../../../src/element-template/background/instance.js', () => {
+vi.mock('../../../src/element-template/background/typed-instance.js', () => {
   class BackgroundElementTemplateInstance {
     constructor(public type: string) {}
   }
   return {
-    BackgroundElementTemplateInstance,
     BackgroundPageRootInstance: class BackgroundPageRootInstance extends BackgroundElementTemplateInstance {
       constructor() {
         super('root');

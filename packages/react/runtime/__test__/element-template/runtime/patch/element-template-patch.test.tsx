@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
-import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
 import { root } from '../../../../src/element-template/index.js';
 import {
   installElementTemplatePatchListener,
