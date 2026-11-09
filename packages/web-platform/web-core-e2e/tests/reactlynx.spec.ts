@@ -5756,6 +5756,43 @@ test.describe('reactlynx3 tests', () => {
   });
 
   test.describe('external-bundle', () => {
+    test('async-external-env', async ({ page }, testInfo) => {
+      const messages: string[] = [];
+      const errors: string[] = [];
+      page.on('console', message => messages.push(message.text()));
+      page.on('pageerror', error => errors.push(error.message));
+      let externalRequested = false;
+      let releaseExternal!: () => void;
+      const externalReady = new Promise<void>(resolve => {
+        releaseExternal = resolve;
+      });
+      await page.route('**/react.web.bundle', async route => {
+        externalRequested = true;
+        await externalReady;
+        await route.continue();
+      });
+      try {
+        await goto(page, testInfo.title);
+        await expect.poll(() => externalRequested).toBe(true);
+        // The ordinary module must evaluate successfully while ReactLynx's
+        // actual external bundle is still blocked by the network route.
+        await expect.poll(() =>
+          messages.some(message => message.includes('async-external-env:ready'))
+        ).toBe(true);
+      } finally {
+        releaseExternal();
+        await testInfo.attach('startup-log', {
+          body: JSON.stringify({ messages, errors }, null, 2),
+          contentType: 'application/json',
+        });
+      }
+      await expectHasText(page, 'Platform: web');
+      await expectHasText(page, 'Count: 0');
+      await page.locator('#counter').click();
+      await expectHasText(page, 'Count: 1');
+      expect(errors).toEqual([]);
+    });
+
     test('external-bundle', async ({ page }, { title }) => {
       await goto(page, title);
       // The external module is fetched + evaluated via lynx.fetchBundle +
