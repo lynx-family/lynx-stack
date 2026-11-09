@@ -198,11 +198,15 @@ removed by old disposers. Because in-place page reloads (`onReload`:
 re-evaluations must invoke the returned `Unsubscribe` disposer when retiring an
 older instance.
 
+Unsubscribing prevents callbacks that have not yet started, including those in
+the current dispatch. It does not interrupt a callback already running.
+Registrations added during dispatch start with the next notification; they do not
+receive the current input.
+
 Once destruction begins, `isDestroyed()` (on MTS and `BTSPageRuntime`) immediately
 returns `true` before any DSL `onDestroy` callback runs, while new listeners,
 owners, messages, flushes, and capability activations throw. Existing disposers
-stay safe and idempotent. Removing a listener during dispatch takes effect
-immediately; additions wait until the next dispatch. MTS stops messages first,
+stay safe and idempotent. MTS stops messages first,
 invokes user `onDestroy` callbacks, and restores input channels and single-owner
 slots (`processData` to passthrough, `getPageData` to `null`) in `finally`.
 
@@ -246,6 +250,10 @@ for a message-driven submission.
   element attributes changed in that update—so the host's `nativeUpdateDataOrder`
   queue and pipeline lifecycle remain aligned. Deferred flushes must retain and
   forward the originating `options`.
+- **Retirement and failure**: If rendering returns normally while the host remains
+  alive, retiring the entry during that render does not cancel the current update's
+  submission. If rendering throws, the DSL owns recovery and decides whether the
+  resulting tree can be submitted. Host destruction prevents further flushes.
 - Calling `flushElementTree()` (or `flushElementTree(undefined)`) invokes
   `__FlushElementTree()` with 0 arguments; calling `flushElementTree(options)`
   validates that `options` is a plain object and invokes

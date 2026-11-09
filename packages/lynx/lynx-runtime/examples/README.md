@@ -68,6 +68,9 @@ destroy callback itself, so replacing entries does not accumulate callbacks unti
 page teardown. The DSL remains responsible for destroying its renderer and other
 resources it creates outside these examples.
 
+For callbacks already running at retirement, see [registration lifetime](../README.md#registration-lifetime)
+and the [flush contract](../README.md#page-level-flush-flushelementtree).
+
 Disposal does not restore previously claimed MTS input handlers or reset Runtime's
 page scope. A replacement entry registers new consumers on the existing live
 scope. If the host instead creates a new BTS App, bind the replacement entry to
