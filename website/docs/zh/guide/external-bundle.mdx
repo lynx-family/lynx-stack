@@ -34,6 +34,8 @@ External Bundle 用来把 Lynx 代码打成一份可复用的独立 bundle，并
 
 对大多数项目来说，安装 `@lynx-js/react-umd` 并开启 `reactlynx` preset 就够了。
 
+该 preset 默认在鸿蒙和 web 上异步加载 ReactLynx，在 Android、iOS 等其他平台同步加载。运行时选择加载方式会让消费模块在所有平台上都采用 Promise 语义。显式配置 `reactlynx: { async: true }`、`reactlynx: { async: false }` 或独立的 `async` 回调可以覆盖默认策略；web 必须使用异步加载。
+
 :::
 
 ## 构建 External Bundle

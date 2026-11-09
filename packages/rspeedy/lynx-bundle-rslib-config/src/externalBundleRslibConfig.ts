@@ -177,9 +177,10 @@ export const reactLynxExternalsPreset: Externals = {
 /**
  * How an externals preset is enabled.
  *
- * `true` mounts the preset's libraries synchronously. The `{ async: true }`
- * object form mounts them asynchronously (as Promises), for the web target
- * where external bundles are loaded via `fetchBundle().then` — see
+ * `true` enables the preset with its default mappings. The built-in `reactlynx`
+ * preset awaits the mounted namespace by default to support runtime-selected
+ * loading on Harmony and web. Set `{ async: false }` for a synchronous host,
+ * or `{ async: true }` to await every library in a custom preset — see
  * {@link ExternalObject.async}.
  *
  * @public
@@ -232,7 +233,7 @@ export type ExternalsPresetDefinitions = Record<
  */
 export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions = {
   reactlynx: {
-    externals: reactLynxExternalsPreset,
+    externals: withAsyncExternals(reactLynxExternalsPreset, true),
   },
 }
 
@@ -386,16 +387,15 @@ function resolvePresetDefinitions(
  * - the final `var` externals shape consumed by Rspack/Rslib.
  */
 /**
- * Convert a preset's externals to the async ({@link ExternalObject} `async`)
- * form so the produced bundle awaits each library before reading its subpaths.
+ * Override the loading mode of each library in a preset.
  */
-function toAsyncExternals(externals: Externals): Externals {
+function withAsyncExternals(externals: Externals, async: boolean): Externals {
   return Object.fromEntries(
     Object.entries(externals).map(([request, value]) => [
       request,
       typeof value === 'object' && !Array.isArray(value)
-        ? { ...value, async: true }
-        : { libraryName: value, async: true },
+        ? { ...value, async }
+        : { libraryName: value, async },
     ]),
   )
 }
@@ -436,11 +436,12 @@ function transformExternals(
         resolvedPresetDefinitions,
         [],
       )
-      const isAsync = typeof presetValue === 'object'
-        && presetValue.async === true
+      const async = typeof presetValue === 'object'
+        ? presetValue.async
+        : undefined
       Object.assign(
         presetExternals,
-        isAsync ? toAsyncExternals(resolved) : resolved,
+        async === undefined ? resolved : withAsyncExternals(resolved, async),
       )
     }
     externals = {

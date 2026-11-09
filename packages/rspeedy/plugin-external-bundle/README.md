@@ -139,6 +139,12 @@ If your local external bundles live somewhere else, set `externalBundleRoot` exp
 
 `externalsPresets.reactlynx` expands the standard ReactLynx module requests automatically, so you do not need to write the full externals map by hand.
 
+By default, a runtime callback loads ReactLynx asynchronously on Harmony and web,
+and synchronously on other platforms, including Android and iOS. Consuming modules
+use promise semantics on every platform. Set `reactlynx: { async: true }`,
+`reactlynx: { async: false }`, or provide a standalone callback to override this
+policy. Web requires asynchronous loading.
+
 If your app needs business-specific presets, define them next to
 `externalsPresets`:
 
@@ -220,8 +226,8 @@ Rspeedy is Apache-2.0 licensed.
 
 ### Choose the loading mode at runtime
 
-Use a standalone callback to load asynchronously on Harmony while retaining
-synchronous fetching on other native platforms:
+The default callback selects asynchronous loading on Harmony and web. To customize
+this policy, provide a standalone callback; the following reproduces the default:
 
 ```js
 pluginExternalBundle({
@@ -244,5 +250,5 @@ return a boolean synchronously, and do not capture imports or configuration
 variables. Both branches use promise module semantics, so dependent modules
 remain asynchronous even when the callback returns `false`. Existing boolean
 options retain their behavior. External bundles that consume this ReactLynx
-namespace must also use `output.externalsPresets.reactlynx: { async: true }` in
-`defineExternalBundleRslibConfig` so subpath imports await the namespace.
+namespace should use `output.externalsPresets.reactlynx: true` in
+`defineExternalBundleRslibConfig`, which awaits the namespace by default.
