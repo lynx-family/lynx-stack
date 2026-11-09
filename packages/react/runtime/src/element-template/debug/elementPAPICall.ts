@@ -2,14 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  debugValueType,
-  formatDebugArgs,
-  formatDebugValue,
-  truncateDebugString,
-  tryEndDebugProfile,
-  tryStartDebugProfile,
-} from '../../shared/debug-logging.js';
+import { profileEnd, profileStart } from '../../shared/profile.js';
 
 const elementTemplatePAPINameList = [
   '__CreateElementTemplate',
@@ -25,60 +18,72 @@ export function initElementTemplatePAPICallAlog(globalWithIndex: Record<string, 
   let count = 0;
   const elementTemplateMap = new Map<unknown, string>();
 
-  const format = (value: unknown, previewStrings: boolean) =>
-    elementTemplateMap.get(value) ?? formatDebugValue(value, previewStrings);
-  const summarizeAttribute = ([target, slot, value]: unknown[]) => ({
-    target: format(target, false),
-    slot: format(slot, false),
-    valueType: debugValueType(value),
-  });
-
-  for (const name of elementTemplatePAPINameList) {
-    const native = globalWithIndex[name];
-    if (typeof native !== 'function') {
+  for (const elementTemplatePAPIName of elementTemplatePAPINameList) {
+    const oldElementTemplatePAPI = globalWithIndex[elementTemplatePAPIName];
+    if (typeof oldElementTemplatePAPI !== 'function') {
       continue;
     }
-    const callNative = native as (...args: unknown[]) => unknown;
-    globalWithIndex[name] = (...args: unknown[]): unknown => {
+    const callElementTemplatePAPI = oldElementTemplatePAPI as (...args: unknown[]) => unknown;
+
+    globalWithIndex[elementTemplatePAPIName] = (...args: unknown[]): unknown => {
       const shouldProfile = typeof __PROFILE__ !== 'undefined' && __PROFILE__;
-      const started = shouldProfile
-        && tryStartDebugProfile(`ElementTemplatePAPI: ${name}`, () =>
-          name === '__SetAttributeOfElementTemplate'
-            ? summarizeAttribute(args)
-            : { args: formatDebugArgs(args, value => format(value, false)) });
-      let result: unknown;
-      try {
-        result = callNative(...args);
-      } finally {
-        tryEndDebugProfile(started);
+      if (shouldProfile) {
+        profileStart(`ElementTemplatePAPI: ${elementTemplatePAPIName}`, {
+          args: {
+            args: formatValue(args, elementTemplateMap),
+          },
+        });
       }
 
+      let result: unknown;
       try {
-        if (!shouldProfile && !console.alog) {
-          return result;
+        result = callElementTemplatePAPI(...args);
+      } finally {
+        if (shouldProfile) {
+          profileEnd();
         }
-        if (result != null && typeof args[0] === 'string') {
-          if (name === '__CreateElementTemplate' && typeof args[4] === 'number') {
-            elementTemplateMap.set(result, `${truncateDebugString(args[0])}#${args[4]}`);
-          } else if (name === '__CreateTypedElementTemplate' && typeof args[3] === 'number') {
-            elementTemplateMap.set(result, `${truncateDebugString(args[0])}#${args[3]}`);
-          }
-        }
-        if (console.alog) {
-          const prefix = `[ReactLynxDebug] ElementTemplate API call #${++count}: ${name}`;
-          if (name === '__SetAttributeOfElementTemplate') {
-            const { target, slot, valueType } = summarizeAttribute(args);
-            const preview = typeof args[2] === 'string' ? ` preview=${formatDebugValue(args[2], true)}` : '';
-            console.alog(`${prefix} target=${target} slot=${slot} valueType=${valueType}${preview}`);
-          } else {
-            const summary = formatDebugArgs(args, value => format(value, true));
-            console.alog(`${prefix}(${summary})${result == null ? '' : ` => ${format(result, true)}`}`);
-          }
-        }
-      } catch {
-        // Handle lookup and logging are diagnostic only.
       }
+
+      if (elementTemplatePAPIName === '__CreateElementTemplate' && result != null) {
+        elementTemplateMap.set(result, `${String(args[0])}#${String(args[4])}`);
+      } else if (elementTemplatePAPIName === '__CreateTypedElementTemplate' && result != null) {
+        elementTemplateMap.set(result, `${String(args[0])}#${String(args[3])}`);
+      }
+
+      const formattedResult = result == null ? undefined : formatValue(result, elementTemplateMap);
+      console.alog?.(
+        `[ReactLynxDebug] ElementTemplate API call #${++count}: ${elementTemplatePAPIName}(${
+          args.map(arg => formatValue(arg, elementTemplateMap)).join(', ')
+        })${formattedResult == null ? '' : ` => ${formattedResult}`}`,
+      );
       return result;
     };
+  }
+}
+
+function formatValue(value: unknown, elementTemplateMap: Map<unknown, string>): string {
+  if (elementTemplateMap.has(value)) {
+    return elementTemplateMap.get(value)!;
+  }
+  if (value === undefined) {
+    return 'undefined';
+  }
+  if (value === null) {
+    return 'null';
+  }
+  if (Array.isArray(value)) {
+    return '[' + value.map(item => formatValue(item, elementTemplateMap)).join(', ') + ']';
+  }
+  if (typeof value === 'function') {
+    return `[Function${value.name ? ` ${value.name}` : ''}]`;
+  }
+  if (typeof value === 'symbol') {
+    return value.toString();
+  }
+  try {
+    const formatted = JSON.stringify(value);
+    return formatted ?? Object.prototype.toString.call(value);
+  } catch {
+    return Object.prototype.toString.call(value);
   }
 }

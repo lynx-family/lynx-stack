@@ -11,11 +11,7 @@ import {
   SnapshotInstance,
   snapshotInstanceManager,
 } from '../../../src/snapshot';
-import {
-  printSerializedSnapshotInstance,
-  printSnapshotInstance,
-  printSnapshotInstanceToString,
-} from '../../../src/snapshot/debug/printSnapshot';
+import { printSerializedSnapshotInstance, printSnapshotInstance } from '../../../src/snapshot/debug/printSnapshot';
 
 const HOLE = null;
 
@@ -101,11 +97,9 @@ describe('printSnapshotInstance', () => {
       "
     `);
 
-    expect(printSnapshotInstanceToString(si1)).toBe(msg.trim());
-
-    const serialized = JSON.parse(JSON.stringify(si1));
+    const serialized = JSON.stringify(si1);
     msg = '\n';
-    printSerializedSnapshotInstance(serialized, log);
+    printSerializedSnapshotInstance(JSON.parse(serialized), log);
     expect(msg).toMatchInlineSnapshot(`
       "
       | -2(__snapshot_a94a8_test_1): undefined
@@ -114,7 +108,6 @@ describe('printSnapshotInstance', () => {
         | -4(__snapshot_a94a8_test_2): undefined
       "
     `);
-    expect(printSnapshotInstanceToString(serialized)).toBe(msg.trim());
   });
 
   it('printToScreen', async function() {

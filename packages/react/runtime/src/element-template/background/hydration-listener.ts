@@ -28,7 +28,8 @@ import {
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
-import { tryDebugLog, tryEndDebugProfile, tryStartDebugProfile } from '../../shared/debug-logging.js';
+import { formatElementTemplateUpdateCommands, printElementTemplateTreeToString } from '../debug/alog.js';
+import { profileEnd, profileStart } from '../debug/profile.js';
 import { sendMTRefInitValueToMainThread } from '../main-thread-ref-init-value.js';
 import { clearPendingEvents, flushPendingEvents } from '../prop-adapters/event.js';
 import { clearDelayedRefUiOps, clearPendingRefs, flushDelayedRefUiOps } from '../prop-adapters/ref.js';
@@ -54,26 +55,37 @@ export function installElementTemplateHydrationListener(): void {
 
     const root = __root as BackgroundPageRootInstance;
 
-    const shouldLog = typeof __ALOG__ !== 'undefined' && __ALOG__;
-    if (shouldLog) {
-      tryDebugLog(() => `[ReactLynxDebug] ET hydrate start root=${root.instanceId} reloadVersion=${reloadVersion}`);
+    if (__PROFILE__) {
+      profileStart('ReactLynx::hydrate');
     }
-    let result = 'failed';
-    let patchStreamLength = 0;
-    let patchDispatched = false;
+    beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
     try {
-      const started = __PROFILE__ && tryStartDebugProfile('ReactLynx::hydrate');
-      let didHydrateMatchedInstances: boolean;
-      try {
-        beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
-        markTiming('hydrateParseSnapshotStart');
-        markTiming('hydrateParseSnapshotEnd');
-        markTiming('diffVdomStart');
-        resetGlobalCommitContext();
-        didHydrateMatchedInstances = hydratePageRootIntoContext(page, root);
-        result = didHydrateMatchedInstances ? 'matched' : 'unmatched';
-      } finally {
-        tryEndDebugProfile(started);
+      markTiming('hydrateParseSnapshotStart');
+      markTiming('hydrateParseSnapshotEnd');
+      markTiming('diffVdomStart');
+
+      resetGlobalCommitContext();
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate:\n'
+            + JSON.stringify({ data: page }, null, 2),
+        );
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundElementTemplate tree before hydration:\n'
+            + printElementTemplateTreeToString(root),
+        );
+      }
+
+      const didHydrateMatchedInstances = hydratePageRootIntoContext(page, root);
+      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+        console.alog?.(
+          '[ReactLynxDebug] BackgroundElementTemplate tree after hydration:\n'
+            + printElementTemplateTreeToString(root),
+        );
+      }
+
+      if (__PROFILE__) {
+        profileEnd();
       }
       markTiming('diffVdomEnd');
 
@@ -104,38 +116,54 @@ export function installElementTemplateHydrationListener(): void {
           ? takeRemovedSubtreesForPostDispatchTeardown()
           : [];
         let hydrateUpdateEvent: ReturnType<typeof createElementTemplateUpdateEvent> | undefined;
-        patchStreamLength = globalCommitContext.ops.length;
-        const packingStarted = __PROFILE__ && tryStartDebugProfile('ReactLynx::commitChanges');
+        if (__PROFILE__) {
+          profileStart('ReactLynx::commitChanges');
+        }
+        markTiming('packChangesStart');
         try {
-          markTiming('packChangesStart');
-          try {
-            sendMTRefInitValueToMainThread();
-            hydrateUpdateEvent = createElementTemplateUpdateEvent({
-              ops: globalCommitContext.ops,
-              flushOptions: globalCommitContext.flushOptions,
-              isHydration: true,
-              reloadVersion: getReloadVersion(),
-              flowIds: globalCommitContext.flowIds,
-              delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
-            });
-          } catch (error) {
-            if (delayedRunOnMainThreadPayload) {
-              dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-            }
-            // Do not expose refs or replay delayed selector ops if the hydrate
-            // patch failed to serialize; selectors may still point at stale
-            // pre-hydration ids in that case.
-            clearPendingEvents();
-            clearPendingRefs();
-            clearDelayedRefUiOps();
-            lynx.reportError(error as Error);
+          sendMTRefInitValueToMainThread();
+          if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+            console.alog?.(
+              '[ReactLynxDebug] ElementTemplate hydrate update commands:\n'
+                + JSON.stringify(
+                  {
+                    ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
+                    flushOptions: globalCommitContext.flushOptions,
+                    flowIds: globalCommitContext.flowIds,
+                    isHydration: true,
+                    delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
+                  },
+                  null,
+                  2,
+                ),
+            );
           }
-          markTiming('packChangesEnd');
-          if (pipelineOptions) {
-            setPipeline(undefined);
+          hydrateUpdateEvent = createElementTemplateUpdateEvent({
+            ops: globalCommitContext.ops,
+            flushOptions: globalCommitContext.flushOptions,
+            isHydration: true,
+            reloadVersion: getReloadVersion(),
+            flowIds: globalCommitContext.flowIds,
+            delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
+          });
+        } catch (error) {
+          if (delayedRunOnMainThreadPayload) {
+            dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
           }
-        } finally {
-          tryEndDebugProfile(packingStarted);
+          // Do not expose refs or replay delayed selector ops if the hydrate
+          // patch failed to serialize; selectors may still point at stale
+          // pre-hydration ids in that case.
+          clearPendingEvents();
+          clearPendingRefs();
+          clearDelayedRefUiOps();
+          lynx.reportError(error as Error);
+        }
+        markTiming('packChangesEnd');
+        if (pipelineOptions) {
+          setPipeline(undefined);
+        }
+        if (__PROFILE__) {
+          profileEnd();
         }
         resetGlobalCommitContext();
         scheduleElementTemplateRemovedSubtreeCleanup(removedSubtreesAwaitingTeardown);
@@ -145,7 +173,6 @@ export function installElementTemplateHydrationListener(): void {
         }
 
         lynx.getCoreContext().dispatchEvent(hydrateUpdateEvent);
-        patchDispatched = true;
         flushPendingEvents();
         // Ordinary refs attach on Preact commit boundaries; hydration only releases
         // delayed selector ops after ids have been rebound to stable native handles.
@@ -153,11 +180,6 @@ export function installElementTemplateHydrationListener(): void {
       }
     } finally {
       setPipeline(undefined);
-      if (shouldLog) {
-        tryDebugLog(() =>
-          `[ReactLynxDebug] ET hydrate end root=${root.instanceId} result=${result} patchDispatched=${patchDispatched} patchStreamLength=${patchStreamLength}`
-        );
-      }
     }
   };
 

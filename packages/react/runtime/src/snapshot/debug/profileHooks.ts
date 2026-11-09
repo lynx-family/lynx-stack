@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Component, options } from 'preact';
-import type { ComponentClass, ComponentType, VNode } from 'preact';
+import type { ComponentClass, VNode } from 'preact';
 
 import type { TraceOption } from '@lynx-js/types';
 
@@ -26,52 +26,92 @@ import { getDisplayName } from '../../utils.js';
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
-const format = (val: unknown) => {
-  if (typeof val === 'function') {
-    return val.toString();
-  }
-  return val;
-};
+const maxStateKeys = 16;
+const maxStateStringLength = 80;
 
-function safeJsonStringify(val: unknown) {
-  const seen = new WeakSet<object>();
+function truncateStateString(value: string): string {
+  return value.length > maxStateStringLength ? value.slice(0, maxStateStringLength) + '…' : value;
+}
 
-  return JSON.stringify(val, function(_key, value: unknown) {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Unserializable: Circular]';
-      }
-      seen.add(value);
-    }
-
+function describeStateValue(value: unknown): unknown {
+  if (value === null || typeof value === 'boolean' || typeof value === 'number') {
     return value;
-  });
+  }
+  if (typeof value === 'string') {
+    return { type: 'string', length: value.length, preview: truncateStateString(value) };
+  }
+  if (Array.isArray(value)) {
+    const length: unknown = Object.getOwnPropertyDescriptor(value, 'length')?.value;
+    return typeof length === 'number' ? { type: 'array', length } : { type: 'array' };
+  }
+  return { type: typeof value };
+}
+
+function getStateProperty(state: object | undefined, key: string): PropertyDescriptor | undefined {
+  const descriptor = state && Object.getOwnPropertyDescriptor(state, key);
+  return descriptor?.enumerable ? descriptor : undefined;
+}
+
+function sampleState(state: unknown) {
+  const record = state !== null && typeof state === 'object' && !Array.isArray(state) ? state : undefined;
+  const properties = new Map<string, PropertyDescriptor>();
+  let scanned = 0;
+  let truncated = false;
+  for (const key in record) {
+    if (scanned === maxStateKeys) {
+      truncated = true;
+      break;
+    }
+    scanned++;
+    const property = getStateProperty(record, key);
+    if (property) {
+      properties.set(key, property);
+    }
+  }
+  const preview = record
+    ? {
+      type: 'object',
+      entries: Array.from(properties, ([key, property]) => [
+        truncateStateString(key),
+        'value' in property ? describeStateValue(property.value) : { type: 'accessor' },
+      ]),
+    }
+    : describeStateValue(state);
+  return { record, properties, preview, truncated };
 }
 
 function buildSetStateProfileMarkArgs(
-  type: string | ComponentType | undefined,
+  type: VNode['type'],
   currentState: unknown,
   nextState: unknown,
 ): Record<string, string> {
-  const EMPTY_OBJ = {};
+  const current = sampleState(currentState);
+  const next = sampleState(nextState);
+  const keys = new Set([...current.properties.keys(), ...next.properties.keys()]);
+  const changed = [...keys].filter(key => {
+    // A key outside the sample can still exist on the other side.
+    const before = current.properties.get(key) ?? getStateProperty(current.record, key);
+    const after = next.properties.get(key) ?? getStateProperty(next.record, key);
+    if (!before || !after) {
+      return before !== after;
+    }
+    if ('value' in before && 'value' in after) {
+      return !Object.is(before.value, after.value);
+    }
+    return ('value' in before) !== ('value' in after) || before.get !== after.get || before.set !== after.set;
+  });
 
-  const currentStateObj = (currentState ?? EMPTY_OBJ) as Record<string, unknown>;
-  const nextStateObj = (nextState ?? EMPTY_OBJ) as Record<string, unknown>;
-
+  const name = typeof type === 'function' ? getDisplayName(type as ComponentClass) : undefined;
   return {
-    componentName: (type && typeof type === 'function')
-      ? getDisplayName(type as ComponentClass)
-      : 'Unknown',
-    'current state keys': JSON.stringify(Object.keys(currentStateObj)),
-    'next state keys': JSON.stringify(Object.keys(nextStateObj)),
+    componentName: typeof name === 'string' ? truncateStateString(name) : 'Unknown',
+    'current state keys': JSON.stringify(Array.from(current.properties.keys(), truncateStateString)),
+    'next state keys': JSON.stringify(Array.from(next.properties.keys(), truncateStateString)),
     'changed (shallow diff) state keys': JSON.stringify(
-      // the setState is in assign manner, we assume nextState is a superset of currentState
-      Object.keys(nextStateObj).filter(
-        key => currentStateObj[key] !== nextStateObj[key],
-      ),
+      changed.slice(0, maxStateKeys).map(key => truncateStateString(key)),
     ),
-    currentValue: safeJsonStringify(format(currentState)),
-    nextValue: safeJsonStringify(format(nextState)),
+    ...(current.truncated || next.truncated || changed.length > maxStateKeys ? { 'state keys truncated': 'true' } : {}),
+    currentValue: JSON.stringify(current.preview),
+    nextValue: JSON.stringify(next.preview),
   };
 }
 
@@ -102,6 +142,27 @@ export function initProfileHook(): void {
     const sFlowID = Symbol('FLOW_ID');
     type PatchedComponent = Component & { [sFlowID]?: number };
 
+    function markSetState(component: PatchedComponent, current: unknown, next: unknown, hookIdx?: number): void {
+      try {
+        const type = component[VNODE]!.type;
+        if (
+          hookIdx === undefined
+          && !(typeof type === 'function' && ('prototype' in type) && ('render' in type.prototype))
+        ) {
+          return;
+        }
+        const args = buildSetStateProfileMarkArgs(type, current, next);
+        if (hookIdx !== undefined) {
+          args['hookIdx'] = String(hookIdx);
+        }
+        const flowId = component[sFlowID] ?? profileFlowId();
+        profileMark(hookIdx === undefined ? 'ReactLynx::setState' : 'ReactLynx::hooks::setState', { flowId, args });
+        component[sFlowID] = flowId;
+      } catch {
+        // A profiling failure must not interrupt Preact's update or scheduling.
+      }
+    }
+
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const oldSetState = Component.prototype.setState;
@@ -109,20 +170,7 @@ export function initProfileHook(): void {
         oldSetState?.call(this, state, callback);
 
         if (this[BITS] & COMPONENT_DIRTY) {
-          const type = this[VNODE]!.type;
-          const isClassComponent = typeof type === 'function' && ('prototype' in type)
-            && ('render' in type.prototype);
-
-          if (isClassComponent) {
-            profileMark('ReactLynx::setState', {
-              flowId: this[sFlowID] ??= profileFlowId(),
-              args: buildSetStateProfileMarkArgs(
-                type,
-                this.state,
-                this[NEXT_STATE],
-              ),
-            });
-          }
+          markSetState(this, this.state, this[NEXT_STATE]);
         }
       };
     }
@@ -171,34 +219,16 @@ export function initProfileHook(): void {
             Object.defineProperty(hookState, NEXT_VALUE, {
               get: () => hookState['internalNextValue'],
               set: (value) => {
-                if (Array.isArray(value)) {
-                  // hookState[VALUE] is [state, dispatch]
-                  const currentValueTuple = hookState[VALUE] as unknown[];
-                  const currentValue = currentValueTuple[0];
-                  const [nextValue] = value as unknown[];
-
-                  const component = hookState[COMPONENT] as PatchedComponent | undefined;
-                  if (!component) {
-                    hookState['internalNextValue'] = value;
-                    return;
-                  }
-
-                  const type = component[VNODE]!.type;
-                  const flowId = component[sFlowID] ??= profileFlowId();
-
-                  profileMark('ReactLynx::hooks::setState', {
-                    flowId,
-                    args: {
-                      hookIdx: String(hookIdx),
-                      ...buildSetStateProfileMarkArgs(
-                        type,
-                        currentValue,
-                        nextValue,
-                      ),
-                    },
-                  });
-                }
+                const pending = hookState['internalNextValue'] as unknown[] | undefined;
                 hookState['internalNextValue'] = value;
+                if (Array.isArray(value)) {
+                  const component = hookState[COMPONENT] as PatchedComponent | undefined;
+                  if (component) {
+                    // The reducer uses the pending tuple as its baseline for batched dispatches.
+                    const previous = pending ?? hookState[VALUE] as unknown[];
+                    markSetState(component, previous[0], value[0], hookIdx);
+                  }
+                }
               },
               configurable: true,
             });

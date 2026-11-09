@@ -1,9 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { formatElementTemplateUpdateCommands } from '../../../src/element-template/debug/alog.js';
+import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/instance.js';
+import { backgroundElementTemplateInstanceManager } from '../../../src/element-template/background/manager.js';
+import {
+  formatElementTemplateUpdateCommands,
+  printElementTemplateTreeToString,
+} from '../../../src/element-template/debug/alog.js';
 import { ElementTemplateUpdateOps } from '../../../src/element-template/protocol/opcodes.js';
 
 describe('ElementTemplate alog helpers', () => {
+  beforeEach(() => {
+    backgroundElementTemplateInstanceManager.clear();
+    backgroundElementTemplateInstanceManager.nextId = 0;
+  });
+
   it('formats update command streams into readable operations', () => {
     expect(formatElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTemplate,
@@ -145,5 +155,60 @@ describe('ElementTemplate alog helpers', () => {
 
   it('formats missing command streams as an empty list', () => {
     expect(formatElementTemplateUpdateCommands(undefined)).toEqual([]);
+  });
+
+  it('prints a compact background tree summary', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const card = new BackgroundElementTemplateInstance('_et_card', ['title']);
+    const text = new BackgroundElementTemplateInstance('_et_builtin_raw_text', ['hello']);
+
+    root.appendChild(card);
+    text.__slotIndex = 2;
+    card.appendChild(text);
+
+    const output = printElementTemplateTreeToString(root);
+
+    expect(output).toContain('root#1');
+    expect(output).toContain('_et_card#2');
+    expect(output).toContain('attributeSlots: ["title"]');
+    expect(output).toContain('childSlots[2]: [3]');
+    expect(output).not.toContain('childSlots[1]');
+    expect(output).toContain('_et_builtin_raw_text#3');
+    expect(output).toContain('attributeSlots: ["hello"]');
+  });
+
+  it('skips sparse child slots when printing the background tree', () => {
+    const root = new BackgroundElementTemplateInstance('root');
+    const child = new BackgroundElementTemplateInstance('view');
+    child.__slotIndex = 1;
+    root.appendChild(child);
+
+    const output = printElementTemplateTreeToString(root);
+
+    expect(output).toContain(`view#${child.instanceId}`);
+    expect(output).toContain(`childSlots[1]: [${child.instanceId}]`);
+    expect(output).not.toMatch(/childSlots\[0\]/);
+  });
+
+  it('keeps malformed debug tree instances printable', () => {
+    const root = {
+      attributeSlots: null,
+      childSlots: null,
+    } as unknown as {
+      attributeSlots?: unknown;
+      type?: string;
+      instanceId?: number;
+      childSlots?: unknown;
+    };
+    root.type = undefined;
+    root.instanceId = undefined;
+
+    expect(printElementTemplateTreeToString(root as BackgroundElementTemplateInstance)).toBe(
+      '<unknown>#<unknown>',
+    );
+  });
+
+  it('prints an empty marker for missing roots', () => {
+    expect(printElementTemplateTreeToString(null)).toBe('<empty>');
   });
 });

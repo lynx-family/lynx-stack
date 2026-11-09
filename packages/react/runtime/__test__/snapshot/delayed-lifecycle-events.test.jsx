@@ -59,38 +59,4 @@ describe('delayedLifecycleEvents', () => {
     flushDelayedLifecycleEvents();
     expect(delayedLifecycleEvents).toMatchInlineSnapshot(`[]`);
   });
-  it('dispatches the first-screen patch without inspecting event handlers', () => {
-    const handler = vi.fn();
-    handler.toJSON = vi.fn(() => {
-      throw new Error('unexpected serialization');
-    });
-    function Comp() {
-      return <view bindtap={handler} />;
-    }
-
-    __root.__jsx = <Comp />;
-    renderPage();
-    const event = globalThis.__OnLifecycleEvent.mock.calls[0];
-    globalEnvManager.switchToBackground();
-    render(<Comp />, __root);
-
-    const alog = vi.spyOn(console, 'alog').mockImplementationOnce(() => {
-      throw new Error('alog failed');
-    });
-    try {
-      expect(() => lynx.getApp().OnLifecycleEvent(...event)).not.toThrow();
-      expect(handler.toJSON).not.toHaveBeenCalled();
-      expect(lynx.getNativeApp().callLepusMethod).toHaveBeenCalledWith(
-        'rLynxChange',
-        expect.anything(),
-        expect.any(Function),
-      );
-      expect(alog).toHaveBeenCalledWith(expect.stringMatching(/Snapshot hydrate start root=.+ payloadLength=\d+/));
-      expect(alog).toHaveBeenCalledWith(
-        expect.stringMatching(/Snapshot hydrate end .+ result=completed patchDispatched=true/),
-      );
-    } finally {
-      alog.mockRestore();
-    }
-  });
 });

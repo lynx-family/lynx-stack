@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render, options, Component, createElement } from 'preact';
+import { render, options, Component, createElement, process } from 'preact';
 import { beforeAll, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { setupDocument } from '../../../src/document';
@@ -231,9 +231,9 @@ describe('profile', () => {
               "changed (shallow diff) state keys": "["count"]",
               "componentName": "ClassComponent",
               "current state keys": "["count"]",
-              "currentValue": "{"count":0}",
+              "currentValue": "{"type":"object","entries":[["count",0]]}",
               "next state keys": "["count"]",
-              "nextValue": "{"count":1}",
+              "nextValue": "{"type":"object","entries":[["count",1]]}",
             },
             "flowId": 666,
           },
@@ -310,10 +310,10 @@ describe('profile', () => {
               "changed (shallow diff) state keys": "["count","newKey"]",
               "componentName": "App",
               "current state keys": "["count","unchanged"]",
-              "currentValue": "{"count":0,"unchanged":"unchanged"}",
+              "currentValue": "{"type":"object","entries":[["count",0],["unchanged",{"type":"string","length":9,"preview":"unchanged"}]]}",
               "hookIdx": "1",
               "next state keys": "["count","unchanged","newKey"]",
-              "nextValue": "{"count":1,"unchanged":"unchanged","newKey":"newValue"}",
+              "nextValue": "{"type":"object","entries":[["count",1],["unchanged",{"type":"string","length":9,"preview":"unchanged"}],["newKey",{"type":"string","length":8,"preview":"newValue"}]]}",
             },
             "flowId": 666,
           },
@@ -325,10 +325,10 @@ describe('profile', () => {
               "changed (shallow diff) state keys": "["count"]",
               "componentName": "App",
               "current state keys": "["count","circularKey"]",
-              "currentValue": "{"count":0,"circularKey":"[Unserializable: Circular]"}",
+              "currentValue": "{"type":"object","entries":[["count",0],["circularKey",{"type":"object"}]]}",
               "hookIdx": "2",
               "next state keys": "["count","circularKey"]",
-              "nextValue": "{"count":1,"circularKey":{"count":0,"circularKey":"[Unserializable: Circular]"}}",
+              "nextValue": "{"type":"object","entries":[["count",1],["circularKey",{"type":"object"}]]}",
             },
             "flowId": 666,
           },
@@ -364,16 +364,116 @@ describe('profile', () => {
               "changed (shallow diff) state keys": "[]",
               "componentName": "App",
               "current state keys": "[]",
-              "currentValue": ""() => \\"A\\""",
+              "currentValue": "{"type":"function"}",
               "hookIdx": "0",
               "next state keys": "[]",
-              "nextValue": ""() => \\"B\\""",
+              "nextValue": "{"type":"function"}",
             },
             "flowId": 666,
           },
         ],
       ]
     `);
+  });
+
+  test('reports field addition and removal against each pending Hook value', () => {
+    let update;
+    function App() {
+      const [, setState] = useState({ removed: 1, stable: NaN, signedZero: 0 });
+      update = setState;
+      return <view />;
+    }
+
+    render(<App />, scratch);
+    update({ stable: NaN, signedZero: -0, added: undefined });
+    update({ stable: NaN, signedZero: -0, removed: 2 });
+
+    const [first, second] = lynx.performance.profileMark.mock.calls.map(([, { args }]) => args);
+    expect(JSON.parse(first['changed (shallow diff) state keys'])).toEqual(['removed', 'signedZero', 'added']);
+    expect(JSON.parse(second['changed (shallow diff) state keys'])).toEqual(['added', 'removed']);
+    expect(second.currentValue).toBe(first.nextValue);
+  });
+
+  test('bounds string and record previews without calling getters or toJSON', () => {
+    let update;
+    function App() {
+      const [, setState] = useState({});
+      update = setState;
+      return <view />;
+    }
+    render(<App />, scratch);
+
+    const value = 'x'.repeat(1000);
+    update(value);
+    const getter = vi.fn(() => {
+      throw new Error('getter ran');
+    });
+    const toJSON = vi.fn(() => {
+      throw new Error('toJSON ran');
+    });
+    const record = { toJSON };
+    Object.defineProperty(record, 'getter', { enumerable: true, get: getter });
+    Object.assign(record, Object.fromEntries(Array.from({ length: 40 }, (_, i) => [`key${i}`, value])));
+    update(record);
+    const keys = Object.keys(record).filter(key => key !== 'getter').reverse();
+    update(Object.fromEntries(keys.map(key => [key, record[key]])));
+
+    const array = Array.from({ length: 1000 });
+    array[0] = array;
+    update(array);
+
+    const [stringArgs, recordArgs, reorderedArgs, arrayArgs] = lynx.performance.profileMark.mock.calls.map(
+      ([, { args }]) => args,
+    );
+    expect(stringArgs['next state keys']).toBe('[]');
+    expect(JSON.parse(stringArgs.nextValue)).toEqual({ type: 'string', length: 1000, preview: 'x'.repeat(80) + '…' });
+    expect(JSON.parse(recordArgs['next state keys'])).toHaveLength(16);
+    expect(JSON.parse(recordArgs['changed (shallow diff) state keys'])).toHaveLength(16);
+    expect(recordArgs['state keys truncated']).toBe('true');
+    expect(JSON.parse(recordArgs.nextValue).entries).toContainEqual(['getter', { type: 'accessor' }]);
+    expect(JSON.parse(reorderedArgs['changed (shallow diff) state keys'])).toEqual(['getter']);
+    expect(arrayArgs['next state keys']).toBe('[]');
+    expect(JSON.parse(arrayArgs.nextValue)).toEqual({ type: 'array', length: 1000 });
+    expect(getter).not.toHaveBeenCalled();
+    expect(toJSON).not.toHaveBeenCalled();
+  });
+
+  test('continues a Hook update when state inspection or trace emission throws', () => {
+    let update;
+    let rendered;
+    function App() {
+      const [value, setValue] = useState(0);
+      rendered = value;
+      update = setValue;
+      return <view />;
+    }
+    render(<App />, scratch);
+
+    update(1n);
+    expect(JSON.parse(lynx.performance.profileMark.mock.lastCall[1].args.nextValue)).toEqual({ type: 'bigint' });
+    process();
+    expect(rendered).toBe(1n);
+
+    const opaque = new Proxy({}, {
+      ownKeys() {
+        throw new Error('inspection failed');
+      },
+    });
+    update(opaque);
+    process();
+    expect(rendered).toBe(opaque);
+
+    // Replace the opaque value before testing the sink so state inspection succeeds.
+    update(2n);
+    process();
+    const sinkError = vi.fn(() => {
+      throw new Error('trace sink failed');
+    });
+    lynx.performance.profileMark.mockImplementationOnce(sinkError);
+    update(3n);
+    process();
+    expect(sinkError).toHaveBeenCalledTimes(1);
+    expect(rendered).toBe(3n);
   });
 
   test('should handle missing component instance', async () => {
