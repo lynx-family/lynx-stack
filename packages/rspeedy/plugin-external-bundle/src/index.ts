@@ -170,8 +170,9 @@ export interface ReactLynxExternalsPresetOptions {
    * Choose asynchronous loading of the ReactLynx runtime bundle.
    *
    * By default, ReactLynx loads asynchronously on Harmony and web, and
-   * synchronously on other platforms. Explicit booleans or callbacks override
-   * this policy.
+   * synchronously on other platforms. Web builds always default to asynchronous
+   * loading, regardless of the host's platform value. Explicit booleans or
+   * callbacks override this policy.
    *
    * The web runtime (`@lynx-js/web-core`) can only fetch external bundles
    * asynchronously (`fetchBundle().then`), so ReactLynx must be mounted as a
@@ -190,7 +191,7 @@ export interface ReactLynxExternalsPresetOptions {
    * { async: ({ systemInfo }) => ['Harmony', 'web'].includes(String(systemInfo['platform'])) }
    * ```
    *
-   * @defaultValue `({ systemInfo }) => systemInfo['platform'] === 'Harmony' || systemInfo['platform'] === 'web'`
+   * @defaultValue `true` for web builds; otherwise `({ systemInfo }) => systemInfo['platform'] === 'Harmony' || systemInfo['platform'] === 'web'`
    */
   async?: ExternalValue['async']
 
@@ -633,7 +634,7 @@ function createReactLynxExternals(
       request,
       {
         ...external,
-        async: preset?.async ?? defaultReactLynxAsync,
+        async: preset?.async ?? (isWeb ? true : defaultReactLynxAsync),
         ...bundleReference,
       },
     ]),

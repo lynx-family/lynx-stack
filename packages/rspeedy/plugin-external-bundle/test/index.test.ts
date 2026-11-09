@@ -441,12 +441,16 @@ describe('pluginExternalBundle', () => {
         },
       })
       await rsbuild.inspectConfig()
-      for (const plugins of Object.values(capturedByEnv)) {
+      for (const [environment, plugins] of Object.entries(capturedByEnv)) {
         const { externals } = getExternalsLoadingPluginOptions(
           getExternalsLoadingPlugin(plugins),
         )
         expect(Object.keys(externals)).toContain('@lynx-js/react')
         for (const external of Object.values(externals)) {
+          if (environment === 'web') {
+            expect(external.async).toBe(true)
+            continue
+          }
           expect(external.async).toBeTypeOf('function')
           // Evaluate the serialized function in a fresh VM, as the runtime does.
           const selectAsync = runInNewContext(
@@ -462,9 +466,16 @@ describe('pluginExternalBundle', () => {
               undefined,
             ]
           ) {
-            expect(selectAsync({ systemInfo: { platform } })).toBe(
-              platform === 'Harmony' || platform === 'web',
-            )
+            for (
+              const predicate of [
+                external.async as typeof runtimeAsyncPredicate,
+                selectAsync,
+              ]
+            ) {
+              expect(predicate({ systemInfo: { platform } })).toBe(
+                platform === 'Harmony' || platform === 'web',
+              )
+            }
           }
         }
       }
@@ -545,38 +556,42 @@ describe('pluginExternalBundle', () => {
     },
   )
 
-  test('should forward a runtime async predicate to all reactlynx aliases', async () => {
-    const { pluginExternalBundle } = await import('../src/index.js')
-    let capturedPlugins: unknown[] = []
-    const rsbuild = await createRsbuild({
-      cwd: __dirname,
-      rsbuildConfig: {
-        source: { entry: { main: './fixtures/basic.tsx' } },
-        tools: {
-          rspack(config) {
-            capturedPlugins = config.plugins ?? []
-            return config
+  test.each(['lynx', 'web'])(
+    'should forward a runtime async predicate to all reactlynx aliases in %s',
+    async (environment) => {
+      const { pluginExternalBundle } = await import('../src/index.js')
+      let capturedPlugins: unknown[] = []
+      const rsbuild = await createRsbuild({
+        cwd: __dirname,
+        rsbuildConfig: {
+          environments: { [environment]: {} },
+          source: { entry: { main: './fixtures/basic.tsx' } },
+          tools: {
+            rspack(config) {
+              capturedPlugins = config.plugins ?? []
+              return config
+            },
           },
+          plugins: [
+            pluginStubLayers(),
+            pluginExternalBundle({
+              externalsPresets: { reactlynx: { async: runtimeAsyncPredicate } },
+            }),
+          ],
         },
-        plugins: [
-          pluginStubLayers(),
-          pluginExternalBundle({
-            externalsPresets: { reactlynx: { async: runtimeAsyncPredicate } },
-          }),
-        ],
-      },
-    })
-    await rsbuild.inspectConfig()
-    const plugin = getExternalsLoadingPlugin(capturedPlugins)
-    expect(plugin).toBeDefined()
-    for (
-      const external of Object.values(
-        getExternalsLoadingPluginOptions(plugin).externals,
-      )
-    ) {
-      expect(external.async).toBe(runtimeAsyncPredicate)
-    }
-  })
+      })
+      await rsbuild.inspectConfig()
+      const plugin = getExternalsLoadingPlugin(capturedPlugins)
+      expect(plugin).toBeDefined()
+      for (
+        const external of Object.values(
+          getExternalsLoadingPluginOptions(plugin).externals,
+        )
+      ) {
+        expect(external.async).toBe(runtimeAsyncPredicate)
+      }
+    },
+  )
 
   test('should emit the reactlynx bundle into build output by default', async () => {
     const { pluginExternalBundle } = await import('../src/index.js')

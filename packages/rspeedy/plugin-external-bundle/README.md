@@ -143,7 +143,9 @@ By default, a runtime callback loads ReactLynx asynchronously on Harmony and web
 and synchronously on other platforms, including Android and iOS. Consuming modules
 use promise semantics on every platform. Set `reactlynx: { async: true }`,
 `reactlynx: { async: false }`, or provide a standalone callback to override this
-policy. Web requires asynchronous loading.
+policy. Web builds default to asynchronous loading regardless of the host's
+`SystemInfo.platform`. Synchronous native loading mounts the namespace directly,
+so existing external bundles can still read its subpaths synchronously.
 
 If your app needs business-specific presets, define them next to
 `externalsPresets`:
@@ -226,8 +228,9 @@ Rspeedy is Apache-2.0 licensed.
 
 ### Choose the loading mode at runtime
 
-The default callback selects asynchronous loading on Harmony and web. To customize
-this policy, provide a standalone callback; the following reproduces the default:
+Native builds use a default callback that selects asynchronous loading on Harmony
+and web; web builds default to `true`. To customize the runtime platform policy,
+provide a standalone callback:
 
 ```js
 pluginExternalBundle({

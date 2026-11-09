@@ -229,7 +229,8 @@ export interface ExternalValue {
    * `SystemInfo` (falling back to `lynx.SystemInfo`). It must be a standalone
    * arrow or function expression without closures, and must return a boolean
    * synchronously. Callback externals always use promise module semantics,
-   * including when the callback selects synchronous loading.
+   * including when the callback selects synchronous loading. Synchronous loads
+   * mount the namespace directly; failures are cached as rejected promises.
    *
    * @example
    * ```js
@@ -617,9 +618,15 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             const loadAsync =
               `createLoadExternalAsync(handler${handlerIndex}, ${sectionPath})`;
             const loadSync =
-              `new Promise(resolve => resolve(createLoadExternalSync(handler${handlerIndex}, ${sectionPath}, ${timeout})))`;
-            const load =
-              `deferExternal(${externalName}, () => ${predicate} ? ${loadAsync} : ${loadSync});`;
+              `createLoadExternalSync(handler${handlerIndex}, ${sectionPath}, ${timeout})`;
+            const load = `deferExternal(${externalName}, () => {
+  if (${predicate}) return ${loadAsync};
+  try {
+    return ${loadSync};
+  } catch (error) {
+    return Promise.reject(error);
+  }
+});`;
             loadCode.add(load);
             continue;
           }
@@ -726,10 +733,10 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
         if (isAsync) {
           // A `promise` external must be a single expression evaluating to a
           // promise whose resolved value becomes the module exports. The
-          // runtime module mounts one promise per library that resolves to
-          // the whole namespace, so subpaths have to be picked after that
-          // promise resolves — an array request would apply the property
-          // access synchronously on the pending promise and yield undefined.
+          // runtime module mounts a namespace or loading promise per library,
+          // so subpaths have to be picked after the namespace resolves — an
+          // array request would apply the property access synchronously on a
+          // pending promise and yield undefined.
           const mount = `${getLynxExternalGlobal(globalObject)}[${
             JSON.stringify(names[0])
           }]`;
