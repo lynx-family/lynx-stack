@@ -34,6 +34,9 @@ export {
 
 export { __page, __pageId, __root };
 
+export { createMainThreadRenderer } from './snapshot/independent/main-thread.js';
+export { createBackgroundRenderer } from './snapshot/independent/background.js';
+
 export {
   BackgroundSnapshotInstance,
   SnapshotInstance,

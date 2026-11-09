@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "lib",
+    "rootDir": "src",
+    "inlineSources": true,
+    "tsBuildInfoFile": "lib/tsconfig.tsbuildinfo",
+    "types": ["node"],
+  },
+  "include": [
+    "src",
+    "../react/runtime/types/types.d.ts",
+    "../react/runtime/types/internal-preact.d.ts",
+  ],
+  "references": [{ "path": "../react/tsconfig.json" }],
+}

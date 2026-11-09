@@ -1,0 +1,50 @@
+{
+  "name": "@lynx-js/react-transfer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Experimental independent native-hosted ReactLynx transfer roots.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/react-transfer"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./experimental/diagnostics": {
+      "types": "./lib/diagnostics.d.ts",
+      "default": "./lib/diagnostics.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "node scripts/api-extractor.mjs",
+    "build": "tsc6 --build"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "4.1.0",
+    "@microsoft/api-extractor": "catalog:",
+    "@types/react": "^19.2.18",
+    "preact": "catalog:lynxjs"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": "^0.129.1",
+    "preact": "*"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

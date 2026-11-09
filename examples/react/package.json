@@ -9,7 +9,8 @@
     "test:type": "vitest --typecheck.only"
   },
   "dependencies": {
-    "@lynx-js/react": "workspace:*"
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-transfer": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/preact-devtools": "catalog:lynxjs",

@@ -94,6 +94,11 @@ export default defineConfig({
       },
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
       {
+        find: '@lynx-js/react-transfer/experimental/diagnostics',
+        replacement: path.resolve(__dirname, '../../react-transfer/src/diagnostics.ts'),
+      },
+      { find: /^@lynx-js\/react-transfer$/, replacement: path.resolve(__dirname, '../../react-transfer/src/index.ts') },
+      {
         find: /^@lynx-js\/react-signals\/lepus$/,
         replacement: path.resolve(__dirname, '../../react-signals/src/mainThread.ts'),
       },
@@ -114,6 +119,12 @@ export default defineConfig({
   },
   test: {
     name: 'react/runtime',
+    include: [
+      ...configDefaults.include,
+      // The transfer protocol tests live with their package but run in this
+      // project so they share its transform, setup files and coverage.
+      '../../react-transfer/__test__/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+    ],
     exclude: [
       ...configDefaults.exclude,
       '**/__test__/element-template/**',
@@ -126,6 +137,9 @@ export default defineConfig({
       },
     },
     coverage: {
+      // Protocol tests exercise the companion package against this renderer's native harness.
+      allowExternal: true,
+      include: [path.join(__dirname, '**'), path.join(__dirname, '../../react-transfer/src/**')],
       exclude: [
         'debug',
         'jsx-runtime',
@@ -166,7 +180,7 @@ export default defineConfig({
         '__test__/snapshot/page.test.jsx',
         '**/*.d.ts',
         '**/*.test-d.*',
-      ],
+      ].map(pattern => pattern.startsWith('**/') ? pattern : path.join(__dirname, pattern)),
       thresholds: {
         lines: 100,
         functions: 100,

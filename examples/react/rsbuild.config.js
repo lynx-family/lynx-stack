@@ -9,6 +9,7 @@ export default defineConfig({
   source: {
     entry: {
       main: './src/index.tsx',
+      'transfer-chat': './src/transfer-chat.tsx',
     },
   },
   plugins: [

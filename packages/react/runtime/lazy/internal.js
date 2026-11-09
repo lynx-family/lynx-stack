@@ -21,6 +21,8 @@ export const {
   Component,
   BITS,
   COMPONENT_DIRTY,
+  createMainThreadRenderer,
+  createBackgroundRenderer,
   DIFF,
   DOM,
   FLAGS,
