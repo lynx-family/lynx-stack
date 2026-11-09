@@ -6,7 +6,7 @@
  * Type definitions for snapshot system.
  */
 
-import type { PlatformInfo } from './platformInfo.js';
+export type SnapshotType = string | null;
 
 /**
  * Interface for objects that have child nodes.
@@ -20,9 +20,9 @@ export interface WithChildren {
  */
 export interface SerializedSnapshotInstance {
   id: number;
-  type: string;
+  type: SnapshotType;
   values?: any[] | undefined;
-  __listItemPlatformInfo?: PlatformInfo | undefined;
+  __listItemPlatformInfo?: unknown;
   extraProps?: Record<string, unknown> | undefined;
   children?: SerializedSnapshotInstance[] | undefined;
   slotIndex?: number | undefined;
