@@ -138,7 +138,9 @@ export interface BTSPageRuntime {
    * Borrow the captured host GlobalProps snapshot without copying on each read
    * (defaults to `{}` when the host has not injected GlobalProps).
    * Treat the entire value as read-only, including nested objects; Readonly is
-   * shallow and no freeze is applied.
+   * shallow and no freeze is applied. If a DSL mutates its own root GlobalProps
+   * object in place (e.g. via `Object.assign`), shallow-copy
+   * `{ ...page.getGlobalProps() }` during bootstrap.
    */
   getGlobalProps<T = Record<string, unknown>>(this: void): Readonly<T>;
   onGlobalPropsChanged<T = Record<string, unknown>>(
@@ -196,6 +198,11 @@ export interface BTSPageRuntime {
    * `Native.__DestroyLifetime`) and on Web. Use this hook to deterministically
    * release page-scoped timers, subscriptions, and shared `LynxGroup` background
    * resources when a page instance is destroyed.
+   *
+   * Host template reload (`onReload`) does **not** trigger host destruction unless
+   * the DSL explicitly invokes `callDestroyLifetimeFun()` before `reloadCard()`.
+   * Runtime objects recreated across in-place reloads must invoke the returned
+   * `Unsubscribe` disposer when retiring so listeners do not accumulate.
    *
    * @param listener - Callback invoked synchronously when BTS page destruction begins.
    * @returns An idempotent disposer that unsubscribes `listener`.

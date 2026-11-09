@@ -79,7 +79,7 @@ function createEventEntry(): BTSEventEntry {
 function assertScopeAlive(scope: BTSPageScope): void {
   if (scope.destroying || scope.destroyed) {
     throw new Error(
-      '[@lynx-js/lynx-runtime/bts] Cannot register or activate a capability on a destroying or destroyed page.',
+      '[@lynx-js/lynx-runtime/bts] Cannot register or activate a capability on a destroying or destroyed page. Check page.isDestroyed() before registering in async callbacks.',
     );
   }
 }
@@ -180,7 +180,7 @@ function getCoreContext(scope: BTSPageScope): HostContextProxy {
   const proxy = getScopeLynx(scope)?.getCoreContext?.();
   if (!proxy) {
     throw new Error(
-      '[@lynx-js/lynx-runtime/bts] Message communication requires lynx.getCoreContext().',
+      '[@lynx-js/lynx-runtime/bts] Message communication requires lynx.getCoreContext(). Ensure the BTS host context is initialized before calling sendMessage() or onMessage().',
     );
   }
   return proxy;
@@ -514,7 +514,7 @@ function resolveCurrentHostScope(): BTSPageScope {
   const resolved = resolveOptionalHostApp(host, lexicalLynx);
   if (!resolved) {
     throw new Error(
-      '[@lynx-js/lynx-runtime/bts] Unable to resolve BTS App instance (`tt`).',
+      '[@lynx-js/lynx-runtime/bts] Unable to resolve BTS App instance (`tt`). Call bindPage() synchronously during BTS page bootstrap and retain the returned handle.',
     );
   }
   return createBTSPageScope(resolved, host, lexicalLynx);
@@ -523,6 +523,8 @@ function resolveCurrentHostScope(): BTSPageScope {
 /**
  * Bind the BTS runtime to the page currently bootstrapping in the host environment
  * and return a page-scoped runtime handle isolated from subsequent `LynxGroup` page loads.
+ * Call `bindPage()` synchronously during page bootstrap and retain the returned
+ * `BTSPageRuntime` handle for all subsequent asynchronous work on that page.
  */
 export function bindPage(): BTSPageRuntime {
   const scope = resolveCurrentHostScope();

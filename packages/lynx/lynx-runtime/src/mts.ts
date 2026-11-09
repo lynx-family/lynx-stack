@@ -153,7 +153,7 @@ function getAliveMTSState(host: HostGlobalScope): MTSHostState {
   const state = getMTSHostState(host);
   if (state.destroying || state.destroyed) {
     throw new Error(
-      '[@lynx-js/lynx-runtime/mts] Cannot register or activate a capability on a destroying or destroyed host.',
+      '[@lynx-js/lynx-runtime/mts] Cannot register or activate a capability on a destroying or destroyed host. Check isDestroyed() before registering in async callbacks.',
     );
   }
   return state;
@@ -296,9 +296,11 @@ function getDestroyProxy(host: HostGlobalScope): HostContextProxy | undefined {
  * without throwing, because the single-page context is torn down as a whole
  * without an MTS destroy event.
  *
- * Note: `globalThis.removeComponents` is called by C++ during `ReloadTemplate` /
- * `ReloadFromJS` immediately before `UpdateTemplate`, NOT on page destroy, so it
- * must not trigger `onDestroy`.
+ * Note: `ReloadTemplate` / `ReloadFromJS` (`globalThis.removeComponents` + `onReload`)
+ * reuses the same MTS context and does **not** dispatch `__DestroyLifetime`.
+ * Runtime objects recreated across reloads or entry re-evaluations must invoke
+ * the returned `Unsubscribe` disposer when retiring so listeners do not accumulate
+ * until page teardown.
  *
  * @param listener - Callback invoked synchronously when MTS destruction begins.
  * @returns An idempotent disposer that unsubscribes `listener` (no-op when the host does not emit MTS destroy notifications).
@@ -430,7 +432,7 @@ function getJSContext(
   const proxy = host.lynx?.getJSContext?.();
   if (!proxy) {
     throw new Error(
-      '[@lynx-js/lynx-runtime/mts] Message communication requires lynx.getJSContext().',
+      '[@lynx-js/lynx-runtime/mts] Message communication requires lynx.getJSContext(). Ensure the MTS host context is initialized before calling sendMessage() or onMessage().',
     );
   }
   if (state.jsContext && state.jsContext !== proxy) {
@@ -441,14 +443,18 @@ function getJSContext(
   return proxy;
 }
 
-/** Submit the page tree; returning does not imply layout or paint completion. */
+/**
+ * Submit the page root element tree (`__FlushElementTree`); returning does not imply layout or paint completion.
+ * Unlike the 2-arg PAPI `__FlushElementTree(target, options)`, `flushElementTree(options)`
+ * flushes the page root only and accepts `MTSFlushOptions` as its first argument.
+ */
 export function flushElementTree(options?: Readonly<MTSFlushOptions>): void {
   const host = globalThis as unknown as HostGlobalScope;
   getAliveMTSState(host);
   const flush = host.__FlushElementTree;
   if (typeof flush !== 'function') {
     throw new Error(
-      '[@lynx-js/lynx-runtime/mts] Page flush requires __FlushElementTree().',
+      '[@lynx-js/lynx-runtime/mts] Page flush requires __FlushElementTree(). Ensure flushElementTree() is called on the main thread (MTS).',
     );
   }
   if (options === undefined) {
@@ -458,7 +464,7 @@ export function flushElementTree(options?: Readonly<MTSFlushOptions>): void {
   }
   if (!isPlainRecord(options as unknown)) {
     throw new TypeError(
-      '[@lynx-js/lynx-runtime/mts] Flush options must be a plain object.',
+      '[@lynx-js/lynx-runtime/mts] Flush options must be a plain object (flushElementTree(options) flushes the page root and does not take an element target).',
     );
   }
   const rawOptions = options as Readonly<
@@ -690,7 +696,9 @@ export function getInitData<T = Record<string, unknown>>(): T {
 /**
  * Borrow the current host `GlobalProps` without copying (defaults to `{}` when unset).
  * Treat the entire value as read-only, including nested objects; Readonly is shallow
- * and no freeze is applied. During and after destruction, read the captured final properties.
+ * and no freeze is applied. If a DSL mutates its own root `GlobalProps` object in place
+ * (e.g. `Object.assign`), shallow-copy `{ ...getGlobalProps() }` at startup.
+ * During and after destruction, read the captured final properties.
  */
 export function getGlobalProps<T = Record<string, unknown>>(): Readonly<T> {
   const host = globalThis as unknown as HostGlobalScope;

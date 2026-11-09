@@ -4,7 +4,7 @@ DSL-neutral Lynx host runtime primitives for main thread (`@lynx-js/lynx-runtime
 
 ## Subpath Exports
 
-- `@lynx-js/lynx-runtime`: Shared TypeScript types only (`BTSPageRuntime`, `BTSEventHandler`, `CreatedPipelineOptions`, `CreatePipelineOptions`, `LynxSystemInfo`, `MTSFlushContext`, `MTSFlushOptions`, `MTSReloadOptions`, `MTSRenderOptions`, `MTSUpdateOptions`, `BTSUpdateOptions`, `BTSReloadOptions`, `PipelineOptions`, `Unsubscribe`). The package declares `"sideEffects": false`, and runtime entrypoints are imported from `/mts` or `/bts` with zero module-evaluation side effects so bundlers can tree-shake unused imports cleanly.
+- `@lynx-js/lynx-runtime`: Shared TypeScript types only (`BTSPageRuntime`, `BTSEventHandler`, `CreatedPipelineOptions`, `CreatePipelineOptions`, `LynxSystemInfo`, `MTSFlushContext`, `MTSFlushOptions`, `MTSReloadOptions`, `MTSRenderOptions`, `MTSUpdateOptions`, `BTSUpdateOptions`, `BTSReloadOptions`, `PipelineOptions`, `Unsubscribe`). The package declares `"sideEffects": false`, and runtime entrypoints are imported from `/mts` or `/bts` with zero module-evaluation side effects so bundlers can tree-shake unused imports cleanly. In dual-thread shared files, import types from `@lynx-js/lynx-runtime` and guard runtime calls to `/mts` or `/bts` behind compile-time thread constants (such as `__LEPUS__` / `__JS__`) so dead-code elimination removes cross-thread references before module-graph resolution.
 - `@lynx-js/lynx-runtime/mts`: Main-thread (Lepus) host lifecycle, data flow, single-owner hooks, peer communication, page-level flush and host services (`isDestroyed`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onRenderPage`, `onUpdateData`, `onReload`, `onGlobalPropsChanged`, `setDataProcessor`, `setPageDataGetter`, `sendMessage`, `onMessage`, `flushElementTree`, `createPipeline`, `markTiming`, `onDestroy`).
 - `@lynx-js/lynx-runtime/bts`: Background-thread (JS) page binding entrypoint (`bindPage(): BTSPageRuntime`). All BTS page capabilities (`isDestroyed`, `getId`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onUpdateData`, `onGlobalPropsChanged`, `onReload`, `onConfigChanged`, `onEnterForeground`, `onEnterBackground`, `setEventHandler`, `sendMessage`, `onMessage`, `createPipeline`, `markTiming`, `onDestroy`) are accessed on the bound `BTSPageRuntime` handle, ensuring deterministic page ownership across synchronous and asynchronous work.
 
@@ -113,7 +113,11 @@ unset) and `onGlobalPropsChanged<T>()`, with thread-appropriate backing storage:
   always holds.
 
 Treat the entire `GlobalProps` value—including nested objects—as read-only on both
-threads (`Readonly<T>` is a compile-time marker and does not freeze objects).
+threads (`Readonly<T>` is a compile-time marker and does not freeze objects). If a
+DSL mutates its own root `GlobalProps` object in place (for example via
+`Object.assign`), shallow-copy `{ ...getGlobalProps() }` or
+`{ ...page.getGlobalProps() }` at startup so in-place root mutations do not write
+back into the borrowed runtime snapshot.
 
 ## Raw BTS events
 
@@ -146,7 +150,11 @@ const stop = bindPage().setEventHandler((handlerName, data, componentId) => {
 Host notifications deduplicate the same callback per page and notification.
 Repeated `bindPage()` calls for the same page return the same `BTSPageRuntime`
 handle and share registrations; a new registration after disposal cannot be
-removed by old disposers.
+removed by old disposers. Because in-place page reloads (`onReload`:
+`ReloadTemplate` / `ReloadFromJS`) do not trigger host `__DestroyLifetime`
+(`onDestroy`), runtime managers that are recreated across reloads or entry
+re-evaluations must invoke the returned `Unsubscribe` disposer when retiring an
+older instance.
 
 Once destruction begins, `isDestroyed()` (on MTS and `BTSPageRuntime`) immediately
 returns `true` before any DSL `onDestroy` callback runs, while new listeners,
