@@ -9,6 +9,7 @@ import { beforeAll, beforeEach, describe, expect, onTestFinished, test, vi } fro
 import { setupDocument } from '../../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
 import { initProfileHook } from '../../../src/snapshot/debug/profileHooks';
+import { globalPatchOptions } from '../../../src/snapshot/lifecycle/patch/commit';
 import { useState } from '../../../src/index';
 import {
   COMMIT,
@@ -228,12 +229,7 @@ describe('profile', () => {
           "ReactLynx::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "["count"]",
               "componentName": "ClassComponent",
-              "current state keys": "["count"]",
-              "currentValue": "{"type":"object","entries":[["count",0]]}",
-              "next state keys": "["count"]",
-              "nextValue": "{"type":"object","entries":[["count",1]]}",
             },
             "flowId": 666,
           },
@@ -292,13 +288,8 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "[]",
               "componentName": "App",
-              "current state keys": "[]",
-              "currentValue": "0",
               "hookIdx": "0",
-              "next state keys": "[]",
-              "nextValue": "1",
             },
             "flowId": 666,
           },
@@ -307,13 +298,8 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "["count","newKey"]",
               "componentName": "App",
-              "current state keys": "["count","unchanged"]",
-              "currentValue": "{"type":"object","entries":[["count",0],["unchanged",{"type":"string","length":9,"preview":"unchanged"}]]}",
               "hookIdx": "1",
-              "next state keys": "["count","unchanged","newKey"]",
-              "nextValue": "{"type":"object","entries":[["count",1],["unchanged",{"type":"string","length":9,"preview":"unchanged"}],["newKey",{"type":"string","length":8,"preview":"newValue"}]]}",
             },
             "flowId": 666,
           },
@@ -322,13 +308,8 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "["count"]",
               "componentName": "App",
-              "current state keys": "["count","circularKey"]",
-              "currentValue": "{"type":"object","entries":[["count",0],["circularKey",{"type":"object"}]]}",
               "hookIdx": "2",
-              "next state keys": "["count","circularKey"]",
-              "nextValue": "{"type":"object","entries":[["count",1],["circularKey",{"type":"object"}]]}",
             },
             "flowId": 666,
           },
@@ -361,13 +342,8 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "[]",
               "componentName": "App",
-              "current state keys": "[]",
-              "currentValue": "{"type":"function"}",
               "hookIdx": "0",
-              "next state keys": "[]",
-              "nextValue": "{"type":"function"}",
             },
             "flowId": 666,
           },
@@ -376,104 +352,149 @@ describe('profile', () => {
     `);
   });
 
-  test('reports field addition and removal against each pending Hook value', () => {
+  test('associates batched Hook updates with one render and commit flow', () => {
+    process();
     let update;
+    const rendered = [];
     function App() {
-      const [, setState] = useState({ removed: 1, stable: NaN, signedZero: 0 });
-      update = setState;
+      const [value, setValue] = useState(0);
+      rendered.push(value);
+      update = setValue;
       return <view />;
     }
-
+    const previousFlowIds = globalPatchOptions.flowIds;
+    onTestFinished(() => {
+      globalPatchOptions.flowIds = previousFlowIds;
+    });
+    globalPatchOptions.flowIds = undefined;
     render(<App />, scratch);
-    update({ stable: NaN, signedZero: -0, added: undefined });
-    update({ stable: NaN, signedZero: -0, removed: 2 });
+    lynx.performance.profileMark.mockClear();
+    lynx.performance.profileFlowId.mockClear();
+    lynx.performance.profileFlowId.mockReturnValueOnce(701).mockReturnValueOnce(702);
+    lynx.performance.profileStart.mockClear();
+    lynx.performance.profileEnd.mockClear();
 
-    const [first, second] = lynx.performance.profileMark.mock.calls.map(([, { args }]) => args);
-    expect(JSON.parse(first['changed (shallow diff) state keys'])).toEqual(['removed', 'signedZero', 'added']);
-    expect(JSON.parse(second['changed (shallow diff) state keys'])).toEqual(['added', 'removed']);
-    expect(second.currentValue).toBe(first.nextValue);
+    update(value => value + 1);
+    update(value => value + 1);
+    expect(rendered).toEqual([0]);
+    expect(lynx.performance.profileMark.mock.calls).toEqual([
+      ['ReactLynx::hooks::setState', { flowId: 701, args: { componentName: 'App', hookIdx: '0' } }],
+      ['ReactLynx::hooks::setState', { flowId: 701, args: { componentName: 'App', hookIdx: '0' } }],
+    ]);
+    expect(lynx.performance.profileFlowId).toHaveBeenCalledTimes(1);
+
+    process();
+    expect(rendered).toEqual([0, 2]);
+    expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::diff::App', { flowId: 701 });
+    expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::commit', {
+      flowId: 701,
+      flowIds: [701],
+    });
+
+    update(value => value + 1);
+    expect(lynx.performance.profileMark).toHaveBeenLastCalledWith('ReactLynx::hooks::setState', {
+      flowId: 702,
+      args: { componentName: 'App', hookIdx: '0' },
+    });
+    process();
+    expect(rendered).toEqual([0, 2, 3]);
+    expect(lynx.performance.profileFlowId).toHaveBeenCalledTimes(2);
+
+    lynx.performance.profileMark.mockClear();
+    update(value => value);
+    process();
+    expect(rendered).toEqual([0, 2, 3]);
+    expect(lynx.performance.profileMark).not.toHaveBeenCalled();
   });
 
-  test('bounds string and record previews without calling getters or toJSON', () => {
-    let update;
-    function App() {
-      const [, setState] = useState({});
-      update = setState;
-      return <view />;
-    }
-    render(<App />, scratch);
-
-    const value = 'x'.repeat(1000);
-    update(value);
-    const getter = vi.fn(() => {
-      throw new Error('getter ran');
-    });
-    const toJSON = vi.fn(() => {
-      throw new Error('toJSON ran');
-    });
-    const record = { toJSON };
-    Object.defineProperty(record, 'getter', { enumerable: true, get: getter });
-    Object.assign(record, Object.fromEntries(Array.from({ length: 40 }, (_, i) => [`key${i}`, value])));
-    update(record);
-    const keys = Object.keys(record).filter(key => key !== 'getter').reverse();
-    update(Object.fromEntries(keys.map(key => [key, record[key]])));
-
-    const array = Array.from({ length: 1000 });
-    array[0] = array;
-    update(array);
-
-    const [stringArgs, recordArgs, reorderedArgs, arrayArgs] = lynx.performance.profileMark.mock.calls.map(
-      ([, { args }]) => args,
-    );
-    expect(stringArgs['next state keys']).toBe('[]');
-    expect(JSON.parse(stringArgs.nextValue)).toEqual({ type: 'string', length: 1000, preview: 'x'.repeat(80) + '…' });
-    expect(JSON.parse(recordArgs['next state keys'])).toHaveLength(16);
-    expect(JSON.parse(recordArgs['changed (shallow diff) state keys'])).toHaveLength(16);
-    expect(recordArgs['state keys truncated']).toBe('true');
-    expect(JSON.parse(recordArgs.nextValue).entries).toContainEqual(['getter', { type: 'accessor' }]);
-    expect(JSON.parse(reorderedArgs['changed (shallow diff) state keys'])).toEqual(['getter']);
-    expect(arrayArgs['next state keys']).toBe('[]');
-    expect(JSON.parse(arrayArgs.nextValue)).toEqual({ type: 'array', length: 1000 });
-    expect(getter).not.toHaveBeenCalled();
-    expect(toJSON).not.toHaveBeenCalled();
-  });
-
-  test('continues a Hook update when state inspection or trace emission throws', () => {
+  test('records only metadata without inspecting Hook state', () => {
     let update;
     let rendered;
     function App() {
-      const [value, setValue] = useState(0);
+      const [value, setValue] = useState(null);
       rendered = value;
       update = setValue;
       return <view />;
     }
     render(<App />, scratch);
 
-    update(1n);
-    expect(JSON.parse(lynx.performance.profileMark.mock.lastCall[1].args.nextValue)).toEqual({ type: 'bigint' });
-    process();
-    expect(rendered).toBe(1n);
-
-    const opaque = new Proxy({}, {
-      ownKeys() {
-        throw new Error('inspection failed');
-      },
+    const inspect = vi.fn(() => {
+      throw new Error('state must not be inspected');
     });
-    update(opaque);
-    process();
-    expect(rendered).toBe(opaque);
+    const record = { toJSON: inspect };
+    Object.defineProperty(record, 'getter', { enumerable: true, get: inspect });
+    const opaque = new Proxy({}, {
+      ownKeys: inspect,
+      get: inspect,
+      getOwnPropertyDescriptor: inspect,
+      getPrototypeOf: inspect,
+      has: inspect,
+    });
+    const revoked = Proxy.revocable({}, {});
+    revoked.revoke();
+    const circular = [];
+    circular.push(circular);
+    const values = [
+      'x'.repeat(65536),
+      Object.fromEntries(Array.from({ length: 1000 }, (_, i) => [`key${i}`, i])),
+      record,
+      opaque,
+      revoked.proxy,
+      circular,
+      1n,
+      Symbol('state'),
+      undefined,
+      () => 'function state',
+    ];
 
-    // Replace the opaque value before testing the sink so state inspection succeeds.
-    update(2n);
-    process();
+    for (const value of values) {
+      lynx.performance.profileMark.mockClear();
+      update(() => value);
+      expect(lynx.performance.profileMark.mock.calls).toEqual([
+        ['ReactLynx::hooks::setState', { flowId: 666, args: { componentName: 'App', hookIdx: '0' } }],
+      ]);
+      process();
+      expect(rendered).toBe(value);
+    }
+    expect(inspect).not.toHaveBeenCalled();
+  });
+
+  test.each(['hook', 'class'])('continues a %s update when trace emission throws', kind => {
+    let update;
+    let rendered;
+    function HookComponent() {
+      const [value, setValue] = useState(0);
+      rendered = value;
+      update = setValue;
+      return <view />;
+    }
+    class ClassComponent extends Component {
+      state = { value: 0 };
+      render() {
+        rendered = this.state.value;
+        update = value => this.setState({ value });
+        return <view />;
+      }
+    }
+    render(kind === 'hook' ? <HookComponent /> : <ClassComponent />, scratch);
+
     const sinkError = vi.fn(() => {
       throw new Error('trace sink failed');
     });
     lynx.performance.profileMark.mockImplementationOnce(sinkError);
-    update(3n);
+    update(1n);
     process();
     expect(sinkError).toHaveBeenCalledTimes(1);
-    expect(rendered).toBe(3n);
+    expect(rendered).toBe(1n);
+
+    const flowError = vi.fn(() => {
+      throw new Error('flow allocation failed');
+    });
+    lynx.performance.profileFlowId.mockImplementationOnce(flowError);
+    update(2n);
+    process();
+    expect(flowError).toHaveBeenCalledTimes(1);
+    expect(rendered).toBe(2n);
   });
 
   test('should handle missing component instance', async () => {

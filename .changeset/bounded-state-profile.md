@@ -2,4 +2,4 @@
 "@lynx-js/react": patch
 ---
 
-Make Snapshot state profiling safe for Hook updates. State traces show bounded previews and include added and removed fields in shallow diffs.
+Keep Snapshot state-update traces independent of application state. The existing events retain component names, Hook indices, and flow IDs, but no longer include state values, property lists, or shallow diffs. Trace failures no longer interrupt pending Hook updates.

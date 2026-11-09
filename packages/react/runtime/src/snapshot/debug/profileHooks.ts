@@ -16,104 +16,13 @@ import {
   DIFFED,
   HOOKS,
   LIST,
-  NEXT_STATE,
   NEXT_VALUE,
   RENDER,
-  VALUE,
   VNODE,
 } from '../../shared/render-constants.js';
 import { getDisplayName } from '../../utils.js';
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-
-const maxStateKeys = 16;
-const maxStateStringLength = 80;
-
-function truncateStateString(value: string): string {
-  return value.length > maxStateStringLength ? value.slice(0, maxStateStringLength) + '…' : value;
-}
-
-function describeStateValue(value: unknown): unknown {
-  if (value === null || typeof value === 'boolean' || typeof value === 'number') {
-    return value;
-  }
-  if (typeof value === 'string') {
-    return { type: 'string', length: value.length, preview: truncateStateString(value) };
-  }
-  if (Array.isArray(value)) {
-    const length: unknown = Object.getOwnPropertyDescriptor(value, 'length')?.value;
-    return typeof length === 'number' ? { type: 'array', length } : { type: 'array' };
-  }
-  return { type: typeof value };
-}
-
-function getStateProperty(state: object | undefined, key: string): PropertyDescriptor | undefined {
-  const descriptor = state && Object.getOwnPropertyDescriptor(state, key);
-  return descriptor?.enumerable ? descriptor : undefined;
-}
-
-function sampleState(state: unknown) {
-  const record = state !== null && typeof state === 'object' && !Array.isArray(state) ? state : undefined;
-  const properties = new Map<string, PropertyDescriptor>();
-  let scanned = 0;
-  let truncated = false;
-  for (const key in record) {
-    if (scanned === maxStateKeys) {
-      truncated = true;
-      break;
-    }
-    scanned++;
-    const property = getStateProperty(record, key);
-    if (property) {
-      properties.set(key, property);
-    }
-  }
-  const preview = record
-    ? {
-      type: 'object',
-      entries: Array.from(properties, ([key, property]) => [
-        truncateStateString(key),
-        'value' in property ? describeStateValue(property.value) : { type: 'accessor' },
-      ]),
-    }
-    : describeStateValue(state);
-  return { record, properties, preview, truncated };
-}
-
-function buildSetStateProfileMarkArgs(
-  type: VNode['type'],
-  currentState: unknown,
-  nextState: unknown,
-): Record<string, string> {
-  const current = sampleState(currentState);
-  const next = sampleState(nextState);
-  const keys = new Set([...current.properties.keys(), ...next.properties.keys()]);
-  const changed = [...keys].filter(key => {
-    // A key outside the sample can still exist on the other side.
-    const before = current.properties.get(key) ?? getStateProperty(current.record, key);
-    const after = next.properties.get(key) ?? getStateProperty(next.record, key);
-    if (!before || !after) {
-      return before !== after;
-    }
-    if ('value' in before && 'value' in after) {
-      return !Object.is(before.value, after.value);
-    }
-    return ('value' in before) !== ('value' in after) || before.get !== after.get || before.set !== after.set;
-  });
-
-  const name = typeof type === 'function' ? getDisplayName(type as ComponentClass) : undefined;
-  return {
-    componentName: typeof name === 'string' ? truncateStateString(name) : 'Unknown',
-    'current state keys': JSON.stringify(Array.from(current.properties.keys(), truncateStateString)),
-    'next state keys': JSON.stringify(Array.from(next.properties.keys(), truncateStateString)),
-    'changed (shallow diff) state keys': JSON.stringify(
-      changed.slice(0, maxStateKeys).map(key => truncateStateString(key)),
-    ),
-    ...(current.truncated || next.truncated || changed.length > maxStateKeys ? { 'state keys truncated': 'true' } : {}),
-    currentValue: JSON.stringify(current.preview),
-    nextValue: JSON.stringify(next.preview),
-  };
-}
 
 export function initProfileHook(): void {
   // early-exit if required profiling APIs are unavailable
@@ -142,7 +51,7 @@ export function initProfileHook(): void {
     const sFlowID = Symbol('FLOW_ID');
     type PatchedComponent = Component & { [sFlowID]?: number };
 
-    function markSetState(component: PatchedComponent, current: unknown, next: unknown, hookIdx?: number): void {
+    function markSetState(component: PatchedComponent, hookIdx?: number): void {
       try {
         const type = component[VNODE]!.type;
         if (
@@ -151,7 +60,10 @@ export function initProfileHook(): void {
         ) {
           return;
         }
-        const args = buildSetStateProfileMarkArgs(type, current, next);
+        // Update traces describe the framework's work without inspecting application state.
+        const args: Record<string, string> = {
+          componentName: typeof type === 'function' ? getDisplayName(type as ComponentClass) : 'Unknown',
+        };
         if (hookIdx !== undefined) {
           args['hookIdx'] = String(hookIdx);
         }
@@ -166,11 +78,11 @@ export function initProfileHook(): void {
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const oldSetState = Component.prototype.setState;
-      Component.prototype.setState = function(this: PatchedComponent & { [NEXT_STATE]: unknown }, state, callback) {
+      Component.prototype.setState = function(this: PatchedComponent, state, callback) {
         oldSetState?.call(this, state, callback);
 
         if (this[BITS] & COMPONENT_DIRTY) {
-          markSetState(this, this.state, this[NEXT_STATE]);
+          markSetState(this);
         }
       };
     }
@@ -219,14 +131,11 @@ export function initProfileHook(): void {
             Object.defineProperty(hookState, NEXT_VALUE, {
               get: () => hookState['internalNextValue'],
               set: (value) => {
-                const pending = hookState['internalNextValue'] as unknown[] | undefined;
                 hookState['internalNextValue'] = value;
                 if (Array.isArray(value)) {
                   const component = hookState[COMPONENT] as PatchedComponent | undefined;
                   if (component) {
-                    // The reducer uses the pending tuple as its baseline for batched dispatches.
-                    const previous = pending ?? hookState[VALUE] as unknown[];
-                    markSetState(component, previous[0], value[0], hookIdx);
+                    markSetState(component, hookIdx);
                   }
                 }
               },
