@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+/** Idempotently remove this registration; does not destroy its page or restore a previous owner. */
 export type Unsubscribe = () => void;
 
 export interface LynxSystemInfo {
@@ -108,6 +109,7 @@ export type BTSEventHandler<T = unknown> = (
   componentId?: string,
 ) => unknown;
 
+/** Capabilities bound to one host App instance; retain this handle across asynchronous work. */
 export interface BTSPageRuntime {
   /**
    * True from the start of BTS page destruction, including inside teardown callbacks.
@@ -132,6 +134,7 @@ export interface BTSPageRuntime {
    * Overlays the current round's processed initial or `onReload` `TemplateData`
    * onto the template's static `_params.initData` (`encoded_data`), replacing
    * previous dynamic keys across reloads while preserving static template keys.
+   * Incremental updates do not change this baseline. Remains readable after destruction.
    */
   getInitData<T = Record<string, unknown>>(this: void): T;
   /**
@@ -141,8 +144,11 @@ export interface BTSPageRuntime {
    * shallow and no freeze is applied. If a DSL mutates its own root GlobalProps
    * object in place (e.g. via `Object.assign`), shallow-copy
    * `{ ...page.getGlobalProps() }` during bootstrap.
+   * The first read or subscription activates capture; do this synchronously during
+   * bootstrap to capture subsequent updates. Remains readable after destruction.
    */
   getGlobalProps<T = Record<string, unknown>>(this: void): Readonly<T>;
+  /** Subscribe during bootstrap; activates snapshot capture without replaying earlier notifications. */
   onGlobalPropsChanged<T = Record<string, unknown>>(
     this: void,
     listener: (globalProps: Readonly<T>) => void,
@@ -156,6 +162,8 @@ export interface BTSPageRuntime {
    * configures legacy `PackageInstanceDSL::REACT` and skips `tt.updateCardData`),
    * BTS `onUpdateData` does not fire until the host converges `.lynxml` to
    * `REACT_NODIFF` (Web is unaffected; `getInitData` and `onReload` remain active).
+   * Payloads are read-only. The DSL owns merge/reset state and rendering;
+   * registering a listener does not replay earlier updates.
    */
   onUpdateData<T = Record<string, unknown>>(
     this: void,
@@ -165,6 +173,7 @@ export interface BTSPageRuntime {
    * Subscribe to host template reloads on BTS (`tt.onAppReload`).
    * Runtime refreshes `getInitData()` by overlaying the reload payload onto
    * template static `_params.initData` before invoking listeners.
+   * A reload notification alone does not destroy the bound App or retire DSL resources.
    */
   onReload<T = Record<string, unknown>>(
     this: void,
@@ -176,15 +185,34 @@ export interface BTSPageRuntime {
   ): Unsubscribe;
   onEnterForeground(this: void, listener: () => void): Unsubscribe;
   onEnterBackground(this: void, listener: () => void): Unsubscribe;
+  /**
+   * Claim both raw page and component event slots with one synchronous handler.
+   * Latest registration wins; disposal clears the current handler without restoring
+   * an earlier owner. Page events have no componentId; component events retain it.
+   * Return values and exceptions pass through to the host; Promises are not awaited
+   * and false is ordinary data, not cancellation. Register only while the page is alive.
+   */
   setEventHandler<T = unknown>(
     this: void,
     handler: BTSEventHandler<T>,
   ): Unsubscribe;
+  /**
+   * Send to this bound page's MTS; returns no receipt and does not wait for execution.
+   * Requires a live page and its host peer proxy. Install the receiver before sending:
+   * there is no startup queue, retry, RPC, or cross-type ordering guarantee.
+   * T constrains the caller only; it does not validate the peer's payload.
+   */
   sendMessage<T = undefined>(
     this: void,
     type: string,
     ...args: undefined extends T ? [data?: T] : [data: T]
   ): void;
+  /**
+   * Subscribe to raw payloads from this page's MTS while the page and proxy are available.
+   * Identical callbacks for a type share a registration. Dispose when the owning entry
+   * retires; page destruction also removes listeners. No replay or payload validation.
+   * Prefer object payloads: Web converts top-level null/undefined to an empty object.
+   */
   onMessage<T = unknown>(
     this: void,
     type: string,

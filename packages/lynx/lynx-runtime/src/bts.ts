@@ -525,6 +525,10 @@ function resolveCurrentHostScope(): BTSPageScope {
  * and return a page-scoped runtime handle isolated from subsequent `LynxGroup` page loads.
  * Call `bindPage()` synchronously during page bootstrap and retain the returned
  * `BTSPageRuntime` handle for all subsequent asynchronous work on that page.
+ * Repeated binding to the same App returns the same handle, including its destruction
+ * state. Binding captures the initial baseline and tracks reload/destruction; other
+ * channels activate on use. Binding alone does not claim the raw event handler.
+ * Throws when the host provides no BTS App; it does not create a page.
  */
 export function bindPage(): BTSPageRuntime {
   const scope = resolveCurrentHostScope();

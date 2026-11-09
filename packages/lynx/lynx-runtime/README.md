@@ -2,6 +2,58 @@
 
 DSL-neutral Lynx host runtime primitives for main thread (`@lynx-js/lynx-runtime/mts`) and background thread (`@lynx-js/lynx-runtime/bts`).
 
+## Find a starting point
+
+Use this package when implementing a DSL's page/host integration. The DSL still
+owns rendering, mutable application state, entry replacement, and message protocols.
+
+| Task                                                 | Start here                                                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Register MTS inputs and submit updates               | [MTS page example](examples/mts-page.ts), [input ownership](#mts-input-ownership), [flush](#page-level-flush-flushelementtree) |
+| Keep BTS asynchronous work bound to a page           | [BTS page example](examples/bts-page.ts), [binding](#bts-capability-ownership)                                                 |
+| Send a message and observe a reply                   | [Paired message examples](examples/README.md#exchange-messages), [transport contract](#peer-messages)                          |
+| Retire an entry without destroying the page          | [Example cleanup](examples/README.md#retire-an-entry), [registration lifetime](#registration-lifetime)                         |
+| Read initial data or GlobalProps                     | [Input baseline](#mts-input-ownership), [GlobalProps ownership](#globalprops-across-mts-and-bts)                               |
+| Install synchronous data hooks or raw event handling | [Data hooks](#native-data-processing--host-updates), [raw BTS events](#raw-bts-events)                                         |
+
+The [example guide](examples/README.md) explains integration prerequisites and
+how to type-check the examples against the built package exports. These examples
+are integration code for a host-provided page, not standalone Node.js programs.
+
+## Contract at a glance
+
+| API                                                               | When and where                                                                             | Ownership and return meaning                                                                                                                             |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bindPage()`                                                      | BTS synchronous bootstrap                                                                  | Captures the current App instance; reuse the handle in asynchronous work. Rebinding the same App does not create a fresh lifetime.                       |
+| `getInitData()`                                                   | Activate MTS capture before the first input; BTS capture starts at binding                 | Copies plain records/arrays from the initial or reload baseline; incremental updates do not accumulate here. Opaque values remain shared.                |
+| `getGlobalProps()`                                                | First read/subscription activates its channel; do this during bootstrap                    | MTS borrows live host data; BTS borrows a captured snapshot. Neither may be mutated, including nested values.                                            |
+| `onRenderPage` / `onUpdateData` / `onReload`                      | MTS listeners register before the first input; BTS uses the bound handle for update/reload | Read-only notifications, not a state store. MTS retains channel ownership after unsubscribe. No replay of inputs missed before registration.             |
+| `sendMessage` / `onMessage`                                       | Same-page peer thread; receiver must already be installed                                  | Sending returns `void`, not a receipt. No startup buffer, RPC, or cross-type ordering guarantee. The DSL owns payload validation and completion replies. |
+| `flushElementTree(options?)`                                      | MTS, after applying an update                                                              | Submits the page root, not a List subtree. Preserve the input's options even for an empty update. Returning is not layout/paint completion.              |
+| `setDataProcessor` / `setPageDataGetter` / `page.setEventHandler` | Install on the owning thread while alive                                                   | Single owner, latest registration wins. Disposing the current owner restores the default, not the previous owner. Host calls are synchronous.            |
+| `onDestroy` / `isDestroyed`                                       | Host page lifetime                                                                         | Does not replace entry/component cleanup. Disposers are idempotent. On older MTS hosts, `false` means destruction has not been observed.                 |
+
+After observed destruction begins, registration, sending, and flushing throw;
+captured initial data/GlobalProps remain readable and disposers remain callable.
+See the linked sections below for per-API activation and compatibility details.
+
+## Package and host versions
+
+Match this README and the exported declarations to the installed
+`@lynx-js/lynx-runtime` version. Also check the actual Native SDK or
+`@lynx-js/web-core` version: updating the JavaScript package does not add host
+capabilities. The compatibility boundary is:
+
+| Host capability                          | Native                                                                           | Web                                                    |
+| ---------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| BTS page destruction                     | Lynx SDK 2.14+                                                                   | Supported by the BTS host                              |
+| MTS destruction notification             | Lynx SDK 3.4+                                                                    | `@lynx-js/web-core` 0.24.0+                            |
+| MTS without destruction notification     | SDK 2.14–3.3: `onDestroy` returns a no-op disposer; `isDestroyed()` stays false  | Earlier hosts without the proxy have the same fallback |
+| BTS incremental input on `.lynxml` pages | Known host limitation; see [host updates](#native-data-processing--host-updates) | Unaffected by the Native card-type limitation          |
+
+These boundaries describe supported paths and fallbacks, not a device-validation
+matrix. Peer messaging still requires the corresponding host ContextProxy.
+
 ## Subpath Exports
 
 - `@lynx-js/lynx-runtime`: Shared TypeScript types only (`BTSPageRuntime`, `BTSEventHandler`, `CreatedPipelineOptions`, `CreatePipelineOptions`, `LynxSystemInfo`, `MTSFlushContext`, `MTSFlushOptions`, `MTSReloadOptions`, `MTSRenderOptions`, `MTSUpdateOptions`, `BTSUpdateOptions`, `BTSReloadOptions`, `PipelineOptions`, `Unsubscribe`). The package declares `"sideEffects": false`, and runtime entrypoints are imported from `/mts` or `/bts` with zero module-evaluation side effects so bundlers can tree-shake unused imports cleanly. In dual-thread shared files, import types from `@lynx-js/lynx-runtime` and guard runtime calls to `/mts` or `/bts` behind compile-time thread constants (such as `__LEPUS__` / `__JS__`) so dead-code elimination removes cross-thread references before module-graph resolution.
@@ -35,20 +87,8 @@ subscribers; older hosts deliver the same notifications through the owned global
 functions.
 
 Migrate existing DSL handlers explicitly, and remove old Engine registrations
-and global assignments for the adopted channel:
-
-```ts
-import {
-  onReload,
-  onRenderPage,
-  onUpdateData,
-} from '@lynx-js/lynx-runtime/mts';
-import { reloadDSLPage, renderDSLPage, updateDSLPage } from './renderer.js';
-
-const stopRender = onRenderPage(renderDSLPage);
-const stopUpdate = onUpdateData(updateDSLPage);
-const stopReload = onReload(reloadDSLPage);
-```
+and global assignments for the adopted channel. The [MTS page example](examples/mts-page.ts)
+shows registration, state updates, flushes, and explicit retirement together.
 
 Runtime captures first-screen and reload inputs before notifying subscribers,
 even if no subscriber exists or all subscribers have unsubscribed. `getInitData()`
@@ -122,7 +162,9 @@ back into the borrowed runtime snapshot.
 ## Raw BTS events
 
 `page.setEventHandler(handler)` takes single-owner control of both page and
-component event entries on `bindPage()`:
+component event entries on its first registration; `bindPage()` alone does not
+claim them. In this dispatcher fragment, `components` and `pageHandlers` are
+registries owned by the DSL:
 
 ```ts
 const stop = bindPage().setEventHandler((handlerName, data, componentId) => {
@@ -172,22 +214,9 @@ type `T` is provided (`sendMessage<Payload>(type, data)`), `data` is required at
 compile time. Messages target the peer thread of the same page (`lynx.getJSContext()`
 on MTS, `lynx.getCoreContext()` on BTS).
 
-```ts
-// MTS
-import { onMessage, sendMessage } from '@lynx-js/lynx-runtime/mts';
-const stop = onMessage<{ text: string }>('example:input', data => {
-  render(data.text);
-  sendMessage('example:rendered', { text: data.text });
-});
-```
-
-```ts
-// BTS
-import { bindPage } from '@lynx-js/lynx-runtime/bts';
-const page = bindPage();
-page.onMessage<{ text: string }>('example:rendered', data => record(data.text));
-page.sendMessage('example:input', { text: 'hello' });
-```
+The [paired examples](examples/README.md#exchange-messages) install both receivers
+before sending. Their `example:submitted` reply means that the MTS handler applied
+the text and called `flushElementTree`; it does not mean layout or paint completed.
 
 - Messages pass `{ type, data }` directly through `ContextProxy.dispatchEvent`
   without envelopes, prefixes, startup queues, acknowledgements, or `Promise` RPC,
@@ -197,36 +226,19 @@ page.sendMessage('example:input', { text: 'hello' });
   values across platforms.
 - Subscriptions share one host listener per message `type` and deduplicate identical
   callbacks. Missing peer context proxies fail explicitly.
+- `T` is a caller-supplied TypeScript contract, not runtime payload validation.
+  `await sendMessage(...)` does not wait for the receiver. If completion matters,
+  define a reply and its meaning in the DSL protocol; timeout alone cannot prove
+  that the peer did not apply an operation.
 
 ## Page-level flush (`flushElementTree`)
 
 MTS exposes `flushElementTree(options?: Readonly<MTSFlushOptions>): void` to submit
 page-level element tree updates after `onUpdateData`, `onReload`,
 `onGlobalPropsChanged`, or `onMessage` (first-screen `onRenderPage` is flushed
-implicitly by the host when the callback returns):
-
-```ts
-import {
-  flushElementTree,
-  onGlobalPropsChanged,
-  onReload,
-  onUpdateData,
-} from '@lynx-js/lynx-runtime/mts';
-
-onUpdateData((data, options) => {
-  applyData(data, options);
-  flushElementTree(options);
-});
-
-onReload((data, options) => {
-  reloadPage(data, options);
-  flushElementTree(options);
-});
-
-onGlobalPropsChanged((_props, options) => {
-  flushElementTree(options);
-});
-```
+implicitly by the host when the callback returns). See [mts-page.ts](examples/mts-page.ts)
+for a complete lifecycle example and [messages-mts.ts](examples/messages-mts.ts)
+for a message-driven submission.
 
 - **Host update flush contract**: Every MTS `onUpdateData`, `onReload`, and
   `onGlobalPropsChanged` handler that owns page updates must submit a corresponding

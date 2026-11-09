@@ -447,6 +447,10 @@ function getJSContext(
  * Submit the page root element tree (`__FlushElementTree`); returning does not imply layout or paint completion.
  * Unlike the 2-arg PAPI `__FlushElementTree(target, options)`, `flushElementTree(options)`
  * flushes the page root only and accepts `MTSFlushOptions` as its first argument.
+ * Preserve the originating update/reload/GlobalProps options, even for an empty
+ * update. First-screen render is submitted by the host when its callback returns.
+ * Requires a live MTS host with __FlushElementTree; throws if unavailable, destroyed,
+ * or passed options that are not a plain object. There is no completion Promise.
  */
 export function flushElementTree(options?: Readonly<MTSFlushOptions>): void {
   const host = globalThis as unknown as HostGlobalScope;
@@ -481,7 +485,12 @@ export function flushElementTree(options?: Readonly<MTSFlushOptions>): void {
   );
 }
 
-/** Send a named message to this page's BTS without a completion receipt. */
+/**
+ * Send a named message to this page's BTS without a completion receipt.
+ * Requires a live MTS host and peer proxy. Install the receiver first: there is
+ * no startup queue, retry, RPC, or cross-type ordering guarantee. Awaiting this
+ * void return does not wait for the peer. T does not validate the payload at runtime.
+ */
 export function sendMessage<T = undefined>(
   type: string,
   ...args: undefined extends T ? [data?: T] : [data: T]
@@ -492,7 +501,13 @@ export function sendMessage(type: string, data?: unknown): void {
   getJSContext(host, state).dispatchEvent({ type, data });
 }
 
-/** Subscribe to named messages from this page's BTS, preserving the raw payload. */
+/**
+ * Subscribe to named messages from this page's BTS, preserving the raw payload.
+ * Requires a live host and peer proxy; missed messages are not replayed. Identical
+ * callbacks for a type share a registration. Dispose when the owning entry retires;
+ * observed page destruction also removes listeners. T is not runtime validation.
+ * Prefer object payloads: Web converts top-level null/undefined to an empty object.
+ */
 export function onMessage<T = unknown>(
   type: string,
   listener: (this: void, data: T) => void,
@@ -683,6 +698,9 @@ function registerSingleOwnerSlot<
  * Opaque objects remain shared by reference.
  * Updated on first-screen `renderPage` and on `reloadTemplate` updates,
  * and isolated from runtime mutations to `lynx.__initData`.
+ * The first call claims the page input channel. Call during synchronous bootstrap,
+ * before the first host input; earlier inputs cannot be recovered. Incremental
+ * updates do not change this baseline. Remains readable after destruction.
  */
 export function getInitData<T = Record<string, unknown>>(): T {
   const host = globalThis as unknown as HostGlobalScope;
@@ -699,6 +717,8 @@ export function getInitData<T = Record<string, unknown>>(): T {
  * and no freeze is applied. If a DSL mutates its own root `GlobalProps` object in place
  * (e.g. `Object.assign`), shallow-copy `{ ...getGlobalProps() }` at startup.
  * During and after destruction, read the captured final properties.
+ * The first read or subscription claims the GlobalProps input channel. Activate
+ * during synchronous bootstrap, before host input; this is not a side-effect-free read.
  */
 export function getGlobalProps<T = Record<string, unknown>>(): Readonly<T> {
   const host = globalThis as unknown as HostGlobalScope;
@@ -713,6 +733,9 @@ export function getGlobalProps<T = Record<string, unknown>>(): Readonly<T> {
 
 /**
  * Subscribe to first-screen render on MTS.
+ * Register synchronously before the first host input. Claims the page input channel;
+ * unsubscribe removes this listener but does not relinquish channel ownership.
+ * Input is read-only and not replayed. The host submits the first screen on return.
  */
 export function onRenderPage<T = Record<string, unknown>>(
   listener: (data: Readonly<T>, options: Readonly<MTSRenderOptions>) => void,
@@ -728,6 +751,8 @@ export function onRenderPage<T = Record<string, unknown>>(
  * `resetPageData` replaces current data rather than merging an incremental update.
  * Preserve these options with the work and pass them to `flushElementTree` when
  * submitting its changes.
+ * Register before host input; claims the page input channel for the host lifetime.
+ * Input is read-only, not replayed, and not automatically merged into DSL state.
  */
 export function onUpdateData<T = Record<string, unknown>>(
   listener: (data: Readonly<T>, options: Readonly<MTSUpdateOptions>) => void,
@@ -743,6 +768,8 @@ export function onUpdateData<T = Record<string, unknown>>(
  * Runtime refreshes `getInitData()` before invoking reload listeners. Preserve
  * these options with the work and pass them to `flushElementTree` when submitting
  * its changes.
+ * Register before host input; claims the page input channel for the host lifetime.
+ * Reload does not imply page destruction or cleanup of the previous DSL entry.
  */
 export function onReload<T = Record<string, unknown>>(
   listener: (data: Readonly<T>, options: Readonly<MTSReloadOptions>) => void,
@@ -756,6 +783,9 @@ export function onReload<T = Record<string, unknown>>(
 /**
  * Subscribe to host `GlobalProps` updates on MTS.
  * Treat the delivered object as read-only; mutating it affects shared host state.
+ * Register before host input; claims the GlobalProps channel for the host lifetime.
+ * Notifications are not replayed. Pass options to flushElementTree after applying
+ * the update, including updates that leave the element tree unchanged.
  */
 export function onGlobalPropsChanged<T = Record<string, unknown>>(
   listener: (
@@ -778,6 +808,8 @@ export function onGlobalPropsChanged<T = Record<string, unknown>>(
  * empty default `processorName` (`""`) to `undefined` across Native and Web.
  * Registering a new processor replaces the previous active processor; unsubscribing
  * the active processor or destroying the page restores the identity processor.
+ * Install before the host processes its first input; it cannot retroactively process
+ * earlier data. Disposing a replaced registration does not affect the current owner.
  */
 export function setDataProcessor<
   TInput = Record<string, unknown>,
@@ -803,6 +835,8 @@ export function setDataProcessor<
  * Register the synchronous single-owner MTS `getPageData` hook
  * (PromiseLike results are rejected),
  * invoked by Native `GetCurrentData` / `GetPageDataByKey` to query the DSL's current state.
+ * Install before host queries. Latest registration wins; disposing the active getter
+ * restores null, not the previous getter. Does not create or maintain DSL state.
  */
 export function setPageDataGetter<T = Record<string, unknown>>(
   getter: (keys?: string[]) => (T & { then?: never }) | null,

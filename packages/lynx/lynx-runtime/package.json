@@ -37,12 +37,14 @@
   "files": [
     "README.md",
     "dist",
+    "examples",
     "src"
   ],
   "scripts": {
     "build": "rslib",
     "dev": "rslib --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:type": "tsc --noEmit -p examples/tsconfig.json"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
