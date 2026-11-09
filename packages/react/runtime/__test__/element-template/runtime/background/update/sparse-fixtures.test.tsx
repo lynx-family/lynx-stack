@@ -142,7 +142,7 @@ describe('Sparse child slot updates', () => {
     envManager.switchToBackground();
   });
 
-  it('walks sparse child slots when alog prints the background tree during hydration', async () => {
+  it('hydrates sparse child slots with alog enabled', async () => {
     globalThis.__ALOG__ = true;
     const alogSpy = vi.fn();
     (console as { alog?: (message: string) => void }).alog = alogSpy;
@@ -152,12 +152,9 @@ describe('Sparse child slot updates', () => {
     renderOnBackground(backgroundModule, { showCard: true, showHeader: false, items: ['body'] });
     hydrateFromMainThread(mainModule, { showCard: true, showHeader: false, items: ['body'] });
 
-    const treeLog = alogSpy.mock.calls.map(args => args[0] as string).find(message =>
-      message.includes('BackgroundElementTemplate tree before hydration')
+    const hydrateLog = alogSpy.mock.calls.map(args => args[0] as string).find(message =>
+      message.includes('ET hydrate end')
     );
-    expect(treeLog).toBeDefined();
-    // SparseCard's root template lists only `childSlots[1]:` because slot 0
-    // (the header view's conditional child) is the hole the print loop must skip.
-    expect(treeLog!).toMatch(/childSlots\[1\]:/);
+    expect(hydrateLog).toContain('result=matched patchDispatched=true');
   });
 });

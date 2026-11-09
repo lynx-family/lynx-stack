@@ -22,12 +22,11 @@ describe('ElementTemplate PAPI alog wrapper', () => {
     const templateRef = { id: 1 };
     const childRef = { id: 2 };
     const typedRef = { id: 'page' };
-    const circular: Record<string, unknown> = {};
-    circular['self'] = circular;
-    const jsonUndefined = { toJSON: () => undefined };
-    function namedHandler() {}
-    const anonymousHandler = () => {};
-    Object.defineProperty(anonymousHandler, 'name', { value: '' });
+    const circular: unknown[] = [];
+    circular.push(circular);
+    const toJSON = vi.fn(() => {
+      throw new Error('unexpected serialization');
+    });
 
     const target = {
       __CreateElementTemplate: vi.fn(() => templateRef),
@@ -58,17 +57,9 @@ describe('ElementTemplate PAPI alog wrapper', () => {
     (target.__SetAttributeOfElementTemplate as (...args: unknown[]) => unknown)(
       templateRef,
       0,
-      [
-        templateRef,
-        undefined,
-        null,
-        namedHandler,
-        anonymousHandler,
-        Symbol.for('slot'),
-        circular,
-        jsonUndefined,
-      ],
+      [circular, { toJSON }, 1n],
     );
+    expect(toJSON).not.toHaveBeenCalled();
     expect((target.__InsertNodeToElementTemplate as (...args: unknown[]) => unknown)(
       templateRef,
       1,
@@ -89,19 +80,23 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       .map(args => String(args[0]))
       .join('\n');
     expect(logs).toContain(
-      '__CreateElementTemplate("_et_card", null, ["title"], [], 17) => _et_card#17',
+      '__CreateElementTemplate("_et_card", null, array, array, 17) => _et_card#17',
     );
     expect(logs).toContain('__CreateTypedElementTemplate("page", null, null, 0, null) => page#0');
     expect(logs).toContain(
-      '__SetAttributeOfElementTemplate(_et_card#17, 0, [_et_card#17, undefined, null, [Function namedHandler], [Function], Symbol(slot), [object Object], [object Object]])',
+      '__SetAttributeOfElementTemplate target=_et_card#17 slot=0 valueType=array',
     );
     expect(logs).toContain(
-      '__InsertNodeToElementTemplate(_et_card#17, 1, {"id":2}, undefined) => {"id":2}',
+      '__InsertNodeToElementTemplate(_et_card#17, 1, object, undefined) => object',
     );
-    expect(logs).toContain('__RemoveNodeFromElementTemplate(_et_card#17, 1, {"id":2})');
-    expect(logs).toContain('__FlushElementTree(undefined, {"triggerLayout":true})');
-    expect(logs).toContain('__SerializeElementTemplate(_et_card#17) => Symbol(serialized)');
+    expect(logs).toContain('__RemoveNodeFromElementTemplate(_et_card#17, 1, object)');
+    expect(logs).toContain('__FlushElementTree(undefined, object)');
+    expect(logs).toContain('__SerializeElementTemplate(_et_card#17) => symbol');
     expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledTimes(7);
+    expect(globalThis.lynx.performance.profileStart).toHaveBeenCalledWith(
+      'ElementTemplatePAPI: __SetAttributeOfElementTemplate',
+      { args: { target: '_et_card#17', slot: '0', valueType: 'array' } },
+    );
     expect(globalThis.lynx.performance.profileEnd).toHaveBeenCalledTimes(7);
   });
 
@@ -127,6 +122,30 @@ describe('ElementTemplate PAPI alog wrapper', () => {
       expect(createElementTemplate).toHaveBeenCalledTimes(1);
       expect(globalThis.lynx.performance.profileStart).not.toHaveBeenCalled();
       expect(globalThis.lynx.performance.profileEnd).not.toHaveBeenCalled();
+    } finally {
+      console.alog = originalAlog;
+    }
+  });
+
+  it('bounds string previews and preserves the Native result when alog throws', () => {
+    const originalAlog = console.alog;
+    const alog = vi.fn(() => {
+      throw new Error('alog failed');
+    });
+    console.alog = alog;
+    const result = {};
+    const native = vi.fn(() => result);
+    const target = { __SetAttributeOfElementTemplate: native };
+    try {
+      initElementTemplatePAPICallAlog(target);
+      const value = 'x'.repeat(1000);
+      expect((target.__SetAttributeOfElementTemplate as (...args: unknown[]) => unknown)({}, 3, value)).toBe(result);
+      expect(native).toHaveBeenCalledExactlyOnceWith({}, 3, value);
+      expect(alog).toHaveBeenCalledExactlyOnceWith(
+        `[ReactLynxDebug] ElementTemplate API call #1: __SetAttributeOfElementTemplate target=object slot=3 valueType=string preview="${
+          'x'.repeat(80)
+        }…"`,
+      );
     } finally {
       console.alog = originalAlog;
     }

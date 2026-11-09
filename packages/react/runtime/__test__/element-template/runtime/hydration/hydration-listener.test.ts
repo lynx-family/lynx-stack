@@ -10,7 +10,6 @@ import { MainThreadRef, clearMainThreadRefLastIdForTesting } from '../../../../s
 import { takeMainThreadRefInitValuePatch } from '../../../../src/core/main-thread-ref-init-value.js';
 import { clearMtsConfigCacheForTesting } from '../../../../src/core/mts-capability.js';
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
-import * as elementTemplateAlog from '../../../../src/element-template/debug/alog.js';
 import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
 import {
   installElementTemplateHydrationListener,
@@ -623,7 +622,6 @@ describe('ElementTemplate hydration listener', () => {
     const ref = vi.fn();
     const exec = vi.fn();
     const select = vi.fn(() => ({ setNativeProps: vi.fn(() => ({ exec })) }));
-    const printTreeSpy = vi.spyOn(elementTemplateAlog, 'printElementTemplateTreeToString').mockReturnValue('<tree>');
     lynx.reportError = reportError;
     lynx.createSelectorQuery = vi.fn(() => ({ select })) as typeof lynx.createSelectorQuery;
 
@@ -697,7 +695,6 @@ describe('ElementTemplate hydration listener', () => {
     } finally {
       lynx.reportError = oldReportError;
       lynx.createSelectorQuery = oldCreateSelectorQuery;
-      printTreeSpy.mockRestore();
     }
   });
 
@@ -1108,7 +1105,7 @@ describe('ElementTemplate hydration listener', () => {
     ]);
   });
 
-  it('logs hydrate payload and background tree states when alog is enabled', () => {
+  it('logs only hydrate metadata when alog is enabled', () => {
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
 
@@ -1132,21 +1129,44 @@ describe('ElementTemplate hydration listener', () => {
     envManager.switchToBackground();
 
     const output = alog.mock.calls.map(args => String(args[0])).join('\n');
-    expect(output).toContain('[ReactLynxDebug] ElementTemplate MTS -> BTS hydrate');
-    expect(output).toContain('BackgroundElementTemplate tree before hydration');
-    expect(output).toContain('BackgroundElementTemplate tree after hydration');
-    expect(output).toContain('setAttribute');
+    const hydrateLogs = output.split('\n').filter(message => message.startsWith('[ReactLynxDebug] ET hydrate'));
+    expect(hydrateLogs).toEqual([
+      `[ReactLynxDebug] ET hydrate start root=${backgroundRoot.instanceId} reloadVersion=${getReloadVersion()}`,
+      `[ReactLynxDebug] ET hydrate end root=${backgroundRoot.instanceId} result=matched patchDispatched=true patchStreamLength=4`,
+    ]);
+    expect(output).not.toContain('attributeSlots');
   });
 
-  it('does not format hydrate alog when alog is disabled', () => {
+  it('dispatches the hydration patch when alog throws', () => {
+    envManager.switchToBackground();
+    installElementTemplateHydrationListener();
+    const dispatch = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+    const originalAlog = console.alog;
+    console.alog = vi.fn(() => {
+      throw new Error('alog failed');
+    });
+    try {
+      const root = __root as BackgroundElementTemplateInstance;
+      root.appendChild(new BackgroundElementTemplateInstance('_et_test', ['after']));
+      envManager.switchToMainThread();
+      dispatchHydrate([createSerializedTemplate(-1, '_et_test')]);
+      envManager.switchToBackground();
+      expect(dispatch).toHaveBeenCalledWith({
+        type: ElementTemplateLifecycleConstant.update,
+        data: expect.anything(),
+      });
+    } finally {
+      console.alog = originalAlog;
+    }
+  });
+
+  it('does not log hydration when alog is disabled', () => {
     globalThis.__ALOG__ = false;
     envManager.switchToBackground();
     installElementTemplateHydrationListener();
 
     const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
     alog.mockClear();
-    const formatSpy = vi.spyOn(elementTemplateAlog, 'formatElementTemplateUpdateCommands');
-    const printSpy = vi.spyOn(elementTemplateAlog, 'printElementTemplateTreeToString');
 
     const backgroundRoot = __root as BackgroundElementTemplateInstance;
     const after = new BackgroundElementTemplateInstance('_et_test', ['before']);
@@ -1164,8 +1184,6 @@ describe('ElementTemplate hydration listener', () => {
 
     envManager.switchToBackground();
 
-    expect(formatSpy).not.toHaveBeenCalled();
-    expect(printSpy).not.toHaveBeenCalled();
     expect(alog.mock.calls).toHaveLength(0);
   });
 

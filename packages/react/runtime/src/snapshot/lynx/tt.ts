@@ -12,9 +12,9 @@ import {
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
 import { __root } from '../../root.js';
+import { tryDebugLog, tryEndDebugProfile, tryStartDebugProfile } from '../../shared/debug-logging.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
-import { printSnapshotInstanceToString } from '../debug/printSnapshot.js';
 import { getSnapshotVNodeSource } from '../debug/vnodeSource.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { FirstScreenData } from '../lifecycle/constant.js';
@@ -64,120 +64,22 @@ function onLifecycleEvent([type, data]: [LifecycleConstant, unknown]) {
     return;
   }
 
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileStart(`OnLifecycleEvent::${type}`);
-  }
+  const started = typeof __PROFILE__ !== 'undefined' && __PROFILE__
+    && tryStartDebugProfile(`OnLifecycleEvent::${type}`);
 
   try {
     onLifecycleEventImpl(type, data);
   } catch (e) {
     lynx.reportError(e as Error);
-  }
-
-  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-    profileEnd();
+  } finally {
+    tryEndDebugProfile(started);
   }
 }
 
 function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
-      let processErr;
-      try {
-        process();
-      } catch (e) {
-        processErr = e;
-      }
-      const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-        profileStart('ReactLynx::hydrate');
-      }
-      beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
-      markTiming('hydrateParseSnapshotStart');
-      const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
-      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-        console.alog?.(
-          '[ReactLynxDebug] MTS -> BTS OnLifecycleEvent:\n' + JSON.stringify(
-            {
-              ...data as object,
-              // use parsed lepusSide to avoid extra escape characters ('\\')
-              root: before,
-            },
-            null,
-            2,
-          ),
-        );
-        console.alog?.(
-          '[ReactLynxDebug] SnapshotInstance tree for first screen hydration:\n'
-            + printSnapshotInstanceToString(before),
-        );
-        console.alog?.(
-          '[ReactLynxDebug] BackgroundSnapshotInstance tree before hydration:\n'
-            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
-        );
-      }
-      markTiming('hydrateParseSnapshotEnd');
-      markTiming('diffVdomStart');
-      const snapshotPatch = hydrate(
-        before,
-        __root as BackgroundSnapshotInstance,
-      );
-      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-        console.alog?.(
-          '[ReactLynxDebug] BackgroundSnapshotInstance after hydration:\n'
-            + printSnapshotInstanceToString(__root as BackgroundSnapshotInstance),
-        );
-      }
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-        profileEnd();
-      }
-      markTiming('diffVdomEnd');
-
-      // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
-      flushDelayedLifecycleEvents();
-      if (delayedEvents) {
-        delayedEvents.forEach((args) => {
-          const [handlerName, data] = args;
-          // eslint-disable-next-line prefer-const
-          let [idStr, ...rest] = handlerName.split(':');
-          while (firstScreenEventIdSwap[idStr!]) idStr = firstScreenEventIdSwap[idStr!]?.toString();
-          try {
-            publishEvent([idStr, ...rest].join(':'), data);
-          } catch (e) {
-            lynx.reportError(e as Error);
-          }
-        });
-        delayedEvents.length = 0;
-      }
-
-      lynx.getApp().publishEvent = publishEvent;
-      lynx.getApp().publicComponentEvent = publicComponentEvent;
-
-      // console.debug("********** After hydration:");
-      // printSnapshotInstance(__root as BackgroundSnapshotInstance);
-      const commitTaskId = genCommitTaskId();
-      const patchList: PatchList = {
-        patchList: [{ snapshotPatch, id: commitTaskId }],
-      };
-      if (delayedRunOnMainThreadData.length) {
-        patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
-      }
-      const obj = commitPatchUpdate(patchList, { isHydration: true });
-      sendMTRefInitValueToMainThread();
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        globalCommitTaskMap.forEach((commitTask, id) => {
-          if (id > commitTaskId) {
-            return;
-          }
-          commitTask();
-          globalCommitTaskMap.delete(id);
-        });
-      });
-      runDelayedUiOps();
-
-      if (processErr) {
-        throw processErr;
-      }
+      hydrateFirstScreen(data as FirstScreenData);
       break;
     }
     case LifecycleConstant.globalEventFromLepus: {
@@ -189,6 +91,94 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       const { handlerName, data: d } = data as { handlerName: string; data: EventDataType };
       lynx.getApp().publishEvent(handlerName, d);
       break;
+    }
+  }
+}
+
+function hydrateFirstScreen(data: FirstScreenData): void {
+  let processErr;
+  try {
+    process();
+  } catch (e) {
+    processErr = e;
+  }
+  const { root: lepusSide, firstScreenEventIdSwap } = data;
+  const root = __root as BackgroundSnapshotInstance;
+  const shouldLog = typeof __ALOG__ !== 'undefined' && __ALOG__;
+  if (shouldLog) {
+    tryDebugLog(() => `[ReactLynxDebug] Snapshot hydrate start root=${root.__id} payloadLength=${lepusSide.length}`);
+  }
+
+  let patchStreamLength: number | undefined;
+  let patchDispatched = false;
+  try {
+    const started = typeof __PROFILE__ !== 'undefined' && __PROFILE__
+      && tryStartDebugProfile('ReactLynx::hydrate');
+    let snapshotPatch: ReturnType<typeof hydrate>;
+    try {
+      beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
+      markTiming('hydrateParseSnapshotStart');
+      const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
+      markTiming('hydrateParseSnapshotEnd');
+      markTiming('diffVdomStart');
+      snapshotPatch = hydrate(before, root);
+      patchStreamLength = snapshotPatch.length;
+    } finally {
+      tryEndDebugProfile(started);
+    }
+    markTiming('diffVdomEnd');
+
+    // TODO: It seems `delayedEvents` and `delayedLifecycleEvents` should be merged into one array to ensure the proper order of events.
+    flushDelayedLifecycleEvents();
+    if (delayedEvents) {
+      delayedEvents.forEach((args) => {
+        const [handlerName, data] = args;
+        // eslint-disable-next-line prefer-const
+        let [idStr, ...rest] = handlerName.split(':');
+        while (firstScreenEventIdSwap[idStr!]) idStr = firstScreenEventIdSwap[idStr!]?.toString();
+        try {
+          publishEvent([idStr, ...rest].join(':'), data);
+        } catch (e) {
+          lynx.reportError(e as Error);
+        }
+      });
+      delayedEvents.length = 0;
+    }
+
+    lynx.getApp().publishEvent = publishEvent;
+    lynx.getApp().publicComponentEvent = publicComponentEvent;
+
+    const commitTaskId = genCommitTaskId();
+    const patchList: PatchList = {
+      patchList: [{ snapshotPatch, id: commitTaskId }],
+    };
+    if (delayedRunOnMainThreadData.length) {
+      patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
+    }
+    const obj = commitPatchUpdate(patchList, { isHydration: true });
+    sendMTRefInitValueToMainThread();
+    lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      globalCommitTaskMap.forEach((commitTask, id) => {
+        if (id > commitTaskId) {
+          return;
+        }
+        commitTask();
+        globalCommitTaskMap.delete(id);
+      });
+    });
+    patchDispatched = true;
+    runDelayedUiOps();
+
+    if (processErr) {
+      throw processErr;
+    }
+  } finally {
+    if (shouldLog) {
+      tryDebugLog(() =>
+        `[ReactLynxDebug] Snapshot hydrate end root=${root.__id} result=${
+          patchStreamLength === undefined ? 'failed' : 'completed'
+        } patchDispatched=${patchDispatched} patchStreamLength=${patchStreamLength ?? 0}`
+      );
     }
   }
 }
