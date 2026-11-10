@@ -24,6 +24,6 @@
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "@types/react": "^19.2.18"
+    "@types/react": "^19.3.0"
   }
 }
