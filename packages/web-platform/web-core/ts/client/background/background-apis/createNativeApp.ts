@@ -17,6 +17,7 @@ import {
   reportErrorEndpoint,
   queryComponentEndpoint,
   updateBTSChunkEndpoint,
+  setProfilingEndpoint,
 } from '../../endpoints.js';
 import { createInvokeUIMethod } from './crossThreadHandlers/createInvokeUIMethod.js';
 import { registerPublicComponentEventHandler } from './crossThreadHandlers/registerPublicComponentEventHandler.js';
@@ -50,9 +51,14 @@ export async function createNativeApp(
   nativeModulesMap: NativeModulesMap,
   entryTemplateUrl: string,
   cardType: string,
+  isProfiling = false,
 ): Promise<NativeApp> {
+  mainThreadRpc.registerHandler(setProfilingEndpoint, (value) => {
+    isProfiling = value;
+  });
   const performanceApis = createPerformanceApis(
     timingSystem,
+    () => isProfiling,
   );
   const callLepusMethod = mainThreadRpc.createCallbackify(
     callLepusMethodEndpoint,

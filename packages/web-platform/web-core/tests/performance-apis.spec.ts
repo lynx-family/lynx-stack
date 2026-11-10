@@ -51,7 +51,18 @@ function clearUserTimingEntries(): void {
   globalThis.performance?.clearMeasures?.();
 }
 
-describe('createPerformanceApis', () => {
+describe.each([
+  {
+    name: 'background-thread profiling',
+    create: (isProfiling?: () => boolean) =>
+      createPerformanceApis(createTimingSystemMock(), isProfiling),
+  },
+  {
+    name: 'main-thread profiling',
+    create: (isProfiling?: () => boolean) =>
+      createMainThreadLynxPerformance(rstest.fn(), isProfiling),
+  },
+])('$name', ({ create }) => {
   beforeEach(() => {
     clearUserTimingEntries();
   });
@@ -62,7 +73,7 @@ describe('createPerformanceApis', () => {
   });
 
   test('bridges profile traces and marks to browser User Timing entries', () => {
-    const performanceApis = createPerformanceApis(createTimingSystemMock());
+    const performanceApis = create(() => true);
 
     const outerOption = {
       flowId: performanceApis.profileFlowId(),
@@ -112,24 +123,44 @@ describe('createPerformanceApis', () => {
   });
 
   test('ignores unmatched profileEnd calls', () => {
-    const performanceApis = createPerformanceApis(createTimingSystemMock());
+    const performanceApis = create(() => true);
 
     expect(() => performanceApis.profileEnd()).not.toThrow();
     expect(performance.getEntriesByType('measure')).toHaveLength(0);
   });
 
-  test('degrades to no-op profiling when User Timing is unavailable', () => {
-    stubGlobalPerformance({});
-    const performanceApis = createPerformanceApis(createTimingSystemMock());
+  test('does not report recording by default even with User Timing', () => {
+    expect(create().isProfileRecording()).toBe(false);
+  });
+
+  test('reflects profiling changes without affecting other views', () => {
+    let isProfiling = false;
+    const performanceApis = create(() => isProfiling);
+    const otherView = create();
 
     expect(performanceApis.isProfileRecording()).toBe(false);
-    expect(performanceApis.profileFlowId()).toBe(1);
-    expect(() => {
-      performanceApis.profileStart('ReactLynx::trace');
-      performanceApis.profileMark('ReactLynx::mark');
-      performanceApis.profileEnd();
-    }).not.toThrow();
+    isProfiling = true;
+    expect(performanceApis.isProfileRecording()).toBe(true);
+    expect(otherView.isProfileRecording()).toBe(false);
+    isProfiling = false;
+    expect(performanceApis.isProfileRecording()).toBe(false);
   });
+
+  test.each([undefined, {}, { mark() {} }, { measure() {} }])(
+    'degrades to no-op profiling when User Timing is incomplete: %j',
+    (browserPerformance) => {
+      stubGlobalPerformance(browserPerformance);
+      const performanceApis = create(() => true);
+
+      expect(performanceApis.isProfileRecording()).toBe(false);
+      expect(performanceApis.profileFlowId()).toBe(1);
+      expect(() => {
+        performanceApis.profileStart('ReactLynx::trace');
+        performanceApis.profileMark('ReactLynx::mark');
+        performanceApis.profileEnd();
+      }).not.toThrow();
+    },
+  );
 });
 
 describe('main-thread lynx.performance', () => {

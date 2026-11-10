@@ -81,6 +81,7 @@ export class LynxViewElement extends HTMLElement {
     'transform-vw',
     'transform-vh',
     'transform-rem',
+    'is-profiling',
   ];
   /**
    * @private
@@ -92,6 +93,31 @@ export class LynxViewElement extends HTMLElement {
 
   #connected = false;
   #url?: string;
+
+  /**
+   * Enables profiling for this view when browser User Timing is available.
+   *
+   * Reflects the `is-profiling` attribute. An absent attribute or the value
+   * `"false"` disables profiling. Changes are sent asynchronously to the
+   * background thread without reloading the view.
+   *
+   * @defaultValue false
+   * @example
+   * ```html
+   * <lynx-view is-profiling url="https://example.com/main.web.bundle"></lynx-view>
+   * ```
+   */
+  get isProfiling(): boolean {
+    const value = this.getAttribute('is-profiling');
+    return value !== null && value !== 'false';
+  }
+  set isProfiling(value: boolean) {
+    if (value) {
+      this.setAttribute('is-profiling', '');
+    } else {
+      this.removeAttribute('is-profiling');
+    }
+  }
 
   /**
    * Resolves image source and placeholder URLs before loading them.
@@ -441,6 +467,9 @@ export class LynxViewElement extends HTMLElement {
   ) {
     if (oldValue !== newValue) {
       switch (name) {
+        case 'is-profiling':
+          this.#instance?.backgroundThread.setProfiling(this.isProfiling);
+          break;
         case 'url':
         case 'src':
           this.url = newValue ?? undefined;
@@ -604,6 +633,7 @@ export class LynxViewElement extends HTMLElement {
     this.#upgradeProperty('transformVW');
     this.#upgradeProperty('transformVH');
     this.#upgradeProperty('transformREM');
+    this.#upgradeProperty('isProfiling');
     if (this.url) {
       this.#url = this.url;
     }

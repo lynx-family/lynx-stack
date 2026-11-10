@@ -7,6 +7,7 @@ import {
   dispatchIntersectionObserverEventEndpoint,
   intersectionObserverCommandEndpoint,
   queryComponentEndpoint,
+  setProfilingEndpoint,
   updateBTSChunkEndpoint,
 } from '../ts/client/endpoints.js';
 import { createNativeApp } from '../ts/client/background/background-apis/createNativeApp.js';
@@ -68,6 +69,38 @@ const timingSystem = {
 } as TimingSystem;
 
 describe('createNativeApp', () => {
+  test.each([undefined, false, true])(
+    'initializes profiling with %s and applies updates per app',
+    async (isProfiling) => {
+      const queryComponent = rstest.fn();
+      const { rpc, handlers } = createMainThreadRpc(queryComponent);
+      const otherRpc = createMainThreadRpc(queryComponent);
+      const nativeApp = await createNativeApp(
+        rpc,
+        timingSystem,
+        {},
+        '/main.web.bundle',
+        'react',
+        isProfiling,
+      );
+      const otherApp = await createNativeApp(
+        otherRpc.rpc,
+        timingSystem,
+        {},
+        '/other.web.bundle',
+        'react',
+      );
+
+      expect(nativeApp.isProfileRecording()).toBe(isProfiling ?? false);
+      const setProfiling = handlers.get(setProfilingEndpoint.name)!;
+      setProfiling(true);
+      expect(nativeApp.isProfileRecording()).toBe(true);
+      expect(otherApp.isProfileRecording()).toBe(false);
+      setProfiling(false);
+      expect(nativeApp.isProfileRecording()).toBe(false);
+    },
+  );
+
   test('waits for the main-thread query when the background chunk is cached', async () => {
     const source = '/lazy-component.web.bundle';
     const query = Promise.withResolvers<QueryComponentResponse>();

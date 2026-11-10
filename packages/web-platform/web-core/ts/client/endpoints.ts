@@ -221,6 +221,11 @@ export const updateGlobalPropsEndpoint = createRpcEndpoint<
   void
 >('updateGlobalProps', false, false);
 
+export const setProfilingEndpoint = createRpcEndpoint<
+  [isProfiling: boolean],
+  void
+>('setProfiling', false, false);
+
 export const updateI18nResourcesEndpoint = createRpcEndpoint<
   [Cloneable],
   void
