@@ -82,7 +82,7 @@
     "@lynx-js/websocket": "workspace:*",
     "@rsbuild/plugin-less": "2.0.1",
     "@rsbuild/plugin-sass": "2.0.1",
-    "commander": "^15.0.0",
+    "commander": "^15.1.0",
     "detect-indent": "^7.0.2",
     "memfs": "^4.67.0",
     "picocolors": "^1.1.1",
