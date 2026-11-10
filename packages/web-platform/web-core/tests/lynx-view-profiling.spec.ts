@@ -4,24 +4,12 @@
 import './jsdom.js';
 import { afterEach, describe, expect, rstest, test } from '@rstest/core';
 import { LynxViewElement } from '../ts/client/mainthread/LynxView.js';
-import { BackgroundThread } from '../ts/client/mainthread/Background.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
-import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
-import type { WorkerStartMessage } from '../ts/types/index.js';
-
-const { setProfiling } = rstest.hoisted(() => ({ setProfiling: rstest.fn() }));
+import { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
+import type { JSRealm, WorkerStartMessage } from '../ts/types/index.js';
 
 rstest.mock('../ts/client/mainthread/TemplateManager.js', () => ({
   templateManager: { fetchBundle: rstest.fn() },
-}));
-rstest.mock('../ts/client/mainthread/createIFrameRealm.js', () => ({
-  createIFrameRealm: rstest.fn().mockResolvedValue({}),
-}));
-rstest.mock('../ts/client/mainthread/LynxViewInstance.js', () => ({
-  LynxViewInstance: class {
-    backgroundThread = { setProfiling };
-    async [Symbol.asyncDispose]() {}
-  },
 }));
 
 describe('lynx-view profiling', () => {
@@ -43,48 +31,22 @@ describe('lynx-view profiling', () => {
     expect(view.isProfiling).toBe(expected);
   });
 
-  test('reflects property changes in the attribute and main-thread API', () => {
-    rstest.stubGlobal('cancelAnimationFrame', rstest.fn());
+  test('reflects property changes in the attribute', () => {
     const view = new LynxViewElement();
-    const { lynx } = createMainThreadGlobalAPIs({
-      parentDom: view,
-      backgroundThread: { markTiming: rstest.fn() },
-      i18nManager: { _I18nResourceTranslation: rstest.fn() },
-    } as unknown as LynxViewInstance);
-
-    expect(lynx.performance.isProfileRecording()).toBe(false);
     view.isProfiling = true;
     expect(view.hasAttribute('is-profiling')).toBe(true);
-    expect(lynx.performance.isProfileRecording()).toBe(true);
     view.isProfiling = false;
     expect(view.hasAttribute('is-profiling')).toBe(false);
-    expect(lynx.performance.isProfileRecording()).toBe(false);
     view.setAttribute('is-profiling', 'true');
-    expect(lynx.performance.isProfileRecording()).toBe(true);
+    expect(view.isProfiling).toBe(true);
     view.setAttribute('is-profiling', 'false');
-    expect(lynx.performance.isProfileRecording()).toBe(false);
-  });
-
-  test('forwards attribute changes to the active background thread', async () => {
-    const view = new LynxViewElement();
-    view.url = 'http://localhost/main.web.bundle';
-    document.body.append(view);
-    // Let the asynchronous instance creation complete before changing attributes.
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    view.setAttribute('is-profiling', '');
-    expect(setProfiling).toHaveBeenLastCalledWith(true);
-    view.removeAttribute('is-profiling');
-    expect(setProfiling).toHaveBeenLastCalledWith(false);
-    view.isProfiling = true;
-    expect(setProfiling).toHaveBeenLastCalledWith(true);
-    view.isProfiling = false;
-    expect(setProfiling).toHaveBeenLastCalledWith(false);
+    expect(view.isProfiling).toBe(false);
   });
 
   test.each([false, true])(
-    'starts the worker with profiling set to %s',
+    'preserves the initial profiling value %s in both threads',
     async (isProfiling) => {
+      rstest.stubGlobal('cancelAnimationFrame', rstest.fn());
       const postMessage = rstest.fn<(message: WorkerStartMessage) => void>();
       rstest.stubGlobal(
         'Worker',
@@ -95,18 +57,41 @@ describe('lynx-view profiling', () => {
       );
       const view = new LynxViewElement();
       view.isProfiling = isProfiling;
-      const background = new BackgroundThread(undefined, {
-        parentDom: view,
-        templateUrl: 'http://localhost/main.web.bundle',
-        systemInfo: {},
-      } as LynxViewInstance);
+      const createInstance = () =>
+        new LynxViewInstance(
+          view,
+          {},
+          {},
+          'http://localhost/main.web.bundle',
+          view.shadowRoot ?? view.attachShadow({ mode: 'open' }),
+          { globalWindow: {} } as JSRealm,
+          false,
+          undefined,
+        );
+      const instance = createInstance();
       try {
-        background.startWebWorker({}, {}, 'react', {}, {}, {});
+        // Changes after instance creation must not affect either runtime,
+        // even if the background worker has not started yet.
+        view.isProfiling = !isProfiling;
+        const { lynx } = createMainThreadGlobalAPIs(instance);
+        expect(lynx.performance.isProfileRecording()).toBe(isProfiling);
+        instance.backgroundThread.startWebWorker({}, {}, 'react', {}, {}, {});
         expect(postMessage).toHaveBeenCalledTimes(1);
         expect(postMessage.mock.calls[0]![0].isProfiling).toBe(isProfiling);
       } finally {
-        await background[Symbol.asyncDispose]();
+        await instance[Symbol.asyncDispose]();
         postMessage.mock.calls[0]?.[0].mainThreadMessagePort.close();
+      }
+
+      const reloaded = createInstance();
+      try {
+        expect(
+          createMainThreadGlobalAPIs(reloaded).lynx.performance
+            .isProfileRecording(),
+        )
+          .toBe(!isProfiling);
+      } finally {
+        await reloaded[Symbol.asyncDispose]();
       }
     },
   );

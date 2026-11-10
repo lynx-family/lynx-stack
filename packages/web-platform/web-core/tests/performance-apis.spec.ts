@@ -54,12 +54,12 @@ function clearUserTimingEntries(): void {
 describe.each([
   {
     name: 'background-thread profiling',
-    create: (isProfiling?: () => boolean) =>
+    create: (isProfiling?: boolean) =>
       createPerformanceApis(createTimingSystemMock(), isProfiling),
   },
   {
     name: 'main-thread profiling',
-    create: (isProfiling?: () => boolean) =>
+    create: (isProfiling?: boolean) =>
       createMainThreadLynxPerformance(rstest.fn(), isProfiling),
   },
 ])('$name', ({ create }) => {
@@ -73,7 +73,7 @@ describe.each([
   });
 
   test('bridges profile traces and marks to browser User Timing entries', () => {
-    const performanceApis = create(() => true);
+    const performanceApis = create(true);
 
     const outerOption = {
       flowId: performanceApis.profileFlowId(),
@@ -123,7 +123,7 @@ describe.each([
   });
 
   test('ignores unmatched profileEnd calls', () => {
-    const performanceApis = create(() => true);
+    const performanceApis = create(true);
 
     expect(() => performanceApis.profileEnd()).not.toThrow();
     expect(performance.getEntriesByType('measure')).toHaveLength(0);
@@ -133,24 +133,19 @@ describe.each([
     expect(create().isProfileRecording()).toBe(false);
   });
 
-  test('reflects profiling changes without affecting other views', () => {
-    let isProfiling = false;
-    const performanceApis = create(() => isProfiling);
-    const otherView = create();
+  test('keeps profiling independent between views', () => {
+    const enabledView = create(true);
+    const disabledView = create(false);
 
-    expect(performanceApis.isProfileRecording()).toBe(false);
-    isProfiling = true;
-    expect(performanceApis.isProfileRecording()).toBe(true);
-    expect(otherView.isProfileRecording()).toBe(false);
-    isProfiling = false;
-    expect(performanceApis.isProfileRecording()).toBe(false);
+    expect(enabledView.isProfileRecording()).toBe(true);
+    expect(disabledView.isProfileRecording()).toBe(false);
   });
 
   test.each([undefined, {}, { mark() {} }, { measure() {} }])(
     'degrades to no-op profiling when User Timing is incomplete: %j',
     (browserPerformance) => {
       stubGlobalPerformance(browserPerformance);
-      const performanceApis = create(() => true);
+      const performanceApis = create(true);
 
       expect(performanceApis.isProfileRecording()).toBe(false);
       expect(performanceApis.profileFlowId()).toBe(1);

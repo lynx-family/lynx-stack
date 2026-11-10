@@ -89,7 +89,7 @@ function measureUserTiming(
 
 export function createMainThreadLynxPerformance(
   markTiming: MarkTiming,
-  isProfiling: () => boolean = () => false,
+  isProfiling = false,
 ): LynxPerformance {
   let pipelineIdInc = 0;
   let profileFlowIdInc = 0;
@@ -160,7 +160,7 @@ export function createMainThreadLynxPerformance(
       return ++profileFlowIdInc;
     },
     isProfileRecording: (): boolean => {
-      return isProfiling() && getUserTimingPerformance() !== undefined;
+      return isProfiling && getUserTimingPerformance() !== undefined;
     },
   };
 }

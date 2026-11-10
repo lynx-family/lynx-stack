@@ -20,7 +20,6 @@ import {
   dispatchIntersectionObserverEventEndpoint,
   updateDataEndpoint,
   updateGlobalPropsEndpoint,
-  setProfilingEndpoint,
   BackgroundThreadStartEndpoint,
   callLepusMethodEndpoint,
   switchExposureServiceEndpoint,
@@ -92,7 +91,6 @@ export class BackgroundThread implements AsyncDisposable {
   >;
   readonly updateData: RpcCallType<typeof updateDataEndpoint>;
   readonly updateGlobalProps: RpcCallType<typeof updateGlobalPropsEndpoint>;
-  readonly setProfiling: RpcCallType<typeof setProfilingEndpoint>;
   readonly updateBTSChunk: RpcCallType<typeof updateBTSChunkEndpoint>;
   readonly dispatchIntersectionObserverEvent: RpcCallType<
     typeof dispatchIntersectionObserverEventEndpoint
@@ -138,7 +136,6 @@ export class BackgroundThread implements AsyncDisposable {
     );
     this.updateData = this.#rpc.createCall(updateDataEndpoint);
     this.updateGlobalProps = this.#rpc.createCall(updateGlobalPropsEndpoint);
-    this.setProfiling = this.#rpc.createCall(setProfilingEndpoint);
     this.updateBTSChunk = this.#rpc.createCall(updateBTSChunkEndpoint);
     this.dispatchIntersectionObserverEvent = this.#rpc.createCall(
       dispatchIntersectionObserverEventEndpoint,
@@ -184,7 +181,7 @@ export class BackgroundThread implements AsyncDisposable {
         nativeModulesMap,
         napiModulesMap,
         entryTemplateUrl: this.#lynxViewInstance.templateUrl,
-        isProfiling: this.#lynxViewInstance.parentDom.isProfiling,
+        isProfiling: this.#lynxViewInstance.isProfiling,
       } as WorkerStartMessage,
       [messageChannel.port2],
     );

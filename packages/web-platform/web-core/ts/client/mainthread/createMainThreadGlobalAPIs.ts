@@ -26,7 +26,7 @@ function createMainThreadLynx(
       lynxViewInstance.backgroundThread.markTiming.bind(
         lynxViewInstance.backgroundThread,
       ),
-      () => lynxViewInstance.parentDom.isProfiling,
+      lynxViewInstance.isProfiling,
     ),
     getJSContext() {
       return lynxViewInstance.backgroundThread.jsContext;

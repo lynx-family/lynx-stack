@@ -81,7 +81,6 @@ export class LynxViewElement extends HTMLElement {
     'transform-vw',
     'transform-vh',
     'transform-rem',
-    'is-profiling',
   ];
   /**
    * @private
@@ -98,8 +97,8 @@ export class LynxViewElement extends HTMLElement {
    * Enables profiling for this view when browser User Timing is available.
    *
    * Reflects the `is-profiling` attribute. An absent attribute or the value
-   * `"false"` disables profiling. Changes are sent asynchronously to the
-   * background thread without reloading the view.
+   * `"false"` disables profiling. Set this before loading the view. The value
+   * is read once per view instance; changes require reloading the view.
    *
    * @defaultValue false
    * @example
@@ -467,9 +466,6 @@ export class LynxViewElement extends HTMLElement {
   ) {
     if (oldValue !== newValue) {
       switch (name) {
-        case 'is-profiling':
-          this.#instance?.backgroundThread.setProfiling(this.isProfiling);
-          break;
         case 'url':
         case 'src':
           this.url = newValue ?? undefined;

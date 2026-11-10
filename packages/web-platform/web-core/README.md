@@ -41,9 +41,10 @@ Profiling is off by default. Add `is-profiling` to enable it for a view:
 <lynx-view is-profiling url="https://example.com/main.web.bundle" style="height:100vh; width:100vw"></lynx-view>
 ```
 
-You can also set `view.isProfiling = true`. Remove the attribute, set it to
-`"false"`, or set `view.isProfiling = false` to turn profiling off. Changes
-reach the background thread asynchronously without reloading the view.
+You can also set `view.isProfiling = true` before loading the view. An absent
+attribute, `is-profiling="false"`, or `view.isProfiling = false` disables profiling.
+The value is read once when the view instance is created and passed to the
+background worker at startup. Changes require reloading the view.
 `lynx.performance.isProfileRecording()` returns `true` only when profiling
 is enabled for that view and the browser supports User Timing marks and measures.
 

@@ -7,7 +7,6 @@ import {
   dispatchIntersectionObserverEventEndpoint,
   intersectionObserverCommandEndpoint,
   queryComponentEndpoint,
-  setProfilingEndpoint,
   updateBTSChunkEndpoint,
 } from '../ts/client/endpoints.js';
 import { createNativeApp } from '../ts/client/background/background-apis/createNativeApp.js';
@@ -70,10 +69,10 @@ const timingSystem = {
 
 describe('createNativeApp', () => {
   test.each([undefined, false, true])(
-    'initializes profiling with %s and applies updates per app',
+    'initializes profiling with %s independently for each app',
     async (isProfiling) => {
       const queryComponent = rstest.fn();
-      const { rpc, handlers } = createMainThreadRpc(queryComponent);
+      const { rpc } = createMainThreadRpc(queryComponent);
       const otherRpc = createMainThreadRpc(queryComponent);
       const nativeApp = await createNativeApp(
         rpc,
@@ -92,12 +91,7 @@ describe('createNativeApp', () => {
       );
 
       expect(nativeApp.isProfileRecording()).toBe(isProfiling ?? false);
-      const setProfiling = handlers.get(setProfilingEndpoint.name)!;
-      setProfiling(true);
-      expect(nativeApp.isProfileRecording()).toBe(true);
       expect(otherApp.isProfileRecording()).toBe(false);
-      setProfiling(false);
-      expect(nativeApp.isProfileRecording()).toBe(false);
     },
   );
 

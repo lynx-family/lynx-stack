@@ -84,7 +84,7 @@ function measureUserTiming(
 
 export function createPerformanceApis(
   timingSystem: TimingSystem,
-  isProfiling: () => boolean = () => false,
+  isProfiling = false,
 ): Pick<
   NativeApp,
   | 'generatePipelineOptions'
@@ -174,7 +174,7 @@ export function createPerformanceApis(
       return ++profileFlowIdInc;
     },
     isProfileRecording: (): boolean => {
-      return isProfiling() && getUserTimingPerformance() !== undefined;
+      return isProfiling && getUserTimingPerformance() !== undefined;
     },
   };
   return performanceApis;
