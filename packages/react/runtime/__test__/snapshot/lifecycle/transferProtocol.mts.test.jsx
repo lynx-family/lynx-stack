@@ -92,10 +92,8 @@ function createTransfer(scopeKey) {
   createdKeys.push(scopeKey);
   fireNative('__CreateTransfer', {
     componentName: 'App',
-    key: scopeKey,
-    reloadVersion: 0,
+    ...scopeKey,
     initialProps: { label: 'a' },
-    propsVersion: 1,
   });
   nativeChannel.deliver('__CreateTransfer');
 }
@@ -133,7 +131,7 @@ afterEach(() => {
   // Disposes every transfer while its element tree is still intact, so the
   // MTS element cleanup runs against the live tree.
   for (const scopeKey of createdKeys.splice(0)) {
-    fireNative('__DestroyTransfer', { key: scopeKey });
+    fireNative('__DestroyTransfer', { ...scopeKey });
     nativeChannel.deliver('__DestroyTransfer');
   }
   vi.unstubAllGlobals();
@@ -172,20 +170,18 @@ describe('transfer protocol (main thread side)', () => {
     expect(() => transferDiagnostics.recordRender())
       .toThrow('Transfer component rendered without its context');
 
-    const key = { transferId: '1', generation: 1 };
+    const key = { transferId: '1' };
     const createEvent = () => ({
       componentName: 'App',
-      key,
-      reloadVersion: 0,
+      ...key,
       initialProps: { label: 'a' },
-      propsVersion: 1,
     });
 
     // Created before the page exists: buffered, nothing rendered nor sent.
     fireNative('__CreateTransfer', createEvent());
     nativeChannel.deliver('__CreateTransfer');
     expect(elementTree.root).toBeUndefined();
-    expect(transferDiagnostics.debug.records['1:1']).toBeUndefined();
+    expect(transferDiagnostics.debug.records['1']).toBeUndefined();
     expect(link.sent('__TransferFirstFrame')).toHaveLength(0);
 
     // Booting the page flushes the buffered create.
@@ -194,7 +190,7 @@ describe('transfer protocol (main thread side)', () => {
     engine.deliver('__RenderPage');
     expect(elementTree.root.type).toBe('page');
     expect(lynx.__initData).toEqual({ text: 'Hello' });
-    expect(transferDiagnostics.debug.records['1:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['1']).toMatchObject({
       phase: 'waiting',
       seq: 0,
       renders: 1,
@@ -202,10 +198,6 @@ describe('transfer protocol (main thread side)', () => {
     const transferElement = elementTree.root.children[0];
     expect(transferElement.type).toBe('transfer-view');
     expect(transferElement.props['transfer-id']).toBe('1');
-    expect(transferElement.props.dataset.__transferMeta).toMatchObject({
-      reloadVersion: 0,
-      key,
-    });
     expect(transferElement.children[0].type).toBe('view');
     expect(transferElement.children[0].children[0].children[0].props.text).toBe(
       'a',
@@ -216,14 +208,12 @@ describe('transfer protocol (main thread side)', () => {
     expect(creates).toHaveLength(1);
     expect(JSON.parse(creates[0].data)).toMatchObject({
       componentName: 'App',
-      key,
-      propsVersion: 1,
+      ...key,
     });
     const frames = link.sent('__TransferFirstFrame');
     expect(frames).toHaveLength(1);
     const frame = JSON.parse(frames[0].data);
-    expect(frame.key).toEqual(key);
-    expect(frame.propsVersion).toBe(1);
+    expect(frame.transferId).toBe(key.transferId);
     expect(frame.snapshot).toContain('"a"');
     expect(JSON.parse(frame.snapshot).type).toBe('root');
 
@@ -231,7 +221,7 @@ describe('transfer protocol (main thread side)', () => {
     fireNative('__CreateTransfer', {
       ...createEvent(),
       componentName: 'Missing',
-      key: { transferId: '404', generation: 1 },
+      ...{ transferId: '404' },
     });
     expect(() => nativeChannel.deliver('__CreateTransfer')).toThrow(
       'Unknown transfer component: Missing',
@@ -242,32 +232,31 @@ describe('transfer protocol (main thread side)', () => {
     fireNative('__CreateTransfer', createEvent());
     nativeChannel.deliver('__CreateTransfer');
     expect(link.sent('__TransferFirstFrame')).toHaveLength(1);
-    expect(transferDiagnostics.debug.records['1:1'].renders).toBe(1);
+    expect(transferDiagnostics.debug.records['1'].renders).toBe(1);
   });
 
   it('applies hydration and update commits and fails on sequence mismatches', () => {
     TransferRegistry.registerComponent('App', () => App);
     fireEngine('__RenderPage', [{}]);
     engine.deliver('__RenderPage');
-    const key = { transferId: '2', generation: 1 };
+    const key = { transferId: '2' };
     createTransfer(key);
-    expect(transferDiagnostics.debug.records['2:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['2']).toMatchObject({
       phase: 'waiting',
       seq: 0,
     });
 
     // Hydration commit with an empty patch: applied and flips the record live.
     fireJS('__TransferCommit', {
-      key,
-      reloadVersion: 0,
+      ...key,
       seq: 1,
       kind: 'hydrate',
       patchList: patchListPacket(100, []),
       patchOptions: { reloadVersion: 0, isHydration: true },
     }, true);
     link.deliver('__TransferCommit');
-    expect(lastResult()).toMatchObject({ key, seq: 1, status: 'applied' });
-    expect(transferDiagnostics.debug.records['2:1']).toMatchObject({
+    expect(lastResult()).toMatchObject({ ...key, seq: 1, status: 'applied' });
+    expect(transferDiagnostics.debug.records['2']).toMatchObject({
       phase: 'live',
       seq: 1,
     });
@@ -285,8 +274,7 @@ describe('transfer protocol (main thread side)', () => {
       0,
     ];
     fireJS('__TransferCommit', {
-      key,
-      reloadVersion: 0,
+      ...key,
       seq: 2,
       kind: 'update',
       patchList: patchListPacket(101, patch),
@@ -298,12 +286,11 @@ describe('transfer protocol (main thread side)', () => {
       'transfer-view',
       'view',
     ]);
-    expect(transferDiagnostics.debug.records['2:1'].seq).toBe(2);
+    expect(transferDiagnostics.debug.records['2'].seq).toBe(2);
 
     // An out-of-sequence commit fails, is reported and answered as failed.
     fireJS('__TransferCommit', {
-      key,
-      reloadVersion: 0,
+      ...key,
       seq: 2,
       kind: 'update',
       patchList: patchListPacket(102, []),
@@ -313,12 +300,11 @@ describe('transfer protocol (main thread side)', () => {
     expect(lastResult().status).toBe('failed');
     expect(reportError).toHaveBeenCalledOnce();
     expect(reportError.mock.calls[0][0]).toBeInstanceOf(Error);
-    expect(transferDiagnostics.debug.records['2:1'].seq).toBe(2);
+    expect(transferDiagnostics.debug.records['2'].seq).toBe(2);
 
     // Commits for unknown transfers are answered as disposed.
     fireJS('__TransferCommit', {
-      key: { transferId: '404', generation: 1 },
-      reloadVersion: 0,
+      ...{ transferId: '404' },
       seq: 1,
       kind: 'update',
       patchList: patchListPacket(103, []),
@@ -336,51 +322,49 @@ describe('transfer protocol (main thread side)', () => {
     expect(lynx.__initData).toEqual({});
 
     // Native-initiated destroy removes the transfer element and notifies.
-    const key = { transferId: '3', generation: 1 };
+    const key = { transferId: '3' };
     createTransfer(key);
     expect(elementTree.root.children.map(child => child.type)).toEqual([
       'transfer-view',
     ]);
-    fireNative('__DestroyTransfer', { key });
+    fireNative('__DestroyTransfer', { ...key });
     nativeChannel.deliver('__DestroyTransfer');
     expect(elementTree.root.children).toHaveLength(0);
     expect(link.sent('__DestroyTransfer')).toHaveLength(1);
-    expect(transferDiagnostics.debug.records['3:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['3']).toMatchObject({
       phase: 'disposed',
     });
 
     // Background-initiated destroy takes the other listener path.
-    const key2 = { transferId: '4', generation: 1 };
+    const key2 = { transferId: '4' };
     createTransfer(key2);
-    fireJS('__TransferDisposed', { key: key2 }, true);
+    fireJS('__TransferDisposed', { ...key2 }, true);
     link.deliver('__TransferDisposed');
     expect(elementTree.root.children).toHaveLength(0);
     expect(link.sent('__DestroyTransfer')).toHaveLength(2);
-    expect(transferDiagnostics.debug.records['4:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['4']).toMatchObject({
       phase: 'disposed',
     });
 
     // Stale destroys for dead transfers are ignored.
-    fireNative('__DestroyTransfer', { key });
+    fireNative('__DestroyTransfer', { ...key });
     nativeChannel.deliver('__DestroyTransfer');
-    fireJS('__TransferDisposed', { key: key2 }, true);
+    fireJS('__TransferDisposed', { ...key2 }, true);
     link.deliver('__TransferDisposed');
     expect(link.sent('__DestroyTransfer')).toHaveLength(2);
 
     // Prop updates for a live transfer are forwarded to the background.
-    const key3 = { transferId: '5', generation: 1 };
+    const key3 = { transferId: '5' };
     createTransfer(key3);
     fireNative('__SetTransferProps', {
-      key: key3,
+      ...key3,
       props: { label: 'z' },
-      propsVersion: 2,
     }, true);
     nativeChannel.deliver('__SetTransferProps');
     const forwarded = link.sent('__SetTransferProps');
     expect(forwarded).toHaveLength(1);
     expect(JSON.parse(forwarded[0].data)).toMatchObject({
-      key: key3,
-      propsVersion: 2,
+      ...key3,
     });
   });
 });

@@ -97,8 +97,7 @@ function fireJS(type, data, asString = false) {
 }
 function ack(seq, status = 'applied', scopeKey = key) {
   fireJS('__TransferCommitResult', {
-    key: scopeKey,
-    reloadVersion: 0,
+    ...scopeKey,
     seq,
     status,
   });
@@ -120,19 +119,17 @@ function serializeFirstFrame() {
   );
 }
 
-const key = { transferId: '1', generation: 1 };
+const key = { transferId: '1' };
 let firstFrameSnapshot;
 
 function createLive(scopeKey) {
   fireJS('__CreateTransfer', {
     componentName: 'App',
-    key: scopeKey,
-    reloadVersion: 0,
+    ...scopeKey,
     initialProps: { label: 'a' },
-    propsVersion: 1,
   });
   link.deliver('__CreateTransfer');
-  const id = `${scopeKey.transferId}:1`;
+  const id = scopeKey.transferId;
   // The record renders its component tree (root and nested component).
   expect(transferDiagnostics.debug.records[id]).toMatchObject({
     phase: 'waiting',
@@ -141,9 +138,7 @@ function createLive(scopeKey) {
   // The frame arrives while the record exists: hydrated right away.
   firstFrameSnapshot ??= serializeFirstFrame();
   fireJS('__TransferFirstFrame', {
-    key: scopeKey,
-    reloadVersion: 0,
-    propsVersion: 1,
+    ...scopeKey,
     snapshot: firstFrameSnapshot,
   });
   link.deliver('__TransferFirstFrame');
@@ -153,7 +148,7 @@ function createLive(scopeKey) {
   const commits = link.sent('__TransferCommit');
   expect(commits).toHaveLength(1);
   const packet = JSON.parse(commits[0].data);
-  expect(packet).toMatchObject({ key: scopeKey, seq: 1, kind: 'hydrate' });
+  expect(packet).toMatchObject({ ...scopeKey, seq: 1, kind: 'hydrate' });
   expect(packet.patchOptions.isHydration).toBe(true);
   expect(Array.isArray(packet.patchList.patchList[0].snapshotPatch)).toBe(true);
   ack(1, 'applied', scopeKey);
@@ -224,9 +219,7 @@ describe('transfer protocol (background side)', () => {
 
     // A duplicate first frame is ignored once hydration started.
     fireJS('__TransferFirstFrame', {
-      key,
-      reloadVersion: 0,
-      propsVersion: 1,
+      ...key,
       snapshot: firstFrameSnapshot,
     });
     link.deliver('__TransferFirstFrame');
@@ -238,11 +231,11 @@ describe('transfer protocol (background side)', () => {
     bumpRoot('c');
     await waitSchedule();
     // Both scheduled renders executed; the second commit is still queued.
-    expect(transferDiagnostics.debug.records['1:1'].renders).toBe(6);
+    expect(transferDiagnostics.debug.records['1'].renders).toBe(6);
     const commits = link.sent('__TransferCommit');
     expect(commits).toHaveLength(2);
     expect(JSON.parse(commits[1].data)).toMatchObject({
-      key,
+      ...key,
       seq: 2,
       kind: 'update',
     });
@@ -251,12 +244,12 @@ describe('transfer protocol (background side)', () => {
     ack(2);
     expect(link.sent('__TransferCommit')).toHaveLength(3);
     expect(JSON.parse(link.sent('__TransferCommit')[2].data)).toMatchObject({
-      key,
+      ...key,
       seq: 3,
       kind: 'update',
     });
     ack(3);
-    expect(transferDiagnostics.debug.records['1:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['1']).toMatchObject({
       seq: 3,
       renders: 6,
     });
@@ -264,10 +257,10 @@ describe('transfer protocol (background side)', () => {
     // --- Nested component updates stay isolated to their own root ---
     bumpChild(1);
     await waitSchedule();
-    expect(transferDiagnostics.debug.records['1:1'].renders).toBe(7);
+    expect(transferDiagnostics.debug.records['1'].renders).toBe(7);
     expect(link.sent('__TransferCommit')).toHaveLength(4);
     expect(JSON.parse(link.sent('__TransferCommit')[3].data)).toMatchObject({
-      key,
+      ...key,
       seq: 4,
       kind: 'update',
     });
@@ -281,9 +274,9 @@ describe('transfer protocol (background side)', () => {
     bumpRoot('z');
     await waitSchedule();
     expect(link.sent('__TransferCommit')).toHaveLength(5);
-    fireJS('__DestroyTransfer', { key });
+    fireJS('__DestroyTransfer', { ...key });
     link.deliver('__DestroyTransfer');
-    expect(transferDiagnostics.debug.records['1:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['1']).toMatchObject({
       phase: 'disposed',
     });
     expect(link.sent('__TransferDisposed')).toHaveLength(1);
@@ -291,95 +284,81 @@ describe('transfer protocol (background side)', () => {
     // Results for a disposed or unknown record are ignored.
     ack(5, 'applied', key);
     ack(999, 'applied', key);
-    ack(1, 'applied', { transferId: '404', generation: 1 });
+    ack(1, 'applied', { transferId: '404' });
 
     // Stale messages for the dead transfer are ignored.
     fireJS('__TransferFirstFrame', {
-      key,
-      reloadVersion: 0,
-      propsVersion: 1,
+      ...key,
       snapshot: firstFrameSnapshot,
     });
     link.deliver('__TransferFirstFrame');
-    fireJS('__SetTransferProps', { key, props: {}, propsVersion: 3 });
+    fireJS('__SetTransferProps', { ...key, props: {} });
     link.deliver('__SetTransferProps');
     fireJS('__CreateTransfer', {
       componentName: 'App',
-      key,
-      reloadVersion: 0,
+      ...key,
       initialProps: {},
-      propsVersion: 1,
     });
     link.deliver('__CreateTransfer');
-    fireJS('__DestroyTransfer', { key });
+    fireJS('__DestroyTransfer', { ...key });
     link.deliver('__DestroyTransfer');
-    expect(transferDiagnostics.debug.records['1:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['1']).toMatchObject({
       phase: 'disposed',
     });
 
     // --- A frame that arrives before its create is buffered, then consumed ---
-    const scope2 = { transferId: '2', generation: 1 };
+    const scope2 = { transferId: '2' };
     fireJS('__TransferFirstFrame', {
-      key: scope2,
-      reloadVersion: 0,
-      propsVersion: 1,
+      ...scope2,
       snapshot: firstFrameSnapshot,
     });
     link.deliver('__TransferFirstFrame');
-    expect(transferDiagnostics.debug.records['2:1']).toBeUndefined();
+    expect(transferDiagnostics.debug.records['2']).toBeUndefined();
     fireJS('__CreateTransfer', {
       componentName: 'App',
-      key: scope2,
-      reloadVersion: 0,
+      ...scope2,
       initialProps: { label: 'a' },
-      propsVersion: 1,
     });
     link.deliver('__CreateTransfer');
-    expect(transferDiagnostics.debug.records['2:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['2']).toMatchObject({
       phase: 'hydrating',
     });
     expect(link.sent('__TransferCommit')).toHaveLength(6);
     ack(1, 'applied', scope2);
-    expect(transferDiagnostics.debug.records['2:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['2']).toMatchObject({
       phase: 'live',
     });
     // A duplicate create for a live record is a no-op.
     fireJS('__CreateTransfer', {
       componentName: 'App',
-      key: scope2,
-      reloadVersion: 0,
+      ...scope2,
       initialProps: { label: 'a' },
-      propsVersion: 1,
     });
     link.deliver('__CreateTransfer');
     expect(link.sent('__TransferCommit')).toHaveLength(6);
   });
 
-  it('drops pre-hydration commits and stale props, and disposes on failed ACKs', async () => {
+  it('drops pre-hydration commits and disposes on failed ACKs', async () => {
     globalEnvManager.switchToBackground();
-    const scope3 = { transferId: '3', generation: 1 };
+    const scope3 = { transferId: '3' };
 
     fireJS('__CreateTransfer', {
       componentName: 'Missing',
-      key: scope3,
-      reloadVersion: 0,
+      ...scope3,
       initialProps: {},
-      propsVersion: 1,
     });
     expect(() => link.deliver('__CreateTransfer')).toThrow(
       'Unknown transfer component: Missing',
     );
-    expect(transferDiagnostics.debug.records['3:1']).toBeUndefined();
+    expect(transferDiagnostics.debug.records['3']).toBeUndefined();
 
     fireJS('__CreateTransfer', {
       componentName: 'App',
-      key: scope3,
-      reloadVersion: 0,
+      ...scope3,
       initialProps: { label: 'a' },
-      propsVersion: 1,
     });
     link.deliver('__CreateTransfer');
-    expect(transferDiagnostics.debug.records['3:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['3']).toMatchObject({
       phase: 'waiting',
       renders: 2,
     });
@@ -387,37 +366,25 @@ describe('transfer protocol (background side)', () => {
     // While still waiting, prop updates re-render the background but no
     // commit is sent: pre-hydration commits are dropped.
     fireJS('__SetTransferProps', {
-      key: scope3,
+      ...scope3,
       props: { label: 'b' },
-      propsVersion: 2,
     });
     link.deliver('__SetTransferProps');
-    expect(transferDiagnostics.debug.records['3:1'].renders).toBe(4);
+    expect(transferDiagnostics.debug.records['3'].renders).toBe(4);
     expect(link.sent('__TransferCommit')).toHaveLength(0);
-
-    // A prop version that is not newer is ignored.
-    fireJS('__SetTransferProps', {
-      key: scope3,
-      props: { label: 'stale' },
-      propsVersion: 2,
-    });
-    link.deliver('__SetTransferProps');
-    expect(transferDiagnostics.debug.records['3:1'].renders).toBe(4);
 
     // Hydrate for real now.
     const snapshot = serializeFirstFrame();
     fireJS('__TransferFirstFrame', {
-      key: scope3,
-      reloadVersion: 0,
-      propsVersion: 1,
+      ...scope3,
       snapshot,
     });
     link.deliver('__TransferFirstFrame');
-    expect(transferDiagnostics.debug.records['3:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['3']).toMatchObject({
       phase: 'hydrating',
     });
     ack(1, 'applied', scope3);
-    expect(transferDiagnostics.debug.records['3:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['3']).toMatchObject({
       phase: 'live',
     });
 
@@ -425,7 +392,7 @@ describe('transfer protocol (background side)', () => {
     bumpRoot('z');
     await waitSchedule();
     ack(2, 'failed', scope3);
-    expect(transferDiagnostics.debug.records['3:1']).toMatchObject({
+    expect(transferDiagnostics.debug.records['3']).toMatchObject({
       phase: 'disposed',
     });
     expect(link.sent('__TransferDisposed')).toHaveLength(1);

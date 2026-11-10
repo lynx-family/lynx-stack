@@ -17,21 +17,12 @@ type PatchOptions = Parameters<
 >[0]['patchOptions'];
 
 type Props = Record<string, unknown>;
-interface Key {
-  transferId: string;
-  generation: number;
-}
 interface Scope {
-  key: Key;
-  reloadVersion: number;
+  transferId: string;
 }
-type Create = Scope & {
-  componentName: string;
-  initialProps: Props;
-  propsVersion: number;
-};
-type Update = Scope & { props: Props; propsVersion: number };
-type Frame = Scope & { propsVersion: number; snapshot: string };
+type Create = Scope & { componentName: string; initialProps: Props };
+type Update = Scope & { props: Props };
+type Frame = Scope & { snapshot: string };
 type Commit = Scope & {
   seq: number;
   kind: 'hydrate' | 'update';
@@ -46,7 +37,6 @@ interface RecordState {
   init: Create;
   Component: ComponentType<Props>;
   props: Props;
-  version: number;
   phase: 'waiting' | 'hydrating' | 'live' | 'disposed';
   main?: MainThreadRoot;
   element?: FiberElement;
@@ -62,7 +52,7 @@ interface TransferRenderContext {
     thread: string;
     records: Record<
       string,
-      { renders: number; version: number; phase: string; seq: number }
+      { renders: number; phase: string; seq: number }
     >;
   };
   registerComponent(name: string, provider: () => ComponentType<Props>): void;
@@ -70,7 +60,6 @@ interface TransferRenderContext {
   dispose(): void;
 }
 
-const identity = (key: Key) => `${key.transferId}:${key.generation}`;
 const decode = <T>(data: unknown): T => (typeof data === 'string' ? JSON.parse(data) : data) as T;
 
 /**
@@ -93,7 +82,7 @@ function createTransferRenderContext(): TransferRenderContext {
     thread: mts ? 'MTS' : 'BTS',
     records: {} as Record<
       string,
-      { renders: number; version: number; phase: string; seq: number }
+      { renders: number; phase: string; seq: number }
     >,
   };
   let active: RecordState | undefined;
@@ -104,9 +93,8 @@ function createTransferRenderContext(): TransferRenderContext {
 
   function log(event: string, record?: RecordState, extra?: unknown) {
     if (record) {
-      debug.records[identity(record.init.key)] = {
+      debug.records[record.init.transferId] = {
         renders: record.renders,
-        version: record.version,
         phase: record.phase,
         seq: record.seq,
       };
@@ -115,7 +103,7 @@ function createTransferRenderContext(): TransferRenderContext {
       '[TransferProtocol]',
       mts ? 'MTS' : 'BTS',
       event,
-      record ? identity(record.init.key) : '',
+      record ? record.init.transferId : '',
       extra ?? '',
     );
   }
@@ -179,8 +167,7 @@ function createTransferRenderContext(): TransferRenderContext {
   ) {
     record.queue.push({
       packet: {
-        key: record.init.key,
-        reloadVersion: 0,
+        transferId: record.init.transferId,
         seq: ++record.seq,
         kind,
         patchList,
@@ -191,7 +178,7 @@ function createTransferRenderContext(): TransferRenderContext {
     pump(record);
   }
   function acceptFrame(frame: Frame) {
-    const id = identity(frame.key);
+    const id = frame.transferId;
     if (dead.has(id)) return;
     const record = records.get(id);
     if (!record || !record.background) {
@@ -200,10 +187,7 @@ function createTransferRenderContext(): TransferRenderContext {
     }
     if (record.phase !== 'waiting') return;
     record.phase = 'hydrating';
-    log('hydrate', record, {
-      first: frame.propsVersion,
-      latest: record.version,
-    });
+    log('hydrate', record);
     const patch = withRecord(
       record,
       () => record.background!.hydrate(frame.snapshot),
@@ -218,7 +202,7 @@ function createTransferRenderContext(): TransferRenderContext {
     }, 'hydrate');
   }
   function create(init: Create) {
-    const id = identity(init.key);
+    const id = init.transferId;
     if (dead.has(id) || records.has(id)) return;
     if (mts && !pageReady) {
       pendingCreates.push(init);
@@ -232,7 +216,6 @@ function createTransferRenderContext(): TransferRenderContext {
       init,
       Component: provider(),
       props: init.initialProps,
-      version: init.propsVersion,
       phase: 'waiting',
       seq: 0,
       queue: [],
@@ -241,10 +224,7 @@ function createTransferRenderContext(): TransferRenderContext {
     records.set(id, record);
     if (mts) {
       const element = record.element = __CreateElement('transfer-view', pageId);
-      __SetAttribute(element, 'transfer-id', init.key.transferId);
-      __SetDataset(element, {
-        __transferMeta: { reloadVersion: 0, key: init.key },
-      });
+      __SetAttribute(element, 'transfer-id', init.transferId);
       __AppendElement(page, element);
       const root = record.main = mainRenderer!.createRoot(element);
       send('__CreateTransfer', init);
@@ -253,13 +233,8 @@ function createTransferRenderContext(): TransferRenderContext {
         () => root.render(createElement(record.Component, record.props)),
       );
       __FlushElementTree(page, {});
-      log('first-frame', record, init.propsVersion);
-      send('__TransferFirstFrame', {
-        key: init.key,
-        reloadVersion: 0,
-        propsVersion: init.propsVersion,
-        snapshot,
-      });
+      log('first-frame', record);
+      send('__TransferFirstFrame', { transferId: init.transferId, snapshot });
     } else {
       record.background = backgroundRenderer!.createRoot(
         (patchList, patchOptions, finish) => {
@@ -285,18 +260,14 @@ function createTransferRenderContext(): TransferRenderContext {
       send('__SetTransferProps', update);
       return;
     }
-    const record = records.get(identity(update.key));
-    if (
-      !record || record.phase === 'disposed'
-      || update.propsVersion <= record.version
-    ) return;
+    const record = records.get(update.transferId);
+    if (!record || record.phase === 'disposed') return;
     record.props = update.props;
-    record.version = update.propsVersion;
-    log('set-props', record, update.propsVersion);
+    log('set-props', record);
     renderBackground(record);
   }
   function dispose(scope: Scope, notify = true) {
-    const id = identity(scope.key);
+    const id = scope.transferId;
     if (dead.has(id)) return;
     dead.add(id);
     frames.delete(id);
@@ -340,7 +311,7 @@ function createTransferRenderContext(): TransferRenderContext {
     listen(native, '__DestroyTransfer', data => dispose(data as Scope));
     listen(lynx.getJSContext(), '__TransferCommit', data => {
       const packet = data as Commit;
-      const record = records.get(identity(packet.key));
+      const record = records.get(packet.transferId);
       let status: Result['status'] = 'disposed';
       if (record && record.phase !== 'disposed') {
         try {
@@ -361,15 +332,14 @@ function createTransferRenderContext(): TransferRenderContext {
         }
       }
       send('__TransferCommitResult', {
-        key: packet.key,
-        reloadVersion: 0,
+        transferId: packet.transferId,
         seq: packet.seq,
         status,
       });
     });
     listen(lynx.getJSContext(), '__TransferDisposed', data => {
       const scope = data as Scope;
-      log('background-disposed', records.get(identity(scope.key)));
+      log('background-disposed', records.get(scope.transferId));
       dispose(scope);
     });
   } else {
@@ -380,7 +350,7 @@ function createTransferRenderContext(): TransferRenderContext {
     listen(core, '__DestroyTransfer', data => dispose(data as Scope));
     listen(core, '__TransferCommitResult', data => {
       const result = data as Result;
-      const record = records.get(identity(result.key));
+      const record = records.get(result.transferId);
       if (!record?.inFlight || record.inFlight.packet.seq !== result.seq) {
         return;
       }

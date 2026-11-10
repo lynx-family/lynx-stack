@@ -17,8 +17,7 @@ import { TransferRegistry } from '@lynx-js/react/internal';
 TransferRegistry.registerComponent('ChatBubble', () => ChatBubble);
 ```
 
-The registry lives in `@lynx-js/react` runtime and owns the native protocol, instance generations,
-props versions, ordered commit delivery and ACK queues. Diagnostics are exported as
+The registry lives in `@lynx-js/react` runtime and owns the native protocol, ordered commit delivery and ACK queues. Diagnostics are exported as
 `transferDiagnostics` from the same entry.
 
 It builds on two renderer factories in the same entry:
@@ -117,30 +116,8 @@ Read diagnostic data with `Runtime.evaluate` on the appropriate thread:
 JSON.stringify(globalThis.transferChatDebug);
 ```
 
-It records actual component executions, versions, phases and commit sequences.
+It records actual component executions, phases and commit sequences.
 The object is diagnostic data, not an Engine protocol entry point.
-
-## Verification
-
-The recorded Android emulator run imported the registry from `@lynx-js/react/internal` using the earlier Engine command route. Native taps incremented the first bubble twice and the second once,
-producing independent counts of 2 and 1. BTS render counts changed from [1, 1]
-to [3, 2]; MTS counts stayed [1, 1].
-
-Sending `Package refactor streaming check` created two more real transfer nodes.
-The completed reply reached props version 42 and commit sequence 42, with its
-final ACK applied. BTS render counts were [3, 2, 1, 42], confirming that streaming
-updated only the reply. Every MTS component rendered once. Native DOM inspection,
-thread diagnostics, protocol logs and screenshots agreed. Clear removed all four
-transfer nodes and marked every instance disposed on both threads.
-
-The recorded prototype validation included the full Stack build, repository type
-checks, source lint and API report generation. The complete Snapshot suite passed
-1,044 tests with one existing skip and four todo tests; ElementTemplate passed
-958 tests. Both suites reached 100% statement, branch, function and line coverage,
-including the companion package in the Snapshot suite. This run used the existing
-ARM64 Explorer build. These recorded results do not validate the current Native
-command listeners or the two-factory renderer boundary; both require a fresh
-validation run with the migrated native sender.
 
 ## Limits
 

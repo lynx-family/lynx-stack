@@ -64,17 +64,15 @@ it('reuses initialization and tracks independently scheduled state renders', asy
     listeners.get('__CreateTransfer')({
       data: {
         componentName,
-        key: { transferId, generation: 1 },
-        reloadVersion: 0,
+        transferId,
         initialProps: {},
-        propsVersion: 1,
       },
     });
   }
   expect(first).toHaveBeenCalledOnce();
   expect(second).toHaveBeenCalledOnce();
-  expect(transferDiagnostics.debug.records['1:1'].renders).toBe(1);
+  expect(transferDiagnostics.debug.records['1'].renders).toBe(1);
   update(value => value + 1);
   await waitSchedule();
-  expect(transferDiagnostics.debug.records['1:1'].renders).toBe(2);
+  expect(transferDiagnostics.debug.records['1'].renders).toBe(2);
 });
