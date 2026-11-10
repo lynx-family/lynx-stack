@@ -289,6 +289,32 @@ test('keeps the rendered iframe and avoids replay when the final surface matches
   }, new URL(nextFrame.src).origin);
 });
 
+test('replays the final bound image when streaming withheld it as loading', async () => {
+  const frame = await send();
+  const post = await ready(frame);
+  const data = {
+    version: 'v0.9',
+    updateDataModel: {
+      surfaceId: 'main',
+      value: { photo: 'https://images.example.com/weather.jpg' },
+    },
+  };
+  const image = {
+    version: 'v0.9',
+    updateComponents: {
+      surfaceId: 'main',
+      components: [{ id: 'root', component: 'Image', url: { path: '/photo' } }],
+    },
+  };
+  await emit('message', { messages: [create, data, loading] });
+  await done([create, data, image]);
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_REPLAY_MESSAGES',
+    messages: [create, data, image],
+  }, new URL(frame.src).origin);
+  expect(container.querySelector('iframe')).toBe(frame);
+});
+
 async function mountOpenUI() {
   window.history.replaceState(null, '', '/#/openui/create');
   await React.act(async () =>
