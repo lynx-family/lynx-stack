@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { startTransition, use, useTransition } from 'preact/compat';
+import { startTransition, use, useDeferredValue, useTransition } from 'preact/compat';
 
 /* eslint-disable-next-line import/default */
 import ReactLynx, { useEffect } from '@lynx-js/react';
@@ -11,9 +11,10 @@ const useInsertionEffect = useEffect;
 export default /*#__PURE__*/ Object.assign({}, ReactLynx, {
   startTransition,
   use,
+  useDeferredValue,
   useInsertionEffect,
   useTransition,
 });
 
 export * from '@lynx-js/react';
-export { startTransition, use, useInsertionEffect, useTransition };
+export { startTransition, use, useDeferredValue, useInsertionEffect, useTransition };
