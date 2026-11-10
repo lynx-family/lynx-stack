@@ -54,6 +54,7 @@ export const {
   // compat
   startTransition,
   use,
+  useDeferredValue,
   useInsertionEffect,
   useTransition,
 } = target[sExportsReactCompat];
