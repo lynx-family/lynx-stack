@@ -22,6 +22,7 @@
     "@testing-library/dom": "workspace:*",
     "@testing-library/jest-dom": "workspace:*",
     "@types/react": "workspace:*",
+    "agent-lynx": "workspace:*",
     "jsdom": "workspace:*",
     "typescript": "workspace:*"
   },
