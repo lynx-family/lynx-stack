@@ -302,7 +302,13 @@ function createTransferRenderContext(): TransferRenderContext {
       page = initialized.element;
       pageId = initialized.id;
       pageReady = true;
-      pendingCreates.splice(0).forEach(init => create(init));
+      pendingCreates.splice(0).forEach(init => {
+        try {
+          create(init);
+        } catch (error) {
+          lynx.reportError(error as Error);
+        }
+      });
       log('page-ready');
     });
     const native = lynx.getNative();

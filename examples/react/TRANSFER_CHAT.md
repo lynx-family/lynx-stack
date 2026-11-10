@@ -30,7 +30,7 @@ It builds on two renderer factories in the same entry:
 ReactLynx owns first-frame rendering, hydration, patch application, Preact hooks
 and native event handling. Underlying Snapshot instances and raw patch
 queues/managers stay inside ReactLynx. There is no separate renderer extension
-entry, and the React runtime contains no transfer protocol. Business code only
+entry. Business code only
 registers component providers and never receives a render context.
 
 ## Build and run
@@ -88,22 +88,22 @@ emulator -avd Pixel_9_Reeval -port 5556 -no-snapshot \
   with `lynx.getNative()`. Each event's `data` is the command object, without an
   argument-array wrapper. Page initialization still listens for the Engine's
   `__RenderPage` event.
-- The companion creates a stable transfer container. The main-thread renderer
+- The registry creates a stable transfer container. The main-thread renderer
   renders the compiled component into a private per-instance Snapshot root and
-  returns its first-frame snapshot for the companion to send to BTS.
+  returns its first-frame snapshot for the registry to send to BTS.
 - The background renderer owns an independent Preact container per bubble.
   Initial UI commits are gated until per-instance hydration against the MTS
   snapshot.
 - Normal updates and ACKs use ContextProxy events, with a per-instance ordered
-  queue owned by the companion. The main-thread renderer applies commits through
+  queue owned by the registry. The main-thread renderer applies commits through
   the shared patch executor and native Page; raw patch queues stay private.
 - The background renderer installs native event handlers independently of
   ordinary page hydration, so `bindtap` can trigger per-instance `useState`
-  updates. The companion calls `flushEvents` after hydration to retry events
+  updates. The registry calls `flushEvents` after hydration to retry events
   whose snapshot handlers were not ready.
 - The background renderer installs the independent commit hook, replacing the
   ordinary page hook installed by bootstrap. Preact hooks and event handlers stay
-  inside ReactLynx, and its internal entry does not import the transfer package.
+  inside ReactLynx.
 - Business code calls `TransferRegistry.registerComponent(name, provider)`.
   The first registration initializes the page-bound protocol listeners and
   renderer factories; later registrations reuse them. Native commands create
