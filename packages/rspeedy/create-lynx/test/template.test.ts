@@ -149,6 +149,26 @@ describe('templates on disk', () => {
     }
   })
 
+  test('gives an app agent-lynx, and not a library', () => {
+    for (const tool of TOOLS) {
+      for (const lang of LANGS) {
+        const manifest = readManifest(templateDir(`${tool}-react-${lang}`))
+        const deps = manifest['devDependencies'] ?? {}
+        if (LIBRARY_TOOLS.includes(tool)) {
+          expect(deps).not.toHaveProperty('agent-lynx')
+        } else {
+          expect(deps['agent-lynx']).toBe('workspace:*')
+        }
+      }
+    }
+
+    const agents = fs.readFileSync(
+      path.join(packageRoot, 'template-common', 'AGENTS.md'),
+      'utf-8',
+    )
+    expect(agents).toContain('agent-lynx')
+  })
+
   test('tests every template with Rstest', () => {
     for (const template of TEMPLATES) {
       const manifest = readManifest(templateDir(template))
