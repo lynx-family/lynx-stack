@@ -19,8 +19,6 @@ We provide the builtin trace points in frameworks like ReactLynx (Components' `r
 
 These tracing points show how components are rendered and diffed.
 
-Snapshot state-update traces record the component name and, for Hooks, the hook index. Their flow IDs associate updates with subsequent diff, commit, and patch stages. Multiple updates can share a flow, and an update does not necessarily produce a patch. State values, property lists, and shallow diffs are omitted so that collecting update metadata does not inspect application state.
-
 #### Run profiling in production
 
 The trace points can be enabled by setting the [`performance.profile`] to `true` when build.

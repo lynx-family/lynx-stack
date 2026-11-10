@@ -19,8 +19,6 @@
 
 这些 Trace 点显示了组件如何渲染和比较差异。
 
-Snapshot 状态更新的 Trace 记录组件名，以及 Hook 更新的 hook 索引。flow ID 将更新与后续的 diff、commit 和 patch 阶段关联起来。多次更新可以共享一个 flow，一次更新也不一定产生 patch。Trace 不包含 state 值、属性列表和浅比较结果，避免在收集更新元数据时检查业务状态。
-
 #### 在生产环境中运行性能分析
 
 可以通过在构建时设置 [`performance.profile`] 为 `true` 来启用 Trace 点。
