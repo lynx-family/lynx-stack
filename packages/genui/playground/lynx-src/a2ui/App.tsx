@@ -328,6 +328,7 @@ export function App() {
   const pendingReplayMessagesRef = useRef<unknown[] | null>(null);
   const pendingLiveMessagesRef = useRef<unknown[] | null>(null);
   const [store, setStore] = useState<MessageStore | null>(null);
+  const storeRevisionRef = useRef(0);
   const [error, setError] = useState<string>('');
   const playbackMode = useMemo(
     () => streamConfig.playbackMode === true,
@@ -495,9 +496,14 @@ export function App() {
           : [messages];
         return;
       }
-      // Replays replace the preview buffer, making parent retries idempotent
-      // while the iframe and Lynx store finish booting.
-      replayMessagesToStore(currentStore, messages);
+      // A2UI tracks a processed offset per mount. A cleared and refilled store
+      // can be observed as one update, so use a fresh store and renderer session.
+      const next = createMessageStore({
+        initialMessages: normalizeProtocolMessages(messages),
+      });
+      storeRef.current = next;
+      storeRevisionRef.current += 1;
+      setStore(next);
       agentRef.current?.stop();
       agentRef.current = null;
     },
@@ -575,6 +581,7 @@ export function App() {
       agentRef.current?.stop();
       storeRef.current = next;
       agentRef.current = agent;
+      storeRevisionRef.current += 1;
       setStore(next);
       const pendingReplayMessages = pendingReplayMessagesRef.current;
       if (pendingReplayMessages) {
@@ -657,6 +664,7 @@ export function App() {
                   className={isPlaybackPaused ? 'a2ui-scrollPaused' : ''}
                 >
                   <A2UI
+                    key={storeRevisionRef.current}
                     messageStore={store}
                     catalogs={ALL_BUILTINS}
                     onAction={(action) => {
