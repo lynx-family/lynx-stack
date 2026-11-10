@@ -9,7 +9,6 @@ packages:
   - packages/repl
   - packages/react
   - packages/react-signals
-  - packages/react-transfer
   - packages/react/refresh
   - packages/react/runtime
   - packages/react/testing-library

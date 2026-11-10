@@ -5,23 +5,14 @@
 // runtime (the first `registerComponent` fixes the thread), so this file owns
 // the main thread side and fakes the background peer over a manual bus. The
 // background side lives in `transferProtocol.test.jsx`.
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SnapshotOperation } from '../../react/runtime/src/snapshot/lifecycle/patch/snapshotPatch';
-import { snapshotInstanceManager } from '../../react/runtime/src/snapshot/snapshot/snapshotInstanceManager';
-import { TransferRegistry } from '@lynx-js/react-transfer';
-import { transferDiagnostics } from '@lynx-js/react-transfer/experimental/diagnostics';
-import { globalEnvManager } from '../../react/runtime/__test__/snapshot/utils/envManager';
-import { elementTree } from '../../react/runtime/__test__/snapshot/utils/nativeMethod';
+import { SnapshotOperation } from '../../../src/snapshot/lifecycle/patch/snapshotPatch';
+import { snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshotInstanceManager';
+import { TransferRegistry } from '../../../src/internal';
+import { transferDiagnostics } from '../../../src/internal';
+import { globalEnvManager } from '../utils/envManager';
+import { elementTree } from '../utils/nativeMethod';
 
 function App(props) {
   transferDiagnostics.recordRender();
@@ -282,9 +273,7 @@ describe('transfer protocol (main thread side)', () => {
     });
 
     // Update commit with a real patch: creates a view under the page element.
-    const root = [...snapshotInstanceManager.values.values()].find(si =>
-      si.type === 'root'
-    );
+    const root = [...snapshotInstanceManager.values.values()].find(si => si.type === 'root');
     const patch = [
       SnapshotOperation.CreateElement,
       'view',

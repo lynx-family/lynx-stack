@@ -2,8 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { useState } from '@lynx-js/react';
-import { TransferRegistry } from '@lynx-js/react-transfer';
-import { transferDiagnostics } from '@lynx-js/react-transfer/experimental/diagnostics';
+import { TransferRegistry, transferDiagnostics } from '@lynx-js/react/internal';
 
 import './transfer-chat.css';
 

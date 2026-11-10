@@ -23,6 +23,8 @@ export const {
   COMPONENT_DIRTY,
   createMainThreadRenderer,
   createBackgroundRenderer,
+  TransferRegistry,
+  transferDiagnostics,
   DIFF,
   DOM,
   FLAGS,

@@ -7,24 +7,21 @@ Replies are deterministic local streams, not calls to a model or external chat
 service. Each bubble also has its own `useState` counter: tap anywhere on the
 bubble to increment the `Count` shown at the bottom.
 
-## Package split
+## Runtime entry
 
-Business code registers components through `@lynx-js/react-transfer`:
+Business code registers components through the existing `@lynx-js/react/internal` entry:
 
 ```tsx
-import { TransferRegistry } from '@lynx-js/react-transfer';
+import { TransferRegistry } from '@lynx-js/react/internal';
 
 TransferRegistry.registerComponent('ChatBubble', () => ChatBubble);
 ```
 
-The package owns the transfer registry, native protocol, instance generations,
-props versions, ordered commit delivery and ACK queues. It coordinates
-per-instance lifecycle and hydration through the renderer factories. Diagnostics
-are available separately from
-`@lynx-js/react-transfer/experimental/diagnostics`.
+The registry lives in `@lynx-js/react` runtime and owns the native protocol, instance generations,
+props versions, ordered commit delivery and ACK queues. Diagnostics are exported as
+`transferDiagnostics` from the same entry.
 
-`@lynx-js/react-transfer` uses exactly two new factories from the peer renderer's
-existing `@lynx-js/react/internal` entry:
+It builds on two renderer factories in the same entry:
 
 - `createMainThreadRenderer` provides `initialize`, `createRoot` (returning
   `render` and `destroy`), and `applyCommit`.
@@ -125,8 +122,7 @@ The object is diagnostic data, not an Engine protocol entry point.
 
 ## Verification
 
-The recorded Android emulator run imported `@lynx-js/react-transfer` through its
-package entry using the earlier Engine command route. Native taps incremented the first bubble twice and the second once,
+The recorded Android emulator run imported the registry from `@lynx-js/react/internal` using the earlier Engine command route. Native taps incremented the first bubble twice and the second once,
 producing independent counts of 2 and 1. BTS render counts changed from [1, 1]
 to [3, 2]; MTS counts stayed [1, 1].
 

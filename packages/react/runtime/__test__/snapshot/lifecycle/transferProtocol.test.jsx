@@ -6,30 +6,18 @@
 // the background side and fakes the main thread peer over a manual bus. The
 // main thread side lives in `transferProtocol.mts.test.jsx`.
 import { createElement, render } from 'preact';
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useState } from '../../react/runtime/src/index';
-import { RENDER } from '../../react/runtime/src/shared/render-constants';
+import { useState } from '../../../src/index';
+import { RENDER } from '../../../src/shared/render-constants';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
-} from '../../react/runtime/src/snapshot/snapshot/backgroundSnapshot';
-import { TransferRegistry } from '@lynx-js/react-transfer';
-import { transferDiagnostics } from '@lynx-js/react-transfer/experimental/diagnostics';
-import { globalEnvManager } from '../../react/runtime/__test__/snapshot/utils/envManager';
-import {
-  elementTree,
-  waitSchedule,
-} from '../../react/runtime/__test__/snapshot/utils/nativeMethod';
+} from '../../../src/snapshot/snapshot/backgroundSnapshot';
+import { TransferRegistry } from '../../../src/internal';
+import { transferDiagnostics } from '../../../src/internal';
+import { globalEnvManager } from '../utils/envManager';
+import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 let bumpRoot;
 let bumpChild;
@@ -465,7 +453,7 @@ describe('transfer protocol (background side)', () => {
     vi.resetModules();
     const freshPreact1 = await import('preact');
     const { TransferRegistry: registry1 } = await import(
-      '@lynx-js/react-transfer'
+      '../../../src/internal'
     );
     delete freshPreact1.options[RENDER];
     registry1.registerComponent('R1', () =>
@@ -489,7 +477,7 @@ describe('transfer protocol (background side)', () => {
     vi.resetModules();
     const freshPreact2 = await import('preact');
     const { TransferRegistry: registry2 } = await import(
-      '@lynx-js/react-transfer'
+      '../../../src/internal'
     );
     const previous = vi.fn();
     freshPreact2.options[RENDER] = previous;
@@ -507,7 +495,7 @@ describe('transfer protocol (background side)', () => {
     vi.resetModules();
     const freshPreact3 = await import('preact');
     const { TransferRegistry: registry3 } = await import(
-      '@lynx-js/react-transfer'
+      '../../../src/internal'
     );
     registry3.registerComponent('R3', () =>
       function R3() {

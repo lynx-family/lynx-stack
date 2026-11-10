@@ -4,10 +4,8 @@
 import { createElement } from 'preact';
 import type { ComponentType } from 'preact';
 
-import {
-  createBackgroundRenderer,
-  createMainThreadRenderer,
-} from '@lynx-js/react/internal';
+import { createBackgroundRenderer } from './background.js';
+import { createMainThreadRenderer } from './main-thread.js';
 
 type MainThreadRenderer = ReturnType<typeof createMainThreadRenderer>;
 type MainThreadRoot = ReturnType<MainThreadRenderer['createRoot']>;
@@ -73,8 +71,7 @@ interface TransferRenderContext {
 }
 
 const identity = (key: Key) => `${key.transferId}:${key.generation}`;
-const decode = <T>(data: unknown): T =>
-  (typeof data === 'string' ? JSON.parse(data) : data) as T;
+const decode = <T>(data: unknown): T => (typeof data === 'string' ? JSON.parse(data) : data) as T;
 
 /**
  * Experimental snapshot-only transfer registry for the native chat proof of concept.

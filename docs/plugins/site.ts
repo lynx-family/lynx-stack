@@ -62,7 +62,6 @@ export const LYNX_STACK: Site = {
     '@lynx-js/genui': 'genui',
   },
   additionalPackages: [
-    '@lynx-js/react-transfer',
     '@lynx-js/testing-environment',
   ],
   configReference: {

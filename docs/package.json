@@ -59,7 +59,6 @@
     "@lynx-js/react-refresh-webpack-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-signals": "workspace:*",
-    "@lynx-js/react-transfer": "workspace:*",
     "@lynx-js/react-webpack-plugin": "workspace:*",
     "@lynx-js/reactlynx-testing-library": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",

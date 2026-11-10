@@ -4,11 +4,11 @@
 import { options } from 'preact';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { useState } from '../../react/runtime/src/index';
-import { TransferRegistry } from '@lynx-js/react-transfer';
-import { transferDiagnostics } from '@lynx-js/react-transfer/experimental/diagnostics';
-import { waitSchedule } from '../../react/runtime/__test__/snapshot/utils/nativeMethod';
-import { globalEnvManager } from '../../react/runtime/__test__/snapshot/utils/envManager';
+import { useState } from '../../../src/index';
+import { TransferRegistry } from '../../../src/internal';
+import { transferDiagnostics } from '../../../src/internal';
+import { waitSchedule } from '../utils/nativeMethod';
+import { globalEnvManager } from '../utils/envManager';
 
 let destroy;
 afterEach(() => {

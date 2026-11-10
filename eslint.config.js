@@ -104,7 +104,6 @@ export default tseslint.config(
       // react
       'packages/react/types/**',
       'packages/react/runtime/__test__/**',
-      'packages/react-transfer/__test__/**',
       'packages/react/runtime/jsx-dev-runtime/**',
       'packages/react/runtime/jsx-runtime/**',
       'packages/react/runtime/lazy/**',
