@@ -67,6 +67,8 @@ minimumReleaseAgeExclude:
   - "@rsdoctor/shared"
   # Changesets v3 packages were released as one coordinated set.
   - "@changesets/*"
+  # Renovate security update: happy-dom@21.0.4
+  - happy-dom@21.0.4
 minimumReleaseAgeExcludePrune: true
 # Some registry metadata omits the `time` field. Skip only those packages;
 # otherwise fail rather than falling back to a release younger than three days.

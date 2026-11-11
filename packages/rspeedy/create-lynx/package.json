@@ -60,7 +60,7 @@
     "@testing-library/jest-dom": "^7.0.0",
     "@types/react": "^19.2.18",
     "agent-lynx": "0.14.29",
-    "happy-dom": "20.14.0",
+    "happy-dom": "21.0.4",
     "jsdom": "^27.4.0",
     "typescript": "catalog:"
   },
