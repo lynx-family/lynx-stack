@@ -31,7 +31,7 @@ describe('resolveDynamic', () => {
     processor = new MessageProcessor();
     processor.registerCatalog('test', { components: [], functions });
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       createSurface: { surfaceId, catalogId: 'test' },
     }]);
   });
@@ -53,7 +53,7 @@ describe('resolveDynamic', () => {
     expect(
       resolveDynamicValue(
         processor,
-        { path: 'tempLow' },
+        { '@path': 'tempLow' },
         surfaceId,
         '/weather',
       ),
@@ -65,8 +65,8 @@ describe('resolveDynamic', () => {
       resolveDynamicValue(
         processor,
         {
-          call: 'add',
-          args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
+          '@call': 'add',
+          args: { a: 1, b: { '@call': 'identity', args: { value: 2 } } },
         },
         surfaceId,
         undefined,
@@ -83,14 +83,14 @@ describe('resolveDynamic', () => {
       resolveDynamicValue(
         processor,
         {
-          call: 'add',
-          args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
+          '@call': 'add',
+          args: { a: 1, b: { '@call': 'identity', args: { value: 2 } } },
         },
         surfaceId,
       ),
     ).toEqual({
-      call: 'add',
-      args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
+      '@call': 'add',
+      args: { a: 1, b: { '@call': 'identity', args: { value: 2 } } },
     });
   });
 });

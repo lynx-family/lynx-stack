@@ -3,7 +3,7 @@
   "description": "Example of task card demonstrating CheckBox and DateTimeInput.",
   "messages": [
     {
-      "version": "v1.0",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-task-card",
         "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
@@ -11,39 +11,47 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-task-card",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-row"
+            "child": "main_row"
           },
           {
-            "id": "main-row",
+            "id": "main_row",
             "component": "Row",
-            "children": ["status-checkbox", "content", "priority"],
+            "children": [
+              "status_checkbox",
+              "content",
+              "priority"
+            ],
             "align": "start"
           },
           {
-            "id": "status-checkbox",
+            "id": "status_checkbox",
             "component": "CheckBox",
             "label": "",
             "value": {
-              "path": "/completed"
+              "@path": "/completed"
             }
           },
           {
             "id": "content",
             "component": "Column",
-            "children": ["title", "description", "meta-row"]
+            "children": [
+              "title",
+              "description",
+              "meta_row"
+            ]
           },
           {
             "id": "title",
             "component": "Text",
             "text": {
-              "path": "/title"
+              "@path": "/title"
             },
             "variant": "h3"
           },
@@ -51,22 +59,25 @@
             "id": "description",
             "component": "Text",
             "text": {
-              "path": "/description"
+              "@path": "/description"
             },
             "variant": "body"
           },
           {
-            "id": "meta-row",
+            "id": "meta_row",
             "component": "Row",
-            "children": ["due-date-input", "project"],
+            "children": [
+              "due_date_input",
+              "project"
+            ],
             "align": "center"
           },
           {
-            "id": "due-date-input",
+            "id": "due_date_input",
             "component": "DateTimeInput",
             "label": "Due",
             "value": {
-              "path": "/dueDate"
+              "@path": "/dueDate"
             },
             "enableDate": true,
             "enableTime": true
@@ -75,7 +86,7 @@
             "id": "project",
             "component": "Text",
             "text": {
-              "path": "/project"
+              "@path": "/project"
             },
             "variant": "caption"
           },
@@ -83,14 +94,14 @@
             "id": "priority",
             "component": "Icon",
             "name": {
-              "path": "/priorityIcon"
+              "@path": "/priorityIcon"
             }
           }
         ]
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-task-card",
         "value": {

@@ -5,6 +5,7 @@
 import type { FunctionCallContext } from './FunctionRegistry.js';
 import type { MessageProcessor } from './MessageProcessor.js';
 import { resolveDynamicValue } from './resolveDynamic.js';
+import { validateArguments } from './schema.js';
 import { createResolvedSignal } from './signalResolution.js';
 import { setInStore } from './SignalStore.js';
 import type { ProtocolFunctionCall } from './types.js';
@@ -16,10 +17,16 @@ import type { CatalogFunctionEntry } from '../catalog/defineCatalog.js';
 export interface ResolveFunctionOptions {
   /** Await a fresh RPC for explicit actions; dynamic bindings reuse a reactive result. */
   awaitResult?: boolean;
+  userActivated?: boolean;
+  /** Catalog inherited only by formatString interpolation. */
+  interpolationCatalogId?: string;
+  allowAgentRouting?: boolean;
+  caller?: 'renderer' | 'agent';
+  throwOnError?: boolean;
   functions?: readonly CatalogFunctionEntry[] | undefined;
 }
 
-function createFunctionContext(
+export function createFunctionContext(
   processor: MessageProcessor,
   surfaceId: string,
   dataContextPath: string | undefined,
@@ -99,9 +106,57 @@ export function executeFunctionCall(
   dataContextPath?: string,
   options: ResolveFunctionOptions = {},
 ): unknown {
+  try {
+    const result = evaluateFunctionCall(
+      processor,
+      fn,
+      surfaceId,
+      dataContextPath,
+      options,
+    );
+    if (
+      result instanceof Promise && options.awaitResult && !options.throwOnError
+    ) {
+      return result.catch(error => {
+        processor.reportExpressionError(error, surfaceId, 'EXECUTION_ERROR');
+        throw error;
+      });
+    }
+    return result;
+  } catch (error) {
+    if (options.throwOnError) throw error;
+    processor.reportExpressionError(
+      error,
+      surfaceId,
+      options.awaitResult ? 'EXECUTION_ERROR' : 'EXPRESSION_ERROR',
+    );
+    if (options.awaitResult) {
+      return Promise.reject(
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    }
+    return null;
+  }
+}
+
+function evaluateFunctionCall(
+  processor: MessageProcessor,
+  fn: ProtocolFunctionCall,
+  surfaceId: string,
+  dataContextPath: string | undefined,
+  options: ResolveFunctionOptions,
+): unknown {
+  if (
+    Object.keys(fn).some(key => !['@call', 'catalogId', 'args'].includes(key))
+    || typeof fn['@call'] !== 'string'
+    || (fn.args !== undefined
+      && (!fn.args || typeof fn.args !== 'object' || Array.isArray(fn.args)))
+  ) {
+    throw new Error('Invalid function call shape');
+  }
   const surface = processor.getOrCreateSurface(surfaceId);
-  if (fn.call === '@index') {
-    if (!dataContextPath) return undefined;
+  if (fn['@call'] === '@index') {
+    if (!dataContextPath) throw new Error('@index requires a template context');
     const parentPath =
       dataContextPath.slice(0, dataContextPath.lastIndexOf('/')) || '/';
     const key = dataContextPath.slice(dataContextPath.lastIndexOf('/') + 1);
@@ -116,48 +171,111 @@ export function executeFunctionCall(
       dataContextPath,
       { ...options, resolveFunctionCall: executeFunctionCall },
     );
-    return index < 0 || typeof offset !== 'number' ? undefined : index + offset;
+    if (index < 0 || typeof offset !== 'number') {
+      throw new Error('Invalid @index context or offset');
+    }
+    return index + offset;
   }
-  const catalogId = fn.catalogId ?? surface.catalogId;
+  if (fn['@call'].startsWith('@')) {
+    throw new Error(`Unknown system function ${fn['@call']}`);
+  }
+  const catalogId = fn.catalogId ?? options.interpolationCatalogId
+    ?? surface.catalogId;
   const catalog = processor.getCatalog(catalogId);
-  if (!catalog) return undefined;
+  if (!catalog) throw new Error('Unknown function catalog');
   options = { ...options, functions: catalog.functions };
-  const entry = catalog.functions.find(entry => entry.name === fn.call);
-  if (entry?.definition?.allowedCallers === 'agentOnly') return undefined;
-  if (!entry) {
-    const request = {
-      ...fn,
-      ...(catalogId ? { catalogId } : {}),
-      args: resolveFunctionArguments(
-        processor,
-        fn.args,
-        surfaceId,
-        dataContextPath,
-        options,
-      ),
-    };
-    return options.awaitResult
-      ? processor.callAgentFunction(surfaceId, request)
-      : processor.resolveAgentFunction(surfaceId, request);
+  const entry = catalog.functions.find(entry => entry.name === fn['@call']);
+  const definition = entry?.definition;
+  const caller = options.caller ?? 'renderer';
+  if (
+    (caller === 'renderer' && definition?.allowedCallers === 'agentOnly')
+    || (caller === 'agent'
+      && (!entry?.impl
+        || (definition?.allowedCallers ?? 'rendererOnly') === 'rendererOnly'))
+    || (definition?.requiresUserActivation && !options.userActivated)
+  ) {
+    throw new Error(
+      `Function "${fn['@call']}" is not allowed in this evaluation context`,
+    );
   }
-  const impl = entry.impl;
-  const resolvedArgs = resolveFunctionArguments(
+  const resolved = resolveFunctionArguments(
     processor,
     fn.args,
     surfaceId,
     dataContextPath,
-    options,
+    { ...options, throwOnError: true },
   );
-  try {
-    return impl(
-      resolvedArgs,
-      createFunctionContext(processor, surfaceId, dataContextPath, options),
+  const invoke = (values: Record<string, unknown>) => {
+    const args = definition
+      ? validateArguments(values, definition.parameters)
+      : values;
+    if (!entry?.impl) {
+      if (options.allowAgentRouting === false) {
+        throw new Error(
+          `Interpolation function "${
+            fn['@call']
+          }" has no renderer implementation`,
+        );
+      }
+      const request = { ...fn, catalogId: catalogId!, args };
+      return options.awaitResult
+        ? processor.callAgentFunction(surfaceId, request)
+        : processor.resolveAgentFunction(
+          surfaceId,
+          request,
+          options.throwOnError,
+        );
+    }
+    const cacheKey = JSON.stringify([surfaceId, fn['@call'], catalogId, args]);
+    const cached = options.awaitResult
+      ? undefined
+      : processor.getAsyncFunctionValue(cacheKey, options.throwOnError);
+    if (cached) return cached.value;
+    const contextOptions = fn['@call'] === 'formatString'
+      ? {
+        ...options,
+        interpolationCatalogId: catalogId!,
+        allowAgentRouting: false,
+      }
+      : options;
+    const result = entry.impl(
+      args,
+      createFunctionContext(processor, surfaceId, dataContextPath, {
+        ...contextOptions,
+        throwOnError: true,
+      }),
     );
-  } catch (error) {
-    console.warn(
-      `[a2ui] Function "${fn.call}" threw while resolving. Returning undefined.`,
-      error,
-    );
-    return undefined;
+    if (result instanceof Promise && !options.awaitResult) {
+      return processor.resolveAsyncFunction(cacheKey, surfaceId, () => result);
+    }
+    return result;
+  };
+  return options.awaitResult && hasPendingValue(resolved)
+    ? awaitResolvedValues(resolved).then(invoke)
+    : invoke(resolved);
+}
+
+/** Await nested expression results before imperative calls or event dispatch. */
+export async function awaitResolvedValues<T>(value: T): Promise<T> {
+  const settled = await value;
+  if (Array.isArray(settled)) {
+    return await Promise.all(
+      (settled as unknown[]).map(item => awaitResolvedValues(item)),
+    ) as T;
   }
+  if (settled !== null && typeof settled === 'object') {
+    const entries = await Promise.all(
+      Object.entries(settled as Record<string, unknown>).map(async (
+        [key, item],
+      ) => [key, await awaitResolvedValues(item)]),
+    );
+    return Object.fromEntries(entries) as T;
+  }
+  return settled;
+}
+
+function hasPendingValue(value: unknown): boolean {
+  if (value instanceof Promise) return true;
+  return value !== null && typeof value === 'object'
+    && Object.values(value).some(item => hasPendingValue(item));
 }

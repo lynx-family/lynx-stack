@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useDataBinding } from '../../react/useDataBinding.js';
 import type {
   ChildList,
@@ -50,7 +51,7 @@ export function List(
     : undefined;
 
   const [listData, , fullPath] = useDataBinding<Record<string, unknown>[]>(
-    template ? { path: template.path } : undefined,
+    template ? { '@path': template.path } : undefined,
     surface,
     dataContextPath,
     [],
@@ -94,6 +95,7 @@ export function List(
 
   return (
     <list
+      {...accessibilityProps(props)}
       className={`list list-${String(direction)} list-align-${String(align)}`}
       scroll-orientation={direction === 'vertical' ? 'vertical' : 'horizontal'}
       list-type='single'

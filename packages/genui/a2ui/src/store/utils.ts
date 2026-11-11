@@ -17,14 +17,14 @@ export function isObject(value: unknown): value is Record<string, unknown> {
  * Return whether a value matches the A2UI data-binding shape.
  */
 export function isDataBinding(value: unknown): value is DataBinding {
-  return isObject(value) && 'path' in value;
+  return isObject(value) && typeof value['@path'] === 'string';
 }
 
 /**
  * Return whether a value matches the A2UI function-call shape.
  */
 export function isFunctionCall(value: unknown): value is ProtocolFunctionCall {
-  return isObject(value) && 'call' in value;
+  return isObject(value) && typeof value['@call'] === 'string';
 }
 
 /**
@@ -42,7 +42,8 @@ export function isCallExpression(value: unknown): boolean {
  * @internal
  */
 export function isTemplateBinding(value: unknown): boolean {
-  return isDataBinding(value) && 'componentId' in value;
+  return isObject(value) && typeof value['path'] === 'string'
+    && typeof value['componentId'] === 'string';
 }
 
 /**

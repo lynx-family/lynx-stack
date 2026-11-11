@@ -38,7 +38,7 @@ Core pieces:
     `deleteSurface` into surface state.
   - Emits typed update events (`beginRendering`, `surfaceUpdate`,
     `deleteSurface`) consumed by the React layer.
-  - `sendMessage({ version: 'v1.0', action })` fans out to `onEvent` listeners.
+  - `sendMessage({ version: '1.0', action })` fans out to `onEvent` listeners.
 - `Resource` (`src/store/Resource.ts`)
   - `pending` / `success` / `error` state machine. Snapshot reference
     changes on every transition so `useSyncExternalStore` doesn't bail
@@ -75,7 +75,7 @@ Core pieces:
 
 ## Data Binding
 
-- A binding is `{ path: string }` and resolves against
+- A binding is `{ '@path': string }` and resolves against
   `Surface.store` (a `SignalStore`).
 - `useResolvedProps` (`src/react/useDataBinding.ts`) resolves bound
   props into concrete values and keeps them up to date via
@@ -106,7 +106,7 @@ User interactions are reported as versioned `action` events:
   internal renderer plumbing).
 - `useAction` (`src/react/useAction.ts`) resolves dynamic values
   (bindings / function calls) against `Surface.store`, builds a
-  `UserActionPayload`, and calls `processor.sendMessage({ version: 'v1.0', action })`.
+  `UserActionPayload`, and calls `processor.sendMessage({ version: '1.0', action })`.
 - `<A2UI>` listens to `processor.onEvent` and forwards to the
   developer's `onAction` prop. Responses (if any) come back as new
   protocol messages the developer pushes into the same `MessageStore`.

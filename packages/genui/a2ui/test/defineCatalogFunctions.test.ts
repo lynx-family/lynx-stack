@@ -68,7 +68,7 @@ describe('defineCatalog with function entries', () => {
     expect(serialized.functions?.['required']).toMatchObject({
       returnType: requiredManifest.required.returnType,
       properties: {
-        call: { const: 'required' },
+        '@call': { const: 'required' },
         args: requiredManifest.required.parameters,
       },
     });

@@ -27,18 +27,21 @@ const functions = basicFunctions
   .map((entry) => entry.definition)
   .filter(Boolean);
 const functionSchemas = Object.fromEntries(
-  functions.map(({ description, name, parameters, returnType }) => [
+  functions.map((
+    { description, name, parameters, returnType, requiresUserActivation },
+  ) => [
     name,
     {
       type: 'object',
       ...(description ? { description } : {}),
       returnType,
       allowedCallers: 'rendererOnly',
+      ...(requiresUserActivation ? { requiresUserActivation } : {}),
       properties: {
-        call: { const: name },
+        '@call': { const: name },
         args: stripSchemaDialect(parameters),
       },
-      required: ['call', 'args'],
+      required: ['@call', 'args'],
     },
   ]),
 );

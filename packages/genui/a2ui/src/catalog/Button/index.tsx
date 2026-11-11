@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { A2UIRenderer } from '../../react/A2UIRenderer.jsx';
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
 import type { ComponentId, GenericComponentProps } from '../../store/types.js';
@@ -22,8 +23,8 @@ export interface ButtonProps extends GenericComponentProps {
   action: {
     event: {
       name: string;
-      userMessage?: string | { path: string } | {
-        call: string;
+      userMessage?: string | { '@path': string } | {
+        '@call': string;
         catalogId?: string;
         args?: Record<string, unknown>;
       };
@@ -32,14 +33,14 @@ export interface ButtonProps extends GenericComponentProps {
     };
   } | {
     functionCall: {
-      call: string;
+      '@call': string;
       catalogId?: string;
       args: Record<string, unknown>;
     };
   };
-  checks?: Array<{
-    condition: { path: string } | {
-      call: string;
+  '@checks'?: Array<{
+    condition: { '@path': string } | {
+      '@call': string;
       catalogId?: string;
       args: Record<string, unknown>;
     };
@@ -64,7 +65,7 @@ export function Button(
     variant = 'primary',
     dataContextPath,
   } = props;
-  const checks = props.checks as CheckLike[] | undefined;
+  const checks = props['@checks'] as CheckLike[] | undefined;
   const { ok, firstFailureMessage } = useChecks({
     checks,
     componentId: id ?? '',
@@ -90,6 +91,7 @@ export function Button(
   return (
     <>
       <view
+        {...accessibilityProps(props)}
         className={`button button-${variant}${
           isValid ? '' : ' button-disabled'
         }${ok ? '' : ' button-invalid'}`}

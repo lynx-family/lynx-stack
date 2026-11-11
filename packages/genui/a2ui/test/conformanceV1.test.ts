@@ -19,6 +19,7 @@ import { basicFunctions } from '../src/functions/index.js';
 import { A2UIContext } from '../src/react/A2UIProvider.jsx';
 import { useAction } from '../src/react/useAction.js';
 import { evaluateChecks } from '../src/react/useChecks.js';
+import { compactA2UIMessagesToSnapshot } from '../src/snapshot/index.js';
 import { MessageProcessor } from '../src/store/MessageProcessor.js';
 import { executeFunctionCall } from '../src/store/resolveFunctionCall.js';
 import type {
@@ -62,7 +63,7 @@ test.each(readdirSync(localExamples).filter(name => name.endsWith('.json')))(
       resolve([]);
     });
     for (const message of messages) {
-      expect(message.version).toBe('v1.0');
+      expect(message.version).toBe('1.0');
       processor.processMessages([message]);
     }
     expect(errors).toEqual([]);
@@ -72,20 +73,44 @@ test.each(readdirSync(localExamples).filter(name => name.endsWith('.json')))(
       expect(surface.rootComponentId).toBe('root');
       expect(surface.components.has('root')).toBe(true);
     }
-    if (name === 'recs.json') {
+    {
       const validate = schemaValidator().compile(agentSchema);
-      for (const message of messages) {
+      for (
+        const message of [
+          ...messages,
+          ...compactA2UIMessagesToSnapshot(messages).messages,
+        ]
+      ) {
         expect(validate(message), JSON.stringify(validate.errors)).toBe(true);
       }
+    }
+    if (name === 'recs.json') {
       const surface = processor.getSurfaces().get('default')!;
       expect(surface.components.get('recs')?.['children']).toEqual([
-        'recCard-1',
-        'recCard-2',
-        'recCard-3',
+        'recCard_1',
+        'recCard_2',
+        'recCard_3',
       ]);
-      expect(surface.components.get('recCard-3-text')?.['text']).toContain(
+      expect(surface.components.get('recCard_3_text')?.['text']).toContain(
         'Sea Breeze Kitchen',
       );
+    }
+  },
+);
+
+const galleryExamples = new URL(
+  '../../playground/src/mock/a2ui-gallery/',
+  import.meta.url,
+);
+test.each(readdirSync(galleryExamples).filter(name => name.endsWith('.json')))(
+  'validates gallery example %s against the official envelope and Lynx catalog',
+  name => {
+    const { messages } = JSON.parse(
+      readFileSync(new URL(name, galleryExamples), 'utf8'),
+    ) as { messages: ServerToClientMessage[] };
+    const validate = schemaValidator().compile(agentSchema);
+    for (const message of messages) {
+      expect(validate(message), JSON.stringify(validate.errors)).toBe(true);
     }
   },
 );
@@ -95,13 +120,13 @@ function Text() {
 }
 
 const message = (component: unknown) => ({
-  version: 'v1.0',
+  version: '1.0',
   updateComponents: { surfaceId: 's', components: [component] },
 });
 
 const regex = (pattern: string) => ({
-  call: 'regex',
-  args: { value: { path: '/input' }, pattern },
+  '@call': 'regex',
+  args: { value: { '@path': '/input' }, pattern },
 });
 
 function schemaValidator(manifest = catalog) {
@@ -111,6 +136,10 @@ function schemaValidator(manifest = catalog) {
     allErrors: true,
   });
   ajv.addSchema(commonSchema);
+  ajv.addSchema({
+    ...commonSchema,
+    $id: new URL('common_types.json', manifest.$id).href,
+  });
   ajv.addSchema(manifest, 'https://a2ui.org/specification/v1_0/catalog.json');
   return ajv;
 }
@@ -119,7 +148,7 @@ function setup() {
   const processor = new MessageProcessor();
   processor.registerCatalog('test', defineCatalog(basicFunctions));
   processor.processMessages([{
-    version: 'v1.0',
+    version: '1.0',
     createSurface: {
       surfaceId: 's',
       catalogId: 'test',
@@ -203,9 +232,9 @@ describe('official A2UI v1.0 conformance', () => {
     });
     processor.processMessages([
       { version: 'v0.9', createSurface: { surfaceId: 'old' } },
-      { version: 'v1.0', createSurface: { surfaceId: 's' } },
+      { version: '1.0', createSurface: { surfaceId: 's' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: { surfaceId: 'missing', components: [] },
       },
     ] as unknown as ServerToClientMessage[]);
@@ -223,15 +252,15 @@ describe('official A2UI v1.0 conformance', () => {
       const surface = processor.getOrCreateSurface('s');
       surface.store.update('/input', input);
       const condition = {
-        call: 'and',
+        '@call': 'and',
         args: {
           values: [
-            { call: 'required', args: { value: { path: '/input' } } },
+            { '@call': 'required', args: { value: { '@path': '/input' } } },
             {
-              call: 'or',
+              '@call': 'or',
               args: {
                 values: [regex('^[A-Z]+$'), {
-                  call: 'not',
+                  '@call': 'not',
                   args: { value: regex('.*') },
                 }],
               },
@@ -264,8 +293,8 @@ describe('official A2UI v1.0 conformance', () => {
     );
     try {
       for (
-        const userMessage of ['Literal', { path: 'label' }, {
-          call: 'formatString',
+        const userMessage of ['Literal', { '@path': 'label' }, {
+          '@call': 'formatString',
           args: { value: 'Selected ${@index(offset: 1)}' },
         }]
       ) {
@@ -292,7 +321,7 @@ describe('official A2UI v1.0 conformance', () => {
   test('logical functions unwrap structured false values', () => {
     const processor = setup();
     const run = (call: string, args: Record<string, unknown>) =>
-      executeFunctionCall(processor, { call, args }, 's');
+      executeFunctionCall(processor, { '@call': call, args }, 's');
     expect(run('and', { values: [{ valid: false }, { valid: true }] })).toBe(
       false,
     );
@@ -307,7 +336,7 @@ describe('official A2UI v1.0 conformance', () => {
     const format = (value: string, path = '/items/1') =>
       executeFunctionCall(
         processor,
-        { call: 'formatString', args: { value } },
+        { '@call': 'formatString', args: { value } },
         's',
         path,
       );

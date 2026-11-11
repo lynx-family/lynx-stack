@@ -39,7 +39,7 @@ describe('A2UI v1.0 server', () => {
     const safe = 'https://images.example.com/safe.png';
     const raw = JSON.stringify([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: {
           surfaceId: 's',
           catalogId: catalog.id,
@@ -51,17 +51,17 @@ describe('A2UI v1.0 server', () => {
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: { surfaceId: 's', path: '/items/label', value: null },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's',
           components: [{
             id: 'root',
             component: 'Image',
-            url: { path: '/items/0/url' },
+            url: { '@path': '/items/0/url' },
           }],
         },
       },
@@ -82,14 +82,14 @@ describe('A2UI v1.0 server', () => {
   test('validates inline components and data with the existing catalog', async () => {
     const catalog = await loadBasicCatalog();
     const messages = [{
-      version: 'v1.0',
+      version: '1.0',
       createSurface: {
         surfaceId: 's',
         catalogId: catalog.id,
         components: [{
           id: 'root',
           component: 'Text',
-          text: { path: '/name' },
+          text: { '@path': '/name' },
         }],
         dataModel: { name: 'Alice' },
       },
@@ -97,17 +97,17 @@ describe('A2UI v1.0 server', () => {
     const result = validateA2UIOutput(JSON.stringify(messages), catalog);
     expect(result.errors).toEqual([]);
     expect(result.messages).toEqual(messages);
-    expect(A2UI_PROTOCOL_VERSION).toBe('v1.0');
+    expect(A2UI_PROTOCOL_VERSION).toBe('1.0');
     expect(
       validateA2UIOutput(
         JSON.stringify([{
-          version: 'v1.0',
+          version: '1.0',
           createSurface: {
             surfaceId: 's',
             components: [{
               id: 'root',
               component: 'Text',
-              catalogId: catalog.id,
+              '@catalogId': catalog.id,
               text: 'Hi',
             }],
           },
@@ -122,7 +122,7 @@ describe('A2UI v1.0 server', () => {
     for (
       const invalid of [
         {
-          version: 'v1.0',
+          version: '1.0',
           createSurface: {
             surfaceId: 's',
             catalogId: catalog.id,
@@ -130,16 +130,16 @@ describe('A2UI v1.0 server', () => {
           },
         },
         {
-          version: 'v1.0',
+          version: '1.0',
           createSurface: { surfaceId: 's', catalogId: catalog.id, theme: {} },
         },
-        { version: 'v1.0', updateDataModel: { surfaceId: 's' } },
+        { version: '1.0', updateDataModel: { surfaceId: 's' } },
         {
-          version: 'v1.0',
+          version: '1.0',
           callRendererFunction: {
             functionCallId: 'f',
             callFunction: {
-              call: 'openUrl',
+              '@call': 'openUrl',
               catalogId: catalog.id,
               args: { url: 'https://example.com' },
             },
@@ -159,7 +159,7 @@ describe('A2UI v1.0 server', () => {
   test('streams inline content through source policies and preserves versions at every chunk boundary', async () => {
     const catalog = await loadBasicCatalog();
     const raw = JSON.stringify([{
-      version: 'v1.0',
+      version: '1.0',
       createSurface: {
         surfaceId: 's',
         catalogId: catalog.id,
@@ -179,7 +179,7 @@ describe('A2UI v1.0 server', () => {
         ...parser.push(raw.slice(0, split)),
         ...parser.push(raw.slice(split)),
       ];
-      expect(messages.every(message => message.version === 'v1.0')).toBe(true);
+      expect(messages.every(message => message.version === '1.0')).toBe(true);
       expect(JSON.stringify(messages)).not.toContain('untrusted.example');
       expect(messages.some(message => 'updateDataModel' in message)).toBe(true);
       expect(
@@ -208,18 +208,18 @@ describe('A2UI v1.0 server', () => {
     const catalog = await loadBasicCatalog();
     const previous = [
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: {
           surfaceId: 's',
           catalogId: catalog.id,
           components: [
             { id: 'root', component: 'Column', children: ['old'] },
-            { id: 'old', component: 'Text', text: { path: '/old' } },
+            { id: 'old', component: 'Text', text: { '@path': '/old' } },
           ],
           dataModel: { old: 'Deleted' },
         },
       },
-      { version: 'v1.0', deleteSurface: { surfaceId: 's' } },
+      { version: '1.0', deleteSurface: { surfaceId: 's' } },
     ];
     for (
       const [components, expected] of [
@@ -232,14 +232,14 @@ describe('A2UI v1.0 server', () => {
           'missing child "old"',
         ],
         [
-          [{ id: 'root', component: 'Text', text: { path: '/old' } }],
+          [{ id: 'root', component: 'Text', text: { '@path': '/old' } }],
           'not populated',
         ],
       ] as const
     ) {
       const result = validateA2UIOutput(
         JSON.stringify([...previous, {
-          version: 'v1.0',
+          version: '1.0',
           createSurface: { surfaceId: 's', catalogId: catalog.id, components },
         }]),
         catalog,
@@ -250,7 +250,7 @@ describe('A2UI v1.0 server', () => {
     expect(
       validateA2UIOutput(
         JSON.stringify([...previous, {
-          version: 'v1.0',
+          version: '1.0',
           createSurface: {
             surfaceId: 's',
             catalogId: catalog.id,
@@ -266,9 +266,9 @@ describe('A2UI v1.0 server', () => {
     const catalog = await loadBasicCatalog();
     const result = validateA2UIOutput(
       JSON.stringify([
-        { version: 'v1.0', deleteSurface: { surfaceId: 's' } },
+        { version: '1.0', deleteSurface: { surfaceId: 's' } },
         {
-          version: 'v1.0',
+          version: '1.0',
           createSurface: {
             surfaceId: 's',
             components: [{ id: 'root', component: 'Text', text: 'New' }],
@@ -284,11 +284,11 @@ describe('A2UI v1.0 server', () => {
 
   test('never streams data updates with missing values at any chunk boundary', () => {
     const valid = [false, 0, '', null, { name: 'Alice' }].map(value => ({
-      version: 'v1.0',
+      version: '1.0',
       updateDataModel: { surfaceId: 's', value },
     }));
     const raw = JSON.stringify([
-      { version: 'v1.0', updateDataModel: { surfaceId: 's' } },
+      { version: '1.0', updateDataModel: { surfaceId: 's' } },
       ...valid,
     ]);
     for (let split = 1; split < raw.length; split++) {
@@ -306,17 +306,19 @@ describe('A2UI v1.0 server', () => {
         ok: true,
         action: { name: 'select', userMessage: 'Selected item 2' },
       });
-    expect(validateAction({ name: 'select', userMessage: { path: '/label' } }))
+    expect(
+      validateAction({ name: 'select', userMessage: { '@path': '/label' } }),
+    )
       .toMatchObject({ ok: false });
   });
 
   test('maps action surface and data-model metadata into the stateless conversation', () => {
     const body = normalizeRendererEvent({
-      version: 'v1.0',
+      version: '1.0',
       action: { surfaceId: 's', name: 'submit' },
       metadata: {
         a2uiRendererDataModel: {
-          version: 'v1.0',
+          version: '1.0',
           surfaces: { s: { name: 'Bob' } },
         },
       },
@@ -337,11 +339,11 @@ describe('A2UI v1.0 server', () => {
         'x-forwarded-for': '203.0.113.202',
       },
       body: JSON.stringify({
-        version: 'v1.0',
+        version: '1.0',
         callAgentFunction: {
           surfaceId: 's',
           functionCallId: 'stream-f1',
-          callFunction: { call: 'unknown' },
+          callFunction: { '@call': 'unknown' },
         },
       }),
     });
@@ -360,11 +362,15 @@ describe('A2UI v1.0 server', () => {
         'x-forwarded-for': '203.0.113.201',
       },
       body: JSON.stringify({
-        version: 'v1.0',
+        version: '1.0',
         callAgentFunction: {
           surfaceId: 's',
           functionCallId: 'f1',
-          callFunction: { call: 'verifyProvider', args: {} },
+          callFunction: {
+            '@call': 'verifyProvider',
+            catalogId: 'test',
+            args: {},
+          },
         },
       }),
     });
@@ -372,7 +378,7 @@ describe('A2UI v1.0 server', () => {
     expect(await response.json()).toEqual({
       ok: true,
       messages: [{
-        version: 'v1.0',
+        version: '1.0',
         agentFunctionResponse: {
           functionCallId: 'f1',
           error: {

@@ -25,6 +25,8 @@ export interface A2UIComponentProp {
  * Prompt-facing component specification derived from a catalog manifest.
  */
 export interface A2UIComponentSpec {
+  allowedParents?: string[];
+  allowedChildren?: string[];
   name: string;
   summary: string;
   props: A2UIComponentProp[];
@@ -51,6 +53,7 @@ export interface A2UICatalog {
  */
 export interface A2UIFunctionSpec {
   allowedCallers?: 'rendererOnly' | 'agentOnly' | 'rendererOrAgent';
+  requiresUserActivation?: boolean;
   description?: string;
   name: string;
   parameters: JsonSchema;
@@ -69,6 +72,9 @@ export interface A2UIFunctionSpec {
  * JSON Schema subset used in prompt-facing catalog descriptions.
  */
 export interface JsonSchema {
+  allowedParents?: string[];
+  allowedChildren?: string[];
+  $ref?: string;
   const?: unknown;
   type?: string;
   enum?: unknown;
@@ -85,6 +91,7 @@ interface CatalogManifest extends Record<string, JsonSchema> {}
 
 interface ExtractedCatalogManifest {
   $id?: string;
+  catalogId?: string;
   protocolVersion?: string;
   components?: Record<string, JsonSchema>;
   functions?: unknown;
@@ -145,6 +152,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function inferType(schema: JsonSchema | undefined): string {
   if (!schema) return 'unknown';
+  if (schema.$ref) return schema.$ref.split('/').at(-1) ?? 'unknown';
 
   if (schema.oneOf && schema.oneOf.length > 0) {
     return schema.oneOf.map((item) => inferType(item)).join(' | ');
@@ -218,6 +226,10 @@ function componentFromManifest(
     name,
     summary: COMPONENT_SUMMARIES[name] ?? `${name} component.`,
     props,
+    ...(schema.allowedParents ? { allowedParents: schema.allowedParents } : {}),
+    ...(schema.allowedChildren
+      ? { allowedChildren: schema.allowedChildren }
+      : {}),
     ...(name === 'Button' ? { requiresAction: true } : {}),
     ...(CONTAINER_SHAPES[name]
       ? { containerShape: CONTAINER_SHAPES[name] }
@@ -248,6 +260,7 @@ function functionSpecFromSchema(
   const schemaRecord = schema as {
     returnType?: unknown;
     allowedCallers?: unknown;
+    requiresUserActivation?: unknown;
     description?: unknown;
     properties?: unknown;
   };
@@ -274,6 +287,9 @@ function functionSpecFromSchema(
     parameters: args as JsonSchema,
     returnType: returnTypeValue,
     ...(allowedCallers ? { allowedCallers } : {}),
+    ...(typeof schemaRecord.requiresUserActivation === 'boolean'
+      ? { requiresUserActivation: schemaRecord.requiresUserActivation }
+      : {}),
   };
 }
 
@@ -335,7 +351,7 @@ export function createA2UICatalogFromManifests(options: {
 export const BASIC_CATALOG: A2UICatalog = {
   id: BASIC_CATALOG_ID,
   label: 'Lynx A2UI basic catalog (v1.0)',
-  version: 'v1.0',
+  version: '1.0',
   components: componentManifestsFromGeneratedCatalog(generatedCatalog)
     .map((manifest) => componentFromManifest(manifest))
     .filter((component): component is A2UIComponentSpec => component !== null),
@@ -393,7 +409,7 @@ function createA2UICatalogFromExtractedManifest(
     componentManifests: componentManifestsFromGeneratedCatalog(manifest),
     functions: functionsFromGeneratedCatalog(manifest),
     label: 'Lynx A2UI basic catalog (v1.0)',
-    version: 'v1.0',
+    version: '1.0',
     extraRules: [
       'Use only components listed in this catalog; unsupported examples such as Video, AudioPlayer, DatePicker, or Checkbox are not available unless they appear here.',
       'The implemented checkbox component is named "CheckBox" with a capital B.',
@@ -412,9 +428,19 @@ function isExtractedCatalogManifest(
   const components = manifest.components;
   const functions = manifest.functions;
   return manifest.protocolVersion === '1.0'
-    && (catalogId === undefined || typeof catalogId === 'string')
+    && typeof catalogId === 'string' && manifest.catalogId === catalogId
     && (components === undefined || isRecord(components))
-    && (functions === undefined || isRecord(functions));
+    && (functions === undefined
+      || (isRecord(functions)
+        && Object.entries(functions).every(([name, definition]) => {
+          if (!isRecord(definition)) return false;
+          const { properties } = definition;
+          if (!isRecord(properties)) return false;
+          const discriminator = properties['@call'];
+          if (!isRecord(discriminator)) return false;
+          const { const: declaredName } = discriminator;
+          return declaredName === name;
+        })));
 }
 
 /**

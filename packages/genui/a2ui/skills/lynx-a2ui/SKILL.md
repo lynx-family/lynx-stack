@@ -59,7 +59,7 @@ Envelope semantics:
 Return only a **pretty**-printed JSON array. Do not return Markdown, prose, XML,
 HTML, JavaScript, CSS, code fences, comments, or trailing commas.
 
-Each array item must be a top-level object with `"version": "v1.0"` and exactly
+Each array item must be a top-level object with `"version": "1.0"` and exactly
 one of these message keys:
 
 - `"createSurface"`: create a new render surface.
@@ -70,7 +70,7 @@ one of these message keys:
 For a fresh UI response, emit messages in this order:
 
 1. `createSurface`
-2. `updateDataModel` for any initial values read through `{ "path": ... }`
+2. `updateDataModel` for any initial values read through `{ "@path": ... }`
 3. `updateComponents` containing a component with id `"root"`
 4. optional additional `updateDataModel` or `updateComponents` messages
 
@@ -137,13 +137,13 @@ way:
 
 1. Output must be a JSON array of A2UI messages. No prose, Markdown, XML, code
    fences, comments, or trailing commas.
-2. Each element must include `"version": "v1.0"`.
+2. Each element must include `"version": "1.0"`.
 3. Output pretty-printed JSON with 2-space indentation. Do not emit minified
    single-line JSON.
 4. For a fresh non-action response, the first message must be `createSurface`.
    Use the fetched `catalogId`, and use surface id `"main"` unless the user
    specifies otherwise.
-5. For `{ "path": ... }` bindings, send `updateDataModel` before the first
+5. For `{ "@path": ... }` bindings, send `updateDataModel` before the first
    `updateComponents` message that reads those paths.
 6. The first fresh `updateComponents` message must contain exactly one component
    with id `"root"`.
@@ -202,10 +202,10 @@ when values need to be shared, editable, repeated, or updated after an action.
 
 ```json
 { "someProp": "literal value" }
-{ "someProp": { "path": "/data/path" } }
+{ "someProp": { "@path": "/data/path" } }
 ```
 
-If a component reads `{ "path": "/..." }`, send a preceding `updateDataModel`
+If a component reads `{ "@path": "/..." }`, send a preceding `updateDataModel`
 message that creates that value.
 
 For repeated children, use the template shape from the fetched component schema.
@@ -222,8 +222,8 @@ The corresponding data must be an array of objects:
 ]
 ```
 
-Inside the template component tree, bind with `{ "path": "label" }`. Do not use
-wildcard paths such as `"/items/*/label"` and do not use `{ "path": "." }`.
+Inside the template component tree, bind with `{ "@path": "label" }`. Do not use
+wildcard paths such as `"/items/*/label"` and do not use `{ "@path": "." }`.
 Choose the repeated-content component whose fetched schema and description best
 match the requested layout and scrolling behavior.
 
@@ -257,14 +257,14 @@ User: `Generate a login card with email, password, and a submit button.`
 ```json
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "value": {
@@ -276,7 +276,7 @@ User: `Generate a login card with email, password, and a submit button.`
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -305,18 +305,14 @@ User: `Generate a login card with email, password, and a submit button.`
           "id": "email",
           "component": "TextField",
           "label": "Email",
-          "value": {
-            "path": "/form/email"
-          }
+          "value": { "@path": "/form/email" }
         },
         {
           "id": "password",
           "component": "TextField",
           "label": "Password",
           "variant": "obscured",
-          "value": {
-            "path": "/form/password"
-          }
+          "value": { "@path": "/form/password" }
         },
         {
           "id": "submit",
@@ -327,12 +323,8 @@ User: `Generate a login card with email, password, and a submit button.`
             "event": {
               "name": "submit_login",
               "context": {
-                "email": {
-                  "path": "/form/email"
-                },
-                "password": {
-                  "path": "/form/password"
-                }
+                "email": { "@path": "/form/email" },
+                "password": { "@path": "/form/password" }
               }
             }
           }
@@ -355,14 +347,14 @@ User: `Show three trip ideas as a compact vertical group.`
 ```json
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "path": "/items",
@@ -383,7 +375,7 @@ User: `Show three trip ideas as a compact vertical group.`
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -404,10 +396,7 @@ User: `Show three trip ideas as a compact vertical group.`
         {
           "id": "trip-items",
           "component": "Column",
-          "children": {
-            "path": "/items",
-            "componentId": "trip-row"
-          }
+          "children": { "@path": "/items", "componentId": "trip-row" }
         },
         {
           "id": "trip-row",
@@ -434,17 +423,13 @@ User: `Show three trip ideas as a compact vertical group.`
         {
           "id": "trip-name",
           "component": "Text",
-          "text": {
-            "path": "name"
-          },
+          "text": { "@path": "name" },
           "variant": "h3"
         },
         {
           "id": "trip-detail",
           "component": "Text",
-          "text": {
-            "path": "detail"
-          },
+          "text": { "@path": "detail" },
           "variant": "body"
         }
       ]
@@ -460,14 +445,14 @@ User: `Show weekly active users as a line chart.`
 ```json
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "value": {
@@ -496,7 +481,7 @@ User: `Show weekly active users as a line chart.`
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -522,12 +507,8 @@ User: `Show weekly active users as a line chart.`
         {
           "id": "chart",
           "component": "LineChart",
-          "labels": {
-            "path": "/chart/labels"
-          },
-          "series": {
-            "path": "/chart/series"
-          },
+          "labels": { "@path": "/chart/labels" },
+          "series": { "@path": "/chart/series" },
           "xLabel": "Day",
           "yLabel": "Users",
           "showGrid": true,
@@ -547,7 +528,7 @@ User:
 ```json
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "main",
       "path": "/status",
@@ -558,7 +539,7 @@ User:
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [
@@ -584,9 +565,7 @@ User:
         {
           "id": "status-message",
           "component": "Text",
-          "text": {
-            "path": "/status/message"
-          }
+          "text": { "@path": "/status/message" }
         }
       ]
     }
@@ -599,7 +578,7 @@ User:
 Before final output, verify:
 
 - The first character is `[` and the last character is `]`.
-- Every message includes `"version": "v1.0"`.
+- Every message includes `"version": "1.0"`.
 - A fresh response starts with `createSurface`.
 - The first fresh `updateComponents` message contains `root`.
 - Every child id reference exists in the same response.

@@ -98,7 +98,7 @@ Create `src/catalog/QuickStartCard.tsx`:
  */
 export interface QuickStartCardProps {
   /** Card title text or data binding. */
-  title: string | { path: string };
+  title: string | { '@path': string };
   /** Visual tone used by the renderer. */
   tone?: 'neutral' | 'accent';
   /**
@@ -162,7 +162,7 @@ dist/catalog/
           {
             "type": "object",
             "properties": {
-              "path": {
+              "@path": {
                 "type": "string"
               }
             },
@@ -340,18 +340,18 @@ JSON value.
 
 ### Supported TypeScript shapes
 
-| TypeScript shape             | JSON Schema shape                                |
-| ---------------------------- | ------------------------------------------------ |
-| `string`                     | `{ "type": "string" }`                           |
-| `number`                     | `{ "type": "number" }`                           |
-| `boolean`                    | `{ "type": "boolean" }`                          |
-| `'a' \| 'b'`                 | `{ "type": "string", "enum": ["a", "b"] }`       |
-| `string \| { path: string }` | `{ "oneOf": [...] }`                             |
-| `T[]`                        | `{ "type": "array", "items": ... }`              |
-| `Array<T>`                   | `{ "type": "array", "items": ... }`              |
-| `ReadonlyArray<T>`           | `{ "type": "array", "items": ... }`              |
-| `{ name: string }`           | Strict object with `additionalProperties: false` |
-| `Record<string, T>`          | Object map with `additionalProperties: ...`      |
+| TypeScript shape                | JSON Schema shape                                |
+| ------------------------------- | ------------------------------------------------ |
+| `string`                        | `{ "type": "string" }`                           |
+| `number`                        | `{ "type": "number" }`                           |
+| `boolean`                       | `{ "type": "boolean" }`                          |
+| `'a' \| 'b'`                    | `{ "type": "string", "enum": ["a", "b"] }`       |
+| `string \| { '@path': string }` | `{ "oneOf": [...] }`                             |
+| `T[]`                           | `{ "type": "array", "items": ... }`              |
+| `Array<T>`                      | `{ "type": "array", "items": ... }`              |
+| `ReadonlyArray<T>`              | `{ "type": "array", "items": ... }`              |
+| `{ name: string }`              | Strict object with `additionalProperties: false` |
+| `Record<string, T>`             | Object map with `additionalProperties: ...`      |
 
 ### Unsupported or ambiguous types
 
@@ -494,7 +494,7 @@ label?: string;
 Or model the state explicitly:
 
 ```tsx
-label: string | { path: string };
+label: string | { '@path': string };
 ```
 
 ### `Unsupported TypeDoc reference`

@@ -106,7 +106,7 @@ The generated prompt includes:
 - A2UI v1.0 protocol overview and design principles.
 - Required server-to-client message types: `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`.
 - Required message ordering for a fresh response.
-- Data binding rules for `{ "path": "/..." }` values and list children.
+- Data binding rules for `{ "@path": "/..." }` values and list children.
 - Client action rules for events and function calls.
 - A rendered catalog reference with component summaries, props, required fields, container shape, enum values, and function signatures.
 - Hard rules for JSON-only output, catalog id matching, flat component trees, `root` component requirements, button labels/actions, modal confirmation flows, loadable image sources, and action-response patches.
@@ -118,14 +118,14 @@ The model should return a JSON array of A2UI messages, not Markdown or prose:
 ```json
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [

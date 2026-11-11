@@ -36,7 +36,7 @@ When `packages/genui/a2ui` generates its catalog, ensure `packages/genui/a2ui-ca
 
 Keep `packages/genui/a2ui-catalog-extractor/src/index.ts` as a narrow public facade. Put CLI-only artifact writers, TypeDoc JSON helpers, and other extractor internals in non-exported source modules, and have `src/cli.ts` import those internals directly instead of importing from `src/index.ts`.
 
-When implementing A2UI v1.0 functions in `packages/genui/a2ui`, keep function resolution scoped to the registered catalog identified by the component, function call, or surface. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, zod argument coercion from `@a2ui/web_core`, and `formatString` data-context interpolation stay consistent.
+When implementing A2UI v1.0 functions in `packages/genui/a2ui`, keep function resolution scoped to the registered catalog identified by the component, function call, or surface. Dynamic component props, checks, and function-call actions should all go through the same `resolveDynamicValue` / `executeFunctionCall` path so data bindings, nested function calls, catalog-declared argument validation and DynamicBoolean coercion, and `formatString` data-context interpolation stay consistent.
 
 When maintaining the A2UI `LazyComponent` catalog component, load ReactLynx standalone lazy bundle URLs with dynamic import attributes such as `import(url, { with: { type: 'component' } })` and avoid importing `loadLazyBundle` from `@lynx-js/react/internal`.
 
@@ -50,7 +50,7 @@ For known GenUI playground examples, keep the web preview URL on `?demo=<id>` in
 
 When restoring GenUI playground Create previews after a page refresh, boot the render iframe separately from restored message delivery. Send restored messages through an idempotent replay event that `render.html` can queue until `<lynx-view>.sendGlobalEvent` and the Lynx `MessageStore` are both available; do not rely on a single eager `postMessage` during iframe startup.
 
-For interactive GenUI playground component examples, bind mutable props through `{ path: ... }` and provide matching example data so the component preview emits an initial `updateDataModel` before `updateComponents`. Literal values render the initial state but cannot be changed by `setValue`, which only writes back to data-bound props.
+For interactive GenUI playground component examples, bind mutable props through `{ '@path': ... }` and provide matching example data so the component preview emits an initial `updateDataModel` before `updateComponents`. Literal values render the initial state but cannot be changed by `setValue`, which only writes back to data-bound props.
 
 For the built-in `DateTimeInput`, keep date-enabled default output as `YYYY-MM-DD` unless `outputFormat` is explicitly provided. Implement calendar behavior inside `packages/genui/a2ui` with local helpers that borrow the `lynx-ui-calendar` windowing/date patterns as needed, because `@lynx-js/lynx-ui-calendar` is not an available package dependency here.
 

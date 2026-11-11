@@ -139,7 +139,7 @@ agentChannel.handshake({ catalog: serializeCatalog(catalog) });
 ## basic-catalog functions
 
 A2UI messages 可以在 dynamic props、action payload 和 validation checks 里内嵌
-function call——例如 `{ call: 'formatDate', args: { … } }`。这些在**客户端的渲染
+function call——例如 `{ '@call': 'formatDate', args: { … } }`。这些在**客户端的渲染
 时刻**运行。要让它们可用，把 `...basicFunctions` 展开进同一个 catalog input 列表：
 
 ```ts
@@ -148,9 +148,9 @@ import { Text, basicFunctions, defineCatalog } from '@lynx-js/genui/a2ui';
 const catalog = defineCatalog([Text, ...basicFunctions]);
 ```
 
-`basicFunctions` 是一组现成 entry 的数组，它们的实现直接来自上游
-`@a2ui/web_core` basic catalog，所以 wire contract 能免费地与 A2UI v1.0 spec
-保持一致。它覆盖 25 个 function：
+`basicFunctions` 包含官方 1.0 basic catalog 的 14 个函数，以及 Lynx Catalog
+额外提供的 11 个算术、比较和字符串工具。官方 schema 固定到指定提交，
+函数在本地执行，不再依赖 0.9 Web SDK。
 
 | 类别   | Functions（协议名）                                                         |
 | ------ | --------------------------------------------------------------------------- |
@@ -163,12 +163,11 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 | 动作   | `openUrl`                                                                   |
 
 > 注意大小写不统一——比较/文本类用 `snake_case`（`not_equals`、`starts_with`），
-> 而格式化类用 `camelCase`（`formatDate`、`openUrl`）。这些是上游 A2UI v1.0 的
-> 名称；在 message 里请原样使用。
+> 而格式化类用 `camelCase`（`formatDate`、`openUrl`）。在 message 中使用当前 Catalog 声明的名称。
 
-只要你的 Agent 可能发出其中任何一个，就加入 `...basicFunctions`。如果某条
-message 引用了 catalog 里没有的 function，那次调用会解析为 `undefined` 而不是
-抛错。
+只要你的 Agent 可能发出其中任何一个，就加入 `...basicFunctions`。没有本地实现的函数通过 `callAgentFunction` 路由给 Agent。
+失败时，动态绑定解析为 `null` 并发送关联的协议错误。`openUrl` 仅能由用户操作触发，
+不能在被动绑定或校验规则中执行。
 
 如果你构建自己的 renderer 而不用 `<A2UI>`，调用一次 `registerBasicFunctions()`
 就能把这些相同的实现注册进共享的 `functionRegistry`。
@@ -328,7 +327,7 @@ MyChart.displayName = 'MyChart';
 自定义组件从 protocol stream 收到运行时形状的 props。对于任何超出叶子组件的
 情况，请使用 `@lynx-js/genui/a2ui/react`——这是自定义组件接入的 contract：
 
-- **`useDataBinding`**——把一个 bound 值（`{ path }`）针对 surface 的 data model
+- **`useDataBinding`**——把一个 bound 值（`{ "@path": path }`）针对 surface 的 data model
   求值，并拿回一个 setter，这样输入组件就能把用户编辑写回 model。
 - **`useResolvedProps`**——一次性解析整个 prop 包，把 data binding 和 function
   call 展开成具体值。

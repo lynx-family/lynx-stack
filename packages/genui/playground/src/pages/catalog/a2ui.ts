@@ -40,7 +40,7 @@ export function createComponentPreviewMessages(
   }
   const messages: unknown[] = [
     {
-      version: 'v1.0',
+      version: '1.0',
       createSurface: {
         surfaceId: 'default',
         catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
@@ -49,7 +49,7 @@ export function createComponentPreviewMessages(
   ];
   if (context?.data !== undefined) {
     messages.push({
-      version: 'v1.0',
+      version: '1.0',
       updateDataModel: {
         surfaceId: 'default',
         path: context.dataPath ?? '/',
@@ -58,7 +58,7 @@ export function createComponentPreviewMessages(
     });
   }
   messages.push({
-    version: 'v1.0',
+    version: '1.0',
     updateComponents: {
       surfaceId: 'default',
       components,

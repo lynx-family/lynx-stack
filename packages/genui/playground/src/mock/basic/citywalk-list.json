@@ -1,20 +1,25 @@
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "default",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
           "id": "root",
           "component": "Column",
-          "children": ["header", "answer", "divider", "spotsList"]
+          "children": [
+            "header",
+            "answer",
+            "divider",
+            "spotsList"
+          ]
         },
         {
           "id": "header",
@@ -49,13 +54,18 @@
         {
           "id": "spotCardBody",
           "component": "Column",
-          "children": ["spotImage", "spotTitle", "spotMeta", "spotReason"]
+          "children": [
+            "spotImage",
+            "spotTitle",
+            "spotMeta",
+            "spotReason"
+          ]
         },
         {
           "id": "spotImage",
           "component": "Image",
           "url": {
-            "path": "cover"
+            "@path": "cover"
           }
         },
         {
@@ -63,7 +73,7 @@
           "component": "Text",
           "variant": "h4",
           "text": {
-            "path": "name"
+            "@path": "name"
           }
         },
         {
@@ -71,7 +81,7 @@
           "component": "Text",
           "variant": "caption",
           "text": {
-            "path": "meta"
+            "@path": "meta"
           }
         },
         {
@@ -79,14 +89,14 @@
           "component": "Text",
           "variant": "body",
           "text": {
-            "path": "reason"
+            "@path": "reason"
           }
         }
       ]
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/spots",
@@ -94,7 +104,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -108,7 +118,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/spots",
@@ -124,7 +134,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -138,7 +148,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/spots",
@@ -161,7 +171,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -175,7 +185,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/spots",
@@ -205,7 +215,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -219,7 +229,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/spots",
@@ -249,7 +259,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [

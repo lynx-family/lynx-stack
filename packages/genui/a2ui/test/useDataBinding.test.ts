@@ -25,7 +25,7 @@ describe('resolveProperties', () => {
       {
         title: 'hello',
         visible: true,
-        tempLow: { path: 'weather/tempLow' },
+        tempLow: { '@path': 'weather/tempLow' },
       },
       surface,
     );
@@ -43,7 +43,7 @@ describe('resolveProperties', () => {
     const resolved = resolveProperties(
       {
         text: {
-          call: 'formatString',
+          '@call': 'formatString',
           args: {
             value: '${/tempLow}°',
           },
@@ -67,16 +67,16 @@ describe('resolveProperties', () => {
 
     const resolved = resolveProperties(
       {
-        labels: { path: '/weather/dates' },
+        labels: { '@path': '/weather/dates' },
         series: [
           {
             name: 'Temperature',
-            values: { path: '/weather/temperatures' },
+            values: { '@path': '/weather/temperatures' },
             color: '#FF5733',
           },
           {
             name: 'Precipitation',
-            values: { path: '/weather/precipitations' },
+            values: { '@path': '/weather/precipitations' },
             color: '#33A1FF',
           },
         ],
@@ -119,11 +119,11 @@ describe('resolveProperties', () => {
     surface.store.update('/weather/temperatures', [12, 14]);
 
     const props = {
-      labels: { path: '/weather/dates' },
+      labels: { '@path': '/weather/dates' },
       series: [
         {
           name: 'Temperature',
-          values: { path: '/weather/temperatures' },
+          values: { '@path': '/weather/temperatures' },
         },
       ],
     };

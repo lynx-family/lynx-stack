@@ -1,13 +1,13 @@
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "default",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -16,7 +16,11 @@
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "children": ["title", "subtitle", "chart"]
+          "children": [
+            "title",
+            "subtitle",
+            "chart"
+          ]
         },
         {
           "id": "title",
@@ -39,20 +43,44 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "value": {
         "weather": {
-          "dates": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-          "temperatures": [12, 14, 16, 18, 20, 22, 19],
-          "precipitations": [6, 7, 8, 10, 11, 13, 12]
+          "dates": [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun"
+          ],
+          "temperatures": [
+            12,
+            14,
+            16,
+            18,
+            20,
+            22,
+            19
+          ],
+          "precipitations": [
+            6,
+            7,
+            8,
+            10,
+            11,
+            13,
+            12
+          ]
         }
       }
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -60,20 +88,20 @@
           "id": "chart",
           "component": "LineChart",
           "labels": {
-            "path": "/weather/dates"
+            "@path": "/weather/dates"
           },
           "series": [
             {
               "name": "High (°C)",
               "values": {
-                "path": "/weather/temperatures"
+                "@path": "/weather/temperatures"
               },
               "color": "#0057d9"
             },
             {
               "name": "Low (°C)",
               "values": {
-                "path": "/weather/precipitations"
+                "@path": "/weather/precipitations"
               },
               "color": "#0a8f8f"
             }

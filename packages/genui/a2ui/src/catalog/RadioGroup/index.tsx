@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
 
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
@@ -25,22 +26,22 @@ const HitSlop = {
  */
 export interface RadioGroupComponentProps extends GenericComponentProps {
   /** The list of string options to display. */
-  items: string[] | { path: string } | {
-    call: string;
+  items: string[] | { '@path': string } | {
+    '@call': string;
     catalogId?: string;
     args: Record<string, unknown>;
   };
   /** The currently selected value. */
-  value: string | { path: string } | {
-    call: string;
+  value: string | { '@path': string } | {
+    '@call': string;
     catalogId?: string;
     args: Record<string, unknown>;
   };
   /** A hint for the visual style of the radio group. */
   usageHint?: 'default' | 'card' | 'row';
-  checks?: Array<{
-    condition: { path: string } | {
-      call: string;
+  '@checks'?: Array<{
+    condition: { '@path': string } | {
+      '@call': string;
       catalogId?: string;
       args: Record<string, unknown>;
     };
@@ -62,7 +63,7 @@ export function RadioGroup(
     | ((key: string, value: unknown) => void)
     | undefined;
   const explicitItems = Array.isArray(items) ? items : [];
-  const checks = props.checks as CheckLike[] | undefined;
+  const checks = props['@checks'] as CheckLike[] | undefined;
 
   const { ok, firstFailureMessage } = useChecks({
     checks,
@@ -77,6 +78,7 @@ export function RadioGroup(
 
   return (
     <view
+      {...accessibilityProps(props)}
       className={`radio-group radio-group-${usageHint}${
         ok ? '' : ' radio-group-invalid'
       }`}

@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { accessibilityProps } from '../../react/accessibility.js';
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Divider.css';
@@ -22,5 +23,11 @@ export function Divider(
 ): import('@lynx-js/react').ReactNode {
   const id = props.id;
   const axis = props.axis as string | undefined ?? 'horizontal';
-  return <view key={id} className={`divider divider-${axis}`} />;
+  return (
+    <view
+      {...accessibilityProps(props)}
+      key={id}
+      className={`divider divider-${axis}`}
+    />
+  );
 }

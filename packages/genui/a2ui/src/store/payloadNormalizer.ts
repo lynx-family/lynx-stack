@@ -21,14 +21,14 @@ export function createFallbackMessagesFromPlainText(
 
   return [
     {
-      version: 'v1.0',
+      version: '1.0',
       createSurface: {
         surfaceId,
         catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
-      version: 'v1.0',
+      version: '1.0',
       updateComponents: {
         surfaceId,
         components: [
@@ -56,14 +56,14 @@ export function createTextCardMessages(
 
   return [
     {
-      version: 'v1.0',
+      version: '1.0',
       createSurface: {
         surfaceId,
         catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
-      version: 'v1.0',
+      version: '1.0',
       updateComponents: {
         surfaceId,
         components: [

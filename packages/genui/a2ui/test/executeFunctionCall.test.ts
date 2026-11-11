@@ -22,7 +22,7 @@ describe('executeFunctionCall', () => {
       ],
     });
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       createSurface: { surfaceId, catalogId: 'test' },
     }]);
   });
@@ -30,7 +30,7 @@ describe('executeFunctionCall', () => {
   test('routes by name and returns the impl result', () => {
     expect(executeFunctionCall(
       processor,
-      { call: 'identity', args: { value: 'hi' } },
+      { '@call': 'identity', args: { value: 'hi' } },
       surfaceId,
     )).toBe('hi');
   });
@@ -42,8 +42,8 @@ describe('executeFunctionCall', () => {
     expect(executeFunctionCall(
       processor,
       {
-        call: 'add',
-        args: { a: { path: '/a' }, b: { path: '/b' } },
+        '@call': 'add',
+        args: { a: { '@path': '/a' }, b: { '@path': '/b' } },
       },
       surfaceId,
     )).toBe(15);
@@ -56,10 +56,10 @@ describe('executeFunctionCall', () => {
     });
     expect(
       executeFunctionCall(processor, {
-        call: 'globalOnly',
+        '@call': 'globalOnly',
         catalogId: 'missing',
       }, surfaceId),
-    ).toBeUndefined();
+    ).toBeNull();
     functionRegistry.unregister('globalOnly');
   });
 
@@ -71,16 +71,16 @@ describe('executeFunctionCall', () => {
     expect(executeFunctionCall(
       processor,
       {
-        call: 'and',
+        '@call': 'and',
         args: {
           values: [
             {
-              call: 'not_equals',
-              args: { a: { path: '/email' }, b: '' },
+              '@call': 'not_equals',
+              args: { a: { '@path': '/email' }, b: '' },
             },
             {
-              call: 'equals',
-              args: { a: { path: '/password' }, b: 'long-password' },
+              '@call': 'equals',
+              args: { a: { '@path': '/password' }, b: 'long-password' },
             },
           ],
         },
@@ -95,16 +95,16 @@ describe('executeFunctionCall', () => {
     expect(executeFunctionCall(
       processor,
       {
-        call: 'and',
+        '@call': 'and',
         args: {
           values: [
             {
-              call: 'not_equals',
-              args: { a: { path: '/email' }, b: '' },
+              '@call': 'not_equals',
+              args: { a: { '@path': '/email' }, b: '' },
             },
             {
-              call: 'equals',
-              args: { a: { path: '/password' }, b: 'long-password' },
+              '@call': 'equals',
+              args: { a: { '@path': '/password' }, b: 'long-password' },
             },
           ],
         },
@@ -115,14 +115,14 @@ describe('executeFunctionCall', () => {
     )).toBe(true);
   });
 
-  test('basic functions use upstream zod parsing and data context', () => {
+  test('basic functions use declared argument coercion and data context', () => {
     const surface = processor.getOrCreateSurface(surfaceId);
     surface.store.update('/name', 'Ada');
 
     expect(executeFunctionCall(
       processor,
       {
-        call: 'add',
+        '@call': 'add',
         args: { a: '7', b: '8' },
       },
       surfaceId,
@@ -133,7 +133,7 @@ describe('executeFunctionCall', () => {
     expect(executeFunctionCall(
       processor,
       {
-        call: 'formatString',
+        '@call': 'formatString',
         args: { value: 'Hello ${/name}' },
       },
       surfaceId,

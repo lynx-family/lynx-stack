@@ -389,7 +389,7 @@ describe('A2UI image URL validation', () => {
     const createMessages = (url: unknown, dataModel?: unknown) =>
       JSON.stringify([
         {
-          version: 'v1.0',
+          version: '1.0',
           createSurface: {
             surfaceId: 'main',
             catalogId: catalog.id,
@@ -398,7 +398,7 @@ describe('A2UI image URL validation', () => {
         ...(dataModel === undefined
           ? []
           : [{
-            version: 'v1.0',
+            version: '1.0',
             updateDataModel: {
               surfaceId: 'main',
               path: '/',
@@ -406,7 +406,7 @@ describe('A2UI image URL validation', () => {
             },
           }]),
         {
-          version: 'v1.0',
+          version: '1.0',
           updateComponents: {
             surfaceId: 'main',
             components: [{
@@ -433,7 +433,7 @@ describe('A2UI image URL validation', () => {
     ).toBe(true);
 
     const unresolvedBinding = validateA2UIOutput(
-      createMessages({ path: '/hero' }, { hero: 'city skyline at night' }),
+      createMessages({ '@path': '/hero' }, { hero: 'city skyline at night' }),
       catalog,
     );
     expect(unresolvedBinding.ok).toBe(false);
@@ -442,7 +442,7 @@ describe('A2UI image URL validation', () => {
     expect(
       validateA2UIOutput(
         createMessages(
-          { path: '/hero' },
+          { '@path': '/hero' },
           { hero: 'https://images.example.com/generated.jpeg' },
         ),
         catalog,
@@ -490,7 +490,7 @@ describe('A2UI image URL validation', () => {
     expect(
       validateA2UIOutput(
         createMessages(
-          { path: '/hero' },
+          { '@path': '/hero' },
           { hero: 'https://images.example.com/hallucinated.jpeg' },
         ),
         catalog,
@@ -503,11 +503,11 @@ describe('A2UI image URL validation', () => {
     const catalog = await loadBasicCatalog();
     const raw = JSON.stringify([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [{

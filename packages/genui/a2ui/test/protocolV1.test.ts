@@ -12,7 +12,7 @@ import { executeFunctionCall } from '../src/store/resolveFunctionCall.js';
 import type { ServerToClientMessage } from '../src/store/types.js';
 
 const initial: ServerToClientMessage = {
-  version: 'v1.0',
+  version: '1.0',
   createSurface: {
     surfaceId: 's',
     catalogId: 'test',
@@ -23,7 +23,7 @@ const initial: ServerToClientMessage = {
         component: 'Column',
         children: { path: '/items', componentId: 'row' },
       },
-      { id: 'row', component: 'Text', text: { path: 'label' } },
+      { id: 'row', component: 'Text', text: { '@path': 'label' } },
     ],
     dataModel: {
       items: [{ label: '007' }, { label: 'false' }],
@@ -52,7 +52,7 @@ describe('A2UI v1.0', () => {
       processor.processMessages(messages);
       expect(processor.getSurfaces().size).toBe(0);
       expect(events).toMatchObject([{
-        version: 'v1.0',
+        version: '1.0',
         error: { code: 'UNSUPPORTED_VERSION', surfaceId: 'old' },
       }]);
       expect(() => compactA2UIMessagesToSnapshot(messages)).toThrow(
@@ -70,7 +70,7 @@ describe('A2UI v1.0', () => {
       expect(
         evaluateChecks(
           processor,
-          [{ condition: { path: '/validation' } }],
+          [{ condition: { '@path': '/validation' } }],
           surface,
         ).ok,
       ).toBe(false);
@@ -86,20 +86,24 @@ describe('A2UI v1.0', () => {
       'row:1',
     ]);
     expect(surface.components.get('row:0')?.dataContextPath).toBe('/items/0');
-    expect(resolveDynamicValue(processor, { path: 'label' }, 's', '/items/0'))
+    expect(
+      resolveDynamicValue(processor, { '@path': 'label' }, 's', '/items/0'),
+    )
       .toBe('007');
-    expect(resolveDynamicValue(processor, { path: 'label' }, 's', '/items/1'))
+    expect(
+      resolveDynamicValue(processor, { '@path': 'label' }, 's', '/items/1'),
+    )
       .toBe('false');
     expect(
       executeFunctionCall(
         processor,
-        { call: '@index', args: { offset: 1 } },
+        { '@call': '@index', args: { offset: 1 } },
         's',
         '/items/1',
       ),
     ).toBe(2);
-    expect(executeFunctionCall(processor, { call: '@index' }, 's'))
-      .toBeUndefined();
+    expect(executeFunctionCall(processor, { '@call': '@index' }, 's'))
+      .toBeNull();
   });
 
   test('replaces subtrees, deletes null paths, updates ancestors and snapshots local inputs', () => {
@@ -108,7 +112,7 @@ describe('A2UI v1.0', () => {
     const store = processor.getOrCreateSurface('s').store;
     const stale = store.getSignal('/user/stale');
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       updateDataModel: {
         surfaceId: 's',
         path: '/user',
@@ -119,7 +123,7 @@ describe('A2UI v1.0', () => {
     store.update('/user/name', 'Carol');
     expect(store.getSignal('/user').value).toEqual({ name: 'Carol' });
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       updateDataModel: { surfaceId: 's', path: '/items/0', value: null },
     }]);
     expect(store.getSignal('/items').value).toEqual([{ label: 'false' }]);
@@ -128,14 +132,14 @@ describe('A2UI v1.0', () => {
     ).toEqual(['row:0']);
     expect(processor.getDataModelMetadata()).toEqual({
       a2uiRendererDataModel: {
-        version: 'v1.0',
+        version: '1.0',
         surfaces: {
           s: { items: [{ label: 'false' }], user: { name: 'Carol' } },
         },
       },
     });
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       updateDataModel: { surfaceId: 's', value: { 'a/b': { '~key': false } } },
     }]);
     expect(store.getSignal('/user/name').value).toBeUndefined();
@@ -146,7 +150,7 @@ describe('A2UI v1.0', () => {
     const processor = new MessageProcessor();
     processor.processMessages([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: {
           surfaceId: 's',
           catalogId: 'test',
@@ -154,20 +158,20 @@ describe('A2UI v1.0', () => {
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's',
           components: [{
             id: 'row',
             component: 'Text',
-            text: { path: 'label' },
+            text: { '@path': 'label' },
           }],
         },
       },
     ]);
     expect(processor.getOrCreateSurface('s').rootComponentId).toBeNull();
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       updateComponents: {
         surfaceId: 's',
         components: [{
@@ -184,11 +188,11 @@ describe('A2UI v1.0', () => {
 
   test('compaction retains the version, inline state and deletion semantics', () => {
     const messages: ServerToClientMessage[] = [initial, {
-      version: 'v1.0',
+      version: '1.0',
       updateDataModel: { surfaceId: 's', path: '/items/0', value: null },
     }];
     const compact = compactA2UIMessagesToSnapshot(messages);
-    expect(compact.messages.every(message => message.version === 'v1.0')).toBe(
+    expect(compact.messages.every(message => message.version === '1.0')).toBe(
       true,
     );
     const processor = new MessageProcessor();
@@ -231,35 +235,37 @@ describe('A2UI v1.0', () => {
     });
     processor.processMessages(
       normalizePayloadToMessages({
-        version: 'v1.0',
+        version: '1.0',
         callRendererFunction: {
           functionCallId: 'denied',
-          callFunction: { catalogId: 'test', call: 'local' },
+          callFunction: { catalogId: 'test', '@call': 'local' },
         },
       }),
     );
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       callRendererFunction: {
         functionCallId: 'allowed',
         callFunction: {
           catalogId: 'test',
-          call: 'remote',
+          '@call': 'remote',
           args: { value: false },
         },
       },
     }]);
     await Promise.resolve();
     expect(events).toContainEqual({
-      version: 'v1.0',
-      error: {
-        code: 'INVALID_FUNCTION_CALL',
-        message: 'Function "local" is not callable by the agent',
+      version: '1.0',
+      rendererFunctionResponse: {
         functionCallId: 'denied',
+        error: {
+          code: 'INVALID_FUNCTION_CALL',
+          message: 'Invalid function, catalog, caller, or surface context',
+        },
       },
     });
     expect(events).toContainEqual({
-      version: 'v1.0',
+      version: '1.0',
       rendererFunctionResponse: { functionCallId: 'allowed', value: false },
     });
   });
@@ -267,7 +273,7 @@ describe('A2UI v1.0', () => {
   test('structured validation results fail checks and use their own messages', () => {
     const processor = new MessageProcessor();
     processor.processMessages([initial, {
-      version: 'v1.0',
+      version: '1.0',
       updateDataModel: {
         surfaceId: 's',
         path: '/validation',
@@ -278,7 +284,7 @@ describe('A2UI v1.0', () => {
     expect(
       evaluateChecks(
         processor,
-        [{ condition: { path: '/validation' } }],
+        [{ condition: { '@path': '/validation' } }],
         surface,
       ),
     ).toEqual({
@@ -289,7 +295,7 @@ describe('A2UI v1.0', () => {
     expect(
       evaluateChecks(
         processor,
-        [{ condition: { path: '/validation' } }],
+        [{ condition: { '@path': '/validation' } }],
         surface,
       ).ok,
     ).toBe(true);
@@ -322,7 +328,7 @@ describe('A2UI v1.0', () => {
         ...(resultMessage === undefined ? {} : { message: resultMessage }),
       });
       const rule = {
-        condition: { path: '/validation' },
+        condition: { '@path': '/validation' },
         ...(fallback === undefined ? {} : { message: fallback }),
       };
       expect(evaluateChecks(processor, [rule], surface)).toEqual({
@@ -340,7 +346,7 @@ describe('A2UI v1.0', () => {
   test('duplicate inline creation cannot overwrite an existing surface', () => {
     const processor = new MessageProcessor();
     processor.processMessages([initial, {
-      version: 'v1.0',
+      version: '1.0',
       createSurface: { surfaceId: 's', dataModel: { overwritten: true } },
     }]);
     expect(
@@ -360,12 +366,12 @@ describe('A2UI v1.0', () => {
       );
       resolve([]);
     });
-    const call = { call: 'lookup' };
+    const call = { '@call': 'lookup' };
     expect(executeFunctionCall(processor, call, 's')).toBeUndefined();
     expect(executeFunctionCall(processor, call, 's')).toBeUndefined();
     expect(ids).toHaveLength(1);
     processor.processMessages([{
-      version: 'v1.0',
+      version: '1.0',
       agentFunctionResponse: { functionCallId: ids[0]!, value: 'ready' },
     }]);
     await Promise.resolve();
@@ -383,19 +389,25 @@ describe('A2UI v1.0', () => {
       );
       resolve([]);
     });
-    const first = processor.callAgentFunction('s', { call: 'first' });
-    const second = processor.callAgentFunction('s', { call: 'second' });
+    const first = processor.callAgentFunction('s', {
+      catalogId: 'test',
+      '@call': 'first',
+    });
+    const second = processor.callAgentFunction('s', {
+      catalogId: 'test',
+      '@call': 'second',
+    });
     const rejected = expect(second).rejects.toThrow('Unknown function');
     processor.processMessages([
       {
-        version: 'v1.0',
+        version: '1.0',
         agentFunctionResponse: {
           functionCallId: requests[1]!,
           error: { code: 'UNKNOWN_FUNCTION', message: 'Unknown function' },
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         agentFunctionResponse: { functionCallId: requests[0]!, value: 42 },
       },
     ]);

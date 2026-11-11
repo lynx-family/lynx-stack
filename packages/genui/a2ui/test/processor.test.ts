@@ -17,11 +17,11 @@ describe('MessageProcessor', () => {
 
     proc.processMessages([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [{ id: 'root', component: 'Text', text: 'hi' }],
@@ -43,9 +43,9 @@ describe('MessageProcessor', () => {
     dispose1();
 
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [{ id: 'root', component: 'Text' }],
@@ -65,9 +65,9 @@ describe('MessageProcessor', () => {
     });
 
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [{ id: 'root', component: 'Text', text: 'hi' }],
@@ -82,9 +82,9 @@ describe('MessageProcessor', () => {
   test('deleteSurface emits and clears state', () => {
     const proc = new MessageProcessor();
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [{ id: 'root', component: 'Text' }],
@@ -97,7 +97,7 @@ describe('MessageProcessor', () => {
     const events: string[] = [];
     proc.onUpdate((d) => events.push((d as { type: string }).type));
     proc.processMessages([
-      { version: 'v1.0', deleteSurface: { surfaceId: 's1' } },
+      { version: '1.0', deleteSurface: { surfaceId: 's1' } },
     ] as ServerToClientMessage[]);
 
     expect(events).toContain('deleteSurface');
@@ -107,16 +107,16 @@ describe('MessageProcessor', () => {
   test('updateDataModel writes to surface store', () => {
     const proc = new MessageProcessor();
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [{ id: 'root', component: 'Text' }],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: { surfaceId: 's1', path: '/title', value: 'hello' },
       },
     ] as ServerToClientMessage[]);
@@ -134,9 +134,9 @@ describe('MessageProcessor', () => {
     });
 
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -151,13 +151,17 @@ describe('MessageProcessor', () => {
               component: 'Column',
               children: ['event-title', 'event-time'],
             },
-            { id: 'event-title', component: 'Text', text: { path: 'title' } },
-            { id: 'event-time', component: 'Text', text: { path: 'time' } },
+            {
+              id: 'event-title',
+              component: 'Text',
+              text: { '@path': 'title' },
+            },
+            { id: 'event-time', component: 'Text', text: { '@path': 'time' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: {
@@ -192,9 +196,9 @@ describe('MessageProcessor', () => {
   test('rewrites non-children child references when cloning templates', () => {
     const proc = new MessageProcessor();
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -204,12 +208,12 @@ describe('MessageProcessor', () => {
               children: { componentId: 'item-card', path: '/items' },
             },
             { id: 'item-card', component: 'Card', child: 'item-body' },
-            { id: 'item-body', component: 'Text', text: { path: 'name' } },
+            { id: 'item-body', component: 'Text', text: { '@path': 'name' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: {
@@ -235,9 +239,9 @@ describe('MessageProcessor', () => {
   test('template expansion rewrites Modal child references', () => {
     const proc = new MessageProcessor();
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -255,18 +259,18 @@ describe('MessageProcessor', () => {
             {
               id: 'modal-trigger',
               component: 'Text',
-              text: { path: 'title' },
+              text: { '@path': 'title' },
             },
             {
               id: 'modal-content',
               component: 'Text',
-              text: { path: 'body' },
+              text: { '@path': 'body' },
             },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: {
@@ -293,9 +297,9 @@ describe('MessageProcessor', () => {
   test('template expansion rewrites Tabs child references', () => {
     const proc = new MessageProcessor();
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -312,13 +316,13 @@ describe('MessageProcessor', () => {
             {
               id: 'tab-content',
               component: 'Text',
-              text: { path: 'body' },
+              text: { '@path': 'body' },
             },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: {
@@ -341,9 +345,9 @@ describe('MessageProcessor', () => {
   test('clears dynamic children when template data becomes empty', () => {
     const proc = new MessageProcessor();
     proc.processMessages([
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -352,19 +356,19 @@ describe('MessageProcessor', () => {
               component: 'Column',
               children: { componentId: 'item', path: '/items' },
             },
-            { id: 'item', component: 'Text', text: { path: 'name' } },
+            { id: 'item', component: 'Text', text: { '@path': 'name' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { items: [{ name: 'Apple' }, { name: 'Banana' }] },
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           path: '/items',
@@ -382,7 +386,7 @@ describe('MessageProcessor', () => {
   test('dispatch with no listeners resolves with empty array', async () => {
     const proc = new MessageProcessor();
     const result = await proc.dispatch({
-      version: 'v1.0',
+      version: '1.0',
       action: { name: 'x' },
     });
     expect(result).toEqual([]);

@@ -10,7 +10,7 @@
  */
 export interface QuickStartCardProps {
   /** Card title text or data binding. */
-  title: string | { path: string };
+  title: string | { '@path': string };
   /** Visual tone used by the renderer. */
   tone?: 'neutral' | 'accent';
   /**

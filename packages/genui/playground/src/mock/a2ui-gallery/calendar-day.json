@@ -3,7 +3,7 @@
   "description": "Example of calendar day demonstrating dynamic templating, relative paths, and date formatting.",
   "messages": [
     {
-      "version": "v1.0",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-calendar-day",
         "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
@@ -11,39 +11,49 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-calendar-day",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["header-row", "divider", "actions"]
+            "children": [
+              "header_row",
+              "divider",
+              "actions"
+            ]
           },
           {
-            "id": "header-row",
+            "id": "header_row",
             "component": "Row",
-            "children": ["date-col", "events-col"]
+            "children": [
+              "date_col",
+              "events_col"
+            ]
           },
           {
-            "id": "date-col",
+            "id": "date_col",
             "component": "Column",
-            "children": ["day-name", "day-number"],
+            "children": [
+              "day_name",
+              "day_number"
+            ],
             "align": "start"
           },
           {
-            "id": "day-name",
+            "id": "day_name",
             "component": "Text",
             "text": {
-              "call": "formatDate",
+              "@call": "formatDate",
               "args": {
                 "value": {
-                  "path": "/date"
+                  "@path": "/date"
                 },
                 "format": "EEEE"
               }
@@ -51,13 +61,13 @@
             "variant": "caption"
           },
           {
-            "id": "day-number",
+            "id": "day_number",
             "component": "Text",
             "text": {
-              "call": "formatDate",
+              "@call": "formatDate",
               "args": {
                 "value": {
-                  "path": "/date"
+                  "@path": "/date"
                 },
                 "format": "d"
               }
@@ -65,31 +75,34 @@
             "variant": "h1"
           },
           {
-            "id": "events-col",
+            "id": "events_col",
             "component": "Column",
             "children": {
               "path": "/events",
-              "componentId": "event-template"
+              "componentId": "event_template"
             }
           },
           {
-            "id": "event-template",
+            "id": "event_template",
             "component": "Column",
-            "children": ["event-title", "event-time"]
+            "children": [
+              "event_title",
+              "event_time"
+            ]
           },
           {
-            "id": "event-title",
+            "id": "event_title",
             "component": "Text",
             "text": {
-              "path": "title"
+              "@path": "title"
             },
             "variant": "body"
           },
           {
-            "id": "event-time",
+            "id": "event_time",
             "component": "Text",
             "text": {
-              "path": "time"
+              "@path": "time"
             },
             "variant": "caption"
           },
@@ -100,17 +113,20 @@
           {
             "id": "actions",
             "component": "Row",
-            "children": ["add-btn", "discard-btn"]
+            "children": [
+              "add_btn",
+              "discard_btn"
+            ]
           },
           {
-            "id": "add-btn-text",
+            "id": "add_btn_text",
             "component": "Text",
             "text": "Add to calendar"
           },
           {
-            "id": "add-btn",
+            "id": "add_btn",
             "component": "Button",
-            "child": "add-btn-text",
+            "child": "add_btn_text",
             "action": {
               "event": {
                 "name": "add",
@@ -119,14 +135,14 @@
             }
           },
           {
-            "id": "discard-btn-text",
+            "id": "discard_btn_text",
             "component": "Text",
             "text": "Discard"
           },
           {
-            "id": "discard-btn",
+            "id": "discard_btn",
             "component": "Button",
-            "child": "discard-btn-text",
+            "child": "discard_btn_text",
             "action": {
               "event": {
                 "name": "discard",
@@ -138,7 +154,7 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-calendar-day",
         "value": {

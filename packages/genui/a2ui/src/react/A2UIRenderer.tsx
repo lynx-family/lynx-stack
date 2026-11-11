@@ -266,8 +266,8 @@ function NodeRendererImpl(
     : component;
 
   const qualifiedCatalog = processor.getCatalog(
-    typeof effectiveComponent.catalogId === 'string'
-      ? effectiveComponent.catalogId
+    typeof effectiveComponent['@catalogId'] === 'string'
+      ? effectiveComponent['@catalogId']
       : surface.catalogId,
   );
   const catalog = useMemo(

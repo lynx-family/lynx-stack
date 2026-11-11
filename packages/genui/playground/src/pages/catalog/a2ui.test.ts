@@ -10,18 +10,18 @@ describe('A2UI catalog preview', () => {
     const messages = createComponentPreviewMessages({
       id: 'title',
       component: 'Text',
-      text: { path: '/title' },
+      text: { '@path': '/title' },
     }, { data: { title: 'Hello' } });
     expect(messages).toEqual([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: {
           surfaceId: 'default',
           catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 'default',
           path: '/',
@@ -29,12 +29,12 @@ describe('A2UI catalog preview', () => {
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'default',
           components: [
             { id: 'root', component: 'Column', children: ['title'] },
-            { id: 'title', component: 'Text', text: { path: '/title' } },
+            { id: 'title', component: 'Text', text: { '@path': '/title' } },
           ],
         },
       },
@@ -43,7 +43,7 @@ describe('A2UI catalog preview', () => {
   test('keeps an existing root without wrapping it again', () => {
     const component = { id: 'root', component: 'Text', text: 'Hello' };
     expect(createComponentPreviewMessages(component)).toContainEqual({
-      version: 'v1.0',
+      version: '1.0',
       updateComponents: { surfaceId: 'default', components: [component] },
     });
   });

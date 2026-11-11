@@ -16,7 +16,7 @@ describe('payloadNormalizer', () => {
     const msgs = createFallbackMessagesFromPlainText('hello');
     expect(msgs).toHaveLength(2);
     const update = msgs[1] as {
-      version: 'v1.0';
+      version: '1.0';
       updateComponents: { components: unknown[] };
     };
     expect(update.updateComponents.components[0]).toMatchObject({
@@ -29,7 +29,7 @@ describe('payloadNormalizer', () => {
     const msgs = createTextCardMessages('greetings');
     expect(msgs).toHaveLength(2);
     const update = msgs[1] as {
-      version: 'v1.0';
+      version: '1.0';
       updateComponents: { components: unknown[] };
     };
     expect(update.updateComponents.components).toHaveLength(2);
@@ -41,7 +41,7 @@ describe('payloadNormalizer', () => {
   });
 
   test('normalizePayloadToMessages passes through structured messages', () => {
-    const input = [{ version: 'v1.0', createSurface: { surfaceId: 's' } }];
+    const input = [{ version: '1.0', createSurface: { surfaceId: 's' } }];
     expect(normalizePayloadToMessages(input)).toEqual(input);
   });
 
@@ -49,7 +49,7 @@ describe('payloadNormalizer', () => {
     const out = normalizePayloadToMessages('hi');
     expect(out).toHaveLength(2);
     expect(
-      (out[0] as { version: 'v1.0'; createSurface: unknown }).createSurface,
+      (out[0] as { version: '1.0'; createSurface: unknown }).createSurface,
     ).toBeDefined();
   });
 
@@ -57,7 +57,7 @@ describe('payloadNormalizer', () => {
     const out = normalizePayloadToMessages({ kind: 'text', data: 'yo' });
     expect(out).toHaveLength(2);
     const update = out[1] as {
-      version: 'v1.0';
+      version: '1.0';
       updateComponents: { components: unknown[] };
     };
     expect(update.updateComponents.components).toHaveLength(2);
@@ -67,14 +67,14 @@ describe('payloadNormalizer', () => {
     'preprocessing tolerates createSurface=%s',
     (createSurface) => {
       const messages = [{
-        version: 'v1.0',
+        version: '1.0',
         createSurface,
       }] as unknown as ServerToClientMessage[];
       const active = new Set<string>();
       const result = prepareMessagesForProcessing(messages, 'task', active);
       expect(result.hasComponentUpdate).toBe(false);
       expect(result.messages).toEqual([{
-        version: 'v1.0',
+        version: '1.0',
         createSurface,
         messageId: 'task',
       }]);
@@ -84,10 +84,10 @@ describe('payloadNormalizer', () => {
 
   test('prepareMessagesForProcessing tags messageId and leaves duplicate validation to the processor', () => {
     const messages = [
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
-      { version: 'v1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
+      { version: '1.0', createSurface: { surfaceId: 's1' } },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [{ id: 'root', component: 'Text' }],

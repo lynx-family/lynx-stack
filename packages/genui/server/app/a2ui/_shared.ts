@@ -2,7 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import Ajv2020 from 'ajv/dist/2020.js';
+
 import type { A2UICatalog } from '../../agent/a2ui/a2ui-catalog.js';
+import commonSchema from '../../agent/a2ui/schemas/common_types.json';
+import rendererSchema from '../../agent/a2ui/schemas/renderer_to_agent.json';
 import type { A2UIChatOptions } from '../../service/a2ui/a2ui-agent.js';
 import type { OpenAIReasoningEffort } from '../../service/common/types';
 import { pickProviderOptions } from '../common/provider-options';
@@ -88,63 +92,6 @@ export function validateAction(value: unknown):
     };
   }
 
-  const hasEvent = 'event' in value;
-  const hasFunctionCall = 'functionCall' in value;
-
-  if (hasEvent && hasFunctionCall) {
-    return {
-      ok: false,
-      status: 400,
-      error: 'exactly one of action.event or action.functionCall is required',
-    };
-  }
-
-  if (hasEvent && isRecord(value.event)) {
-    const name = value.event.name;
-    if (typeof name === 'string' && name.length > 0) {
-      const action: A2UIActionRequest = { name };
-      if ('context' in value.event) {
-        if (!isRecord(value.event.context)) {
-          return {
-            ok: false,
-            status: 400,
-            error: 'action.event.context must be an object',
-          };
-        }
-        action.context = value.event.context;
-      }
-      return {
-        ok: true,
-        action,
-        kind: 'event',
-        name,
-      };
-    }
-  }
-
-  if (hasFunctionCall && isRecord(value.functionCall)) {
-    const call = value.functionCall.call;
-    if (typeof call === 'string' && call.length > 0) {
-      const action: A2UIActionRequest = { name: call };
-      if ('args' in value.functionCall) {
-        if (!isRecord(value.functionCall.args)) {
-          return {
-            ok: false,
-            status: 400,
-            error: 'action.functionCall.args must be an object',
-          };
-        }
-        action.context = value.functionCall.args;
-      }
-      return {
-        ok: true,
-        action,
-        kind: 'functionCall',
-        name: call,
-      };
-    }
-  }
-
   return {
     ok: false,
     status: 400,
@@ -162,6 +109,36 @@ export interface A2UIRendererEventBody {
   error?: unknown;
   metadata?: unknown;
   conversation?: unknown;
+}
+
+const rendererAjv = new Ajv2020({ strict: false, validateFormats: false });
+rendererAjv.addSchema(commonSchema);
+rendererAjv.addSchema({
+  $id: 'https://a2ui.org/specification/v1_0/catalog.json',
+  $defs: {
+    anyFunction: { type: 'object', properties: { args: { type: 'object' } } },
+  },
+});
+const validateRendererEnvelope = rendererAjv.compile(rendererSchema);
+
+/** Validate the wire message separately from HTTP transport options. */
+export function rendererEventError(
+  body: A2UIRendererEventBody,
+): string | undefined {
+  const envelope = Object.fromEntries(
+    Object.entries(body).filter(([key]) =>
+      [
+        'version',
+        'action',
+        'callAgentFunction',
+        'rendererFunctionResponse',
+        'error',
+      ].includes(key)
+    ),
+  );
+  return validateRendererEnvelope(envelope)
+    ? undefined
+    : rendererAjv.errorsText(validateRendererEnvelope.errors);
 }
 
 /** Adapt a v1.0 action and transport metadata to the existing stateless service. */
@@ -186,12 +163,14 @@ export function normalizeRendererEvent<T extends A2UIRendererEventBody>(
   const surfaceId =
     isRecord(body.action) && typeof body.action.surfaceId === 'string'
       ? body.action.surfaceId
-      : body.surfaceId;
+      : (isRecord(body.error) && typeof body.error.surfaceId === 'string'
+        ? body.error.surfaceId
+        : body.surfaceId);
   const model = isRecord(body.metadata)
     ? body.metadata.a2uiRendererDataModel
     : undefined;
   const surfaces =
-    isRecord(model) && model.version === 'v1.0' && isRecord(model.surfaces)
+    isRecord(model) && model.version === '1.0' && isRecord(model.surfaces)
       ? model.surfaces
       : undefined;
   return {
@@ -217,12 +196,12 @@ export function rejectUnknownAgentFunction(
   if (body.callAgentFunction === undefined) return undefined;
   const request = body.callAgentFunction;
   if (
-    body.version !== 'v1.0' || body.action !== undefined || !isRecord(request)
+    body.version !== '1.0' || body.action !== undefined || !isRecord(request)
     || typeof request.functionCallId !== 'string' || !request.functionCallId
     || typeof request.surfaceId !== 'string' || !request.surfaceId
     || !isRecord(request.callFunction)
-    || typeof request.callFunction.call !== 'string'
-    || !request.callFunction.call
+    || typeof request.callFunction['@call'] !== 'string'
+    || !request.callFunction['@call']
   ) {
     return {
       status: 400,
@@ -236,14 +215,16 @@ export function rejectUnknownAgentFunction(
     body: {
       ok: true,
       messages: [{
-        version: 'v1.0',
+        version: '1.0',
         agentFunctionResponse: {
           functionCallId: request.functionCallId,
           error: {
             code: invalidArgs ? 'INVALID_FUNCTION_CALL' : 'UNKNOWN_FUNCTION',
             message: invalidArgs
               ? 'Function args must be an object'
-              : `No agent implementation registered for "${request.callFunction.call}"`,
+              : `No agent implementation registered for "${
+                request.callFunction['@call']
+              }"`,
           },
         },
       }],

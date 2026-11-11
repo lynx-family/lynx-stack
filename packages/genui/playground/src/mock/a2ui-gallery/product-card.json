@@ -3,7 +3,7 @@
   "description": "Example of product card demonstrating currency formatting and pluralization.",
   "messages": [
     {
-      "version": "v1.0",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-product-card",
         "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
@@ -11,52 +11,63 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-product-card",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["image", "details"]
+            "children": [
+              "image",
+              "details"
+            ]
           },
           {
             "id": "image",
             "component": "Image",
             "url": {
-              "path": "/imageUrl"
+              "@path": "/imageUrl"
             },
             "fit": "cover"
           },
           {
             "id": "details",
             "component": "Column",
-            "children": ["name", "rating-row", "price-row", "actions"]
+            "children": [
+              "name",
+              "rating_row",
+              "price_row",
+              "actions"
+            ]
           },
           {
             "id": "name",
             "component": "Text",
             "text": {
-              "path": "/name"
+              "@path": "/name"
             },
             "variant": "h3"
           },
           {
-            "id": "rating-row",
+            "id": "rating_row",
             "component": "Row",
-            "children": ["stars", "reviews"],
+            "children": [
+              "stars",
+              "reviews"
+            ],
             "align": "center"
           },
           {
             "id": "stars",
             "component": "Text",
             "text": {
-              "path": "/stars"
+              "@path": "/stars"
             },
             "variant": "body"
           },
@@ -64,7 +75,7 @@
             "id": "reviews",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "(${formatNumber(value: ${/reviewCount})} ${pluralize(value: ${/reviewCount}, one: 'review', other: 'reviews')})"
               }
@@ -72,19 +83,22 @@
             "variant": "caption"
           },
           {
-            "id": "price-row",
+            "id": "price_row",
             "component": "Row",
-            "children": ["price", "original-price"],
+            "children": [
+              "price",
+              "original_price"
+            ],
             "align": "start"
           },
           {
             "id": "price",
             "component": "Text",
             "text": {
-              "call": "formatCurrency",
+              "@call": "formatCurrency",
               "args": {
                 "value": {
-                  "path": "/price"
+                  "@path": "/price"
                 },
                 "currency": "USD"
               }
@@ -92,13 +106,13 @@
             "variant": "h2"
           },
           {
-            "id": "original-price",
+            "id": "original_price",
             "component": "Text",
             "text": {
-              "call": "formatCurrency",
+              "@call": "formatCurrency",
               "args": {
                 "value": {
-                  "path": "/originalPrice"
+                  "@path": "/originalPrice"
                 },
                 "currency": "USD"
               }
@@ -108,17 +122,19 @@
           {
             "id": "actions",
             "component": "Row",
-            "children": ["add-cart-btn"]
+            "children": [
+              "add_cart_btn"
+            ]
           },
           {
-            "id": "add-cart-btn-text",
+            "id": "add_cart_btn_text",
             "component": "Text",
             "text": "Add to Cart"
           },
           {
-            "id": "add-cart-btn",
+            "id": "add_cart_btn",
             "component": "Button",
-            "child": "add-cart-btn-text",
+            "child": "add_cart_btn_text",
             "variant": "primary",
             "action": {
               "event": {
@@ -131,7 +147,7 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-product-card",
         "value": {

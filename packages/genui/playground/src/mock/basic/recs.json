@@ -1,20 +1,25 @@
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "default",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
           "id": "root",
           "component": "Column",
-          "children": ["header", "answer", "divider", "recs"]
+          "children": [
+            "header",
+            "answer",
+            "divider",
+            "recs"
+          ]
         },
         {
           "id": "header",
@@ -41,7 +46,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -55,7 +60,7 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -69,24 +74,37 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
-        { "id": "recs", "component": "Column", "children": ["recCard-1"] },
-        { "id": "recCard-1", "component": "Card", "child": "recCard-1-body" },
         {
-          "id": "recCard-1-body",
+          "id": "recs",
           "component": "Column",
-          "children": ["recCard-1-img", "recCard-1-text"]
+          "children": [
+            "recCard_1"
+          ]
         },
         {
-          "id": "recCard-1-img",
+          "id": "recCard_1",
+          "component": "Card",
+          "child": "recCard_1_body"
+        },
+        {
+          "id": "recCard_1_body",
+          "component": "Column",
+          "children": [
+            "recCard_1_img",
+            "recCard_1_text"
+          ]
+        },
+        {
+          "id": "recCard_1_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-moon/640/360"
         },
         {
-          "id": "recCard-1-text",
+          "id": "recCard_1_text",
           "component": "Loading",
           "variant": "block"
         }
@@ -94,12 +112,12 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "recCard-1-text",
+          "id": "recCard_1_text",
           "component": "Text",
           "variant": "body",
           "text": "1. Moonlight Terrace\nRating 4.9 · Avg 168 · 1.2 km\nHighlight: window-side night view, soft lighting, great for a slow chat.\nTip: ask for a window table; desserts are a standout."
@@ -114,28 +132,38 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
           "id": "recs",
           "component": "Column",
-          "children": ["recCard-1", "recCard-2"]
+          "children": [
+            "recCard_1",
+            "recCard_2"
+          ]
         },
-        { "id": "recCard-2", "component": "Card", "child": "recCard-2-body" },
         {
-          "id": "recCard-2-body",
+          "id": "recCard_2",
+          "component": "Card",
+          "child": "recCard_2_body"
+        },
+        {
+          "id": "recCard_2_body",
           "component": "Column",
-          "children": ["recCard-2-img", "recCard-2-text"]
+          "children": [
+            "recCard_2_img",
+            "recCard_2_text"
+          ]
         },
         {
-          "id": "recCard-2-img",
+          "id": "recCard_2_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-pine/640/360"
         },
         {
-          "id": "recCard-2-text",
+          "id": "recCard_2_text",
           "component": "Loading",
           "variant": "block"
         }
@@ -143,12 +171,12 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "recCard-2-text",
+          "id": "recCard_2_text",
           "component": "Text",
           "variant": "body",
           "text": "2. Pinewood Bistro\nRating 4.7 · Avg 128 · 2.0 km\nHighlight: spacious seating and private rooms for a more intimate talk.\nTip: a set menu is easiest; avoid the 7pm rush."
@@ -163,28 +191,39 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
           "id": "recs",
           "component": "Column",
-          "children": ["recCard-1", "recCard-2", "recCard-3"]
+          "children": [
+            "recCard_1",
+            "recCard_2",
+            "recCard_3"
+          ]
         },
-        { "id": "recCard-3", "component": "Card", "child": "recCard-3-body" },
         {
-          "id": "recCard-3-body",
+          "id": "recCard_3",
+          "component": "Card",
+          "child": "recCard_3_body"
+        },
+        {
+          "id": "recCard_3_body",
           "component": "Column",
-          "children": ["recCard-3-img", "recCard-3-text"]
+          "children": [
+            "recCard_3_img",
+            "recCard_3_text"
+          ]
         },
         {
-          "id": "recCard-3-img",
+          "id": "recCard_3_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-breeze/640/360"
         },
         {
-          "id": "recCard-3-text",
+          "id": "recCard_3_text",
           "component": "Loading",
           "variant": "block"
         }
@@ -192,12 +231,12 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "recCard-3-text",
+          "id": "recCard_3_text",
           "component": "Text",
           "variant": "body",
           "text": "3. Sea Breeze Kitchen\nRating 4.6 · Avg 98 · 0.8 km\nHighlight: casual vibe, great for a stroll before or after dinner.\nTip: sit near the outside; shareable small plates work well."

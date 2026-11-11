@@ -6,7 +6,10 @@ import { useCallback } from '@lynx-js/react';
 
 import { useA2UIContext } from './useA2UIContext.js';
 import { resolveDynamicValue } from '../store/resolveDynamic.js';
-import { executeFunctionCall } from '../store/resolveFunctionCall.js';
+import {
+  awaitResolvedValues,
+  executeFunctionCall,
+} from '../store/resolveFunctionCall.js';
 import type { Action, UserActionPayload } from '../store/types.js';
 
 /**
@@ -29,66 +32,85 @@ export function useAction(
   const { catalog, processor } = useA2UIContext();
 
   const sendAction = useCallback(
-    (action: Action) => {
-      if ('functionCall' in action && action.functionCall) {
-        return Promise.resolve(executeFunctionCall(
-          processor,
-          action.functionCall,
-          surfaceId,
-          dataContext,
-          { functions: catalog.functions, awaitResult: true },
-        ));
-      }
-
-      let name = 'unknownAction';
-      let context: Record<string, unknown> = {};
-
-      if ('event' in action && action.event) {
-        name = action.event.name;
-        const ctx = action.event.context as Record<string, unknown> | undefined;
-        if (ctx) {
-          const resolvedContext: Record<string, unknown> = {};
-          for (const [key, value] of Object.entries(ctx)) {
-            resolvedContext[key] = resolveDynamicValue(
-              processor,
-              value,
-              surfaceId,
-              dataContext,
-              {
-                functions: catalog.functions,
-                resolveFunctionCall: executeFunctionCall,
-              },
-            );
-          }
-          context = resolvedContext;
+    async (action: Action) => {
+      try {
+        if ('functionCall' in action && action.functionCall) {
+          return Promise.resolve(executeFunctionCall(
+            processor,
+            action.functionCall,
+            surfaceId,
+            dataContext,
+            {
+              functions: catalog.functions,
+              awaitResult: true,
+              userActivated: true,
+            },
+          ));
         }
-      }
 
-      const userMessage = action.event?.userMessage === undefined
-        ? undefined
-        : resolveDynamicValue(
-          processor,
-          action.event.userMessage,
+        let name = 'unknownAction';
+        let context: Record<string, unknown> = {};
+
+        if ('event' in action && action.event) {
+          name = action.event.name;
+          const ctx = action.event.context as
+            | Record<string, unknown>
+            | undefined;
+          if (ctx) {
+            const resolvedContext: Record<string, unknown> = {};
+            for (const [key, value] of Object.entries(ctx)) {
+              resolvedContext[key] = await awaitResolvedValues(
+                resolveDynamicValue(
+                  processor,
+                  value,
+                  surfaceId,
+                  dataContext,
+                  {
+                    functions: catalog.functions,
+                    resolveFunctionCall: executeFunctionCall,
+                    awaitResult: true,
+                    userActivated: true,
+                    throwOnError: true,
+                  },
+                ),
+              );
+            }
+            context = resolvedContext;
+          }
+        }
+
+        const userMessage = action.event?.userMessage === undefined
+          ? undefined
+          : await awaitResolvedValues(resolveDynamicValue(
+            processor,
+            action.event.userMessage,
+            surfaceId,
+            dataContext,
+            {
+              functions: catalog.functions,
+              resolveFunctionCall: executeFunctionCall,
+              awaitResult: true,
+              userActivated: true,
+              throwOnError: true,
+            },
+          ));
+        const userAction: UserActionPayload = {
+          name,
           surfaceId,
-          dataContext,
-          {
-            functions: catalog.functions,
-            resolveFunctionCall: executeFunctionCall,
-          },
-        );
-      const userAction: UserActionPayload = {
-        name,
-        surfaceId,
-        sourceComponentId: id,
-        timestamp: new Date().toISOString(),
-        context,
-        ...(typeof userMessage === 'string' ? { userMessage } : {}),
-      };
+          sourceComponentId: id,
+          timestamp: new Date().toISOString(),
+          context,
+          ...(typeof userMessage === 'string' ? { userMessage } : {}),
+        };
 
-      // Dispatch through the processor — `<A2UI>` listens via
-      // `processor.onEvent` and forwards the action to its `onAction`
-      // prop, which the developer wires to their agent.
-      return processor.sendMessage({ version: 'v1.0', action: userAction });
+        // Dispatch through the processor — `<A2UI>` listens via
+        // `processor.onEvent` and forwards the action to its `onAction`
+        // prop, which the developer wires to their agent.
+        return processor.sendMessage({ version: '1.0', action: userAction });
+      } catch (error) {
+        processor.reportExpressionError(error, surfaceId, 'EXECUTION_ERROR');
+        throw error;
+      }
     },
     [id, surfaceId, dataContext, processor, catalog.functions],
   );

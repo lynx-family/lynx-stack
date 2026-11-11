@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useDataBinding } from '../../react/useDataBinding.js';
 import type {
   ChildList,
@@ -42,6 +43,8 @@ const buildChild = (
  * @a2uiCatalog Column
  */
 export interface ColumnProps extends GenericComponentProps {
+  /** Relative space allocated by a Row or Column parent. */
+  weight?: number;
   /** Static child IDs array or template object. */
   children: ChildList;
   align?: 'start' | 'center' | 'end' | 'stretch';
@@ -76,7 +79,7 @@ export function Column(
     : undefined;
 
   const [columnData, , fullPath] = useDataBinding<Record<string, unknown>[]>(
-    template ? { path: template.path } : undefined,
+    template ? { '@path': template.path } : undefined,
     surface,
     dataContextPath,
     [],
@@ -102,6 +105,7 @@ export function Column(
 
   return (
     <view
+      {...accessibilityProps(props)}
       className={`column alignment-${align} distribution-${justify}`}
     >
       {childList.map((item) => {

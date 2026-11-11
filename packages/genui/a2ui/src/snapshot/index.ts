@@ -35,6 +35,7 @@ export interface CompactA2UISnapshotResult {
 }
 
 interface SnapshotTemplateInfo {
+  rawPath: string;
   componentId: string;
   path: string;
 }
@@ -43,6 +44,7 @@ interface SnapshotSurfaceState {
   surfaceId: string;
   catalogId?: string;
   sendDataModel?: boolean;
+  metadata?: Record<string, unknown>;
   rootComponentId: string | null;
   components: Map<string, ComponentInstance>;
   templates: Map<string, SnapshotTemplateInfo>;
@@ -55,8 +57,6 @@ const CHILD_REFERENCE_FIELDS = [
   'child',
   'trigger',
   'content',
-  'entryPointChild',
-  'contentChild',
 ] as const;
 
 function isObject(value: unknown): value is JsonRecord {
@@ -117,6 +117,7 @@ function getTemplateInfo(
   }
   return {
     componentId,
+    rawPath: path,
     path: resolveBindingPath(path, dataContextPath),
   };
 }
@@ -291,6 +292,7 @@ function stripInternalComponentState(
 ): ComponentInstance {
   const out = cloneJson(component) as ComponentInstance & JsonRecord;
   delete out.__template;
+  delete out.dataContextPath;
   return out;
 }
 
@@ -303,11 +305,12 @@ function createSurfaceMessage(
   if (surface.catalogId !== undefined) {
     createSurface['catalogId'] = surface.catalogId;
   }
+  if (surface.metadata) createSurface['metadata'] = surface.metadata;
   if (surface.sendDataModel !== undefined) {
     createSurface['sendDataModel'] = surface.sendDataModel;
   }
   return {
-    version: 'v1.0',
+    version: '1.0',
     createSurface,
   } as ServerToClientMessage;
 }
@@ -323,7 +326,7 @@ function createDataMessage(
   };
   if (path !== '/') updateDataModel['path'] = path;
   return {
-    version: 'v1.0',
+    version: '1.0',
     updateDataModel,
   } as ServerToClientMessage;
 }
@@ -333,7 +336,7 @@ function createComponentsMessage(
   components: ComponentInstance[],
 ): ServerToClientMessage {
   return {
-    version: 'v1.0',
+    version: '1.0',
     updateComponents: {
       surfaceId,
       components: components.map(component =>
@@ -347,7 +350,7 @@ class A2UISnapshotMachine {
   private surfaces = new Map<string, SnapshotSurfaceState>();
 
   applyAll(messages: readonly ServerToClientMessage[]): void {
-    if (messages.some(message => message.version !== 'v1.0')) {
+    if (messages.some(message => message.version !== '1.0')) {
       throw new Error('Only A2UI v1.0 is supported');
     }
     for (const message of messages.flatMap(message => expandMessage(message))) {
@@ -378,6 +381,16 @@ class A2UISnapshotMachine {
     let retainedDataPathCount = 0;
 
     for (const surface of this.surfaces.values()) {
+      // Snapshots are wire messages: retain templates, not renderer clone IDs or contexts.
+      for (const [id, template] of surface.templates) {
+        const component = surface.components.get(id);
+        if (component) {
+          component['children'] = {
+            path: template.rawPath,
+            componentId: template.componentId,
+          };
+        }
+      }
       const reachableComponents = collectReachableComponents(surface);
       // Keep the complete typed data model, including transport metadata.
       const retainedExistingPaths = surface.dataModel.has('/') ? ['/'] : [];
@@ -449,6 +462,9 @@ class A2UISnapshotMachine {
     const surface = this.getOrCreateSurface(surfaceId);
     if (typeof createSurface['catalogId'] === 'string') {
       surface.catalogId = createSurface['catalogId'];
+    }
+    if (isObject(createSurface['metadata'])) {
+      surface.metadata = createSurface['metadata'];
     }
     if (typeof createSurface['sendDataModel'] === 'boolean') {
       surface.sendDataModel = createSurface['sendDataModel'];

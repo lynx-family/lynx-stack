@@ -427,8 +427,8 @@ export async function writeCatalogArtifacts(
 
 // Function names must be valid JavaScript identifiers so they're safe to
 // (a) use as filesystem paths without escaping `..` or path separators and
-// (b) survive A2UI's wire format (`FunctionCall.call` is a bare name).
-const FUNCTION_NAME_RE = /^[a-z_$][\w$]*$/i;
+// (b) survive A2UI's wire format (`FunctionCall.@call` is a bare name).
+const FUNCTION_NAME_RE = /^[\p{XID_Start}_]\p{XID_Continue}*$/u;
 
 /**
  * Write function definition artifacts that were already extracted.
@@ -449,8 +449,8 @@ export function writeCatalogFunctions(
     if (!FUNCTION_NAME_RE.test(fn.name)) {
       throw new Error(
         `[a2ui-catalog-extractor] Invalid function name "${fn.name}". `
-          + 'Names must match /^[A-Za-z_$][A-Za-z0-9_$]*$/ so they can be '
-          + 'used as filenames and as FunctionCall.call identifiers.',
+          + 'Names must be UAX #31 identifiers so they can be '
+          + 'used as filenames and as FunctionCall.@call identifiers.',
       );
     }
     const { filePath: _filePath, ...definition } = fn;
@@ -475,6 +475,9 @@ export function createA2UICatalog(options: {
     )
     : options.components;
 
+  if ('Surface' in catalogComponents) {
+    throw new Error('Surface is a reserved A2UI component name');
+  }
   const functions = createFunctionSchemas(options.functions ?? []);
   return {
     $id: options.catalogId,
@@ -526,10 +529,10 @@ function createFunctionSchemas(
         ...(description ? { description } : {}),
         returnType,
         properties: {
-          call: { const: name } as JsonSchema,
+          '@call': { const: name } as JsonSchema,
           args: stripSchemaDialect(parameters),
         },
-        required: ['call', 'args'],
+        required: ['@call', 'args'],
       } as JsonSchema,
     ]),
   );
@@ -1138,8 +1141,7 @@ function parseReferenceType(
   const typeArguments = type.typeArguments ?? [];
   if (typeName === 'ComponentId' || typeName === 'ChildList') {
     return {
-      $ref:
-        `https://a2ui.org/specification/v1_0/common_types.json#/$defs/${typeName}`,
+      $ref: `common_types.json#/$defs/${typeName}`,
     };
   }
 
@@ -1233,8 +1235,7 @@ function parseComment(comment: TypeDocComment | undefined): ParsedDoc {
 
 function applyDocToSchema(schema: JsonSchema, parsedDoc: ParsedDoc): void {
   if (parsedDoc.componentId) {
-    schema.$ref =
-      'https://a2ui.org/specification/v1_0/common_types.json#/$defs/ComponentId';
+    schema.$ref = 'common_types.json#/$defs/ComponentId';
   }
   if (parsedDoc.description) {
     schema.description = parsedDoc.description;

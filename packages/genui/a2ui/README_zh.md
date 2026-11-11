@@ -8,8 +8,10 @@ A2UI server-to-client JSON messages，并在你的应用中渲染可信的 React
 当你已经有、或准备构建一个返回 A2UI messages 的 Agent 服务时，使用这个包。它不托管 Agent，不调用
 LLM，不拥有后端路由，也不提供 chat shell。你的应用负责传输层，并把消息写入 renderer。
 
+[当前标准迁移复核](./docs/protocol-1.0-audit_zh.md) 说明了消息字段、RPC 和校验语义的变化。
+
 server 和 client 只支持 `v1.0`，拒绝旧版本或缺少版本的协议消息。
-事件请求需要携带 `version: "v1.0"`，操作使用 `action` 信封。旧 v0.9 数据需要重新生成。客户端支持 `createSurface` 内嵌
+事件请求需要携带 `version: "1.0"`，操作使用 `action` 信封。0.9 和较早 1.0 草案的数据都需要重新生成。动态值使用 `@path`/`@call`，组件使用 `@catalogId`、`@checks`、`@metadata`、`@accessibility`。客户端支持 `createSurface` 内嵌
 `components` 和 `dataModel`、保留 JSON 类型的数据子树替换、`null` 删除和结构化校验结果。
 通过 `onMessage(message, metadata)` 转发 v1.0 协议事件，再把响应写入 `messageStore`。
 现有 `onAction` 回调继续可用；发送 action 时只使用其中一个回调，避免重复请求。

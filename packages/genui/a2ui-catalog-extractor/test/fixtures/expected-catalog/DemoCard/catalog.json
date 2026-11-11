@@ -12,12 +12,12 @@
           {
             "type": "object",
             "properties": {
-              "path": {
+              "@path": {
                 "type": "string"
               }
             },
             "required": [
-              "path"
+              "@path"
             ],
             "additionalProperties": false
           }

@@ -100,7 +100,7 @@ function containsUntrustedOpenURL(
     );
   }
   if (!isRecord(value)) return false;
-  if (value.call === 'openUrl') {
+  if (value['@call'] === 'openUrl') {
     if (!isRecord(value.args)) return true;
     const url = value.args.url;
     if (typeof url !== 'string' || !isOpenUrlAllowed(url)) return true;
@@ -118,7 +118,7 @@ function createSurfaceLoadingMessage(
   surfaceId: string,
 ): A2UIMessage {
   return {
-    version: 'v1.0',
+    version: '1.0',
     updateComponents: {
       surfaceId,
       components: [
@@ -151,10 +151,6 @@ function collectChildRefs(component: ComponentRecord): string[] {
   } else if (isRecord(children)) {
     const componentId = children.componentId;
     if (typeof componentId === 'string') refs.push(componentId);
-    const template = children.template;
-    if (isRecord(template) && typeof template.componentId === 'string') {
-      refs.push(template.componentId);
-    }
   }
 
   const tabs = component.tabs;
@@ -244,7 +240,7 @@ export class A2UIProtocolMessageStreamParser {
               frame.expectingKey = false;
             } else if (frame.role === 'message' && frame.key === 'version') {
               const value = this.parse(this.stringStart, i);
-              if (value === 'v1.0') {
+              if (value === '1.0') {
                 frame.version = value;
               }
             } else if (frame.role === 'update' && frame.key === 'surfaceId') {
@@ -426,7 +422,7 @@ export class A2UIProtocolMessageStreamParser {
       }
       if (changed.length > 0) {
         messages.push({
-          version: 'v1.0',
+          version: '1.0',
           updateComponents: { surfaceId, components: changed },
         });
       }

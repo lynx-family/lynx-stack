@@ -134,9 +134,9 @@ function createFunctionSchema(
       : {}),
     returnType: definition['returnType'],
     properties: {
-      call: { const: name },
+      '@call': { const: name },
       args: definition['parameters'],
     },
-    required: ['call', 'args'],
+    required: ['@call', 'args'],
   };
 }

@@ -53,7 +53,7 @@ function getDataUpdate(message: ServerToClientMessage): DataUpdate | null {
 
   const path = updateDataModel['path'];
   return {
-    ...(typeof path === 'string' ? { path } : {}),
+    ...(typeof path === 'string' ? { '@path': path } : {}),
     value: updateDataModel['value'],
   };
 }
@@ -115,11 +115,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('drops components removed from the final reachable tree', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -128,24 +128,24 @@ describe('compactA2UIMessagesToSnapshot', () => {
               component: 'Column',
               children: ['keep', 'remove-me'],
             },
-            { id: 'keep', component: 'Text', text: { path: '/title' } },
+            { id: 'keep', component: 'Text', text: { '@path': '/title' } },
             {
               id: 'remove-me',
               component: 'Text',
-              text: { path: '/unused' },
+              text: { '@path': '/unused' },
             },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { title: 'Visible', unused: 'Gone' },
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -179,11 +179,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('keeps the final replacement for an updated component', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -192,7 +192,7 @@ describe('compactA2UIMessagesToSnapshot', () => {
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -210,7 +210,7 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('preserves createSurface metadata and omits passthrough fields', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: {
           surfaceId: 's1',
           catalogId: 'test',
@@ -219,7 +219,7 @@ describe('compactA2UIMessagesToSnapshot', () => {
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [{ id: 'root', component: 'Text', text: 'Ready' }],
@@ -228,7 +228,7 @@ describe('compactA2UIMessagesToSnapshot', () => {
     ] as ServerToClientMessage[]);
 
     expect(result.messages[0]).toEqual({
-      version: 'v1.0',
+      version: '1.0',
       createSurface: {
         surfaceId: 's1',
         catalogId: 'test',
@@ -240,18 +240,18 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('omits deleted surfaces', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 'gone', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'gone',
           components: [{ id: 'root', component: 'Text', text: 'Gone' }],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         deleteSurface: { surfaceId: 'gone' },
       },
     ] as ServerToClientMessage[]);
@@ -260,14 +260,14 @@ describe('compactA2UIMessagesToSnapshot', () => {
     expect(result.metadata.activeSurfaceCount).toBe(0);
   });
 
-  test('serializes final dynamic children with data contexts', () => {
+  test('serializes templates without internal clone contexts', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -276,12 +276,12 @@ describe('compactA2UIMessagesToSnapshot', () => {
               component: 'Column',
               children: { componentId: 'item', path: '/items' },
             },
-            { id: 'item', component: 'Text', text: { path: 'name' } },
+            { id: 'item', component: 'Text', text: { '@path': 'name' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { items: [{ name: 'Apple' }, { name: 'Banana' }] },
@@ -294,20 +294,9 @@ describe('compactA2UIMessagesToSnapshot', () => {
       {
         id: 'root',
         component: 'Column',
-        children: ['item:0', 'item:1'],
+        children: { path: '/items', componentId: 'item' },
       },
-      {
-        id: 'item:0',
-        component: 'Text',
-        text: { path: 'name' },
-        dataContextPath: '/items/0',
-      },
-      {
-        id: 'item:1',
-        component: 'Text',
-        text: { path: 'name' },
-        dataContextPath: '/items/1',
-      },
+      { id: 'item', component: 'Text', text: { '@path': 'name' } },
     ]);
     expect(
       nextComponents.some(component => '__template' in component),
@@ -318,11 +307,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('normalizes root-bound dynamic children data contexts', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -331,12 +320,12 @@ describe('compactA2UIMessagesToSnapshot', () => {
               component: 'Column',
               children: { componentId: 'item', path: '/' },
             },
-            { id: 'item', component: 'Text', text: { path: 'name' } },
+            { id: 'item', component: 'Text', text: { '@path': 'name' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: [{ name: 'Alpha' }, { name: 'Beta' }],
@@ -348,20 +337,9 @@ describe('compactA2UIMessagesToSnapshot', () => {
       {
         id: 'root',
         component: 'Column',
-        children: ['item:0', 'item:1'],
+        children: { path: '/', componentId: 'item' },
       },
-      {
-        id: 'item:0',
-        component: 'Text',
-        text: { path: 'name' },
-        dataContextPath: '/0',
-      },
-      {
-        id: 'item:1',
-        component: 'Text',
-        text: { path: 'name' },
-        dataContextPath: '/1',
-      },
+      { id: 'item', component: 'Text', text: { '@path': 'name' } },
     ]);
     expect(dataPaths(result)).toEqual(['/']);
   });
@@ -369,11 +347,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('drops stale dynamic children when the final data is empty', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -382,19 +360,19 @@ describe('compactA2UIMessagesToSnapshot', () => {
               component: 'Column',
               children: { componentId: 'item', path: '/items' },
             },
-            { id: 'item', component: 'Text', text: { path: 'name' } },
+            { id: 'item', component: 'Text', text: { '@path': 'name' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { items: [{ name: 'Apple' }, { name: 'Banana' }] },
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           path: '/items',
@@ -404,7 +382,12 @@ describe('compactA2UIMessagesToSnapshot', () => {
     ] as ServerToClientMessage[]);
 
     expect(components(result)).toEqual([
-      { id: 'root', component: 'Column', children: [] },
+      {
+        id: 'root',
+        component: 'Column',
+        children: { path: '/items', componentId: 'item' },
+      },
+      { id: 'item', component: 'Text', text: { '@path': 'name' } },
     ]);
     expect(componentIds(result)).not.toContain('item:0');
     expect(componentIds(result)).not.toContain('item:1');
@@ -414,11 +397,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('resolves dot-relative bindings against generated data contexts', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -427,12 +410,12 @@ describe('compactA2UIMessagesToSnapshot', () => {
               component: 'Column',
               children: { componentId: 'item', path: '/items' },
             },
-            { id: 'item', component: 'Text', text: { path: './name' } },
+            { id: 'item', component: 'Text', text: { '@path': './name' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { items: [{ name: 'Apple' }] },
@@ -444,14 +427,14 @@ describe('compactA2UIMessagesToSnapshot', () => {
     expect(dataValues(result)).toEqual([{ items: [{ name: 'Apple' }] }]);
   });
 
-  test('keeps a generated component data context when it is replaced', () => {
+  test('keeps replacement template definitions', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -460,26 +443,26 @@ describe('compactA2UIMessagesToSnapshot', () => {
               component: 'Column',
               children: { componentId: 'item', path: '/items' },
             },
-            { id: 'item', component: 'Text', text: { path: 'name' } },
+            { id: 'item', component: 'Text', text: { '@path': 'name' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { items: [{ name: 'Apple' }] },
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
             {
-              id: 'item:0',
+              id: 'item',
               component: 'Text',
-              text: { path: 'name' },
+              text: { '@path': 'name' },
               color: 'green',
             },
           ],
@@ -491,14 +474,13 @@ describe('compactA2UIMessagesToSnapshot', () => {
       {
         id: 'root',
         component: 'Column',
-        children: ['item:0'],
+        children: { path: '/items', componentId: 'item' },
       },
       {
-        id: 'item:0',
+        id: 'item',
         component: 'Text',
-        text: { path: 'name' },
+        text: { '@path': 'name' },
         color: 'green',
-        dataContextPath: '/items/0',
       },
     ]);
     expect(dataPaths(result)).toEqual(['/']);
@@ -507,11 +489,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('retains data paths referenced by actions, checks, and function args', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -523,22 +505,22 @@ describe('compactA2UIMessagesToSnapshot', () => {
               action: {
                 event: {
                   name: 'buy',
-                  context: { productId: { path: '/product/id' } },
+                  context: { productId: { '@path': '/product/id' } },
                 },
               },
-              checks: [{ condition: { path: '/product/valid' } }],
+              '@checks': [{ condition: { '@path': '/product/valid' } }],
               isValid: {
-                call: 'isPositive',
-                args: { value: { path: '/product/count' } },
+                '@call': 'isPositive',
+                args: { value: { '@path': '/product/count' } },
               },
             },
             { id: 'label', component: 'Text', text: 'Buy' },
-            { id: 'unused', component: 'Text', text: { path: '/unused' } },
+            { id: 'unused', component: 'Text', text: { '@path': '/unused' } },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: {
@@ -556,11 +538,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('retains custom child references on unknown components', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -572,18 +554,18 @@ describe('compactA2UIMessagesToSnapshot', () => {
             {
               id: 'custom-child',
               component: 'Text',
-              text: { path: '/title' },
+              text: { '@path': '/title' },
             },
             {
               id: 'orphan',
               component: 'Text',
-              text: { path: '/unused' },
+              text: { '@path': '/unused' },
             },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { title: 'Visible', unused: 'Gone' },
@@ -598,11 +580,11 @@ describe('compactA2UIMessagesToSnapshot', () => {
   test('is stable when compacting compacted messages again', () => {
     const result = compactA2UIMessagesToSnapshot([
       {
-        version: 'v1.0',
+        version: '1.0',
         createSurface: { surfaceId: 's1', catalogId: 'test' },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [
@@ -611,20 +593,20 @@ describe('compactA2UIMessagesToSnapshot', () => {
               component: 'Column',
               children: ['keep', 'remove-me'],
             },
-            { id: 'keep', component: 'Text', text: { path: '/title' } },
+            { id: 'keep', component: 'Text', text: { '@path': '/title' } },
             { id: 'remove-me', component: 'Text', text: 'drop' },
           ],
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 's1',
           value: { title: 'Stable' },
         },
       },
       {
-        version: 'v1.0',
+        version: '1.0',
         updateComponents: {
           surfaceId: 's1',
           components: [

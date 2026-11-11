@@ -20,6 +20,7 @@ import {
   normalizeChoicePickerVariant,
   toggleChoicePickerValue,
 } from './utils.js';
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
@@ -42,8 +43,8 @@ const HitSlop = {
  */
 export interface ChoicePickerProps extends GenericComponentProps {
   /** The label for the group of options. */
-  label?: string | { path: string } | {
-    call: string;
+  label?: string | { '@path': string } | {
+    '@call': string;
     catalogId?: string;
     args: Record<string, unknown>;
   };
@@ -52,8 +53,8 @@ export interface ChoicePickerProps extends GenericComponentProps {
   /** The list of available options to choose from. */
   options: Array<{
     /** The text to display for this option. */
-    label: string | { path: string } | {
-      call: string;
+    label: string | { '@path': string } | {
+      '@call': string;
       catalogId?: string;
       args: Record<string, unknown>;
     };
@@ -61,8 +62,8 @@ export interface ChoicePickerProps extends GenericComponentProps {
     value: string;
   }>;
   /** The list of currently selected values. */
-  value: string[] | { path: string } | {
-    call: string;
+  value: string[] | { '@path': string } | {
+    '@call': string;
     catalogId?: string;
     args: Record<string, unknown>;
   };
@@ -71,10 +72,10 @@ export interface ChoicePickerProps extends GenericComponentProps {
   /** If true, displays a search input to filter the options. */
   filterable?: boolean;
   /** A list of checks to perform. */
-  checks?: Array<{
+  '@checks'?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: { path: string } | {
-      call: string;
+    condition: { '@path': string } | {
+      '@call': string;
       catalogId?: string;
       args: Record<string, unknown>;
     };
@@ -104,7 +105,7 @@ export function ChoicePicker(
   const selectedValues = normalizeChoicePickerValue(props.value, options);
   const selectedValue = selectedValues[0] ?? '';
   const visibleOptions = filterChoicePickerOptions(options, query);
-  const checks = props.checks as CheckLike[] | undefined;
+  const checks = props['@checks'] as CheckLike[] | undefined;
 
   const { ok, firstFailureMessage } = useChecks({
     checks,
@@ -134,7 +135,7 @@ export function ChoicePicker(
   const labelText = normalizeChoicePickerLabel(label);
 
   return (
-    <view key={id} className={rootClassName}>
+    <view {...accessibilityProps(props)} key={id} className={rootClassName}>
       {labelText
         ? <text className='choice-picker-label'>{labelText}</text>
         : null}

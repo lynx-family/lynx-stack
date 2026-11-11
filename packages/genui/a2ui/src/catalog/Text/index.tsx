@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { accessibilityProps } from '../../react/accessibility.js';
 import type { GenericComponentProps } from '../../store/types.js';
 import '../../../styles/catalog/Text.css';
 
@@ -10,9 +11,11 @@ import '../../../styles/catalog/Text.css';
  * @a2uiCatalog Text
  */
 export interface TextProps extends GenericComponentProps {
+  /** Relative space allocated by a Row or Column parent. */
+  weight?: number;
   /** Literal text, path binding, or function call. */
-  text: string | { path: string } | {
-    call: string;
+  text: string | { '@path': string } | {
+    '@call': string;
     catalogId?: string;
     args: Record<string, unknown>;
   };
@@ -34,11 +37,15 @@ export function Text(
   if (variant === 'markdown') {
     return (
       // @ts-expect-error support markdown future
-      <x-markdown content={text} />
+      <x-markdown {...accessibilityProps(props)} content={text} />
     );
   }
   return (
-    <text key={id} className={`text-${variant} ${emphasisClass}`}>
+    <text
+      {...accessibilityProps(props)}
+      key={id}
+      className={`text-${variant} ${emphasisClass}`}
+    >
       {text}
     </text>
   );

@@ -94,7 +94,7 @@ pnpm build:catalog
  */
 export interface QuickStartCardProps {
   /** Card title text or data binding. */
-  title: string | { path: string };
+  title: string | { '@path': string };
   /** Visual tone used by the renderer. */
   tone?: 'neutral' | 'accent';
   /**
@@ -157,7 +157,7 @@ dist/catalog/
           {
             "type": "object",
             "properties": {
-              "path": {
+              "@path": {
                 "type": "string"
               }
             },
@@ -332,18 +332,18 @@ context?: Record<string, string>;
 
 ### 支持的 TypeScript 形状
 
-| TypeScript 形状              | JSON Schema 形状                             |
-| ---------------------------- | -------------------------------------------- |
-| `string`                     | `{ "type": "string" }`                       |
-| `number`                     | `{ "type": "number" }`                       |
-| `boolean`                    | `{ "type": "boolean" }`                      |
-| `'a' \| 'b'`                 | `{ "type": "string", "enum": ["a", "b"] }`   |
-| `string \| { path: string }` | `{ "oneOf": [...] }`                         |
-| `T[]`                        | `{ "type": "array", "items": ... }`          |
-| `Array<T>`                   | `{ "type": "array", "items": ... }`          |
-| `ReadonlyArray<T>`           | `{ "type": "array", "items": ... }`          |
-| `{ name: string }`           | 带 `additionalProperties: false` 的严格对象  |
-| `Record<string, T>`          | 带 `additionalProperties: ...` 的 object map |
+| TypeScript 形状                 | JSON Schema 形状                             |
+| ------------------------------- | -------------------------------------------- |
+| `string`                        | `{ "type": "string" }`                       |
+| `number`                        | `{ "type": "number" }`                       |
+| `boolean`                       | `{ "type": "boolean" }`                      |
+| `'a' \| 'b'`                    | `{ "type": "string", "enum": ["a", "b"] }`   |
+| `string \| { '@path': string }` | `{ "oneOf": [...] }`                         |
+| `T[]`                           | `{ "type": "array", "items": ... }`          |
+| `Array<T>`                      | `{ "type": "array", "items": ... }`          |
+| `ReadonlyArray<T>`              | `{ "type": "array", "items": ... }`          |
+| `{ name: string }`              | 带 `additionalProperties: false` 的严格对象  |
+| `Record<string, T>`             | 带 `additionalProperties: ...` 的 object map |
 
 ### 不支持或含义不明确的类型
 
@@ -480,7 +480,7 @@ label?: string;
 或者显式建模状态：
 
 ```tsx
-label: string | { path: string };
+label: string | { '@path': string };
 ```
 
 ### `Unsupported TypeDoc reference`

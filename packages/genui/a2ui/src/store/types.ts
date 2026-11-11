@@ -17,7 +17,14 @@ export type ChildList = ComponentId[] | {
 export interface ComponentInstance {
   id: string;
   component: string;
-  catalogId?: string;
+  '@catalogId'?: string;
+  '@metadata'?: { extensions?: Record<string, unknown> };
+  '@accessibility'?: {
+    label?: string | DataBinding | ProtocolFunctionCall;
+    description?: string | DataBinding | ProtocolFunctionCall;
+    live?: 'off' | 'polite' | 'assertive';
+    hidden?: boolean | DataBinding | ProtocolFunctionCall;
+  };
   weight?: number;
   [key: string]: unknown;
   /**
@@ -42,6 +49,7 @@ export interface Surface {
   surfaceId: SurfaceId;
   catalogId?: string;
   sendDataModel?: boolean | undefined;
+  metadata?: { extensions?: Record<string, unknown> };
   /** id of the root component for this surface (must be 'root'). */
   rootComponentId?: string | null;
   components: Map<string, ComponentInstance>;
@@ -65,11 +73,11 @@ export interface ResourceInfo {
 export type Resource = GenericResource<ResourceInfo>;
 
 /** Supported wire protocol versions. */
-export type ProtocolVersion = 'v1.0';
+export type ProtocolVersion = '1.0';
 
 /** Catalog-qualified function invocation. */
 export interface ProtocolFunctionCall {
-  call: string;
+  '@call': string;
   catalogId?: string;
   args?: Record<string, unknown>;
 }
@@ -84,13 +92,14 @@ export type FunctionResponse =
 
 /** v1.0 messages, sharing the existing component representation. */
 export type V1Message =
-  & { version: 'v1.0' }
+  & { version: '1.0' }
   & (
     | {
       createSurface: {
         surfaceId: string;
         catalogId?: string;
         sendDataModel?: boolean;
+        metadata?: { extensions?: Record<string, unknown> };
         components?: ComponentInstance[];
         dataModel?: Record<string, unknown>;
       };
@@ -102,6 +111,7 @@ export type V1Message =
     | { deleteSurface: { surfaceId: string } }
     | {
       callRendererFunction: {
+        surfaceId?: string;
         functionCallId: string;
         callFunction: ProtocolFunctionCall & { catalogId: string };
       };
@@ -116,7 +126,7 @@ export type ServerToClientMessage = V1Message & {
 
 /** Renderer-to-agent v1.0 wire envelope. Transport metadata is separate. */
 export type RendererToAgentMessage =
-  & { version: 'v1.0' }
+  & { version: '1.0' }
   & (
     | { action: UserActionPayload }
     | {
@@ -149,10 +159,11 @@ export interface UserActionPayload {
   timestamp: string; // ISO 8601
   context: Record<string, unknown>;
   userMessage?: string;
+  metadata?: { extensions?: Record<string, unknown> };
 }
 
 export interface DataBinding {
-  path: string;
+  '@path': string;
 }
 export type Action =
   | {

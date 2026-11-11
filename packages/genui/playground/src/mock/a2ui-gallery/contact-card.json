@@ -3,7 +3,7 @@
   "description": "Example of contact card",
   "messages": [
     {
-      "version": "v1.0",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-contact-card",
         "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
@@ -11,26 +11,33 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-contact-card",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["avatar-image", "name", "title", "divider", "contact-info", "actions"],
+            "children": [
+              "avatar_image",
+              "name",
+              "title",
+              "divider",
+              "contact_info",
+              "actions"
+            ],
             "align": "center"
           },
           {
-            "id": "avatar-image",
+            "id": "avatar_image",
             "component": "Image",
             "url": {
-              "path": "/avatar"
+              "@path": "/avatar"
             },
             "fit": "cover",
             "variant": "avatar"
@@ -39,7 +46,7 @@
             "id": "name",
             "component": "Text",
             "text": {
-              "path": "/name"
+              "@path": "/name"
             },
             "variant": "h2"
           },
@@ -47,7 +54,7 @@
             "id": "title",
             "component": "Text",
             "text": {
-              "path": "/title"
+              "@path": "/title"
             },
             "variant": "body"
           },
@@ -56,81 +63,97 @@
             "component": "Divider"
           },
           {
-            "id": "contact-info",
+            "id": "contact_info",
             "component": "Column",
-            "children": ["phone-row", "email-row", "location-row"]
+            "children": [
+              "phone_row",
+              "email_row",
+              "location_row"
+            ]
           },
           {
-            "id": "phone-row",
+            "id": "phone_row",
             "component": "Row",
-            "children": ["phone-icon", "phone-text"],
+            "children": [
+              "phone_icon",
+              "phone_text"
+            ],
             "align": "center"
           },
           {
-            "id": "phone-icon",
+            "id": "phone_icon",
             "component": "Icon",
             "name": "phone"
           },
           {
-            "id": "phone-text",
+            "id": "phone_text",
             "component": "Text",
             "text": {
-              "path": "/phone"
+              "@path": "/phone"
             },
             "variant": "body"
           },
           {
-            "id": "email-row",
+            "id": "email_row",
             "component": "Row",
-            "children": ["email-icon", "email-text"],
+            "children": [
+              "email_icon",
+              "email_text"
+            ],
             "align": "center"
           },
           {
-            "id": "email-icon",
+            "id": "email_icon",
             "component": "Icon",
             "name": "mail"
           },
           {
-            "id": "email-text",
+            "id": "email_text",
             "component": "Text",
             "text": {
-              "path": "/email"
+              "@path": "/email"
             },
             "variant": "body"
           },
           {
-            "id": "location-row",
+            "id": "location_row",
             "component": "Row",
-            "children": ["location-icon", "location-text"],
+            "children": [
+              "location_icon",
+              "location_text"
+            ],
             "align": "center"
           },
           {
-            "id": "location-icon",
+            "id": "location_icon",
             "component": "Icon",
-            "name": "locationOn"
+            "name": "location_on"
           },
           {
-            "id": "location-text",
+            "id": "location_text",
             "component": "Text",
             "text": {
-              "path": "/location"
+              "@path": "/location"
             },
             "variant": "body"
           },
           {
             "id": "actions",
             "component": "Row",
-            "children": ["call-btn", "message-btn"]
+            "children": [
+              "call_btn",
+              "message_btn"
+            ]
           },
           {
-            "id": "call-btn-text",
+            "id": "call_btn_text",
             "component": "Text",
             "text": "Call"
           },
           {
-            "id": "call-btn",
+            "id": "call_btn",
             "component": "Button",
-            "child": "call-btn-text",
+            "child": "call_btn_text",
             "action": {
               "event": {
                 "name": "call",
@@ -139,14 +162,14 @@
             }
           },
           {
-            "id": "message-btn-text",
+            "id": "message_btn_text",
             "component": "Text",
             "text": "Message"
           },
           {
-            "id": "message-btn",
+            "id": "message_btn",
             "component": "Button",
-            "child": "message-btn-text",
+            "child": "message_btn_text",
             "action": {
               "event": {
                 "name": "message",
@@ -158,7 +181,7 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-contact-card",
         "value": {

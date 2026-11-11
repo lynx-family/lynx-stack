@@ -150,7 +150,7 @@ be validated. Pair each component with a manifest before announcing it.
 ## Basic-catalog functions
 
 A2UI messages can embed function calls in dynamic props, action payloads,
-and validation checks — for example `{ call: 'formatDate', args: { … } }`.
+and validation checks — for example `{ '@call': 'formatDate', args: { … } }`.
 These run **on the client at render time**. To make them available, spread
 `...basicFunctions` into the same catalog input list:
 
@@ -160,10 +160,9 @@ import { Text, basicFunctions, defineCatalog } from '@lynx-js/genui/a2ui';
 const catalog = defineCatalog([Text, ...basicFunctions]);
 ```
 
-`basicFunctions` is an array of ready-made entries whose implementations
-come straight from the upstream `@a2ui/web_core` basic catalog, so the wire
-contract stays aligned with the A2UI v1.0 spec for free. It covers 25
-functions:
+`basicFunctions` contains 14 functions from the official 1.0 basic catalog and
+11 additional Lynx arithmetic, comparison, and string utilities. The official
+schemas are pinned; implementations run locally without the 0.9 Web SDK.
 
 | Category   | Functions (protocol names)                                                  |
 | ---------- | --------------------------------------------------------------------------- |
@@ -177,12 +176,11 @@ functions:
 
 > Note the mixed casing — comparison/text helpers use `snake_case`
 > (`not_equals`, `starts_with`) while formatters use `camelCase`
-> (`formatDate`, `openUrl`). These are the upstream A2UI v1.0 names; use
-> them verbatim in messages.
+> (`formatDate`, `openUrl`). Use the names declared by your selected catalog verbatim in messages.
 
-Include `...basicFunctions` whenever your Agent might emit any of these. If
-a message references a function the catalog does not contain, that call
-resolves to `undefined` rather than throwing.
+Include `...basicFunctions` whenever your Agent might emit any of these. Calls without a local implementation route to the Agent using `callAgentFunction`.
+Failures resolve dynamic bindings to `null` and emit a correlated protocol error.
+`openUrl` requires a user gesture and is blocked in passive bindings and checks.
 
 If you build your own renderer instead of using `<A2UI>`, call
 `registerBasicFunctions()` once to register the same implementations into
@@ -349,7 +347,7 @@ Custom components receive runtime-shaped props from the protocol stream. For
 anything beyond a leaf component, reach into `@lynx-js/genui/a2ui/react`,
 the contract custom components plug into:
 
-- **`useDataBinding`** — resolve a bound value (`{ path }`) against the
+- **`useDataBinding`** — resolve a bound value (`{ "@path": path }`) against the
   surface's data model and get a setter back, so inputs can write user edits
   into the model.
 - **`useResolvedProps`** — resolve a whole prop bag at once, expanding data

@@ -225,14 +225,14 @@ describe('Bench generation, capture and scoring pipeline', () => {
           return Promise.resolve({
             text: JSON.stringify([
               {
-                version: 'v1.0',
+                version: '1.0',
                 createSurface: {
                   surfaceId: 'main',
                   catalogId: options.catalog?.id,
                 },
               },
               {
-                version: 'v1.0',
+                version: '1.0',
                 updateComponents: {
                   surfaceId: 'main',
                   components: [

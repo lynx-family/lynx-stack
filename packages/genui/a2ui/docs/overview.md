@@ -219,7 +219,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
   applies `createSurface` / `updateComponents` / `updateDataModel` /
   `deleteSurface` into surface state, and emits typed events
   (`beginRendering`, `surfaceUpdate`, `deleteSurface`) for the React layer
-  to consume. `sendMessage({ version: 'v1.0', action })` fans actions out to listeners.
+  to consume. `sendMessage({ version: '1.0', action })` fans actions out to listeners.
 - **`Resource`** — a `pending → success → error` state machine, one per
   surface root and per component instance. Its snapshot reference changes
   on every transition so `useSyncExternalStore` never bails out of a
@@ -237,7 +237,7 @@ see while building:
 - **Children by reference.** A component instance references children by id
   (`child: "text-1"` or `children: ["a", "b"]`). Catalog components render
   their child ids by delegating to `<NodeRenderer>` for the same surface.
-- **Data binding.** A bound prop is `{ path: string }` resolved against the
+- **Data binding.** A bound prop is `{ '@path': string }` resolved against the
   surface's `SignalStore`. Relative paths resolve against the component's
   `dataContextPath`, which is what makes templates and repeated lists work.
 - **Template expansion.** When `updateComponents` carries a "templated

@@ -5,8 +5,10 @@
 import type { Signal } from '@lynx-js/react-signals';
 import { signal } from '@lynx-js/react-signals';
 
+import { compositionErrors } from './composition.js';
 import { expandMessage } from './protocol.js';
 import { resolveBindingPath } from './resolveDynamic.js';
+import { executeFunctionCall } from './resolveFunctionCall.js';
 import { createResource } from './Resource.js';
 import { SignalStore } from './SignalStore.js';
 import type {
@@ -26,6 +28,7 @@ import type { Catalog } from '../catalog/defineCatalog.js';
 export interface A2UIEvent {
   message: Record<string, unknown>;
   resolve: (response: unknown) => void;
+  reject: (error: unknown) => void;
 }
 
 /**
@@ -50,6 +53,8 @@ export class MessageProcessor {
   surfaces: Map<string, Surface>;
   private catalogs = new Map<string, Catalog>();
   private functionValues = new Map<string, Signal<unknown>>();
+  private functionFailures = new Map<string, Error>();
+  private reportedExpressionErrors = new WeakSet<object>();
   private nextFunctionCallId = 0;
   private pendingCalls = new Map<
     string,
@@ -80,7 +85,7 @@ export class MessageProcessor {
   getDataModelMetadata(): Record<string, unknown> {
     return {
       a2uiRendererDataModel: {
-        version: 'v1.0',
+        version: '1.0',
         surfaces: Object.fromEntries(
           [...this.surfaces].filter(([, surface]) => surface.sendDataModel).map(
             ([id, surface]) => [id, surface.store.getDataModel() ?? {}],
@@ -95,11 +100,21 @@ export class MessageProcessor {
     surfaceId: string,
     callFunction: ProtocolFunctionCall,
   ): Promise<unknown> {
+    const catalogId = callFunction.catalogId
+      ?? this.surfaces.get(surfaceId)?.catalogId;
+    if (!catalogId) {
+      return Promise.reject(new Error('Function call requires a catalog'));
+    }
+    callFunction = { ...callFunction, catalogId };
     const functionCallId = `renderer-${++this.nextFunctionCallId}`;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingCalls.delete(functionCallId);
-        reject(new Error('Agent function response timed out'));
+        reject(
+          Object.assign(new Error('Agent function response timed out'), {
+            functionCallId,
+          }),
+        );
       }, 30_000);
       this.pendingCalls.set(functionCallId, {
         surfaceId,
@@ -108,8 +123,13 @@ export class MessageProcessor {
         timer,
       });
       void this.sendMessage({
-        version: 'v1.0',
+        version: '1.0',
         callAgentFunction: { surfaceId, functionCallId, callFunction },
+      }).catch(error => {
+        this.completeFunctionCall({
+          functionCallId,
+          error: { code: 'TRANSPORT_ERROR', message: String(error) },
+        });
       });
     });
   }
@@ -118,8 +138,12 @@ export class MessageProcessor {
   resolveAgentFunction(
     surfaceId: string,
     callFunction: ProtocolFunctionCall,
+    throwOnError = false,
   ): unknown {
     const key = JSON.stringify([surfaceId, callFunction]);
+    if (throwOnError && this.functionFailures.has(key)) {
+      throw this.functionFailures.get(key);
+    }
     let result = this.functionValues.get(key);
     if (!result) {
       result = signal<unknown>(undefined);
@@ -128,7 +152,13 @@ export class MessageProcessor {
       void this.callAgentFunction(surfaceId, callFunction).then(value => {
         target.value = value;
       }, error => {
-        console.warn('[a2ui] Agent function failed:', error);
+        if (!this.functionValues.has(key)) return;
+        this.functionFailures.set(
+          key,
+          error instanceof Error ? error : new Error(String(error)),
+        );
+        this.reportExpressionError(error, surfaceId);
+        target.value = null;
       });
     }
     return result.value;
@@ -139,8 +169,13 @@ export class MessageProcessor {
     if (!pending) return;
     this.pendingCalls.delete(response.functionCallId);
     clearTimeout(pending.timer);
-    if (response.error) pending.reject(new Error(response.error.message));
-    else pending.resolve(response.value);
+    if (response.error) {
+      pending.reject(
+        Object.assign(new Error(response.error.message), {
+          functionCallId: response.functionCallId,
+        }),
+      );
+    } else pending.resolve(response.value);
   }
 
   private cancelFunctionCalls(surfaceId?: string): void {
@@ -154,50 +189,130 @@ export class MessageProcessor {
     }
   }
 
-  private async callRendererFunction(
-    request: {
-      functionCallId: string;
-      callFunction: ProtocolFunctionCall & { catalogId: string };
-    },
-  ): Promise<void> {
-    const { functionCallId, callFunction } = request;
+  /** Report local evaluation failures without discarding the surface. */
+  reportExpressionError(
+    error: unknown,
+    surfaceId: string,
+    code = 'EXPRESSION_ERROR',
+  ): void {
+    if (error && typeof error === 'object') {
+      if (this.reportedExpressionErrors.has(error)) return;
+      this.reportedExpressionErrors.add(error);
+    }
+    void this.sendMessage({
+      version: '1.0',
+      error: {
+        ...(error instanceof Error && 'functionCallId' in error
+          ? {
+            code: 'EXPRESSION_ERROR',
+            functionCallId: String(error.functionCallId),
+          }
+          : { code, surfaceId }),
+        message: error instanceof Error ? error.message : String(error),
+      },
+    }).catch(error => {
+      console.warn('[a2ui] Error reporting failed:', error);
+    });
+  }
+
+  getAsyncFunctionValue(
+    key: string,
+    throwOnError = false,
+  ): { value: unknown } | undefined {
+    if (throwOnError && this.functionFailures.has(key)) {
+      throw this.functionFailures.get(key);
+    }
+    return this.functionValues.get(key);
+  }
+
+  /** Cache an asynchronous expression result and notify reactive consumers. */
+  resolveAsyncFunction(
+    key: string,
+    surfaceId: string,
+    invoke: () => Promise<unknown>,
+  ): unknown {
+    let result = this.functionValues.get(key);
+    if (!result) {
+      result = signal<unknown>(undefined);
+      this.functionValues.set(key, result);
+      const target = result;
+      void invoke().then(value => {
+        target.value = value;
+      }, error => {
+        if (!this.functionValues.has(key)) return;
+        this.functionFailures.set(
+          key,
+          error instanceof Error ? error : new Error(String(error)),
+        );
+        this.reportExpressionError(error, surfaceId);
+        target.value = null;
+      });
+    }
+    return result.value;
+  }
+
+  private async callRendererFunction(request: {
+    surfaceId?: string;
+    functionCallId: string;
+    callFunction: ProtocolFunctionCall & { catalogId: string };
+  }): Promise<void> {
+    const { functionCallId, callFunction, surfaceId } = request;
+    let response: FunctionResponse;
     const entry = this.getCatalog(callFunction.catalogId)?.functions.find(fn =>
-      fn.name === callFunction.call
+      fn.name === callFunction['@call']
     );
     if (
-      !entry
-      || !['agentOnly', 'rendererOrAgent'].includes(
-        entry.definition?.allowedCallers ?? 'rendererOnly',
-      )
+      !entry?.impl
+      || (entry.definition?.allowedCallers ?? 'rendererOnly') === 'rendererOnly'
+      || entry.definition?.requiresUserActivation
+      || (surfaceId !== undefined && !this.surfaces.has(surfaceId))
     ) {
-      await this.sendMessage({
-        version: 'v1.0',
+      response = {
+        functionCallId,
         error: {
           code: 'INVALID_FUNCTION_CALL',
-          message:
-            `Function "${callFunction.call}" is not callable by the agent`,
+          message: 'Invalid function, catalog, caller, or surface context',
+        },
+      };
+    } else {
+      // An omitted surface must never borrow data from an existing surface.
+      const evaluator = surfaceId === undefined ? new MessageProcessor() : this;
+      if (surfaceId === undefined) {
+        for (const [id, catalog] of this.catalogs) {
+          evaluator.registerCatalog(id, catalog);
+        }
+      }
+      const contextId = surfaceId ?? '';
+      try {
+        const value = await executeFunctionCall(
+          evaluator,
+          callFunction,
+          contextId,
+          undefined,
+          {
+            caller: 'agent',
+            awaitResult: true,
+            throwOnError: true,
+          },
+        );
+        response = { functionCallId, value: value ?? null };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        response = {
           functionCallId,
-        },
-      });
-      return;
-    }
-    let response: FunctionResponse;
-    try {
-      response = {
-        functionCallId,
-        value: (await entry.impl(callFunction.args ?? {})) ?? null,
-      };
-    } catch (error) {
-      response = {
-        functionCallId,
-        error: {
-          code: 'EXECUTION_FAILED',
-          message: error instanceof Error ? error.message : String(error),
-        },
-      };
+          error: {
+            code: message.startsWith('Invalid function')
+              ? 'INVALID_FUNCTION_CALL'
+              : 'EXECUTION_ERROR',
+            message,
+          },
+        };
+      } finally {
+        if (evaluator !== this) evaluator.clearSurfaces();
+      }
     }
     await this.sendMessage({
-      version: 'v1.0',
+      version: '1.0',
       rendererFunctionResponse: response,
     });
   }
@@ -222,7 +337,7 @@ export class MessageProcessor {
   }
 
   dispatch(message: Record<string, unknown>): Promise<unknown> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (this.eventListeners.size === 0) {
         resolve([]);
         return;
@@ -247,6 +362,12 @@ export class MessageProcessor {
         let called = false;
         cb({
           message,
+          reject: (error) => {
+            if (!called) {
+              called = true;
+              reject(error instanceof Error ? error : new Error(String(error)));
+            }
+          },
           resolve: (value) => {
             if (called) return;
             called = true;
@@ -279,6 +400,7 @@ export class MessageProcessor {
   clearSurfaces(): void {
     this.cancelFunctionCalls();
     this.functionValues.clear();
+    this.functionFailures.clear();
     this.surfaces.clear();
   }
 
@@ -388,15 +510,13 @@ export class MessageProcessor {
 
     cloneStringField('trigger');
     cloneStringField('content');
-    cloneStringField('entryPointChild');
-    cloneStringField('contentChild');
 
     return newId;
   }
 
   processMessages(messages: ServerToClientMessage[]): void {
     for (const message of messages) {
-      if (message.version !== 'v1.0') {
+      if (message.version !== '1.0') {
         const source = Object.values(message).find((
           value,
         ): value is Record<string, unknown> =>
@@ -413,12 +533,14 @@ export class MessageProcessor {
           continue;
         }
         void this.sendMessage({
-          version: 'v1.0',
+          version: '1.0',
           error: {
             code: 'UNSUPPORTED_VERSION',
             ...location,
             message: 'Only A2UI v1.0 is supported',
           },
+        }).catch(error => {
+          console.warn('[a2ui] Error reporting failed:', error);
         });
         continue;
       }
@@ -427,13 +549,15 @@ export class MessageProcessor {
         && this.surfaces.has(message.createSurface.surfaceId)
       ) {
         void this.sendMessage({
-          version: 'v1.0',
+          version: '1.0',
           error: {
             code: 'VALIDATION_FAILED',
             surfaceId: message.createSurface.surfaceId,
             path: '/createSurface/surfaceId',
             message: 'Surface already exists',
           },
+        }).catch(error => {
+          console.warn('[a2ui] Error reporting failed:', error);
         });
         continue;
       }
@@ -444,7 +568,11 @@ export class MessageProcessor {
   private processExpandedMessages(messages: ServerToClientMessage[]): void {
     for (const message of messages) {
       if ('callRendererFunction' in message) {
-        void this.callRendererFunction(message.callRendererFunction);
+        void this.callRendererFunction(message.callRendererFunction).catch(
+          error => {
+            console.warn('[a2ui] RPC response delivery failed:', error);
+          },
+        );
         continue;
       }
       if ('agentFunctionResponse' in message) {
@@ -461,13 +589,15 @@ export class MessageProcessor {
         && !this.surfaces.has(payload.surfaceId)
       ) {
         void this.sendMessage({
-          version: 'v1.0',
+          version: '1.0',
           error: {
             code: 'VALIDATION_FAILED',
             surfaceId: payload.surfaceId,
             path: '/',
             message: 'Surface must be created exactly once before updates',
           },
+        }).catch(error => {
+          console.warn('[a2ui] Error reporting failed:', error);
         });
         continue;
       }
@@ -481,11 +611,35 @@ export class MessageProcessor {
         if (catId !== undefined) surface.catalogId = catId as string;
         const sData = createSurface['sendDataModel'];
         if (sData !== undefined) surface.sendDataModel = sData as boolean;
+        if (createSurface['metadata']) {
+          surface.metadata = createSurface['metadata'] as NonNullable<
+            Surface['metadata']
+          >;
+        }
       }
 
       if ('updateComponents' in message && message.updateComponents) {
         const { surfaceId, components } = message.updateComponents;
         const surface = this.getOrCreateSurface(surfaceId);
+
+        const proposed = new Map(surface.components);
+        for (const component of components) {
+          proposed.set(component.id, component);
+        }
+        const violations = compositionErrors(
+          proposed,
+          surface.catalogId,
+          id => this.getCatalog(id),
+        );
+        if (violations.length > 0) {
+          for (const error of violations) {
+            void this.sendMessage({
+              version: '1.0',
+              error: { ...error, surfaceId },
+            }).catch(() => undefined);
+          }
+          continue;
+        }
 
         const updatesMap = new Map<string, ComponentInstance>();
 
@@ -568,7 +722,7 @@ export class MessageProcessor {
           });
         }
         this.processMessages([{
-          version: 'v1.0',
+          version: '1.0',
           updateDataModel: { surfaceId, value: surface.store.getDataModel() },
         }]);
       }
@@ -675,6 +829,7 @@ export class MessageProcessor {
         for (const key of this.functionValues.keys()) {
           if ((JSON.parse(key) as unknown[])[0] === surfaceId) {
             this.functionValues.delete(key);
+            this.functionFailures.delete(key);
           }
         }
         this.surfaces.delete(surfaceId);

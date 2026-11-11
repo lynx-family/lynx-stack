@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
@@ -13,19 +14,19 @@ import '../../../styles/catalog/CheckBox.css';
  * @a2uiCatalog CheckBox
  */
 export interface CheckBoxProps extends GenericComponentProps {
-  label: string | { path: string } | {
-    call: string;
+  label: string | { '@path': string } | {
+    '@call': string;
     catalogId?: string;
     args: Record<string, unknown>;
   };
-  value: boolean | { path: string } | {
-    call: string;
+  value: boolean | { '@path': string } | {
+    '@call': string;
     catalogId?: string;
     args: Record<string, unknown>;
   };
-  checks?: Array<{
-    condition: { path: string } | {
-      call: string;
+  '@checks'?: Array<{
+    condition: { '@path': string } | {
+      '@call': string;
       catalogId?: string;
       args: Record<string, unknown>;
     };
@@ -48,7 +49,7 @@ export function CheckBox(
     surface,
     dataContextPath,
   } = props;
-  const checks = props.checks as CheckLike[] | undefined;
+  const checks = props['@checks'] as CheckLike[] | undefined;
 
   const { ok, firstFailureMessage } = useChecks({
     checks,
@@ -63,6 +64,7 @@ export function CheckBox(
 
   return (
     <view
+      {...accessibilityProps(props)}
       key={id}
       className={`checkbox-row${ok ? '' : ' checkbox-row-invalid'}`}
       bindtap={handleChange}

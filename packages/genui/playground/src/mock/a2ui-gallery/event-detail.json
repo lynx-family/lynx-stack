@@ -3,7 +3,7 @@
   "description": "Example of event detail demonstrating date and string formatting.",
   "messages": [
     {
-      "version": "v1.0",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-event-detail",
         "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
@@ -11,44 +11,54 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-event-detail",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["title", "time-row", "location-row", "description", "divider", "actions"]
+            "children": [
+              "title",
+              "time_row",
+              "location_row",
+              "description",
+              "divider",
+              "actions"
+            ]
           },
           {
             "id": "title",
             "component": "Text",
             "text": {
-              "path": "/title"
+              "@path": "/title"
             },
             "variant": "h2"
           },
           {
-            "id": "time-row",
+            "id": "time_row",
             "component": "Row",
-            "children": ["time-icon", "time-text"],
+            "children": [
+              "time_icon",
+              "time_text"
+            ],
             "align": "center"
           },
           {
-            "id": "time-icon",
+            "id": "time_icon",
             "component": "Icon",
-            "name": "calendarToday"
+            "name": "calendar_today"
           },
           {
-            "id": "time-text",
+            "id": "time_text",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "${formatDate(value: ${/start}, format: 'E, MMM d')} • ${formatDate(value: ${/start}, format: 'h:mm a')} - ${formatDate(value: ${/end}, format: 'h:mm a')}"
               }
@@ -56,21 +66,24 @@
             "variant": "body"
           },
           {
-            "id": "location-row",
+            "id": "location_row",
             "component": "Row",
-            "children": ["location-icon", "location-text"],
+            "children": [
+              "location_icon",
+              "location_text"
+            ],
             "align": "center"
           },
           {
-            "id": "location-icon",
+            "id": "location_icon",
             "component": "Icon",
-            "name": "locationOn"
+            "name": "location_on"
           },
           {
-            "id": "location-text",
+            "id": "location_text",
             "component": "Text",
             "text": {
-              "path": "/location"
+              "@path": "/location"
             },
             "variant": "body"
           },
@@ -78,7 +91,7 @@
             "id": "description",
             "component": "Text",
             "text": {
-              "path": "/description"
+              "@path": "/description"
             },
             "variant": "body"
           },
@@ -89,17 +102,20 @@
           {
             "id": "actions",
             "component": "Row",
-            "children": ["accept-btn", "decline-btn"]
+            "children": [
+              "accept_btn",
+              "decline_btn"
+            ]
           },
           {
-            "id": "accept-btn-text",
+            "id": "accept_btn_text",
             "component": "Text",
             "text": "Accept"
           },
           {
-            "id": "accept-btn",
+            "id": "accept_btn",
             "component": "Button",
-            "child": "accept-btn-text",
+            "child": "accept_btn_text",
             "action": {
               "event": {
                 "name": "accept",
@@ -108,14 +124,14 @@
             }
           },
           {
-            "id": "decline-btn-text",
+            "id": "decline_btn_text",
             "component": "Text",
             "text": "Decline"
           },
           {
-            "id": "decline-btn",
+            "id": "decline_btn",
             "component": "Button",
-            "child": "decline-btn-text",
+            "child": "decline_btn_text",
             "action": {
               "event": {
                 "name": "decline",
@@ -127,7 +143,7 @@
       }
     },
     {
-      "version": "v1.0",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-event-detail",
         "value": {

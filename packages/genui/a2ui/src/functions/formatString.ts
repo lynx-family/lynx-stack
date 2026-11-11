@@ -7,12 +7,20 @@ import type { FunctionCallContext } from '../store/FunctionRegistry.js';
 export function formatString(
   template: string,
   context?: FunctionCallContext,
-): string {
+): string | Promise<string> {
   const parser = new InterpolationParser(template);
-  return parser.parse().map(part => {
-    const value = part !== null && typeof part === 'object'
+  const values = parser.parse().map(part =>
+    part !== null && typeof part === 'object'
       ? context?.resolveDynamicValue(part)
-      : part;
+      : part
+  );
+  return values.some(value => value instanceof Promise)
+    ? Promise.all(values).then(stringify)
+    : stringify(values);
+}
+
+function stringify(parts: unknown[]): string {
+  return parts.map(value => {
     if (value === null || value === undefined) return '';
     if (typeof value === 'object') return JSON.stringify(value);
     if (
@@ -113,12 +121,12 @@ class InterpolationParser {
         this.whitespace();
       }
       this.consume(')');
-      return { call: token, args };
+      return { '@call': token, args };
     }
     if (token === 'true') return true;
     if (token === 'false') return false;
     if (token === 'null') return null;
     if (/^-?\d+(?:\.\d+)?(?:e[+-]?\d+)?$/i.test(token)) return Number(token);
-    return { path: token };
+    return { '@path': token };
   }
 }

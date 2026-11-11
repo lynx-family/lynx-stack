@@ -169,7 +169,7 @@ describe('extractCatalogComponents', () => {
           description: 'Format a raw value for display.',
           returnType: 'string',
           properties: {
-            call: {
+            '@call': {
               const: 'formatDisplayValue',
             },
             args: {
@@ -181,7 +181,7 @@ describe('extractCatalogComponents', () => {
               additionalProperties: false,
             },
           },
-          required: ['call', 'args'],
+          required: ['@call', 'args'],
         },
       },
     });

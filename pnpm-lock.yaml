@@ -1048,9 +1048,9 @@ importers:
 
   packages/genui:
     dependencies:
-      '@a2ui/web_core':
-        specifier: 0.10.6
-        version: 0.10.6
+      '@cfworker/json-schema':
+        specifier: 4.1.4
+        version: 4.1.4
       '@lynx-js/lynx-ui':
         specifier: '>=3.133.0'
         version: 3.135.4(@lynx-js/react@packages+react)(@lynx-js/types@4.1.0)(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1059,7 +1059,7 @@ importers:
         version: link:../react-signals
       '@openuidev/lang-core':
         specifier: ^0.2.11
-        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       typedoc:
         specifier: ^0.28.20
         version: 0.28.20(typescript@6.0.3)
@@ -1106,15 +1106,12 @@ importers:
 
   packages/genui/a2ui:
     dependencies:
-      '@a2ui/web_core':
-        specifier: 0.10.6
-        version: 0.10.6
+      '@cfworker/json-schema':
+        specifier: 4.1.4
+        version: 4.1.4
       '@lynx-js/react-signals':
         specifier: workspace:*
         version: link:../../react-signals
-      zod-to-json-schema:
-        specifier: ^3.25.2
-        version: 3.25.2(zod@4.4.3)
     devDependencies:
       '@lynx-js/genui-cli':
         specifier: workspace:*
@@ -1226,7 +1223,7 @@ importers:
     dependencies:
       '@openuidev/lang-core':
         specifier: ^0.2.11
-        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       zod:
         specifier: ^3.25.76 || ^4.0.0
         version: 4.4.3
@@ -1275,7 +1272,7 @@ importers:
         version: link:../../web-platform/web-elements
       '@openuidev/lang-core':
         specifier: ^0.2.11
-        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       '@radix-ui/react-select':
         specifier: ^2.3.7
         version: 2.3.7(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1372,7 +1369,7 @@ importers:
         version: 1.63.2(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod@4.4.3)
       '@openuidev/lang-core':
         specifier: ^0.2.11
-        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
+        version: 0.2.11(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)
       '@volcengine/tos-sdk':
         specifier: ^2.9.1
         version: 2.9.1(supports-color@10.2.2)
@@ -1487,7 +1484,7 @@ importers:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: 1.28.0
-        version: 1.28.0(supports-color@10.2.2)(zod@4.4.3)
+        version: 1.28.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3)
       commander:
         specifier: ^15.0.0
         version: 15.0.0
@@ -2331,7 +2328,7 @@ importers:
         version: 1.1.1
       rsbuild-plugin-tailwindcss:
         specifier: 0.2.4
-        version: 0.2.4(@rsbuild/core@2.2.4(core-js@3.50.0))(tailwindcss@4.3.3)
+        version: 0.2.4(@rsbuild/core@2.2.4(core-js@3.50.0))(tailwindcss@3.4.19)
       rslog:
         specifier: ^2.3.0
         version: 2.3.0
@@ -2746,7 +2743,7 @@ importers:
         version: 0.11.12(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@30.0.1)
       '@types/loader-utils':
         specifier: ^3.0.0
-        version: 3.0.0(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)
+        version: 3.0.0(lightningcss@1.33.0)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -3230,9 +3227,6 @@ packages:
         optional: true
       express:
         optional: true
-
-  '@a2ui/web_core@0.10.6':
-    resolution: {integrity: sha512-kTwir93Fk5eupl4FZ6CkhJDrisR2fnQgEIlDCTp06uzx2PvUhItbq1E+h7hFyeHGTu/NMci9Tqn7Is1IVRpufw==}
 
   '@acemir/cssom@0.9.30':
     resolution: {integrity: sha512-9CnlMCI0LmCIq0olalQqdWrJHPzm0/tw3gzOA9zJSgvFX7Xau3D24mAGa4BtwxwY69nsuJW6kQqqCzf/mEcQgg==}
@@ -3756,6 +3750,9 @@ packages:
 
   '@bufbuild/protobuf@2.6.0':
     resolution: {integrity: sha512-6cuonJVNOIL7lTj5zgo/Rc2bKAo4/GvN+rKCrUj7GdEHRzCk8zKOfFwUsL9nAVk5rSIsRmlgcpLzTRysopEeeg==}
+
+  '@cfworker/json-schema@4.1.4':
+    resolution: {integrity: sha512-20rPE8EX0dSg6JGOVe31HpqsLYZTDSlcFJZA5mpZqQxcZ71vh/SXCMX+UuHO1mMcZBDKeb752z+3L8IWa+0Svg==}
 
   '@changesets/apply-release-plan@8.0.0':
     resolution: {integrity: sha512-kUd2pbf1w5/AYmBMb0Tt+rkIPCjFJdT0SZMrkOjJT/WV/QbtmvkyB5jkV0oaNPheavprZk+SfUiozUti7TIL2w==}
@@ -8071,9 +8068,6 @@ packages:
 
   dataloader@1.4.0:
     resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
-
-  date-fns@4.4.0:
-    resolution: {integrity: sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -12855,9 +12849,6 @@ packages:
     peerDependencies:
       zod: ^3.25.28 || ^4
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
@@ -12883,13 +12874,6 @@ snapshots:
       uuid: 11.1.1
     optionalDependencies:
       express: 5.2.1(supports-color@10.2.2)
-
-  '@a2ui/web_core@0.10.6':
-    dependencies:
-      '@preact/signals-core': 1.14.4
-      date-fns: 4.4.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
 
   '@acemir/cssom@0.9.30': {}
 
@@ -13486,6 +13470,8 @@ snapshots:
       css-tree: 3.2.1
 
   '@bufbuild/protobuf@2.6.0': {}
+
+  '@cfworker/json-schema@4.1.4': {}
 
   '@changesets/apply-release-plan@8.0.0':
     dependencies:
@@ -14987,7 +14973,7 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  '@modelcontextprotocol/sdk@1.28.0(supports-color@10.2.2)(zod@4.4.3)':
+  '@modelcontextprotocol/sdk@1.28.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.13.0)
       ajv: 8.20.0
@@ -15006,10 +14992,12 @@ snapshots:
       raw-body: 3.0.2
       zod: 4.4.3
       zod-to-json-schema: 3.25.2(zod@4.4.3)
+    optionalDependencies:
+      '@cfworker/json-schema': 4.1.4
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3)':
+  '@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.13.0)
       ajv: 8.20.0
@@ -15028,6 +15016,8 @@ snapshots:
       raw-body: 3.0.2
       zod: 4.4.3
       zod-to-json-schema: 3.25.2(zod@4.4.3)
+    optionalDependencies:
+      '@cfworker/json-schema': 4.1.4
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -15074,11 +15064,11 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@openuidev/lang-core@0.2.11(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)':
+  '@openuidev/lang-core@0.2.11(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       zod: 4.4.3
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.29.0(supports-color@10.2.2)(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.4.3)
 
   '@oxc-project/types@0.139.0': {}
 
@@ -16741,10 +16731,10 @@ snapshots:
 
   '@types/linkify-it@5.0.0': {}
 
-  '@types/loader-utils@3.0.0(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)':
+  '@types/loader-utils@3.0.0(lightningcss@1.33.0)':
     dependencies:
       '@types/node': 24.13.3
-      webpack: 5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)
+      webpack: 5.109.2(lightningcss@1.33.0)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -18107,8 +18097,6 @@ snapshots:
       is-data-view: 1.0.2
 
   dataloader@1.4.0: {}
-
-  date-fns@4.4.0: {}
 
   debug@2.6.9(supports-color@10.2.2):
     dependencies:
@@ -20869,6 +20857,16 @@ snapshots:
       lightningcss: 1.33.0
       postcss: 8.5.25
 
+  minimizer-webpack-plugin@5.6.1(lightningcss@1.33.0)(webpack@5.109.2(lightningcss@1.33.0)):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.48.0
+      webpack: 5.109.2(lightningcss@1.33.0)
+    optionalDependencies:
+      lightningcss: 1.33.0
+
   minipass@7.1.3: {}
 
   monaco-editor@0.56.0:
@@ -22045,12 +22043,6 @@ snapshots:
   rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.2.4(core-js@3.50.0))(tailwindcss@3.4.19):
     dependencies:
       tailwindcss: 3.4.19
-    optionalDependencies:
-      '@rsbuild/core': 2.2.4(core-js@3.50.0)
-
-  rsbuild-plugin-tailwindcss@0.2.4(@rsbuild/core@2.2.4(core-js@3.50.0))(tailwindcss@4.3.3):
-    dependencies:
-      tailwindcss: 4.3.3
     optionalDependencies:
       '@rsbuild/core': 2.2.4(core-js@3.50.0)
 
@@ -23344,6 +23336,42 @@ snapshots:
       - postcss
       - uglify-js
 
+  webpack@5.109.2(lightningcss@1.33.0):
+    dependencies:
+      '@types/estree': 1.0.9
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.17.0
+      browserslist: 4.28.7
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.24.5
+      es-module-lexer: 2.1.0
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      graceful-fs: 4.2.11
+      mime-db: 1.54.0
+      minimizer-webpack-plugin: 5.6.1(lightningcss@1.33.0)(webpack@5.109.2(lightningcss@1.33.0))
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.3
+      watchpack: 2.5.2
+      webpack-sources: 3.5.1
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
+      - uglify-js
+
   whatwg-mimetype@3.0.0: {}
 
   whatwg-mimetype@4.0.0: {}
@@ -23526,15 +23554,9 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  zod-to-json-schema@3.25.2(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
-
   zod-to-json-schema@3.25.2(zod@4.4.3):
     dependencies:
       zod: 4.4.3
-
-  zod@3.25.76: {}
 
   zod@4.4.3: {}
 

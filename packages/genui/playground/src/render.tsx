@@ -736,6 +736,15 @@ function BundledProtocolRender() {
         }
         return;
       }
+      if (name === 'A2UI_PROTOCOL_MESSAGE') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: name,
+            ...data as Record<string, unknown>,
+          }, '*');
+        }
+        return;
+      }
       if (name === 'A2UI_USER_ACTION') {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(
@@ -783,7 +792,9 @@ function BundledProtocolRender() {
       if (
         e.data
         && typeof e.data === 'object'
-        && (e.data as UserActionMessage).type === 'A2UI_USER_ACTION'
+        && ['A2UI_USER_ACTION', 'A2UI_PROTOCOL_MESSAGE'].includes(
+          (e.data as UserActionMessage).type,
+        )
       ) {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage(e.data, '*');

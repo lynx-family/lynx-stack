@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useResolvedProps } from '../../react/useDataBinding.js';
 import type { GenericComponentProps } from '../../store/types.js';
 import {
@@ -42,7 +43,7 @@ export interface PieChartProps extends GenericComponentProps {
       value: number;
       color?: string;
     }>
-    | { path: string };
+    | { '@path': string };
   /** Render the chart as a flat pie or a donut. */
   variant?: 'pie' | 'donut';
   /** Optional title shown above the chart. */
@@ -250,7 +251,7 @@ export function PieChart(
   const svgMarkup = buildSvgMarkup(slices, variant, paddingAngle, palette);
 
   return (
-    <view key={id} className='pie-chart'>
+    <view {...accessibilityProps(props)} key={id} className='pie-chart'>
       <view className='pie-chart-header'>
         <view className='pie-chart-header-copy'>
           <text className='pie-chart-title'>{title}</text>

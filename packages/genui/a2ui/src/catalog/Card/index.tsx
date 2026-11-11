@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import { accessibilityProps } from '../../react/accessibility.js';
 import type { ComponentId, GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Card.css';
@@ -33,7 +34,10 @@ export function Card(props: CardProps): import('@lynx-js/react').ReactNode {
     : '';
 
   return (
-    <view className={`card card-${variant} ${weightClass}`.trim()}>
+    <view
+      {...accessibilityProps(props)}
+      className={`card card-${variant} ${weightClass}`.trim()}
+    >
       {childWithContext && (
         <NodeRenderer component={childWithContext} surface={surface} />
       )}

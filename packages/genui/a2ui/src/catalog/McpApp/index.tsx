@@ -9,6 +9,7 @@ import {
   normalizeMcpAppHeight,
   resolveMcpAppBundleUrl,
 } from './frame.js';
+import { accessibilityProps } from '../../react/accessibility.js';
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/McpApp.css';
@@ -86,7 +87,7 @@ export function McpApp(props: McpAppProps): ReactNode {
   }
 
   return (
-    <view className='a2ui-mcp-app'>
+    <view {...accessibilityProps(props)} className='a2ui-mcp-app'>
       <frame
         key={props.id}
         className='a2ui-mcp-app-frame'

@@ -106,7 +106,7 @@ const systemPrompt = buildA2UISystemPrompt({ catalog });
 - A2UI v1.0 协议概览和设计原则。
 - 必需的服务端到客户端消息类型：`createSurface`、`updateComponents`、`updateDataModel` 和 `deleteSurface`。
 - 新 UI 响应的消息顺序要求。
-- `{ "path": "/..." }` 数据绑定和列表 children 的规则。
+- `{ "@path": "/..." }` 数据绑定和列表 children 的规则。
 - 客户端 action、event 和 function call 的规则。
 - catalog reference：组件摘要、props、必填字段、容器形态、枚举值和函数签名。
 - 硬性规则：只能输出 JSON、catalog id 必须匹配、组件树必须扁平、必须有 `root` 组件、Button 标签和 action 规则、Modal 确认流程、可加载图片资源处理，以及 action response 的 patch 规则。
@@ -118,14 +118,14 @@ const systemPrompt = buildA2UISystemPrompt({ catalog });
 ```json
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "main",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [

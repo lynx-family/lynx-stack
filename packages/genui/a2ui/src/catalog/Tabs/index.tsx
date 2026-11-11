@@ -4,6 +4,7 @@
 import { useState } from '@lynx-js/react';
 
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import { accessibilityProps } from '../../react/accessibility.js';
 import type {
   ComponentId,
   GenericComponentProps,
@@ -75,11 +76,11 @@ export function Tabs(props: TabsProps): import('@lynx-js/react').ReactNode {
   const activeTab = tabs[activeIndex];
 
   if (tabs.length === 0) {
-    return <view className='tabs' />;
+    return <view {...accessibilityProps(props)} className='tabs' />;
   }
 
   return (
-    <view className='tabs'>
+    <view {...accessibilityProps(props)} className='tabs'>
       <view className='tabs-headers'>
         {tabs.map((tab, index) => (
           <TabsHeader

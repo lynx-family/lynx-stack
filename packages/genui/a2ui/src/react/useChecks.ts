@@ -38,7 +38,7 @@ function evaluateCondition(
       condition,
       surfaceId,
       dataContextPath,
-      { functions },
+      { functions, throwOnError: true },
     );
     return result;
   }
@@ -70,21 +70,39 @@ export function evaluateChecks(
   }
   const failures: CheckFailure[] = [];
   for (const rule of checks) {
-    const result = evaluateCondition(
-      processor,
-      rule.condition,
-      surface.surfaceId,
-      dataContextPath,
-      functions,
-    );
+    let result: unknown;
+    try {
+      result = evaluateCondition(
+        processor,
+        rule.condition,
+        surface.surfaceId,
+        dataContextPath,
+        functions,
+      );
+    } catch (error) {
+      processor.reportExpressionError(error, surface.surfaceId);
+      result = {
+        valid: false,
+        message: rule.message
+          ?? (error instanceof Error ? error.message : String(error)),
+        severity: 'error',
+      };
+    }
     const validation = result && typeof result === 'object' && 'valid' in result
-      ? result as { valid: boolean; message?: string }
+      ? result as {
+        valid: boolean;
+        message?: string;
+        severity?: 'error' | 'warning' | 'info';
+        code?: string;
+      }
       : undefined;
     const ok = result === true || validation?.valid === true;
     if (!ok) {
       failures.push({
+        ...(validation?.code ? { code: validation.code } : {}),
+        ...(validation?.severity ? { severity: validation.severity } : {}),
         call: isFunctionCall(rule.condition)
-          ? rule.condition.call
+          ? rule.condition['@call']
           : 'condition',
         message: typeof validation?.message === 'string'
           ? validation.message

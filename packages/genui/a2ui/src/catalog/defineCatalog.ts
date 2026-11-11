@@ -49,7 +49,7 @@ export type FunctionManifest = Record<string, CatalogFunctionDefinition>;
 export interface CatalogFunctionEntry {
   kind: 'function';
   name: string;
-  impl: FunctionImpl;
+  impl?: FunctionImpl;
   definition?: CatalogFunctionDefinition;
 }
 
@@ -230,14 +230,19 @@ export function defineCatalog(inputs: readonly CatalogInput[]): Catalog {
       }
       seenFunctions.add(input.name);
       functions.push(input);
-      functionRegistry.register({
-        name: input.name,
-        impl: input.impl,
-        ...(input.definition ? { definition: input.definition } : {}),
-      });
+      if (input.impl) {
+        functionRegistry.register({
+          name: input.name,
+          impl: input.impl,
+          ...(input.definition ? { definition: input.definition } : {}),
+        });
+      }
       continue;
     }
     const entry = resolveComponentInput(input);
+    if (entry.name === 'Surface') {
+      throw new Error('Surface is a reserved A2UI component name');
+    }
     if (seenComponents.has(entry.name)) {
       throw new Error(
         `[a2ui] Duplicate component name in catalog: "${entry.name}". `
@@ -264,11 +269,13 @@ export function mergeCatalogs(...catalogs: Catalog[]): Catalog {
   }
   // Re-register so the registry tracks the merged set.
   for (const fn of functionMap.values()) {
-    functionRegistry.register({
-      name: fn.name,
-      impl: fn.impl,
-      ...(fn.definition ? { definition: fn.definition } : {}),
-    });
+    if (fn.impl) {
+      functionRegistry.register({
+        name: fn.name,
+        impl: fn.impl,
+        ...(fn.definition ? { definition: fn.definition } : {}),
+      });
+    }
   }
   return {
     components: Array.from(componentMap.values()),
@@ -320,7 +327,13 @@ export function serializeCatalog(
   );
   const functions = Object.fromEntries(
     catalog.functions.filter(fn => fn.definition).map(fn => {
-      const { description, parameters, returnType, allowedCallers } = fn
+      const {
+        description,
+        parameters,
+        returnType,
+        allowedCallers,
+        requiresUserActivation,
+      } = fn
         .definition!;
       const args = { ...parameters };
       delete args['$schema'];
@@ -328,9 +341,14 @@ export function serializeCatalog(
         type: 'object',
         ...(description ? { description } : {}),
         returnType,
-        ...(allowedCallers ? { allowedCallers } : {}),
-        properties: { call: { const: fn.name }, args },
-        required: ['call', 'args'],
+        ...(allowedCallers || requiresUserActivation
+          ? { allowedCallers: allowedCallers ?? 'rendererOnly' }
+          : {}),
+        ...(requiresUserActivation === undefined
+          ? {}
+          : { requiresUserActivation }),
+        properties: { '@call': { const: fn.name }, args },
+        required: ['@call', 'args'],
       }];
     }),
   );

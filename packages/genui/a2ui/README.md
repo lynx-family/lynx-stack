@@ -21,11 +21,13 @@ If you have never used A2UI before, think of it this way:
 The result is not arbitrary generated code. It is a ReactLynx UI tree assembled
 from a trusted catalog.
 
+See the [current standard migration audit](./docs/protocol-1.0-audit.md) for wire, RPC, and validation changes.
+
 ## Protocol versions
 
 The server and client support only A2UI `v1.0`. Older or versionless protocol
-messages are rejected. Send renderer events with `version: "v1.0"`; action
-requests use the `action` envelope. Existing v0.9 streams must be regenerated.
+messages are rejected. Send renderer events with `version: "1.0"`; action
+requests use the `action` envelope. Streams using 0.9 or the earlier 1.0 draft must be regenerated. Dynamic values use `@path`/`@call`, and components use `@catalogId`, `@checks`, `@metadata`, and `@accessibility`.
 The client supports inline `createSurface.components` and `dataModel`, typed
 subtree replacement, `null` deletion, and structured validation results.
 Styling stays in the host app and the Lynx component catalog.

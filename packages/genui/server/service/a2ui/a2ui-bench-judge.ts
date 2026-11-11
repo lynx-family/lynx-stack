@@ -261,7 +261,7 @@ function containsOpenUrlCall(
   seen.add(value);
   if (
     isRecord(value)
-    && value.call === 'openUrl'
+    && value['@call'] === 'openUrl'
   ) {
     return true;
   }

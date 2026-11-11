@@ -1,13 +1,13 @@
 [
   {
-    "version": "v1.0",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "default",
       "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -16,7 +16,14 @@
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["header", "subheader", "progressRow", "divider", "planList", "footer"]
+          "children": [
+            "header",
+            "subheader",
+            "progressRow",
+            "divider",
+            "planList",
+            "footer"
+          ]
         },
         {
           "id": "header",
@@ -32,9 +39,12 @@
         {
           "id": "progressRow",
           "component": "Row",
-          "alignment": "center",
-          "distribution": "spaceBetween",
-          "children": ["progressLabel", "progressCount"]
+          "children": [
+            "progressLabel",
+            "progressCount"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
         },
         {
           "id": "progressLabel",
@@ -71,44 +81,62 @@
           "id": "dayCardBody",
           "component": "Column",
           "align": "stretch",
-          "children": ["dayHeader", "dayFocus", "dayMoves", "dayNote"]
+          "children": [
+            "dayHeader",
+            "dayFocus",
+            "dayMoves",
+            "dayNote"
+          ]
         },
         {
           "id": "dayHeader",
           "component": "Row",
-          "alignment": "center",
-          "distribution": "spaceBetween",
-          "children": ["dayTitle", "dayDuration"]
+          "children": [
+            "dayTitle",
+            "dayDuration"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
         },
         {
           "id": "dayTitle",
           "component": "Text",
           "variant": "h4",
-          "text": { "path": "title" }
+          "text": {
+            "@path": "title"
+          }
         },
         {
           "id": "dayDuration",
           "component": "Text",
           "variant": "caption",
-          "text": { "path": "duration" }
+          "text": {
+            "@path": "duration"
+          }
         },
         {
           "id": "dayFocus",
           "component": "Text",
-          "variant": "label",
-          "text": { "path": "focus" }
+          "variant": "caption",
+          "text": {
+            "@path": "focus"
+          }
         },
         {
           "id": "dayMoves",
           "component": "Text",
           "variant": "body",
-          "text": { "path": "moves" }
+          "text": {
+            "@path": "moves"
+          }
         },
         {
           "id": "dayNote",
           "component": "Text",
           "variant": "caption",
-          "text": { "path": "note" }
+          "text": {
+            "@path": "note"
+          }
         },
         {
           "id": "footer",
@@ -120,16 +148,15 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
       "value": []
     }
   },
-
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -142,9 +169,8 @@
       ]
     }
   },
-
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -161,16 +187,21 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
-        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "1 / 5 days" }
+        {
+          "id": "progressCount",
+          "component": "Text",
+          "variant": "caption",
+          "text": "1 / 5 days"
+        }
       ]
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -186,9 +217,8 @@
       ]
     }
   },
-
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -213,16 +243,21 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
-        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "2 / 5 days" }
+        {
+          "id": "progressCount",
+          "component": "Text",
+          "variant": "caption",
+          "text": "2 / 5 days"
+        }
       ]
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -246,9 +281,8 @@
       ]
     }
   },
-
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -281,16 +315,21 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
-        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "3 / 5 days" }
+        {
+          "id": "progressCount",
+          "component": "Text",
+          "variant": "caption",
+          "text": "3 / 5 days"
+        }
       ]
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -322,9 +361,8 @@
       ]
     }
   },
-
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -365,17 +403,21 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
-        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "4 / 5 days" }
+        {
+          "id": "progressCount",
+          "component": "Text",
+          "variant": "caption",
+          "text": "4 / 5 days"
+        }
       ]
     }
   },
-
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateDataModel": {
       "surfaceId": "default",
       "path": "/days",
@@ -424,11 +466,16 @@
     }
   },
   {
-    "version": "v1.0",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
-        { "id": "progressCount", "component": "Text", "variant": "caption", "text": "5 / 5 days" },
+        {
+          "id": "progressCount",
+          "component": "Text",
+          "variant": "caption",
+          "text": "5 / 5 days"
+        },
         {
           "id": "subheader",
           "component": "Text",

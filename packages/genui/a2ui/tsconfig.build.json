@@ -6,6 +6,6 @@
     "jsx": "preserve",
     "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo",
   },
-  "include": ["src"],
+  "include": ["src", "src/**/*.json"],
   "exclude": ["test"],
 }

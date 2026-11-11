@@ -185,7 +185,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 - **`MessageProcessor`**——协议大脑。它拥有每一个 `Surface`，把
   `createSurface` / `updateComponents` / `updateDataModel` / `deleteSurface`
   应用进 surface 状态，并发出带类型的事件（`beginRendering`、`surfaceUpdate`、
-  `deleteSurface`）供 React layer 消费。`sendMessage({ version: 'v1.0', action })` 把 action
+  `deleteSurface`）供 React layer 消费。`sendMessage({ version: '1.0', action })` 把 action
   分发给监听者。
 - **`Resource`**——一个 `pending → success → error` 状态机，每个 surface root
   和每个 component 实例各一个。它的 snapshot 引用在每次状态转换时都会改变，
@@ -201,7 +201,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 - **children 通过引用。** 一个 component 实例用 id 引用 children
   （`child: "text-1"` 或 `children: ["a", "b"]`）。catalog 组件通过对同一个
   surface 委托 `<NodeRenderer>` 来渲染它的 child id。
-- **data binding。** 一个 bound prop 是 `{ path: string }`，它针对 surface 的
+- **data binding。** 一个 bound prop 是 `{ '@path': string }`，它针对 surface 的
   `SignalStore` 求值。相对 path 针对组件的 `dataContextPath` 求值——这正是
   templates 和重复列表能工作的原因。
 - **template 展开。** 当 `updateComponents` 带有「templated children」占位时，

@@ -18,6 +18,7 @@ import {
   resolveDynamicValue,
 } from '../store/resolveDynamic.js';
 import { executeFunctionCall } from '../store/resolveFunctionCall.js';
+import { coerceBoolean, coerceDynamic } from '../store/schema.js';
 import type { Surface } from '../store/types.js';
 import {
   isCallExpression,
@@ -66,9 +67,9 @@ export function useDataBinding<T = unknown>(
   } else if (
     dynamicValue
     && typeof dynamicValue === 'object'
-    && 'path' in dynamicValue
+    && '@path' in dynamicValue
   ) {
-    path = (dynamicValue as Record<string, unknown>)['path'] as
+    path = (dynamicValue as Record<string, unknown>)['@path'] as
       | string
       | undefined;
   }
@@ -164,42 +165,81 @@ export function resolveProperties(
   previousResolved?: Record<string, unknown>,
 ) {
   if (!properties) return properties;
-  return resolveDeepValue(
-    properties,
-    previousResolved,
-    (leaf) => {
-      if (isFunctionCall(leaf) && surface && processor) {
-        return resolveDynamicValue(
-          processor,
-          leaf,
-          surface.surfaceId,
-          dataContextPath,
-          {
-            functions,
-            resolveFunctionCall: executeFunctionCall,
-          },
-        );
-      }
-
-      if (isPlainDataBinding(leaf)) {
-        const rawPath = (leaf as Record<string, unknown>)['path'] as
-          | string
-          | undefined;
-        const path = resolveBindingPath(rawPath ?? '', dataContextPath);
-        if (path && surface?.store) {
-          const signal = surface.store.getSignal(path);
-          return signal.value;
+  const resolve = (value: unknown, previous: unknown) =>
+    resolveDeepValue(
+      value,
+      previous,
+      (leaf) => {
+        if (isFunctionCall(leaf) && surface && processor) {
+          return resolveDynamicValue(
+            processor,
+            leaf,
+            surface.surfaceId,
+            dataContextPath,
+            {
+              functions,
+              resolveFunctionCall: executeFunctionCall,
+            },
+          );
         }
-        return undefined;
-      }
 
-      if (isCallExpression(leaf)) {
-        return UNSUPPORTED_PROP;
-      }
+        if (isPlainDataBinding(leaf)) {
+          const rawPath = (leaf as Record<string, unknown>)['@path'] as
+            | string
+            | undefined;
+          const path = resolveBindingPath(rawPath ?? '', dataContextPath);
+          if (path && surface?.store) {
+            const signal = surface.store.getSignal(path);
+            return signal.value;
+          }
+          return undefined;
+        }
 
-      return leaf;
-    },
-  ) as Record<string, unknown>;
+        if (isCallExpression(leaf)) {
+          return UNSUPPORTED_PROP;
+        }
+
+        return leaf;
+      },
+    );
+  const result: Record<string, unknown> = {};
+  const componentCatalog = processor?.getCatalog(
+    typeof properties['@catalogId'] === 'string'
+      ? properties['@catalogId']
+      : surface?.catalogId,
+  );
+  const schema = componentCatalog?.components.find(entry =>
+    entry.name === properties['component']
+  )?.schema;
+  const schemas = schema?.['properties'] as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  for (const [key, value] of Object.entries(properties)) {
+    // Actions and checks are expressions evaluated at their own execution boundary.
+    if (
+      ['action', '@checks', '@metadata', 'children', '__template'].includes(key)
+    ) {
+      result[key] = value;
+      continue;
+    }
+    try {
+      const resolved = resolve(value, previousResolved?.[key]);
+      result[key] = schemas?.[key]
+        ? (schemas[key]['type'] === 'boolean'
+            && (isPlainDataBinding(value) || isFunctionCall(value))
+          ? coerceBoolean(resolved)
+          : coerceDynamic(resolved, schemas[key]))
+        : resolved;
+    } catch (error) {
+      result[key] = null;
+      if (processor && surface) {
+        processor.reportExpressionError(error, surface.surfaceId);
+      }
+    }
+  }
+  return previousResolved && shallowEqual(result, previousResolved)
+    ? previousResolved
+    : result;
 }
 
 function shallowEqual(
@@ -273,7 +313,7 @@ export function useResolvedProps(
     (key: string, value: unknown) => {
       const prop = properties?.[key];
       if (isPlainDataBinding(prop)) {
-        const rawPath = (prop as Record<string, unknown>)['path'] as
+        const rawPath = (prop as Record<string, unknown>)['@path'] as
           | string
           | undefined;
         const path = resolveBindingPath(rawPath ?? '', dataContextPath);

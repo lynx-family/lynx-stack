@@ -218,20 +218,20 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       }
     });
 
-    const offEvent = proc.onEvent(({ message, resolve }) => {
-      // Empty resolve — there is no "response" channel from the renderer
-      // back into the protocol. Responses arrive via the buffer.
-      resolve([]);
+    const offEvent = proc.onEvent(({ message, resolve, reject }) => {
+      // Acknowledge transport completion; protocol responses arrive via the buffer.
       try {
         const pending = onMessageRef.current?.(
           message as RendererToAgentMessage,
           proc.getDataModelMetadata(),
         );
-        void pending?.catch((error: unknown) => {
+        void Promise.resolve(pending).then(() => resolve([]), error => {
           console.error('[a2ui] onMessage handler rejected:', error);
+          reject(error);
         });
       } catch (e) {
         console.error('[a2ui] onMessage handler threw:', e);
+        reject(e);
       }
       if ('action' in message) {
         try {
