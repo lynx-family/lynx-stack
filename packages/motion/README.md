@@ -176,3 +176,40 @@ does not call the worklet descriptor during render or add a dummy public export.
 Select **Motion values** in the `features` entry; the box should grow from 100px
 to 200px. The verification suites share an entry, so they do not independently
 reproduce the compiler limitation in #4244 or establish Mini-only bundle size.
+
+## Scroll-driven styles
+
+Bind `useScroll` to a Lynx `scroll-view`. The scroll handlers, derived values,
+springs, and style updates run on the main thread. The first frame uses the
+initial values of the same MotionValue bindings.
+
+```tsx
+import {
+  motion,
+  useMotionTemplate,
+  useScroll,
+  useSpring,
+  useTransform,
+} from '@lynx-js/motion';
+
+function ScrollExample() {
+  const { scrollYProgress, onScroll, onLayoutChange } = useScroll();
+  const progress = useSpring(scrollYProgress);
+  const angle = useTransform(progress, [0, 1], [0, 18]);
+  const transform = useMotionTemplate`rotate(${angle}deg)`;
+
+  return (
+    <scroll-view
+      scroll-orientation='vertical'
+      main-thread:bindscroll={onScroll}
+      main-thread:bindlayoutchange={onLayoutChange}
+    >
+      <motion.view style={{ transform }} />
+    </scroll-view>
+  );
+}
+```
+
+`useTransform` supports range mappings with numeric or string outputs. By
+default the result is clamped to the output range. Use `{ clamp: false }` to
+extrapolate past the range.

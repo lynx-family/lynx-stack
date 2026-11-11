@@ -8,7 +8,7 @@ export default defineConfig({
       name: 'test-compiled-motion',
       enforce: 'pre',
       resolveId(id) {
-        const entry = /\/upstream\/(full|mini)\.js$/.exec(id)?.[1];
+        const entry = /\/upstream\/(full|mini|values)\.js$/.exec(id)?.[1];
         if (entry) {
           return fileURLToPath(
             new URL(`./dist/upstream/${entry}.js`, import.meta.url),
