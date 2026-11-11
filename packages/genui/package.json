@@ -184,7 +184,7 @@
     "@openuidev/lang-core": "^0.3.0",
     "@rsbuild/core": "catalog:rsbuild",
     "eslint-scope": "^8.4.0",
-    "marked": "^14.0.0",
+    "marked": "14.0.0",
     "typedoc": "^0.28.20",
     "typescript": "^6.0.3",
     "zod": "^3.25.76 || ^4.0.0"
