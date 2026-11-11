@@ -8,13 +8,10 @@
  * host output instead of HTML strings for Lynx.
  */
 
-// @ts-nocheck
-
 import { Fragment, h, options } from 'preact';
+import type { VNode } from 'preact';
 
 import { discardRenderedHostsSince } from './create-rendered-host.js';
-import { getNextElementTemplateId } from '../template/handle.js';
-
 import {
   BITS,
   CHILDREN,
@@ -31,41 +28,133 @@ import {
   SKIP_EFFECTS,
   VNODE,
 } from '../../../shared/render-constants.js';
+import type { TypedElementAttributesCommand } from '../../protocol/types.js';
+import { getNextElementTemplateId } from '../template/handle.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
 
-/** @typedef {import('preact').VNode} VNode */
+type RenderContext = Record<string, unknown>;
 
-const EMPTY_ARR = [];
+interface PreactRenderOptions {
+  [SKIP_EFFECTS]?: boolean | undefined;
+  [DIFF]?: ((vnode: unknown) => void) | undefined;
+  [DIFF2]?: ((vnode: unknown, context: RenderContext) => void) | undefined;
+  [DIFFED]?: ((vnode: unknown) => void) | undefined;
+  [RENDER]?: ((vnode: unknown) => void) | undefined;
+  [COMMIT]?: ((vnode: unknown, commitQueue: unknown[]) => void) | undefined;
+  unmount?: ((vnode: unknown) => void) | undefined;
+}
+
+interface InternalContextObject {
+  __c: string;
+  __: unknown;
+}
+
+interface InternalContextProvider {
+  props: {
+    value: unknown;
+  };
+}
+
+interface InternalComponentConstructor {
+  (props: Record<string, unknown>, context: RenderContext): unknown;
+  new(props: Record<string, unknown>, context: RenderContext): InternalRenderComponent;
+  prototype?: { render?: unknown };
+  contextType?: InternalContextObject;
+  getDerivedStateFromProps?: (
+    props: Record<string, unknown>,
+    state: Record<string, unknown>,
+  ) => Record<string, unknown> | null;
+}
+
+interface InternalRenderComponent {
+  [VNODE]?: InternalRenderVNode;
+  props: Record<string, unknown>;
+  state?: Record<string, unknown> | undefined;
+  context: RenderContext;
+  [GLOBAL_CONTEXT]?: RenderContext;
+  [BITS]: number;
+  [NEXT_STATE]?: Record<string, unknown> | undefined;
+  __h?: unknown[];
+  __c?: unknown;
+  constructor: InternalComponentConstructor;
+  setState: (state: Record<string, unknown>) => void;
+  forceUpdate: () => void;
+  getChildContext?: () => Record<string, unknown>;
+  render: (
+    props: Record<string, unknown>,
+    state: Record<string, unknown> | undefined,
+    context: RenderContext,
+  ) => unknown;
+}
+
+export interface InternalRenderVNode {
+  type: unknown;
+  props: Record<string, unknown>;
+  key?: unknown;
+  templateKey?: string;
+  [COMPONENT]?: InternalRenderComponent;
+  [PARENT]?: InternalRenderVNode | undefined;
+  [CHILDREN]?: unknown[] | undefined;
+}
+
+export interface ComponentRenderCollectorState {
+  pageAttributes: TypedElementAttributesCommand | null | undefined;
+  rootSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[][];
+  isInsideAuthoredPage?: boolean | undefined;
+}
+
+export type RenderVNodeFn<
+  TOutput = ElementTemplateHandle,
+  TResult extends ComponentRenderCollectorState = ComponentRenderCollectorState,
+> = (
+  value: unknown,
+  context: RenderContext,
+  parent: InternalRenderVNode,
+  output: TOutput[],
+  result: TResult,
+  parentType?: string,
+  subtreeHandles?: MainThreadDynamicAttrSubtreeHandle[],
+  listItemUids?: number[],
+) => void;
+
+const preactOptions = options as unknown as PreactRenderOptions;
+const EMPTY_ARR: unknown[] = [];
 const assign = /* @__PURE__ */ Object.assign;
 
 // Global state for the current render pass
 export let beforeDiff: ((vnode: unknown) => void) | undefined;
-export let beforeDiff2: ((vnode: unknown, context: Record<string, unknown>) => void) | undefined;
-let afterDiff, renderHook, unmountHook;
+export let beforeDiff2: ((vnode: unknown, context: RenderContext) => void) | undefined;
+let afterDiff: ((vnode: unknown) => void) | undefined;
+let renderHook: ((vnode: unknown) => void) | undefined;
+let unmountHook: ((vnode: unknown) => void) | undefined;
 
-export function renderWithHooks(
+export function renderWithHooks<
+  TOutput,
+  TResult extends ComponentRenderCollectorState,
+>(
   vnode: unknown,
-  context: unknown,
-  output: unknown[],
-  renderVNode: Function,
-  result: unknown,
-): unknown[] {
+  context: RenderContext | null | undefined,
+  output: TOutput[],
+  renderVNode: RenderVNodeFn<TOutput, TResult>,
+  result: TResult,
+): TOutput[] {
   // Performance optimization: main-thread rendering is synchronous and we
   // therefore don't execute any effects. To do that we pass an empty
   // array to `options._commit` (`__c`). But we can go one step further
   // and avoid a lot of dirty checks and allocations by setting
   // `options._skipEffects` (`__s`) too.
-  const previousSkipEffects = options[SKIP_EFFECTS];
-  options[SKIP_EFFECTS] = true;
+  const previousSkipEffects = preactOptions[SKIP_EFFECTS];
+  preactOptions[SKIP_EFFECTS] = true;
 
   // store options hooks once before each synchronous render call
-  beforeDiff = options[DIFF];
-  beforeDiff2 = options[DIFF2];
-  afterDiff = options[DIFFED];
-  renderHook = options[RENDER];
-  unmountHook = options.unmount;
+  beforeDiff = preactOptions[DIFF];
+  beforeDiff2 = preactOptions[DIFF2];
+  afterDiff = preactOptions[DIFFED];
+  renderHook = preactOptions[RENDER];
+  unmountHook = preactOptions.unmount;
 
-  const parent = h(Fragment, null);
-  parent[CHILDREN] = [vnode];
+  const parent = h(Fragment, null) as unknown as InternalRenderVNode;
+  parent[CHILDREN] = [vnode as VNode];
 
   try {
     renderVNode(
@@ -78,8 +167,8 @@ export function renderWithHooks(
   } finally {
     // options._commit, we don't schedule any effects in this library right now,
     // so we can pass an empty queue to this hook.
-    if (options[COMMIT]) options[COMMIT](vnode, EMPTY_ARR);
-    options[SKIP_EFFECTS] = previousSkipEffects;
+    if (preactOptions[COMMIT]) preactOptions[COMMIT](vnode, EMPTY_ARR);
+    preactOptions[SKIP_EFFECTS] = previousSkipEffects;
     EMPTY_ARR.length = 0;
   }
 
@@ -88,21 +177,21 @@ export function renderWithHooks(
 
 // Installed as setState/forceUpdate for function components
 /* v8 ignore start */
-function markAsDirty() {
+function markAsDirty(this: InternalRenderComponent): void {
   this[BITS] |= COMPONENT_DIRTY;
 }
 /* v8 ignore stop */
 
 export const EMPTY_OBJ: Record<string, unknown> = {};
 
-/**
- * @param {VNode} vnode
- * @param {Record<string, unknown>} context
- */
-function renderClassComponent(vnode, context, globalContext) {
-  const type = /** @type {import("preact").ComponentClass<typeof vnode.props>} */ (vnode.type);
+function renderClassComponent(
+  vnode: InternalRenderVNode,
+  context: RenderContext,
+  globalContext: RenderContext,
+): unknown {
+  const type = vnode.type as InternalComponentConstructor;
 
-  let c;
+  let c: InternalRenderComponent;
   if (vnode[COMPONENT]) {
     c = vnode[COMPONENT];
     c.state = c[NEXT_STATE];
@@ -138,46 +227,50 @@ function renderClassComponent(vnode, context, globalContext) {
   return c.render(c.props, c.state, context);
 }
 
-export function cleanupVNode(vnode: unknown): void {
+export function cleanupVNode(vnode: InternalRenderVNode): void {
   if (afterDiff) afterDiff(vnode);
   vnode[PARENT] = undefined;
   if (unmountHook) unmountHook(vnode);
 }
 
-export function renderComponentVNode(
-  vnode: unknown,
+export function renderComponentVNode<
+  TOutput,
+  TResult extends ComponentRenderCollectorState,
+>(
+  vnode: InternalRenderVNode,
   type: unknown,
-  props: unknown,
-  context: unknown,
-  output: unknown[],
-  renderVNode: Function,
-  result: unknown,
+  props: Record<string, unknown>,
+  context: RenderContext,
+  output: TOutput[],
+  renderVNode: RenderVNodeFn<TOutput, TResult>,
+  result: TResult,
   parentType?: string,
-  subtreeHandles?: unknown[],
+  subtreeHandles?: MainThreadDynamicAttrSubtreeHandle[],
   listItemUids?: number[],
 ): void {
-  let cctx = context;
-  let rendered;
-  let component;
+  const componentType = type as InternalComponentConstructor;
+  let cctx: unknown = context;
+  let rendered: unknown;
+  let component: InternalRenderComponent | undefined;
   const outputLength = output.length;
 
-  if (type === Fragment) {
-    rendered = props.children;
+  if ((type as unknown) === Fragment) {
+    rendered = props['children'];
   } else {
-    const contextType = type.contextType;
+    const contextType = componentType.contextType;
     if (contextType != null) {
-      const provider = context[contextType.__c];
+      const provider = context[contextType.__c] as InternalContextProvider | undefined;
       cctx = provider ? provider.props.value : contextType.__;
     }
 
-    if (type.prototype && typeof type.prototype.render === 'function') {
-      rendered = /**#__NOINLINE__**/ renderClassComponent(vnode, cctx, context);
+    if (componentType.prototype && typeof componentType.prototype.render === 'function') {
+      rendered = /**#__NOINLINE__**/ renderClassComponent(vnode, cctx as RenderContext, context);
       component = vnode[COMPONENT];
     } else {
       component = {
         __v: vnode,
         props,
-        context: cctx,
+        context: cctx as RenderContext,
         [GLOBAL_CONTEXT]: context,
         // silently drop state updates
         setState: markAsDirty,
@@ -185,10 +278,10 @@ export function renderComponentVNode(
         __g: COMPONENT_DIRTY,
         // hooks
         __h: [],
+        constructor: componentType,
+        render: doRender,
       };
       vnode[COMPONENT] = component;
-      component.constructor = type;
-      component.render = doRender;
 
       let count = 0;
       while (component[BITS] & COMPONENT_DIRTY && count++ < 25) {
@@ -196,19 +289,20 @@ export function renderComponentVNode(
 
         if (renderHook) renderHook(vnode);
 
-        rendered = component.render(props, component.state, cctx);
+        rendered = component.render(props, component.state, cctx as RenderContext);
       }
       component[BITS] |= COMPONENT_DIRTY;
     }
 
-    if (component.getChildContext != null) {
-      context = assign({}, context, component.getChildContext());
+    if (component!.getChildContext != null) {
+      context = assign({}, context, component!.getChildContext());
     }
   }
 
-  const isTopLevelFragment = rendered != null && rendered.type === Fragment
-    && rendered.key == null;
-  rendered = isTopLevelFragment ? rendered.props.children : rendered;
+  const renderedVNode = rendered as InternalRenderVNode | null | undefined;
+  const isTopLevelFragment = renderedVNode != null && (renderedVNode.type as unknown) === Fragment
+    && renderedVNode.key == null;
+  rendered = isTopLevelFragment ? renderedVNode.props['children'] : rendered;
 
   // A Suspense boundary owns the IDs allocated while rendering its children,
   // as well as the entries added to the enclosing commit collectors.
@@ -227,16 +321,16 @@ export function renderComponentVNode(
     renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
   } catch (e) {
     if (
-      checkpoint && e && typeof e === 'object' && e.then
+      checkpoint && e && typeof e === 'object' && (e as { then?: unknown }).then
     ) {
-      component.setState({ /* _suspended */ __a: true });
+      component!.setState({ /* _suspended */ __a: true });
 
       rendered = renderClassComponent(vnode, context, context);
 
       output.length = outputLength;
       result.rootSubtreeHandles.length = checkpoint.rootSubtreeHandlesLength;
-      if (subtreeHandles) subtreeHandles.length = checkpoint.subtreeHandlesLength;
-      if (listItemUids) listItemUids.length = checkpoint.listItemUidsLength;
+      if (subtreeHandles) subtreeHandles.length = checkpoint.subtreeHandlesLength!;
+      if (listItemUids) listItemUids.length = checkpoint.listItemUidsLength!;
       discardRenderedHostsSince(checkpoint.nextId);
       result.pageAttributes = checkpoint.pageAttributes;
       if (__DEV__) result.isInsideAuthoredPage = checkpoint.isInsideAuthoredPage;
@@ -250,6 +344,11 @@ export function renderComponentVNode(
 }
 
 /** The `.render()` method for a PFC backing instance. */
-function doRender(props, state, context) {
+function doRender(
+  this: InternalRenderComponent,
+  props: Record<string, unknown>,
+  _state: Record<string, unknown> | undefined,
+  context: RenderContext,
+): unknown {
   return this.constructor(props, context);
 }

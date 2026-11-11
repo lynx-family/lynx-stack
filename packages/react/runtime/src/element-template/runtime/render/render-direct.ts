@@ -35,7 +35,7 @@ export interface MainThreadCreateResult {
 
 interface DirectRenderState extends Omit<MainThreadCreateResult, 'pageAttributes'> {
   pageAttributes: TypedElementAttributesCommand | null | undefined;
-  isInsideAuthoredPage?: boolean;
+  isInsideAuthoredPage?: boolean | undefined;
 }
 
 interface RenderVNode {
@@ -43,7 +43,7 @@ interface RenderVNode {
   props: Record<string, unknown>;
   templateKey?: string;
   [PARENT]?: RenderVNode | undefined;
-  [CHILDREN]?: unknown[];
+  [CHILDREN]?: unknown[] | undefined;
 }
 
 type RenderContext = Record<string, unknown>;
