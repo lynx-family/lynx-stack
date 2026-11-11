@@ -2,196 +2,67 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createParser } from '@openuidev/lang-core';
-import type { LibraryJSONSchema, ParseResult } from '@openuidev/lang-core';
+import type { ParseResult } from '@openuidev/lang-core';
+
+import { createOpenUiChatPromptLibrary } from '@lynx-js/genui/openui/chat/agent';
+import { createOpenUiPromptLibrary } from '@lynx-js/genui/openui/prompt';
+
+import { OPENUI_CANVAS_MATH_RAW } from './openui-canvas-math.js';
+import {
+  OPENUI_CANVAS_RELATIVITY_RAW,
+  OPENUI_CANVAS_STREAM_RAW,
+  OPENUI_GOMOKU_RAW,
+  OPENUI_SLIDER_ICON_RAW,
+} from './openui-canvas.js';
+import { OPENUI_CHAT_CASES } from './openui-chat-scenarios.js';
+import { splitOpenUiResponse } from '../../lynx-src/openui/inlineResponse.js';
+import { OPENUI_INLINE_TRIP_RAW } from '../../lynx-src/openui/mockData.js';
+import { OPENUI_TODO_RAW } from '../../lynx-src/openui/todo.js';
 
 export interface OpenUIScenario {
   id: string;
   title: string;
   badge?: string;
+  inlineMode?: boolean;
+  library?: 'stack' | 'chat';
+  sourcePath?: string;
   raw: string;
   parsed: string;
 }
 
-const OPENUI_SCENARIO_SCHEMA: LibraryJSONSchema = {
-  $defs: {
-    Stack: {
-      properties: {
-        children: {},
-        direction: {},
-        wrap: {},
-        gap: {},
-        align: {},
-        justify: {},
-      },
-      required: ['children'],
-    },
-    Row: {
-      properties: {
-        children: {},
-        justify: {},
-        align: {},
-        gap: {},
-        wrap: {},
-      },
-      required: ['children'],
-    },
-    Column: {
-      properties: {
-        children: {},
-        justify: {},
-        align: {},
-        gap: {},
-      },
-      required: ['children'],
-    },
-    List: {
-      properties: {
-        children: {},
-        items: {},
-        direction: {},
-        align: {},
-        gap: {},
-        divider: {},
-      },
-    },
-    Card: {
-      properties: {
-        children: {},
-        variant: {},
-        direction: {},
-        wrap: {},
-        gap: {},
-        align: {},
-        justify: {},
-      },
-      required: ['children'],
-    },
-    CardHeader: {
-      properties: { title: {}, subtitle: {} },
-      required: ['title'],
-    },
-    Text: {
-      properties: { text: {}, variant: {} },
-      required: ['text'],
-    },
-    TextContent: {
-      properties: { text: {}, size: {} },
-      required: ['text'],
-    },
-    Separator: {
-      properties: { orientation: {}, decorative: {} },
-    },
-    Divider: {
-      properties: { axis: {} },
-    },
-    Button: {
-      properties: {
-        label: {},
-        action: {},
-        variant: {},
-        type: {},
-        size: {},
-      },
-      required: ['label'],
-    },
-    Buttons: {
-      properties: { buttons: {} },
-      required: ['buttons'],
-    },
-    Tag: {
-      properties: { text: {} },
-      required: ['text'],
-    },
-    Image: {
-      properties: { url: {}, fit: {}, variant: {} },
-      required: ['url'],
-    },
-    Icon: {
-      properties: { name: {}, size: {}, color: {} },
-      required: ['name'],
-    },
-    Video: {
-      properties: { url: {}, title: {} },
-      required: ['url'],
-    },
-    AudioPlayer: {
-      properties: { url: {}, description: {} },
-      required: ['url'],
-    },
-    Loading: {
-      properties: { variant: {} },
-    },
-    Tabs: {
-      properties: { tabs: {}, value: {} },
-      required: ['tabs'],
-    },
-    Modal: {
-      properties: { trigger: {}, content: {}, title: {} },
-      required: ['trigger', 'content'],
-    },
-    CheckBox: {
-      properties: { label: {}, value: {}, action: {}, name: {} },
-      required: ['label'],
-    },
-    RadioGroup: {
-      properties: { items: {}, value: {}, usageHint: {}, action: {}, name: {} },
-      required: ['items'],
-    },
-    ChoicePicker: {
-      properties: {
-        label: {},
-        options: {},
-        value: {},
-        variant: {},
-        displayStyle: {},
-        filterable: {},
-      },
-      required: ['options'],
-    },
-    Slider: {
-      properties: {
-        label: {},
-        min: {},
-        max: {},
-        value: {},
-        step: {},
-        action: {},
-        name: {},
-      },
-    },
-    TextField: {
-      properties: {
-        label: {},
-        value: {},
-        variant: {},
-        validationRegexp: {},
-        action: {},
-        name: {},
-      },
-      required: ['label'],
-    },
-    DateTimeInput: {
-      properties: {
-        value: {},
-        enableDate: {},
-        enableTime: {},
-        min: {},
-        max: {},
-        label: {},
-      },
-      required: ['value'],
-    },
-  },
-};
+const openUiLibrary = createOpenUiPromptLibrary();
+const openUiScenarioParser = createParser(
+  openUiLibrary.toJSONSchema(),
+  openUiLibrary.root,
+);
 
-const openUiScenarioParser = createParser(OPENUI_SCENARIO_SCHEMA, 'Stack');
+const chatLibrary = createOpenUiChatPromptLibrary();
+const chatParser = createParser(chatLibrary.toJSONSchema(), chatLibrary.root);
 
-export function parseOpenUIScenario(raw: string): ParseResult {
-  return openUiScenarioParser.parse(raw);
+export function parseOpenUIScenario(
+  raw: string,
+  library: 'stack' | 'chat' = 'stack',
+): ParseResult {
+  return (library === 'chat' ? chatParser : openUiScenarioParser).parse(raw);
 }
 
-export function parseOpenUIScenarioRaw(raw: string): string {
-  return JSON.stringify(parseOpenUIScenario(raw), null, 2);
+export function parseOpenUIScenarioRaw(
+  raw: string,
+  library: 'stack' | 'chat' = 'stack',
+): string {
+  const parts = splitOpenUiResponse(raw);
+  if (parts.some(part => part.kind === 'code')) {
+    return JSON.stringify(
+      parts.map(part =>
+        part.kind === 'code'
+          ? { ...part, result: parseOpenUIScenario(part.content, library) }
+          : part
+      ),
+      null,
+      2,
+    );
+  }
+  return JSON.stringify(parseOpenUIScenario(raw, library), null, 2);
 }
 
 const V05_QUERY_WEATHER_RAW = `$city = "Seattle"
@@ -234,7 +105,7 @@ hero = Card([Text("Layout Showcase", "h2"), Text("Row, Column, List and Divider 
 layoutCard = Card([CardHeader("Release Roadmap", "Row and Column primitives"), statusRow, Divider("horizontal"), milestoneColumn], "card", "column", false, "m", "stretch", "start")
 statusRow = Row([Text("Design", "h5"), Tag("In review"), Icon("arrow_forward", "sm", "muted"), Text("Build", "h5"), Tag("Active"), Icon("arrow_forward", "sm", "muted"), Text("Launch", "h5")], "between", "center", "s", true)
 milestoneColumn = Column([Text("1. API shape finalized", "body"), Text("2. Playground coverage added", "body"), Text("3. Browser verification complete", "body")], "start", "stretch", "s")
-listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
+listCard = Card([CardHeader("Checklist", "Tap each item to update local state"), List([CheckBox("Document usage snippets", true), CheckBox("Verify tabs and modal interactions", false), CheckBox("Confirm media placeholders render", false)], null, "vertical", "stretch", "s", true)], "sunk", "column", false, "m", "stretch", "start")`;
 
 const NEW_INTERACTIVE_CONTROLS_RAW = `$status = "Draft"
 root = Column([masthead, introRule, tabs, actionRule, actionBlock], "start", "stretch", "xl")
@@ -259,9 +130,28 @@ const NEW_MEDIA_CARDS_RAW =
 header = Card([Text("Media Cards", "h2"), Text("AudioPlayer and Video provide lightweight media attachment surfaces.", "body")], "card", "column", false, "s", "start", "start")
 mediaTabs = Tabs([{ value: "audio", title: "Audio", child: audioCard }, { value: "video", title: "Video", child: videoCard }])
 audioCard = Card([CardHeader("Podcast Preview", "AudioPlayer placeholder"), AudioPlayer("https://example.com/openui-weekly.mp3", "OpenUI Weekly - catalog additions"), Row([Icon("pause", "sm", "muted"), Text("12 min episode", "caption"), Tag("Transcript ready")], "start", "center", "s", true)], "card", "column", false, "m", "stretch", "start")
-videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
+videoCard = Card([CardHeader("Launch Walkthrough", "Video placeholder"), Video("https://example.com/openui-launch.mp4", "OpenUI component walkthrough"), List([Text("Covers layout primitives", "body"), Text("Shows tabs and modal", "body"), Text("Highlights media cards", "body")], null, "vertical", "stretch", "xs", true)], "card", "column", false, "m", "stretch", "start")`;
 
 export const OPENUI_SCENARIOS: OpenUIScenario[] = [
+  ...OPENUI_CHAT_CASES.map(scenario => ({
+    ...scenario,
+    parsed: parseOpenUIScenarioRaw(scenario.raw, 'chat'),
+  })),
+  {
+    id: 'inline-winter-trip',
+    title: 'Inline Winter Trip',
+    inlineMode: true,
+    raw: OPENUI_INLINE_TRIP_RAW,
+    badge: 'Markdown + UI',
+    parsed: parseOpenUIScenarioRaw(OPENUI_INLINE_TRIP_RAW),
+  },
+  {
+    id: 'todo-list',
+    title: 'Todo List',
+    badge: 'Action + Mutation',
+    raw: OPENUI_TODO_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_TODO_RAW),
+  },
   {
     id: 'new-layout-showcase',
     title: 'New Layout Showcase',
@@ -283,31 +173,31 @@ export const OPENUI_SCENARIOS: OpenUIScenario[] = [
   {
     id: 'pricing-cards',
     title: 'Pricing Cards',
-    raw: `root = Stack([header, cards], "column", "l", "center")
+    raw: `root = Stack([header, cards], "column", false, "l", "center")
 header = TextContent("Choose Your Plan", "large-heavy")
-cards = Stack([freeCard, proCard, enterpriseCard], "row", "l", "stretch")
+cards = Stack([freeCard, proCard, enterpriseCard], "row", true, "l", "stretch")
 
-freeCard = Card([freeHeader, freePrice, freeSep, freeFeatures, freeBtn], "card", "column", "stretch", "between")
+freeCard = Card([freeHeader, freePrice, freeSep, freeFeatures, freeBtn], "card", "column", false, "m", "stretch", "between")
 freeHeader = CardHeader("Free", "For individuals just getting started")
-freePrice = Stack([freePriceAmt, freePricePer], "row", "none", "baseline")
+freePrice = Stack([freePriceAmt, freePricePer], "row", false, "none", "end")
 freePriceAmt = TextContent("$0", "large-heavy")
 freePricePer = TextContent(" / month", "small")
-freeSep = Separator("horizontal", true)
-freeFeatures = Stack([ff1, ff2, ff3, ff4], "column", "s")
+freeSep = Separator()
+freeFeatures = Stack([ff1, ff2, ff3, ff4], "column", false, "s")
 ff1 = TextContent("✓  1 user")
 ff2 = TextContent("✓  5 projects")
 ff3 = TextContent("✓  2 GB storage")
 ff4 = TextContent("✗  Priority support")
 freeBtn = Buttons([Button("Get Started", Action([@ToAssistant("Get started with Free plan")]), "secondary")])
 
-proCard = Card([proHeader, proPrice, proBadge, proSep, proFeatures, proBtn], "card", "column", "stretch", "between")
+proCard = Card([proHeader, proPrice, proBadge, proSep, proFeatures, proBtn], "card", "column", false, "m", "stretch", "between")
 proHeader = CardHeader("Pro", "For growing teams and professionals")
-proPrice = Stack([proPriceAmt, proPricePer], "row", "none", "baseline")
+proPrice = Stack([proPriceAmt, proPricePer], "row", false, "none", "end")
 proPriceAmt = TextContent("$29", "large-heavy")
 proPricePer = TextContent(" / month", "small")
-proBadge = Tag("Most Popular", null, "sm", "info")
-proSep = Separator("horizontal", true)
-proFeatures = Stack([pf1, pf2, pf3, pf4, pf5], "column", "s")
+proBadge = Tag("Most Popular")
+proSep = Separator()
+proFeatures = Stack([pf1, pf2, pf3, pf4, pf5], "column", false, "s")
 pf1 = TextContent("✓  Up to 10 users")
 pf2 = TextContent("✓  Unlimited projects")
 pf3 = TextContent("✓  50 GB storage")
@@ -315,13 +205,13 @@ pf4 = TextContent("✓  Priority support")
 pf5 = TextContent("✓  Advanced analytics")
 proBtn = Buttons([Button("Start Free Trial", Action([@ToAssistant("Start free trial with Pro plan")]), "primary")])
 
-enterpriseCard = Card([entHeader, entPrice, entSep, entFeatures, entBtn], "card", "column", "stretch", "between")
+enterpriseCard = Card([entHeader, entPrice, entSep, entFeatures, entBtn], "card", "column", false, "m", "stretch", "between")
 entHeader = CardHeader("Enterprise", "For large organizations at scale")
-entPrice = Stack([entPriceAmt, entPricePer], "row", "none", "baseline")
+entPrice = Stack([entPriceAmt, entPricePer], "row", false, "none", "end")
 entPriceAmt = TextContent("$99", "large-heavy")
 entPricePer = TextContent(" / month", "small")
-entSep = Separator("horizontal", true)
-entFeatures = Stack([ef1, ef2, ef3, ef4, ef5, ef6], "column", "s")
+entSep = Separator()
+entFeatures = Stack([ef1, ef2, ef3, ef4, ef5, ef6], "column", false, "s")
 ef1 = TextContent("✓  Unlimited users")
 ef2 = TextContent("✓  Unlimited projects")
 ef3 = TextContent("✓  1 TB storage")
@@ -1167,16 +1057,16 @@ verifiedText = TextContent("All settings saved", "small")
 hint = TextContent("Try clicking on checkmark to toggle", "small")
 
 list = Stack([item1, sep, item2, sep, item3, sep, skeleton], "column", false, "s", "stretch", "start")
-item1 = Stack([icon1, label1, toggle1], "row", false, "m", "center", "space-between")
+item1 = Stack([icon1, label1, toggle1], "row", false, "m", "center", "between")
 icon1 = Icon("mail", "md", "muted")
 label1 = TextContent("Email updates", "default")
 toggle1 = CheckBox("Email updates", true, Action([@ToAssistant("Toggle email")]))
 sep = Separator()
-item2 = Stack([icon2, label2, toggle2], "row", false, "m", "center", "space-between")
+item2 = Stack([icon2, label2, toggle2], "row", false, "m", "center", "between")
 icon2 = Icon("star", "md", "muted")
 label2 = TextContent("Newsletter", "default")
 toggle2 = CheckBox("Newsletter", false, Action([@ToAssistant("Toggle newsletter")]))
-item3 = Stack([icon3, label3, toggle3], "row", false, "m", "center", "space-between")
+item3 = Stack([icon3, label3, toggle3], "row", false, "m", "center", "between")
 icon3 = Icon("settings", "md", "muted")
 label3 = TextContent("Beta features", "default")
 toggle3 = CheckBox("Beta features", true, Action([@ToAssistant("Toggle beta")]))
@@ -2171,5 +2061,41 @@ actionRow = Stack([Buttons([Button("Cancel", Action([@ToAssistant("Cancel order"
       null,
       2,
     ),
+  },
+  {
+    id: 'canvas-streaming',
+    title: 'Canvas Streaming',
+    badge: 'Canvas · Streaming',
+    raw: OPENUI_CANVAS_STREAM_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_STREAM_RAW),
+  },
+  {
+    id: 'canvas-relativity',
+    title: 'General Relativity',
+    badge: 'Canvas · Physics',
+    sourcePath: 'demos/openui/canvas-relativity.txt',
+    raw: OPENUI_CANVAS_RELATIVITY_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_RELATIVITY_RAW),
+  },
+  {
+    id: 'canvas-sine-wave',
+    title: 'Sine Wave Lab',
+    badge: 'Canvas · Math',
+    raw: OPENUI_CANVAS_MATH_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_CANVAS_MATH_RAW),
+  },
+  {
+    id: 'canvas-gomoku',
+    title: 'Canvas Gomoku',
+    badge: 'Canvas · Interactive',
+    raw: OPENUI_GOMOKU_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_GOMOKU_RAW),
+  },
+  {
+    id: 'canvas-slider-icon',
+    title: 'Canvas Icon Studio',
+    badge: 'Canvas + Slider',
+    raw: OPENUI_SLIDER_ICON_RAW,
+    parsed: parseOpenUIScenarioRaw(OPENUI_SLIDER_ICON_RAW),
   },
 ];

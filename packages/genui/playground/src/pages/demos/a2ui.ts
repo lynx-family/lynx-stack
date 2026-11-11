@@ -125,6 +125,14 @@ function createScenarioPreviewInput(
 
 export const A2UI_DEMOS_PAGE_SOURCE = {
   scenarios: A2UI_DETAIL_SCENARIOS,
+  sections: [
+    ...A2UI_DEMOS_LIST_SOURCE.sections,
+    {
+      id: 'dynamic',
+      title: 'Interactive Examples',
+      scenarios: DYNAMIC_EXAMPLES,
+    },
+  ],
   findScenario: findDetailScenario,
   getEditorValue(scenario) {
     return JSON.stringify(scenario.messages ?? [], null, 2);

@@ -6,12 +6,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 
 import { A2UI_DEMOS_PAGE_SOURCE } from './a2ui.js';
+import { ExampleTokenCount } from './ExampleTokenCount.js';
 import { LYNX_XML_DEMOS_PAGE_SOURCE } from './lynx-xml.js';
 import { MCP_APPS_DEMOS_PAGE_SOURCE } from './mcp-apps.js';
 import { OPENUI_DEMOS_PAGE_SOURCE } from './openui.js';
+import { ScenarioBadge } from './ScenarioBadge.js';
 import type { DemoCommit, DemoPageScenario, DemosPageSource } from './type.js';
 import { Button } from '../../components/Button.js';
 import {
+  ChevronDown,
   ChevronLeft,
   Pause,
   Play,
@@ -77,7 +80,7 @@ function DemosPageContent<
   );
 
   const [playState, setPlayState] = useState<PlayState>('idle');
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [playbackSpeed, setPlaybackSpeed] = useState(4);
   const [deliveredCount, setDeliveredCount] = useState(0);
   const [playbackPanelHeight, setPlaybackPanelHeight] = useState(
     PLAYBACK_PANEL_IDLE_HEIGHT,
@@ -512,24 +515,49 @@ function DemosPageContent<
           </Button>
         </div>
         <div className='sidebarSection'>
-          <div className='sidebarHeading'>Scenarios</div>
-          <div className='scenarioList'>
-            {source.scenarios.map((scenario) => (
-              <button
-                key={scenario.id}
-                type='button'
-                className={[
-                  'scenarioItem',
-                  scenario.id === scenarioId ? 'active' : '',
-                  scenario.badge ? 'hasBadge' : '',
-                ].filter(Boolean).join(' ')}
-                onClick={() => handleSelectScenario(scenario.id)}
-              >
-                <span className='scenarioName'>{scenario.title}</span>
-                {scenario.badge
-                  ? <span className='scenarioBadge'>{scenario.badge}</span>
-                  : null}
-              </button>
+          <div className='scenarioGroups'>
+            {(source.sections ?? [{
+              id: 'examples',
+              title: 'Examples',
+              hideScenarioBadges: false,
+              scenarios: source.scenarios,
+            }]).filter(section => section.scenarios.length > 0).map(section => (
+              <details key={section.id} className='scenarioGroup' open>
+                <summary className='scenarioGroupHeading'>
+                  <ChevronDown
+                    className='scenarioGroupChevron'
+                    size={14}
+                    aria-hidden='true'
+                  />
+                  <ScenarioBadge label={section.title} />
+                  <span className='scenarioName' title={section.title}>
+                    {section.title}
+                  </span>
+                  <span className='scenarioGroupCount'>
+                    {section.scenarios.length}
+                  </span>
+                </summary>
+                <div className='scenarioList'>
+                  {section.scenarios.map((scenario) => (
+                    <button
+                      key={scenario.id}
+                      type='button'
+                      className={[
+                        'scenarioItem',
+                        scenario.id === scenarioId ? 'active' : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => handleSelectScenario(scenario.id)}
+                    >
+                      <span className='scenarioName' title={scenario.title}>
+                        {scenario.title}
+                      </span>
+                      {section.hideScenarioBadges
+                        ? null
+                        : <ScenarioBadge label={scenario.badge} />}
+                    </button>
+                  ))}
+                </div>
+              </details>
             ))}
           </div>
         </div>
@@ -691,7 +719,11 @@ function DemosPageContent<
               </div>
               {source.editor.views && source.editor.views.length > 1
                 ? (
-                  <div className='previewModeSwitch openuiCodeViewSwitch'>
+                  <div
+                    className='previewModeSwitch openuiCodeViewSwitch'
+                    role='group'
+                    aria-label='Code view'
+                  >
                     {source.editor.views.map((view) => (
                       <button
                         key={view.id}
@@ -701,6 +733,7 @@ function DemosPageContent<
                           : 'previewModeBtn'}
                         onClick={() => setActiveEditorView(view.id)}
                         title={view.title}
+                        aria-pressed={activeEditorView === view.id}
                       >
                         {view.label}
                       </button>
@@ -772,6 +805,7 @@ function DemosPageContent<
               theme='dark'
               basicSetup={source.editor.basicSetup}
             />
+            <ExampleTokenCount source={displayedEditorValue} />
             {error ? <div className='codeError'>{error}</div> : null}
           </div>
         </div>
@@ -789,6 +823,7 @@ function DemosPageContent<
           className='previewPanel examplesPreviewPanel'
           title='Lynx Preview'
           showPreviewModeSwitch
+          showImagePreview
           showSimulationBar={playbackEnabled}
           speed={playbackSpeed}
           onSpeedChange={setPlaybackSpeed}

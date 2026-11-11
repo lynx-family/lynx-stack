@@ -3,15 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 
 import { updateWorkletRefInitValueChanges } from '@lynx-js/react/worklet-runtime/bindings';
+import type { MainThreadRefInitValuePatch } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { takeMainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
-import type { MainThreadRefInitValuePatch } from '../../../core/main-thread-ref-init-value.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 
 function updateMTRefInitValue({ data }: { data: string }): void {
   // This update ignores reloadVersion check.
   // MainThreadRefs created before reloadTemplate may still be referenced by user in some cases after reloadTemplate.
   const patch = JSON.parse(data) as MainThreadRefInitValuePatch;
+  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    console.alog?.('[ReactLynxDebug] Snapshot MTS updateMTRefInitValue:\n' + data);
+  }
   updateWorkletRefInitValueChanges(patch);
 }
 
@@ -26,5 +29,8 @@ export function sendMTRefInitValueToMainThread(): void {
   }
 
   const data = JSON.stringify(patch);
+  if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
+    console.alog?.('[ReactLynxDebug] Snapshot BTS -> MTS sendMTRefInitValue:\n' + data);
+  }
   lynx.getNativeApp().callLepusMethod(LifecycleConstant.updateMTRefInitValue, { data });
 }

@@ -90,13 +90,21 @@ describe('Lynx XML Bench adapter', () => {
     ]);
     expect(result.attempts[0]?.outputChars).toBe(source.length);
   });
-  test.each([undefined, false, true])(
+  test.each([undefined, false, true, 'default', 'preset-only'] as const)(
     'passes fragment selection through every repair: %s',
     async (enabled) => {
       let calls = 0;
       const adapter = createLynxXmlBenchAdapter({
         generateRaw(_messages, options) {
-          expect(options.enableHtmlFragment).toBe(enabled === true);
+          expect(options.enableScriptReuse).toBe(enabled === true);
+          expect(options.enableHtmlFragment).toBe(
+            enabled === true || enabled === 'default',
+          );
+          expect(options.stylePreset).toBe(
+            enabled === 'default' || enabled === 'preset-only'
+              ? 'default'
+              : undefined,
+          );
           return Promise.resolve({
             text: ++calls === 1 ? '<!doctype lynx>' : SOURCE,
             usage: undefined,
@@ -106,7 +114,13 @@ describe('Lynx XML Bench adapter', () => {
       });
       await adapter.generate({
         ...INPUT,
-        ...(enabled === undefined ? {} : { enableHtmlFragment: enabled }),
+        enableScriptReuse: enabled === true,
+        ...(enabled === undefined
+          ? {}
+          : { enableHtmlFragment: enabled === true || enabled === 'default' }),
+        ...(enabled === 'default' || enabled === 'preset-only'
+          ? { stylePreset: 'default' as const }
+          : {}),
       });
       expect(calls).toBe(2);
     },
@@ -158,6 +172,136 @@ describe('Lynx XML Bench adapter', () => {
       judgePayload: { kind: 'lynx-xml-source', rawText: SOURCE },
     });
   });
+
+  test.each([false, true])(
+    'regenerates compactly after token exhaustion with fragment mode %s',
+    async (enableHtmlFragment) => {
+      const conversations: ChatMessage[][] = [];
+      const settings: unknown[] = [];
+      const truncated = enableHtmlFragment ? '' : SOURCE.slice(0, -16);
+      const controller = new AbortController();
+      const adapter = createLynxXmlBenchAdapter({
+        generateRaw(messages, options, signal) {
+          conversations.push([...messages]);
+          settings.push({ ...options, resourceId: undefined });
+          expect(signal).toBe(controller.signal);
+          if (conversations.length === 1) {
+            const result = {
+              text: truncated,
+              usage: { inputTokens: 10, outputTokens: 16_384 },
+              finishReason: 'length',
+            };
+            if (enableHtmlFragment) {
+              throw new GenerationPostprocessError(
+                new Error(
+                  'Fragment document requires a <!doctype lynx> document with a <lynx> root',
+                ),
+                result,
+              );
+            }
+            return Promise.resolve(result);
+          }
+          return Promise.resolve({
+            text: SOURCE,
+            usage: { inputTokens: 20, outputTokens: 8 },
+            finishReason: 'stop',
+          });
+        },
+      });
+
+      const result = await adapter.generate({
+        ...INPUT,
+        enableDesignGuidance: false,
+        enableHtmlFragment,
+      }, controller.signal);
+
+      expect(conversations.map(messages => messages.length)).toEqual([1, 2]);
+      expect(conversations[1]?.[0]).toEqual(conversations[0]?.[0]);
+      expect(conversations[1]?.[1]?.role).toBe('user');
+      expect(conversations[1]?.[1]?.content).toContain(
+        'Regenerate a shorter, complete artifact',
+      );
+      expect(conversations[1]?.[1]?.content).toContain(
+        'Preserve all required content and actions',
+      );
+      if (truncated) {
+        expect(conversations[1]?.[0]?.content).not.toContain(truncated);
+      }
+      expect(settings[1]).toEqual(settings[0]);
+      expect(settings[1]).toMatchObject({
+        model: INPUT.provider.model,
+        maxRetries: 0,
+        enableDesignGuidance: false,
+        enableHtmlFragment,
+      });
+      expect(result.attempts[0]).toMatchObject({
+        valid: false,
+        totalTokens: 16_394,
+        usage: { inputTokens: 10, outputTokens: 16_384 },
+        finishReason: 'length',
+        outputChars: truncated.length,
+        validationErrors: [
+          expect.stringContaining('Model output reached its token limit'),
+        ],
+      });
+      expect(result.attempts[1]).toMatchObject({
+        valid: true,
+        totalTokens: 28,
+      });
+      expect(result).toMatchObject({
+        finalValid: true,
+        finalText: SOURCE,
+        finalErrors: [],
+        judgePayload: { kind: 'lynx-xml-source', rawText: SOURCE },
+      });
+    },
+  );
+
+  test('accepts a complete artifact even when generation ends at its token limit', async () => {
+    let calls = 0;
+    const adapter = createLynxXmlBenchAdapter({
+      generateRaw() {
+        calls++;
+        return Promise.resolve({
+          text: SOURCE,
+          usage: { outputTokens: 16_384 },
+          finishReason: 'length',
+        });
+      },
+    });
+    const result = await adapter.generate(INPUT);
+    expect(calls).toBe(1);
+    expect(result).toMatchObject({
+      finalValid: true,
+      judgePayload: { kind: 'lynx-xml-source', rawText: SOURCE },
+    });
+    expect(result.attempts[0]?.finishReason).toBe('length');
+  });
+
+  test.each([1, 2])(
+    'bounds compact regeneration by %s configured attempts',
+    async (maxAttempts) => {
+      let calls = 0;
+      const adapter = createLynxXmlBenchAdapter({
+        generateRaw() {
+          calls++;
+          return Promise.resolve({
+            text: '<!doctype lynx>',
+            usage: { outputTokens: 16_384 },
+            finishReason: 'length',
+          });
+        },
+      });
+      const result = await adapter.generate({ ...INPUT, maxAttempts });
+      expect(calls).toBe(maxAttempts);
+      expect(result.attempts).toHaveLength(maxAttempts);
+      expect(result.finalValid).toBe(false);
+      expect(result.finalErrors).toEqual([
+        expect.stringContaining('Model output reached its token limit'),
+      ]);
+      expect(result.judgePayload).toBeUndefined();
+    },
+  );
 
   test('bounds transport retries and never supplies invalid output to Judge', async () => {
     let calls = 0;

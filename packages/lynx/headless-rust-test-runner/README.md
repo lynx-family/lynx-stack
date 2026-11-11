@@ -6,11 +6,12 @@ software-rendering harness with DOM inspection and interaction:
 
 - After non-native resource validation succeeds, the first
   `LynxContainer::new` binds native Lynx state to a permanent process owner
-  thread and prepares the runtime and local DebugRouter on first use.
+  thread and prepares the runtime without connecting to the local DebugRouter.
 - `LynxContainer::new_page` creates a windowless `LynxPage`. The process owns
   one live page at a time and can create later pages after dropping it.
-- `LynxPage::goto`, `content`, and `locator` load and inspect compiled Lynx
-  bundles or UTF-8 `.lynxml` source documents through CDP.
+- `LynxPage::goto` loads compiled Lynx bundles or UTF-8 `.lynxml` source
+  documents through the native API. `content` and `locator` inspect them
+  through CDP, connecting to the DebugRouter on first use.
 - `ElementNode` reads attributes and computed styles and dispatches taps by
   native node id, without absolute coordinates or hit-testing.
 - `LynxPage::screenshot` captures the software renderer directly as a 32-bit
@@ -69,10 +70,13 @@ applies to both formats; `global_props_json` applies only to compiled templates.
 Passing it for LynxML returns an error because the public LynxML load API does
 not accept global properties.
 
-`goto` waits for a newly presented software frame and nothing more. The DOM
-session attaches lazily on the first `content` or `locator` call, so a
-screenshot-only caller never pays for DevTools setup and there is no separate
-screenshot-only navigation entry point.
+`goto` waits for a newly presented software frame and nothing more. DebugRouter
+discovery, global-switch setup, and DOM session attachment happen on the first
+`content` or `locator` call. Navigation and screenshots do not wait for a router
+connection. Native DevTools initialization stays enabled so later DOM queries
+can attach to the same page; there is no separate screenshot-only navigation
+entry point. Connection failures are reported by the DOM operation and can be
+retried on a later call.
 
 Each page resolves its **own** DevTools session from its native view through
 `lynx_view_get_devtool_target`, so successive pages that load the same URL do
@@ -100,6 +104,12 @@ or inside `LynxResources.bundle` beside it on macOS and serves
 runner checks `$LYNX_SDK_DIR/resources/lynx_core.js`; its build script downloads
 a missing script into that SDK location. Use `CUSTOM_LYNX_CORE_JS_URL` with
 `CUSTOM_LYNX_CORE_JS_SHA256` for a different build-time download.
+
+On Linux, the desktop runtime requests `lynx_core_dev.js` while DevTools is
+enabled. If that executable-side resource is absent, the runner installs a
+relative symlink to `lynx_core.js`. An existing dev resource is preserved.
+UI Judge includes this fallback in its Linux server bundle so a packaged
+server can start from a read-only installation directory.
 
 ## Tests
 

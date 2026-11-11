@@ -105,6 +105,7 @@ export function decodeTemplate(
         break;
       }
       case TemplateSectionLabel.Manifest:
+      case TemplateSectionLabel.CustomSectionsStyleInfo:
       case TemplateSectionLabel.ElementTemplates: {
         // Ignore these sections for now
         break;

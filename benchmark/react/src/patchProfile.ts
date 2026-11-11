@@ -53,7 +53,9 @@ if (typeof Codspeed !== 'undefined') {
       } else {
         Codspeed.stopBenchmark();
         Codspeed.setExecutedBenchmark(
-          `${PREFIX}::${__webpack_chunkname__}-${
+          `${PREFIX}::${
+            __BENCHMARK_ELEMENT_TEMPLATE__ ? 'et-' : ''
+          }${__webpack_chunkname__}-${
             name
               .replace(/^ReactLynx::/, '')
               .replace(/::/g, '__')

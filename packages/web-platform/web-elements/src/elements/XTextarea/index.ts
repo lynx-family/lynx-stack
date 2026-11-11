@@ -12,7 +12,6 @@
  * - `disabled`: 'true' | 'false'.
  * - `placeholder`: Placeholder text.
  * - `maxlength`: Max character length (default 140).
- * - `auto-height`: 'true' | 'false', auto resize height.
  * - `confirm-type`: 'send' | 'search' | 'next' | 'go' | 'done'.
  * - `confirm-enter`: 'true' | 'false', trigger confirm event on enter.
  * - `max-height`: Max height style.
@@ -23,11 +22,10 @@
  * - `placeholder-font-family`: Font family of the placeholder.
  *
  * Events:
- * - `input`: Fired on input.
- * - `focus`: Fired on focus.
- * - `blur`: Fired on blur.
+ * - `input` (mapped to `lynxinput`): Fired on input.
+ * - `focus` (mapped to `lynxfocus`): Fired on focus.
+ * - `blur` (mapped to `lynxblur`): Fired on blur.
  * - `confirm`: Fired on confirm/enter.
- * - `linechange`: Fired when line count changes.
  *
  * Methods:
  * - `addText({ text })`: Inserts text.

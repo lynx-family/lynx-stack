@@ -149,6 +149,13 @@ export async function loadConversation(
   };
 }
 
+export async function saveConversationMeta(
+  meta: ConversationMeta,
+): Promise<void> {
+  const db = await getDB();
+  await db.put('conversations', meta);
+}
+
 export async function saveConversationMessages(
   meta: ConversationMeta,
   messages: PersistedMessage[],

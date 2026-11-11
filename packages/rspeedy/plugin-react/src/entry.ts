@@ -19,9 +19,9 @@ import type { RuntimeConfigWebpackPluginOptions } from '@lynx-js/runtime-config-
 import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
 import {
   LynxEncodePlugin,
-  LynxTemplatePlugin,
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
+import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 import { resolveLazyBundleFetcher } from './resolveLazyBundleFetcher.js'
@@ -62,10 +62,13 @@ export function applyEntry(
 
     experimental_isLazyBundle,
     experimental_transformBuiltinAttributeNames,
+    experimental_reEvalJSOnReload,
   } = options
 
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
   const runtimeConfig: RuntimeConfigWebpackPluginOptions = {}
+
+  runtimeConfig['globalPropsMode'] = globalPropsMode ?? 'reactive'
 
   if (experimental_transformBuiltinAttributeNames) {
     runtimeConfig['transformBuiltinAttributeNames'] =
@@ -73,6 +76,14 @@ export function applyEntry(
   }
 
   api.modifyBundlerChain(async (chain, { environment, isDev, isProd }) => {
+    // Rstest has no template engine. Application and library builds read the
+    // engine implementation after all user plugin setup hooks have run.
+    const { LynxTemplatePlugin } = api.context.callerName === 'rstest'
+      ? ReactWebpackPlugin.defaultOptions
+      // biome-ignore lint/correctness/useHookAtTopLevel: This is not a React hook.
+      : api.useExposed<{
+        LynxTemplatePlugin: typeof LynxTemplatePluginClass
+      }>(Symbol.for('LynxTemplatePlugin'))!
     const mainThreadChunks: string[] = []
     const entryPairs: Array<{ mainThread: string, background: string }> = []
 
@@ -242,6 +253,7 @@ export function applyEntry(
             experimental_isLazyBundle,
             lazyBundleFetcher,
             cssPlugins: [],
+            enableReuseLoadScriptExports: experimental_reEvalJSOnReload,
           }])
           .end()
       })
@@ -276,6 +288,10 @@ export function applyEntry(
           },
           targetSdkVersion,
           experimental_isLazyBundle,
+          // External libraries share the host Lynx object and must not mark
+          // a legacy application entry as supporting re-evaluation.
+          experimental_reEvalJSOnReload: experimental_reEvalJSOnReload
+            && isApplication,
         }])
         .end()
         .plugin(`${LynxEncodePlugin.name}`)
@@ -298,14 +314,17 @@ export function applyEntry(
       extractStr = false
     }
 
-    const { resolve } = api.useExposed<
-      { resolve: (request: string) => Promise<string> }
+    const { version: runtimeVersion } = api.useExposed<
+      {
+        version: string
+      }
     >(Symbol.for('@lynx-js/react/internal:resolve'))!
 
     chain
       .plugin(PLUGIN_NAME_REACT)
       .after(PLUGIN_NAME_TEMPLATE)
       .use(ReactWebpackPlugin, [{
+        LynxTemplatePlugin,
         disableCreateSelectorQueryIncompatibleWarning: compat
           ?.disableCreateSelectorQueryIncompatibleWarning ?? false,
         firstScreenSyncTiming,
@@ -318,10 +337,9 @@ export function applyEntry(
         experimental_useElementTemplate:
           options.experimental_useElementTemplate,
         profile: getDefaultProfile(),
-        workletRuntimePath: await resolve(
-          `@lynx-js/react/${isDev ? 'worklet-dev-runtime' : 'worklet-runtime'}`,
-        ),
         lazyBundleFetcher,
+        runtimeVersion,
+        experimental_reEvalJSOnReload,
       }])
 
     // Runtime config belongs to the page host. Standalone lazy bundles and
@@ -346,27 +364,9 @@ export function applyEntry(
         return environmentProfile
       }
 
-      const userProfile = lynxConfig?.performance.profile
-      if (userProfile !== undefined) {
-        return userProfile
-      }
-
-      if (isDebug()) {
-        return true
-      }
-
-      return undefined
+      return lynxConfig?.performance.profile
     }
   })
-}
-
-export const isDebug = (): boolean => {
-  if (!process.env['DEBUG']) {
-    return false
-  }
-
-  const values = process.env['DEBUG'].toLocaleLowerCase().split(',')
-  return ['lynx', 'rspeedy', '*'].some((key) => values.includes(key))
 }
 
 // This is copied from https://github.com/web-infra-dev/rsbuild/blob/037da7b9d92e20c7136c8b2efa21eef539fa2f88/packages/core/src/plugins/html.ts#L168

@@ -10,7 +10,7 @@ mod is_component_class;
 #[cfg(feature = "napi")]
 pub mod napi;
 
-/// {@inheritdoc PluginReactLynxOptions.shake}
+/// {@inheritDoc PluginReactLynxOptions.shake}
 /// @public
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "camelCase")]

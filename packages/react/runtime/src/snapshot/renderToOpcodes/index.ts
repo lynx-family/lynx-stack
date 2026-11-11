@@ -39,7 +39,7 @@ const isArray = /* @__PURE__ */ Array.isArray;
 const assign = /* @__PURE__ */ Object.assign;
 
 // Global state for the current render pass
-let beforeDiff, beforeDiff2, afterDiff, renderHook, ummountHook;
+let beforeDiff, beforeDiff2, afterDiff, renderHook, unmountHook;
 
 /**
  * Render Preact JSX + Components to an HTML string.
@@ -60,7 +60,7 @@ export function renderToString(vnode: any, context: any, into: SnapshotInstance)
   beforeDiff2 = options[DIFF2];
   afterDiff = options[DIFFED];
   renderHook = options[RENDER];
-  ummountHook = options.unmount;
+  unmountHook = options.unmount;
 
   const parent = h(Fragment, null);
   parent[CHILDREN] = [vnode];
@@ -194,7 +194,7 @@ function _renderToString(
         opcodes,
         /* v8 ignore start */
         __ENABLE_SSR__ ? opcodes.length : 0,
-        /* v8 ignore end */
+        /* v8 ignore stop */
         into,
       );
     }
@@ -282,7 +282,7 @@ function _renderToString(
         opcodes,
         /* v8 ignore start */
         __ENABLE_SSR__ ? opcodes.length : 0,
-        /* v8 ignore end */
+        /* v8 ignore stop */
         into,
       );
     } catch (e) {
@@ -312,7 +312,7 @@ function _renderToString(
             opcodes,
             /* v8 ignore start */
             __ENABLE_SSR__ ? opcodes.length : 0,
-            /* v8 ignore end */
+            /* v8 ignore stop */
             into,
           );
         }
@@ -323,7 +323,7 @@ function _renderToString(
       if (afterDiff) afterDiff(vnode);
       vnode[PARENT] = undefined;
 
-      if (ummountHook) ummountHook(vnode);
+      if (unmountHook) unmountHook(vnode);
     }
 
     return;
@@ -406,14 +406,14 @@ function _renderToString(
       opcodes,
       /* v8 ignore start */
       __ENABLE_SSR__ ? opcodes.length : 0,
-      /* v8 ignore end */
+      /* v8 ignore stop */
       vnode,
     );
   }
 
   if (afterDiff) afterDiff(vnode);
   vnode[PARENT] = undefined;
-  if (ummountHook) ummountHook(vnode);
+  if (unmountHook) unmountHook(vnode);
 
   if (__ENABLE_SSR__) {
     opcodes.push(__OpEnd);

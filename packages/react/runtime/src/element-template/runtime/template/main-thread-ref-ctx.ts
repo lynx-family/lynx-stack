@@ -24,6 +24,14 @@ export function isMTRefValue(value: unknown): value is MTRefValue {
   return isMainThreadRef(value) || isMainThreadFunction(value);
 }
 
+export function isMTRefNativeWrapper(value: unknown): value is MTRefNativeWrapper {
+  return value !== null
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && (value as { type?: unknown }).type === 'main-thread-ref'
+    && isMTRefValue((value as { value?: unknown }).value);
+}
+
 export function retainMTRefValue(value: MTRefValue): void {
   if (isMainThreadFunction(value)) {
     retainMainThreadBackgroundFunctionCtx(value);
@@ -32,7 +40,7 @@ export function retainMTRefValue(value: MTRefValue): void {
 
 export function hydrateMTRefValue(
   value: MTRefValue,
-  previousValue: MTRefValue | undefined,
+  previousValue: MTRefValue | null | undefined,
 ): void {
   if (isMainThreadFunction(value) && previousValue && isMainThreadFunction(previousValue)) {
     hydrateWorkletCtx(value, previousValue);
@@ -41,10 +49,10 @@ export function hydrateMTRefValue(
 
 export function attachMTRefValue(
   value: MTRefValue,
-  nativeRef: ElementTemplateHandle,
+  nativeRef: ElementRef,
 ): void {
   if (isMainThreadRef(value)) {
-    updateWorkletRef(value, nativeRef as unknown as ElementNode);
+    updateWorkletRef(value, nativeRef);
     return;
   }
   value._unmount = runWorkletCtx(
@@ -59,7 +67,9 @@ export function cleanupMTRefValue(value: MTRefValue): void {
     return;
   }
   if (typeof value._unmount === 'function') {
-    value._unmount();
+    const unmount = value._unmount;
+    delete value._unmount;
+    unmount();
     return;
   }
   runWorkletCtx(value, [null]);

@@ -9,6 +9,7 @@ import type {
   BenchScenario,
   BenchSettings,
 } from './benchData.js';
+import type { ModelPrices } from '../../utils/modelPricing.js';
 
 export type BenchStatus =
   | 'cancelled'
@@ -50,7 +51,9 @@ export interface BenchJudgeDimensionResult {
 }
 
 export interface BenchResult {
+  modelPrices?: ModelPrices;
   agentMs: number;
+  firstTextTokenMs?: number;
   attempts: number;
   catalog?: string;
   error?: string;
@@ -65,6 +68,7 @@ export interface BenchResult {
   judgeStatus?: 'complete' | 'failed' | 'skipped';
   judgeWarnings?: string[];
   messageCount?: number;
+  messages?: unknown[];
   model?: string;
   ok?: boolean;
   outputChars?: number;
@@ -77,6 +81,7 @@ export interface BenchResult {
   scenarioName: string;
   screenshotDataUrl?: string;
   status?: 'complete' | 'failed';
+  text?: string;
   ttiMs: number;
   tokens: number;
   usage?: unknown;
@@ -84,6 +89,8 @@ export interface BenchResult {
 
 export interface BenchGroupSummary {
   avgAgentMs: number;
+  avgFirstTextTokenMs?: number;
+  firstTextRunCount?: number;
   avgAttempts: number;
   avgFmpMs: number;
   avgJudgeGeqiScore?: number;

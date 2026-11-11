@@ -3,7 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from '@rstest/core';
 
-import { createPreviewQrCards } from './PreviewPanel.js';
+import {
+  buildReactLynxWebRenderUrl,
+  createPreviewQrCards,
+} from './PreviewPanel.js';
 
 describe('PreviewPanel QR cards', () => {
   test('keeps unavailable QR cards visible for edited Lynx XML', () => {
@@ -51,4 +54,22 @@ describe('PreviewPanel QR cards', () => {
     ]);
     expect(cards.every(({ item }) => item.showQrCode === true)).toBe(true);
   });
+});
+
+test('loads every ReactLynx Web preview directly from TOS', () => {
+  const url = new URL(
+    buildReactLynxWebRenderUrl('http://100.82.183.224:3003/', {
+      kind: 'reactlynx',
+      webUrl: 'https://tos.example/main.web.js',
+      nativeUrl: 'https://tos.example/main.lynx.js',
+    }),
+  );
+
+  expect(url.origin).toBe('http://100.82.183.224:3003');
+  expect(url.searchParams.get('protocol')).toBe('reactlynx');
+  expect(url.searchParams.has('artifactId')).toBe(false);
+  expect(url.searchParams.get('bundleUrl')).toBe(
+    'https://tos.example/main.web.js',
+  );
+  expect(url.searchParams.has('bundleDelivery')).toBe(false);
 });

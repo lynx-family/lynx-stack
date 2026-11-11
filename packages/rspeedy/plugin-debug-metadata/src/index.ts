@@ -9,8 +9,8 @@
  * bundle build, plus the underlying webpack plugin class for direct
  * webpack/rspack use.
  *
- * This plugin is auto-registered by `@lynx-js/rspeedy` as a default
- * plugin — consumers do not need to apply it explicitly.
+ * `pluginLynx` from `@lynx-js/rsbuild-plugin` registers this plugin, so apps
+ * do not need to add it themselves.
  */
 
 export { pluginLynxDebugMetadata } from './pluginLynxDebugMetadata.js'

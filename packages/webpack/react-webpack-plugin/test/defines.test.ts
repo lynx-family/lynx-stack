@@ -84,6 +84,31 @@ describe('collectDefines', () => {
     expect(defines.map(({ id }) => id)).toEqual(['shared', 'a']);
   });
 
+  it.each([
+    [false, false, false],
+    [false, true, true],
+    [true, false, true],
+    [true, true, true],
+  ])(
+    'preserves semantic evidence when deduplicating %s and %s',
+    (first, second, expected) => {
+      const copies = [first, second].map(value => ({
+        ...define('shared'),
+        imports: [],
+        runtimeRequirements: { mainThreadProgrammability: value },
+      }));
+      const [result] = collect(
+        copies.map((copy, i) => asModule({ id: String(i), defines: [copy] })),
+      );
+      expect(result!.runtimeRequirements).toEqual(
+        { mainThreadProgrammability: expected },
+      );
+      expect(
+        copies.map(copy => copy.runtimeRequirements?.mainThreadProgrammability),
+      ).toEqual([first, second]);
+    },
+  );
+
   it('fails the build when an id no longer identifies its content', () => {
     expect(() =>
       collect([
@@ -92,6 +117,47 @@ describe('collectDefines', () => {
       ])
     ).toThrowError(/share the id x/);
   });
+
+  it.each([
+    undefined,
+    [],
+    [{
+      source: 'other-runtime',
+      imported: 'registerWorklet',
+      local: 'register',
+    }],
+    [{ source: 'custom-runtime', imported: 'otherExport', local: 'register' }],
+    [{
+      source: 'custom-runtime',
+      imported: 'registerWorklet',
+      local: 'otherLocal',
+    }],
+  ])(
+    'rejects definitions with the same code but different imports: %j',
+    imports => {
+      const code = 'register();';
+      expect(() =>
+        collect([
+          asModule({
+            id: 'a',
+            defines: [{
+              id: 'w',
+              code,
+              imports: [{
+                source: 'custom-runtime',
+                imported: 'registerWorklet',
+                local: 'register',
+              }],
+            }],
+          }),
+          asModule({
+            id: 'b',
+            defines: [{ id: 'w', code, ...(imports ? { imports } : {}) }],
+          }),
+        ])
+      ).toThrowError(/share the id w/);
+    },
+  );
 
   it('reads only the requested kind', () => {
     const defines = collectDefines(
@@ -140,6 +206,26 @@ describe('selectMissingDefines', () => {
 });
 
 describe('renderDefinesModule', () => {
+  it('renders default and namespace definition imports', () => {
+    const code = renderDefinesModule([], [{
+      id: 'imports',
+      code: 'use(defaultValue, namespaceValue);',
+      imports: [
+        { source: './values.js', imported: 'default', local: 'defaultValue' },
+        {
+          source: './values.js',
+          imported: '*',
+          local: 'namespaceValue',
+          namespace: true,
+        },
+      ],
+    }]);
+    expect(code).toContain('import { "default" as __lynxDefineImport0 }');
+    expect(code).toContain('import * as __lynxDefineImport1');
+    expect(code).toContain('const defaultValue = __lynxDefineImport0;');
+    expect(code).toContain('const namespaceValue = __lynxDefineImport1;');
+  });
+
   it('references the runtime through namespace member accesses', () => {
     const code = renderDefinesModule(
       [define('a', 'ReactLynx.createSnapshot(ReactLynx.__pageId);')],
@@ -154,14 +240,60 @@ describe('renderDefinesModule', () => {
     expect(code).not.toContain('loadWorkletRuntime');
   });
 
-  it('binds the worklet runtime loader only for worklet definitions', () => {
+  it('transports named imports from their producer source and scopes each local binding', () => {
     const code = renderDefinesModule([], [
-      define('w', 'loadWorkletRuntime();'),
+      {
+        id: 'a',
+        code: 'register("a");',
+        imports: [{
+          source: 'custom-runtime/init',
+          imported: 'registerWorklet',
+          local: 'register',
+        }],
+      },
+      {
+        id: 'b',
+        code: '__lynxDefineImport0("b");',
+        imports: [{
+          source: 'custom-runtime/init',
+          imported: 'registerWorklet',
+          local: '__lynxDefineImport0',
+        }],
+      },
+      {
+        id: 'c',
+        code: 'register("c");',
+        imports: [{
+          source: 'other-runtime/init',
+          imported: 'registerWorklet',
+          local: 'register',
+        }],
+      },
     ]);
-
+    expect(code.match(/from "custom-runtime\/init"/g)).toHaveLength(1);
     expect(code).toContain(
-      'var loadWorkletRuntime = ReactLynx.loadWorkletRuntime;',
+      'import { "registerWorklet" as __lynxDefineImport1 } from "custom-runtime/init";',
     );
+    expect(code).toContain(
+      '// a\n{\nconst register = __lynxDefineImport1;\nregister("a");\n}',
+    );
+    expect(code).toContain(
+      '// b\n{\nconst __lynxDefineImport0 = __lynxDefineImport1;',
+    );
+    expect(code).toContain('// c\n{\nconst register = __lynxDefineImport2;');
+    expect(code).not.toContain('@lynx-js/react/worklet-runtime/init');
+    expect(code).not.toContain('loadWorkletRuntime');
+  });
+
+  it('does not reconstruct executable dependencies from semantic requirements', () => {
+    const code = renderDefinesModule([], [{
+      id: 'w',
+      code: 'doSomething();',
+      imports: [],
+      runtimeRequirements: { mainThreadProgrammability: true },
+    }]);
+    expect(code).not.toContain('worklet-runtime/init');
+    expect(code).not.toContain('loadWorkletRuntime');
   });
 
   it('emits the `require` fallback only for definitions that call it', () => {
@@ -193,6 +325,88 @@ describe('missing definitions injection', () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const require = createRequire(import.meta.url);
 
+  it('executes imported runOnBackground calls from background-only definitions', async () => {
+    const fixture = path.join(__dirname, 'fixtures/worklet-imports');
+    const outputPath = mkdtempSync(path.join(tmpdir(), 'worklet-imports-'));
+    const compiler = rspack({
+      context: fixture,
+      mode: 'none',
+      entry: {
+        'main__main-thread': {
+          import: './index.jsx',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './index.jsx', layer: LAYERS.BACKGROUND },
+      },
+      module: {
+        rules: [
+          {
+            test: /\.jsx$/,
+            issuerLayer: LAYERS.MAIN_THREAD,
+            use: ReactWebpackPlugin.loaders.MAIN_THREAD,
+          },
+          {
+            test: /\.jsx$/,
+            issuerLayer: LAYERS.BACKGROUND,
+            use: ReactWebpackPlugin.loaders.BACKGROUND,
+          },
+        ],
+      },
+      resolve: {
+        alias: {
+          '@lynx-js/react$': path.join(fixture, 'runtime.js'),
+          '@lynx-js/react/internal$': path.join(fixture, 'runtime.js'),
+          '@lynx-js/react/worklet-runtime/init$': path.join(
+            fixture,
+            'init-runtime.js',
+          ),
+        },
+      },
+      output: {
+        path: outputPath,
+        filename: '[name].cjs',
+        library: { type: 'commonjs2' },
+      },
+      plugins: [
+        new ReactWebpackPlugin({
+          mainThreadChunks: ['main__main-thread.cjs'],
+          entryPairs: [{ mainThread: 'main__main-thread', background: 'main' }],
+        }),
+      ],
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        compiler.run((err, stats) => {
+          if (err || stats?.hasErrors()) {
+            reject(err ?? new Error(stats!.toString()));
+          } else {
+            resolve(undefined);
+          }
+        });
+      });
+      const exported = require(
+        path.join(outputPath, 'main__main-thread.cjs'),
+      ) as {
+        components: unknown;
+        worklets: Array<
+          (this: { _jsFn: { _jsFn1: (value: string) => void } }) => void
+        >;
+      };
+      expect(exported.components).toBeNull();
+      expect(exported.worklets).toHaveLength(2);
+      const calls: string[] = [];
+      for (const worklet of exported.worklets) {
+        worklet.call({ _jsFn: { _jsFn1: value => calls.push(value) } });
+      }
+      expect(calls.sort()).toEqual(['other', 'react']);
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        compiler.close(err => err ? reject(err) : resolve())
+      );
+      await fs.rm(outputPath, { recursive: true, force: true });
+    }
+  });
+
   function compile(
     definesByResource: Record<
       string,
@@ -217,9 +431,6 @@ describe('missing definitions injection', () => {
             `${mainThread}.js`
           ),
           entryPairs,
-          workletRuntimePath: require.resolve(
-            '@lynx-js/react/worklet-dev-runtime',
-          ),
         }),
         (compiler: import('@rspack/core').Compiler) => {
           compiler.hooks.thisCompilation.tap('test', (compilation) => {
@@ -267,7 +478,11 @@ describe('missing definitions injection', () => {
       {
         'empty.js': {
           snapshot: [define('bg-only', 'registerBackgroundOnly;')],
-          worklet: [define('bg-worklet', 'registerBackgroundWorklet;')],
+          worklet: [{
+            ...define('bg-worklet', 'registerBackgroundWorklet;'),
+            imports: [],
+            runtimeRequirements: { mainThreadProgrammability: true },
+          }],
         },
       },
       {
@@ -340,9 +555,6 @@ describe('missing definitions injection', () => {
         new ReactWebpackPlugin({
           mainThreadChunks: ['main__main-thread.cjs'],
           entryPairs: [{ mainThread: 'main__main-thread', background: 'main' }],
-          workletRuntimePath: require.resolve(
-            '@lynx-js/react/worklet-dev-runtime',
-          ),
         }),
         (compiler: import('@rspack/core').Compiler) => {
           compiler.hooks.thisCompilation.tap('test', (compilation) => {

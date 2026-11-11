@@ -16,10 +16,14 @@ function functionThatThrows() {
 }
 
 function App() {
+  const onTap = () => {
+    'main thread'
+  }
+
   functionThatThrows()
 
   return (
-    <view>
+    <view bindtap={onTap}>
       <text>Hello, Lynx x rsbuild</text>
       <Suspense fallback={<text>Loading...</text>}>
         <LazyBundleComp />

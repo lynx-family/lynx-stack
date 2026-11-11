@@ -12,6 +12,7 @@ import type { RsbuildPlugin } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
 import { resolveGenuiServerUrl } from './genui-server-url.js';
+import { OPENUI_CANVAS_RELATIVITY_RAW } from './src/mock/openui-canvas.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const GENUI_SERVER_URL = resolveGenuiServerUrl(process.env.GENUI_SERVER_URL);
@@ -248,7 +249,7 @@ export default defineConfig({
     },
     entry: {
       index: './src/entry.tsx',
-      render: './src/render.tsx',
+      render: './src/render/index.tsx',
     },
   },
   html: {
@@ -268,6 +269,16 @@ export default defineConfig({
   output: {
     assetPrefix: process.env.ASSET_PREFIX,
     copy: [
+      {
+        from: 'src/mock/openui-canvas.ts',
+        to: 'demos/openui/canvas-relativity.txt',
+        transform: () => OPENUI_CANVAS_RELATIVITY_RAW,
+      },
+      {
+        from: 'src/mock/openui/chat',
+        to: 'demos/openui/chat',
+        globOptions: { ignore: ['**/README.md'] },
+      },
       {
         from: 'src/mock/basic/*.json',
         to: 'demos/[name][ext]',
@@ -293,7 +304,7 @@ export default defineConfig({
       module: {
         rules: [
           {
-            test: /\.lynxml$/,
+            test: /\.(lynxml|openui)$/,
             resourceQuery: /raw/,
             type: 'asset/source',
           },
@@ -307,9 +318,15 @@ export default defineConfig({
     cors: {
       origin: '*',
     },
+    // Rspeedy also copies public assets into www; authored files take precedence.
     publicDir: [
       {
         name: 'www',
+        copyOnBuild: true,
+        watch: true,
+      },
+      {
+        name: 'public',
         copyOnBuild: true,
         watch: true,
       },

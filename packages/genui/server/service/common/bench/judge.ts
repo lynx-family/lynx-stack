@@ -6,6 +6,7 @@ import type { BenchJudgeScheduling } from './concurrency.js';
 import type { BenchProtocol } from './protocol-types.js';
 import type { BenchScenarioRequest } from './types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
+import type { ScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
 import {
   resolveBenchUiJudge,
   runBenchUiJudge,
@@ -21,15 +22,29 @@ import type {
 const DEFAULT_OPENUI_ZIP_URL = 'https://lynx-stack.dev/genui/openui.lynx.zip';
 const DEFAULT_UI_JUDGE_ATTEMPT_COUNT = 2;
 const DEFAULT_UI_JUDGE_RETRY_DELAY_MS = 5_000;
-const UNSAFE_OPENUI_RESOURCE_URL =
-  /(?:^|[\s("'=])(?:data|file|https?):(?:\/\/)?/iu;
 const UNSAFE_OPENUI_HOST_CALL = /\bopenUrl\s*\(/u;
+
+function findUnsafeResourceMarker(rawText: string): string | null {
+  for (const match of rawText.matchAll(/\b(?:data|file|https?):/giu)) {
+    if (match[0].toLowerCase() !== 'data:') return match[0];
+    // A quoted URI prefix may be completed dynamically. Unquoted data URIs
+    // (for example CSS url(data:...)) need a media/parameter header and comma.
+    // Bare JavaScript fields such as data: {}, data: snapshot, or data: 0 are
+    // event payloads, not resource URLs.
+    const quoted = /["'`]/u.test(rawText[match.index - 1] ?? '');
+    const hasDataHeader = /^(?:[\w.+-]+\/[\w.+-]+)?(?:;[^,\s"'`<>{}]*)?,/u
+      .test(rawText.slice(match.index + match[0].length));
+    if (quoted || hasDataHeader) return match[0];
+  }
+  return null;
+}
 
 export type GenuiBenchProtocol = BenchProtocol;
 
 export type GenuiBenchJudgeArtifact =
+  | { protocol: 'reactlynx'; rawText: string; zipUrl: string }
   | { messages: A2UIMessage[]; protocol: 'a2ui' }
-  | { protocol: 'openui' | 'lynx-xml' | 'html'; rawText: string };
+  | { protocol: 'openui' | 'lynx-xml' | 'html' | 'reactweb'; rawText: string };
 
 export interface RunGenuiBenchUiJudgeOptions {
   onPhase?: (phase: BenchJudgePhase) => void;
@@ -51,6 +66,7 @@ export interface RunGenuiBenchUiJudgeOptions {
    * Test seam for the retry backoff. Production callers use the 5s default.
    */
   retryDelayMs?: number;
+  evaluate?: ScreenshotEvaluator;
 }
 
 function normalizedAttemptCount(value: number | undefined): number {
@@ -123,7 +139,7 @@ async function runWithBoundedRetry(
     attempt < attemptCount && result.status === 'failed';
     attempt++
   ) {
-    if (isLocalSafetyRejection(result)) break;
+    if (result.retryable === false || isLocalSafetyRejection(result)) break;
     options.onPhase?.('judge-retry');
     if (!await waitForRetry(retryDelayMs, options.signal)) break;
 
@@ -148,8 +164,14 @@ export async function resolveGenuiBenchUiJudge(
     env?: NodeJS.ProcessEnv;
   } = {},
 ): Promise<BenchUiJudgeCapability> {
-  if (protocol === 'html') {
+  if (protocol === 'html' || protocol === 'reactweb') {
     return { enabled: true, session: { screenshotPath: 'browser/html' } };
+  }
+  if (protocol === 'reactlynx') {
+    return {
+      enabled: true,
+      session: { screenshotPath: 'screenshot/zip/url' },
+    };
   }
   const env = options.env ?? process.env;
   const zipUrl = protocol === 'a2ui'
@@ -186,6 +208,7 @@ export async function runGenuiBenchUiJudge(
             ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
           },
           captureScreenshot,
+          options.evaluate,
         ),
     );
   }
@@ -193,19 +216,31 @@ export async function runGenuiBenchUiJudge(
   const rawText = options.artifact.rawText;
   if (
     options.artifact.protocol !== 'html'
-    && (UNSAFE_OPENUI_RESOURCE_URL.test(rawText)
-      || UNSAFE_OPENUI_HOST_CALL.test(rawText))
+    && options.artifact.protocol !== 'reactweb'
   ) {
-    return {
-      errors: [
-        `ui-judge rejected ${
-          options.artifact.protocol === 'lynx-xml' ? 'Lynx XML' : 'OpenUI'
-        } output containing an external resource URL or openUrl call.`,
-      ],
-      score: 0,
-      status: 'failed',
-      warnings: [],
-    };
+    const unsafeResourceMarker = findUnsafeResourceMarker(rawText);
+    const hasOpenUrlCall = UNSAFE_OPENUI_HOST_CALL.test(rawText);
+    const rejectionReason = unsafeResourceMarker
+      ? `external resource URL (${unsafeResourceMarker})`
+      : (hasOpenUrlCall
+        ? 'openUrl call'
+        : null);
+    if (rejectionReason) {
+      return {
+        errors: [
+          `ui-judge rejected ${
+            options.artifact.protocol === 'reactlynx'
+              ? 'ReactLynx'
+              : (options.artifact.protocol === 'lynx-xml'
+                ? 'Lynx XML'
+                : 'OpenUI')
+          } output containing ${rejectionReason}.`,
+        ],
+        score: 0,
+        status: 'failed',
+        warnings: [],
+      };
+    }
   }
 
   return await runWithBoundedRetry(
@@ -214,10 +249,14 @@ export async function runGenuiBenchUiJudge(
       runBenchUiJudgeRequest(
         {
           model: options.model,
+          ...(options.artifact.protocol === 'reactlynx'
+            ? { reactLynxZipUrl: options.artifact.zipUrl }
+            : {}),
           ...(options.artifact.protocol === 'lynx-xml'
             ? { lynxXmlSource: rawText }
             : {}),
-          ...(options.artifact.protocol === 'html'
+          ...((options.artifact.protocol === 'html'
+              || options.artifact.protocol === 'reactweb')
             ? { htmlSource: rawText }
             : {}),
           globalProps: {
@@ -236,6 +275,7 @@ export async function runGenuiBenchUiJudge(
           ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
         },
         captureScreenshot,
+        options.evaluate,
       ),
   );
 }

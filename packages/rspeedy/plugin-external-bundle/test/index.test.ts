@@ -23,6 +23,10 @@ import { ExternalsLoadingPlugin } from '@lynx-js/externals-loading-webpack-plugi
 
 import { pluginStubLayers } from './stub-layers.plugin.js'
 
+const runtimeAsyncPredicate = (
+  { systemInfo }: { systemInfo: Record<string, unknown> },
+) => ['Harmony', 'web'].includes(String(systemInfo['platform']))
+
 class MockResponse extends Writable {
   headers = new Map<string, string>()
 
@@ -475,6 +479,39 @@ describe('pluginExternalBundle', () => {
           },
         },
       })
+  })
+
+  test('should forward a runtime async predicate to all reactlynx aliases', async () => {
+    const { pluginExternalBundle } = await import('../src/index.js')
+    let capturedPlugins: unknown[] = []
+    const rsbuild = await createRsbuild({
+      cwd: __dirname,
+      rsbuildConfig: {
+        source: { entry: { main: './fixtures/basic.tsx' } },
+        tools: {
+          rspack(config) {
+            capturedPlugins = config.plugins ?? []
+            return config
+          },
+        },
+        plugins: [
+          pluginStubLayers(),
+          pluginExternalBundle({
+            externalsPresets: { reactlynx: { async: runtimeAsyncPredicate } },
+          }),
+        ],
+      },
+    })
+    await rsbuild.inspectConfig()
+    const plugin = getExternalsLoadingPlugin(capturedPlugins)
+    expect(plugin).toBeDefined()
+    for (
+      const external of Object.values(
+        getExternalsLoadingPluginOptions(plugin).externals,
+      )
+    ) {
+      expect(external.async).toBe(runtimeAsyncPredicate)
+    }
   })
 
   test('should emit the reactlynx bundle into build output by default', async () => {

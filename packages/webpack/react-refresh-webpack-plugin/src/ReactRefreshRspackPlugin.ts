@@ -89,13 +89,13 @@ export class ReactRefreshRspackPlugin {
    * ```js
    * // rspack.config.js
    * import { ReactRefreshRspackPlugin } from '@lynx-js/react-refresh-webpack-plugin'
-   * import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin'
+   * import { LAYERS } from '@lynx-js/react-webpack-plugin'
    *
    * export default {
    *   module: {
    *     rules: [
    *       {
-   *         issueLayer: ReactWebpackPlugin.LAYERS.BACKGROUND,
+   *         issuerLayer: LAYERS.BACKGROUND,
    *         test: /\.[jt]sx?$/,
    *         exclude: [
    *           /node_modules/,

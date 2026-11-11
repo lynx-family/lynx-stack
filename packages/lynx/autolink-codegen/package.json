@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/autolink-codegen",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Lynx library code generator",
   "keywords": [
     "Lynx",
@@ -30,8 +30,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rslib",
+    "dev": "rslib --watch",
     "test": "vitest run"
   },
   "devDependencies": {

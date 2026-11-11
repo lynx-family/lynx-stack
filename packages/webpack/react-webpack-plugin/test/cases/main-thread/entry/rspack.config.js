@@ -20,13 +20,15 @@ export default {
         const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
           compilation,
         );
-        compilation.hooks.processAssets.tap('test', () => {
+        compilation.hooks.processAssets.tapPromise('test', async () => {
           const asset = compilation.getAsset('main__main-thread.js');
           expect(asset).not.toBe(undefined);
-          hooks.beforeEncode.promise({
+          await hooks.beforeEncode.promise({
+            chunkGroups: compilation.chunkGroups,
             encodeData: {
               lepusCode: {
                 root: asset,
+                chunks: [],
               },
               sourceContent: {
                 appType: 'card',

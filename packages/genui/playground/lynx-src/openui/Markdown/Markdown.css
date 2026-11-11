@@ -1,0 +1,8 @@
+.OpenUIMarkdown {
+  width: 100%;
+  color: var(--openui-color-text);
+}
+
+.OpenUIMarkdown x-markdown {
+  width: 100%;
+}

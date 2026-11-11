@@ -7,9 +7,9 @@
 - Bundle: async/common.js
 - Bundle: async/lazy.js
 - Bundle: entry.js
-- Manifest: async/common.css.hot-update.json, size: 1248
-- Manifest: async/lazy.css.hot-update.json, size: 1554
-- Manifest: entry.css.hot-update.json, size: 1822
+- Manifest: async/common.css.hot-update.json, size: 1228
+- Manifest: async/lazy.css.hot-update.json, size: 1534
+- Manifest: entry.css.hot-update.json, size: 1798
 
 ## Manifest
 
@@ -41,15 +41,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -97,15 +96,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -185,15 +183,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {

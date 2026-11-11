@@ -28,6 +28,8 @@ interface GlobalPropsApi<Data> {
  * The interface you can extends so that the `useGlobalProps` returning value can be customized
  *
  * @public
+ *
+ * @group Types
  */
 export interface GlobalProps {}
 
@@ -36,7 +38,7 @@ export interface UpdateGlobalPropsOptions {
 }
 
 export function isGlobalPropsEventMode(): boolean {
-  return typeof __GLOBAL_PROPS_MODE__ !== 'undefined' && __GLOBAL_PROPS_MODE__ === 'event';
+  return lynx.__runtime_configs__?.globalPropsMode === 'event';
 }
 
 export function createGlobalProps<Data = GlobalProps>(

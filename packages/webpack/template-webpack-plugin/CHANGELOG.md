@@ -1,5 +1,64 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.7
+
+### Patch Changes
+
+- Support lazy bundles when `splitChunks` creates common async chunks. ([#4079](https://github.com/lynx-family/lynx-stack/pull/4079))
+- Updated dependencies [[`62e0a54`](https://github.com/lynx-family/lynx-stack/commit/62e0a5456040e942967a10dbc6d10d7d1f712b66)]:
+  - @lynx-js/web-core@0.26.7
+
+## 0.16.6
+
+### Patch Changes
+
+- Updated dependencies [[`208ef02`](https://github.com/lynx-family/lynx-stack/commit/208ef02c932bbd5a804c4ff8753739b6ec68401c), [`7336d1e`](https://github.com/lynx-family/lynx-stack/commit/7336d1e5459ef3e46feafd597848e40a02d9a98d), [`2e066a5`](https://github.com/lynx-family/lynx-stack/commit/2e066a574982aaf5d16f59de7bca07892fdde524)]:
+  - @lynx-js/web-core@0.26.6
+  - @lynx-js/webpack-runtime-globals@0.0.9
+
+## 0.16.5
+
+### Patch Changes
+
+- Support `@lynx-js/react@0.129.0`, `@lynx-js/react-webpack-plugin@0.14.0`, and `@lynx-js/react-rsbuild-plugin@0.22.0`. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+- Updated dependencies [[`4f74827`](https://github.com/lynx-family/lynx-stack/commit/4f748279ddf56706fc29cf64056324c9344d8829)]:
+  - @lynx-js/web-core@0.26.5
+
+## 0.16.4
+
+### Patch Changes
+
+- Keep the `CSS` custom sections of an external bundle as custom sections on web. They still ride the `StyleInfo` section, and are now also written under their names into the `CustomSectionsStyleInfo` section. ([#4142](https://github.com/lynx-family/lynx-stack/pull/4142))
+- Updated dependencies [[`75c770f`](https://github.com/lynx-family/lynx-stack/commit/75c770fe259896601fedb187f96ef75ac39a7839)]:
+  - @lynx-js/web-core@0.26.4
+
+## 0.16.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-core@0.26.3
+
+## 0.16.2
+
+### Patch Changes
+
+- Correct the emitted page config key for enabling zero-percent flex basis behavior. ([#4015](https://github.com/lynx-family/lynx-stack/pull/4015))
+
+- Keep both layers of a lazy bundle that a `webpackChunkName` names. The name is the identity of a chunk group, so writing one collapsed the main-thread and the background compilation into a single chunk: the bundle shipped with an empty `lepusCode`, and its intermediate outputs landed outside of `.lynx/lazy-bundle/<name>/`. The transform now appends `-react__<layer>` to a user-written name and the plugin strips it again, the way it did for the names the transform used to inject, so a named lazy bundle is built exactly like an unnamed one. ([#4002](https://github.com/lynx-family/lynx-stack/pull/4002))
+
+- Updated dependency `tinypool` to `^2.2.0`. ([#3835](https://github.com/lynx-family/lynx-stack/pull/3835))
+- Updated dependencies []:
+  - @lynx-js/web-core@0.26.2
+
+## 0.16.1
+
+### Patch Changes
+
+- Fix the JavaScript chunk of a lazy bundle ignoring `output.filenameHash`. It is now named like the entry of its layer, so `background.[contenthash:8].js` is emitted next to `main-thread.js` in production, and the chunk of a non-Lynx environment stays in that environment's output root instead of `.lynx/`. ([#3883](https://github.com/lynx-family/lynx-stack/pull/3883))
+- Updated dependencies [[`c5d8272`](https://github.com/lynx-family/lynx-stack/commit/c5d8272e621a2622d783d98836c05c509252e55c), [`8d0b358`](https://github.com/lynx-family/lynx-stack/commit/8d0b358bf35ba6f2958c61da5b81dffa5c422c2d)]:
+  - @lynx-js/web-core@0.26.1
+
 ## 0.16.0
 
 ### Minor Changes

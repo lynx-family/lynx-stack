@@ -1,5 +1,18 @@
 # @lynx-js/runtime-wrapper-webpack-plugin
 
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [[`7336d1e`](https://github.com/lynx-family/lynx-stack/commit/7336d1e5459ef3e46feafd597848e40a02d9a98d)]:
+  - @lynx-js/webpack-runtime-globals@0.0.9
+
+## 0.2.5
+
+### Patch Changes
+
+- Support `@lynx-js/react@0.129.0`, `@lynx-js/react-webpack-plugin@0.14.0`, and `@lynx-js/react-rsbuild-plugin@0.22.0`. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
 ## 0.2.4
 
 ### Patch Changes

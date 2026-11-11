@@ -7,7 +7,7 @@ it('should inject env variables', () => {
   expect(__PROFILE__).toBe(false);
   expect(__REACT_DEVTOOL__).toBe(false);
 
-  if (__filename.includes('main-thread')) {
+  if (__filename.endsWith('main__main-thread.js')) {
     // This is false in LEPUS bundle
     expect(__LEPUS__).toBe(true);
     expect(__MAIN_THREAD__).toBe(true);

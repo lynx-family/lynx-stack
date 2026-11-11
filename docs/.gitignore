@@ -1,0 +1,5 @@
+doc_build
+.rspress
+content/*/api/
+manifest.json
+content/*/_nav.json

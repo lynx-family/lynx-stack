@@ -29,6 +29,7 @@ pub use template::template_sections::style_info::{
   decoded_style_data::DecodedStyleData,
   flattened_style_info::{FlattenedStyleInfo, FlattenedStyleSheet},
   raw_style_info::{RawStyleInfo, Rule, RulePrelude, Selector, StyleSheet},
+  raw_style_info_map::RawStyleInfoMap,
   style_info_decoder::StyleInfoDecoder,
 };
 

@@ -167,8 +167,7 @@ export class XList extends HTMLElement {
        */
       rate: `${number}px` | `${number}rpx` | `${number}ppx` | number;
       /**
-       * @description start/pause autoScroll
-       * @defaultValue true
+       * @description true to start, false to stop.
        */
       start: boolean;
       /**

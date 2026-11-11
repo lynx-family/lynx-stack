@@ -1,0 +1,54 @@
+.OpenUIChatList {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+.OpenUIChatListRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+}
+.OpenUIChatListBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 6rpx;
+}
+.OpenUIChatListNumber {
+  font-size: 26rpx;
+  color: var(--openui-color-text-muted);
+  width: 30rpx;
+}
+.OpenUIChatListTitle {
+  font-size: 26rpx;
+  color: var(--openui-color-text);
+  font-weight: 600;
+  line-height: 1.45;
+}
+.OpenUIChatListSubtitle {
+  font-size: 22rpx;
+  color: var(--openui-color-text-muted);
+  line-height: 1.45;
+}
+.OpenUIChatListImage {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 12rpx;
+  flex-shrink: 0;
+}
+.OpenUIChatListAction {
+  font-size: 22rpx;
+  color: var(--openui-color-primary);
+}
+.OpenUIChatListSmall {
+  gap: 12rpx;
+}
+.OpenUIChatListSmall .OpenUIChatListTitle {
+  font-size: 22rpx;
+}
+.OpenUIChatListSmall .OpenUIChatListImage {
+  width: 64rpx;
+  height: 64rpx;
+}

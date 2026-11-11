@@ -1,5 +1,15 @@
 # @lynx-js/tailwind-preset
 
+## 0.6.0
+
+### Minor Changes
+
+- **BREAKING:** Align composed `skew-x-*` and `skew-y-*` utilities with Tailwind ([#3935](https://github.com/lynx-family/lynx-stack/pull/3935))
+  CSS v3 by emitting `skewX(...) skewY(...)`. Elements combining both axes now
+  use Tailwind's matrix composition instead of the previous two-argument
+  `skew(...)` behavior. To preserve the previous geometry, migrate to a complete
+  arbitrary transform such as `transform-[skew(12deg,6deg)]`.
+
 ## 0.5.1
 
 ### Patch Changes

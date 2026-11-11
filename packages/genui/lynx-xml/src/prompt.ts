@@ -2,16 +2,33 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { LYNX_XML_MOBILE_DESIGN_GUIDANCE } from './mobile-design.js';
-import { VANILLA_LYNX_SKILL_GUIDANCE } from './vanilla-lynx-skill.js';
+import { scriptReuseInstructions } from './script-reuse.js';
+import {
+  LYNX_XML_STYLE_PRESET_INSTRUCTIONS,
+  validateStylePreset,
+} from './style-preset.js';
+import type { LynxXmlStylePreset } from './style-preset.js';
+import {
+  VANILLA_LYNX_REUSED_SCRIPT_GUIDANCE,
+  VANILLA_LYNX_SKILL_GUIDANCE,
+  VANILLA_LYNX_TEMPLATE_REUSED_SCRIPT_GUIDANCE,
+} from './vanilla-lynx-skill.js';
 
 /** The default Lynx engine version used by generated XML artifacts. */
 export const LYNX_XML_ENGINE_VERSION = '4.2';
 
 /** Options used to customize the Lynx XML generation system prompt. */
 export interface BuildLynxXmlSystemPromptOptions {
+  /**
+   * Generate business callbacks and let the agent assemble shared script logic.
+   * @defaultValue false
+   * @example { enableScriptReuse: true, enableHtmlFragment: true }
+   */
+  enableScriptReuse?: boolean;
   /** Generate an intermediate document for deterministic fragment compilation. */
   enableHtmlFragment?: boolean;
+  /** Reuse preset utility CSS independently of Template. Disabled when omitted or false. */
+  stylePreset?: LynxXmlStylePreset | false;
   /** Override the generated artifact's Lynx engine version. */
   engineVersion?: string;
   /** Append caller-specific instructions after the built-in contract. */
@@ -22,23 +39,26 @@ const ENGINE_VERSION_PATTERN = /^\d+(?:\.\d+)*$/u;
 
 /** Intermediate source contract for deterministic fragment compilation. */
 export const LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS =
-  `XML fragment mode is enabled for this request (this output contract overrides the imported document guidance below):
-- Generate the entire document in one response: one <template> containing the initial XML element fragment directly inside <lynx>, alongside CSS and main/background scripts in their normal source blocks. Prefer placing the template first, but block order is not significant. Never omit the template, even when conversation history contains already-compiled .lynxml artifacts. The server removes <template> and compiles it to Element PAPI before delivery; it is an intermediate format, not a runtime Lynx element.
+  `Template mode is enabled for this request (this output contract overrides the imported document guidance below):
+- Generate the entire document in one response: one <template> containing the initial XML element fragment directly inside <lynx>, alongside CSS and one main-thread script in their normal source blocks. Prefer placing the template first, but block order is not significant. Never omit the template, even when conversation history contains already-compiled .lynxml artifacts. The server removes <template> and compiles it to Element PAPI before delivery; it is an intermediate format, not a runtime Lynx element.
 - Give a unique id ONLY to nodes referenced later by event binding, state updates, or cleanup. Omit id on purely static nodes; do not assign ids to every node. Use well-formed XML, literal attributes and XML entities in the template. Keep style, script, lynx, and page elements outside the fragment. Prefer literal text directly inside <text>. An explicit <raw-text> leaf may use text content or a text attribute, never both; put styling, event handlers, and update ids on its parent <text>. Do not use interpolation, loops, conditional directives, or inline event-handler attributes; implement dynamic behavior in JavaScript.
 - The server supplies createFragment(page, pageId). Call it exactly once in renderPage(), after page and pageId exist: nodes = createFragment(page, pageId). Declare let nodes at main-thread script scope so later event, update, and cleanup handlers can use nodes["cityText"] for id="cityText". Access nodes only after rendering. Do not declare or shadow createFragment, invent nodeN variables, or assume XML ids declare variables.
 - createFragment creates and appends the initial roots to page and returns their id-to-node map. Do not recreate or append the initial roots yourself. Bind events and apply initial state after the call. Use Element PAPI for subsequent dynamic updates and new nodes.
-- Write all CSS, state, event handlers, lifecycle registration, background work, and cleanup in the same response. Do not request conversion, wait for bindings, or output placeholders. The server performs conversion after generation without another model request.`;
+- Write all CSS, state, event handlers, lifecycle registration, and cleanup in the same response. Do not request conversion, wait for bindings, or output placeholders. The server performs conversion after generation without another model request.`;
 
 /** Build a system prompt for producing complete, zero-build `.lynxml` files. */
 export function buildLynxXmlSystemPrompt(
   options: BuildLynxXmlSystemPromptOptions = {},
 ): string {
+  validateStylePreset(options.stylePreset);
   const engineVersion = normalizeEngineVersion(
     options.engineVersion ?? LYNX_XML_ENGINE_VERSION,
   );
   const prompt = buildBasePrompt(
     engineVersion,
     options.enableHtmlFragment === true,
+    options.stylePreset === 'default',
+    options.enableScriptReuse === true,
   );
   const appendix = options.appendix?.trim();
   return appendix ? `${prompt}\n\n${appendix}` : prompt;
@@ -59,12 +79,19 @@ function normalizeEngineVersion(engineVersion: string): string {
 function buildBasePrompt(
   engineVersion: string,
   enableHtmlFragment: boolean,
+  enableStylePreset: boolean,
+  enableScriptReuse: boolean,
 ): string {
+  const guidance = enableScriptReuse
+    ? (enableHtmlFragment
+      ? VANILLA_LYNX_TEMPLATE_REUSED_SCRIPT_GUIDANCE
+      : VANILLA_LYNX_REUSED_SCRIPT_GUIDANCE)
+    : VANILLA_LYNX_SKILL_GUIDANCE;
   return `
 You are the Lynx XML generation agent for Lynx GenUI. Turn the user's request
 into ${
-    enableHtmlFragment
-      ? 'one intermediate fragment document for server compilation'
+    enableHtmlFragment || enableScriptReuse
+      ? 'one intermediate document for server assembly'
       : 'one complete, runnable, zero-build .lynxml artifact'
   } implemented with
 Vanilla Lynx, Element PAPI, and Lynx Runtime APIs.
@@ -75,6 +102,9 @@ conflict.
 GenUI output requirements:
 - Return only the raw artifact. Do not use Markdown fences, explanations, or
   text before or after the document.
+- Generate in main-thread-only mode: put all page state, UI logic, and event
+  handlers in exactly one <script thread="main"> block. Use only APIs available
+  on the main thread.
 - Set the <lynx> root's engine-version to "${engineVersion}".
 - Add another attribute to the <lynx> root only when the user or consuming
   integration defines the corresponding PageConfig key. Never invent root
@@ -82,53 +112,117 @@ GenUI output requirements:
 
 ${
     enableHtmlFragment
-      ? LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS + '\n\n'
+      ? (enableStylePreset
+        ? LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS.replace(
+          'Write all CSS,',
+          'Write only custom CSS beyond the enabled preset,',
+        )
+        : LYNX_XML_HTML_FRAGMENT_INSTRUCTIONS).split('\n').filter(line =>
+          !enableScriptReuse
+          || (!line.startsWith('- The server supplies createFragment')
+            && !line.startsWith('- createFragment creates')
+            && !line.startsWith('- Write all CSS,')
+            && !line.startsWith('- Write only custom CSS'))
+        ).join('\n') + '\n\n'
       : ''
-  }${VANILLA_LYNX_SKILL_GUIDANCE}
+  }${guidance}
 
-Lynx XML adaptation contract:
-- Keep nodes distinct from numeric ids: every __AppendElement argument and
-  append helper's parent must be a node. Use pageId only as the first argument
-  to page-owned element creation APIs; never append pageId,
-  __GetElementUniqueID(...), or another number.
-- Validate lifecycle and app-event payload shapes and normalize defaults before
-  use.
-- Apply a class with display: flex and an explicit row or column flex-direction
-  to the page and every container that lays out Element children. Do not rely on
-  implicit Linear or Flex layout or inline styles for this; leaf text and image
-  nodes are exempt.
-- Keep the page otherwise visually unstyled except for an optional responsive
-  root font size. Append the first business node directly to it; that node owns
-  sizing, background, and entry layout. Use __CreateView(pageId) only when
-  content fits one viewport. For longer content, append
-  __CreateScrollView(pageId) directly to the page as the first business node,
-  never below a business view. Set scroll-orientation to "vertical" with
-  __SetAttribute and apply a class with width: 100%, a definite height such as
-  100vh, display: flex, and flex-direction: column. Append sections directly or
-  under one growing wrapper that is not 100vh. Do not nest vertical scroll
-  views. A requested fixed bar must be a direct page sibling; reserve its full
-  size and any host-supplied safe-area inset in scrolling content.
-- For each tappable control, set accessibility-element to true and an applicable
-  accessibility-traits value. Add accessibility-label only when visible text
-  does not name it; never use Web aria-label.
-- Use calc() only for length-valued properties. Do not use min(), max(),
-  clamp(), physical units, vmin, or vmax. Protect fixed-size controls, media,
-  headers, and footers from Flex compression with flex-shrink: 0 or an explicit
-  minimum size.
+${enableScriptReuse ? scriptReuseInstructions(enableHtmlFragment) : ''}
 
-${LYNX_XML_MOBILE_DESIGN_GUIDANCE}
+${
+    enableStylePreset
+      ? LYNX_XML_STYLE_PRESET_INSTRUCTIONS + '\n\n'
+      : ''
+  }${
+    buildAdaptationContract(
+      enableHtmlFragment,
+      enableStylePreset,
+      enableScriptReuse,
+    )
+  }
 
-Product and safety requirements:
-- Produce a polished, responsive interface that follows the user's requested
-  content, hierarchy, and interactions. Keep the tree reasonably flat and use
-  self-contained text and CSS shapes when assets are not supplied.
-- Keep the artifact self-contained: do not use imports or package dependencies,
-  and do not add analytics, tracking, eval, Function, fetchBundle, loadScript,
-  arbitrary network requests, or invented external asset URLs. Use an external
-  URL only when the user supplied it or explicitly requested that integration;
-  requested data fetching belongs on the background thread.
-- Do not claim or imply that the artifact was device-tested.
+Artifact boundaries:
+- Keep all code in the document: no imports, package dependencies, eval,
+  Function, fetchBundle, loadScript, analytics, or tracking.
+- Use only asset/link URLs supplied by the user or host, or returned by enabled
+  search/image tools. Never invent URLs or execute external scripts.
+- Keep runtime behavior local to the page; do not issue scripted network requests.
+- Do not claim device testing.
 `.trim();
+}
+
+/** Match local constraints to the tree, script, and style authoring modes. */
+function buildAdaptationContract(
+  enableHtmlFragment: boolean,
+  enableStylePreset: boolean,
+  enableScriptReuse: boolean,
+): string {
+  const page = enableScriptReuse ? 'ctx.page' : 'page';
+  const pageId = enableScriptReuse ? 'ctx.pageId' : 'pageId';
+  const layoutClasses = enableStylePreset
+    ? 'preset flex with flex-row or flex-col'
+    : 'classes declaring display: flex and flex-direction: row or column';
+  const layoutTargets = enableScriptReuse
+    ? 'every business container'
+    : 'the Page and every container';
+
+  // Template and ScriptReuse already define node maps and initial-tree ownership.
+  // Keep only local constraints here, preserving their mode-specific vocabulary.
+  return [
+    'Lynx XML adaptation contract:',
+    enableHtmlFragment && enableScriptReuse
+      ? `- During dynamic updates, ctx.append and ctx.replaceChildren take nodes,
+  never ids. Use ctx creation helpers rather than raw Element PAPI.`
+      : `- ${
+        enableHtmlFragment ? 'During dynamic updates, ' : ''
+      }__AppendElement and append helpers take nodes, never ids.
+  In Element PAPI, pass ${pageId} only as the first argument to page-owned creation APIs.`,
+    `- Pass ${
+      enableScriptReuse ? 'ctx, ' : ''
+    }parent nodes and local dependencies to helpers; call/apply/bind
+  cannot expose caller locals. Declare shared state and node references in scope
+  for all render, event, update, and cleanup handlers; initialize before use.`,
+    `- Validate ${
+      enableScriptReuse
+        ? 'business fields in hook data/patch'
+        : 'lifecycle payloads'
+    } and app-event payloads;
+  default missing values.`,
+    `- Use ${layoutClasses}
+  on ${layoutTargets} that lays out Element children; no inline or implicit layout.
+  Leaf text and images are exempt.`,
+    enableScriptReuse
+      ? `- Keep ctx.page's genui-page class; only add an optional responsive root font size.
+  Its first business child owns sizing, background, and layout.`
+      : `- Page only gets its layout class and optional responsive root font size;
+  its first business child owns sizing, background, and layout.`,
+    `- Default to a vertical scroll view, including when content height is uncertain.
+  Use a non-scrolling root only when the user explicitly requests a fixed
+  single-screen layout; fitting one viewport alone is not an exception.`,
+    enableHtmlFragment
+      ? `- Make <scroll-view scroll-orientation="vertical"> the first <template> root;
+  use <view> there only for the explicit fixed single-screen exception. Roots
+  become direct Page children; never wrap the scroll view in a business <view>.`
+      : `- Append __CreateScrollView(${pageId}) as ${page}'s first business child and set
+  scroll-orientation to "vertical" via __SetAttribute. Use __CreateView(${pageId})
+  there only for the explicit fixed single-screen exception. Never wrap the
+  scroll view in a business view.`,
+    enableStylePreset
+      ? '- Scroll-view classes: preset flex flex-col w-full h-screen.'
+      : `- Scroll-view class: display: flex, flex-direction: column,
+  width: 100%, and a definite height such as 100vh.`,
+    `- Scroll content: direct sections or one growing wrapper without 100vh; no nested
+  vertical scroll views. Fixed bars are ${
+      enableHtmlFragment
+        ? 'sibling <template> roots'
+        : 'direct Page children beside the scroll view'
+    };
+  reserve their full size plus host-supplied safe-area insets once in scrolling content.`,
+    `- calc() is for lengths only. No min()/max()/clamp(), physical units, vmin or vmax.
+  Prevent fixed-size shrinking with ${
+      enableStylePreset ? 'preset shrink-0' : 'flex-shrink: 0'
+    } or an explicit minimum size.`,
+  ].join('\n');
 }
 
 /** The default Lynx XML generation system prompt. */

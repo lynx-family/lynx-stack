@@ -3,11 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 import { Radio, RadioGroupRoot, RadioIndicator } from '@lynx-js/lynx-ui';
 import { useEffect, useRef, useState } from '@lynx-js/react';
 
+import { RadioGroup as RadioGroupDefinition } from './definition.js';
 import {
   useFormName,
   useGetFieldValue,
@@ -15,8 +16,7 @@ import {
   useSetFieldValue,
   useTriggerAction,
 } from '../../core/context.jsx';
-import { defineComponent } from '../../core/library.jsx';
-import { actionPropSchema } from '../Action/index.jsx';
+import type { DefinedComponent } from '../../core/library.jsx';
 
 import '../../../styles/catalog/RadioGroup.css';
 
@@ -34,15 +34,7 @@ const HitSlop = {
   },
 };
 
-const radioGroupPropsSchema = z.object({
-  items: z.array(z.string()),
-  value: z.string().optional(),
-  usageHint: z.enum(['default', 'card', 'row']).optional(),
-  action: actionPropSchema.optional(),
-  name: z.string().optional(),
-});
-
-type RadioGroupProps = z.infer<typeof radioGroupPropsSchema>;
+type RadioGroupProps = z.infer<typeof RadioGroupDefinition.props>;
 
 function RadioGroupRenderer({ props }: { props: RadioGroupProps }) {
   const triggerAction = useTriggerAction();
@@ -125,10 +117,7 @@ function RadioGroupRenderer({ props }: { props: RadioGroupProps }) {
   );
 }
 
-export const RadioGroup = defineComponent({
-  name: 'RadioGroup',
-  props: radioGroupPropsSchema,
-  description:
-    'Single-choice radio group. Visual state updates locally on tap; the action fires for the LLM to persist the change.',
+export const RadioGroup: DefinedComponent<typeof RadioGroupDefinition.props> = {
+  ...RadioGroupDefinition,
   component: RadioGroupRenderer,
-});
+};

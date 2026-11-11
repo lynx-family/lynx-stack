@@ -20,7 +20,6 @@
   "files": [
     "index.d.ts",
     "main.js",
-    "main.cjs",
     "cjs",
     "dist",
     "!dist/*.node"

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="width=device-width,initial-scale=1.0" name="viewport">
+    <title>x-markdown rapid append reproduction</title>
+    <link href="/main.css" rel="stylesheet" />
+    <style>
+    body {
+      margin: 24px;
+      font-family: sans-serif;
+    }
+    .comparison {
+      display: flex;
+      gap: 24px;
+    }
+    section {
+      flex: 1;
+      min-width: 0;
+    }
+    x-markdown {
+      display: block;
+      border: 1px solid #aaa;
+      padding: 16px;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+    </style>
+  </head>
+  <body>
+    <script src="/main.js" defer></script>
+    <h1>x-markdown rapid append</h1>
+    <p>Append 4 characters every 5ms. Reload to replay.</p>
+    <p id="status">Loading markdown dependencies…</p>
+    <div class="comparison">
+      <section>
+        <h2>Streaming</h2>
+        <x-markdown id="streamed"></x-markdown>
+      </section>
+      <section>
+        <h2>Set once (same final content)</h2>
+        <x-markdown id="reference"></x-markdown>
+      </section>
+    </div>
+    <h2>Source</h2>
+    <pre id="source"></pre>
+    <script>
+    const source =
+        'Hello **world**.\n\n```js\nconst value = 1;\n```\n\n'
+        + '| A | B |\n| --- | --- |\n| 1 | 2 |\n';
+      const seed = 'Hello **wor';
+      const streamed = document.getElementById('streamed');
+      const reference = document.getElementById('reference');
+      const status = document.getElementById('status');
+      const root = (element) =>
+        element.shadowRoot?.querySelector('#markdown-root');
+      document.getElementById('source').textContent = source;
+      window.streamDone = false;
+      customElements.whenDefined('x-markdown').then(() => {
+        reference.setAttribute('content', source);
+        streamed.setAttribute('content', seed);
+        const startWhenReady = () => {
+          // Wait for the real parser before starting the streaming experiment.
+          if (
+            !root(reference)?.querySelector('table')
+            || !root(streamed)?.querySelector('p')
+          ) {
+            requestAnimationFrame(startWhenReady);
+            return;
+          }
+          let length = seed.length;
+          status.textContent = 'Streaming…';
+          const timer = setInterval(() => {
+            length = Math.min(length + 4, source.length);
+            streamed.setAttribute('content', source.slice(0, length));
+            if (length === source.length) {
+              clearInterval(timer);
+              window.streamDone = true;
+              status.textContent =
+                'All content appended. Compare bold text, code block, and table.';
+            }
+          }, 5);
+        };
+        startWhenReady();
+      });
+    </script>
+  </body>
+</html>

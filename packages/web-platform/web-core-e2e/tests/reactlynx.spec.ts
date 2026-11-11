@@ -1701,20 +1701,23 @@ test.describe('reactlynx3 tests', () => {
     });
 
     test('api-dispose', async ({ page }, { title }) => {
+      const message: string[] = [];
+      page.on('console', (msg) => {
+        message.push(msg.text());
+      });
       await goto(page, title);
       const target = page.locator('#target');
       await expect(target).toHaveCSS('background-color', 'rgb(255, 192, 203)'); // pink
+      // The main-thread render can finish before the background effect is installed.
+      await expect.poll(() => message).toContain('api-dispose-ready');
       const currentWorkerCount = page.workers().length;
-      const message: string[] = [];
-      await page.on('console', (msg) => {
-        message.push(msg.text());
-      });
       await page.evaluate(() => {
         document.querySelector('lynx-view')!.remove();
       });
-      await wait(50);
-      expect(message).toContain('fin');
-      expect(currentWorkerCount - page.workers().length).toStrictEqual(1);
+      await expect.poll(() => message).toContain('fin');
+      await expect.poll(() => currentWorkerCount - page.workers().length).toBe(
+        1,
+      );
     });
 
     test('api-error', async ({ page }, { title }) => {

@@ -1,0 +1,54 @@
+.OpenUIChatRadioGroup, .OpenUIChatRadioOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.OpenUIChatRadioOption {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14rpx;
+  padding: 8rpx 0;
+}
+.OpenUIChatRadioOption.ui-disabled {
+  opacity: 0.4;
+}
+.OpenUIChatRadioIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34rpx;
+  height: 34rpx;
+  flex-shrink: 0;
+  border: 2rpx solid var(--line, var(--openui-color-border-input));
+  border-radius: 50%;
+}
+.OpenUIChatRadioIndicator.ui-checked {
+  border-color: var(--primary, var(--openui-color-primary));
+}
+.OpenUIChatRadioDot {
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background-color: var(--primary, var(--openui-color-primary));
+}
+.OpenUIChatRadioLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+}
+.OpenUIChatRadioLabel {
+  font-size: 26rpx;
+  color: var(--content, var(--openui-color-text));
+  line-height: 1.5;
+}
+.OpenUIChatRadioDescription {
+  font-size: 22rpx;
+  color: var(--content-muted, var(--openui-color-text-muted));
+  line-height: 1.5;
+}
+.OpenUIChatRadioError {
+  font-size: 22rpx;
+  color: var(--openui-color-error);
+}

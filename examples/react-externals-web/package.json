@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run build:comp-lib && cross-env REACT_DEVTOOL=1 rsbuild build --config rsbuild.config.lynx.ts",
-    "build:comp-lib": "cross-env REACT_DEVTOOL=1 rslib build --config rslib-comp-lib.config.ts",
+    "build:comp-lib": "cross-env REACT_DEVTOOL=1 rslib --config rslib-comp-lib.config.ts",
     "dev": "pnpm run build && rsbuild dev --open",
     "preview": "rsbuild dev"
   },

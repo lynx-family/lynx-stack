@@ -28,6 +28,7 @@ import {
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatArtifact,
   ChatHydration,
@@ -233,21 +234,6 @@ const WELCOME_MESSAGE: ChatMessageModel = {
   text:
     'I can route requests to MCP Apps registered by this client. Ask for weather in any city or request a product card.',
 };
-
-const SUGGESTIONS = [
-  {
-    label: 'Weather Card',
-    text: 'Show the weather in San Francisco in Fahrenheit.',
-  },
-  {
-    label: 'Product Card',
-    text: 'Show a product card for a limited-edition sneaker.',
-  },
-  {
-    label: 'What is Lynx',
-    text: 'What is Lynx? Show me the difference with React Native.',
-  },
-] as const;
 
 function normalizeError(payload: unknown): string {
   if (isRecord(payload)) {
@@ -478,10 +464,25 @@ function hydrate(
       continue;
     }
     if (message.role !== 'assistant') continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
     const parsed = parsePersistedOutput(message.content);
     if (!parsed) continue;
     output = parsed;
-    messages.push(...transcriptMessages(parsed));
+    messages.push(
+      ...transcriptMessages(parsed).map((result, index) =>
+        index === 0
+          ? { ...result, generationUsage: message.generationUsage }
+          : result
+      ),
+    );
   }
   for (let index = previewMessages.length - 1; index >= 0; index--) {
     const parsed = parseMcpAppsOutput(previewMessages[index]);
@@ -564,7 +565,7 @@ export const MCP_APPS_CHAT_ADAPTER = {
     progressLabel: 'Routing request to a registered MCP Apps...',
     failurePrefix: 'MCP Apps request failed:',
   },
-  suggestions: SUGGESTIONS,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   async createRequest({ prompt, conversation, settings, host, signal }) {
     const url = getChatEndpoint('mcp-apps', host, settings);
@@ -606,12 +607,12 @@ export const MCP_APPS_CHAT_ADAPTER = {
         text: 'Routing request to a registered MCP Apps...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Selecting a registered MCP Apps (${text.length} chars)...`,
+        text: 'Selecting a registered MCP Apps...',
       };
     },
     success(output) {

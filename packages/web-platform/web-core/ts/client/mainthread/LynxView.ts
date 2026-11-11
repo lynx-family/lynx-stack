@@ -46,7 +46,7 @@ export interface BrowserConfig {
  * @property {NapiModulesCall} onNapiModulesCall [optional] the NapiModule value handler.
  * @property {string[]} injectStyleRules [optional] the css rules which will be injected into shadowroot. Each items will be inserted by `insertRule` method. @see https://developer.mozilla.org/docs/Web/API/CSSStyleSheet/insertRule
  * @property {number} lynxGroupId [optional] (attribute: "lynx-group-id") the background shared context id, which is used to share webworker between different lynx cards
- * @property {InitI18nResources} initI18nResources [optional] (attribute: "init-i18n-resources") the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
+ * @property {InitI18nResources} initI18nResources [optional] the complete set of i18nResources that on the container side, which can be obtained synchronously by _I18nResourceTranslation
  *
  * @event error lynx card fired an error
  * @event i18nResourceMissed i18n resource cache miss
@@ -58,13 +58,13 @@ export interface BrowserConfig {
  * Note that you should declarae the size of lynx-view
  *
  * ```html
- * <lynx-view url="https://path/to/main-thread.js" raw-data="{}" global-props="{}" style="height:300px;width:300px">
+ * <lynx-view url="https://path/to/main.web.bundle" init-data="{}" global-props="{}" style="height:300px;width:300px">
  * </lynx-view>
  * ```
  *
  * React 19 Example
  * ```jsx
- * <lynx-view url={myLynxCardUrl} rawData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
+ * <lynx-view url={myLynxCardUrl} initData={{}} globalProps={{}} style={{height:'300px', width:'300px'}}>
  * </lynx-view>
  * ```
  */
@@ -92,6 +92,23 @@ export class LynxViewElement extends HTMLElement {
 
   #connected = false;
   #url?: string;
+
+  /**
+   * Resolves image source and placeholder URLs before loading them.
+   *
+   * Set this synchronous hook before loading the view. It receives the original
+   * attribute value for images in this view's shadow root, including placeholder
+   * preloads and error fallbacks. Image attributes retain their original values.
+   * Images resolve their URLs again when connected or moved to another view.
+   * Changing the hook does not reload images that are already connected.
+   *
+   * @defaultValue undefined; image URLs are used unchanged.
+   * @example
+   * ```ts
+   * view.resolveResource = (src) => new URL(src, 'https://example.com/assets/').href;
+   * ```
+   */
+  declare resolveResource?: (src: string) => string;
 
   /**
    * @public
@@ -279,7 +296,7 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @public
    * @property initI18nResources
-   * @default {}
+   * @default []
    */
   get initI18nResources(): InitI18nResources {
     return this.#initI18nResources;
@@ -295,7 +312,7 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @public
    * @method
-   * update the `__initData` and trigger essential flow
+   * Update the i18n resources for the given translation options.
    */
   updateI18nResources(
     data: InitI18nResources,
@@ -404,7 +421,7 @@ export class LynxViewElement extends HTMLElement {
    * @override
    * "false" value will be omitted
    *
-   * {@inheritdoc HTMLElement.setAttribute}
+   * See {@link https://developer.mozilla.org/docs/Web/API/Element/setAttribute | HTMLElement.setAttribute}.
    */
   override setAttribute(qualifiedName: string, value: string): void {
     if (value === 'false') {

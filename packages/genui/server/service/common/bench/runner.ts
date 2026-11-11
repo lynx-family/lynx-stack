@@ -17,8 +17,11 @@ import type {
   ProtocolBenchJudgePayload,
 } from './protocol-adapter.js';
 import type { ProtocolBenchScenario } from './protocol-types.js';
-import { sanitizeBenchPublicValue } from './redaction.js';
+import { sanitizeBenchPlanValue } from './redaction.js';
+import { resolveBenchRetryDelay, waitForBenchRetry } from './retry.js';
 import { getBenchJobStore } from './store.js';
+import { parseReasoningEffort } from '../provider.js';
+import { createBenchGenerationTiming } from './timing.js';
 import type {
   BenchCatalogLabel,
   BenchGroupRequest,
@@ -42,6 +45,8 @@ import {
   createArkImageGenerationRunScope,
   generatedArkImageURLs,
 } from '../../../agent/common/ark-image-generation-tool.js';
+import { createScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
+import type { ScreenshotEvaluator } from '../../../agent/common/ui-judge-agent.js';
 import { getA2UIAgentService } from '../../a2ui/a2ui-agent.js';
 import { createA2UIBenchAdapter } from '../../a2ui/a2ui-bench-adapter.js';
 import { resolveBenchCatalog } from '../../a2ui/a2ui-bench-catalog.js';
@@ -54,7 +59,11 @@ import type {
 import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
-import { defaultModelName } from '../model-config.js';
+import { createReactLynxBenchAdapter } from '../../reactlynx/reactlynx-bench-adapter.js';
+import { createReactWebBenchAdapter } from '../../reactweb/reactweb-bench-adapter.js';
+import { buildGenerationRepairMessages } from '../generation-repair.js';
+import { defaultModelName, readModelConfig } from '../model-config.js';
+import { GenerationUpstreamError } from '../result.js';
 import type { ChatMessage } from '../types.js';
 
 interface BenchRunItem {
@@ -171,6 +180,7 @@ async function generateA2UINative(
   catalog: ReturnType<typeof resolveBenchCatalog>,
   model: string | undefined,
   signal: AbortSignal,
+  onPerformanceEvent: (event: string) => void,
 ): Promise<{
   attempts: number;
   errors: string[];
@@ -181,12 +191,13 @@ async function generateA2UINative(
   usage: unknown[];
   warnings: string[];
 }> {
-  const conversation = [...messages];
+  let conversation = [...messages];
   const usage: unknown[] = [];
   const maxAttempts = Math.min(
     5,
     Math.max(1, request.settings.maxRepairAttempts + 1),
   );
+  let attempts = 0;
   let lastText = '';
   let lastErrors: string[] = [];
   let lastFinishReason: unknown;
@@ -199,23 +210,45 @@ async function generateA2UINative(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     signal.throwIfAborted();
-    const generated = await getA2UIAgentService().generateRaw(
-      conversation,
-      {
-        resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
-        apiKey: request.provider.apiKey,
-        baseURL: request.provider.baseURL,
-        model,
-        api: request.provider.api,
-        catalog,
-        disableAgentCache: true,
-        enableWebSearch: false,
-        enableImageGeneration: false,
-      },
-      undefined,
-      signal,
-      imageGenerationScope,
-    );
+    attempts = attempt;
+    let generated: { text: string; usage: unknown; finishReason: unknown };
+    try {
+      generated = await getA2UIAgentService().generateRaw(
+        conversation,
+        {
+          resourceId: `bench:${item.group.id}:${runId}:attempt-${attempt}`,
+          apiKey: request.provider.apiKey,
+          baseURL: request.provider.baseURL,
+          model,
+          api: request.provider.api,
+          catalog,
+          disableAgentCache: true,
+          maxRetries: 0,
+          reasoningEffort: parseReasoningEffort(item.group.reasoningEffort),
+          streamRawGeneration: true,
+          onPerformanceEvent,
+          enableWebSearch: false,
+          enableImageGeneration: false,
+        },
+        undefined,
+        signal,
+        imageGenerationScope,
+      );
+    } catch (error) {
+      signal.throwIfAborted();
+      const failed = error instanceof GenerationUpstreamError
+        ? error.result
+        : undefined;
+      usage.push(failed?.usage);
+      lastFinishReason = failed?.finishReason ?? 'error';
+      lastErrors = [error instanceof Error ? error.message : String(error)];
+      const delayMs = resolveBenchRetryDelay(error, attempt);
+      if (attempt < maxAttempts && delayMs !== undefined) {
+        await waitForBenchRetry(delayMs, signal);
+        continue;
+      }
+      break;
+    }
     usage.push(generated.usage);
     lastText = generated.text;
     lastFinishReason = generated.finishReason;
@@ -237,16 +270,17 @@ async function generateA2UINative(
       };
     }
     if (attempt < maxAttempts) {
-      conversation.push({ role: 'assistant', content: generated.text });
-      conversation.push({
-        role: 'user',
-        content: formatErrorsForModel(validation.errors),
+      conversation = buildGenerationRepairMessages({
+        initialMessages: messages,
+        messages: conversation,
+        result: generated,
+        repairPrompt: formatErrorsForModel(validation.errors),
       });
     }
   }
 
   return {
-    attempts: maxAttempts,
+    attempts,
     errors: lastErrors,
     finishReason: lastFinishReason,
     messages: [],
@@ -281,6 +315,7 @@ async function runA2UINativeOne(
     { role: 'user', content: buildBenchPrompt(item.group, item.scenario) },
   ];
   const startedAt = performance.now();
+  const timing = createBenchGenerationTiming();
   emitRunPhase(jobId, item, 'agent');
 
   try {
@@ -292,6 +327,7 @@ async function runA2UINativeOne(
       catalog,
       model,
       signal,
+      timing.observe,
     );
     emitRunPhase(jobId, item, 'validate');
     const agentMs = performance.now() - startedAt;
@@ -316,7 +352,7 @@ async function runA2UINativeOne(
           },
         }
         : {}),
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -335,6 +371,7 @@ async function runA2UINativeOne(
           0,
         ),
         agentMs: Math.round(agentMs),
+        ...timing.metrics(),
         // fmpMs: preview.fmpMs,
         fmpMs: 0,
         // ttiMs: preview.ttiMs,
@@ -359,13 +396,13 @@ async function runA2UINativeOne(
         usage: result.usage,
         messages: result.messages,
         text: result.text,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   } catch (error) {
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -381,6 +418,7 @@ async function runA2UINativeOne(
         catalog: catalogLabel,
         tokens: 0,
         agentMs: Math.round(agentMs),
+        ...timing.metrics(),
         fmpMs: 0,
         ttiMs: 0,
         renderMs: 0,
@@ -391,7 +429,7 @@ async function runA2UINativeOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -430,11 +468,13 @@ async function runProtocolAdapterOne(
   const protocol = protocolForGroup(item.group);
   const profile = profileForGroup(item.group);
   const model = pickRunModel(request, item.group);
-  const catalogLabel = protocol === 'lynx-xml' || protocol === 'html'
-    ? 'none' as const
-    : (profile === 'matched-core'
-      ? 'matched-core' as const
-      : pickRunCatalog(item.group));
+  const catalogLabel =
+    protocol === 'lynx-xml' || protocol === 'html' || protocol === 'reactweb'
+      || protocol === 'reactlynx'
+      ? 'none' as const
+      : (profile === 'matched-core'
+        ? 'matched-core' as const
+        : pickRunCatalog(item.group));
 
   store.emit(jobId, 'run-start', {
     runId,
@@ -447,6 +487,7 @@ async function runProtocolAdapterOne(
   });
   emitRunPhase(jobId, item, 'agent');
   const startedAt = performance.now();
+  const timing = createBenchGenerationTiming();
 
   try {
     if (!adapter) {
@@ -455,8 +496,17 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      reasoningEffort: parseReasoningEffort(item.group.reasoningEffort),
+      onPerformanceEvent: timing.observe,
+      enableDesignGuidance: item.group.enableDesignGuidance !== false,
       ...(protocol === 'lynx-xml'
-        ? { enableHtmlFragment: item.group.enableHtmlFragment === true }
+        ? {
+          enableHtmlFragment: item.group.enableHtmlFragment === true,
+          enableScriptReuse: item.group.enableScriptReuse === true,
+          ...(item.group.stylePreset
+            ? { stylePreset: item.group.stylePreset }
+            : {}),
+        }
         : {}),
       runId,
       pairId: `${item.scenario.id}-repeat-${item.repeatIndex}`,
@@ -502,6 +552,7 @@ async function runProtocolAdapterOne(
       catalog: catalogLabel,
       tokens,
       agentMs: Math.round(agentMs),
+      ...timing.metrics(),
       fmpMs: 0,
       ttiMs: 0,
       renderMs: 0,
@@ -536,9 +587,9 @@ async function runProtocolAdapterOne(
       ...(artifact.finalText ? { text: artifact.finalText } : {}),
     };
     return {
-      result: sanitizeBenchPublicValue(
+      result: sanitizeBenchPlanValue(
         result,
-        request.provider,
+        request,
       ) as BenchRunResult,
       ...(judgePayload
         ? {
@@ -549,14 +600,21 @@ async function runProtocolAdapterOne(
                 BenchRunResult['messages']
               >,
             }
-            : {
-              protocol: judgePayload.kind === 'lynx-xml-source'
-                ? 'lynx-xml' as const
-                : (judgePayload.kind === 'html-source'
-                  ? 'html' as const
-                  : 'openui' as const),
-              rawText: judgePayload.rawText,
-            },
+            : (judgePayload.kind === 'reactlynx-bundle'
+              ? {
+                protocol: 'reactlynx' as const,
+                rawText: judgePayload.rawText,
+                zipUrl: judgePayload.zipUrl,
+              }
+              : {
+                protocol: ({
+                  'lynx-xml-source': 'lynx-xml',
+                  'reactweb-html': 'reactweb',
+                  'html-source': 'html',
+                  'openui-text': 'openui',
+                } as const)[judgePayload.kind],
+                rawText: judgePayload.rawText,
+              }),
         }
         : {}),
     };
@@ -564,7 +622,7 @@ async function runProtocolAdapterOne(
     const agentMs = performance.now() - startedAt;
     const message = error instanceof Error ? error.message : String(error);
     return {
-      result: sanitizeBenchPublicValue({
+      result: sanitizeBenchPlanValue({
         id: runId,
         groupId: item.group.id,
         groupName: item.group.name,
@@ -580,6 +638,7 @@ async function runProtocolAdapterOne(
         catalog: catalogLabel,
         tokens: 0,
         agentMs: Math.round(agentMs),
+        ...timing.metrics(),
         fmpMs: 0,
         ttiMs: 0,
         renderMs: 0,
@@ -590,7 +649,7 @@ async function runProtocolAdapterOne(
         outputChars: 0,
         errors: [message],
         error: message,
-      }, request.provider) as BenchRunResult,
+      }, request) as BenchRunResult,
     };
   }
 }
@@ -602,24 +661,38 @@ async function generateOne(
   adapters: Partial<Record<BenchProtocol, ProtocolBenchAdapter>>,
   signal: AbortSignal,
 ): Promise<GeneratedBenchRun> {
-  if (
-    protocolForGroup(item.group) === 'a2ui'
-    && profileForGroup(item.group) === 'native'
-  ) {
-    return await runA2UINativeOne(
+  const configured = readModelConfig();
+  const modelName = pickRunModel(request, item.group);
+  const model = configured.ok
+    ? configured.config.models[modelName ?? '']
+      ?? configured.config.models[configured.config.defaultModel]
+    : undefined;
+  const modelPrices = model
+    ? {
+      input_price: model.input_price,
+      cached_price: model.cached_price,
+      output_price: model.output_price,
+    }
+    : undefined;
+  const generated = (
+      protocolForGroup(item.group) === 'a2ui'
+      && profileForGroup(item.group) === 'native'
+    )
+    ? await runA2UINativeOne(
       jobId,
       request,
       item,
       signal,
+    )
+    : await runProtocolAdapterOne(
+      jobId,
+      request,
+      item,
+      adapters[protocolForGroup(item.group)],
+      signal,
     );
-  }
-  return await runProtocolAdapterOne(
-    jobId,
-    request,
-    item,
-    adapters[protocolForGroup(item.group)],
-    signal,
-  );
+  if (modelPrices) generated.result.modelPrices = modelPrices;
+  return generated;
 }
 
 async function finishRun(
@@ -630,6 +703,7 @@ async function finishRun(
   judgeCapabilities: BenchJudgeCapabilities,
   scheduling: BenchJudgeScheduling,
   signal: AbortSignal,
+  evaluate?: ScreenshotEvaluator,
 ): Promise<BenchRunResult> {
   const { result, judgeArtifact } = generated;
   const session = judgeCapabilities.get(judgeCapabilityKey(item.group))
@@ -645,7 +719,8 @@ async function finishRun(
   try {
     judge = await runGenuiBenchUiJudge(
       {
-        model: pickRunModel(request, item.group),
+        model: request.settings.uiJudgeModel
+          ?? pickRunModel(request, item.group),
         artifact: judgeArtifact,
         scenario: item.scenario,
         session,
@@ -653,6 +728,7 @@ async function finishRun(
         timeoutMs: request.settings.timeoutMs,
         scheduling,
         onPhase: phase => emitRunPhase(jobId, item, phase),
+        ...(evaluate ? { evaluate } : {}),
       },
       (capture, captureSignal) =>
         getBenchJobStore().requestScreenshot(jobId, capture, captureSignal),
@@ -668,7 +744,7 @@ async function finishRun(
   const errors = [...result.errors, ...judge.errors];
   const warnings = [...(result.judgeWarnings ?? []), ...judge.warnings];
   const ok = result.ok && judge.status !== 'failed';
-  return sanitizeBenchPublicValue({
+  return sanitizeBenchPlanValue({
     ...result,
     ok,
     status: ok ? 'complete' : 'failed',
@@ -690,7 +766,7 @@ async function finishRun(
     ...(judge.screenshotDataUrl
       ? { screenshotDataUrl: judge.screenshotDataUrl }
       : {}),
-  }, request.provider) as BenchRunResult;
+  }, request) as BenchRunResult;
 }
 
 /*
@@ -752,6 +828,12 @@ export function summarizeGroup(
     typeof item.judgeGeqiScore === 'number'
   );
   const failedRuns = Math.max(0, plannedRuns - successfulRuns);
+  const firstTextTimes = groupResults.flatMap(item =>
+    typeof item.firstTextTokenMs === 'number'
+      && Number.isFinite(item.firstTextTokenMs) && item.firstTextTokenMs >= 0
+      ? [item.firstTextTokenMs]
+      : []
+  );
   return {
     groupId: group.id,
     groupName: group.name,
@@ -770,6 +852,15 @@ export function summarizeGroup(
       groupResults.map((item) => item.agentMs),
       plannedRuns,
     ),
+    ...(firstTextTimes.length > 0
+      ? {
+        avgFirstTextTokenMs: averagePlanned(
+          firstTextTimes,
+          firstTextTimes.length,
+        ),
+        firstTextRunCount: firstTextTimes.length,
+      }
+      : {}),
     avgFmpMs: averagePlanned(
       groupResults.map((item) => item.fmpMs),
       plannedRuns,
@@ -881,7 +972,7 @@ function buildReport(
     ),
     summary,
   };
-  return sanitizeBenchPublicValue(report, request.provider) as BenchReport;
+  return sanitizeBenchPlanValue(report, request, jobId) as BenchReport;
 }
 
 export function startBenchJob(jobId: string): void {
@@ -929,6 +1020,8 @@ function resolveProtocolAdapters(
       openui: createOpenUIBenchAdapter,
       'lynx-xml': createLynxXmlBenchAdapter,
       html: createHtmlBenchAdapter,
+      reactweb: createReactWebBenchAdapter,
+      reactlynx: createReactLynxBenchAdapter,
     };
     adapters[protocol] = overrides?.[protocol] ?? factories[protocol]();
   }
@@ -1008,6 +1101,10 @@ export async function runBenchJob(
     const scheduling: BenchJudgeScheduling = {
       evaluation: evaluationPool,
     };
+    const judgeEvaluator = request.settings.judgeEnabled
+        && request.settings.uiJudgeModel
+      ? createScreenshotEvaluator(request.settings.uiJudgeModel).evaluate
+      : undefined;
     // Reserve space before generation so announced browser tasks and pending
     // scores stay bounded even when the client drains its capture queue slowly.
     const inFlight = new BenchTaskPool(
@@ -1071,6 +1168,7 @@ export async function runBenchJob(
               judgeCapabilities,
               scheduling,
               signal,
+              judgeEvaluator,
             ).then(publishResult).catch(fail).finally(() => {
               release();
               pending.delete(completion);

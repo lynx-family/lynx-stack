@@ -1,9 +1,12 @@
+---
+description: '路径别名与模块解析配置。'
+---
+
 # 模块解析
 
 在现代前端开发中，模块化已成为有效管理代码的关键方式：
 
 1. **简化模块导入**：
-
    - 模块解析允许使用简洁易读的路径进行模块导入，替代冗长的相对路径。例如通过别名配置，可以使用 `@components/Button` 代替 `../../../src/components/Button`，显著提升代码可维护性。
 
 2. **环境感知的模块替换**：
@@ -37,15 +40,15 @@
 更多细节可参考 [TypeScript - paths](https://typescriptlang.org/tsconfig#paths) 官方文档。
 :::
 
-### 使用 `resolve.alias` 配置
+### 使用 `source.alias` 配置
 
-Rsbuild 提供 [resolve.alias](../../api/rspeedy.resolve.alias) 配置项，对应 webpack/Rspack 原生的 [resolve.alias](https://rspack.rs/config/resolve#resolvealias) 配置。可通过对象或函数形式进行配置。
+Rsbuild 提供 [source.alias](../api/rspeedy.source.alias.md) 配置项，对应 webpack/Rspack 原生的 [resolve.alias](https://rspack.rs/config/resolve#resolvealias) 配置。可通过对象或函数形式进行配置。
 
 #### 使用场景
 
-`tsconfig.json` 的 `paths` 配置是静态的，缺乏动态性。且 `paths` 仅在模块被包含在 [`source.include`](../../api/rspeedy.source.include) 时生效。
+`tsconfig.json` 的 `paths` 配置是静态的，缺乏动态性。且 `paths` 仅在模块被包含在 [`source.include`](../api/rspeedy.source.include.md) 时生效。
 
-`resolve.alias` 配置能突破这些限制，允许通过 JavaScript 代码动态设置别名。例如为所有依赖使用工作区版本的 `lodash-es`：
+`source.alias` 配置能突破这些限制，允许通过 JavaScript 代码动态设置别名。例如为所有依赖使用工作区版本的 `lodash-es`：
 
 ```js title="lynx.config.ts"
 import { createRequire } from 'node:module';
@@ -55,7 +58,7 @@ import { defineConfig } from '@lynx-js/rspeedy';
 const require = createRequire(import.meta.url);
 
 export default defineConfig({
-  resolve: {
+  source: {
     alias: {
       'lodash-es': require.resolve('lodash-es'),
     },
@@ -209,4 +212,4 @@ export default defineConfig({
 });
 ```
 
-[`tools.rspack`]: ../../api/rspeedy.tools.rspack
+[`tools.rspack`]: ../api/rspeedy.tools.rspack.md

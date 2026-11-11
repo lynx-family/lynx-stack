@@ -2,20 +2,29 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  createLibrary,
-  defineComponent,
-  tagSchemaId,
-} from '@openuidev/lang-core';
+/**
+ * @module prompt
+ */
+
+import { createLibrary } from '@openuidev/lang-core';
 import type {
   ComponentGroup,
   DefinedComponent,
   Library,
   PromptOptions,
 } from '@openuidev/lang-core';
-import { z } from 'zod/v4';
 
-import { OPENUI_GAP_VALUES } from '../shared/layout.js';
+import * as catalog from '../catalog/agent.js';
+import { DATA_GENERATION_RULES } from '../data-tools/data-rules.js';
+import { registerOpenUIBuiltins } from '../shared/builtins.js';
+import {
+  DEFAULT_COMPONENT_GROUPS,
+  getDefaultComponents,
+} from '../shared/defaultCatalog.js';
+import { resolveLibraryOptions } from '../shared/libraryOptions.js';
+
+/** Shared action prop schema exposed to prompt signatures as `ActionExpression`. */
+export { actionPropSchema as openUiPromptActionPropSchema } from '../catalog/Action/schema.js';
 
 type HeadlessRenderer = () => null;
 
@@ -26,13 +35,26 @@ export type OpenUiPromptLibrary = Library<HeadlessRenderer>;
  * Options for creating the headless OpenUI prompt library.
  */
 export interface CreateOpenUiPromptLibraryOptions {
-  /** Override the root component name. Defaults to `'Stack'`. */
+  /**
+   * Root component name; supply its definition when defaults are disabled.
+   * @defaultValue `'Stack'`
+   */
   root?: string;
-  /** Limit built-ins to these names. Custom `components` are still appended. */
+  /**
+   * Whether to include the built-in components and component groups.
+   * @defaultValue `true`
+   */
+  includeDefaultComponents?: boolean;
+  /**
+   * Limit built-ins to these names, retaining the selected root automatically.
+   * Custom components are always appended. Ignored when defaults are disabled.
+   * @defaultValue All built-in components.
+   * @example `componentNames: ['Stack', 'Text']`
+   */
   componentNames?: readonly string[];
-  /** Replace or extend the built-in component set. */
+  /** Additional components, or the complete set when defaults are disabled. */
   components?: OpenUiPromptComponent[];
-  /** Replace or extend the built-in component groups. */
+  /** Additional groups, or the complete set when defaults are disabled. */
   componentGroups?: ComponentGroup[];
 }
 
@@ -46,507 +68,20 @@ export interface BuildOpenUiSystemPromptOptions
   appendix?: string;
 }
 
-const ICON_NAMES = [
-  'account_circle',
-  'add',
-  'arrow_back',
-  'arrow_forward',
-  'camera',
-  'check',
-  'close',
-  'delete',
-  'edit',
-  'error',
-  'favorite',
-  'help',
-  'home',
-  'info',
-  'location_on',
-  'lock',
-  'mail',
-  'menu',
-  'more_vert',
-  'pause',
-  'person',
-  'play_arrow',
-  'refresh',
-  'search',
-  'send',
-  'settings',
-  'share',
-  'star',
-  'warning',
-] as const;
-
-const ALIGN_VALUES = ['start', 'center', 'end', 'stretch'] as const;
-const STACK_JUSTIFY_VALUES = ['start', 'center', 'end', 'between'] as const;
-const EXTENDED_JUSTIFY_VALUES = [
-  'start',
-  'center',
-  'end',
-  'between',
-  'around',
-  'evenly',
-  'spaceBetween',
-  'spaceAround',
-  'spaceEvenly',
-  'stretch',
-] as const;
-const TEXT_VARIANTS = [
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'caption',
-  'body',
-] as const;
-
-const pathBindingSchema = z.object({
-  path: z.string(),
-});
-tagSchemaId(pathBindingSchema, 'PathBinding');
-
-const stringLikeSchema = z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-  pathBindingSchema,
-]);
-tagSchemaId(stringLikeSchema, 'StringLike');
-
-const booleanLikeSchema = z.union([
-  z.boolean(),
-  pathBindingSchema,
-]);
-tagSchemaId(booleanLikeSchema, 'BooleanLike');
-
-const templateChildrenSchema = z.object({
-  componentId: z.string(),
-  path: z.string(),
-});
-tagSchemaId(templateChildrenSchema, 'TemplateChildren');
-
-const listChildrenSchema = z.union([
-  z.array(z.any()),
-  templateChildrenSchema,
-]);
-
-const actionStepSchema = z.looseObject({
-  type: z.string(),
-});
-
-const actionPlanSchema = z.object({
-  steps: z.array(actionStepSchema),
-});
-
-const legacyActionSchema = z.object({
-  type: z.string().optional(),
-  params: z.record(z.string(), z.any()).optional(),
-  url: z.string().optional(),
-  context: z.string().optional(),
-});
-
-/** Shared action prop schema exposed to prompt signatures as `ActionExpression`. */
-export const openUiPromptActionPropSchema = z.union([
-  actionPlanSchema,
-  legacyActionSchema,
-]);
-tagSchemaId(openUiPromptActionPropSchema, 'ActionExpression');
-
-const Stack = defineComponent({
-  name: 'Stack',
-  props: z.object({
-    children: z.array(z.any()),
-    direction: z.enum(['row', 'column']).optional(),
-    wrap: z.boolean().optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
-  }),
-  description: 'Flex layout container.',
-  component: () => null,
-});
-
-const Row = defineComponent({
-  name: 'Row',
-  props: z.object({
-    children: z.array(z.any()),
-    justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    wrap: z.boolean().optional(),
-  }),
-  description: 'Horizontal flex layout container.',
-  component: () => null,
-});
-
-const Column = defineComponent({
-  name: 'Column',
-  props: z.object({
-    children: z.array(z.any()),
-    justify: z.enum(EXTENDED_JUSTIFY_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-  }),
-  description: 'Vertical flex layout container.',
-  component: () => null,
-});
-
-const List = defineComponent({
-  name: 'List',
-  props: z.object({
-    children: listChildrenSchema.optional(),
-    items: listChildrenSchema.optional(),
-    direction: z.enum(['vertical', 'horizontal']).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    divider: z.boolean().optional(),
-  }),
-  description:
-    'List container for repeated children. Pass child components as the first argument.',
-  component: () => null,
-});
-
-const Card = defineComponent({
-  name: 'Card',
-  props: z.object({
-    children: z.array(z.any()),
-    variant: z.enum(['card', 'sunk', 'clear']).optional(),
-    direction: z.enum(['row', 'column']).optional(),
-    wrap: z.boolean().optional(),
-    gap: z.enum(OPENUI_GAP_VALUES).optional(),
-    align: z.enum(ALIGN_VALUES).optional(),
-    justify: z.enum(STACK_JUSTIFY_VALUES).optional(),
-  }),
-  description:
-    'Styled container (card/sunk/clear). Accepts Stack layout parameters.',
-  component: () => null,
-});
-
-const CardHeader = defineComponent({
-  name: 'CardHeader',
-  props: z.object({
-    title: z.string(),
-    subtitle: z.string().optional(),
-  }),
-  description: 'Card header with title and optional subtitle.',
-  component: () => null,
-});
-
-const TextContent = defineComponent({
-  name: 'TextContent',
-  props: z.object({
-    text: z.union([z.string(), z.number(), z.boolean()]),
-    size: z.enum(['small', 'default', 'large', 'small-heavy', 'large-heavy'])
-      .optional(),
-  }),
-  description: 'Text content with optional size.',
-  component: () => null,
-});
-
-const Text = defineComponent({
-  name: 'Text',
-  props: z.object({
-    text: stringLikeSchema,
-    variant: z.enum(TEXT_VARIANTS).optional(),
-  }),
-  description:
-    'Plain text with semantic variants h1, h2, h3, h4, h5, caption, and body.',
-  component: () => null,
-});
-
-const Separator = defineComponent({
-  name: 'Separator',
-  props: z.object({}),
-  description: 'Visual separator.',
-  component: () => null,
-});
-
-const Divider = defineComponent({
-  name: 'Divider',
-  props: z.object({
-    axis: z.enum(['horizontal', 'vertical']).optional(),
-  }),
-  description: 'Horizontal or vertical divider.',
-  component: () => null,
-});
-
-const Button = defineComponent({
-  name: 'Button',
-  props: z.object({
-    label: z.string(),
-    action: openUiPromptActionPropSchema.optional(),
-    variant: z.enum(['primary', 'secondary', 'tertiary']).optional(),
-    type: z.enum(['normal', 'destructive']).optional(),
-    size: z.enum(['extra-small', 'small', 'medium', 'large']).optional(),
-  }),
-  description: 'Clickable button.',
-  component: () => null,
-});
-
-const Buttons = defineComponent({
-  name: 'Buttons',
-  props: z.object({
-    buttons: z.array(Button.ref),
-  }),
-  description: 'Button group.',
-  component: () => null,
-});
-
-const Tag = defineComponent({
-  name: 'Tag',
-  props: z.object({
-    text: z.string(),
-  }),
-  description: 'Compact label or status tag.',
-  component: () => null,
-});
-
-const Image = defineComponent({
-  name: 'Image',
-  props: z.object({
-    url: stringLikeSchema,
-    fit: z.enum(['contain', 'cover', 'fill', 'none', 'scale-down']).optional(),
-    variant: z.enum([
-      'icon',
-      'avatar',
-      'smallFeature',
-      'mediumFeature',
-      'largeFeature',
-      'header',
-    ]).optional(),
-  }),
-  description: 'Image with optional fit and variant sizing.',
-  component: () => null,
-});
-
-const Icon = defineComponent({
-  name: 'Icon',
-  props: z.object({
-    name: z.enum(ICON_NAMES),
-    size: z.enum(['sm', 'md', 'lg']).optional(),
-    color: z.enum(['primary', 'muted', 'inherit']).optional(),
-  }),
-  description: 'Material icon.',
-  component: () => null,
-});
-
-const Loading = defineComponent({
-  name: 'Loading',
-  props: z.object({
-    variant: z.enum(['inline', 'block']).optional(),
-  }),
-  description: 'Skeleton placeholder while content loads.',
-  component: () => null,
-});
-
-const AudioPlayer = defineComponent({
-  name: 'AudioPlayer',
-  props: z.object({
-    url: stringLikeSchema,
-    description: stringLikeSchema.optional(),
-  }),
-  description: 'Audio attachment placeholder with URL and description.',
-  component: () => null,
-});
-
-const Video = defineComponent({
-  name: 'Video',
-  props: z.object({
-    url: stringLikeSchema,
-    title: stringLikeSchema.optional(),
-  }),
-  description: 'Video attachment placeholder with URL and optional title.',
-  component: () => null,
-});
-
-const CheckBox = defineComponent({
-  name: 'CheckBox',
-  props: z.object({
-    label: z.string(),
-    value: z.boolean().optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description:
-    'Toggleable checkbox. Use name when it participates in a form or stateful flow.',
-  component: () => null,
-});
-
-const RadioGroup = defineComponent({
-  name: 'RadioGroup',
-  props: z.object({
-    items: z.array(z.string()),
-    value: z.string().optional(),
-    usageHint: z.enum(['default', 'card', 'row']).optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description: 'Single-choice radio group.',
-  component: () => null,
-});
-
-const ChoicePicker = defineComponent({
-  name: 'ChoicePicker',
-  props: z.object({
-    label: stringLikeSchema.optional(),
-    options: z.union([z.array(stringLikeSchema), stringLikeSchema]),
-    value: stringLikeSchema.optional(),
-    variant: z.enum(['default', 'card']).optional(),
-    displayStyle: z.enum(['list', 'chips', 'dropdown']).optional(),
-    filterable: booleanLikeSchema.optional(),
-  }),
-  description:
-    'Choice picker rendered as selectable chips, list items, or a dropdown-like field.',
-  component: () => null,
-});
-
-const Slider = defineComponent({
-  name: 'Slider',
-  props: z.object({
-    label: z.string().optional(),
-    min: z.number().optional(),
-    max: z.number().optional(),
-    value: z.number().optional(),
-    step: z.number().optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description: 'Continuous-value slider.',
-  component: () => null,
-});
-
-const DateTimeInput = defineComponent({
-  name: 'DateTimeInput',
-  props: z.object({
-    value: stringLikeSchema,
-    enableDate: booleanLikeSchema.optional(),
-    enableTime: booleanLikeSchema.optional(),
-    min: stringLikeSchema.optional(),
-    max: stringLikeSchema.optional(),
-    label: stringLikeSchema.optional(),
-  }),
-  description:
-    'Date/time value display with optional label, min/max, and enabled date/time hints.',
-  component: () => null,
-});
-
-const TextField = defineComponent({
-  name: 'TextField',
-  props: z.object({
-    label: z.string(),
-    value: z.string().optional(),
-    variant: z.enum(['longText', 'number', 'shortText', 'obscured'])
-      .optional(),
-    validationRegexp: z.string().optional(),
-    action: openUiPromptActionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description:
-    'Single-line or multi-line text input with optional regex validation.',
-  component: () => null,
-});
-
-const Modal = defineComponent({
-  name: 'Modal',
-  props: z.object({
-    trigger: z.any(),
-    content: z.any(),
-    title: stringLikeSchema.optional(),
-    closeOnAction: z.boolean().optional(),
-  }),
-  description:
-    'Tap-triggered modal container. Pass the trigger component first and content second.',
-  component: () => null,
-});
-
-const Tabs = defineComponent({
-  name: 'Tabs',
-  props: z.object({
-    tabs: z.array(z.object({
-      value: z.string(),
-      title: stringLikeSchema,
-      child: z.any(),
-    })),
-    value: z.string().optional(),
-  }),
-  description:
-    'Tabbed content switcher. Each tab item is an object with value, title, and child.',
-  component: () => null,
-});
-
-const DEFAULT_COMPONENTS: OpenUiPromptComponent[] = [
-  Stack,
-  Row,
-  Column,
-  List,
-  Card,
-  CardHeader,
-  Text,
-  TextContent,
-  Separator,
-  Divider,
-  Button,
-  Buttons,
-  Tag,
-  Image,
-  Icon,
-  Loading,
-  AudioPlayer,
-  Video,
-  CheckBox,
-  RadioGroup,
-  ChoicePicker,
-  Slider,
-  DateTimeInput,
-  TextField,
-  Modal,
-  Tabs,
-];
-
-const DEFAULT_COMPONENT_GROUPS: ComponentGroup[] = [
-  {
-    name: 'Layout',
-    components: [
-      'Stack',
-      'Row',
-      'Column',
-      'List',
-      'Tabs',
-      'Modal',
-      'Separator',
-      'Divider',
-    ],
-  },
-  {
-    name: 'Content',
-    components: ['Card', 'CardHeader', 'Text', 'TextContent'],
-  },
-  { name: 'Buttons', components: ['Button', 'Buttons'] },
-  { name: 'Data Display', components: ['Tag', 'Icon', 'Loading'] },
-  { name: 'Media', components: ['Image', 'AudioPlayer', 'Video'] },
-  {
-    name: 'Inputs',
-    components: [
-      'CheckBox',
-      'RadioGroup',
-      'ChoicePicker',
-      'Slider',
-      'DateTimeInput',
-      'TextField',
-    ],
-  },
-];
+const ENUM_ARGUMENT_RULE =
+  'Treat every component enum as a closed set: use only the exact values listed for that argument. Do not borrow enum values from another component or from the broader upstream UI or icon library. If no value fits, use another available component instead of inventing a value.';
 
 const DEFAULT_ADDITIONAL_RULES = [
   'Use the built-in OpenUI components exactly as listed; do not invent component names or named-argument syntax.',
+  'Arguments are positional. Omit optional arguments only from the end; use null for every skipped optional slot before a later argument. Never shift later values into earlier slots.',
+  ENUM_ARGUMENT_RULE,
   'Prefer compact, mobile-friendly layouts. Use Stack, Row, Column, List, and Card for structure, CardHeader for titles, and Text/TextContent for text.',
   'Use Tabs for alternate views, Modal for tap-to-open details, and List for repeated or grouped items.',
-  'For List, pass the child component array as the first argument; only use TemplateChildren when the host provides template data.',
+  'For List, use List(children, null, direction, align, gap, divider) when supplying layout options; the second items argument must remain null when children is supplied. Only use TemplateChildren when the host provides template data.',
   'For Tabs, each tab entry is an object like { value: "summary", title: "Summary", child: summaryContent }.',
   'For Modal, pass trigger first and content second: Modal(triggerButton, modalContent, "Title").',
   'When no real tool list is provided, use realistic Query() defaults or static data instead of inventing external tool behavior.',
+  'Use media URLs only when supplied by the user or host or returned by a host image tool. Never invent placeholder URLs. Use Icon or text when no image is available.',
   'Return only OpenUI Lang code unless inlineMode is explicitly enabled.',
 ];
 
@@ -567,19 +102,21 @@ const DEFAULT_EXAMPLES = [
     'header = Row([Icon("location_on", "md", "primary"), Text("Trip Plan", "h3")], "start", "center", "s")',
     'tabs = Tabs([{ value: "summary", title: "Summary", child: summary }, { value: "details", title: "Details", child: details }])',
     'summary = Card([CardHeader("Friday", "Downtown route"), TextContent("Three stops, light walking, dinner at 7 PM.")], "card", "column", false, "s")',
-    'details = List([Text("Museum tickets confirmed.", "body"), DateTimeInput("2026-07-10T19:00", true, true, "2026-07-10T18:00", "2026-07-10T21:00", "Dinner reservation")])',
-    'media = Row([Image("https://example.com/map.png", "cover", "smallFeature"), Video("https://example.com/preview.mp4", "Route preview")], "start", "center", "s", true)',
+    'details = List([Text("Museum tickets confirmed.", "body"), DateTimeInput("2026-07-10T19:00", true, true, "2026-07-10T18:00", "2026-07-10T21:00", "Dinner reservation")], null, "vertical", "stretch", "s", false)',
+    'media = Row([Icon("location_on", "md", "primary"), Text("Downtown walking route", "body")], "start", "center", "s", true)',
   ].join('\n'),
   [
     'root = Stack([filters, list, detailsModal], "column", false, "m", "stretch", "start")',
     'filters = ChoicePicker("Priority", ["High", "Normal", "Low"], "Normal", "card", "chips")',
-    'list = List([Card([Text("Inbox triage", "h4"), TextContent("12 items need review."), AudioPlayer("https://example.com/briefing.mp3", "Briefing audio")], "card", "column", false, "s")])',
+    'list = List([Card([Text("Inbox triage", "h4"), TextContent("12 items need review."), TextContent("Briefing audio is unavailable.")], "card", "column", false, "s")])',
     'detailsModal = Modal(Button("Open details", Action([@ToAssistant("Open inbox details")]), "secondary"), Card([CardHeader("Details"), TextContent("Use actions to confirm or defer items.")]), "Inbox details")',
   ].join('\n'),
 ];
 
 const RESTRICTED_COMPONENT_RULES = [
   'Use only the components listed in this prompt; do not invent component names or named-argument syntax.',
+  'Arguments are positional. Omit optional arguments only from the end; use null for every skipped optional slot before a later argument. Never shift later values into earlier slots.',
+  ENUM_ARGUMENT_RULE,
   'Prefer compact, mobile-friendly layouts built from the available layout and content components.',
   'Return only OpenUI Lang code unless inlineMode is explicitly enabled.',
 ];
@@ -591,12 +128,20 @@ function withDefaultPromptOptions(
   const defaultRules = restrictedComponents
     ? RESTRICTED_COMPONENT_RULES
     : DEFAULT_ADDITIONAL_RULES;
+  const toolNames = new Set(
+    options?.tools?.map(tool => typeof tool === 'string' ? tool : tool.name),
+  );
+  const dataRules = (options?.toolCalls ?? !restrictedComponents)
+      && toolNames.has('openui_query') && toolNames.has('openui_mutation')
+    ? [DATA_GENERATION_RULES]
+    : [];
   return {
     bindings: true,
     toolCalls: !restrictedComponents,
     ...options,
     additionalRules: [
       ...defaultRules,
+      ...dataRules,
       ...(options?.additionalRules ?? []),
     ],
     examples: options?.examples
@@ -613,33 +158,11 @@ function withDefaultPromptOptions(
 export function createOpenUiPromptLibrary(
   options: CreateOpenUiPromptLibraryOptions = {},
 ): OpenUiPromptLibrary {
-  const root = options.root ?? 'Stack';
-  const componentNames = options.componentNames
-    ? new Set([...options.componentNames, root])
-    : null;
-  const defaultComponents = componentNames
-    ? DEFAULT_COMPONENTS.filter((component) =>
-      componentNames.has(component.name)
-    )
-    : DEFAULT_COMPONENTS;
-  const defaultComponentGroups = componentNames
-    ? DEFAULT_COMPONENT_GROUPS
-      .map((group) => ({
-        ...group,
-        components: group.components.filter((name) => componentNames.has(name)),
-      }))
-      .filter((group) => group.components.length > 0)
-    : DEFAULT_COMPONENT_GROUPS;
-
-  return createLibrary<HeadlessRenderer>({
-    root,
-    components: options.components
-      ? [...defaultComponents, ...options.components]
-      : defaultComponents,
-    componentGroups: options.componentGroups
-      ? [...defaultComponentGroups, ...options.componentGroups]
-      : defaultComponentGroups,
-  });
+  registerOpenUIBuiltins();
+  return createLibrary<HeadlessRenderer>(resolveLibraryOptions(options, {
+    components: getDefaultComponents(catalog),
+    componentGroups: DEFAULT_COMPONENT_GROUPS,
+  }));
 }
 
 /**
@@ -651,6 +174,9 @@ export function buildOpenUiSystemPrompt(
   const libraryOptions: CreateOpenUiPromptLibraryOptions = {};
   if (options.root !== undefined) {
     libraryOptions.root = options.root;
+  }
+  if (options.includeDefaultComponents !== undefined) {
+    libraryOptions.includeDefaultComponents = options.includeDefaultComponents;
   }
   if (options.componentNames !== undefined) {
     libraryOptions.componentNames = options.componentNames;
@@ -665,7 +191,8 @@ export function buildOpenUiSystemPrompt(
   const prompt = library.prompt(
     withDefaultPromptOptions(
       options.promptOptions,
-      options.componentNames !== undefined,
+      options.componentNames !== undefined
+        || options.includeDefaultComponents === false,
     ),
   );
   return options.appendix ? `${prompt}\n\n${options.appendix}` : prompt;

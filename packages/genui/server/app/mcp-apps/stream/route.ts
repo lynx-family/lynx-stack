@@ -12,6 +12,7 @@ import {
   resolveMcpAppsResource,
   validateMcpAppsClientRegistry,
 } from '../../../agent/mcp-apps/mcp-apps-registry.js';
+import type { OpenAIReasoningEffort } from '../../../service/common/types.js';
 import { getMcpAppsAgentService } from '../../../service/mcp-apps/mcp-apps-agent.js';
 import {
   validateConversation,
@@ -19,10 +20,14 @@ import {
 } from '../../common/chat-validation';
 import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
+import { createFailureReasoning } from '../../common/failure-reasoning.js';
+import { createGenerationTiming } from '../../common/generation-timing.js';
 import { pickProviderOptions } from '../../common/provider-options';
 import { checkRateLimit, rateLimitSseResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
 import { encodeSSE, sseHeaders } from '../../common/sse';
+import { createStreamLogger } from '../../common/stream-logger.js';
+import { extractTokenUsage } from '../../common/usage.js';
 
 interface McpAppsChatBody {
   messages?: unknown;
@@ -33,9 +38,11 @@ interface McpAppsChatBody {
   apiKey?: string;
   baseURL?: string;
   api?: 'chat' | 'responses';
+  reasoningEffort?: OpenAIReasoningEffort;
 }
 
 async function postMcpAppsStream(req: Request) {
+  const { log } = createStreamLogger('mcp-apps', '/mcp-apps/stream');
   const decision = checkRateLimit(req);
   if (!decision.ok) return rateLimitSseResponse(req, decision);
 
@@ -73,7 +80,21 @@ async function postMcpAppsStream(req: Request) {
   }
 
   const registry = validatedRegistry.registry;
-  const opts = pickProviderOptions(parsed.body);
+  const reasoning = createFailureReasoning([
+    parsed.body.apiKey,
+    parsed.body.baseURL,
+  ]);
+  let observeGenerationTiming:
+    | ((event: string, details?: Record<string, unknown>) => void)
+    | undefined;
+  const opts = {
+    ...pickProviderOptions(parsed.body),
+    onReasoning: reasoning.append,
+    onPerformanceEvent: (event: string, details = {}) => {
+      log(event, details);
+      observeGenerationTiming?.(event, details);
+    },
+  };
   const errorOptions = { secrets: [parsed.body.apiKey, opts.apiKey] };
   const service = getMcpAppsAgentService();
   const modelMessages = [
@@ -110,6 +131,8 @@ async function postMcpAppsStream(req: Request) {
         }
       };
       const run = async () => {
+        const timing = createGenerationTiming();
+        observeGenerationTiming = timing.observe;
         try {
           const { text, usage, finishReason } = await service.generateRaw(
             modelMessages,
@@ -124,10 +147,12 @@ async function postMcpAppsStream(req: Request) {
           );
           if (selection.type === 'message') {
             enqueue('done', {
+              metrics: timing.finish(),
               ok: true,
               protocolVersion: MCP_APPS_PROTOCOL_VERSION,
               message: selection.text,
               usage,
+              tokenUsage: extractTokenUsage(usage),
               finishReason,
             });
             return;
@@ -141,6 +166,7 @@ async function postMcpAppsStream(req: Request) {
           }
           const resource = resolveMcpAppsResource(tool, registry);
           enqueue('done', {
+            metrics: timing.finish(),
             ok: true,
             protocolVersion: MCP_APPS_PROTOCOL_VERSION,
             toolCall: {
@@ -155,11 +181,16 @@ async function postMcpAppsStream(req: Request) {
             tool,
             resource,
             usage,
+            tokenUsage: extractTokenUsage(usage),
             finishReason,
           });
         } catch (error) {
           if (!closed && !generationController.signal.aborted) {
-            enqueue('error', errorMessage(error, errorOptions));
+            enqueue('error', {
+              metrics: timing.finish(),
+              ...errorMessage(error, errorOptions),
+              ...reasoning.payload(),
+            });
           }
         } finally {
           req.signal.removeEventListener('abort', onRequestAbort);

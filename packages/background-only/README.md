@@ -16,7 +16,7 @@ export function log(msg) {
 }
 ```
 
-By adding `import "background-only"` to poison this module, we are now declaring that this module is only safe to be bundled in a "Background" environment, protecting this module from being accidentally bundled into a "Main thread" environment by throwing an error at runtime.
+By adding `import "background-only"` to poison this module, we are now declaring that this module is only safe to be bundled in a "Background" environment, protecting this module from being accidentally bundled into a "Main thread" environment. With `pluginReactLynx`, importing it from a main-thread module fails the build; with other bundlers that resolve the `lepus` export condition, it throws an error at runtime instead.
 
 For example, if we use `log` in a desirable position from a React component, such as in `useEffect` or an event handler, the `log` will work as expected:
 
@@ -32,7 +32,7 @@ function App() {
 }
 ```
 
-However, if we use `log` in a undesirable position from a React component, such as in the body of the rendering function, it will throw an error at runtime time:
+However, if we use `log` in a undesirable position from a React component, such as in the body of the rendering function, the build will fail with `pluginReactLynx` (with other bundlers that resolve the `lepus` condition, it will throw an error at runtime):
 
 ```tsx
 // App.jsx

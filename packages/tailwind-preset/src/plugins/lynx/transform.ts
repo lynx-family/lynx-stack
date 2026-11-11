@@ -44,12 +44,17 @@ export const cssTransformDefault: Record<string, string> = {
   '--tw-sy': '1',
 };
 
-/*
- * These variables are layered into `transform: ...` via customized transform utility:
+/**
+ * Canonical transform value shared by the composable transform utilities.
+ *
+ * The transform variables are layered into one declaration:
  *     transform: translate3d(var(--tw-tx), var(--tw-ty), var(--tw-tz))
  *                rotateX(var(--tw-rx)) rotateY(var(--tw-ry)) rotateZ(var(--tw-rz))
- *                skew(var(--tw-skx), var(--tw-sky))
+ *                skewX(var(--tw-skx)) skewY(var(--tw-sky))
  *                scale(var(--tw-sx), var(--tw-sy));
+ *
+ * Function order is behavioral. In particular, `skewX` must precede `skewY`
+ * to match Tailwind CSS v3 composition semantics.
  */
 
 export const cssTransformValue: string = [
@@ -57,7 +62,8 @@ export const cssTransformValue: string = [
   `rotateX(var(${cssTransformVarMap.rotateX}))`,
   `rotateY(var(${cssTransformVarMap.rotateY}))`,
   `rotateZ(var(${cssTransformVarMap.rotateZ}))`,
-  `skew(var(${cssTransformVarMap.skewX}), var(${cssTransformVarMap.skewY}))`,
+  `skewX(var(${cssTransformVarMap.skewX}))`,
+  `skewY(var(${cssTransformVarMap.skewY}))`,
   `scale(var(${cssTransformVarMap.scaleX}), var(${cssTransformVarMap.scaleY}))`,
 ].join(' ');
 

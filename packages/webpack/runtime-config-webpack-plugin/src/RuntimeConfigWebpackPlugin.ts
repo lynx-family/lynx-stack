@@ -48,11 +48,10 @@ function applyRuntimeConfigInjection(
 }
 
 /**
- * Merges and shallow-freezes runtime configuration in
- * `lynx.__runtime_configs__`.
+ * Replaces `lynx.__runtime_configs__` with this bundle's runtime configuration.
  *
- * Bundles are merged in execution order. Later bundle values overwrite
- * earlier values with the same key.
+ * Apply it to the host bundle only. Lazy and external bundles consume the
+ * configuration injected by the host.
  *
  * @public
  */

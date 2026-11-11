@@ -68,6 +68,7 @@ describe('HTML stream route', () => {
       expect(body).toContain('event: delta\ndata: {"text":"```html\\n"}');
       expect(body).toContain(`"text":${JSON.stringify(ARTIFACT)}`);
       expect(body).toContain('event: done');
+      expect(body).toMatch(/"metrics":\{"generationMs":\d/u);
       expect(body).toContain(
         '"usage":{"inputTokens":4,"outputTokens":8}',
       );

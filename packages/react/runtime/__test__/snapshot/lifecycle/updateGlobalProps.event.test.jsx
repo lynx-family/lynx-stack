@@ -15,13 +15,13 @@ beforeAll(() => {
 
 beforeEach(() => {
   globalEnvManager.resetEnv();
-  globalThis.__GLOBAL_PROPS_MODE__ = 'event';
+  lynx.__runtime_configs__ = { globalPropsMode: 'event' };
 });
 
 afterEach(() => {
   elementTree.clear();
   vi.restoreAllMocks();
-  globalThis.__GLOBAL_PROPS_MODE__ = 'reactive';
+  lynx.__runtime_configs__ = { globalPropsMode: 'reactive' };
 });
 
 async function renderWithCurrentPreact(element, root) {

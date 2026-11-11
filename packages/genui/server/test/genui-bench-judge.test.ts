@@ -107,41 +107,44 @@ describe('resolveGenuiBenchUiJudge', () => {
 });
 
 describe('runGenuiBenchUiJudge', () => {
-  test('captures HTML directly in the browser and scores PNG with the selected model', async () => {
-    const rawText =
-      '<!doctype html><html><head></head><body>Hello</body></html>';
-    const result = await runGenuiBenchUiJudge({
-      artifact: { protocol: 'html', rawText },
-      model: 'html-model',
-      scenario: { prompt: 'Build a greeting' },
-      session: { screenshotPath: 'browser/html' },
-      timeoutMs: 10_000,
-    }, (input, init) => {
-      expect(input.path).toBe('browser/html');
-      expect(input.source).toBe(rawText);
-      expect(input.timeoutMs).toBe(20000);
-      expect(init).toBeInstanceOf(AbortSignal);
-      expect(Object.entries(input.fields)).toEqual([
-        ['width', '390'],
-        ['height', '844'],
-      ]);
-      return Promise.resolve(evaluationResponse(geqiResponse(4)));
-    });
-    expect(result).toMatchObject({
-      status: 'complete',
-      score: 4,
-      geqiScore: 80,
-    });
-    expect(evaluateScreenshot).toHaveBeenLastCalledWith(
-      expect.objectContaining({
+  test.each(['html', 'reactweb'] as const)(
+    'captures %s HTML in the browser and scores PNG with the selected model',
+    async (protocol) => {
+      const rawText =
+        '<!doctype html><html><head></head><body>Hello</body></html>';
+      const result = await runGenuiBenchUiJudge({
+        artifact: { protocol, rawText },
         model: 'html-model',
-        task: 'Build a greeting',
-        screenshotDataUrl: expect.stringMatching(
-          /^data:image\/png;base64,/u,
-        ) as unknown,
-      }),
-    );
-  });
+        scenario: { prompt: 'Build a greeting' },
+        session: { screenshotPath: 'browser/html' },
+        timeoutMs: 10_000,
+      }, (input, init) => {
+        expect(input.path).toBe('browser/html');
+        expect(input.source).toBe(rawText);
+        expect(input.timeoutMs).toBe(20000);
+        expect(init).toBeInstanceOf(AbortSignal);
+        expect(Object.entries(input.fields)).toEqual([
+          ['width', '390'],
+          ['height', '844'],
+        ]);
+        return Promise.resolve(evaluationResponse(geqiResponse(4)));
+      });
+      expect(result).toMatchObject({
+        status: 'complete',
+        score: 4,
+        geqiScore: 80,
+      });
+      expect(evaluateScreenshot).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          model: 'html-model',
+          task: 'Build a greeting',
+          screenshotDataUrl: expect.stringMatching(
+            /^data:image\/png;base64,/u,
+          ) as unknown,
+        }),
+      );
+    },
+  );
 
   test('relays Lynx XML for browser ZIP upload and scores the converted PNG', async () => {
     const rawText =
@@ -180,20 +183,74 @@ describe('runGenuiBenchUiJudge', () => {
     );
   });
 
-  test('rejects external XML resources before calling the screenshot service', async () => {
-    const capture = rstest.fn();
+  test.each([
+    'data: { task: "refreshWeather" }',
+    'data:{temp:26,humidity:"54%"}',
+    'data: snapshot',
+    'data:snapshot',
+    'data: []',
+    'data:null',
+    'data:0',
+    'data:"Updated just now"',
+    '"data": { task: "refreshWeather" }',
+  ])('allows Lynx XML event payload fields (%s)', async field => {
+    const rawText = `<!doctype lynx>
+<lynx engine-version="4.2">
+<script thread="main">
+const backgroundBridge = lynx.getJSContext();
+backgroundBridge.dispatchEvent({ type: "DispatchEventToBackground", ${field}, source: "weather" });
+</script>
+<script thread="background">
+const mainThreadBridge = lynx.getCoreContext();
+mainThreadBridge.dispatchEvent({ type: "PatchFromBackground", data: { temp: 26, forecast: [] } });
+</script>
+</lynx>`;
+    const capture = rstest.fn(() =>
+      Promise.resolve(evaluationResponse(geqiResponse(4)))
+    );
     const result = await runGenuiBenchUiJudge({
-      artifact: {
-        protocol: 'lynx-xml',
-        rawText:
-          '<style>.hero { background-image: url("https://assets.test/image.png"); }</style>',
-      },
-      scenario: { prompt: 'Build a card' },
+      artifact: { protocol: 'lynx-xml', rawText },
+      scenario: { prompt: 'Build a weather card' },
       session: { screenshotPath: 'screenshot/zip/upload' },
     }, capture);
-    expect(capture).not.toHaveBeenCalled();
-    expect(result.status).toBe('failed');
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(capture).toHaveBeenCalledWith(
+      expect.objectContaining({ source: rawText }),
+      expect.any(AbortSignal),
+    );
+    expect(result.status).toBe('complete');
+    expect(result.errors).toEqual([]);
   });
+
+  test.each([
+    '<style>.hero { background-image: url("https://assets.test/image.png"); }</style>',
+    '<style>.hero { background-image: url(http://assets.test/image.png); }</style>',
+    '<script thread="main">const source = "file:///etc/passwd";</script>',
+    '<script thread="main">const source = "data:image/png;base64,AAAA";</script>',
+    '<script thread="main">const source = `data:${mime};base64,${image}`;</script>',
+    '<script thread="main">const source = "data:" + encoded;</script>',
+    '<script thread="main">const event = { data: {} }; const source = "data:image/png;base64,AAAA";</script>',
+    '<script thread="main">const event = { data: {} }; openUrl(target);</script>',
+    '<style>.hero { background-image: url(data:image/png;base64,AAAA); }</style>',
+    '<style>.hero { background-image: url(DATA:image/svg+xml;charset=utf-8,%3Csvg%3E); }</style>',
+    '<style>.hero { background-image: url(data:;base64,AAAA); }</style>',
+    '<style>.hero { background-image: url(data:,payload); }</style>',
+  ])(
+    'rejects XML resource URLs and host calls before screenshot capture (%s)',
+    async rawText => {
+      const capture = rstest.fn();
+      const result = await runGenuiBenchUiJudge({
+        artifact: {
+          protocol: 'lynx-xml',
+          rawText,
+        },
+        scenario: { prompt: 'Build a card' },
+        session: { screenshotPath: 'screenshot/zip/upload' },
+      }, capture);
+      expect(capture).not.toHaveBeenCalled();
+      expect(result.status).toBe('failed');
+    },
+  );
 
   test('injects OpenUI source into the OpenUI bundle', async () => {
     let body: unknown;
@@ -360,6 +417,41 @@ describe('runGenuiBenchUiJudge', () => {
     });
   });
 
+  test.each(['html', 'a2ui'] as const)(
+    '%s does not repeat capture or evaluation after the evaluator exhausts its retries',
+    async (protocol) => {
+      const phases: string[] = [];
+      const evaluate = rstest.fn(() =>
+        Promise.reject(new Error('RPM limit exceeded'))
+      );
+      const capture = rstest.fn(() =>
+        Promise.resolve(evaluationResponse(geqiResponse(4)))
+      );
+      const result = await runGenuiBenchUiJudge({
+        artifact: protocol === 'a2ui'
+          ? { protocol, messages: [] }
+          : { protocol, rawText: '<!doctype html><html></html>' },
+        scenario: { prompt: 'Build a greeting' },
+        session: { screenshotPath: 'browser/html' },
+        onPhase: phase => phases.push(phase),
+        evaluate,
+        retryDelayMs: 0,
+      }, capture);
+      expect(capture).toHaveBeenCalledTimes(1);
+      expect(evaluate).toHaveBeenCalledTimes(1);
+      expect(phases).not.toContain('judge-retry');
+      expect(result).toMatchObject({
+        status: 'failed',
+        score: 0,
+        retryable: false,
+        errors: ['GenUI screenshot evaluation failed: RPM limit exceeded'],
+        screenshotDataUrl: expect.stringMatching(
+          /^data:image\/png;base64,/u,
+        ) as unknown,
+      });
+    },
+  );
+
   test('returns the final result after both sidecar attempts fail', async () => {
     let calls = 0;
     const result = await runGenuiBenchUiJudge(
@@ -473,7 +565,7 @@ describe('runGenuiBenchUiJudge', () => {
     expect(calls).toBe(0);
     expect(result).toMatchObject({
       errors: [
-        'ui-judge rejected OpenUI output containing an external resource URL or openUrl call.',
+        'ui-judge rejected OpenUI output containing external resource URL (file:).',
       ],
       score: 0,
       status: 'failed',
@@ -482,10 +574,78 @@ describe('runGenuiBenchUiJudge', () => {
   });
 });
 
-test('HTML capture capability needs no Lynx bundle or sidecar configuration', async () => {
-  expect(
-    await resolveGenuiBenchUiJudge('html', {
-      env: { UI_JUDGE_ZIP_URL: 'invalid' },
-    }),
-  ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
+test.each(['html', 'reactweb'] as const)(
+  '%s capture capability needs no Lynx bundle or sidecar configuration',
+  async (protocol) => {
+    expect(
+      await resolveGenuiBenchUiJudge(protocol, {
+        env: { UI_JUDGE_ZIP_URL: 'invalid' },
+      }),
+    ).toEqual({ enabled: true, session: { screenshotPath: 'browser/html' } });
+  },
+);
+
+test('ReactLynx captures the CDN ZIP through the browser relay and scores PNG', async () => {
+  const capability = await resolveGenuiBenchUiJudge('reactlynx', {
+    env: { UI_JUDGE_ZIP_URL: 'invalid', UI_JUDGE_OPENUI_ZIP_URL: 'invalid' },
+  });
+  expect(capability).toEqual({
+    enabled: true,
+    session: { screenshotPath: 'screenshot/zip/url' },
+  });
+  const zipUrl = 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip';
+  const result = await runGenuiBenchUiJudge({
+    artifact: { protocol: 'reactlynx', rawText: '{"files":{}}', zipUrl },
+    model: 'lynx-model',
+    scenario: { prompt: 'Build a greeting' },
+    session: capability.session!,
+  }, (input) => {
+    expect(input).toMatchObject({
+      path: 'screenshot/zip/url',
+      fields: {
+        entry: 'main.lynx.js',
+        url: zipUrl,
+        width: '390',
+        height: '844',
+      },
+    });
+    expect(input.source).toBeUndefined();
+    expect(Object.keys(input.fields)).toEqual([
+      'entry',
+      'url',
+      'width',
+      'height',
+    ]);
+    return Promise.resolve(evaluationResponse(geqiResponse(4)));
+  });
+  expect(result).toMatchObject({ status: 'complete', score: 4, geqiScore: 80 });
+  expect(evaluateScreenshot).toHaveBeenLastCalledWith(expect.objectContaining({
+    model: 'lynx-model',
+    screenshotDataUrl: expect.stringMatching(
+      /^data:image\/png;base64,/u,
+    ) as unknown,
+  }));
 });
+
+test.each([
+  'https://example.com/a.png',
+  'file:///tmp/a.png',
+  'openUrl("target")',
+])(
+  'rejects ReactLynx source containing untrusted resources before native capture: %s',
+  async (rawText) => {
+    const capture = rstest.fn();
+    const result = await runGenuiBenchUiJudge({
+      artifact: {
+        protocol: 'reactlynx',
+        rawText,
+        zipUrl: 'https://cdn.test/reactlynx-bench/preview/id/bundle.zip',
+      },
+      scenario: { prompt: 'Build a greeting' },
+      session: { screenshotPath: 'screenshot/zip/url' },
+    }, capture);
+    expect(result.status).toBe('failed');
+    expect(result.errors[0]).toContain('ui-judge rejected ReactLynx');
+    expect(capture).not.toHaveBeenCalled();
+  },
+);

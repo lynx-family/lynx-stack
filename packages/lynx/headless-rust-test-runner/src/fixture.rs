@@ -230,7 +230,7 @@ fn screenshot_stats(frame: &Bitmap) -> ScreenshotStats {
       stats.logo_pixels += 1;
     }
     if (370..430).contains(&x)
-      && (385..445).contains(&y)
+      && (430..490).contains(&y)
       && alpha > 0
       && is_saturated_image_pixel(red, green, blue)
     {

@@ -2,9 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { normalizeLynxXmlArtifact } from '@lynx-js/genui-lynx-xml';
+
 import { getLynxXmlAgentService } from './lynx-xml-agent.js';
 import type { LynxXmlChatOptions } from './lynx-xml-agent.js';
-import { normalizeLynxXmlArtifact } from '../../agent/lynx-xml/lynx-xml-output.js';
 import type {
   ProtocolBenchAdapter,
   ProtocolBenchAdapterInput,
@@ -16,6 +17,7 @@ import {
 } from '../common/bench/retry.js';
 import type { BenchRetrySleep } from '../common/bench/retry.js';
 import { benchAttemptTokenCounts } from '../common/bench/usage.js';
+import { buildGenerationRepairMessages } from '../common/generation-repair.js';
 import {
   GenerationPostprocessError,
   GenerationUpstreamError,
@@ -71,10 +73,11 @@ export function createLynxXmlBenchAdapter(
     protocol: 'lynx-xml',
     async generate(input, signal) {
       signal?.throwIfAborted();
-      const messages: ChatMessage[] = [{
+      const initialMessages: ChatMessage[] = [{
         role: 'user',
         content: buildPrompt(input),
       }];
+      let messages = initialMessages;
       const attempts: ProtocolBenchAttemptResult[] = [];
       const maxAttempts = Number.isFinite(input.maxAttempts)
         ? Math.min(4, Math.max(1, Math.floor(input.maxAttempts)))
@@ -93,9 +96,15 @@ export function createLynxXmlBenchAdapter(
             resourceId: `genui-bench:${input.runId}:attempt-${index}`,
             disableAgentCache: true,
             maxRetries: 0,
+            reasoningEffort: input.reasoningEffort,
+            streamRawGeneration: true,
+            onPerformanceEvent: input.onPerformanceEvent,
             enableWebSearch: false,
             enableImageGeneration: false,
+            enableDesignGuidance: input.enableDesignGuidance !== false,
             enableHtmlFragment: input.enableHtmlFragment === true,
+            enableScriptReuse: input.enableScriptReuse === true,
+            ...(input.stylePreset ? { stylePreset: input.stylePreset } : {}),
           }, signal);
           signal?.throwIfAborted();
         } catch (error) {
@@ -138,7 +147,9 @@ export function createLynxXmlBenchAdapter(
           finalValid = true;
         } catch (error) {
           finalErrors = [
-            error instanceof Error ? error.message : String(error),
+            (error instanceof GenerationPostprocessError
+              ? error
+              : new GenerationPostprocessError(error, generated)).message,
           ];
         }
         attempts.push({
@@ -153,13 +164,14 @@ export function createLynxXmlBenchAdapter(
         });
         if (finalValid) break;
         if (index < maxAttempts) {
-          messages.push({
-            role: 'assistant',
-            content: generated.metadata?.modelOutput ?? generated.text,
-          });
-          messages.push({
-            role: 'user',
-            content:
+          messages = buildGenerationRepairMessages({
+            initialMessages,
+            messages,
+            result: {
+              text: generated.metadata?.modelOutput ?? generated.text,
+              finishReason: generated.finishReason,
+            },
+            repairPrompt:
               `Fix the following validation errors and return the complete Lynx XML artifact:\n${
                 finalErrors.join('\n')
               }`,

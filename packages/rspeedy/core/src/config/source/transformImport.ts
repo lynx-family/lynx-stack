@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * {@inheritdoc Source.transformImport}
+ * {@inheritDoc Source.transformImport}
  *
  * @public
  */

@@ -5,9 +5,9 @@
 import '../global.js';
 
 /**
- * Loads and initializes the Lepus chunk in the main thread.
+ * Loads the legacy main-thread worklet chunk or reuses an initialized runtime.
  * @param __schema - The dynamic component entry for loading the Lepus chunk.
- * @returns A boolean indicating whether the Lepus chunk was loaded and initialized successfully.
+ * @returns Whether the worklet runtime was loaded and initialized successfully.
  */
 function loadWorkletRuntime(__schema?: string): boolean {
   if (typeof __LoadLepusChunk === 'undefined') {

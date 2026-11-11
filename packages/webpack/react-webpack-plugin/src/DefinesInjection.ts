@@ -13,11 +13,16 @@ import {
   renderDefinesModule,
   selectMissingDefines,
 } from './Defines.js';
+import { MAIN_THREAD_HMR } from './hmr/enabled.js';
 import { LAYERS } from './layer.js';
 import {
   boundaryKey,
   definesImportByBoundary,
 } from './loaders/defines-import-by-boundary.js';
+import {
+  REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
+} from './loaders/main-thread.js';
+import type { ReactRuntimeRequirementsBuildInfo } from './loaders/main-thread.js';
 
 export interface EntryPair {
   mainThread: string;
@@ -43,7 +48,24 @@ export function applyDefinesInjection(
         layer?: string | null;
       };
       const definesImports = definesImportByBoundary(compiler);
+      const previousDefinesImports = new Map(definesImports);
       definesImports.clear();
+      const requirementsByRequest = new Map<
+        string,
+        ReactRuntimeRequirementsBuildInfo
+      >();
+      compilation.hooks.finishModules.tap(pluginName, modules => {
+        // Rebuilding an async boundary does not finish its new dependencies.
+        // Transfer compiler metadata only after all injected modules are built.
+        for (const module of modules) {
+          const resource = (module as ModuleWithMeta).resource;
+          const requirements = resource && requirementsByRequest.get(resource);
+          if (requirements) {
+            module.buildInfo![REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] =
+              requirements;
+          }
+        }
+      });
 
       const traverse = (roots: Module[]) => {
         const visited = new Set<Module>();
@@ -119,8 +141,10 @@ export function applyDefinesInjection(
         backgroundRoots: Module[],
         mainThreadRoots: Module[],
         inheritedPresent: { snapshot: string[]; worklet: string[] },
+        ancestors: ReadonlySet<string>,
         request: string,
         inject: (request: string) => Promise<void>,
+        keepEmpty = false,
       ): Promise<void> => {
         const background = traverse(backgroundRoots);
         const mainThread = traverse(mainThreadRoots);
@@ -152,12 +176,32 @@ export function applyDefinesInjection(
             } and they cannot be merged: they close over shared-runtime imports. Make the owning module reachable from the main thread, or avoid closing over a shared import inside the worklet.`,
           );
         }
-        if (missingSnapshot.length > 0 || missingWorklet.length > 0) {
+        if (
+          keepEmpty || missingSnapshot.length > 0 || missingWorklet.length > 0
+        ) {
+          const previousModule = [...compilation.modules].find(module =>
+            (module as ModuleWithMeta).resource === request
+          );
           virtualModules.writeModule(
             request,
-            renderDefinesModule(missingSnapshot, missingWorklet),
+            renderDefinesModule(missingSnapshot, missingWorklet)
+              + ((compiler as unknown as Record<symbol, unknown>)[
+                  MAIN_THREAD_HMR
+                ]
+                ? '\nif (module.hot) module.hot.accept();'
+                : ''),
           );
+          // Updating the virtual file does not invalidate a module already
+          // reused by this compilation. Rebuild it before reusing its imports.
+          if (previousModule) {
+            await rebuildModule(previousModule);
+          }
           await inject(request);
+          requirementsByRequest.set(request, {
+            mainThreadProgrammability: missingWorklet.some(
+              define => define.runtimeRequirements!.mainThreadProgrammability,
+            ),
+          });
         }
         for (
           const [resource, backgroundBoundary] of background.asyncBoundaries
@@ -165,13 +209,14 @@ export function applyDefinesInjection(
           const mainThreadBoundary = mainThread.asyncBoundaries.get(
             resource,
           );
-          if (!mainThreadBoundary) {
+          if (!mainThreadBoundary || ancestors.has(resource)) {
             continue;
           }
           await processScope(
             [backgroundBoundary],
             [mainThreadBoundary],
             present,
+            new Set([...ancestors, resource]),
             `${resource}.__lynx-react-defines.js`,
             async (boundaryRequest) => {
               definesImports.set(
@@ -183,6 +228,7 @@ export function applyDefinesInjection(
               );
               await rebuildModule(mainThreadBoundary);
             },
+            keepEmpty,
           );
         }
       };
@@ -193,6 +239,7 @@ export function applyDefinesInjection(
             entryRoots(background),
             entryRoots(mainThread),
             { snapshot: [], worklet: [] },
+            new Set(),
             path.join(
               compiler.context,
               `__lynx-react-defines.${mainThread}.js`,
@@ -218,9 +265,27 @@ export function applyDefinesInjection(
                 await addEntry(originalRequest);
               }
             },
+            // HMR only reexecutes cached self-accepted modules. Keep the root
+            // definition module executed even before its first definition.
+            Boolean(
+              (compiler as unknown as Record<symbol, unknown>)[MAIN_THREAD_HMR],
+            ),
           );
         }),
       );
+      // A background boundary can lose its last definition or disappear
+      // entirely while its main-thread module remains cached and reachable.
+      // Rebuild every former owner that no longer needs a synthetic import.
+      await Promise.all([...compilation.modules].flatMap(module => {
+        const { resource, layer } = module as ModuleWithMeta;
+        if (!resource) {
+          return [];
+        }
+        const key = boundaryKey(layer, resource);
+        return previousDefinesImports.has(key) && !definesImports.has(key)
+          ? [rebuildModule(module)]
+          : [];
+      }));
     },
   );
 }

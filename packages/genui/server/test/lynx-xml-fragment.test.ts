@@ -18,23 +18,35 @@ const DIRECT =
   '<!doctype lynx>\n<lynx engine-version="4.2"><script thread="main">const page = __CreatePage("0", 0);</script></lynx>';
 const USAGE = { inputTokens: 12, outputTokens: 8, totalTokens: 20 };
 let calls: string[];
+let budgets: (number | undefined)[];
 let override: string | undefined;
 let upstreamFailure: Error | undefined;
+let queued: { text: string; finishReason: 'stop' | 'length' }[];
 
-function response(options: { prompt: unknown; tools?: { name?: string }[] }) {
+function response(options: {
+  prompt: unknown;
+  tools?: { name?: string }[];
+  maxOutputTokens?: number;
+}) {
   const prompt = JSON.stringify(options.prompt);
   calls.push(prompt);
+  budgets.push(options.maxOutputTokens);
   expect(
     options.tools?.some(tool =>
       tool.name === 'html_fragment_to_main_thread_script'
     ) ?? false,
   ).toBe(false);
-  return override
-    ?? (prompt.includes('XML fragment mode') ? INTERMEDIATE : DIRECT);
+  return queued.shift() ?? {
+    text: override
+      ?? (prompt.includes('Template mode') ? INTERMEDIATE : DIRECT),
+    finishReason: 'stop' as const,
+  };
 }
 
 beforeEach(() => {
   calls = [];
+  budgets = [];
+  queued = [];
   override = undefined;
   upstreamFailure = undefined;
   rstest.mocked(createLLMProvider).mockReset();
@@ -49,15 +61,16 @@ beforeEach(() => {
       modelId: 'fragment-test',
       supportedUrls: {},
       doGenerate(options) {
+        const { text, finishReason } = response(options);
         return Promise.resolve({
-          content: [{ type: 'text' as const, text: response(options) }],
-          finishReason: 'stop' as const,
+          content: [{ type: 'text' as const, text }],
+          finishReason,
           usage: USAGE,
           warnings: [],
         });
       },
       doStream(options) {
-        const text = response(options);
+        const { text, finishReason } = response(options);
         return Promise.resolve({
           stream: new ReadableStream({
             start(controller) {
@@ -83,7 +96,7 @@ beforeEach(() => {
               controller.enqueue({ type: 'text-end', id: 'answer' });
               controller.enqueue({
                 type: 'finish',
-                finishReason: 'stop',
+                finishReason,
                 usage: USAGE,
               });
               controller.close();
@@ -94,6 +107,65 @@ beforeEach(() => {
     }),
   });
 });
+
+test.each([false, true])(
+  'real Mastra streaming returns truncated XML errors without continuation (fragment=%s)',
+  async enableHtmlFragment => {
+    const document = enableHtmlFragment ? INTERMEDIATE : DIRECT;
+    const split = document.indexOf('const page') + 'const pa'.length;
+    const prefix = document.slice(0, split);
+    queued = [
+      { text: prefix, finishReason: 'length' },
+      {
+        text: prefix.slice(-128) + document.slice(split),
+        finishReason: 'stop',
+      },
+    ];
+    const log = rstest.fn((
+      _event: string,
+      _details?: Record<string, unknown>,
+    ) => undefined);
+    const service = new LynxXmlAgentService();
+    const stream = await service.streamAsAsyncIterable([
+      { role: 'user', content: 'Make a weather card for Hangzhou.' },
+    ], {
+      enableHtmlFragment,
+      enableWebSearch: false,
+      enableImageGeneration: false,
+      onPerformanceEvent: log,
+    });
+    let streamed = '';
+    for await (const chunk of stream.textStream) streamed += chunk;
+    expect(streamed).toBe(prefix);
+    await expect(stream.finalize()).rejects.toMatchObject({
+      result: { text: prefix, finishReason: 'length', usage: USAGE },
+    });
+    expect(calls).toHaveLength(1);
+    expect(budgets).toEqual([32_768]);
+    expect(createLLMProvider).toHaveBeenCalledTimes(1);
+    expect(log.mock.calls.some(([event]) => event === 'agent.recovery.started'))
+      .toBe(false);
+  },
+);
+
+test.each([false, true])(
+  'real Mastra streaming returns empty token-limit errors without regeneration (fragment=%s)',
+  async enableHtmlFragment => {
+    queued = [{ text: '', finishReason: 'length' }];
+    const service = new LynxXmlAgentService();
+    const stream = await service.streamAsAsyncIterable([], {
+      enableHtmlFragment,
+      enableWebSearch: false,
+      enableImageGeneration: false,
+    });
+    for await (const _chunk of stream.textStream) { /* drain */ }
+    await expect(stream.finalize()).rejects.toMatchObject({
+      result: { text: '', finishReason: 'length', usage: USAGE },
+    });
+    expect(calls).toHaveLength(1);
+    expect(budgets).toEqual([32_768]);
+  },
+);
 
 test.each([false, true])(
   'real Mastra streaming retains the provider failure before compilation (fragment=%s)',
@@ -178,6 +250,60 @@ test('isolates cached configurations and defaults to direct output', async () =>
 });
 
 test.each(['generate', 'stream'] as const)(
+  '%s applies both independent options and isolates all four agent cache variants',
+  async mode => {
+    const service = new LynxXmlAgentService();
+    for (const enableHtmlFragment of [false, true]) {
+      override = enableHtmlFragment
+        ? INTERMEDIATE.replace(
+          'id="root"',
+          'id="root" class="flex flex-col p-4"',
+        )
+        : DIRECT.replace(
+          '</script>',
+          '__SetClasses(page, "flex flex-col p-4");</script>',
+        );
+      for (const stylePreset of [false, 'default', false, 'default'] as const) {
+        const options = {
+          enableHtmlFragment,
+          stylePreset,
+          enableWebSearch: false,
+          enableImageGeneration: false,
+        };
+        let result;
+        if (mode === 'generate') {
+          result = await service.generateRaw([], options);
+        } else {
+          const stream = await service.streamAsAsyncIterable([], options);
+          let raw = '';
+          for await (const chunk of stream.textStream) raw += chunk;
+          expect(raw).toBe(override);
+          result = await stream.finalize();
+        }
+        expect(result.text?.includes('.p-4 { padding: 16px; }')).toBe(
+          stylePreset === 'default',
+        );
+        expect(result.text?.match(/<style>/gu) ?? []).toHaveLength(
+          enableHtmlFragment || stylePreset ? 1 : 0,
+        );
+        expect(result.metadata.xmlFragment !== undefined).toBe(
+          enableHtmlFragment,
+        );
+        expect(result.text).not.toContain('<template>');
+        expect(calls.at(-1)?.includes('Lynx StylePreset')).toBe(
+          stylePreset === 'default',
+        );
+        expect(result.metadata.modelOutput).toBe(override);
+        expect(result.metadata.stylePreset).toBe(stylePreset || undefined);
+        expect(result.usage).toMatchObject(USAGE);
+      }
+    }
+    expect(createLLMProvider).toHaveBeenCalledTimes(4);
+    expect(calls).toHaveLength(8);
+  },
+);
+
+test.each(['generate', 'stream'] as const)(
   '%s conversion failures preserve model evidence and never silently request another round',
   async mode => {
     override = INTERMEDIATE.replace(FRAGMENT, '<view><text></view>');
@@ -211,4 +337,65 @@ test('keeps token-limit failures actionable', () => {
   });
   expect(error.message).toContain('token limit');
   expect(error.result.usage).toEqual(USAGE);
+});
+
+test.each(['generate', 'stream'] as const)(
+  '%s isolates all ScriptReuse/Template/StylePreset variants and retains raw evidence',
+  async mode => {
+    const service = new LynxXmlAgentService();
+    for (const enableHtmlFragment of [false, true]) {
+      for (const stylePreset of [false, 'default'] as const) {
+        for (const enableScriptReuse of [false, true, false, true]) {
+          override = enableScriptReuse
+            ? `<!doctype lynx><lynx engine-version="4.2">${
+              enableHtmlFragment ? `<template>${FRAGMENT}</template>` : ''
+            }<script thread="main">definePage({render(ctx) { __SetClasses(ctx.page, "flex flex-col p-4"); }});</script></lynx>`
+            : (enableHtmlFragment ? INTERMEDIATE : DIRECT);
+          const options = {
+            enableHtmlFragment,
+            stylePreset,
+            enableScriptReuse,
+            enableWebSearch: false,
+            enableImageGeneration: false,
+          };
+          let result;
+          if (mode === 'generate') {
+            result = await service.generateRaw([], options);
+          } else {
+            const stream = await service.streamAsAsyncIterable([], options);
+            let raw = '';
+            for await (const chunk of stream.textStream) raw += chunk;
+            expect(raw).toBe(override);
+            result = await stream.finalize();
+          }
+          expect(result.metadata.modelOutput).toBe(override);
+          expect(result.metadata.enableScriptReuse).toBe(
+            enableScriptReuse || undefined,
+          );
+          expect(result.text?.includes('function definePage')).toBe(
+            enableScriptReuse,
+          );
+          expect(calls.at(-1)?.includes('ScriptReuse is enabled')).toBe(
+            enableScriptReuse,
+          );
+          expect(result.usage).toMatchObject(USAGE);
+        }
+      }
+    }
+    expect(createLLMProvider).toHaveBeenCalledTimes(8);
+    expect(calls).toHaveLength(16);
+  },
+);
+
+test('ScriptReuse failure preserves usage without a hidden model retry', async () => {
+  override = DIRECT;
+  await expect(new LynxXmlAgentService().generateRaw([], {
+    enableScriptReuse: true,
+    enableWebSearch: false,
+    enableImageGeneration: false,
+  })).rejects.toMatchObject({
+    name: 'GenerationPostprocessError',
+    result: { text: DIRECT, usage: USAGE, finishReason: 'stop' },
+  });
+  expect(calls).toHaveLength(1);
 });

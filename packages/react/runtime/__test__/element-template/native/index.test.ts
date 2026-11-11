@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
 
 const envManager = new ElementTemplateEnvManager();
+const installElementTemplateRefInitValueListener = vi.fn();
 
 describe('element-template native index wiring', () => {
   const originalNodeEnv = process.env['NODE_ENV'];
@@ -10,6 +11,10 @@ describe('element-template native index wiring', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    vi.doMock('../../../src/element-template/main-thread-ref-init-value.js', async (importOriginal) => ({
+      ...await importOriginal<typeof import('../../../src/element-template/main-thread-ref-init-value.js')>(),
+      installElementTemplateRefInitValueListener,
+    }));
     globalThis.__ALOG_ELEMENT_API__ = undefined;
   });
 
@@ -17,6 +22,7 @@ describe('element-template native index wiring', () => {
     process.env['NODE_ENV'] = originalNodeEnv;
     globalThis.__ALOG_ELEMENT_API__ = undefined;
     vi.resetModules();
+    vi.doUnmock('../../../src/element-template/main-thread-ref-init-value.js');
     vi.doUnmock('../../../src/element-template/native/main-thread-api.js');
     vi.doUnmock('../../../src/element-template/native/patch-listener.js');
     vi.doUnmock('../../../src/element-template/native/mts-destroy.js');
@@ -98,6 +104,7 @@ describe('element-template native index wiring', () => {
 
     expect(initElementTemplatePAPICallAlog).toHaveBeenCalledTimes(1);
     expect(injectCalledByNative).toHaveBeenCalledTimes(1);
+    expect(installElementTemplateRefInitValueListener).toHaveBeenCalledTimes(1);
     expect(installElementTemplatePatchListener).toHaveBeenCalledTimes(1);
     expect(installOnMtsDestruction).toHaveBeenCalledTimes(1);
     expect(initProfileHook).toHaveBeenCalledTimes(1);
@@ -218,6 +225,7 @@ describe('element-template native index wiring', () => {
     );
 
     expect(injectCalledByNative).not.toHaveBeenCalled();
+    expect(installElementTemplateRefInitValueListener).not.toHaveBeenCalled();
     expect(installElementTemplatePatchListener).not.toHaveBeenCalled();
     expect(installOnMtsDestruction).not.toHaveBeenCalled();
   });

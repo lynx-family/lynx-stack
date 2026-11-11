@@ -145,7 +145,7 @@ describe('Plugins - SWC', () => {
     // the baseline via `env`, so a user-set `jsc.target` is rejected with a
     // clear error rather than silently dropped.
     await expect(rsbuild.unwrapConfig()).rejects.toThrowError(
-      /Rspeedy manages the SWC compilation target via `env`/,
+      /The Lynx Rsbuild plugin manages the SWC compilation target via `env`/,
     )
   })
 

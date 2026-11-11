@@ -3,16 +3,27 @@
 // LICENSE file in the root directory of this source tree.
 import { createLibrary } from './library.jsx';
 import type { ComponentGroup, DefinedComponent, Library } from './library.jsx';
+import { resolveLibraryOptions } from '../shared/libraryOptions.js';
 
 /** Options for creating a ReactLynx OpenUI component library. */
 export interface CreateOpenUiLibraryOptions {
-  /** Override the root component name. Defaults to `'Stack'`. */
+  /**
+   * Root component name; supply its definition when defaults are disabled.
+   * @defaultValue `'Stack'`
+   */
   root?: string;
   /**
    * Whether to include the built-in components and component groups.
-   * Defaults to `true`.
+   * @defaultValue `true`
    */
   includeDefaultComponents?: boolean;
+  /**
+   * Limit built-ins to these names, retaining the selected root automatically.
+   * Custom components are always appended. Ignored when defaults are disabled.
+   * @defaultValue All built-in components.
+   * @example `componentNames: ['Stack', 'Text']`
+   */
+  componentNames?: readonly string[];
   /** Additional components, or the complete set when defaults are disabled. */
   components?: DefinedComponent<any>[];
   /** Additional groups, or the complete set when defaults are disabled. */
@@ -29,16 +40,5 @@ export function createOpenUiLibraryWithDefaults(
   options: CreateOpenUiLibraryOptions | undefined,
   defaults: OpenUiLibraryDefaults,
 ): Library {
-  const includeDefaultComponents = options?.includeDefaultComponents ?? true;
-  const componentGroups = includeDefaultComponents
-    ? [...defaults.componentGroups, ...(options?.componentGroups ?? [])]
-    : options?.componentGroups;
-
-  return createLibrary({
-    root: options?.root ?? 'Stack',
-    components: includeDefaultComponents
-      ? [...defaults.components, ...(options?.components ?? [])]
-      : (options?.components ?? []),
-    ...(componentGroups ? { componentGroups } : {}),
-  });
+  return createLibrary(resolveLibraryOptions(options, defaults));
 }

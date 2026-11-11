@@ -32,7 +32,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "build:fixture": "rspeedy build",
     "serve": "rspeedy dev",
     "test": "vitest run"

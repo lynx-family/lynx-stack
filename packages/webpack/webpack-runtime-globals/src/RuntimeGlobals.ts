@@ -9,7 +9,17 @@
  */
 export const RuntimeGlobals = {
   /**
-   * An array of all the async chunk ids.
+   * Coordinates main-thread and background-thread hot updates.
+   */
+  lynxHMR: '__webpack_require__.lynxHMR',
+
+  /**
+   * Loads HMR manifests and update chunks through the runtime's host adapter.
+   */
+  lynxHMRLoad: '__webpack_require__.lynxHMRLoad',
+
+  /**
+   * A map from async `chunk.id` to the lazy-bundle URL it loads from.
    */
   lynxAsyncChunkIds: '__webpack_require__.lynx_aci',
 

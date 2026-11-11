@@ -1,0 +1,213 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<template>
+  <scroll-view class="counter-card" scroll-orientation="vertical">
+    <text class="eyebrow">MAKE A LITTLE PROGRESS</text>
+    <text class="title">Daily counter</text>
+    <text class="description">Small steps add up. Set your own pace.</text>
+    <view class="value-panel">
+      <text class="value-label">TODAY'S TOTAL</text>
+      <text id="count" class="value">8</text>
+      <text id="note" class="value-note">Keep the momentum going</text>
+    </view>
+    <view class="stats">
+      <view class="stat">
+        <text class="stat-value">12</text>
+        <text class="value-note">Daily goal</text>
+      </view>
+      <view class="stat highlight">
+        <text id="remaining" class="stat-value">4</text>
+        <text class="value-note">Steps to go</text>
+      </view>
+    </view>
+    <view class="stepper">
+      <view id="decrement" class="step-button">
+        <text class="step-button-text">−</text>
+      </view>
+      <view id="increment" class="step-button highlight">
+        <text class="step-button-text">+</text>
+      </view>
+    </view>
+    <view id="reset" class="reset-button">
+      <text class="reset-button-text">Start over</text>
+    </view>
+  </scroll-view>
+</template>
+<style>
+.counter-card {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+  background-color: #f3f0e8;
+}
+.eyebrow {
+  color: #687367;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+.title {
+  margin-top: 12px;
+  color: #233c32;
+  font-size: 34px;
+  font-weight: 700;
+}
+.description {
+  margin-top: 10px;
+  color: #687367;
+  font-size: 14px;
+  line-height: 22px;
+  white-space: normal;
+}
+.value-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 28px;
+  padding: 28px 16px;
+  border-radius: 24px;
+  background-color: #ffffff;
+}
+.value-label {
+  color: #687367;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.value {
+  margin-top: 8px;
+  color: #233c32;
+  font-size: 80px;
+  line-height: 96px;
+  font-weight: 700;
+}
+.value-note {
+  margin-top: 8px;
+  color: #687367;
+  font-size: 12px;
+  white-space: normal;
+  text-align: center;
+}
+.stats {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  gap: 12px;
+  margin-top: 20px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 20px 12px;
+  border-radius: 18px;
+  background-color: #e0e6dd;
+}
+.stat-value {
+  color: #233c32;
+  font-size: 30px;
+}
+.stepper {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  gap: 12px;
+  margin-top: 16px;
+}
+.step-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 52px;
+  border-radius: 16px;
+  background-color: #e0e6dd;
+}
+.step-button-text {
+  color: #233c32;
+  font-size: 28px;
+}
+.reset-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 48px;
+  margin-top: 8px;
+}
+.reset-button-text {
+  color: #526453;
+  font-size: 14px;
+  font-weight: 700;
+}
+.highlight {
+  background-color: #c2de83;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const tapOptions = {};
+let count = 8;
+let nodes;
+
+function replaceText(node, value) {
+  __ReplaceElements(node, [__CreateRawText(value)], __GetChildren(node));
+}
+
+function updateCounter() {
+  replaceText(nodes.count, String(count));
+  replaceText(nodes.remaining, String(Math.max(0, 12 - count)));
+  replaceText(nodes.note, count >= 12 ? "Daily goal reached!" : "Keep the momentum going");
+}
+
+function increment() {
+  count += 1;
+  updateCounter();
+  __FlushElementTree();
+}
+
+function decrement() {
+  count = Math.max(0, count - 1);
+  updateCounter();
+  __FlushElementTree();
+}
+
+function reset() {
+  count = 0;
+  updateCounter();
+  __FlushElementTree();
+}
+
+function renderPage() {
+  if (nodes) return;
+  const page = __CreatePage("0", 0);
+  const pageId = __GetElementUniqueID(page);
+  nodes = createFragment(page, pageId);
+  __AddEventListener(nodes.increment, "tap", increment, tapOptions);
+  __AddEventListener(nodes.decrement, "tap", decrement, tapOptions);
+  __AddEventListener(nodes.reset, "tap", reset, tapOptions);
+  updateCounter();
+}
+
+function cleanup() {
+  if (nodes) {
+    __RemoveEventListener(nodes.increment, "tap", increment, tapOptions);
+    __RemoveEventListener(nodes.decrement, "tap", decrement, tapOptions);
+    __RemoveEventListener(nodes.reset, "tap", reset, tapOptions);
+  }
+  nodes = undefined;
+  engine.removeEventListener("__RenderPage", renderPage);
+  engine.removeEventListener("__DestroyLifetime", cleanup);
+}
+
+engine.addEventListener("__RenderPage", renderPage);
+engine.addEventListener("__DestroyLifetime", cleanup);
+</script>
+</lynx>

@@ -1,148 +1,125 @@
-// Copyright 2025 The Lynx Authors. All rights reserved.
+// Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
-describe('Shim', () => {
-  // Store original values
-  const origDocument = globalThis.document;
-  const origPerformance = globalThis.performance;
-  const origQueueMicrotask = globalThis.queueMicrotask;
-  const origNodeList = globalThis.NodeList;
-  const origSVGElement = globalThis.SVGElement;
-  const origHTMLElement = globalThis.HTMLElement;
-  const origWindow = globalThis.window;
-  const origElement = (globalThis as any).Element;
-  const origGetComputedStyle = globalThis.getComputedStyle;
-  const origEventTarget = (globalThis as any).EventTarget;
-  const origLynx = (globalThis as any).lynx;
-  const origSystemInfo = (globalThis as any).SystemInfo;
+const names = [
+  'window',
+  'document',
+  'Element',
+  'HTMLElement',
+  'SVGElement',
+  'NodeList',
+  'EventTarget',
+  'getComputedStyle',
+  'performance',
+  'queueMicrotask',
+] as const;
 
-  beforeEach(() => {
-    vi.resetModules();
-    // Reset globals to test shimming
-    // @ts-expect-error
-    delete globalThis.document;
-    // @ts-expect-error
-    delete globalThis.performance;
-    // @ts-expect-error
-    delete globalThis.queueMicrotask;
-    // @ts-expect-error
-    delete globalThis.NodeList;
-    // @ts-expect-error
-    delete globalThis.SVGElement;
-    // @ts-expect-error
-    delete globalThis.HTMLElement;
-    // @ts-expect-error
-    delete globalThis.window;
-    delete (globalThis as any).Element;
-    // @ts-expect-error
-    delete globalThis.getComputedStyle;
-    delete (globalThis as any).EventTarget;
-
-    // Setup lynx mock
-    (globalThis as any).lynx = {
-      querySelector: () => null,
-      querySelectorAll: () => [],
-    };
-
-    // Mock __MAIN_THREAD__ and __DEV__
-    (globalThis as any).__MAIN_THREAD__ = true;
-    (globalThis as any).__DEV__ = false;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-    // Restore original globals
-    globalThis.document = origDocument;
-    globalThis.performance = origPerformance;
-    globalThis.queueMicrotask = origQueueMicrotask;
-
-    globalThis.NodeList = origNodeList;
-
-    globalThis.SVGElement = origSVGElement;
-
-    globalThis.HTMLElement = origHTMLElement;
-    globalThis.window = origWindow;
-    (globalThis as any).Element = origElement;
-    globalThis.getComputedStyle = origGetComputedStyle;
-    (globalThis as any).EventTarget = origEventTarget;
-    (globalThis as any).lynx = origLynx;
-    (globalThis as any).SystemInfo = origSystemInfo;
-    delete (globalThis as any).__MAIN_THREAD__;
-    delete (globalThis as any).__DEV__;
-  });
-
-  test('should export shimmed globals after import', async () => {
-    // Import shim to trigger shimming
-    await import('../src/polyfill/shim.js');
-
-    // Check that shims were applied (they may already exist in test env)
-    // The shim only applies if they don't exist, so we just verify no errors
-    expect(true).toBe(true);
-  });
-
-  test('should replace browser DOM globals in Lynx for Web', async () => {
-    const BrowserElement = class Element {};
-    const BrowserHTMLElement = class HTMLElement {};
-    const BrowserEventTarget = class EventTarget {};
-    (globalThis as any).Element = BrowserElement;
-    globalThis.HTMLElement = BrowserHTMLElement;
-    (globalThis as any).EventTarget = BrowserEventTarget;
-    (globalThis as any).SystemInfo = { platform: 'web' };
-    globalThis.window = {} as Window & typeof globalThis;
-
-    await import('../src/polyfill/shim.js');
-
-    expect(globalThis.Element).not.toBe(BrowserElement);
-    expect(globalThis.HTMLElement).toBe(globalThis.Element);
-    expect(globalThis.EventTarget).toBe(globalThis.Element);
-    expect(globalThis.window.getComputedStyle).toBe(
-      globalThis.getComputedStyle,
-    );
-  });
-
-  test('should tolerate an immutable window binding from older Lynx for Web runtimes', async () => {
-    (globalThis as any).SystemInfo = { platform: 'web' };
-    // Older Lynx for Web MTS wrappers declare `window` as a `const`, so
-    // assigning to it throws in strict mode. A non-writable property fails
-    // the same way.
-    const immutableWindow = {} as Window & typeof globalThis;
-    Object.defineProperty(globalThis, 'window', {
-      value: immutableWindow,
-      writable: false,
-      configurable: true,
-    });
-
-    try {
-      await expect(import('../src/polyfill/shim.js')).resolves.toBeDefined();
-
-      // The window facade is skipped, but the remaining shims still apply.
-      expect(globalThis.window).toBe(immutableWindow);
-      expect(typeof globalThis.Element).toBe('function');
-      expect(globalThis.HTMLElement).toBe(globalThis.Element);
-      expect(globalThis.getComputedStyle).toBeDefined();
-    } finally {
-      // Make `window` assignable again so afterEach can restore it.
-      delete (globalThis as any).window;
-    }
-  });
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+  vi.resetModules();
 });
 
-describe('Shim queueMicrotask', () => {
-  test('queueMicrotask polyfill should work', async () => {
-    // Test that our queueMicrotask works
-    let called = false;
+describe('Private Motion runtime', () => {
+  test('imports without installing missing globals', async () => {
+    for (const name of names) vi.stubGlobal(name, undefined);
+    const runtime = await import('../src/polyfill/runtime.js');
+    const { ElementCompt } = await import('../src/polyfill/element.js');
 
-    // Use the global queueMicrotask
-    queueMicrotask(() => {
-      called = true;
-    });
-
-    // Wait for microtask to complete
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    expect(called).toBe(true);
+    expect(runtime.Element).toBe(ElementCompt);
+    expect(runtime.HTMLElement).toBe(ElementCompt);
+    expect(runtime.EventTarget).toBe(ElementCompt);
+    expect(runtime.performance.now()).toBeGreaterThanOrEqual(0);
+    for (const name of names) expect(globalThis[name]).toBeUndefined();
   });
+
+  test('preserves browser globals while using Lynx constructors', async () => {
+    const before = names.map(name =>
+      Object.getOwnPropertyDescriptor(globalThis, name)
+    );
+    const runtime = await import('../src/polyfill/runtime.js');
+    const { ElementCompt } = await import('../src/polyfill/element.js');
+
+    expect(runtime.Element).toBe(ElementCompt);
+    expect(runtime.window.getComputedStyle).toBe(runtime.getComputedStyle);
+    expect(names.map(name => Object.getOwnPropertyDescriptor(globalThis, name)))
+      .toEqual(before);
+  });
+
+  test('resolves selectors to the same wrapper used by instanceof checks', async () => {
+    const element = { setStyleProperty: vi.fn() };
+    vi.stubGlobal('lynx', {
+      querySelector: vi.fn(() => element),
+      querySelectorAll: vi.fn(() => [element]),
+    });
+    const runtime = await import('../src/polyfill/runtime.js');
+    expect(runtime.document.querySelector('.item')).toBeInstanceOf(
+      runtime.Element,
+    );
+    expect(runtime.document.querySelectorAll('.item')[0]).toBeInstanceOf(
+      runtime.EventTarget,
+    );
+    expect(lynx.querySelectorAll).toHaveBeenCalledWith('.item');
+  });
+
+  test('returns null for a missing Lynx selector', async () => {
+    vi.stubGlobal('lynx', { querySelector: vi.fn(() => null) });
+    const { document } = await import('../src/polyfill/dom.js');
+    expect(document.querySelector('.missing')).toBeNull();
+  });
+
+  test('uses the host animation-frame pair with its receiver', async () => {
+    const callback = vi.fn();
+    const request = vi.fn(function(this: unknown, cb: typeof callback) {
+      expect(this).toBe(globalThis);
+      expect(cb).toBe(callback);
+      return 42;
+    });
+    const cancel = vi.fn(function(this: unknown, handle: number) {
+      expect(this).toBe(globalThis);
+      expect(handle).toBe(42);
+    });
+    vi.stubGlobal('requestAnimationFrame', request);
+    vi.stubGlobal('cancelAnimationFrame', cancel);
+    const runtime = await import('../src/polyfill/animationFrame.js');
+
+    const handle = runtime.requestAnimationFrame(callback);
+    runtime.cancelAnimationFrame(handle);
+    expect(request).toHaveBeenCalledOnce();
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  test.each(['neither', 'request only', 'cancel only'])(
+    'uses cancellable timers when the host provides %s frame methods',
+    async (mode) => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      const hostRequest = vi.fn();
+      const hostCancel = vi.fn();
+      vi.stubGlobal(
+        'requestAnimationFrame',
+        mode === 'request only' ? hostRequest : undefined,
+      );
+      vi.stubGlobal(
+        'cancelAnimationFrame',
+        mode === 'cancel only' ? hostCancel : undefined,
+      );
+      vi.stubGlobal('performance', { now: () => 123 });
+      const runtime = await import('../src/polyfill/animationFrame.js');
+      const cancelled = vi.fn();
+      const delivered = vi.fn();
+
+      runtime.cancelAnimationFrame(runtime.requestAnimationFrame(cancelled));
+      runtime.requestAnimationFrame(delivered);
+      vi.advanceTimersByTime(15);
+      expect(delivered).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(delivered).toHaveBeenCalledExactlyOnceWith(123);
+      expect(cancelled).not.toHaveBeenCalled();
+      expect(hostRequest).not.toHaveBeenCalled();
+      expect(hostCancel).not.toHaveBeenCalled();
+    },
+  );
 });

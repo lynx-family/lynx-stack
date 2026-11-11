@@ -1,29 +1,19 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 import { useEffect, useRef, useState } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
+import { Tabs as TabsDefinition } from './definition.js';
 import { useIsStreaming } from '../../core/context.jsx';
-import { defineComponent } from '../../core/library.jsx';
-import { stringLikeSchema, stringifyValue } from '../utils.js';
+import type { DefinedComponent } from '../../core/library.jsx';
+import { stringifyValue } from '../utils.js';
 
 import '../../../styles/catalog/Tabs.css';
 
-const tabSchema = z.object({
-  value: z.string(),
-  title: stringLikeSchema,
-  child: z.any(),
-});
-
-const tabsPropsSchema = z.object({
-  tabs: z.array(tabSchema),
-  value: z.string().optional(),
-});
-
-type TabsProps = z.infer<typeof tabsPropsSchema>;
+type TabsProps = z.infer<typeof TabsDefinition.props>;
 
 function TabsRenderer(
   { props, renderNode }: {
@@ -81,10 +71,7 @@ function TabsRenderer(
   );
 }
 
-export const Tabs = defineComponent({
-  name: 'Tabs',
-  props: tabsPropsSchema,
-  description:
-    'Tabbed content switcher. Each tab has value, title, and child content.',
+export const Tabs: DefinedComponent<typeof TabsDefinition.props> = {
+  ...TabsDefinition,
   component: TabsRenderer,
-});
+};

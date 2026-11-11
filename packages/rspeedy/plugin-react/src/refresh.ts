@@ -38,7 +38,7 @@ async function applyRefreshRules(
   const [reactRuntime, refresh, workletRuntime] = await Promise.all([
     resolve('@lynx-js/react/package.json'),
     resolve('@lynx-js/react/refresh'),
-    resolve('@lynx-js/react/worklet-runtime'),
+    resolve('@lynx-js/react/worklet-runtime/init'),
   ])
 
   chain.resolve.alias.set('@lynx-js/react/refresh$', refresh)

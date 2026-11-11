@@ -1,0 +1,8 @@
+export const snapshotCreatorMap = {};
+export const runOnBackground = fn => () => fn('react');
+export const useState = value => [value, () => undefined];
+export const transformToWorklet = fn => fn;
+export const createSnapshot = id => id;
+export const __pageId = 0;
+export const __DynamicPartSlotV2_0 = [];
+export const updateWorkletEvent = () => undefined;

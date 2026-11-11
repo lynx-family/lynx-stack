@@ -1711,6 +1711,43 @@ test.describe('web-elements test suite', () => {
     });
   });
   test.describe('x-image', () => {
+    test('auto-size responds to object-fit style changes', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-image/basic-inherit');
+      const image = page.locator('x-image');
+      const inner = image.locator('#img');
+
+      for (
+        const objectFit of ['contain', 'cover', 'none', 'scale-down', 'fill']
+      ) {
+        await image.evaluate((el, value) => {
+          el.style.objectFit = value;
+        }, objectFit);
+        await expect(inner).toHaveCSS('object-fit', objectFit);
+      }
+
+      await image.evaluate(el => {
+        el.style.objectFit = 'contain';
+        el.removeAttribute('auto-size');
+      });
+      await expect(inner).toHaveCSS('object-fit', 'contain');
+      await image.evaluate(el => el.setAttribute('auto-size', ''));
+      await expect(inner).toHaveCSS('object-fit', 'contain');
+    });
+
+    test('auto-size responds to image mode changes', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-image/basic-inherit');
+      const image = page.locator('x-image');
+      const inner = image.locator('#img');
+
+      await expect(inner).toHaveCSS('object-fit', 'fill');
+      await image.evaluate(el => el.setAttribute('mode', 'aspectFit'));
+      await expect(inner).toHaveCSS('object-fit', 'contain');
+      await image.evaluate(el => el.setAttribute('mode', 'aspectFill'));
+      await expect(inner).toHaveCSS('object-fit', 'cover');
+      await image.evaluate(el => el.removeAttribute('mode'));
+      await expect(inner).toHaveCSS('object-fit', 'fill');
+    });
+
     for (const tagName of ['x-image', 'inline-image']) {
       test(`${tagName} defers detached load events until connected`, async ({ page }) => {
         await gotoWebComponentPage(page, 'x-image/basic');

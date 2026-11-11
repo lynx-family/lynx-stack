@@ -55,7 +55,7 @@ export async function applyDefaultPlugins(
     ),
 
     import('./statsJson.plugin.js').then(({ pluginStatsJson }) =>
-      pluginStatsJson(config)
+      pluginStatsJson()
     ),
   ])
 

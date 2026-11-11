@@ -11,7 +11,7 @@ import { useState } from 'preact/hooks';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setupBackgroundDocument } from '../../../src/document';
-import { useLynxGlobalEventListener } from '../../../src/lynx-api';
+import { useLynxGlobalEventListener } from '../../../src/core/hooks/useLynxGlobalEventListener';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,

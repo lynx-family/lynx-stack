@@ -214,7 +214,7 @@ export interface LynxTemplatePluginOptions {
   excludeChunks?: string[];
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.customCSSInheritanceList}
    *
    * @example
    *
@@ -230,18 +230,18 @@ export interface LynxTemplatePluginOptions {
    *      customCSSInheritanceList: ['direction', 'overflow']
    *    }),
    *  ],
-   * }
+   * })
    * ```
    */
   customCSSInheritanceList: string[] | undefined;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.debugInfoOutside}
    */
   debugInfoOutside: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.defaultDisplayLinear}
    */
   defaultDisplayLinear: boolean;
 
@@ -253,7 +253,7 @@ export interface LynxTemplatePluginOptions {
   dsl?: 'tt' | 'react' | 'react_nodiff';
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableAccessibilityElement}
    */
   enableAccessibilityElement: boolean;
 
@@ -263,37 +263,37 @@ export interface LynxTemplatePluginOptions {
   enableA11y: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInheritance}
    */
   enableCSSInheritance: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSInvalidation}
    */
   enableCSSInvalidation: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableCSSSelector}
    */
   enableCSSSelector: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableNewGesture}
    */
   enableNewGesture: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.enableRemoveCSSScope}
    */
   enableRemoveCSSScope: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.removeDescendantSelectorScope}
    */
   removeDescendantSelectorScope: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.targetSdkVersion}
    */
   targetSdkVersion: string;
 
@@ -305,7 +305,7 @@ export interface LynxTemplatePluginOptions {
   defaultOverflowVisible?: boolean;
 
   /**
-   * {@inheritdoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
+   * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.experimental_isLazyBundle}
    *
    * @alpha
    */
@@ -352,6 +352,8 @@ export interface LynxTemplatePluginOptions {
    * plugins passed to parser
    */
   cssPlugins: CSS.Plugin[];
+
+  enableReuseLoadScriptExports?: boolean | undefined;
 }
 
 interface EncodeRawData {
@@ -477,13 +479,15 @@ export class LynxTemplatePlugin {
       experimental_isLazyBundle: false,
       lazyBundleFetcher: 'QueryComponent',
       cssPlugins: [],
+      enableReuseLoadScriptExports: false,
     });
 
   /**
    * Convert the css chunks to css map.
    *
    * @param cssChunks - The CSS chunks content.
-   * @param options - The encode options.
+   * @param plugins - The CSS plugins passed to the parser.
+   * @param enableCSSSelector - Whether to enable the CSS selector.
    * @returns The CSS map and css source.
    *
    * @remarks
@@ -498,12 +502,10 @@ export class LynxTemplatePlugin {
    *
    * @example
    * ```
-   * (console.log(await convertCSSChunksToMap(
-   *   '.red { color: red; }',
-   *   {
-   *     targetSdkVersion: '3.2',
-   *     enableCSSSelector: true,
-   *   },
+   * (console.log(LynxTemplatePlugin.convertCSSChunksToMap(
+   *   ['.red { color: red; }'],
+   *   [],
+   *   true,
    * )));
    * ```
    */
@@ -539,7 +541,7 @@ const SECTION_BACKGROUND = 'background';
 
 interface AsyncChunkLayout {
   name: string;
-  layer: string | undefined;
+  layer: string;
 }
 
 function shortLayerName(layer: string): string {
@@ -740,9 +742,6 @@ class LynxTemplatePluginImpl {
           );
           if (layout !== undefined) {
             const { name, layer } = layout;
-            if (layer === undefined) {
-              return `${prefix}lazy-bundle/${name}.js`;
-            }
             // A lazy bundle's chunk in a layer mirrors the entry of that layer:
             // `<root>/main/background.[contenthash:8].js` becomes
             // `<root>/lazy-bundle/<name>/background.[contenthash:8].js`, so it
@@ -840,8 +839,6 @@ class LynxTemplatePluginImpl {
         compiler.webpack,
       );
 
-      const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation);
-
       compilation.hooks.runtimeRequirementInTree.for(
         RuntimeGlobals.lynxAsyncChunkIds,
       ).tap(this.name, (chunk, set) => {
@@ -856,14 +853,12 @@ class LynxTemplatePluginImpl {
         compilation.addRuntimeModule(
           chunk,
           new LynxAsyncChunksRuntimeModule((asyncChunk) => {
-            const filename =
-              LynxTemplatePluginImpl.#getLazyBundleNameByChunkId(compilation)
-                .get(asyncChunk.id!)
-                ?? (asyncChunk.name !== null && asyncChunk.name !== undefined
-                  ? hooks.asyncChunkName.call(asyncChunk.name)
-                  : undefined);
+            const filename = LynxTemplatePluginImpl.#getLazyBundleOwner(
+              compilation,
+              asyncChunk.id!,
+            );
 
-            if (filename === undefined || filename === '') {
+            if (filename === undefined) {
               return undefined;
             }
 
@@ -995,7 +990,7 @@ class LynxTemplatePluginImpl {
       // async chunk empty; `RemoveEmptyChunksPlugin` drops that chunk but
       // keeps the group, which would otherwise emit an empty lazy bundle.
       compilation.chunkGroups.filter(cg =>
-        !cg.isInitial() && cg.chunks.length > 0
+        !cg.isInitial() && cg.chunks.length > 0 && resources.has(cg)
       ),
       cg => {
         // A `webpackChunkName` is user-provided (the react transform no longer
@@ -1005,6 +1000,9 @@ class LynxTemplatePluginImpl {
         // or alias) produces a single lazy bundle.
         // See https://github.com/lynx-family/lynx-stack/issues/455
         if (cg.name !== null && cg.name !== undefined) {
+          // import(/* webpackChunkName: 'a' */ './PageA.js') uses the hook's
+          // name for both thread layers. Named context imports do too, even
+          // when they have no resolved resource path.
           return hooks.asyncChunkName.call(cg.name);
         }
         const chunkGroupResources = resources.get(cg);
@@ -1020,43 +1018,80 @@ class LynxTemplatePluginImpl {
     return asyncChunkGroups;
   }
 
-  static #lazyBundleNames = new WeakMap<
+  static #lazyBundleOwners = new WeakMap<
     Compilation,
     Map<string | number, string>
   >();
 
-  static #getLazyBundleNameByChunkId(compilation: Compilation) {
-    let lazyBundleNames = LynxTemplatePluginImpl.#lazyBundleNames.get(
-      compilation,
-    );
-
-    if (lazyBundleNames) {
-      return lazyBundleNames;
-    }
-
-    lazyBundleNames = new Map<string | number, string>();
-
-    for (
-      const [filename, chunkGroups] of Object.entries(
-        LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
-      )
-    ) {
-      const derived = chunkGroups.every(cg =>
-        cg.name === null || cg.name === undefined
+  /** Return the owning lazy bundle, or undefined for ordinary/shared chunks. */
+  static #getLazyBundleOwner(
+    compilation: Compilation,
+    chunkId: string | number,
+  ): string | undefined {
+    let owners = LynxTemplatePluginImpl.#lazyBundleOwners.get(compilation);
+    if (!owners) {
+      owners = new Map<string | number, string>();
+      // import('./PageA.js') and import('@/PageA.js') can create different
+      // groups but resolve to the same file. Their resource keys match, so
+      // sharing a chunk between these groups still counts as one owner.
+      const resourceKeys = new Map(
+        [...collectChunkGroupResources(compilation)]
+          .filter(([, paths]) => paths.length > 0)
+          .map(([group, paths]) => [group, JSON.stringify(paths)]),
       );
-      for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
-        if (chunk.id === null || chunk.id === undefined) {
+
+      for (
+        const [name, chunkGroups] of Object.entries(
+          LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
+        )
+      ) {
+        // import(`./x/${y}`) has no single resolved resource, so its unnamed
+        // context group gets name ''. Leave it without a lazy bundle owner:
+        // filename generation and runtime loading then use their defaults.
+        // A named context group already went through asyncChunkName above
+        // and, like a named ordinary import, can own a lazy bundle.
+        if (name === '') {
           continue;
         }
-        if (derived || !lazyBundleNames.has(chunk.id)) {
-          lazyBundleNames.set(chunk.id, filename);
+        const groups = new Set(chunkGroups);
+        const resources = new Set(
+          chunkGroups.map(group => resourceKeys.get(group))
+            .filter(key => key !== undefined),
+        );
+        // import('./PageA.js')                          => derived: true
+        //   name is inferred from the file, e.g. 'src_PageA.js'.
+        // import(/* webpackChunkName: 'a' */ './PageA.js') => derived: false
+        //   name comes from the explicit chunk group name 'a'.
+        const derived = chunkGroups.every(group => group.name == null);
+
+        for (
+          const chunk of new Set(chunkGroups.flatMap(group => group.chunks))
+        ) {
+          if (chunk.id == null) {
+            continue;
+          }
+          // When checking PageA:
+          //   chunk used by [PageA background]              => owned: true
+          //   chunk used by [PageA, alias resolving to PageA] => owned: true
+          //   shared chunk used by [PageA, PageB]            => owned: false
+          //   chunk used by [initial entry, PageA]           => owned: false
+          const owned = [...chunk.groupsIterable].every(group =>
+            groups.has(group)
+            || (!group.isInitial() && resources.has(resourceKeys.get(group)!))
+          );
+          // For an owned chunk, preserve the existing naming priority:
+          //   no owner yet + explicit name 'a'       => record 'a'
+          //   owner 'a' + derived 'src_PageA.js'     => replace with 'src_PageA.js'
+          //   owner 'src_PageA.js' + explicit 'a'    => keep 'src_PageA.js'
+          //   owner 'a' + another explicit name 'b' => keep the first name 'a'
+          if (owned && (derived || !owners.has(chunk.id))) {
+            owners.set(chunk.id, name);
+          }
         }
       }
+      LynxTemplatePluginImpl.#lazyBundleOwners.set(compilation, owners);
     }
-
-    LynxTemplatePluginImpl.#lazyBundleNames.set(compilation, lazyBundleNames);
-
-    return lazyBundleNames;
+    return owners.get(chunkId);
   }
 
   static #asyncChunkLayouts = new WeakMap<
@@ -1081,7 +1116,7 @@ class LynxTemplatePluginImpl {
       return undefined;
     }
     const { name, layer } = layout;
-    return layer === undefined ? name : `${name}/${shortLayerName(layer)}`;
+    return `${name}/${shortLayerName(layer)}`;
   }
 
   static #getAsyncChunkLayout(
@@ -1092,34 +1127,36 @@ class LynxTemplatePluginImpl {
 
     if (!layouts) {
       layouts = new Map<string | number, AsyncChunkLayout>();
-      const { chunkGraph } = compilation;
       for (
         const [name, chunkGroups] of Object.entries(
           LynxTemplatePluginImpl.#getAsyncChunkGroups(compilation),
         )
       ) {
-        // A named chunk group means the user wrote an explicit
-        // `webpackChunkName` — keep the user-controlled `[name]` placement.
-        // Context imports (`import(`./x/${y}`)`) group under an empty name
-        // and are not lazy bundles — leave them on the default template.
-        if (
-          name === ''
-          || chunkGroups.some(cg => cg.name !== null && cg.name !== undefined)
+        for (
+          const chunk of new Set(chunkGroups.flatMap(group => group.chunks))
         ) {
-          continue;
-        }
-        for (const chunk of chunkGroups.flatMap(cg => cg.chunks)) {
-          if (chunk.id === null || chunk.id === undefined) {
+          if (
+            chunk.id == null
+            || LynxTemplatePluginImpl.#getLazyBundleOwner(compilation, chunk.id)
+              === undefined
+          ) {
             continue;
           }
-          let layer: string | undefined;
-          for (const module of chunkGraph.getChunkModulesIterable(chunk)) {
+          // import('./page.js') and import(/* webpackChunkName: 'page' */
+          // './page.js') can share an owned chunk. Keep the existing layout
+          // order: the later 'page' group places it under lazy-bundle/page/,
+          // even if the runtime map prefers the resource-derived bundle URL.
+          // Without a layer, keep the default chunk filename.
+          for (
+            const module of compilation.chunkGraph.getChunkModulesIterable(
+              chunk,
+            )
+          ) {
             if (module.layer) {
-              layer = String(module.layer);
+              layouts.set(chunk.id, { name, layer: String(module.layer) });
               break;
             }
           }
-          layouts.set(chunk.id, { name, layer });
         }
       }
       LynxTemplatePluginImpl.#asyncChunkLayouts.set(compilation, layouts);
@@ -1172,11 +1209,26 @@ class LynxTemplatePluginImpl {
 
           const asyncAssetsInfoByGroups = this.#getAssetsInformationByFilenames(
             compilation,
-            // Merged chunk groups may share chunks, so dedupe the files.
-            Array.from(new Set(chunkGroups.flatMap(cg => cg.getFiles())))
-              .filter(chunkFile =>
-                predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+            // Shared JS loads separately; shared CSS is needed by each template.
+            Array.from(
+              new Set(
+                chunkGroups.flatMap(group =>
+                  group.chunks.flatMap(chunk => {
+                    const owner = chunk.id == null
+                      ? undefined
+                      : LynxTemplatePluginImpl.#getLazyBundleOwner(
+                        compilation,
+                        chunk.id,
+                      );
+                    return [...chunk.files].filter(file =>
+                      owner === filename || file.endsWith('.css')
+                    );
+                  })
+                ),
               ),
+            ).filter(chunkFile =>
+              predicateNonHotModuleReplacementAsset(chunkFile, compilation)
+            ),
           );
 
           return this.#encodeByAssetsInformation(
@@ -1218,6 +1270,7 @@ class LynxTemplatePluginImpl {
       defaultOverflowVisible,
       dsl,
       cssPlugins,
+      enableReuseLoadScriptExports,
     } = this.#options;
 
     const isDev = process.env['NODE_ENV'] === 'development'
@@ -1262,7 +1315,7 @@ class LynxTemplatePluginImpl {
           enableNewIntersectionObserver: true,
           enableNativeList: true,
           enableNewSticky: true,
-          flexBasisZeroPercent: true,
+          enableFlexBasisZeroPercent: true,
           enableGridPlacementShorthands: true,
           syncXElementRegistry: true,
           enableA11y,
@@ -1273,6 +1326,12 @@ class LynxTemplatePluginImpl {
           removeDescendantSelectorScope,
           // Will be filled later in `@lynx-js/debug-metadata-rsbuild-plugin`
           debugMetadataUrl: '',
+          ...(enableReuseLoadScriptExports
+            ? {
+              // Avoid extra loadScript; reuse the `init` function.
+              enableReuseLoadScriptExports: true,
+            }
+            : {}),
         },
       },
       css: {
@@ -1590,6 +1649,12 @@ function collectChunkGroupResources(
       if (!chunkGroup) {
         continue;
       }
+      // Record import groups even when context imports have no resource path.
+      let chunkGroupResources = resources.get(chunkGroup);
+      if (!chunkGroupResources) {
+        chunkGroupResources = new Set();
+        resources.set(chunkGroup, chunkGroupResources);
+      }
       for (const dependency of block.dependencies) {
         // `nameForCondition()` is the resource path of a `NormalModule`. It is
         // `undefined` for `ContextModule`(e.g. `import(`./locales/${lang}`)`),
@@ -1598,11 +1663,6 @@ function collectChunkGroupResources(
           ?.nameForCondition();
         if (!resource) {
           continue;
-        }
-        let chunkGroupResources = resources.get(chunkGroup);
-        if (!chunkGroupResources) {
-          chunkGroupResources = new Set();
-          resources.set(chunkGroup, chunkGroupResources);
         }
         chunkGroupResources.add(resource);
       }

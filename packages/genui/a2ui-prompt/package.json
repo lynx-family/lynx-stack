@@ -22,7 +22,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build"
+    "build": "rslib"
   },
   "devDependencies": {
     "@types/node": "^24.13.3"

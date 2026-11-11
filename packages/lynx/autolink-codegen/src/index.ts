@@ -454,7 +454,9 @@ function findMatchingBrace(source: string, openBraceIndex: number): number {
 }
 
 /**
- * Builds the generated JS facade and platform spec file contents for a library package.
+ * Builds the generated file contents for a library package: JS facades and platform specs,
+ * plus the shared C++ sources, registrations, CMake target, iOS wrapper and Lynxtron
+ * registrations for Node-API and Lynxtron modules.
  */
 export function generate(options: CodegenOptions = {}): GeneratedFile[] {
   const root = path.resolve(options.root ?? process.cwd());
@@ -643,7 +645,8 @@ function validatePlatformModuleSpec(module: NativeModuleSpec): void {
 }
 
 /**
- * Writes generated files to disk and returns the generated file descriptors.
+ * Writes generated files to disk, skipping existing files marked `overwrite: false`,
+ * and returns the generated file descriptors.
  */
 export function runCodegen(options: CodegenOptions = {}): GeneratedFile[] {
   const root = path.resolve(options.root ?? process.cwd());

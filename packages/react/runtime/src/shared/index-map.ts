@@ -3,11 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 export class IndexMap<T> {
-  protected lastIndex = 0;
   protected indexMap: Map<number, T> = new Map<number, T>();
 
+  constructor(private counter: { lastIndex: number } = { lastIndex: 0 }) {}
+
   public add(value: T): number {
-    const index = ++this.lastIndex;
+    const index = ++this.counter.lastIndex;
     this.indexMap.set(index, value);
     return index;
   }

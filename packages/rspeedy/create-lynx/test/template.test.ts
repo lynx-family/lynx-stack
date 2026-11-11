@@ -141,10 +141,32 @@ describe('templates on disk', () => {
       for (const dsl of DSLS) {
         for (const lang of LANGS) {
           const manifest = readManifest(templateDir(`${tool}-${dsl}-${lang}`))
-          expect(manifest['scripts']?.['build']).toBe(`${tool} build`)
+          expect(manifest['scripts']?.['build']).toBe(
+            tool === 'rslib' ? 'rslib' : `${tool} build`,
+          )
         }
       }
     }
+  })
+
+  test('gives an app agent-lynx, and not a library', () => {
+    for (const tool of TOOLS) {
+      for (const lang of LANGS) {
+        const manifest = readManifest(templateDir(`${tool}-react-${lang}`))
+        const deps = manifest['devDependencies'] ?? {}
+        if (LIBRARY_TOOLS.includes(tool)) {
+          expect(deps).not.toHaveProperty('agent-lynx')
+        } else {
+          expect(deps['agent-lynx']).toBe('workspace:*')
+        }
+      }
+    }
+
+    const agents = fs.readFileSync(
+      path.join(packageRoot, 'template-common', 'AGENTS.md'),
+      'utf-8',
+    )
+    expect(agents).toContain('agent-lynx')
   })
 
   test('tests every template with Rstest', () => {
@@ -175,7 +197,7 @@ describe('templates on disk', () => {
           ),
         )
         expect(manifest['scripts']?.['build:external-bundle']).toMatch(
-          /^rslib build --config /,
+          /^rslib --config /,
         )
       }
     }

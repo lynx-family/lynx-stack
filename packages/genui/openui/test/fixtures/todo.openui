@@ -1,0 +1,12 @@
+root = Stack([header, listSection, editorCard], "column", false, "m", "stretch", "start")
+$selectedId = ""
+$editText = ""
+$nextCompleted = false
+header = CardHeader("我的待办", "选择任务后，可编辑、切换完成状态或删除")
+tasks = Query("openui_query", { key: "tasks" }, { items: [{ id: 1, text: "买牛奶", completed: false }, { id: 2, text: "写周报", completed: true }, { id: 3, text: "预约牙医", completed: false }] })
+listSection = Card([TextContent("共 " + @Count(tasks.items) + " 项 · 未完成 " + @Count(@Filter(tasks.items, "completed", "==", false)), "small"), taskList])
+taskList = List(@Each(tasks.items, "item", Card([TextContent(item.text), TextContent(item.completed ? "已完成" : "未完成", "small"), Button("编辑", Action([@Set($selectedId, item.id), @Set($editText, item.text), @Set($nextCompleted, item.completed == false)]), "secondary")], "clear")), null, "vertical", "stretch", "s", true)
+editorCard = $selectedId == "" ? null : Card([CardHeader("编辑任务"), TextField("任务内容", $editText, "shortText", null, null, "$editText"), Buttons([Button("保存", Action([@Run(saveTask), @Run(tasks), @Reset($selectedId, $editText)]), "primary"), Button($nextCompleted ? "标记完成" : "恢复待办", Action([@Run(toggleTask), @Run(tasks), @Reset($selectedId, $editText)]), "secondary"), Button("删除", Action([@Run(deleteTask), @Run(tasks), @Reset($selectedId, $editText)]), "tertiary", "destructive"), Button("取消", Action([@Reset($selectedId, $editText)]), "tertiary")])], "sunk")
+saveTask = Mutation("openui_mutation", { key: "tasks", value: { items: @Each(tasks.items, "item", item.id == $selectedId ? { id: item.id, text: $editText, completed: item.completed } : item) } })
+toggleTask = Mutation("openui_mutation", { key: "tasks", value: { items: @Each(tasks.items, "item", item.id == $selectedId ? { id: item.id, text: item.text, completed: $nextCompleted } : item) } })
+deleteTask = Mutation("openui_mutation", { key: "tasks", value: { items: @Filter(tasks.items, "id", "!=", $selectedId) } })

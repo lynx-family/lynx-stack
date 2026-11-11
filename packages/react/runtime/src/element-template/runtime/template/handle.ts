@@ -22,6 +22,10 @@ import type {
 // Main-thread IFR allocates ids as consecutive negative integers.
 let nextId = -1;
 
+export function getNextElementTemplateId(): number {
+  return nextId;
+}
+
 export function reserveElementTemplateId(): number {
   const id = nextId--;
   return id;
@@ -33,9 +37,13 @@ export function createElementTemplateWithReservedHandle(
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
   childSlots: RuntimeChildSlots | null | undefined,
+  hasDynamicAttributes = true,
 ): ElementTemplateHandle {
-  const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
-  const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(templateType, attributeSlots);
+  // Adapter-free compiled hosts need neither dynamic state nor native slot preparation.
+  const templateType = hasDynamicAttributes ? elementTemplateTypeTag(templateKey, bundleUrl) : undefined;
+  const nativeAttributeSlots = templateType === undefined
+    ? attributeSlots
+    : prepareMainThreadDynamicAttrSlotsForNative(templateType, attributeSlots);
   const nativeRef = __CreateElementTemplate(
     templateKey,
     bundleUrl,
@@ -45,11 +53,13 @@ export function createElementTemplateWithReservedHandle(
   );
   if (nativeRef) {
     setElementTemplateNativeRef(handleId, nativeRef);
-    initializeMainThreadDynamicAttrSlots(
-      handleId,
-      templateType,
-      attributeSlots,
-    );
+    if (templateType !== undefined) {
+      initializeMainThreadDynamicAttrSlots(
+        handleId,
+        templateType,
+        attributeSlots,
+      );
+    }
   }
   return nativeRef;
 }

@@ -28,8 +28,8 @@ describe('local report image capture', () => {
     source.className = 'publishedReportContent';
     source.innerHTML =
       '<h1>Bench report</h1><button data-report-image-exclude>Export</button>'
-      + '<details open><summary>Run evidence</summary><p>Saved result</p></details>'
-      + '<details><summary>Plan</summary><p>Collapsed content</p></details>'
+      + '<details class="publishedReportDisclosure" data-report-image-exclude open><summary>Run result</summary><p>Saved result</p></details>'
+      + '<details class="publishedReportDisclosure"><summary>Plan</summary><p>Collapsed content</p></details>'
       + '<div class="publishedReportTableWrap"><table><tr><td>Score</td></tr></table></div>';
     document.body.append(source);
     rstest.spyOn(source, 'getBoundingClientRect').mockReturnValue(
@@ -48,7 +48,7 @@ describe('local report image capture', () => {
     rstest.useRealTimers();
   });
 
-  test('captures the complete cloned page and screenshots without changing the live report', async () => {
+  test('expands the recorded plan and removes run disclosures without changing the live report', async () => {
     const img = document.createElement('img');
     img.src = 'data:image/png;base64,cG5n';
     source.append(img);
@@ -59,14 +59,23 @@ describe('local report image capture', () => {
     });
     const before = source.innerHTML;
     source.scrollTop = 400;
-    rstest.mocked(toBlob).mockImplementationOnce(async (clone, options) => {
+    rstest.mocked(toBlob).mockImplementationOnce((clone, options) => {
       expect(clone).not.toBe(source);
       expect(clone.isConnected).toBe(true);
-      expect(clone.textContent).toContain('Saved result');
-      expect(clone.querySelector('button')).toBeNull();
+      expect(clone.textContent).toContain('Bench report');
+      expect(clone.textContent).toContain('Score');
+      expect(clone.textContent).not.toContain('Saved result');
+      expect(clone.textContent).not.toContain('Run result');
+      expect(clone.textContent).toContain('Plan');
+      expect(clone.textContent).toContain('Collapsed content');
+      expect(clone.querySelectorAll('.publishedReportDisclosure')).toHaveLength(
+        1,
+      );
       expect(
-        [...clone.querySelectorAll('details')].map((details) => details.open),
-      ).toEqual([true, false]);
+        clone.querySelector<HTMLDetailsElement>('.publishedReportDisclosure')
+          ?.open,
+      ).toBe(true);
+      expect(clone.querySelector('button')).toBeNull();
       expect(clone.querySelector('img')?.src).toBe(img.src);
       expect(options).toMatchObject({
         width: 900,
@@ -74,7 +83,7 @@ describe('local report image capture', () => {
         pixelRatio: 2,
         skipFonts: true,
       });
-      return png;
+      return Promise.resolve(png);
     });
     expect(await createBenchReportImage(source)).toBe(png);
     expect(decode).toHaveBeenCalled();
@@ -100,6 +109,22 @@ describe('local report image capture', () => {
       clone.querySelector<HTMLElement>('.publishedReportTableWrap')?.style
         .overflow,
     ).toBe('visible');
+  });
+
+  test('measures table width after expanding nested token details', async () => {
+    source.querySelector('td')!.innerHTML =
+      '<details><summary>Tokens</summary><p>Token breakdown</p></details>';
+    rstest.spyOn(HTMLElement.prototype, 'scrollWidth', 'get')
+      .mockImplementation(function(this: HTMLElement) {
+        return this.querySelector('details[open]') ? 1200 : 300;
+      });
+    await createBenchReportImage(source);
+    const [clone, options] = rstest.mocked(toBlob).mock.calls[0]!;
+    expect(options?.width).toBe(1296);
+    expect(clone.querySelector('td details')?.hasAttribute('open')).toBe(true);
+    expect(source.querySelector('td details')?.hasAttribute('open')).toBe(
+      false,
+    );
   });
 
   test('rejects screenshots that would require a network request', async () => {

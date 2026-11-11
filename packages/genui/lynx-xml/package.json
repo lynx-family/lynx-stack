@@ -19,18 +19,19 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README*.md",
+    "docs/*.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "rstest"
   },
   "dependencies": {
     "@lynx-js/skill-vanilla-lynx": "0.2.0",
-    "acorn": "^8.17.0",
+    "acorn": "^8.19.0",
     "acorn-walk": "^8.3.5",
     "eslint-scope": "^8.4.0",
-    "fast-xml-parser": "^5.11.1"
+    "fast-xml-parser": "^5.11.2"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",

@@ -1,0 +1,13 @@
+.OpenUIChatSeparator {
+  flex-shrink: 0;
+  background-color: var(--openui-color-border);
+}
+.OpenUIChatSeparator-horizontal {
+  width: 100%;
+  height: 1px;
+}
+.OpenUIChatSeparator-vertical {
+  width: 1px;
+  min-height: 24rpx;
+  align-self: stretch;
+}

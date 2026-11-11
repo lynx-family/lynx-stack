@@ -17,6 +17,7 @@ import {
   resolveArkImageGenerationConfig,
   waitForPendingArkImageGeneration,
 } from '../agent/common/ark-image-generation-tool.js';
+import { registerToolPerformanceObserver } from '../agent/common/tool-performance.js';
 
 const CONFIG = {
   apiKey: 'ark-secret',
@@ -374,12 +375,25 @@ describe('Ark image-generation request', () => {
 
   test('counts failed image calls against the request budget', async () => {
     const scope = createArkImageGenerationRunScope(1);
+    const events: {
+      event: string;
+      details?: Record<string, unknown>;
+    }[] = [];
+    registerToolPerformanceObserver(scope, (event, details) => {
+      events.push({ event, details });
+    });
     await expect(
       generateArkImageForRun(scope, CONFIG, 'prompt', rateLimitedFetch),
     ).rejects.toThrow('request failed with status 429');
     await expect(
       generateArkImageForRun(scope, CONFIG, 'prompt', toolGeneratedFetch),
     ).rejects.toThrow('call limit reached (1 per request)');
+    expect(events).toHaveLength(1);
+    expect(events[0]?.event).toBe('agent.tool.completed');
+    expect(events[0]?.details?.toolName).toBe('generate_image');
+    expect(events[0]?.details?.durationMs).toBeTypeOf('number');
+    expect(events[0]?.details?.status).toBe('error');
+    expect(JSON.stringify(events)).not.toContain('prompt');
   });
 });
 

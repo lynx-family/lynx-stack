@@ -3,12 +3,21 @@
 // LICENSE file in the root directory of this source tree.
 
 import { createServer as createHttp2Server } from 'node:http2';
+import {
+  getDefaultAutoSelectFamilyAttemptTimeout,
+  setDefaultAutoSelectFamilyAttemptTimeout,
+} from 'node:net';
 
 import { serve } from '@hono/node-server';
 
 import app from './app.js';
 import { createGracefulShutdown } from './graceful-shutdown.js';
 import { resolveListenOptions } from './listen-options.js';
+
+// Allow slower IPv6 connections to finish before trying an unreachable IPv4 route.
+setDefaultAutoSelectFamilyAttemptTimeout(
+  Math.max(2_000, getDefaultAutoSelectFamilyAttemptTimeout()),
+);
 
 const HTTP2_ENABLED = process.env.GENUI_HTTP2 === '1';
 const { hostname, port } = resolveListenOptions(process.env);

@@ -15,6 +15,7 @@ import type {
 
 export { pluginReactLynx } from './pluginReactLynx.js'
 export type { PluginReactLynxOptions } from './pluginReactLynx.js'
+export type { ReactCompileResultExposureV1 } from './compileResult.js'
 
 export type {
   AddComponentElementConfig,
@@ -36,3 +37,4 @@ interface LynxTemplatePlugin {
 export type { LynxTemplatePlugin, TemplateHooks }
 
 export { LAYERS } from '@lynx-js/react-webpack-plugin'
+export type { ReactCompileResult } from '@lynx-js/react-webpack-plugin'

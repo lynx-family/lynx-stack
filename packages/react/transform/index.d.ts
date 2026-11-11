@@ -59,7 +59,7 @@ export interface DarkModeConfig {
   themeExpr: string
 }
 /**
- * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * {@inheritDoc CompatVisitorConfig.addComponentElement}
  * @public
  */
 export interface AddComponentElementConfig {
@@ -89,7 +89,7 @@ export interface AddComponentElementConfig {
   compilerOnly: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.compat}
+ * {@inheritDoc PluginReactLynxOptions.compat}
  * @public
  */
 export interface CompatVisitorConfig {
@@ -341,9 +341,10 @@ export interface CompatVisitorConfig {
    */
   disableDeprecatedWarning: boolean
   /**
+   * Dark mode configuration
+   *
    * @public
    * @deprecated
-   * Dark mode configuration
    *
    * @defaultValue `undefined`
    *
@@ -407,7 +408,7 @@ export interface CssScopeVisitorConfig {
   filename: string
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.defineDCE}
+ * {@inheritDoc PluginReactLynxOptions.defineDCE}
  * @public
  */
 export interface DefineDceVisitorConfig {
@@ -472,7 +473,7 @@ export interface DynamicImportVisitorConfig {
   injectLazyBundle?: boolean
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.extractStr}
+ * {@inheritDoc @lynx-js/react-rsbuild-plugin#PluginReactLynxOptions.extractStr}
  * @public
  */
 export interface ExtractStrConfig {
@@ -510,7 +511,7 @@ export interface RefreshVisitorConfig {
   library?: Array<string>
 }
 /**
- * {@inheritdoc PluginReactLynxOptions.shake}
+ * {@inheritDoc PluginReactLynxOptions.shake}
  * @public
  */
 export interface ShakeVisitorConfig {
@@ -675,6 +676,10 @@ export interface WorkletVisitorConfig {
   filename: string
   /** @internal */
   target: 'LEPUS' | 'JS' | 'MIXED'
+  /**
+   * Module providing worklet helpers. The init entry uses this path with a
+   * trailing `/internal` removed, followed by `/worklet-runtime/init`.
+   */
   runtimePkg: string
 }
 /**
@@ -762,9 +767,16 @@ export interface TransformNodiffOutput {
   /** @internal */
   elementTemplates?: Array<ElementTemplateAsset>
   /** @internal */
+  runtimeRequirements: TransformRuntimeRequirements
+  /** @internal */
   definesForSnapshot?: Array<Define>
   /** @internal */
   definesForWorklet?: Array<Define>
+}
+/** @internal */
+export interface TransformRuntimeRequirements {
+  /** @internal */
+  mainThreadProgrammability: boolean
 }
 /**
  * @internal
@@ -780,7 +792,7 @@ export interface Define {
   id: string
   /**
    * @internal
-   * A self-contained statement list registering the definition.
+   * A statement list registering the definition, using the bindings in imports.
    */
   code: string
   /**
@@ -790,6 +802,21 @@ export interface Define {
    * the main thread lacks such a definition.
    */
   unmergeable?: boolean
+  /** @internal Compiler requirements of the extracted registration. */
+  runtimeRequirements?: TransformRuntimeRequirements
+  /** @internal Imports required by this definition. */
+  imports?: DefineImport[]
+}
+/** @internal */
+export interface DefineImport {
+  /** @internal */
+  source: string
+  /** @internal */
+  imported: string
+  /** @internal */
+  local: string
+  /** @internal */
+  namespace?: boolean
 }
 /** @internal */
 export interface ElementTemplateAsset {

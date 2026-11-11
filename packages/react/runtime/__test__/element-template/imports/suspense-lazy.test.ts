@@ -56,8 +56,10 @@ const sExportsLegacyReactRuntime = Symbol.for(
   '__REACT_LYNX_EXPORTS__(@lynx-js/react/legacy-react-runtime)',
 );
 const sRuntimeBackend = Symbol.for('__REACT_LYNX_RUNTIME_BACKEND__');
+const sRuntimeVersion = Symbol.for('__REACT_LYNX_RUNTIME_VERSION__');
 const lazyTargetSymbols = [
   sRuntimeBackend,
+  sRuntimeVersion,
   sExportsReact,
   sExportsReactCompat,
   sExportsReactLepus,
@@ -118,6 +120,30 @@ function clearLazyTargetSymbols(): void {
   }
 }
 
+async function withRuntimeVersion(
+  version: string,
+  callback: () => Promise<void>,
+): Promise<void> {
+  const target = globalThis as typeof globalThis & {
+    __RUNTIME_VERSION__?: string;
+  };
+  const descriptor = Object.getOwnPropertyDescriptor(target, '__RUNTIME_VERSION__');
+  Object.defineProperty(target, '__RUNTIME_VERSION__', {
+    value: version,
+    configurable: true,
+  });
+
+  try {
+    await callback();
+  } finally {
+    if (descriptor) {
+      Object.defineProperty(target, '__RUNTIME_VERSION__', descriptor);
+    } else {
+      delete target.__RUNTIME_VERSION__;
+    }
+  }
+}
+
 describe('element-template Suspense and lazy imports', () => {
   let originalQueryComponent: LynxWithDynamicImportMocks['QueryComponent'];
   let originalRequireModuleAsync: LynxWithDynamicImportMocks['requireModuleAsync'];
@@ -173,6 +199,30 @@ describe('element-template Suspense and lazy imports', () => {
     expect('__ComponentIsPolyfill' in ElementTemplateInternal).toBe(false);
     expect('__DynamicPartSlot' in ElementTemplateInternal).toBe(false);
     expect('snapshotCreatorMap' in ElementTemplateInternal).toBe(false);
+  });
+
+  it('records a stamped runtime version from the ET runtime marker', async () => {
+    clearLazyTargetSymbols();
+
+    await withRuntimeVersion('1.2.0', async () => {
+      vi.resetModules();
+      await import('../../../src/element-template/runtime-marker.js');
+
+      expect(ElementTemplateInternal.getRuntimeVersion()).toBe('1.2.0');
+    });
+  });
+
+  it('records a stamped runtime version from the standalone ET lazy import', async () => {
+    clearLazyTargetSymbols();
+    vi.resetModules();
+    await import('../../../lazy/element-template-import.js');
+
+    await withRuntimeVersion('1.2.0', async () => {
+      vi.resetModules();
+      await import('../../../lazy/element-template-internal.js');
+
+      expect(ElementTemplateInternal.getRuntimeVersion()).toBe('1.2.0');
+    });
   });
 
   it('routes ET component dynamic imports through loadLazyBundle', async () => {
@@ -273,12 +323,7 @@ describe('element-template Suspense and lazy imports', () => {
     expect(Object.getOwnPropertyDescriptors(lynx.getApp())).toEqual(appDescriptors);
   });
 
-  it.each([
-    '../../../lazy/element-template.js',
-    '../../../lazy/element-template-internal.js',
-    '../../../lazy/element-template-jsx-runtime.js',
-    '../../../lazy/element-template-jsx-dev-runtime.js',
-  ])('rejects a Snapshot host before reading exports from %s', async (entry) => {
+  it('rejects a Snapshot host before reading exports from element-template-import.js', async () => {
     clearLazyTargetSymbols();
     vi.resetModules();
     Object.defineProperty(lynx, sRuntimeBackend, {
@@ -287,7 +332,7 @@ describe('element-template Suspense and lazy imports', () => {
     });
     const appDescriptors = Object.getOwnPropertyDescriptors(lynx.getApp());
 
-    await expect(import(entry)).rejects.toThrow(
+    await expect(import('../../../lazy/element-template-import.js')).rejects.toThrow(
       'Snapshot and Element Template templates cannot share lazy bundles.',
     );
     expect(Object.getOwnPropertyDescriptors(lynx.getApp())).toEqual(appDescriptors);

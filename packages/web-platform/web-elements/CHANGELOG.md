@@ -1,5 +1,49 @@
 # @lynx-js/web-elements
 
+## 0.12.17
+
+### Patch Changes
+
+- Fix `x-image` ignoring `object-fit` and the `aspectFit`/`aspectFill` modes when `auto-size` is enabled. ([#4288](https://github.com/lynx-family/lynx-stack/pull/4288))
+
+## 0.12.16
+
+### Patch Changes
+
+- Add the optional `lynx-view.resolveResource` hook to resolve image sources and placeholders before loading, including placeholder preloads, error fallbacks, and reconnection. Keep the original image attributes unchanged and prevent repeated fallback loads for relative placeholder URLs. ([#4240](https://github.com/lynx-family/lynx-stack/pull/4240))
+
+## 0.12.15
+
+### Patch Changes
+
+- Support `![](blockview://id)` in `x-markdown` by rendering a named slot at the image position, including in typewriter mode. Set `slot="id"` on the child element to project it into the slot. ([#4220](https://github.com/lynx-family/lynx-stack/pull/4220))
+
+## 0.12.14
+
+### Patch Changes
+
+- Fix x-markdown rendering when content is appended rapidly. Preserve Markdown context across updates, show appended text without waiting for input to stop, and retain typewriter progress while continuing playback as new content arrives. ([#4162](https://github.com/lynx-family/lynx-stack/pull/4162))
+
+## 0.12.13
+
+### Patch Changes
+
+- Updated dependency `dompurify` to `^3.4.16`. ([#3832](https://github.com/lynx-family/lynx-stack/pull/3832))
+
+## 0.12.12
+
+### Patch Changes
+
+- Updated dependency `markdown-it` to `^15.0.2`. ([#3943](https://github.com/lynx-family/lynx-stack/pull/3943))
+
+## 0.12.11
+
+### Patch Changes
+
+- Defer `x-image` and `inline-image` load events received while detached until the host connects to the document, preserving the image dimensions at load time. ([#3906](https://github.com/lynx-family/lynx-stack/pull/3906))
+
+- Apply inline image layout styles to `x-svg` inside text and custom truncation content. ([#3899](https://github.com/lynx-family/lynx-stack/pull/3899))
+
 ## 0.12.10
 
 ### Patch Changes

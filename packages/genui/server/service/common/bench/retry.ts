@@ -63,7 +63,11 @@ function retryAfter(headers: unknown, now: number): number | undefined {
 export function resolveBenchRetryDelay(
   error: unknown,
   attempt: number,
-  options: { retryDelayMs?: number | undefined; now?: number } = {},
+  options: {
+    retryDelayMs?: number | undefined;
+    rateLimitDelayMs?: number | undefined;
+    now?: number;
+  } = {},
 ): number | undefined {
   const chain = errorChain(error);
   if (
@@ -96,9 +100,12 @@ export function resolveBenchRetryDelay(
       return delay <= MAX_RETRY_DELAY_MS ? delay : undefined;
     }
   }
-  const baseDelay = options.retryDelayMs !== undefined
-      && Number.isFinite(options.retryDelayMs)
-    ? Math.max(0, Math.floor(options.retryDelayMs))
+  const configuredDelay = status === 429
+    ? options.rateLimitDelayMs ?? options.retryDelayMs
+    : options.retryDelayMs;
+  const baseDelay = configuredDelay !== undefined
+      && Number.isFinite(configuredDelay)
+    ? Math.max(0, Math.floor(configuredDelay))
     : DEFAULT_RETRY_DELAY_MS;
   const exponent = Number.isFinite(attempt)
     ? Math.min(6, Math.max(0, Math.floor(attempt) - 1))

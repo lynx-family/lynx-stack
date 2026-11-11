@@ -1,5 +1,57 @@
 # `@lynx-js/vanilla-rsbuild-plugin`
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`a5159b3`](https://github.com/lynx-family/lynx-stack/commit/a5159b333471d821daf2c1707a0cffd4411bc301)]:
+  - @lynx-js/template-webpack-plugin@0.16.7
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/template-webpack-plugin@0.16.6
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.6
+
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`f3a9192`](https://github.com/lynx-family/lynx-stack/commit/f3a91921e53784b8255e5eda230ee8602648499e)]:
+  - @lynx-js/template-webpack-plugin@0.16.5
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.5
+
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`16b45de`](https://github.com/lynx-family/lynx-stack/commit/16b45defdc76e822086b5207c0c290d51224da0e)]:
+  - @lynx-js/template-webpack-plugin@0.16.4
+
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/template-webpack-plugin@0.16.3
+
+## 0.1.2
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.18.0` to the peer dependency range. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+- Updated dependencies [[`b5241dd`](https://github.com/lynx-family/lynx-stack/commit/b5241dd52770e97cb9bc5f08d9aa3bdbf7be9ce8), [`c5809d0`](https://github.com/lynx-family/lynx-stack/commit/c5809d097d6cd3c29ba8a140288fce0846b60b2c), [`4c453b9`](https://github.com/lynx-family/lynx-stack/commit/4c453b9ed1c58860f96cde9c4e91722f5d145470)]:
+  - @lynx-js/template-webpack-plugin@0.16.2
+
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`b900a78`](https://github.com/lynx-family/lynx-stack/commit/b900a78a43914adf2aae60849e2d6433be5eb797)]:
+  - @lynx-js/template-webpack-plugin@0.16.1
+
 ## 0.1.0
 
 ### Minor Changes

@@ -497,6 +497,7 @@ function transformExternals(
  * ```js
  * // rslib.config.js
  * import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+ * import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
  *
  * export default defineExternalBundleRslibConfig({
  *   id: 'utils-lib',
@@ -504,10 +505,11 @@ function transformExternals(
  *     entry: {
  *       utils: {
  *         import: './src/utils.ts',
- *         layer: 'background',
+ *         layer: LAYERS.BACKGROUND,
  *       }
  *     }
- *   }
+ *   },
+ *   plugins: [pluginReactLynx()],
  * })
  * ```
  *
@@ -520,6 +522,7 @@ function transformExternals(
  * ```js
  * // rslib.config.js
  * import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+ * import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
  *
  * export default defineExternalBundleRslibConfig({
  *   id: 'utils-lib',
@@ -527,10 +530,11 @@ function transformExternals(
  *     entry: {
  *       utils: {
  *         import: './src/utils.ts',
- *         layer: 'main-thread',
+ *         layer: LAYERS.MAIN_THREAD,
  *       }
  *     }
- *   }
+ *   },
+ *   plugins: [pluginReactLynx()],
  * })
  * ```
  * Then you can use `lynx.loadScript('utils', { bundleName: 'utils-lib-bundle-url' })` in main-thread.
@@ -542,6 +546,7 @@ function transformExternals(
  * ```js
  * // rslib.config.js
  * import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config'
+ * import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
  *
  * export default defineExternalBundleRslibConfig({
  *   id: 'utils-lib',
@@ -549,7 +554,8 @@ function transformExternals(
  *     entry: {
  *       utils: './src/utils.ts',
  *     },
- *   }
+ *   },
+ *   plugins: [pluginReactLynx()],
  * })
  * ```
  *

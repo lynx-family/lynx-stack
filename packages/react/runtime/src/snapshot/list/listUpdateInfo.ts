@@ -17,26 +17,6 @@ export interface ListUpdateInfo {
   onSetAttribute(child: SnapshotInstance, attr: any, oldAttr: any): void;
 }
 
-// class ListUpdateInfoDiffing implements ListUpdateInfo {
-//   private oldChildNodes: SnapshotInstance[];
-//   constructor(private list: SnapshotInstance) {
-//     this.oldChildNodes = list.childNodes;
-//   }
-//   flush(): void {
-//     Object.defineProperty(SnapshotInstance.prototype, "key", {
-//       get: function () {
-//         return this.values[0]["item-key"];
-//       },
-//     });
-
-//   }
-//   onInsertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance | undefined): void {}
-//   onRemoveChild(child: SnapshotInstance): void {}
-//   onSetAttribute(child: SnapshotInstance, attr: any): void {
-//     throw new Error("Method not implemented.");
-//   }
-// }
-
 interface InsertAction {
   position: number;
   type: string;
@@ -58,19 +38,7 @@ interface ListOperations {
 export class ListUpdateInfoRecording implements ListUpdateInfo {
   constructor(private list: SnapshotInstance) {
     this.oldChildNodes = list.childNodes;
-    // this.oldChildNodesSet = new Set(this.oldChildNodes);
   }
-
-  // private __commitAndReset() {
-  //   (this.__pendingAttributes ??= []).push(this.__toAttribute());
-  //   this.oldChildNodes = this.list.childNodes;
-  //   this.oldChildNodesSet = new Set(this.oldChildNodes);
-  //   this.removeChild1.clear();
-  //   this.removeChild2.clear();
-  //   this.insertBefore.clear();
-  //   this.appendChild.length = 0;
-  //   this.platformInfoUpdate.clear();
-  // }
 
   flush(): undefined | number {
     if (!this.list.__elements) {
@@ -78,10 +46,6 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
     }
     const elementIndex = this.list.__snapshot_def.slot[0]![1];
     const listElement = this.list.__elements[elementIndex]!;
-    // this.__pendingAttributes?.forEach(pendingAttribute => {
-    //   __SetAttribute(listElement, "update-list-info", pendingAttribute);
-    //   __FlushElementTree(listElement);
-    // });
     const updateListInfo = this.__toAttribute();
 
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -132,7 +96,6 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   }
 
   private oldChildNodes: SnapshotInstance[];
-  // private oldChildNodesSet: Set<SnapshotInstance>;
   private removeChild = new Set<SnapshotInstance>();
   private insertBefore = new Map<SnapshotInstance, SnapshotInstance[]>(); // insert V before K
   private appendChild = [] as SnapshotInstance[];
@@ -140,15 +103,9 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
 
   onInsertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void {
     if (newNode.parentNode) {
-      // if (!this.oldChildNodesSet.has(newNode)) {
-      //   this.__commitAndReset();
-      // }
       this.removeChild.add(newNode);
     }
     if (existingNode) {
-      // if (!this.oldChildNodesSet.has(existingNode)) {
-      //   this.__commitAndReset();
-      // }
       const newChildren = this.insertBefore.get(existingNode) ?? [];
       newChildren.push(newNode);
       this.insertBefore.set(existingNode, newChildren);
@@ -158,9 +115,6 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   }
 
   onRemoveChild(child: SnapshotInstance): void {
-    // if (!this.oldChildNodesSet.has(child)) {
-    //   this.__commitAndReset();
-    // }
     this.removeChild.add(child);
   }
 
@@ -254,12 +208,6 @@ export class ListUpdateInfoRecording implements ListUpdateInfo {
   }
 
   toJSON(): [ListOperations] {
-    // if (this.__pendingAttributes) {
-    //   return [...this.__pendingAttributes, this.__toAttribute()];
-    // } else {
-    //   return [this.__toAttribute()];
-    // }
-
     return [this.__toAttribute()] as const;
   }
 }

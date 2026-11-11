@@ -14,6 +14,7 @@ export default defineConfig({
         '**/*.test-d.*',
         '**/vitest.config.ts',
         '**/rslib.config.ts',
+        '**/rslib.*.config.ts',
         '**/*.bench.js',
         '**/*.bench.ts',
         '**/dist/**',
@@ -23,7 +24,9 @@ export default defineConfig({
         'examples/**',
         'packages/**/lib/**',
         'packages/**/test/**',
+        '**/__tests__/fixtures/**',
         'website/**',
+        'docs/**',
 
         'packages/react/transform/tests/__swc_snapshots__/**',
         '**/tests/__swc_snapshots__/**',
@@ -32,6 +35,34 @@ export default defineConfig({
         '**/eslint.config.js',
 
         'packages/tools/canary-release/**',
+        // Rspeedy core is covered by its Rstest project. Excluding this module
+        // prevents Codecov from merging that coverage with Vitest's unexecuted
+        // V8 report for the same source file.
+        'packages/rspeedy/core/src/plugins/rsdoctor.plugin.ts',
+        // These modules are covered by Rstest; an unexecuted V8 report would
+        // add uncovered lines when Codecov merges the two collectors.
+        'packages/rspeedy/plugin-react-alias/src/index.ts',
+        'packages/webpack/externals-loading-webpack-plugin/src/index.ts',
+        // These Rstest-owned templates are stringified into generated code and
+        // intentionally ignored by Istanbul. V8's untested-file sweep would
+        // otherwise invent zero-hit coverage for their original source.
+        'packages/webpack/chunk-loading-webpack-plugin/src/runtime/javascript/hmr-load-chunk.js',
+        'packages/webpack/chunk-loading-webpack-plugin/src/runtime/javascript/hmr-load-manifest.js',
+        'packages/webpack/react-webpack-plugin/src/Defines.ts',
+        'packages/webpack/react-webpack-plugin/src/DefinesInjection.ts',
+        'packages/webpack/react-webpack-plugin/src/MainThreadHMR.ts',
+        'packages/webpack/react-webpack-plugin/src/ReactWebpackPlugin.ts',
+        'packages/webpack/react-webpack-plugin/src/hmr/enabled.ts',
+        'packages/webpack/react-webpack-plugin/src/loaders/main-thread.ts',
+        'packages/webpack/react-webpack-plugin/src/runtime/hmr-background.ts',
+        'packages/webpack/react-webpack-plugin/src/runtime/hmr-load.ts',
+        'packages/webpack/react-webpack-plugin/src/runtime/hmr-main-thread.ts',
+        'packages/rspeedy/plugin-react/src/splitChunks.ts',
+        'packages/rspeedy/plugin-react/src/compileResult.ts',
+        'packages/rspeedy/plugin-react/src/pluginReactLynx.ts',
+        'packages/rspeedy/plugin-react/src/entry.ts',
+        'packages/webpack/runtime-wrapper-webpack-plugin/src/RuntimeWrapperWebpackPlugin.ts',
+        'packages/webpack/template-webpack-plugin/src/LynxTemplatePlugin.ts',
         'packages/rspeedy/plugin-lynx/**',
         'packages/web-platform/web-core-e2e/**',
         'packages/webpack/test-tools/**',
@@ -71,7 +102,9 @@ export default defineConfig({
       'examples/*/vitest.config.ts',
       'packages/react/*/vitest.config.ts',
       'packages/react/*/vitest.**.config.ts',
+      'packages/react/runtime/__test__/element-template/vitest.config.ts',
       'packages/rspeedy/*/vitest.config.ts',
+      'packages/web-platform/web-explorer/vitest.config.ts',
       'packages/testing-library/*/vitest.config.mts',
       'packages/testing-library/examples/*/vitest.config.ts',
       '!packages/testing-library/examples/react-compiler/vitest.config.ts',

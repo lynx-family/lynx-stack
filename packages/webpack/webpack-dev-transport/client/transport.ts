@@ -40,13 +40,11 @@ declare const lynx: {
  * It can be used in the
  * {@link https://webpack.js.org/configuration/dev-server/#websockettransport | `devServer.client.webSocketTransport`}
  * configuration of webpack.
- * It should be used with `LynxTransportServer`.
  *
  * @example
  * ```js
  * // webpack.config.js
  * import { createRequire } from 'node:module'
- * import { LynxTransportServer } from '@lynx-js/webpack-dev-transport'
  *
  * const require = createRequire(import.meta.url)
  * export default {
@@ -54,8 +52,6 @@ declare const lynx: {
  *     client: {
  *       webSocketTransport: require.resolve('@lynx-js/webpack-dev-transport/client')
  *     },
- *     allowedHosts: 'all',
- *     webSocketServer: LynxTransportServer
  *   }
  * }
  * ```
@@ -66,19 +62,19 @@ export class LynxTransportClient implements Client {
   /** @internal */
   static EventType = 'message';
 
-  /** {@inheritdoc Client.onOpen} */
+  /** {@inheritDoc Client.onOpen} */
   onOpen(callback: () => void): void {
     callback();
   }
 
-  /** {@inheritdoc Client.onClose} */
+  /** {@inheritDoc Client.onClose} */
 
   onClose(_callback: () => void): void {
     // webpack-dev-server will retry in the `callback`
     // but `onOpen` in Lynx will never fail.
   }
 
-  /** {@inheritdoc Client.onMessage} */
+  /** {@inheritDoc Client.onMessage} */
   onMessage(
     callback: (message: string) => void,
   ): void {

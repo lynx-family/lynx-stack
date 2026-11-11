@@ -10,8 +10,6 @@ import * as ReactLegacyReactRuntime from '@lynx-js/react/legacy-react-runtime';
 import * as ReactLepusAPIs from '@lynx-js/react/lepus';
 
 import {
-  RUNTIME_BACKEND_SNAPSHOT,
-  registerLazyRuntimeBackend,
   sExportsJSXDevRuntime,
   sExportsJSXRuntime,
   sExportsLegacyReactRuntime,
@@ -21,8 +19,6 @@ import {
   sExportsReactLepus,
   target,
 } from './target.js';
-
-registerLazyRuntimeBackend(RUNTIME_BACKEND_SNAPSHOT);
 
 Object.defineProperty(target, sExportsReact, {
   value: ReactAPIs,

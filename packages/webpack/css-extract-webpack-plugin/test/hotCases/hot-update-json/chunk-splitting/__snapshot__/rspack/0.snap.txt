@@ -14,10 +14,10 @@
 - Bundle: main3/template.js
 - Bundle: main4.js
 - Bundle: main4/template.js
-- Manifest: index.css.hot-update.json, size: 2470
-- Manifest: main2.css.hot-update.json, size: 2470
-- Manifest: main3.css.hot-update.json, size: 2470
-- Manifest: main4.css.hot-update.json, size: 2470
+- Manifest: index.css.hot-update.json, size: 2450
+- Manifest: main2.css.hot-update.json, size: 2450
+- Manifest: main3.css.hot-update.json, size: 2450
+- Manifest: main4.css.hot-update.json, size: 2450
 
 ## Manifest
 
@@ -49,15 +49,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -212,15 +211,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -375,15 +373,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {
@@ -538,15 +535,14 @@
         "enableNewIntersectionObserver": true,
         "enableNativeList": true,
         "enableNewSticky": true,
-        "flexBasisZeroPercent": true,
+        "enableFlexBasisZeroPercent": true,
         "enableGridPlacementShorthands": true,
         "syncXElementRegistry": true,
         "enableA11y": true,
         "enableAccessibilityElement": false,
         "enableCSSInheritance": false,
         "enableNewGesture": false,
-        "removeDescendantSelectorScope": false,
-        "debugMetadataUrl": ""
+        "removeDescendantSelectorScope": false
       }
     },
     "css": {

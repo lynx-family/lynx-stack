@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { sExportsReact, target } from './target';
+import { sExportsReact, target } from './target.js';
 
 export const {
   Children,
@@ -20,6 +20,7 @@ export const {
   createContext,
   createElement,
   createRef,
+  defineMainThreadObjectType,
   forwardRef,
   isValidElement,
   lazy,
@@ -42,6 +43,7 @@ export const {
   useGlobalPropsChanged,
   useLayoutEffect,
   useMainThreadRef,
+  useMainThreadObject,
   useMemo,
   useReducer,
   useRef,

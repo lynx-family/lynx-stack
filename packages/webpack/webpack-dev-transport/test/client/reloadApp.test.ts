@@ -47,6 +47,7 @@ describe('reloadApp', () => {
       expect(LynxDevtoolSetModule.invokeCdp).toHaveBeenCalledWith(
         'Page.reload',
         JSON.stringify({
+          id: 1,
           method: 'Page.reload',
           params: {
             ignoreCache: true,
@@ -71,6 +72,7 @@ describe('reloadApp', () => {
 
       expect(LynxDevToolSetModule.invokeCdp).toHaveBeenCalledWith(
         JSON.stringify({
+          id: 1,
           method: 'Page.reload',
           params: {
             ignoreCache: true,
@@ -148,6 +150,7 @@ describe('reloadApp', () => {
 
       expect(LynxDevToolSetModule.invokeCdp).toHaveBeenCalledWith(
         JSON.stringify({
+          id: 1,
           method: 'Page.reload',
           params: {
             ignoreCache: true,

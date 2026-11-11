@@ -5,6 +5,7 @@
 import { describe, expect, test } from '@rstest/core';
 
 import {
+  GenerationPostprocessError,
   GenerationUpstreamError,
   extractGenerationResult,
   finalizeResult,
@@ -123,3 +124,30 @@ describe('Mastra result finalization', () => {
     });
   });
 });
+
+test.each(
+  [
+    ['', { reasoningTokens: 10 }, 'other', 'reasoning but no final artifact'],
+    [
+      ' \n',
+      { outputTokens: { reasoning: 10 } },
+      'other',
+      'reasoning but no final artifact',
+    ],
+    ['', { reasoningTokens: 10 }, 'length', 'reached its token limit'],
+    ['partial artifact', { reasoningTokens: 10 }, 'other', 'Invalid artifact'],
+    ['', { reasoningTokens: 0 }, 'other', 'Invalid artifact'],
+    ['', undefined, 'other', 'Invalid artifact'],
+  ] as const,
+)(
+  'describes artifact failures without inferring truncation (%j, %j, %s)',
+  (text, usage, finishReason, message) => {
+    const cause = new Error('Invalid artifact');
+    const result = { text, usage, finishReason };
+    const error = new GenerationPostprocessError(cause, result);
+    expect(error.message).toContain(message);
+    if (message === 'Invalid artifact') expect(error.message).toBe(message);
+    expect(error.cause).toBe(cause);
+    expect(error.result).toBe(result);
+  },
+);

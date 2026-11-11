@@ -15,7 +15,7 @@ impl From<CoreConfig> for DefineDCEVisitorConfig {
   }
 }
 
-/// {@inheritdoc PluginReactLynxOptions.defineDCE}
+/// {@inheritDoc PluginReactLynxOptions.defineDCE}
 /// @public
 #[napi(object)]
 #[derive(Clone, Debug)]

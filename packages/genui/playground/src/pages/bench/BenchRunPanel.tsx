@@ -1,11 +1,15 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { DEFAULT_SCREENSHOT_SETTLE_MS } from './benchScreenshotDelay.js';
+
 export interface BenchRunPanelSettings {
   collectLiveRenderMetrics: boolean;
   judgeEnabled: boolean;
   repairEnabled: boolean;
   repeats: number;
+  uiJudgeModel?: string;
+  screenshotSettleMs?: number;
 }
 
 function clampNumber(value: number, min: number, max: number): number {
@@ -15,6 +19,7 @@ function clampNumber(value: number, min: number, max: number): number {
 
 export function BenchRunPanel(props: {
   locked: boolean;
+  modelOptions?: readonly { id: string; label: string }[];
   hasHtmlGroups?: boolean;
   needsScreenshotService?: boolean;
   onSettingsChange: (patch: Partial<BenchRunPanelSettings>) => void;
@@ -23,6 +28,11 @@ export function BenchRunPanel(props: {
   uiJudgeServerUrl: string;
   uiJudgeServerUrlValidationError?: string;
 }) {
+  const modelOptions = props.modelOptions ?? [];
+  const configuredJudgeModel = props.settings.uiJudgeModel;
+  const selectedJudgeModel = configuredJudgeModel ?? modelOptions[0]?.id ?? '';
+  const missingJudgeModel = configuredJudgeModel
+    && !modelOptions.some(model => model.id === configuredJudgeModel);
   return (
     <section className='benchPlanSection benchRunSection'>
       <div className='benchRunPanel'>
@@ -46,6 +56,29 @@ export function BenchRunPanel(props: {
           <div className='benchInlineConfigGrid'>
             <section className='benchInlineConfigGroup'>
               <h4>UI Judge</h4>
+              <label className='benchField'>
+                <span className='benchFieldLabel'>Judge model</span>
+                <select
+                  className='benchInput'
+                  value={selectedJudgeModel}
+                  disabled={props.locked || modelOptions.length === 0}
+                  onChange={(event) =>
+                    props.onSettingsChange({
+                      uiJudgeModel: event.target.value,
+                    })}
+                >
+                  {missingJudgeModel && (
+                    <option value={configuredJudgeModel} disabled>
+                      {configuredJudgeModel} (unavailable)
+                    </option>
+                  )}
+                  {modelOptions.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
               {props.needsScreenshotService !== false && (
                 <>
                   <label className='benchField'>
@@ -65,8 +98,8 @@ export function BenchRunPanel(props: {
                   </label>
                   <p className='benchFieldHint'>
                     Your browser connects to this service and uploads
-                    screenshots for scoring. The address is saved only in this
-                    browser.
+                    screenshots for scoring. The address is saved in this
+                    browser and included when sharing Bench parameters.
                   </p>
                   {props.uiJudgeServerUrlValidationError
                     ? (
@@ -77,11 +110,39 @@ export function BenchRunPanel(props: {
                     : null}
                 </>
               )}
+              <label className='benchField'>
+                <span className='benchFieldLabel'>
+                  Screenshot delay (ms)
+                </span>
+                <input
+                  className='benchInput'
+                  type='number'
+                  min={0}
+                  step={1}
+                  max={Number.MAX_SAFE_INTEGER}
+                  value={props.settings.screenshotSettleMs
+                    ?? DEFAULT_SCREENSHOT_SETTLE_MS}
+                  readOnly={props.locked}
+                  onChange={(event) =>
+                    props.onSettingsChange({
+                      screenshotSettleMs: clampNumber(
+                        Number(event.target.value),
+                        0,
+                        Number.MAX_SAFE_INTEGER,
+                      ),
+                    })}
+                />
+              </label>
+              <p className='benchFieldHint'>
+                Wait before capturing content. Default: 100 ms. Increase this
+                for content that loads asynchronously; 0 skips the extra wait.
+              </p>
               {props.hasHtmlGroups && (
                 <p className='benchFieldHint'>
-                  HTML uses your browser's screenshot capability. When UI Judge
-                  is on, Start run asks you to share this tab. Use desktop
-                  Chrome 132+ and keep this page open until the run finishes.
+                  HTML and ReactWeb use your browser's screenshot capability.
+                  When UI Judge is on, Start run asks you to share this tab. Use
+                  desktop Chrome 132+ and keep this page open until the run
+                  finishes.
                 </p>
               )}
             </section>

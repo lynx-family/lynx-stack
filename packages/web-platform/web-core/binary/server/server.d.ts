@@ -53,6 +53,27 @@ export class RawStyleInfo {
     push_rule(css_id: number, rule: Rule): void;
 }
 
+/**
+ *
+ * * The style sheets carried by the custom sections of a template.
+ * * Each custom section whose encoding is `CSS` is keyed by its section name.
+ *
+ */
+export class RawStyleInfoMap {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     *
+     *   * Sets the style info of the custom section identified by `name`.
+     *   * An existing style info with the same name is replaced.
+     *   * @param name - The name of the custom section.
+     *   * @param style_info - The style info of the custom section.
+     *
+     */
+    insert(name: string, style_info: RawStyleInfo): void;
+    constructor();
+}
+
 export class Rule {
     free(): void;
     [Symbol.dispose](): void;

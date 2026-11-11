@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { MastraResult, MastraStreamResult } from './types';
+import { readBenchTokenUsage } from './bench/usage.js';
+import type { MastraResult, MastraStreamResult } from './types.js';
 
 /** Stop protocol postprocessing while retaining the failed model's usage. */
 export class GenerationUpstreamError extends Error {
@@ -54,12 +55,17 @@ export class GenerationPostprocessError extends Error {
     },
   ) {
     const reason = cause instanceof Error ? cause.message : String(cause);
-    super(
-      result.finishReason === 'length'
-        ? `Model output reached its token limit before producing a valid final artifact: ${reason}`
-        : reason,
-      { cause },
-    );
+    let message = reason;
+    if (result.finishReason === 'length') {
+      message =
+        `Model output reached its token limit before producing a valid final artifact: ${reason}`;
+    } else if (
+      !result.text.trim()
+      && (readBenchTokenUsage(result.usage).reasoningTokens ?? 0) > 0
+    ) {
+      message = `Model returned reasoning but no final artifact: ${reason}`;
+    }
+    super(message, { cause });
     this.name = 'GenerationPostprocessError';
   }
 }
@@ -204,12 +210,29 @@ export async function extractGenerationResult(result: MastraResult): Promise<{
   usage: unknown;
   finishReason: unknown;
 }> {
+  // Raw Bench generation uses the streaming API to observe first text arrival.
+  // Drain it before reading completion getters, retaining the upstream failure evidence.
+  let streamedText = '';
+  if ('textStream' in result) {
+    try {
+      for await (
+        const chunk of toAsyncIterable(
+          (result as MastraStreamResult).textStream,
+        )
+      ) {
+        streamedText += chunk;
+      }
+    } catch (error) {
+      await finalizeResult(result);
+      throw error;
+    }
+  }
   const [text, metadata] = await Promise.all([
     extractText(result),
     finalizeResult(result),
   ]);
   return {
-    text,
+    text: text || streamedText,
     usage: metadata.usage,
     finishReason: metadata.finishReason,
   };

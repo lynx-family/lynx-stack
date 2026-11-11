@@ -1,0 +1,30 @@
+.OpenUIChatTextAreaGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.OpenUIChatTextAreaFrame {
+  display: flex;
+  flex-direction: column;
+  padding: 12rpx 18rpx;
+  background-color: var(--paper-clear, var(--openui-color-surface-strong));
+  border: 1rpx solid var(--line, var(--openui-color-border-input));
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+.OpenUIChatTextArea {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  font-size: 26rpx;
+  line-height: 40rpx;
+  color: var(--content, var(--openui-color-text));
+  background-color: transparent;
+}
+.OpenUIChatTextAreaInvalid {
+  border-color: var(--openui-color-error);
+}
+.OpenUIChatTextAreaError {
+  font-size: 22rpx;
+  color: var(--openui-color-error);
+}

@@ -25,28 +25,66 @@ interface HotEmitter {
   on(eventName: string, callback: (...args: unknown[]) => void): void;
 }
 
+interface HotUpdateCoordinator {
+  // `false` disables coordination when the host cannot load main-thread updates.
+  // biome-ignore lint/suspicious/noConfusingVoidType: Existing coordinators return Promise<void>; false is an optional opt-out.
+  prepare(hash: string): Promise<void | false>;
+  finish(hash: string): void;
+  stop(): void;
+}
+
 function startHotDevServer(
   webpackHot: WebpackHot,
   hotEmitter: HotEmitter,
   getCurrentHash: () => string,
+  coordinator?: HotUpdateCoordinator,
 ): void {
   let lastHash: string | undefined;
+  let checking = false;
+  let reloading = false;
+
+  const reload = () => {
+    if (reloading) return;
+    reloading = true;
+    coordinator?.stop();
+    reloadPage();
+  };
 
   const upToDate = () => (lastHash ?? '').includes(getCurrentHash());
 
   const check = () => {
-    webpackHot
-      .check(true)
+    if (checking || reloading) return;
+    checking = true;
+    Promise.resolve()
+      .then(() => coordinator?.prepare(getCurrentHash()))
+      .then((prepared) => {
+        if (prepared === false) coordinator = undefined;
+        const application = webpackHot.check(true);
+        if (!coordinator) return application;
+        let timer: ReturnType<typeof setTimeout>;
+        return Promise.race([
+          application,
+          new Promise<never>((_resolve, reject) => {
+            timer = setTimeout(() => {
+              reject(new Error('Background HMR application timed out'));
+            }, 10000);
+          }),
+        ]).finally(() => clearTimeout(timer));
+      })
       .then((updatedModules) => {
+        if (reloading) return;
         if (!updatedModules) {
           log('warning', '[HMR] Cannot find update. Need to do a full reload!');
           log(
             'warning',
             '[HMR] (Probably because of restarting the rspack-dev-server)',
           );
-          reloadPage();
+          reload();
           return;
         }
+
+        coordinator?.finish(getCurrentHash());
+        checking = false;
 
         if (!upToDate()) {
           check();
@@ -59,18 +97,20 @@ function startHotDevServer(
         }
       })
       .catch((err: unknown) => {
+        checking = false;
+        const error = err instanceof Error ? err : new Error(String(err));
         const status = webpackHot.status();
         // `abort` and `fail` are terminal: the session can never apply another
         // update, so reloading is the only way back.
-        if (status === 'abort' || status === 'fail') {
+        if (coordinator || status === 'abort' || status === 'fail') {
           log(
             'warning',
             '[HMR] Cannot apply update. Need to do a full reload!',
           );
-          log('warning', `[HMR] ${formatError(err)}`);
-          reloadPage();
+          log('warning', `[HMR] ${formatError(error)}`);
+          reload();
         } else {
-          log('warning', `[HMR] Update failed: ${formatError(err)}`);
+          log('warning', `[HMR] Update failed: ${formatError(error)}`);
         }
       });
   };
@@ -87,3 +127,4 @@ function startHotDevServer(
 }
 
 export { startHotDevServer };
+export type { HotUpdateCoordinator };

@@ -143,6 +143,153 @@ describe('local-only report routing', () => {
     await React.act(async () => button!.click());
   }
 
+  test.each([
+    {
+      protocol: 'a2ui',
+      messages: [{
+        updateDataModel: { surfaceId: 'main', value: { text: 'Saved output' } },
+      }],
+      text: 'Raw assistant response',
+      expected: JSON.stringify(
+        [{
+          updateDataModel: {
+            surfaceId: 'main',
+            value: { text: 'Saved output' },
+          },
+        }],
+        null,
+        2,
+      ),
+    },
+    {
+      protocol: 'a2ui',
+      messages: [],
+      text: 'Incomplete output from a failed run',
+      expected: 'Incomplete output from a failed run',
+    },
+    {
+      protocol: 'openui',
+      messages: [{ unrelated: true }],
+      text: 'root = Card(Text("Saved output"))\n',
+      expected: 'root = Card(Text("Saved output"))\n',
+    },
+    {
+      protocol: 'lynx-xml',
+      text: '<!doctype lynx>\n<lynx engine-version="4.2"></lynx>\n',
+      expected: '<!doctype lynx>\n<lynx engine-version="4.2"></lynx>\n',
+    },
+    {
+      protocol: 'html',
+      text: '<!doctype html>\n<html><body>Saved output</body></html>\n',
+      expected: '<!doctype html>\n<html><body>Saved output</body></html>\n',
+    },
+    {
+      protocol: undefined,
+      messages: [{ updateDataModel: { surfaceId: 'main', value: {} } }],
+      expected: JSON.stringify(
+        [{ updateDataModel: { surfaceId: 'main', value: {} } }],
+        null,
+        2,
+      ),
+    },
+  ])(
+    'copies the saved $protocol artifact from its own collapsed run',
+    async (artifact) => {
+      const fixture = reportFixture();
+      const report = {
+        ...fixture,
+        results: [
+          {
+            ...fixture.results[0]!,
+            protocol: artifact.protocol,
+            text: artifact.text,
+            messages: artifact.messages,
+          },
+          {
+            ...fixture.results[0]!,
+            id: 'second-run',
+            repeatIndex: 2,
+            protocol: 'html',
+            text: '<!doctype html><html>Second artifact</html>',
+          },
+        ],
+      };
+      window.localStorage.setItem(
+        BENCH_HISTORY_STORAGE_KEY,
+        JSON.stringify([historyEntry('local-entry', report)]),
+      );
+      const copy = rstest.spyOn(clipboard, 'copyToClipboard').mockResolvedValue(
+        true,
+      );
+      await mount(JOB_ID);
+      const buttons = container.querySelectorAll<HTMLButtonElement>(
+        '.publishedReportArtifactAction button',
+      );
+      expect(buttons).toHaveLength(2);
+      const disclosure = buttons[0]!.closest('details')!;
+      expect(disclosure.open).toBe(false);
+      await React.act(async () => buttons[0]!.click());
+      expect(copy).toHaveBeenLastCalledWith(artifact.expected);
+      expect(disclosure.open).toBe(false);
+      expect(disclosure.querySelector('[role="status"]')?.textContent).toBe(
+        'Copied.',
+      );
+      await React.act(async () => buttons[1]!.click());
+      expect(copy).toHaveBeenLastCalledWith(report.results[1]!.text);
+      expect(copy).toHaveBeenCalledTimes(2);
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
+  test('disables artifact copy when an older run has no saved output', async () => {
+    window.localStorage.setItem(
+      BENCH_HISTORY_STORAGE_KEY,
+      JSON.stringify([historyEntry('local-entry')]),
+    );
+    const copy = rstest.spyOn(clipboard, 'copyToClipboard');
+    await mount(JOB_ID);
+    const button = container.querySelector<HTMLButtonElement>(
+      '.publishedReportArtifactAction button',
+    )!;
+    expect(button.disabled).toBe(true);
+    expect(button.title).toBe('No artifact was saved for this run.');
+    await React.act(async () => button.click());
+    expect(copy).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  test('allows retrying an artifact copy after clipboard failure', async () => {
+    const fixture = reportFixture();
+    const report = {
+      ...fixture,
+      results: [{
+        ...fixture.results[0]!,
+        protocol: 'html',
+        text: '<!doctype html><html>Saved output</html>',
+      }],
+    };
+    window.localStorage.setItem(
+      BENCH_HISTORY_STORAGE_KEY,
+      JSON.stringify([historyEntry('local-entry', report)]),
+    );
+    const copy = rstest.spyOn(clipboard, 'copyToClipboard')
+      .mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await mount(JOB_ID);
+    await click('Copy artifact');
+    expect(
+      container.querySelector('.publishedReportArtifactAction [role="status"]')
+        ?.textContent,
+    )
+      .toContain('Copy failed');
+    await click('Copy artifact');
+    expect(
+      container.querySelector('.publishedReportArtifactAction [role="status"]')
+        ?.textContent,
+    )
+      .toBe('Copied.');
+    expect(copy).toHaveBeenCalledTimes(2);
+  });
+
   test('reads the selected cached record and its screenshot without a data URL or network request', async () => {
     const raw = JSON.stringify([historyEntry('local-entry')]);
     window.localStorage.setItem(BENCH_HISTORY_STORAGE_KEY, raw);

@@ -10,6 +10,7 @@ import { createGlobalProps } from './core/globalProps.js';
 import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
+import type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from './core/lynx-data-processors.js';
 import { __root } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
@@ -19,6 +20,8 @@ import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX
  * @public
+ *
+ * @group Types
  */
 export interface Root {
   /**
@@ -83,6 +86,8 @@ export interface Root {
  * ```
  *
  * @public
+ *
+ * @group Functions
  */
 export const root: Root = {
   render: (jsx: ReactNode): void => {
@@ -134,6 +139,8 @@ export const root: Root = {
  * ```
  *
  * @public
+ *
+ * @group Functions
  */
 export function markFirstScreenSyncReady(): void {
   if (__FIRST_SCREEN_SYNC_TIMING__ !== 'manual') {
@@ -182,6 +189,8 @@ const _InitData = /* @__PURE__ */ factory<InitData>(
  * ```
  *
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _InitData.Provider();
@@ -190,6 +199,8 @@ export const InitDataProvider: FC<{ children?: ReactNode | undefined }> = /* @__
  * This should be used with {@link InitDataProvider}
  * @group Components
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Consumer();
@@ -207,7 +218,10 @@ export const InitDataConsumer: Consumer<InitData> = /* @__PURE__ */ _InitData.Co
  * }
  * ```
  *
+ * @function
  * @public
+ *
+ * @group Hooks
  */
 export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
 /**
@@ -221,7 +235,10 @@ export const useInitData: () => InitData = /* @__PURE__ */ _InitData.use();
  *   })
  * }
  * ```
+ * @function
  * @public
+ *
+ * @group Hooks
  */
 export const useInitDataChanged: (callback: (data: InitData) => void) => void = /* @__PURE__ */ _InitData.useChanged();
 
@@ -235,11 +252,14 @@ const _GlobalProps = /* @__PURE__ */ createGlobalProps<GlobalProps>({
 });
 
 /**
- * The {@link https://react.dev/reference/react/createContext#provider | Provider} Component that provide `lynx.__globalProps`,
- * you must wrap your JSX inside it
+ * The {@link https://react.dev/reference/react/createContext#provider | Provider} Component that provide `lynx.__globalProps`.
+ * Only needed with `globalPropsMode: 'event'`; in the default `'reactive'` mode it renders its children directly
+ * and updates come from a full re-render.
  * @group Components
  *
  * @example
+ *
+ * With `globalPropsMode: 'event'`:
  *
  * ```ts
  * import { root } from "@lynx-js/react"
@@ -259,22 +279,28 @@ const _GlobalProps = /* @__PURE__ */ createGlobalProps<GlobalProps>({
  * ```
  *
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const GlobalPropsProvider: FC<{ children?: ReactNode | undefined }> = /* @__PURE__ */ _GlobalProps.Provider();
 
 /**
  * The {@link https://react.dev/reference/react/createContext#consumer | Consumer} Component that provide `lynx.__globalProps`.
- * This should be used with {@link GlobalPropsProvider}
+ * Only needed with `globalPropsMode: 'event'`, together with {@link GlobalPropsProvider}; in the default `'reactive'` mode
+ * it calls `children` with `lynx.__globalProps` directly and updates come from a full re-render.
  * @group Components
  * @public
+ *
+ * @function
  */
 // @ts-expect-error make preact and react types work
 export const GlobalPropsConsumer: Consumer<GlobalProps> = /* @__PURE__ */ _GlobalProps.Consumer();
 
 /**
  * A React Hooks for you to get `lynx.__globalProps`.
- * If `lynx.__globalProps` is changed, a re-render will be triggered automatically.
+ * With `globalPropsMode: 'event'`, the component re-renders when `lynx.__globalProps` changes;
+ * in the default `'reactive'` mode, updates arrive through a full re-render.
  *
  * @example
  *
@@ -286,7 +312,10 @@ export const GlobalPropsConsumer: Consumer<GlobalProps> = /* @__PURE__ */ _Globa
  * }
  * ```
  *
+ * @function
  * @public
+ *
+ * @group Hooks
  */
 export const useGlobalProps: () => GlobalProps = /* @__PURE__ */ _GlobalProps.use();
 
@@ -302,128 +331,16 @@ export const useGlobalProps: () => GlobalProps = /* @__PURE__ */ _GlobalProps.us
  *   })
  * }
  * ```
+ * @function
  * @public
+ *
+ * @group Hooks
  */
 export const useGlobalPropsChanged: (callback: (data: GlobalProps) => void) => void = /* @__PURE__ */ _GlobalProps
   .useChanged();
 
-/**
- * The interface you can extends so that the `defaultDataProcessor` parameter can be customized
- *
- * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
- *
- * @public
- */
-export interface InitDataRaw {}
-/**
- * The interface you can extends so that the `defaultDataProcessor` returning value can be customized
- *
- * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
- *
- * @public
- */
-export interface InitData {}
-
+export type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw };
 export { withInitDataInState };
-
-/**
- * The data processors that registered with {@link Lynx.registerDataProcessors}.
- *
- * @example
- *
- * Extending `dataProcessors` interface
- *
- * ```ts
- * import type { DataProcessors as WellKnownDataProcessors } from '@lynx-js/react';
- *
- * declare module '@lynx-js/react' {
- *   interface DataProcessors extends WellKnownDataProcessors {
- *     foo(bar: string): number;
- *   }
- * }
- * ```
- *
- * Then you can use `lynx.registerDataProcessors` with types.
- *
- * ```js
- * lynx.registerDataProcessors({
- *   dataProcessors: {
- *     foo(bar) {
- *       return 1;
- *     }
- *   }
- * })
- * ```
- *
- * @public
- */
-export interface DataProcessors {
-  /**
-   * Optional processor to override screen metrics used by the app
-   *
-   * @param metrics - The physical screen dimensions in pixels
-   *
-   * @returns New screen dimensions to be used by the app
-   *
-   * @example
-   *
-   * ```ts
-   * lynx.registerDataProcessors({
-   *   dataProcessors: {
-   *     getScreenMetricsOverride: (metrics) => {
-   *       // Force a specific aspect ratio
-   *       return {
-   *         width: metrics.width,
-   *         height: metrics.width * (16/9)
-   *       };
-   *     }
-   *   }
-   * });
-   * ```
-   */
-  getScreenMetricsOverride?(metrics: {
-    /**
-     * The physical pixel width of the screen
-     */
-    width: number;
-    /**
-     * The physical pixel height of the screen
-     */
-    height: number;
-  }): { width: number; height: number };
-
-  /**
-   * Custom unknown data processors.
-   *
-   * @remarks
-   *
-   * You may extends the `DataProcessors` interface for better TypeScript types. See {@link DataProcessors}.
-   */
-  [processorName: string]: (...args: any[]) => any;
-}
-
-/**
- * Definition of DataProcessor(s)
- * @public
- */
-export interface DataProcessorDefinition {
-  /**
-   * You can custom input and output type of `defaultDataProcessor` by extends {@link InitDataRaw} and {@link InitData}
-   *
-   * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
-   *
-   * @param rawInitData - initData passed from native code
-   * @returns
-   * @public
-   */
-  defaultDataProcessor?: (rawInitData: InitDataRaw) => InitData;
-  /**
-   * Should be used with `lynx.registerDataProcessors`. See more examples at {@link Lynx.registerDataProcessors}.
-   *
-   * @public
-   */
-  dataProcessors?: DataProcessors;
-}
 
 /**
  * APIs under `lynx` global variable that added by ReactLynx.
@@ -437,6 +354,8 @@ export interface DataProcessorDefinition {
  * ```
  *
  * @public
+ *
+ * @group Types
  */
 export interface Lynx {
   /**
@@ -523,7 +442,7 @@ export interface Lynx {
    * they can achieve it by extends interface `InitDataRaw` and `InitData`.
    *
    * ```ts
-   * import { root, useInitData } from "@lynx-js/react"
+   * import { useInitData } from "@lynx-js/react"
    *
    * interface AnotherExistingInterface {
    *   someAnotherPropertyFromExistingInterface: number
@@ -535,7 +454,7 @@ export interface Lynx {
    *   }
    * }
    *
-   * root.registerDataProcessors({
+   * lynx.registerDataProcessors({
    *   defaultDataProcessor: () => {
    *     return {
    *       someCustomProperty: 'value', // will be typed
@@ -561,3 +480,9 @@ export { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListe
 export { runOnBackground } from './core/background-function/run-on-background.js';
 export { runOnMainThread } from './snapshot/worklet/call/runOnMainThread.js';
 export { MainThreadRef, useMainThreadRef } from './core/main-thread-ref.js';
+export { defineMainThreadObjectType, useMainThreadObject } from './core/main-thread-object.js';
+export type {
+  MainThreadObjectHandle,
+  MainThreadObjectType,
+  MainThreadObjectTypeDefinition,
+} from './core/main-thread-object.js';

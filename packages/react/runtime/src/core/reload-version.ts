@@ -2,12 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-let reloadVersion = 0;
+import { cardLifetime } from './card-lifetime.js';
+
+const state = /*#__PURE__*/ cardLifetime('reloadVersion', () => ({ value: 0 }));
 
 export function getReloadVersion(): number {
-  return reloadVersion;
+  return state.value;
 }
 
 export function increaseReloadVersion(): number {
-  return ++reloadVersion;
+  return ++state.value;
 }

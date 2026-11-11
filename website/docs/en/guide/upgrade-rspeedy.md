@@ -1,23 +1,14 @@
+import { PackageManagerTabs } from '@theme';
+
 # Upgrade Rspeedy
 
 This section explains how to upgrade the project's Rspeedy-related dependencies.
-
-## Get CHANGELOG
-
-The CHANGELOG of each packages is published within the npm package.
-
-We also make the CHANGELOGs available at this website. See:
-
-- [`@lynx-js/react`](/changelog/lynx-js--react)
-- [`@lynx-js/rspeedy`](/changelog/lynx-js--rspeedy)
-- [`@lynx-js/react-rsbuild-plugin`](/changelog/lynx-js--react-rsbuild-plugin)
-- [`@lynx-js/qrcode-rsbuild-plugin`](/changelog/lynx-js--qrcode-rsbuild-plugin)
 
 ## Use `upgrade-rspeedy`
 
 The Rspeedy project includes several NPM packages with `peerDependencies` constraints. Unmatched `peerDependencies` can lead to compilation and runtime errors.
 
-We recommend using the [`upgrade-rspeedy`](https://npmjs.org/package/upgrade-rspeedy) tool to upgrade the Rspeedy version.
+We recommend using the [`upgrade-rspeedy`](https://www.npmjs.com/package/upgrade-rspeedy) tool to upgrade the Rspeedy version.
 
 :::info
 The `upgrade-rspeedy` command will not install dependencies for you.
@@ -29,18 +20,31 @@ Please remember to install the dependencies with your package manager.
 
 To upgrade `@lynx-js/rspeedy` and its plugins to the latest version, use the following command in your project:
 
-```bash
-npx upgrade-rspeedy@latest
-```
+<PackageManagerTabs
+command={{
+npm: `npx upgrade-rspeedy@latest`,
+pnpm: `pnpm dlx upgrade-rspeedy@latest`,
+bun: `bunx upgrade-rspeedy@latest`,
+yarn: `yarn dlx upgrade-rspeedy@latest`,
+}}
+/>
+
+> For better performance when using **pnpm** in a monolithic repository, use **pnpm dlx** instead of **npx**.
 
 ### Upgrade to a specific version
 
 To upgrade `@lynx-js/rspeedy` and its plugins to a specific version, use the following command in your project:
 
-```bash
-# Replace the `0.8.3` with the one you would like to install.
-npx upgrade-rspeedy@0.8.3
-```
+<PackageManagerTabs
+command={{
+npm: `npx upgrade-rspeedy@0.15.0`,
+pnpm: `pnpm dlx upgrade-rspeedy@0.15.0`,
+bun: `bunx upgrade-rspeedy@0.15.0`,
+yarn: `yarn dlx upgrade-rspeedy@0.15.0`,
+}}
+/>
+
+Replace the `0.15.0` with the one you would like to install.
 
 ### Upgrade to a canary version
 
@@ -53,6 +57,6 @@ Please note that the canary version of Rspeedy is released solely for testing pu
 To upgrade `@lynx-js/rspeedy` and its plugins to a canary version before release, use the following command:
 
 ```bash
-# Replace the `0.3.0-next-20240823-28a1e571` with your canary version.
-pnpm dlx upgrade-rspeedy-canary@0.8.2-canary-20250309-870106fc
+# Replace the `0.15.1-canary-20260624-897063d1` with your canary version.
+pnpm dlx upgrade-rspeedy-canary@0.15.1-canary-20260624-897063d1
 ```

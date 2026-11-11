@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { CompatibleRsdoctorOptions } from '@rsdoctor/core';
 import type { CompressOptions } from '@rsbuild/core';
 import type { CreateRsbuildOptions } from '@rsbuild/core';
 import type { DataUriLimit } from '@rsbuild/core';
@@ -13,13 +14,11 @@ import { logger } from '@rsbuild/core';
 import type { PerformanceConfig } from '@rsbuild/core';
 import type { ProxyConfig } from '@rsbuild/core';
 import type { RsbuildConfig } from '@rsbuild/core';
-import type { RsbuildEntry } from '@rsbuild/core';
 import type { RsbuildInstance } from '@rsbuild/core';
 import { RsbuildPlugin } from '@rsbuild/core';
 import { RsbuildPluginAPI } from '@rsbuild/core';
 import type { RsbuildPlugins } from '@rsbuild/core';
 import { version as rsbuildVersion } from '@rsbuild/core';
-import type { RsdoctorRspackPluginOptions as RsdoctorRspackPluginOptions_2 } from '@rsdoctor/core';
 import { Rspack } from '@rsbuild/core';
 import { rspack } from '@rsbuild/core';
 import type { ServerConfig } from '@rsbuild/core';
@@ -196,7 +195,6 @@ export interface EntryDescription {
 export interface ExposedAPI {
     config: Config;
     debug: (message: string | (() => string)) => void;
-    entries?: RsbuildEntry;
     exit: (code?: number) => Promise<void> | void;
     logger: typeof logger;
     version: string;
@@ -259,6 +257,7 @@ export interface Output {
     inlineScripts?: InlineChunkConfig | undefined;
     legalComments?: 'none' | 'inline' | 'linked' | undefined;
     minify?: Minify | boolean | undefined;
+    polyfill?: 'off' | 'usage' | 'entry' | undefined;
     sourceMap?: boolean | SourceMap | undefined;
 }
 
@@ -288,13 +287,14 @@ export { RsbuildPluginAPI }
 export { rsbuildVersion }
 
 // @public
-export interface RsdoctorRspackPluginOptions extends Omit<RsdoctorRspackPluginOptions_2<[]>, 'linter'> {
+export interface RsdoctorRspackPluginOptions extends Omit<CompatibleRsdoctorOptions<[]>, 'linter' | 'sdkInstance'> {
     // (undocumented)
     linter?: {
         rules?: Record<string, unknown>;
         level?: 'Ignore' | 'Warn' | 'Error';
         extends?: unknown[];
     };
+    sdkInstance?: object;
 }
 
 export { Rspack }

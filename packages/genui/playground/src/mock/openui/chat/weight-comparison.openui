@@ -1,0 +1,3 @@
+root = Card([verdict, table])
+verdict = TextContent("A为100克，B为150克；重视轻便可选A。数据来自用户输入。")
+table = Table([Col("选项", ["A", "B"]), Col("重量（克）", [100, 150], "number")])

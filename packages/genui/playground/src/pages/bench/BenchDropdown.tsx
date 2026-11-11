@@ -18,8 +18,7 @@ export function BenchDropdown<T extends string>(props: {
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const selected = props.options.find((option) => option.value === props.value)
-    ?? props.options[0];
+  const selected = props.options.find((option) => option.value === props.value);
 
   useEffect(() => {
     if (!open) return;

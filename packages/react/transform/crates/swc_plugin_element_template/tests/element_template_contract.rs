@@ -232,7 +232,7 @@ fn should_emit_direct_event_attr_plan_for_lepus_target() {
     "direct event slots should register a sparse ET attr plan",
   );
   assert!(
-    code.contains("attributeSlots={[1,1]}"),
+    code.contains(",void0,[1,1],void0,void0)"),
     "LEPUS target should keep event markers in attributeSlots before runtime preparation, got: {code}"
   );
 }
@@ -304,8 +304,121 @@ fn should_emit_direct_main_thread_ref_attr_plan_for_lepus_target() {
     "direct main-thread ref slots should register an ET MTRef attr plan",
   );
   assert!(
-    code.contains("attributeSlots={[mainThreadRef]}"),
+    code.contains(",void0,[mainThreadRef],void0,void0)"),
     "LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
+  );
+}
+
+#[test]
+fn should_emit_direct_gesture_attr_plan_for_both_targets() {
+  use swc_plugins_shared::target::TransformTarget;
+
+  for target in [TransformTarget::JS, TransformTarget::LEPUS] {
+    let (code, template) = first_user_template_json_with_code(
+      r#"<view main-thread:gesture={composedGesture} />"#,
+      JSXTransformerConfig {
+        target,
+        ..element_template_config()
+      },
+    );
+    let code = without_whitespace(&code);
+
+    assert_attr_plan_assignment(
+      &code,
+      "0,ReactLynxInternal.adaptGestureAttrSlot",
+      "direct Gesture should use the same ET adapter on both targets",
+    );
+    let raw_value_transport = if target == TransformTarget::JS {
+      "attributeSlots={[composedGesture]}"
+    } else {
+      ",void0,[composedGesture],void0,void0)"
+    };
+    assert!(
+      code.contains(raw_value_transport),
+      "Gesture composition must remain a raw runtime adapter input, got: {code}"
+    );
+    assert_eq!(
+      template["attributesArray"][0],
+      serde_json::json!({
+        "kind": "slot",
+        "key": "main-thread:gesture",
+        "attrSlotIndex": 0.0,
+      }),
+      "Native must receive the full Gesture namespace key"
+    );
+  }
+}
+
+#[test]
+fn should_keep_gesture_targets_inside_one_compiled_template() {
+  use swc_plugins_shared::target::TransformTarget;
+
+  for target in [TransformTarget::JS, TransformTarget::LEPUS] {
+    let (templates, code) = transform_fixture(
+      r#"
+        <view id={rootId} main-thread:gesture={rootGesture}>
+          <text main-thread:gesture={textGesture}>Drag</text>
+          <view id={childId} main-thread:gesture={childGesture} />
+        </view>
+      "#,
+      JSXTransformerConfig {
+        target,
+        ..element_template_config()
+      },
+    );
+    let user_templates = templates
+      .iter()
+      .filter(|template| template.template_id != BUILTIN_RAW_TEXT_TEMPLATE_ID)
+      .collect::<Vec<_>>();
+    assert_eq!(
+      user_templates.len(),
+      1,
+      "Gesture targets must not split the compiled tree or add wrappers"
+    );
+    let template = &user_templates[0].compiled_template;
+    let code = without_whitespace(&code);
+    assert_attr_plan_assignment(
+      &code,
+      "1,ReactLynxInternal.adaptGestureAttrSlot,2,ReactLynxInternal.adaptGestureAttrSlot,4,ReactLynxInternal.adaptGestureAttrSlot",
+      "Gesture adapters must retain the slot identity of each target",
+    );
+    assert!(
+      code.contains("[rootId,rootGesture,textGesture,childId,childGesture]"),
+      "runtime Gesture values must follow descriptor traversal order, got: {code}"
+    );
+    for (node, slot_index) in [
+      (template, 1.0),
+      (&template["children"][0], 2.0),
+      (&template["children"][1], 4.0),
+    ] {
+      assert!(
+        node["attributesArray"]
+          .as_array()
+          .expect("target attributes")
+          .iter()
+          .any(|attr| *attr
+            == serde_json::json!({
+              "kind": "slot",
+              "key": "main-thread:gesture",
+              "attrSlotIndex": slot_index,
+            })),
+        "Gesture slot {slot_index} must remain on its declared node: {template:?}"
+      );
+    }
+    assert_eq!(template["children"][0]["type"], "text");
+    assert_eq!(template["children"][1]["type"], "view");
+  }
+}
+
+#[test]
+fn should_only_adapt_direct_gesture_in_main_thread_namespace() {
+  let (code, _) = first_user_template_json_with_code(
+    r#"<view gesture={ordinaryValue} other:gesture={namespacedValue} />"#,
+    element_template_config(),
+  );
+  assert!(
+    !code.contains("adaptGestureAttrSlot"),
+    "ordinary and unrelated namespaced attributes must not become Gesture bindings: {code}"
   );
 }
 
@@ -608,7 +721,7 @@ fn should_keep_static_attribute_values_out_of_et_attribute_slots() {
   assert_eq!(attr_by_key("class")["attrSlotIndex"].as_f64(), Some(1.0));
   let code = without_whitespace(&code);
   assert!(
-    code.contains("attributeSlots={[1e400,cls]}"),
+    code.contains(",void0,[1e400,cls],void0,void0,true)"),
     "overflowed numeric literals should stay observable via ET attribute slots, got: {code}"
   );
 }
@@ -642,11 +755,11 @@ fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
   assert_eq!(recyclable["value"].as_bool(), Some(true));
   let code = without_whitespace(&code);
   assert!(
-    code.contains("attributeSlots={[itemKey]}"),
+    code.contains(",void0,[itemKey],void0,"),
     "legacy list platform info must not consume ET attribute slots, got: {code}"
   );
   assert!(
-    code.contains("__listItemPlatformInfo={{\"item-key\":itemKey,\"recyclable\":true}}"),
+    code.contains(",{\"item-key\":itemKey,\"recyclable\":true})"),
     "list item platform info should be available as an ET runtime-only carrier, got: {code}"
   );
 }
@@ -688,8 +801,8 @@ fn should_lower_exact_list_as_typed_runtime_host() {
     "ET list output should expose exact list, attributes, and $0 logical children, got: {code}"
   );
   assert!(
-    code.contains("__listItemPlatformInfo={{\"item-key\":firstKey,\"full-span\":true}}")
-      && code.contains("__listItemPlatformInfo={{\"item-key\":secondKey,\"recyclable\":true}}"),
+    code.contains(",{\"item-key\":firstKey,\"full-span\":true})")
+      && code.contains(",{\"item-key\":secondKey,\"recyclable\":true})"),
     "list item roots should carry platform info beside compiled ET roots, got: {code}"
   );
 }
@@ -756,7 +869,7 @@ fn should_keep_main_thread_attr_descriptor_keys_for_namespaced_attrs() {
     "main-thread:ref must use the ET MTRef adapter, got: {code}"
   );
   assert!(
-    code.contains("attributeSlots={[handleTap,viewRef]}"),
+    code.contains(",void0,[handleTap,viewRef],void0,"),
     "default LEPUS target should keep raw main-thread refs in attributeSlots before runtime preparation, got: {code}"
   );
 
@@ -927,4 +1040,90 @@ fn should_preserve_user_wrapper_elements_as_template_nodes() {
 
   assert_eq!(children[1]["kind"], "childSlot");
   assert_eq!(children[1]["elementSlotIndex"].as_f64(), Some(0.0));
+}
+
+#[test]
+fn ordered_child_slots_are_lepus_only_and_preserve_template_identity() {
+  use swc_plugins_shared::target::TransformTarget;
+
+  let input = r#"<view key={key()} id={attr()}><view>{first()}</view><text>static</text><view>{second()}</view></view>"#;
+  let mut expected_templates = None;
+  for target in [
+    TransformTarget::LEPUS,
+    TransformTarget::JS,
+    TransformTarget::MIXED,
+  ] {
+    let (templates, code) = transform_fixture(
+      input,
+      JSXTransformerConfig {
+        target,
+        ..element_template_config()
+      },
+    );
+    let templates = templates
+      .into_iter()
+      .map(|template| {
+        (
+          template.template_id,
+          serde_json::to_value(template.compiled_template).unwrap(),
+        )
+      })
+      .collect::<Vec<_>>();
+    if let Some(expected) = &expected_templates {
+      assert_eq!(&templates, expected);
+    } else {
+      expected_templates = Some(templates);
+    }
+    let code = without_whitespace(&code);
+    if target == TransformTarget::LEPUS {
+      assert!(code.contains(",[first(),second()],void0,true)"), "{code}");
+      assert!(!code.contains("$0="), "{code}");
+    } else {
+      assert!(code.contains("$0={first()}$1={second()}"), "{code}");
+      assert!(!code.contains("slotChildren="), "{code}");
+      assert!(!code.contains(".__etHost("), "{code}");
+    }
+    let positions = ["key()", "attr()", "first()", "second()"].map(|expr| {
+      assert_eq!(code.matches(expr).count(), 1, "{code}");
+      code.find(expr).unwrap()
+    });
+    assert!(positions.windows(2).all(|pair| pair[0] < pair[1]), "{code}");
+  }
+}
+
+#[test]
+fn should_specialize_only_adapter_free_lepus_hosts_without_list_item_metadata() {
+  use swc_plugins_shared::target::TransformTarget;
+  for (input, plain) in [
+    ("<view id={id} />", true),
+    ("<view><Child /></view>", true),
+    ("<view bindtap={onTap} />", false),
+    ("<view ref={ref} />", false),
+    ("<view main-thread:ref={ref} />", false),
+    ("<view main-thread:bindtap={onTap} />", false),
+    ("<view {...props} />", false),
+    ("<list-item item-key={key} />", false),
+  ] {
+    for target in [
+      TransformTarget::LEPUS,
+      TransformTarget::JS,
+      TransformTarget::MIXED,
+    ] {
+      let (_, code) = transform_fixture(
+        input,
+        JSXTransformerConfig {
+          target,
+          ..element_template_config()
+        },
+      );
+      assert_eq!(
+        without_whitespace(&code).contains(",void0,true)"),
+        plain && target == TransformTarget::LEPUS,
+        "{input}: {code}"
+      );
+      if target == TransformTarget::LEPUS && !plain {
+        assert!(code.contains(".__etHost("), "{input}: {code}");
+      }
+    }
+  }
 }

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 import {
   SliderIndicator,
@@ -13,6 +13,7 @@ import {
 } from '@lynx-js/lynx-ui';
 import { useEffect, useRef, useState } from '@lynx-js/react';
 
+import { Slider as SliderDefinition } from './definition.js';
 import {
   useFormName,
   useGetFieldValue,
@@ -20,8 +21,7 @@ import {
   useSetFieldValue,
   useTriggerAction,
 } from '../../core/context.jsx';
-import { defineComponent } from '../../core/library.jsx';
-import { actionPropSchema } from '../Action/index.jsx';
+import type { DefinedComponent } from '../../core/library.jsx';
 
 import '../../../styles/catalog/Slider.css';
 
@@ -33,17 +33,7 @@ const OPEN_URL_ACTION = String(BuiltinActionType.OpenUrl);
 const DEFAULT_MIN = 0;
 const DEFAULT_MAX = 100;
 
-const sliderPropsSchema = z.object({
-  label: z.string().optional(),
-  min: z.number().optional(),
-  max: z.number().optional(),
-  value: z.number().optional(),
-  step: z.number().optional(),
-  action: actionPropSchema.optional(),
-  name: z.string().optional(),
-});
-
-type SliderProps = z.infer<typeof sliderPropsSchema>;
+type SliderProps = z.infer<typeof SliderDefinition.props>;
 
 function toFiniteNumber(value: unknown, fallback: number): number {
   if (typeof value === 'number') return value;
@@ -180,10 +170,7 @@ function SliderRenderer({ props }: { props: SliderProps }) {
   );
 }
 
-export const Slider = defineComponent({
-  name: 'Slider',
-  props: sliderPropsSchema,
-  description:
-    'Continuous-value slider. Visual state updates locally during drag; the action fires for the LLM to persist the change.',
+export const Slider: DefinedComponent<typeof SliderDefinition.props> = {
+  ...SliderDefinition,
   component: SliderRenderer,
-});
+};

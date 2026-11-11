@@ -101,3 +101,26 @@ test('bounds malformed configuration and cyclic error causes', () => {
   );
   expect(resolveBenchRetryDelay(error, 2, { retryDelayMs: -1 })).toBe(0);
 });
+
+test('allows Judge RPM backoff without changing transport retries or provider hints', () => {
+  const options = { rateLimitDelayMs: 60_000 };
+  expect(resolveBenchRetryDelay({ statusCode: 429 }, 1, options)).toBe(60_000);
+  expect(resolveBenchRetryDelay({ statusCode: 503 }, 1, options)).toBe(1_000);
+  expect(resolveBenchRetryDelay({ statusCode: 429 }, 1)).toBe(1_000);
+  expect(resolveBenchRetryDelay(
+    {
+      statusCode: 429,
+      responseHeaders: { 'Retry-After': '3' },
+    },
+    1,
+    options,
+  )).toBe(3_000);
+  expect(resolveBenchRetryDelay(
+    {
+      statusCode: 429,
+      responseHeaders: { 'Retry-After': '61' },
+    },
+    1,
+    options,
+  )).toBeUndefined();
+});

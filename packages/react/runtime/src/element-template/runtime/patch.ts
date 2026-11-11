@@ -16,6 +16,8 @@ import {
 } from './list/list.js';
 import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { insertElementTemplateSubtree } from './template/handle.js';
+import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
+import type { MTEventNativeWrapper } from './template/main-thread-event-ctx.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
@@ -41,11 +43,18 @@ import type {
 import {
   deleteMainThreadDynamicAttrStateForSubtree,
   initializeMainThreadDynamicAttrSlots,
+  isSpreadDynamicAttrSlot,
   prepareMainThreadDynamicAttrSlotsForNative,
+  prepareSpreadAttrSlotForNative,
+  reconcileUnhydratedSpreadMTRefSlots,
+  updateGestureAttrSlot,
   updateMainThreadEventAttrSlot,
   updateMainThreadRefAttrSlot,
+  updateSpreadAttrSlot,
 } from './template/main-thread-dynamic-attr-state.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
+import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
+import type { GestureSlotValue } from '../prop-adapters/gesture.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -103,6 +112,7 @@ export function applyElementTemplateUpdateCommands(
             handleId,
             templateType,
             attributeSlots,
+            true,
           );
         }
         break;
@@ -126,7 +136,29 @@ export function applyElementTemplateUpdateCommands(
             break;
           }
         }
+        if (isSpreadDynamicAttrSlot(targetId, attrSlotIndex)) {
+          const nativeValue = prepareSpreadAttrSlotForNative(value);
+          __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, nativeValue);
+          updateSpreadAttrSlot(targetId, attrSlotIndex, value, nativeRef, isHydration);
+          break;
+        }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
+        break;
+      }
+
+      case ElementTemplateUpdateOps.setGesture: {
+        const targetId = stream[i++] as number;
+        const attrSlotIndex = stream[i++] as number;
+        const value = stream[i++] as SerializableValue | null;
+        const nativeRef = resolveTargetHandle(targetId, 'target');
+        if (!nativeRef) {
+          continue;
+        }
+        if (value != null) {
+          retainGestureCallbacks(value as unknown as GestureSlotValue);
+        }
+        __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
+        updateGestureAttrSlot(targetId, attrSlotIndex, value, isHydration);
         break;
       }
 
@@ -137,6 +169,9 @@ export function applyElementTemplateUpdateCommands(
         const nativeRef = resolveTargetHandle(targetId, 'target');
         if (!nativeRef) {
           continue;
+        }
+        if (value != null) {
+          retainMainThreadBackgroundFunctionCtx((value as unknown as MTEventNativeWrapper).value);
         }
         __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, value);
         updateMainThreadEventAttrSlot(targetId, attrSlotIndex, value, isHydration);
@@ -322,6 +357,9 @@ export function applyElementTemplateUpdateCommands(
         }
       }
     }
+  }
+  if (isHydration) {
+    reconcileUnhydratedSpreadMTRefSlots();
   }
   flushPendingListUpdates();
 }

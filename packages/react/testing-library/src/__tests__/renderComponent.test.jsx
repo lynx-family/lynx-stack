@@ -97,13 +97,6 @@ test('setState generates insertBefore operation', async () => {
       {
         "data": "{"patchList":[{"id":3,"snapshotPatch":[1,-2,-7,-5,0]}]}",
         "patchOptions": {
-          "pipelineOptions": {
-            "dsl": "reactLynx",
-            "needTimestamps": true,
-            "pipelineID": "pipelineID",
-            "pipelineOrigin": "reactLynxHydrate",
-            "stage": "hydrate",
-          },
           "reloadVersion": 0,
         },
       },
@@ -268,13 +261,6 @@ test('setState triggered renderComponent should have correct slotIndex', async (
       {
         "data": "{"patchList":[{"id":3,"snapshotPatch":[2,-2,-4,0,"__snapshot_289e0_test_5",6,0,null,7,3,7,0,1,1,6,7,null,0,1,-2,6,null,1]}]}",
         "patchOptions": {
-          "pipelineOptions": {
-            "dsl": "reactLynx",
-            "needTimestamps": true,
-            "pipelineID": "pipelineID",
-            "pipelineOrigin": "reactLynxHydrate",
-            "stage": "hydrate",
-          },
           "reloadVersion": 0,
         },
       },

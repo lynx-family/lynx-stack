@@ -1,0 +1,58 @@
+.OpenUIChatSlider {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+.OpenUIChatSliderLabel {
+  font-size: 26rpx;
+  color: var(--content, var(--openui-color-text));
+}
+.OpenUIChatSliderControl {
+  display: flex;
+  flex-direction: column;
+  padding: 0 14rpx;
+}
+.OpenUIChatSliderValue {
+  font-size: 22rpx;
+  text-align: right;
+  color: var(--content-muted, var(--openui-color-text-muted));
+}
+.OpenUIChatSliderRoot {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 64rpx;
+}
+.OpenUIChatSliderRoot.ui-disabled {
+  opacity: 0.4;
+}
+.OpenUIChatSliderTrack {
+  position: relative;
+  width: 100%;
+  height: 12rpx;
+  border-radius: 8rpx;
+  background-color: var(--neutral-faint, var(--openui-color-surface-subtle));
+}
+.OpenUIChatSliderIndicator {
+  height: 100%;
+  border-radius: 8rpx;
+  background-color: var(--primary, var(--openui-color-primary));
+}
+.OpenUIChatSliderThumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48rpx;
+  height: 48rpx;
+}
+.OpenUIChatSliderDot {
+  width: 36rpx;
+  height: 36rpx;
+  border: 4rpx solid var(--primary, var(--openui-color-primary));
+  background-color: var(--paper-clear, var(--openui-color-surface-strong));
+  border-radius: 50%;
+}
+.OpenUIChatSliderError {
+  font-size: 22rpx;
+  color: var(--openui-color-error);
+}

@@ -1,0 +1,5 @@
+root = Card([verdict, places], [{url:"./demos/openui/chat/references.html#a", title:"A街角店", sourceName:"示例地点搜索"}, {url:"./demos/openui/chat/references.html#b", title:"B庭院店", sourceName:"示例地点搜索"}])
+verdict = TextContent("**想在庭院和朋友小聚，优先B；预算低一些且工作日白天去，可选A。** 环境判断来自店铺点评，不保证每个时段都安静。[1][2]")
+places = ListBlock([ListItem("A街角店 · 工作日白天的预算选择", "📍示例路10号｜人均35元
+点评提及工作日白天较安静，周末可能排队；营业时间本次未取得。", {src:"./demos/openui/chat/assets/place.png", alt:"A街角店实景"}, "查看店铺", {type:"open_url", url:"./demos/openui/chat/references.html#a"}), ListItem("B庭院店 · 庭院小聚", "📍示例巷2号｜人均52元
+点评提及庭院座位与朋友小聚，适合更重视环境的选择。", {src:"./demos/openui/chat/assets/place.png", alt:"B庭院店实景"}, "查看店铺", {type:"open_url", url:"./demos/openui/chat/references.html#b"})], "image")

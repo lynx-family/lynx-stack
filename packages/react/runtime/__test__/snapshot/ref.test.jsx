@@ -7,6 +7,7 @@ import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/snapshot/lifecycle/ref/delay';
+import { destroyBackground } from '../../src/snapshot/lifecycle/destroy';
 
 import { Component, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
@@ -2364,5 +2365,34 @@ describe('runDelayedUiOps helper', () => {
     shouldDelayUiOps.value = true;
     runDelayedUiOps();
     expect(shouldDelayUiOps.value).toBe(false);
+  });
+
+  it('should clear pre-hydration delayed UI operations on destroyBackground even when unmount cleanup throws', () => {
+    shouldDelayUiOps.value = true;
+    const invoke = vi.fn();
+    vi.spyOn(lynx, 'createSelectorQuery').mockReturnValue({
+      selectUniqueID: () => ({ invoke }),
+    });
+
+    const proxy = new RefProxy([1, 0]);
+    proxy.invoke({ method: 'focus' }).exec();
+    expect(invoke).not.toHaveBeenCalled();
+
+    class ThrowingUnmount extends Component {
+      componentWillUnmount() {
+        throw new Error('unmount boom');
+      }
+      render() {
+        return <view />;
+      }
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<ThrowingUnmount />, __root);
+
+    expect(() => destroyBackground()).toThrow('unmount boom');
+    runDelayedUiOps();
+
+    expect(invoke).not.toHaveBeenCalled();
   });
 });

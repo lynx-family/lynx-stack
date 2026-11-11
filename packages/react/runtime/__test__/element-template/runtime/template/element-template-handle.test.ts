@@ -23,6 +23,7 @@ import {
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
+import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 
 describe('ElementTemplateHandle', () => {
@@ -101,6 +102,37 @@ describe('ElementTemplateHandle', () => {
       nativeHeldValue: ctx,
     });
   });
+
+  it.each(['success', 'null', 'throw'])(
+    'prepares and tracks create input before Native %s without advancing failed state',
+    (outcome) => {
+      const previous = globalThis.lynxWorkletImpl;
+      const manager = new JsFunctionLifecycleManager();
+      globalThis.lynxWorkletImpl = { ...previous, _jsFunctionLifecycleManager: manager };
+      const ctx = { _wkltId: 'tap', _execId: 21 };
+      const retain = vi.spyOn(manager, 'addRef');
+      const error = new Error('create failed');
+      __etAttrPlanMap['__Card__:_et_test'] = [0, adaptMTEventAttrSlot];
+      mockCreateCompiledElementTemplate.mockImplementationOnce((_key, _url, slots) => {
+        expect(slots[0].value).toBe(ctx);
+        expect(retain).toHaveBeenCalledExactlyOnceWith(21, ctx);
+        expect(getMainThreadDynamicAttrState(-1, 0)).toBeUndefined();
+        if (outcome === 'throw') throw error;
+        return outcome === 'null' ? null : mockCreatedNativeRef;
+      });
+      try {
+        const create = () =>
+          createElementTemplateWithReservedHandle(-1, '_et_test', null, [{ type: 'worklet', value: ctx }], null);
+        if (outcome === 'throw') expect(create).toThrow(error);
+        else expect(create()).toBe(outcome === 'null' ? null : mockCreatedNativeRef);
+        expect(retain).toHaveBeenCalledExactlyOnceWith(21, ctx);
+        expect(getMainThreadDynamicAttrState(-1, 0)?.nativeHeldValue).toBe(outcome === 'success' ? ctx : undefined);
+      } finally {
+        manager.dispose();
+        globalThis.lynxWorkletImpl = previous;
+      }
+    },
+  );
 
   it('records dynamic-entry main-thread dynamic attr state with the full template identity', () => {
     const id = reserveElementTemplateId();

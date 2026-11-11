@@ -23,6 +23,16 @@ The prompt-side Library and client renderer Library must agree on every
 component name and positional prop order. If they drift, the model can produce
 valid text for one side that the other side rejects.
 
+Arguments are positional. Omit optional arguments only from the end; use `null`
+for a skipped slot before later arguments. For example, List's second argument
+is the optional `items` alias, so a list supplied through `children` uses:
+
+```text
+root = List([Text("Hello")], null, "vertical", "stretch", "s", false)
+```
+
+The argument order is `children, items, direction, align, gap, divider`.
+
 ## 1. CLI
 
 Generate the default built-in OpenUI prompt to a file:
@@ -69,6 +79,11 @@ import { buildOpenUiSystemPrompt } from '@lynx-js/genui/openui/prompt';
 
 const systemPrompt = buildOpenUiSystemPrompt();
 ```
+
+Data processing tools are opt-in: the shared prompt includes their rules when
+`promptOptions.tools` declares both `openui_query` and `openui_mutation` and tool
+calls are enabled. For configuration examples, host tool registration, and the
+Agent-to-renderer workflow, see [Data processing tools](./query-data.md).
 
 Add application policy and tool descriptions:
 
@@ -127,21 +142,23 @@ the prompt or browser-side tool arguments.
 `buildOpenUiSystemPrompt` accepts Library options, prompt feature flags, and an
 optional appendix:
 
-| Option                          | Purpose                                                                                                       |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `root`                          | Override the required root component name. The component must exist in the prompt Library and client Library. |
-| `components`                    | Append headless component definitions; later duplicate names replace defaults.                                |
-| `componentGroups`               | Append prompt grouping metadata.                                                                              |
-| `promptOptions.preamble`        | Replace or extend the product framing before language rules.                                                  |
-| `promptOptions.additionalRules` | Add rules after the built-in mobile/OpenUI constraints.                                                       |
-| `promptOptions.examples`        | Replace the default static examples.                                                                          |
-| `promptOptions.toolExamples`    | Provide examples used when tools are present.                                                                 |
-| `promptOptions.tools`           | Describe Query/Mutation tools by name or rich schema.                                                         |
-| `promptOptions.toolCalls`       | Enable or disable Query, Mutation, `@Run`, and tool workflow instructions.                                    |
-| `promptOptions.bindings`        | Enable or disable `$variables`, `@Set`, `@Reset`, and reactive filter instructions.                           |
-| `promptOptions.editMode`        | Teach the model to return only changed statements for incremental editing.                                    |
-| `promptOptions.inlineMode`      | Allow prose with optional fenced OpenUI instead of raw OpenUI-only output.                                    |
-| `appendix`                      | Append final deployment-specific instructions verbatim.                                                       |
+| Option                          | Purpose                                                                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `root`                          | Override the required root component name. The component must exist in the prompt Library and client Library.            |
+| `includeDefaultComponents`      | Include built-ins and their groups by default; set to `false` and supply the complete component set, including the root. |
+| `componentNames`                | Select built-ins while retaining the root; custom definitions are appended. Ignored when defaults are disabled.          |
+| `components`                    | Append headless component definitions; later duplicate names replace defaults.                                           |
+| `componentGroups`               | Append prompt grouping metadata.                                                                                         |
+| `promptOptions.preamble`        | Replace or extend the product framing before language rules.                                                             |
+| `promptOptions.additionalRules` | Add rules after the built-in mobile/OpenUI constraints.                                                                  |
+| `promptOptions.examples`        | Replace the default static examples.                                                                                     |
+| `promptOptions.toolExamples`    | Provide examples used when tools are present.                                                                            |
+| `promptOptions.tools`           | Describe Query/Mutation tools by name or rich schema.                                                                    |
+| `promptOptions.toolCalls`       | Enable or disable Query, Mutation, `@Run`, and tool workflow instructions.                                               |
+| `promptOptions.bindings`        | Enable or disable `$variables`, `@Set`, `@Reset`, and reactive filter instructions.                                      |
+| `promptOptions.editMode`        | Teach the model to return only changed statements for incremental editing.                                               |
+| `promptOptions.inlineMode`      | Allow prose with optional fenced OpenUI instead of raw OpenUI-only output.                                               |
+| `appendix`                      | Append final deployment-specific instructions verbatim.                                                                  |
 
 The Lynx OpenUI prompt builder enables `bindings` and `toolCalls` by default.
 Disable them explicitly for a static-only product surface:

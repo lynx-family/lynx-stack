@@ -8,5 +8,5 @@ it('should inject runtime config', () => {
       enabled: true,
     },
   });
-  expect(Object.isFrozen(lynx.__runtime_configs__)).toBe(true);
+  expect(Object.isFrozen(lynx.__runtime_configs__)).toBe(false);
 });

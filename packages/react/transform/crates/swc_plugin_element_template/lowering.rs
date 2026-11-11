@@ -101,20 +101,52 @@ where
       }));
     }
 
-    for dynamic_child in dynamic_children {
-      let (slot_index, expr) = match dynamic_child {
-        DynamicElementPart::Slot(expr, idx) | DynamicElementPart::ListSlot(expr, idx) => {
-          (idx, expr)
+    // LEPUS consumes slots in numeric order once, without background reconciliation.
+    // Keep named slot props for JS/MIXED, whose VNodes are also used by Preact.
+    if target == TransformTarget::LEPUS && !dynamic_children.is_empty() {
+      let mut slot_children: Vec<Option<ExprOrSpread>> = vec![];
+      for dynamic_child in dynamic_children {
+        let (slot_index, expr) = match dynamic_child {
+          DynamicElementPart::Slot(expr, idx) | DynamicElementPart::ListSlot(expr, idx) => {
+            (idx, expr)
+          }
+        };
+        let index = usize::try_from(slot_index).expect("ET child slot index must be non-negative");
+        if slot_children.len() <= index {
+          slot_children.resize_with(index + 1, || None);
         }
-      };
+        slot_children[index] = Some(ExprOrSpread {
+          spread: None,
+          expr: Box::new(expr),
+        });
+      }
       rendered_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
-        name: JSXAttrName::Ident(IdentName::new(format!("${}", slot_index).into(), DUMMY_SP)),
+        name: JSXAttrName::Ident(IdentName::new("slotChildren".into(), DUMMY_SP)),
         value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
           span: DUMMY_SP,
-          expr: JSXExpr::Expr(Box::new(expr)),
+          expr: JSXExpr::Expr(Box::new(Expr::Array(ArrayLit {
+            span: DUMMY_SP,
+            elems: slot_children,
+          }))),
         })),
       }));
+    } else {
+      for dynamic_child in dynamic_children {
+        let (slot_index, expr) = match dynamic_child {
+          DynamicElementPart::Slot(expr, idx) | DynamicElementPart::ListSlot(expr, idx) => {
+            (idx, expr)
+          }
+        };
+        rendered_attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
+          span: DUMMY_SP,
+          name: JSXAttrName::Ident(IdentName::new(format!("${}", slot_index).into(), DUMMY_SP)),
+          value: Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+            span: DUMMY_SP,
+            expr: JSXExpr::Expr(Box::new(expr)),
+          })),
+        }));
+      }
     }
 
     LoweredRuntimeJsx {

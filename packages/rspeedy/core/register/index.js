@@ -10,7 +10,7 @@ import nodeModule from 'node:module'
 /**
  * Register the ESM loader for TypeScript.
  *
- * @returns - The `unregister` function.
+ * @returns The `unregister` function.
  */
 export function register(options) {
   // eslint-disable-next-line n/no-unsupported-features/node-builtins

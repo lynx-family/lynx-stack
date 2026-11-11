@@ -8,15 +8,15 @@ import type { Entry } from './entry.js'
 import type { TransformImport } from './transformImport.js'
 
 /**
- * {@inheritdoc Config.source}
+ * {@inheritDoc Config.source}
  *
  * @public
  */
 export interface Source {
   /**
-   * {@inheritdoc Resolve.alias}
+   * {@inheritDoc Resolve.alias}
    *
-   * @deprecated - Use {@link Resolve.alias} instead.
+   * @deprecated Use {@link Resolve.alias} instead.
    *
    * @defaultValue undefined
    */
@@ -436,7 +436,7 @@ export interface Source {
    *
    * The `tsconfigPath` configuration affects the following behaviors:
    *
-   * - The `paths` field is used to configure {@link Source.alias | Path Aliases}.
+   * - The `paths` field is used to configure {@link Resolve.alias | Path Aliases}.
    *
    * - Sets the scope and rules for the {@link https://rsbuild.rs/guide/basic/typescript#type-checking | Type Check Plugin}.
    *

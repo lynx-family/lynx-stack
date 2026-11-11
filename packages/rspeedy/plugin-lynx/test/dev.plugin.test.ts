@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { readFile } from 'node:fs/promises'
 import { isIP, isIPv4 } from 'node:net'
 import type { AddressInfo } from 'node:net'
 import path from 'node:path'
@@ -977,6 +978,38 @@ describe('pluginDev', () => {
     expect(isIP(hostname)).toBe(0)
     expect(hostname).toBe('example.com')
     expect(pathname).toBe('/dist/')
+  })
+
+  test('starting another dev server preserves the first server output', async () => {
+    const createServer = (entry: string) =>
+      createDevStubRsbuild({
+        source: {
+          entry: {
+            [entry]: path.resolve(__dirname, './fixtures/hello-world/index.js'),
+          },
+        },
+        environments: { web: {}, lynx: {} },
+      })
+    const first = await createServer('first')
+    await using firstServer = await first.usingDevServer()
+    await firstServer.waitDevCompileDone()
+    const firstConfig = await first.unwrapConfig()
+    const firstOutputPath = path.join(
+      firstConfig.output!.path!,
+      'static/js/first.js',
+    )
+    const firstOutput = await readFile(firstOutputPath)
+
+    const second = await createServer('second')
+    await using secondServer = await second.usingDevServer()
+    await secondServer.waitDevCompileDone()
+    const secondConfig = await second.unwrapConfig()
+
+    const secondOutput = await readFile(
+      path.join(secondConfig.output!.path!, 'static/js/second.js'),
+    )
+    expect(await readFile(firstOutputPath)).toEqual(firstOutput)
+    expect(secondOutput.length).toBeGreaterThan(0)
   })
 
   test('environment.web to have middleware installed', async () => {

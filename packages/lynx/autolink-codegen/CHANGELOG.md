@@ -1,5 +1,19 @@
 # @lynx-js/autolink-codegen
 
+## 0.6.0
+
+### Minor Changes
+
+- Type and validate platform-selected Lynxtron `targets`, with each target ([#3760](https://github.com/lynx-family/lynx-stack/pull/3760))
+  declaring `files`, macOS `frameworks`, and signed macOS `appBundles` as needed.
+  Generate the same manifest shape and `dist/<os>/<arch>` output layout in new
+  Lynxtron library projects.
+
+### Patch Changes
+
+- Avoid intersecting the generated Node-API shim's dynamic global access with ([#3914](https://github.com/lynx-family/lynx-stack/pull/3914))
+  host-specific NativeModules declarations, which may require fields such as bridge.
+
 ## 0.5.0
 
 ### Minor Changes

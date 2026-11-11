@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/testing-environment",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "A subset of a Lynx environment to be useful for testing",
   "keywords": [
     "Lynx",
@@ -57,8 +57,8 @@
   ],
   "scripts": {
     "api-extractor": "api-extractor run --verbose",
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rslib",
+    "dev": "rslib --watch",
     "rstest": "rstest",
     "test": "vitest"
   },

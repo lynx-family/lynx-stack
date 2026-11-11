@@ -1,0 +1,5 @@
+root = Card([verdict, products], [{url:"./demos/openui/chat/references.html#p1", title:"轻薄训练款", sourceName:"示例商品搜索"}, {url:"./demos/openui/chat/references.html#p2", title:"棉感日常款", sourceName:"示例商品搜索"}])
+verdict = TextContent("**日常跑步优先轻薄训练款；更重视亲肤和日常穿着，再看棉感款。** 第二款只有部分规格在100元预算内。[1][2]")
+products = CompositeCardBlock([p1, p2], "grid", true)
+p1 = CompositeCardItem("P1", ImageText("./demos/openui/chat/assets/product.png", "轻薄训练款商品图", "轻薄训练款", "日常跑步优先", true, "vertical"), [Text("text", "100%聚酯纤维，吸湿速干；适合日常跑步。"), Text("text", "取舍：面料轻薄，保暖性较弱。"), Text("text", "店铺：示例商家甲 · 专卖店")], {price:BoldText("number", "69元", "固定价"), button:Button("查看商品", {type:"open_url", url:"./demos/openui/chat/references.html#p1"})})
+p2 = CompositeCardItem("P2", ImageText("./demos/openui/chat/assets/product.png", "棉感日常款商品图", "棉感日常款", "轻运动与日常穿着", true, "vertical"), [Text("text", "棉感亲肤，侧重轻运动和日常穿着。"), Text("text", "取舍：SKU99–129元，部分规格超预算；下单前核对颜色/尺码。"), Text("text", "店铺：示例商家乙 · 旗舰店")], {price:BoldText("number", "99元起", "SKU99–129元"), button:Button("查看商品", {type:"open_url", url:"./demos/openui/chat/references.html#p2"})})

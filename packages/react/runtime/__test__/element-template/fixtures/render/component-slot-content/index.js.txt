@@ -1,16 +1,20 @@
 import { jsx as _jsx } from "@lynx-js/react/jsx-runtime";
-const _et_49c2d60c49a6 = `${globDynamicComponentEntry}:${"_et_49c2d60c49a6"}`;
+import * as ReactLynxInternal from "@lynx-js/react/element-template/internal";
+const _et_49c2d60c49a6_bundle = globDynamicComponentEntry;
+const _et_49c2d60c49a6 = `${_et_49c2d60c49a6_bundle}:${"_et_49c2d60c49a6"}`;
 function CustomComponent(props) {
-    return /*#__PURE__*/ _jsx(_et_49c2d60c49a6, {
-        $0: props.children
-    });
+    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_49c2d60c49a6, "_et_49c2d60c49a6", _et_49c2d60c49a6_bundle, void 0, void 0, [
+        props.children
+    ], void 0, true);
 }
-const _et_d33ba201dffe = `${globDynamicComponentEntry}:${"_et_d33ba201dffe"}`;
-const _et_955a06fee137 = `${globDynamicComponentEntry}:${"_et_955a06fee137"}`;
+const _et_d33ba201dffe_bundle = globDynamicComponentEntry;
+const _et_d33ba201dffe = `${_et_d33ba201dffe_bundle}:${"_et_d33ba201dffe"}`;
+const _et_955a06fee137_bundle = globDynamicComponentEntry;
+const _et_955a06fee137 = `${_et_955a06fee137_bundle}:${"_et_955a06fee137"}`;
 export function App() {
-    return /*#__PURE__*/ _jsx(_et_955a06fee137, {
-        $0: /*#__PURE__*/ _jsx(CustomComponent, {
-            children: /*#__PURE__*/ _jsx(_et_d33ba201dffe, {})
+    return /*#__PURE__*/ ReactLynxInternal.__etHost(_et_955a06fee137, "_et_955a06fee137", _et_955a06fee137_bundle, void 0, void 0, [
+        /*#__PURE__*/ _jsx(CustomComponent, {
+            children: /*#__PURE__*/ ReactLynxInternal.__etHost(_et_d33ba201dffe, "_et_d33ba201dffe", _et_d33ba201dffe_bundle, void 0, void 0, void 0, void 0, true)
         })
-    });
+    ], void 0, true);
 }

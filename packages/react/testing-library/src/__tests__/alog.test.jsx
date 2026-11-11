@@ -298,14 +298,7 @@ describe('alog', () => {
           ]
         },
         "patchOptions": {
-          "reloadVersion": 0,
-          "pipelineOptions": {
-            "pipelineID": "pipelineID",
-            "needTimestamps": true,
-            "pipelineOrigin": "reactLynxHydrate",
-            "dsl": "reactLynx",
-            "stage": "hydrate"
-          }
+          "reloadVersion": 0
         }
       }",
         ],
@@ -313,7 +306,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {})",
         ],
       ]
     `);
@@ -566,14 +559,7 @@ describe('alog', () => {
           ]
         },
         "patchOptions": {
-          "reloadVersion": 0,
-          "pipelineOptions": {
-            "pipelineID": "pipelineID",
-            "needTimestamps": true,
-            "pipelineOrigin": "reactLynxHydrate",
-            "dsl": "reactLynx",
-            "stage": "hydrate"
-          }
+          "reloadVersion": 0
         }
       }",
         ],
@@ -581,7 +567,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #30: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #31: __FlushElementTree(PAGE#0, {})",
         ],
       ]
     `);
@@ -626,14 +612,7 @@ describe('alog', () => {
           ]
         },
         "patchOptions": {
-          "reloadVersion": 0,
-          "pipelineOptions": {
-            "pipelineID": "pipelineID",
-            "needTimestamps": true,
-            "pipelineOrigin": "reactLynxHydrate",
-            "dsl": "reactLynx",
-            "stage": "hydrate"
-          }
+          "reloadVersion": 0
         }
       }",
         ],
@@ -641,7 +620,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {})",
         ],
       ]
     `);
@@ -678,14 +657,7 @@ describe('alog', () => {
           ]
         },
         "patchOptions": {
-          "reloadVersion": 0,
-          "pipelineOptions": {
-            "pipelineID": "pipelineID",
-            "needTimestamps": true,
-            "pipelineOrigin": "reactLynxHydrate",
-            "dsl": "reactLynx",
-            "stage": "hydrate"
-          }
+          "reloadVersion": 0
         }
       }",
         ],
@@ -693,7 +665,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #32: __SetAttribute(#text#6, "text", 0)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #33: __FlushElementTree(PAGE#0, {})",
         ],
       ]
     `);
@@ -738,14 +710,7 @@ describe('alog', () => {
           ]
         },
         "patchOptions": {
-          "reloadVersion": 0,
-          "pipelineOptions": {
-            "pipelineID": "pipelineID",
-            "needTimestamps": true,
-            "pipelineOrigin": "reactLynxHydrate",
-            "dsl": "reactLynx",
-            "stage": "hydrate"
-          }
+          "reloadVersion": 0
         }
       }",
         ],
@@ -753,7 +718,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {})",
         ],
       ]
     `);
@@ -790,14 +755,7 @@ describe('alog', () => {
           ]
         },
         "patchOptions": {
-          "reloadVersion": 0,
-          "pipelineOptions": {
-            "pipelineID": "pipelineID",
-            "needTimestamps": true,
-            "pipelineOrigin": "reactLynxHydrate",
-            "dsl": "reactLynx",
-            "stage": "hydrate"
-          }
+          "reloadVersion": 0
         }
       }",
         ],
@@ -805,7 +763,7 @@ describe('alog', () => {
           "[ReactLynxDebug] FiberElement API call #34: __SetAttribute(#text#6, "text", 1)",
         ],
         [
-          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {"pipelineOptions":{"pipelineID":"pipelineID","needTimestamps":true,"pipelineOrigin":"reactLynxHydrate","dsl":"reactLynx","stage":"hydrate"}})",
+          "[ReactLynxDebug] FiberElement API call #35: __FlushElementTree(PAGE#0, {})",
         ],
       ]
     `);

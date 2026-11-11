@@ -6,7 +6,6 @@ import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings'
 
 import { ElementTemplateUpdateOps } from './opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from './page.js';
-import type { MainThreadRefInitValuePatch } from '../../core/main-thread-ref-init-value.js';
 
 export type SerializableValue =
   | string
@@ -129,6 +128,13 @@ export type SetMainThreadEventCommand = [
   value: SerializableValue | null,
 ];
 
+export type SetGestureCommand = [
+  typeof ElementTemplateUpdateOps.setGesture,
+  targetHandleId: number,
+  attrSlotIndex: number,
+  value: SerializableValue | null,
+];
+
 export type SetMainThreadRefCommand = [
   typeof ElementTemplateUpdateOps.setMainThreadRef,
   targetHandleId: number,
@@ -187,6 +193,7 @@ export type ElementTemplateUpdateCommand =
   | SetAttributeCommand
   | SetMainThreadEventCommand
   | SetMainThreadRefCommand
+  | SetGestureCommand
   | InsertNodeCommand
   | RemoveNodeCommand
   | CreateTypedElementCommand
@@ -200,20 +207,7 @@ export type ElementTemplateUpdateCommand =
 export type ElementTemplateUpdateCommandStream = ElementTemplateUpdateCommand[number][];
 
 export interface ElementTemplateFlushOptions {
-  // triggerLayout?: boolean;
-  // operationID?: any;
-  // __lynx_timing_flag?: string;
-  // nativeUpdateDataOrder?: number;
-  // elementID?: number;
-  // listID?: number;
-  // listReuseNotification?: {
-  //   listElement: FiberElement;
-  //   itemKey: string;
-  // };
   pipelineOptions?: PipelineOptions;
-  // elementIDs?: number[];
-  // operationIDs?: any[];
-  // asyncFlush?: boolean;
   triggerDataUpdated?: boolean;
   emptyPatch?: boolean;
 }
@@ -225,5 +219,4 @@ export interface ElementTemplateUpdateCommitContext {
   isHydration?: boolean | undefined;
   reloadVersion?: number | undefined;
   delayedRunOnMainThreadData?: RunWorkletCtxData[] | undefined;
-  mainThreadRefInitValuePatch?: MainThreadRefInitValuePatch | undefined;
 }

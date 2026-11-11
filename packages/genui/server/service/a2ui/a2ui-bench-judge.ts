@@ -57,6 +57,8 @@ export interface BenchUiJudgeCapability {
 }
 
 export interface BenchUiJudgeResult {
+  /** Model retries are owned by the evaluator; do not recapture after scoring. */
+  retryable?: false;
   dimensions?: BenchUiJudgeDimensionResult[];
   errors: string[];
   geqiScore?: number;
@@ -128,6 +130,7 @@ export interface RunBenchUiJudgeRequestOptions {
   viewport?: { width?: number; height?: number };
   lynxXmlSource?: string;
   htmlSource?: string;
+  reactLynxZipUrl?: string;
   scenario: BenchUiJudgeScenario;
   includeScreenshot?: boolean;
   session: BenchUiJudgeSession;
@@ -396,7 +399,12 @@ export async function runBenchUiJudgeRequest(
     return await (pool ? pool.run(execute, options.signal) : execute());
   }
   const fields: Record<string, string> = {};
-  if (options.htmlSource === undefined && options.lynxXmlSource === undefined) {
+  if (options.reactLynxZipUrl !== undefined) {
+    fields.entry = 'main.lynx.js';
+    fields.url = options.reactLynxZipUrl;
+  } else if (
+    options.htmlSource === undefined && options.lynxXmlSource === undefined
+  ) {
     fields.entry = 'template.js';
     if (options.session.zipUrl !== undefined) {
       fields.url = options.session.zipUrl;
@@ -468,6 +476,7 @@ export async function runBenchUiJudgeRequest(
 
   let reportScreenshot: string | undefined;
   let payload: ScreenshotEvaluation;
+  let scoringStarted = false;
   const captureController = new AbortController();
   try {
     options.onPhase?.('screenshot-queued');
@@ -502,6 +511,7 @@ export async function runBenchUiJudgeRequest(
     });
     if ('status' in captured) return captured;
     reportScreenshot = captured.reportScreenshot;
+    scoringStarted = true;
     options.onPhase?.('judge-queued');
     payload = await runStage(
       options.scheduling?.evaluation,
@@ -512,16 +522,20 @@ export async function runBenchUiJudgeRequest(
           task: options.scenario.judgeTask ?? options.scenario.prompt,
           model: options.model,
           signal,
+          ...(options.onPhase
+            ? { onPhase: options.onPhase }
+            : {}),
         });
       },
     );
-  } catch {
+  } catch (error) {
     return {
       errors: options.signal?.aborted
         ? []
-        : ['GenUI screenshot evaluation failed.'],
+        : [`GenUI screenshot evaluation failed: ${toErrorMessage(error)}`],
       score: 0,
       status: 'failed',
+      ...(scoringStarted ? { retryable: false as const } : {}),
       ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),
       warnings,
     };
@@ -577,6 +591,7 @@ export async function runBenchUiJudgeRequest(
     score: complete ? score : 0,
     ...(reportScreenshot ? { screenshotDataUrl: reportScreenshot } : {}),
     status: complete ? 'complete' : 'failed',
+    ...(complete ? {} : { retryable: false as const }),
     ...(complete && summary ? { summary } : {}),
     warnings: resultWarnings,
   };

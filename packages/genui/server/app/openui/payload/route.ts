@@ -4,11 +4,11 @@
 
 import { Hono } from 'hono';
 
-import { publishOpenUIRawText } from '../../a2ui/payload-publisher';
 import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
+import { publishOpenUIRawText } from '../payload-publisher.js';
 
 interface OpenUIPayloadBody {
   rawText?: unknown;

@@ -5,7 +5,7 @@
 /**
  * @packageDocumentation
  *
- * A webpack/Rspack plugin to generate chunk loading runtime for Lynx.
+ * An Rspack plugin to generate chunk loading runtime for Lynx.
  */
 
 import type { Compiler } from '@rspack/core';
@@ -21,33 +21,18 @@ import { ChunkLoadingWebpackPluginImpl } from './ChunkLoadingWebpackPlugin.js';
 export interface ChunkLoadingWebpackPluginOptions {}
 
 /**
- * The ChunkLoadingWebpackPlugin enables chunk loading for webpack/Rspack in Lynx.
+ * The ChunkLoadingWebpackPlugin enables chunk loading for Rspack in Lynx.
+ * It only takes effect when `output.chunkLoading` is `'lynx'`.
  *
  * @example
- *
- * - Use with Rspack.
  *
  * ```js
  * // rspack.config.js
  * import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
  * export default {
  *   output: {
- *     chunkFormat: 'require',
- *   },
- *   plugins: [new ChunkLoadingWebpackPlugin()],
- * }
- * ```
- *
- * @example
- *
- * - Use with Webpack.
- *
- * ```js
- * // webpack.config.js
- * import { ChunkLoadingWebpackPlugin } from '@lynx-js/chunk-loading-webpack-plugin'
- * export default {
- *   output: {
- *     chunkFormat: 'lynx',
+ *     chunkLoading: 'lynx',
+ *     chunkFormat: 'commonjs',
  *   },
  *   plugins: [new ChunkLoadingWebpackPlugin()],
  * }

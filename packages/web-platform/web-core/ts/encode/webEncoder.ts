@@ -5,7 +5,7 @@
  */
 import type * as CSS from '@lynx-js/css-serializer';
 import type { ElementTemplateData } from '../types/index.js';
-import { encodeCSS } from './encodeCSS.js';
+import { encodeCSS, encodeCSSMap } from './encodeCSS.js';
 import {
   MagicHeader0,
   MagicHeader1,
@@ -68,6 +68,7 @@ export type TasmJSONInfo = {
   lepusCode: Record<string, string>;
   customSections: Record<string, {
     type?: 'lazy';
+    encoding?: 'JsBytecode' | 'CSS';
     content: string | Record<string, unknown>;
   }>;
   elementTemplates: Record<string, ElementTemplateData>;
@@ -87,7 +88,27 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   const encodedManifest = encodeStringMap(manifest);
   const encodedLepusCode = encodeStringMap(lepusCode);
 
-  const encodedCustomSections = encodeAsJSON(customSections);
+  // The `CSS` custom sections are pre-processed by the css encoder, the rest
+  // stay JSON.
+  const jsonCustomSections: TasmJSONInfo['customSections'] = {};
+  const cssCustomSections: Record<string, CSS.LynxStyleNode[]> = {};
+  for (const [name, section] of Object.entries(customSections)) {
+    if (section.encoding === 'CSS') {
+      const { ruleList } = section.content as {
+        ruleList?: CSS.LynxStyleNode[];
+      };
+      cssCustomSections[name] = ruleList ?? [];
+    } else {
+      jsonCustomSections[name] = section;
+    }
+  }
+  const encodedCustomSections = encodeAsJSON(jsonCustomSections);
+  // Left out when there is no `CSS` custom section, so that such a bundle
+  // still loads on a runtime which does not know this section.
+  const encodedCustomSectionsStyleInfo =
+    Object.keys(cssCustomSections).length > 0
+      ? encodeCSSMap(cssCustomSections)
+      : undefined;
 
   const configMap: Record<string, string> = {};
   configMap['cardType'] = cardType;
@@ -106,6 +127,9 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
     + 4 + 4 + encodedLepusCode.length // Lepus Code
     + 4 + 4 + encodedCustomSections.length // Custom Sections
     + 4 + 4 + encodedManifest.length // Manifest
+    + (encodedCustomSectionsStyleInfo
+      ? 4 + 4 + encodedCustomSectionsStyleInfo.length
+      : 0) // Custom Sections Style Info
   ;
 
   // generate final buffer in order
@@ -157,6 +181,19 @@ export function encode(tasmJSON: TasmJSONInfo): Uint8Array {
   offset += 4;
   buffer.set(encodedManifest, offset);
   offset += encodedManifest.length;
+  // Custom Sections Style Info
+  if (encodedCustomSectionsStyleInfo) {
+    dataView.setUint32(
+      offset,
+      TemplateSectionLabel.CustomSectionsStyleInfo,
+      true,
+    ); // section label
+    offset += 4;
+    dataView.setUint32(offset, encodedCustomSectionsStyleInfo.length, true); // section length
+    offset += 4;
+    buffer.set(encodedCustomSectionsStyleInfo, offset);
+    offset += encodedCustomSectionsStyleInfo.length;
+  }
 
   return buffer;
 }

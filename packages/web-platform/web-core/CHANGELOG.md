@@ -1,5 +1,70 @@
 # @lynx-js/web-core
 
+## 0.26.7
+
+### Patch Changes
+
+- Subtract the lynx-view top-left offset from mouse event clientX/clientY, matching the normalization already applied to x/y. Preserve pageX/pageY as document coordinates. ([#4273](https://github.com/lynx-family/lynx-stack/pull/4273))
+- Updated dependencies [[`27d5db9`](https://github.com/lynx-family/lynx-stack/commit/27d5db9e179f4d782f4aa96136dcf51446a9b17a)]:
+  - @lynx-js/web-elements@0.12.17
+  - @lynx-js/web-worker-rpc@0.26.7
+
+## 0.26.6
+
+### Patch Changes
+
+- Add the optional `lynx-view.resolveResource` hook to resolve image sources and placeholders before loading, including placeholder preloads, error fallbacks, and reconnection. Keep the original image attributes unchanged and prevent repeated fallback loads for relative placeholder URLs. ([#4240](https://github.com/lynx-family/lynx-stack/pull/4240))
+
+- Wait for the entry bundle's background scripts to be registered before starting the background runtime. This prevents external or lazy bundles that load first from triggering premature requests for unregistered entry modules. ([#4239](https://github.com/lynx-family/lynx-stack/pull/4239))
+- Updated dependencies [[`208ef02`](https://github.com/lynx-family/lynx-stack/commit/208ef02c932bbd5a804c4ff8753739b6ec68401c)]:
+  - @lynx-js/web-elements@0.12.16
+  - @lynx-js/web-worker-rpc@0.26.6
+
+## 0.26.5
+
+### Patch Changes
+
+- Convert `text-stroke-width` and `text-stroke-color` to their `-webkit-` prefixed CSS properties. ([#4208](https://github.com/lynx-family/lynx-stack/pull/4208))
+- Updated dependencies [[`3790ba3`](https://github.com/lynx-family/lynx-stack/commit/3790ba38abae8fbfc3613875b390a3f2906cfb52)]:
+  - @lynx-js/web-elements@0.12.15
+  - @lynx-js/web-worker-rpc@0.26.5
+
+## 0.26.4
+
+### Patch Changes
+
+- Encode the custom sections whose `encoding` is `CSS` with the CSS encoder. They are written as a name-keyed map into the new `CustomSectionsStyleInfo` section instead of being kept as JSON in `CustomSections`. ([#4138](https://github.com/lynx-family/lynx-stack/pull/4138))
+- Updated dependencies [[`2616520`](https://github.com/lynx-family/lynx-stack/commit/2616520b975adce55b79b408742a47a3f59dd78c)]:
+  - @lynx-js/web-elements@0.12.14
+  - @lynx-js/web-worker-rpc@0.26.4
+
+## 0.26.3
+
+### Patch Changes
+
+- Updated dependencies [[`45199d2`](https://github.com/lynx-family/lynx-stack/commit/45199d2e72b4dd1da9b8175b0776f690c418196c)]:
+  - @lynx-js/web-elements@0.12.13
+  - @lynx-js/web-worker-rpc@0.26.3
+
+## 0.26.2
+
+### Patch Changes
+
+- Updated dependencies [[`972bd58`](https://github.com/lynx-family/lynx-stack/commit/972bd58bf65a3fca5e9d56d60c8f020a41a7eb1a)]:
+  - @lynx-js/web-elements@0.12.12
+  - @lynx-js/web-worker-rpc@0.26.2
+
+## 0.26.1
+
+### Patch Changes
+
+- Fix page child events being dispatched as component events by registering the page element unique ID in the Web host. ([#3842](https://github.com/lynx-family/lynx-stack/pull/3842))
+
+- Support `enableCSSInheritance` for text inside views, including gradient text colors, in client rendering and SSR. ([#3907](https://github.com/lynx-family/lynx-stack/pull/3907))
+- Updated dependencies [[`8321c8f`](https://github.com/lynx-family/lynx-stack/commit/8321c8f58346223d33130ca342686adc92a0fd35), [`8419cb6`](https://github.com/lynx-family/lynx-stack/commit/8419cb6becd191cd49acb092507eeee7b77b3fcd)]:
+  - @lynx-js/web-elements@0.12.11
+  - @lynx-js/web-worker-rpc@0.26.1
+
 ## 0.26.0
 
 ### Minor Changes

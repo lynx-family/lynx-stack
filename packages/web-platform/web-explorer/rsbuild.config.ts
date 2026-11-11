@@ -1,6 +1,6 @@
 import { defineConfig, type RsbuildPluginAPI } from '@rsbuild/core';
 import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
-import { RsdoctorRspackPlugin } from '@rsdoctor/rspack-plugin';
+import { RsdoctorRspackPlugin } from '@rsdoctor/core';
 import { writeFileSync } from 'node:fs';
 import path from 'path';
 
@@ -65,11 +65,7 @@ export default defineConfig({
       },
       plugins: [
         process.env.RSDOCTOR === 'true'
-        && new RsdoctorRspackPlugin({
-          supports: {
-            generateTileGraph: true,
-          },
-        }),
+        && new RsdoctorRspackPlugin(),
       ],
     },
   },

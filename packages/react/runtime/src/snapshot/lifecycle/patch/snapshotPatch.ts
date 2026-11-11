@@ -18,7 +18,6 @@ export const SnapshotOperation = {
   nodesRefRemoveChild: 6,
 
   DEV_ONLY_AddSnapshot: 100,
-  DEV_ONLY_RegisterWorklet: 101,
   DEV_ONLY_SetSnapshotEntryName: 102,
 } as const;
 
@@ -63,10 +62,6 @@ export const SnapshotOperationParams: Record<number, { name: string; params: str
       'uniqID', /* string */
       'snapshotCreator', /* string */
     ],
-  },
-  [SnapshotOperation.DEV_ONLY_RegisterWorklet]: {
-    name: 'DEV_ONLY_RegisterWorklet',
-    params: ['hash', /* string */ 'fnStr' /* string */],
   },
   [SnapshotOperation.DEV_ONLY_SetSnapshotEntryName]: {
     name: 'DEV_ONLY_SetSnapshotEntryName',

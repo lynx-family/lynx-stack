@@ -68,3 +68,14 @@ Catalog、提示词、示例、传输适配和文档。对照官方提交
 - 不限定范围的全仓 Biome 会扫描 examples/react-debug-metadata/dist-consumer 下被 Git
   忽略的构建产物，报告生成代码错误。本次源码范围检查通过，没有提交这些构建产物。
 - Playground 独立 tsc --noEmit 被现有项目引用配置阻止（TS6310）；Web 和原生生产构建通过。
+
+## 与 main 的集成
+
+协议审计后合入 main 的 `3ff5a0282`，保留其拆分后的 Playground 渲染入口和按批次处理
+的流式占位逻辑。在 `playground/src/render/a2ui.ts` 转发 RPC 和元数据；将 Jev 生成、
+内联快照恢复和独立预览页迁移至当前协议。Jev action 响应更新已有 Surface，不再重复
+发送 createSurface。
+
+合并后全仓 80 个构建任务、170 个文件中的 1,948 个测试、26 个 API Extractor 任务通过。
+Client、server、extractor 类型检查和修改范围的 ESLint、Biome、dprint 检查通过。
+Server Catalog 已与当前提取器输出同步，并补齐新文档站要求的 API 中文翻译。

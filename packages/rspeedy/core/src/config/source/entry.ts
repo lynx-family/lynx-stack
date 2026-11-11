@@ -38,7 +38,7 @@ export interface EntryDescription {
 
 // TODO(doc): document about multiple entry modules
 /**
- * {@inheritdoc Source.entry}
+ * {@inheritDoc Source.entry}
  *
  * @example
  *

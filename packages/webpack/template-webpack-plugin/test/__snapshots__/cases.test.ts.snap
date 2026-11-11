@@ -24,12 +24,12 @@ exports[`template > templateCases-cases/defaults/config > should pass 1`] = `
   enableA11y: true,
   enableAccessibilityElement: false,
   enableCSSInheritance: false,
+  enableFlexBasisZeroPercent: true,
   enableGridPlacementShorthands: true,
   enableNativeList: true,
   enableNewGesture: false,
   enableNewIntersectionObserver: true,
   enableNewSticky: true,
-  flexBasisZeroPercent: true,
   lepusStrict: true,
   removeDescendantSelectorScope: false,
   syncXElementRegistry: true,
@@ -37,36 +37,19 @@ exports[`template > templateCases-cases/defaults/config > should pass 1`] = `
 }
 `;
 
-exports[`template > templateCases-cases/main-thread/external-bundle > should pass 1`] = `
-{
-  bundleModuleMode: ReturnByFunction,
-  debugInfoOutside: true,
-  defaultDisplayLinear: true,
-  defaultOverflowVisible: true,
-  enableCSSInvalidation: false,
-  enableCSSSelector: true,
-  enableFiberArch: true,
-  enableLepusDebug: true,
-  enableRemoveCSSScope: false,
-  enableReuseContext: true,
-  targetSdkVersion: 3.2,
-  templateDebugUrl: ,
-  useLepusNG: true,
-}
-`;
-
-exports[`template > templateCases-cases/main-thread/external-bundle > should pass 2`] = `
+exports[`template > templateCases-cases/defaults/reload-card > should pass 1`] = `
 {
   debugMetadataUrl: ,
   enableA11y: true,
   enableAccessibilityElement: false,
   enableCSSInheritance: false,
+  enableFlexBasisZeroPercent: true,
   enableGridPlacementShorthands: true,
   enableNativeList: true,
   enableNewGesture: false,
   enableNewIntersectionObserver: true,
   enableNewSticky: true,
-  flexBasisZeroPercent: true,
+  enableReuseLoadScriptExports: true,
   lepusStrict: true,
   removeDescendantSelectorScope: false,
   syncXElementRegistry: true,

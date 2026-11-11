@@ -1,6 +1,9 @@
+import { createRequire } from 'node:module';
 import { defineConfig } from '@rstest/core';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { withDefaultConfig } from './src/rstest-config.ts';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
   extends: withDefaultConfig({

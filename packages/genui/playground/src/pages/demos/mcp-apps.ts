@@ -102,6 +102,7 @@ const jsonExtensions = [json()];
 
 export const MCP_APPS_DEMOS_PAGE_SOURCE = {
   scenarios: MCP_APPS_SCENARIOS,
+  sections: MCP_APPS_DEMOS_LIST_SOURCE.sections,
   findScenario,
   getEditorValue(scenario) {
     return JSON.stringify(scenario.renderData, null, 2);

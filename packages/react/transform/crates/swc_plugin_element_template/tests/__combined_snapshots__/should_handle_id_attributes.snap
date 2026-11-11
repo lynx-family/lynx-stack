@@ -3,7 +3,7 @@ source: packages/react/transform/crates/swc_plugin_element_template/tests/elemen
 expression: "serde_json::json!({\n    \"code\": code, \"templates\": template_snapshot_json(&templates),\n})"
 ---
 {
-  "code": "import * as ReactLynx from \"@lynx-js/react\";\nconst _et_ea6d5e931fea = `${globDynamicComponentEntry}:${\"_et_ea6d5e931fea\"}`;\n<_et_ea6d5e931fea attributeSlots={[\n    dynamicId\n]}/>;\n",
+  "code": "import * as ReactLynxInternal from \"@lynx-js/react/internal\";\nimport * as ReactLynx from \"@lynx-js/react\";\nconst _et_ea6d5e931fea_bundle = globDynamicComponentEntry;\nconst _et_ea6d5e931fea = `${_et_ea6d5e931fea_bundle}:${\"_et_ea6d5e931fea\"}`;\nReactLynxInternal.__etHost(_et_ea6d5e931fea, \"_et_ea6d5e931fea\", _et_ea6d5e931fea_bundle, void 0, [\n    dynamicId\n], void 0, void 0, true);\n",
   "templates": [
     {
       "template_id": "_et_ea6d5e931fea",

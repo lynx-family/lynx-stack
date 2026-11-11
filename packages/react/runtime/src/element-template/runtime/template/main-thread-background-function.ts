@@ -11,7 +11,7 @@ import {
   runOnBackground,
 } from '../../../core/background-function/run-on-background.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
-import { isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
+import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
 
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
 type RetainableMainThreadCtx = Parameters<typeof retainWorkletCtx>[0];
@@ -33,6 +33,8 @@ export function registerMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroun
   }
 }
 
+// Track the input before Native takes ownership. If Native rejects it, collection
+// must still release its already-registered background execution; slot state commits later.
 export function retainMainThreadBackgroundFunctionCtx(ctx: MainThreadBackgroundFunctionCtx): void {
   retainWorkletCtx(ctx as RetainableMainThreadCtx);
 }
@@ -43,6 +45,11 @@ export function resetElementTemplateBackgroundFunctionRuntime(): void {
 }
 
 export function resetElementTemplateMainThreadBackgroundFunctionRuntime(): void {
+  const manager = globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager;
+  if (manager) {
+    manager.dispose();
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager = new JsFunctionLifecycleManager();
+  }
   clearDelayedRunOnBackgroundFunctions();
   resetFunctionCallReturnListener();
 }

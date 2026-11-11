@@ -4,6 +4,7 @@
 import { describe, expect, test } from '@rstest/core';
 
 import {
+  CHAT_PROVIDER_SETTINGS_ADAPTER,
   CUSTOM_PROVIDER_BASE_URL,
   CUSTOM_PROVIDER_ID,
   CUSTOM_PROVIDER_MODEL,
@@ -26,6 +27,31 @@ const CUSTOM_SETTINGS: ProviderSettings = {
 };
 
 describe('shared chat helpers', () => {
+  test('keeps model selection separate from custom credentials and handles legacy or removed models', () => {
+    const { snapshot, restore } = CHAT_PROVIDER_SETTINGS_ADAPTER.conversation;
+    expect(snapshot(CUSTOM_SETTINGS)).toEqual({
+      provider: CUSTOM_PROVIDER_ID,
+      enableDesignGuidance: true,
+    });
+    const settings: ProviderSettings = {
+      ...CUSTOM_SETTINGS,
+      provider: 'available-model',
+      models: [{ id: 'available-model', label: 'Available model' }],
+    };
+    for (const provider of [undefined, 'removed-model']) {
+      expect(restore(settings, { provider, enableDesignGuidance: false }))
+        .toMatchObject({
+          provider: 'available-model',
+          enableDesignGuidance: false,
+        });
+    }
+    expect(restore(settings, snapshot(CUSTOM_SETTINGS))).toMatchObject({
+      provider: CUSTOM_PROVIDER_ID,
+      apiKey: CUSTOM_SETTINGS.apiKey,
+      baseURL: CUSTOM_SETTINGS.baseURL,
+    });
+  });
+
   test('parses OpenAI-style input and output token keys', () => {
     expect(parseTokenUsage({
       input_tokens: 2,

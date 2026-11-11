@@ -10,7 +10,7 @@ export type EventStatusChangeHandler = (
   eventName: string,
 ) => void;
 /**
- * @param eventName
+ * @param key - The event name
  * @returns
  */
 export const registerEventEnableStatusChangeHandler = generateRegister<

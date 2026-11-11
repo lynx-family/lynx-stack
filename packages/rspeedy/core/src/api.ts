@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { logger } from '@rsbuild/core'
-import type { RsbuildEntry } from '@rsbuild/core'
 
 import type { Config } from './config/index.js'
 
@@ -53,9 +52,4 @@ export interface ExposedAPI {
    * The version of Rspeedy.
    */
   version: string
-
-  /**
-   * Used for plugin qrcode get entry points from self-defined environments rather than default lynx environment.
-   */
-  entries?: RsbuildEntry
 }

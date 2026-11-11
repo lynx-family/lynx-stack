@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
 } from '@lynx-js/react';
+import type { Context } from '@lynx-js/react';
 
 /**
  * Validation state and helpers for OpenUI form fields.
@@ -30,7 +31,10 @@ export interface FormValidationContextValue {
   clearFieldError: (name: string) => void;
 }
 
-export const FormValidationContext = createContext<
+/** Validation state for the nearest enclosing OpenUI form. */
+export const FormValidationContext: Context<
+  FormValidationContextValue | null
+> = createContext<
   FormValidationContextValue | null
 >(null);
 

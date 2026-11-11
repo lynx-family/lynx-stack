@@ -87,3 +87,16 @@ external conformance program.
   The scoped source check passes; no generated output is included in the change.
 - Playground's standalone `tsc --noEmit` command is blocked by its existing project
   reference configuration (TS6310). Its Web and native production builds pass.
+
+## Integration with main
+
+Merged main at `3ff5a0282` after the protocol audit. Preserve its split Playground
+renderer and batch-aware streaming placeholders. Forward protocol RPC and metadata
+from `playground/src/render/a2ui.ts`; migrate Jev generation, restored inline
+snapshots, and the standalone preview to the current contract. Jev action responses
+update the existing surface without sending another createSurface.
+
+The merged tree passes all 80 repository build tasks, 1,948 tests across 170 files,
+and 26 API Extractor tasks. Client, server, and extractor type checks and scoped
+ESLint, Biome, and dprint checks pass. Refresh the server catalog with the current
+extractor output and include the API translations required by the new docs site.

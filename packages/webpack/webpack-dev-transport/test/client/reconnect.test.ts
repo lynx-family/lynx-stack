@@ -160,4 +160,38 @@ describe('reconnect', () => {
     // Should not change `__webpack_require__.h()`, HMR will update the runtime module.
     expect(global.__webpack_require__.h()).toBe('next-compilation-hash');
   });
+
+  it.each([true, false])(
+    'uses coordinated reconnect only while its coordinator is registered (%s)',
+    async enabled => {
+      vi.mock('../../client/transport.js');
+      vi.mock('../../client/reloadApp.js');
+      vi.stubGlobal('__webpack_require__', {
+        h: () => String(hash),
+        lynxHMR: {},
+      });
+      const { default: reloadApp } = await import('../../client/reloadApp.js');
+      await import('../../client/index.js');
+      const { LynxTransportClient } = await import('../../client/transport.js');
+      // @ts-expect-error mock type
+      const instance = LynxTransportClient.mock.instances[0];
+      const send = instance.onMessage.mock.calls[0][0];
+      if (!enabled) delete global.__webpack_require__.lynxHMR;
+      send(JSON.stringify({ type: 'hot' }));
+      send(JSON.stringify({ type: 'close' }));
+      send(JSON.stringify({ type: 'hash', data: 'new-server-hash' }));
+      send(JSON.stringify({ type: 'ok' }));
+      expect(global.__webpack_require__.h()).toBe(
+        enabled ? String(hash) : 'new-server-hash',
+      );
+      expect(reloadApp).toHaveBeenLastCalledWith(
+        { hot: true, liveReload: false, progress: false },
+        {
+          previousHash: enabled ? String(hash) : 'new-server-hash',
+          currentHash: 'new-server-hash',
+          isReconnecting: false,
+        },
+      );
+    },
+  );
 });

@@ -7,7 +7,6 @@
  */
 let __root: {
   __jsx?: React.ReactNode;
-  __opcodes?: any[];
   nodeType?: Element['nodeType'];
 };
 

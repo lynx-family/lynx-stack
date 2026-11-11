@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/create-lynx",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Create a Lynx app or library with one command",
   "keywords": [
     "create",
@@ -34,7 +34,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "rstest run"
   },
   "dependencies": {
@@ -59,6 +59,7 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@types/react": "^19.2.18",
+    "agent-lynx": "0.14.29",
     "happy-dom": "20.14.0",
     "jsdom": "^27.4.0",
     "typescript": "catalog:"

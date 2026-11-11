@@ -3,11 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
-import { z } from 'zod/v4';
 
 import { Checkbox, CheckboxIndicator } from '@lynx-js/lynx-ui';
 import { useEffect, useRef, useState } from '@lynx-js/react';
 
+import { CheckBox as CheckBoxDefinition } from './definition.js';
 import {
   useFormName,
   useGetFieldValue,
@@ -16,8 +16,7 @@ import {
   useSetFieldValue,
   useTriggerAction,
 } from '../../core/context.jsx';
-import { defineComponent } from '../../core/library.jsx';
-import { actionPropSchema } from '../Action/index.jsx';
+import type { DefinedComponent } from '../../core/library.jsx';
 
 import '../../../styles/catalog/CheckBox.css';
 
@@ -26,16 +25,8 @@ const CONTINUE_CONVERSATION_ACTION = String(
 );
 const OPEN_URL_ACTION = String(BuiltinActionType.OpenUrl);
 
-export const CheckBox = defineComponent({
-  name: 'CheckBox',
-  props: z.object({
-    label: z.string(),
-    value: z.boolean().optional(),
-    action: actionPropSchema.optional(),
-    name: z.string().optional(),
-  }),
-  description:
-    'Toggleable checkbox. Visual state updates locally on tap; the action fires for the LLM to persist the change.',
+export const CheckBox: DefinedComponent<typeof CheckBoxDefinition.props> = {
+  ...CheckBoxDefinition,
   component: ({ props }) => {
     const triggerAction = useTriggerAction();
     const formName = useFormName();
@@ -109,4 +100,4 @@ export const CheckBox = defineComponent({
       </Checkbox>
     );
   },
-});
+};

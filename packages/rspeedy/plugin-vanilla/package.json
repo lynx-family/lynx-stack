@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/vanilla-rsbuild-plugin",
-  "version": "0.1.0",
+  "version": "0.1.7",
   "description": "An Rsbuild plugin for building Vanilla Lynx applications with Element PAPI.",
   "keywords": [
     "rsbuild",
@@ -32,7 +32,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "rstest",
     "test:type": "tsc6 --noEmit"
   },
@@ -48,7 +48,7 @@
     "@rstest/core": "catalog:rstest"
   },
   "peerDependencies": {
-    "@lynx-js/rspeedy": "^0.17.0",
+    "@lynx-js/rspeedy": "^0.17.0 || ^0.18.0",
     "@rsbuild/core": "^2.0.0"
   },
   "peerDependenciesMeta": {

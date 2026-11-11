@@ -35,6 +35,7 @@ export interface MockNativePapi {
   mockRemoveElementTemplateNodeFromSlot: any;
   mockReportError: any;
   mockFlushElementTree: any;
+  mockGetElementByAttrSlot: any;
   cleanup: () => void;
 }
 
@@ -347,8 +348,38 @@ export function installMockNativePapi(
     },
   );
 
-  const mockFlushElementTree = vi.fn().mockImplementation((element: unknown, options: unknown) => {
-    nativeLog.push(['__FlushElementTree', formatNode(element), options]);
+  const mockFlushElementTree = vi.fn().mockImplementation((element: unknown, flushOptions?: FlushOptions) => {
+    nativeLog.push(['__FlushElementTree', formatNode(element), flushOptions]);
+  });
+
+  const rootTargets = new WeakMap<object, object>();
+  const mockGetElementByAttrSlot = vi.fn((handle: CompiledTemplateNode, slot: number) => {
+    function findTarget(definition: unknown, element: unknown): object | null {
+      if (!isRecord(definition) || !isRecord(element)) return null;
+      const descriptors = definition['attributesArray'] as Array<{ kind: string; attrSlotIndex?: number }> | undefined;
+      if (descriptors?.some(descriptor => descriptor.kind !== 'static' && descriptor.attrSlotIndex === slot)) {
+        if (element !== handle) {
+          if (typeof element['__mockNativeId'] !== 'number') attachMockNativeId(element);
+          return element;
+        }
+        // Even a root target is an ElementRef distinct from the ET handle.
+        let target = rootTargets.get(handle);
+        if (!target) {
+          target = Object.create(handle) as object;
+          attachMockNativeId(target);
+          rootTargets.set(handle, target);
+        }
+        return target;
+      }
+      const definitions = definition['children'] as unknown[] | undefined;
+      const elements = element['children'] as unknown[] | undefined;
+      for (const [index, child] of (definitions ?? []).entries()) {
+        const target = findTarget(child, elements?.[index]);
+        if (target) return target;
+      }
+      return null;
+    }
+    return findTarget(handle.__compiledTemplate, handle);
   });
 
   vi.stubGlobal('__CreateElementTemplate', mockCreateCompiledElementTemplate);
@@ -365,6 +396,7 @@ export function installMockNativePapi(
   vi.stubGlobal('__RemoveNodeFromElementTemplate', mockRemoveElementTemplateNodeFromSlot);
   vi.stubGlobal('__SerializeElementTemplate', mockSerializeElementTemplate);
   vi.stubGlobal('__FlushElementTree', mockFlushElementTree);
+  vi.stubGlobal('__GetElementByAttrSlot', mockGetElementByAttrSlot);
   const currentLynx = (globalThis as unknown as { lynx?: any }).lynx;
   const baseLynx = (currentLynx && typeof currentLynx === 'object') ? currentLynx : {};
   const baseGetNativeApp = typeof baseLynx.getNativeApp === 'function'
@@ -395,6 +427,7 @@ export function installMockNativePapi(
     mockRemoveElementTemplateNodeFromSlot: mockRemoveElementTemplateNodeFromSlot,
     mockReportError: mockReportError,
     mockFlushElementTree: mockFlushElementTree,
+    mockGetElementByAttrSlot,
     cleanup: (): void => {
       const errorCalls = mockReportError.mock.calls;
       if (clearTemplatesOnCleanup) {

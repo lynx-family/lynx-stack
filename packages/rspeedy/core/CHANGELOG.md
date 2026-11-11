@@ -1,5 +1,77 @@
 # @lynx-js/rspeedy
 
+## 0.18.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.8
+
+## 0.18.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.7
+
+## 0.18.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.6
+
+## 0.18.2
+
+### Patch Changes
+
+- Upgrade the bundled Rsdoctor packages from the 2.0 release candidate to 2.0.0. ([#4174](https://github.com/lynx-family/lynx-stack/pull/4174))
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.5
+
+## 0.18.1
+
+### Patch Changes
+
+- Upgrade the built-in Rsdoctor to `@rsdoctor/core@2.0.0-rc.1`, which supports the same Node.js range as Rspeedy (`^20.19.0 || >=22.12.0`). `RSDOCTOR=true` automatically enables Rsdoctor 2.0, and manually registered plugins are preserved without duplicate injection. ([#4043](https://github.com/lynx-family/lynx-stack/pull/4043))
+
+  `tools.rsdoctor` accepts legacy Rsdoctor 1.x fields and migrates them to the Rsdoctor 2.0 configuration. Rsdoctor 2 enables native graph collection and treemap visualization by default. Custom plugin registrations should import `RsdoctorRspackPlugin` from `@rsdoctor/core`.
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.1.4
+
+## 0.18.0
+
+### Minor Changes
+
+- **BREAKING CHANGE**: Remove `entries` from `ExposedAPI`. Rspeedy never set it; `pluginQRCode` reads the entry points from the environments instead. ([#3971](https://github.com/lynx-family/lynx-stack/pull/3971))
+
+- Stop defaulting `output.cssModules.localIdentName` to `[local]-[hash:base64:6]`, so Rspeedy follows the Rsbuild default of `[path][name]__[local]-[hash:base64:6]` in development. ([#3972](https://github.com/lynx-family/lynx-stack/pull/3972))
+
+- Stop defaulting `dev.progressBar` to `true`, so Rspeedy follows the Rsbuild default and leaves the progress bar off. ([#3969](https://github.com/lynx-family/lynx-stack/pull/3969))
+
+### Patch Changes
+
+- Updated dependency `@rsdoctor/rspack-plugin` to `~1.6.4`. ([#3831](https://github.com/lynx-family/lynx-stack/pull/3831))
+
+- Default `performance.profile` to `true` in `pluginLynx` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, to align with Rspeedy. ([#3973](https://github.com/lynx-family/lynx-stack/pull/3973))
+
+- Write `stats.json` in chunks, so that a large project no longer fails with `RangeError: Invalid string length` when `performance.profile` is enabled. ([#3929](https://github.com/lynx-family/lynx-stack/pull/3929))
+
+- Upgrade Rspack, Rsbuild, Rslib, and Rstest as one compatible toolchain, and emit inspected Rspeedy configurations as `.mjs` files. ([#3997](https://github.com/lynx-family/lynx-stack/pull/3997))
+- Updated dependencies [[`f5779c6`](https://github.com/lynx-family/lynx-stack/commit/f5779c6364caba15152181baf7205a33b2037870), [`0cea2a3`](https://github.com/lynx-family/lynx-stack/commit/0cea2a3d34cb4dee019f0bc82ba07ef3a664ef23), [`c8a6aaf`](https://github.com/lynx-family/lynx-stack/commit/c8a6aafdde20972252898eae32da0aa385f31d6e)]:
+  - @lynx-js/rsbuild-plugin@0.1.3
+
+## 0.17.2
+
+### Patch Changes
+
+- Tell `initConfigs` which action the preview command is for. Without it Rsbuild does not know the action yet when the plugins are initialized, and skips every plugin's `apply` filter. ([#3843](https://github.com/lynx-family/lynx-stack/pull/3843))
+
+  Leave the `dev.lazyCompilation` default to `@lynx-js/rsbuild-plugin`, which now applies it for the Rsbuild CLI too.
+- Upgrade Rsbuild to 2.2.4 and fix CSS rule cloning with its stricter bundler chain types. ([#3885](https://github.com/lynx-family/lynx-stack/pull/3885))
+- Updated dependencies [[`4cde2f4`](https://github.com/lynx-family/lynx-stack/commit/4cde2f42601fa58a6936481eb2f486c68ebd3f55), [`9a56957`](https://github.com/lynx-family/lynx-stack/commit/9a5695786d050b395e262e0964747aaa3eae69d7), [`c171d53`](https://github.com/lynx-family/lynx-stack/commit/c171d53a110e64062371357efef290fabf95dd9e), [`9b4693f`](https://github.com/lynx-family/lynx-stack/commit/9b4693f4277bf637fceaeb39022664f49428d4f2), [`958ffb4`](https://github.com/lynx-family/lynx-stack/commit/958ffb4d591f0c3be4affe7ffc2da97c3044c701)]:
+  - @lynx-js/rsbuild-plugin@0.1.2
+
 ## 0.17.1
 
 ### Patch Changes

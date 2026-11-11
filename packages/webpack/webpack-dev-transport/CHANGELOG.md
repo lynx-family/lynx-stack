@@ -1,5 +1,14 @@
 # @lynx-js/webpack-dev-transport
 
+## 0.4.1
+
+### Patch Changes
+
+- Add internal HMR loading and update coordination hooks. Allow coordinated updates to refresh cached module factories, serialize application, detect timeouts, preserve runtime hashes on reconnect, and reload once on failure. ([#4178](https://github.com/lynx-family/lynx-stack/pull/4178))
+
+  Allow up to ten seconds for coordinated background application before timeout recovery.
+- Apply main-thread hot updates to loaded async chunks, keep async definition modules stable when worklets are added or removed, and retain background HMR on hosts without Native bundle loading. ([#4179](https://github.com/lynx-family/lynx-stack/pull/4179))
+
 ## 0.4.0
 
 ### Minor Changes

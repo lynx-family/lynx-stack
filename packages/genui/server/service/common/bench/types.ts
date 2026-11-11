@@ -1,7 +1,8 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-
+import type { ModelPrices } from '../model-config.js';
+import type { OpenAIReasoningEffort } from '../types.js';
 import type { BenchProtocol } from './protocol-types.js';
 import type { A2UIMessage } from '../../../agent/a2ui/a2ui-validator.js';
 
@@ -76,12 +77,18 @@ export interface BenchSettings {
   maxRepairAttempts: number;
   repairEnabled: boolean;
   judgeEnabled: boolean;
+  uiJudgeModel?: string;
   renderMetricsEnabled: boolean;
   timeoutMs?: number;
 }
 
 export interface BenchGroupRequest {
+  /** Generation reasoning effort. Defaults to default, inheriting the selected model configuration. */
+  reasoningEffort?: 'default' | OpenAIReasoningEffort;
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  enableScriptReuse?: boolean;
+  stylePreset?: 'default' | false;
   id: string;
   role: BenchRole;
   name: string;
@@ -126,6 +133,7 @@ export interface BenchProgress {
 }
 
 export interface BenchRunResult {
+  modelPrices?: ModelPrices;
   id: string;
   groupId: string;
   groupName: string;
@@ -141,6 +149,8 @@ export interface BenchRunResult {
   catalog: BenchCatalogLabel | 'matched-core' | 'none';
   tokens: number;
   agentMs: number;
+  /** Generation-relative arrival of the first nonempty text delta; reasoning is excluded. */
+  firstTextTokenMs?: number;
   fmpMs: number;
   ttiMs: number;
   renderMs: number;
@@ -186,6 +196,9 @@ export interface BenchGroupSummary {
   successRate: number;
   avgTokens: number;
   avgAgentMs: number;
+  /** Average over runs with a recorded first text milestone. */
+  avgFirstTextTokenMs?: number;
+  firstTextRunCount?: number;
   avgFmpMs: number;
   avgTtiMs: number;
   avgRenderMs: number;

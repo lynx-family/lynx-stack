@@ -22,7 +22,6 @@ import type {
   Store,
   ToolProvider,
 } from '@openuidev/lang-core';
-import type React from 'react';
 
 import {
   useCallback,
@@ -31,8 +30,11 @@ import {
   useRef,
   useSyncExternalStore,
 } from '@lynx-js/react';
+import type { ReactNode } from '@lynx-js/react';
 
 import type { LegacyActionConfig } from '../../catalog/Action/index.jsx';
+import type { InitialQueryResults } from '../../data-tools/types.js';
+import { registerOpenUIBuiltins } from '../../shared/builtins.js';
 import type { OpenUIContextValue } from '../context.jsx';
 import type { Library } from '../library.jsx';
 
@@ -86,8 +88,7 @@ function evaluateRecord(
     : {};
 }
 
-/** Prefetched Query results keyed by Query assignment name (statement ID). */
-export type InitialQueryResults = Readonly<Record<string, unknown>>;
+export type { InitialQueryResults } from '../../data-tools/types.js';
 
 /** Inputs used to parse OpenUI text and build renderer state. */
 export interface UseOpenUIStateOptions {
@@ -141,8 +142,9 @@ export function useOpenUIState(
     toolProvider,
     onError,
   }: UseOpenUIStateOptions,
-  renderDeep: (value: unknown) => React.ReactNode,
+  renderDeep: (value: unknown) => ReactNode,
 ): OpenUIState {
+  registerOpenUIBuiltins();
   // ─── Streaming parser (incremental — caches completed statements) ───
   const sp = useMemo(
     () => createStreamingParser(library.toJSONSchema(), library.root),
@@ -503,6 +505,17 @@ export function useOpenUIState(
       // ActionPlan path (v0.5) — sequential steps with halt-on-mutation-failure
       const actionPlan = action;
       if (actionPlan?.steps) {
+        // Actions may follow a field update or another Set in the same turn.
+        // Render snapshots do not include those writes until the next render.
+        const actionContext: EvaluationContext = {
+          ...evaluationContext,
+          getState: name => {
+            const snapshot = store.getSnapshot();
+            return hasOwn(snapshot, name)
+              ? unwrapFieldValue(snapshot[name])
+              : evaluationContext.getState(name);
+          },
+        };
         for (const step of actionPlan.steps) {
           switch (step.type) {
             case ACTION_STEPS.Run: {
@@ -511,7 +524,7 @@ export function useOpenUIState(
                   (m) => m.statementId === step.statementId,
                 );
                 const evaluatedArgs = mn?.argsAST
-                  ? evaluateRecord(mn.argsAST, evaluationContext)
+                  ? evaluateRecord(mn.argsAST, actionContext)
                   : {};
                 const ok = await queryManager.fireMutation(
                   step.statementId,
@@ -538,7 +551,7 @@ export function useOpenUIState(
               ));
               break;
             case ACTION_STEPS.Set: {
-              const value = evaluate(step.valueAST, evaluationContext);
+              const value = evaluate(step.valueAST, actionContext);
               store.set(step.target, value);
               break;
             }

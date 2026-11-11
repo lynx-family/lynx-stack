@@ -1,6 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
     "build": {
       "dependsOn": [
@@ -9,13 +11,6 @@
         "@lynx-js/react-transform#build:wasm",
         "@lynx-js/reactlynx-testing-library#build",
         "@lynx-js/testing-environment#build"
-      ],
-      "inputs": [
-        "runtime/src/worklet-runtime/**",
-        "rslib.config.ts"
-      ],
-      "outputs": [
-        "runtime/worklet-runtime/**"
       ]
     }
   }

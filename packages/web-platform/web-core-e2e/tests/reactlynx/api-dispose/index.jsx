@@ -5,6 +5,7 @@ import { root, useEffect } from '@lynx-js/react';
 
 function App() {
   useEffect(() => {
+    console.log('api-dispose-ready');
     return () => {
       console.log('fin');
     };

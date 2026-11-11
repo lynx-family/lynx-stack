@@ -6,7 +6,7 @@ import { describe, expect, test } from '@rstest/core';
 
 import { RuntimeWrapperWebpackPlugin } from '../src/index.js';
 
-function wrap(assets) {
+function wrap(assets, options = {}) {
   const updated = new Map();
   let processAssets;
   const compilation = {
@@ -38,12 +38,28 @@ function wrap(assets) {
     },
   };
 
-  new RuntimeWrapperWebpackPlugin({ targetSdkVersion: '3.2' }).apply(compiler);
+  new RuntimeWrapperWebpackPlugin({ targetSdkVersion: '3.2', ...options })
+    .apply(compiler);
   processAssets();
   return updated;
 }
 
 describe('RuntimeWrapperWebpackPlugin', () => {
+  test('marks background chunks when re-evaluation is enabled', () => {
+    const updated = wrap({
+      'entry.js': {},
+      'async.js': {},
+    }, { experimental_reEvalJSOnReload: true });
+    const marker =
+      `lynx[Symbol.for('__LYNX_ENTRY_SUPPORTS_RE_EVAL__')] = true;`;
+
+    expect(updated.get('entry.js')).toContain(marker);
+    expect(updated.get('entry.js').indexOf(marker)).toBeLessThan(
+      updated.get('entry.js').indexOf('\nbody\n'),
+    );
+    expect(updated.get('async.js')).toContain(marker);
+  });
+
   test('wraps a background asset and leaves a main-thread one alone', () => {
     const updated = wrap({
       'background.js': {},

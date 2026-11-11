@@ -22,7 +22,7 @@ The [`paths`](https://www.typescriptlang.org/tsconfig/#paths) option of TypeScri
 
 After configuring, if you reference `@common/request.ts` in your code, it will be mapped to the `<project>/src/common/request.ts` path.
 
-<!-- eslint-disable-next-line import/no-unresolved, no-unused-vars -->
+<!-- eslint-disable-next-line import/no-unresolved -->
 
 ```js
 import { get } from '@common/request.js'; // The same as './common/request.js'
@@ -30,7 +30,7 @@ import { get } from '@common/request.js'; // The same as './common/request.js'
 
 ## Custom `tsconfig.json` Path
 
-Rspeedy by default reads the `tsconfig.json` file from the root directory. You can use the [source.tsconfigPath](../api/rspeedy.source.tsconfigpath) to configure a custom tsconfig.json file path.
+Rspeedy by default reads the `tsconfig.json` file from the root directory. You can use the [source.tsconfigPath](../api/rspeedy.source.tsconfigpath.md) to configure a custom tsconfig.json file path.
 
 ```ts
 export default {
@@ -42,17 +42,106 @@ export default {
 
 ## Rspeedy type declaration
 
-Rspeedy provide various built-in features like [CSS Modules](./css.mdx#using-css-modules) and [Static Assets](./assets.md). TypeScript does not know about these features and the corresponding type declarations.
+Rspeedy provide various built-in features like CSS Modules and [Static Assets](./assets.md). TypeScript does not know about these features and the corresponding type declarations.
 
-To solve this, create a `src/rspeedy-env.d.ts` file, and add the following content:
+To solve this, add `@lynx-js/rspeedy/client` to the `types` array in `tsconfig.json`, keeping the entries already there:
 
-```typescript title=src/rspeedy-env.d.ts
-/// <reference types="@lynx-js/rspeedy/client" />
+```json title=tsconfig.json
+{
+  "compilerOptions": {
+    "types": ["@lynx-js/rspeedy/client"]
+  }
+}
 ```
 
 :::tip
-`create-rspeedy-app` will automatically create this file for you.
+[`create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) will automatically include this for you.
 :::
+
+## Extending Lynx types
+
+Lynx provides default types, but you may need to extend or customize certain type definitions for your application.
+
+- [`GlobalProps`](#globalprops): extends the type definition for `lynx.__globalProps`
+- [`InitData`](#initdata): extends the return type of [`useInitData()`](https://lynxjs.org/api/react/Function.useInitData.mdx)
+- [`IntrinsicElements`](#intrinsicelements): extends the type definition for elements (e.g: you may have your own `<input>` element)
+- [`NativeModules`](#nativemodules): extends the type definition for [custom native modules](https://lynxjs.org/guide/use-native-modules.mdx).
+
+### GlobalProps
+
+You can extend the `interface GlobalProps` from `@lynx-js/types` to add custom properties:
+
+```ts title="src/global-props.d.ts"
+declare module '@lynx-js/types' {
+  interface GlobalProps {
+    foo: string;
+    bar: number;
+  }
+}
+
+export {}; // This export makes the file a module
+```
+
+After this extension, TypeScript will recognize and provide type checking for `lynx.__globalProps.foo` and `lynx.__globalProps.bar`.
+
+### InitData
+
+You can extend the `interface InitData` from `@lynx-js/react` to add your custom data properties:
+
+```ts title="src/init-data.d.ts"
+declare module '@lynx-js/react' {
+  interface InitData {
+    foo: string;
+    bar: number;
+  }
+}
+
+export {}; // This export makes the file a module
+```
+
+With this extension, TypeScript will provide type checking for `useInitData().foo` and `useInitData().bar` in your components.
+
+### IntrinsicElements
+
+You can extends the `interface IntrinsicElements` from `@lynx-js/types` to add your [custom native element](https://lynxjs.org/guide/custom-native-component.mdx)
+
+Here is an example for a `<input>` element with required `type` and optional `bindinput` and `value`.
+
+<!-- eslint-disable import/no-unresolved -->
+
+```ts title="src/intrinsic-element.d.ts"
+import * as Lynx from '@lynx-js/types';
+
+declare module '@lynx-js/types' {
+  interface IntrinsicElements extends Lynx.IntrinsicElements {
+    input: {
+      bindinput?: (e: { type: 'input'; detail: { value: string } }) => void;
+      type: string;
+      value?: string | undefined;
+    };
+  }
+}
+```
+
+### NativeModules
+
+You can extend the `interface NativeModules` from `@lynx-js/types` to add custom [native modules](https://lynxjs.org/guide/use-native-modules.mdx):
+
+Here is an example for a `NativeLocalStorageModule` with 3 methods:
+
+```ts title="src/native-modules.d.ts"
+declare module '@lynx-js/types' {
+  interface NativeModules {
+    NativeLocalStorageModule: {
+      clearStorage(): void;
+      getStorageItem(key: string): string | null;
+      setStorageItem(key: string, value: string): void;
+    };
+  }
+}
+
+export {}; // This export makes the file a module
+```
 
 ## TypeScript Transpilation
 
@@ -65,13 +154,13 @@ Unlike the native TypeScript compiler, tools like SWC and Babel compile each fil
 ```json title="tsconfig.json"
 {
   "compilerOptions": {
-    "isolatedModules": true
+    "isolatedModules": true // [!code focus]
   }
 }
 ```
 
 :::tip
-`create-rspeedy` will automatically include this for you.
+[`create-lynx`](https://www.npmjs.com/package/@lynx-js/create-lynx) will automatically include this for you.
 :::
 
 This option can help you avoid using certain syntax that cannot be correctly compiled by SWC and Babel, such as cross-file type references. It will guide you to correct the corresponding usage:

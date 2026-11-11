@@ -14,6 +14,7 @@ import { runWithForceRootRender } from '../../core/forceRootRender.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
 import { installMainThreadHooks } from '../../core/hooks/mainThreadImpl.js';
 import { updateCardData } from '../../core/lynx-update-data.js';
+import { setupComponentStack } from '../../shared/component-stack.js';
 import { lynxQueueMicrotask } from '../../utils.js';
 import { installElementTemplateCommitHook } from '../background/commit-hook.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
@@ -24,6 +25,7 @@ import { initElementTemplatePAPICallAlog } from '../debug/elementPAPICall.js';
 import { initProfileHook } from '../debug/profile.js';
 import { setupLynxEnv } from '../lynx/env.js';
 import { initTimingAPI } from '../lynx/performance.js';
+import { installElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { publicComponentEvent, publishEvent, resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';
 
@@ -56,6 +58,7 @@ function init(): void {
   if (__MAIN_THREAD__) {
     installMainThreadHooks();
     injectCalledByNative();
+    installElementTemplateRefInitValueListener();
     installElementTemplatePatchListener();
     installOnMtsDestruction();
     if (__PROFILE__) {
@@ -64,6 +67,9 @@ function init(): void {
   }
 
   if (__BACKGROUND__) {
+    if (__DEV__) {
+      setupComponentStack();
+    }
     options.requestAnimationFrame = lynxQueueMicrotask;
     console.log('experimental_useElementTemplate:', __USE_ELEMENT_TEMPLATE__);
     setRoot(new BackgroundPageRootInstance());

@@ -175,14 +175,14 @@ describe('Compiled ordinary ref background updates', () => {
     );
     const stableRef = vi.fn();
     const newRef = vi.fn();
-    const unsupportedMainThreadRef = vi.fn();
+    const unsupportedCustomRef = vi.fn();
     const unsupportedWorkletRef = vi.fn();
 
     const host = renderOnBackground(backgroundModule, {
       spread: {
         id: 'cta',
         ref: stableRef,
-        'main-thread:ref': unsupportedMainThreadRef,
+        'custom:ref': unsupportedCustomRef,
         'worklet:ref': unsupportedWorkletRef,
       },
     });
@@ -192,7 +192,7 @@ describe('Compiled ordinary ref background updates', () => {
       spread: {
         id: 'cta',
         ref: stableRef,
-        'main-thread:ref': unsupportedMainThreadRef,
+        'custom:ref': unsupportedCustomRef,
         'worklet:ref': unsupportedWorkletRef,
       },
     });
@@ -229,7 +229,6 @@ describe('Compiled ordinary ref background updates', () => {
     expect(newRef).toHaveBeenCalledWith(expect.objectContaining({
       selector: `[ref=${host.instanceId}-0]`,
     }));
-    expect(unsupportedMainThreadRef).not.toHaveBeenCalled();
     expect(unsupportedWorkletRef).not.toHaveBeenCalled();
   });
 

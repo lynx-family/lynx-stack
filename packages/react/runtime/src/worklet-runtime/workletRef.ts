@@ -2,24 +2,44 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { WorkletRef, WorkletRefId, WorkletRefImpl } from './bindings/types.js';
+import type {
+  MainThreadRefInitValuePatch,
+  Worklet,
+  WorkletRef,
+  WorkletRefId,
+  WorkletRefImpl,
+} from './bindings/types.js';
+import {
+  assertCompatibleMainThreadObject,
+  createMainThreadObject,
+  initMainThreadObjects,
+  isRealizedMainThreadObject,
+  registerMainThreadObjectType,
+} from './mainThreadObject.js';
+import type { MainThreadObjectFactory } from './mainThreadObject.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
 
 interface RefImpl {
-  _workletRefMap: Record<WorkletRefId, WorkletRef<unknown>>;
-  _firstScreenWorkletRefMap: Record<WorkletRefId, WorkletRef<unknown>>;
+  _workletRefMap: Record<WorkletRefId, object>;
+  _firstScreenWorkletRefMap: Record<WorkletRefId, object>;
   updateWorkletRef(
     refImpl: WorkletRefImpl<Element | null>,
     element: ElementNode | null,
   ): void;
-  updateWorkletRefInitValueChanges(patch: [number, unknown][]): void;
+  updateWorkletRefInitValueChanges(
+    patch: MainThreadRefInitValuePatch,
+  ): void;
+  registerMainThreadObjectType(
+    type: string,
+    create: MainThreadObjectFactory | Worklet,
+  ): void;
   clearFirstScreenWorkletRefMap(): void;
 }
 
 let impl: RefImpl | undefined;
-
 function initWorkletRef(): RefImpl {
+  initMainThreadObjects();
   return (impl = {
     _workletRefMap: {},
     /**
@@ -31,6 +51,7 @@ function initWorkletRef(): RefImpl {
     _firstScreenWorkletRefMap: {},
     updateWorkletRef,
     updateWorkletRefInitValueChanges,
+    registerMainThreadObjectType,
     clearFirstScreenWorkletRefMap,
   });
 }
@@ -39,15 +60,64 @@ const createWorkletRef = <T>(
   id: WorkletRefId,
   value: T,
 ): WorkletRef<T> => {
-  return {
+  const ref = {
     current: value,
     _wvid: id,
   };
+  return ref;
 };
 
-const getFromWorkletRefMap = <T>(
-  refImpl: WorkletRefImpl<T>,
-): WorkletRef<T> => {
+function createWorkletValue(refImpl: WorkletRefImpl<unknown>): object {
+  return !refImpl._type || refImpl._type === 'main-thread'
+    ? createWorkletRef(refImpl._wvid, refImpl._initValue)
+    : createMainThreadObject(refImpl);
+}
+
+function isMutableCell(value: unknown): value is WorkletRef<unknown> {
+  return typeof value === 'object' && value !== null
+    && typeof (value as Partial<WorkletRef<unknown>>)._wvid === 'number'
+    && Object.prototype.hasOwnProperty.call(value, 'current');
+}
+
+function isHydratedWorkletValue(value: unknown): value is object {
+  return typeof value === 'object' && value !== null
+    && (isRealizedMainThreadObject(value) || isMutableCell(value));
+}
+
+function assertCompatibleWorkletValue(
+  handle: WorkletRefImpl<unknown>,
+  value: object,
+  operation: 'hydration' | 'initialization patch',
+): void {
+  let actualKind: 'typed-object' | 'mutable-cell' | undefined;
+  if (isRealizedMainThreadObject(value)) {
+    actualKind = 'typed-object';
+  } else if (isMutableCell(value)) {
+    actualKind = 'mutable-cell';
+  }
+  if (!actualKind) {
+    throw new Error(
+      `Cannot apply MainThreadObject ${operation} for handle ${handle._wvid}: the existing target has no worklet-value metadata.`,
+    );
+  }
+
+  const expectedType = handle._type;
+  const expectedKind = !expectedType || expectedType === 'main-thread'
+    ? 'mutable-cell'
+    : 'typed-object';
+  if (actualKind !== expectedKind) {
+    throw new Error(
+      `Worklet value kind mismatch during ${operation} for handle ${handle._wvid}: background handle expects ${expectedKind}, but the main-thread target is ${actualKind}.`,
+    );
+  }
+  if (actualKind === 'typed-object') {
+    assertCompatibleMainThreadObject(handle, value, operation);
+  }
+}
+
+const getFromWorkletRefMap = (
+  refImpl: WorkletRefImpl<unknown>,
+): object | undefined => {
   const id = refImpl._wvid;
   /* v8 ignore next 3 */
   if (__DEV__) {
@@ -59,12 +129,9 @@ const getFromWorkletRefMap = <T>(
     // Might be called in two scenarios:
     // 1. In MTS events
     // 2. In `main-thread:ref`
-    value = impl!._firstScreenWorkletRefMap[id] as WorkletRef<T>;
-    if (!value) {
-      value = impl!._firstScreenWorkletRefMap[id] = createWorkletRef(id, refImpl._initValue);
-    }
+    value = impl!._firstScreenWorkletRefMap[id] ??= createWorkletValue(refImpl);
   } else {
-    value = impl!._workletRefMap[id] as WorkletRef<T>;
+    value = impl!._workletRefMap[id];
   }
 
   /* v8 ignore next 3 */
@@ -78,6 +145,14 @@ function removeValueFromWorkletRefMap(id: WorkletRefId): void {
   delete impl!._workletRefMap[id];
 }
 
+function hydrateWorkletValue(
+  handle: WorkletRefImpl<unknown>,
+  value: object,
+): void {
+  assertCompatibleWorkletValue(handle, value, 'hydration');
+  impl!._workletRefMap[handle._wvid] = value;
+}
+
 /**
  * Create an element instance of the given element node, then set the worklet value to it.
  * This is called in `snapshotContextUpdateWorkletRef`.
@@ -88,20 +163,44 @@ function updateWorkletRef(
   handle: WorkletRefImpl<Element | null>,
   element: ElementNode | null,
 ): void {
-  getFromWorkletRefMap(handle).current = element
+  (getFromWorkletRefMap(handle) as WorkletRef<Element | null>).current = element
     ? new Element(element)
     : null;
 }
 
 function updateWorkletRefInitValueChanges(
-  patch: [WorkletRefId, unknown][],
+  patch: MainThreadRefInitValuePatch,
 ): void {
   profile('updateWorkletRefInitValueChanges', () => {
-    patch.forEach(([id, value]) => {
-      if (!impl!._workletRefMap[id]) {
-        impl!._workletRefMap[id] = createWorkletRef(id, value);
+    let firstError: unknown;
+    let hasError = false;
+    patch.forEach(([id, value, type]) => {
+      try {
+        const handle = {
+          _wvid: id,
+          _initValue: value,
+          _type: type,
+        } as WorkletRefImpl<unknown>;
+        const existing = impl!._workletRefMap[id];
+        if (existing) {
+          assertCompatibleWorkletValue(
+            handle,
+            existing,
+            'initialization patch',
+          );
+        } else {
+          impl!._workletRefMap[id] = createWorkletValue(handle);
+        }
+      } catch (error) {
+        if (!hasError) {
+          firstError = error;
+          hasError = true;
+        }
       }
     });
+    if (hasError) {
+      throw firstError;
+    }
   });
 }
 
@@ -115,5 +214,7 @@ export {
   initWorkletRef,
   getFromWorkletRefMap,
   removeValueFromWorkletRefMap,
+  hydrateWorkletValue,
+  isHydratedWorkletValue,
   updateWorkletRefInitValueChanges,
 };

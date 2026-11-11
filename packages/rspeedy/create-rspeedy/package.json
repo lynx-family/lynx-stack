@@ -1,6 +1,6 @@
 {
   "name": "create-rspeedy",
-  "version": "0.17.1",
+  "version": "0.18.5",
   "description": "Deprecated: use @lynx-js/create-lynx instead",
   "keywords": [
     "webpack",
@@ -30,7 +30,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib",
     "test": "vitest"
   },
   "dependencies": {

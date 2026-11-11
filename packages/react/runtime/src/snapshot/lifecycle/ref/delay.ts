@@ -79,4 +79,4 @@ interface RefProxy extends RefProxyForwardedMethods<RefProxy> {}
 /**
  * @internal
  */
-export { RefProxy, runDelayedUiOps, shouldDelayUiOps };
+export { delayedUiOps, RefProxy, runDelayedUiOps, shouldDelayUiOps };

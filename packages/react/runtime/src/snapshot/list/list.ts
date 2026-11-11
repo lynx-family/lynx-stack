@@ -1,13 +1,20 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { cardLifetime } from '../../core/card-lifetime.js';
 import { maybePromise } from '../../utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';
 
-export const gSignMap: Record<number, Map<number, SnapshotInstance>> = {};
-export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = {};
+export const gSignMap: Record<number, Map<number, SnapshotInstance>> = /*#__PURE__*/ cardLifetime(
+  'listSignMap',
+  () => ({}),
+);
+export const gRecycleMap: Record<number, Map<string, Map<number, SnapshotInstance>>> = /*#__PURE__*/ cardLifetime(
+  'listRecycleMap',
+  () => ({}),
+);
 const gParentWeakMap: WeakMap<SnapshotInstance, unknown> = /*#__PURE__*/ new WeakMap();
 const resolvedPromise = /* @__PURE__ */ Promise.resolve();
 

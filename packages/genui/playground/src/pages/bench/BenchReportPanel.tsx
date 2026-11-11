@@ -3,8 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 import { useMemo } from 'react';
 
+import { BenchCost, BenchCostLabel } from './BenchCost.js';
 import { findComparableBaseline, getBenchProtocolLabel } from './benchData.js';
 import type { BenchSettings } from './benchData.js';
+import { benchGroupAverageCost, benchTotalCost } from './benchPricing.js';
 import type { BenchGroupSummary, BenchReport } from './benchReportTypes.js';
 import { BenchTaskTiming } from './BenchTaskTiming.js';
 import { BenchTokens } from './BenchTokens.js';
@@ -13,7 +15,8 @@ import { Button } from '../../components/Button.js';
 import { FileText, Maximize2, Sparkles } from '../../components/Icon.js';
 import { PageHeader } from '../../components/PageHeader.js';
 
-function formatMs(value: number): string {
+function formatMs(value: number | undefined): string {
+  if (value === undefined || !Number.isFinite(value)) return 'Not recorded';
   if (value >= 1000) return `${(value / 1000).toFixed(1)}s`;
   return `${Math.round(value)}ms`;
 }
@@ -22,8 +25,13 @@ function formatNumber(value: number): string {
   return new Intl.NumberFormat('en-US').format(Math.round(value));
 }
 
-function deltaText(value: number, baseline: number): string {
-  if (baseline === 0) return 'n/a';
+function deltaText(
+  value: number | undefined,
+  baseline: number | undefined,
+): string {
+  if (value === undefined || baseline === undefined || baseline === 0) {
+    return 'n/a';
+  }
   const delta = ((value - baseline) / baseline) * 100;
   const sign = delta > 0 ? '+' : '';
   return `${sign}${delta.toFixed(1)}%`;
@@ -110,9 +118,11 @@ export function BenchReportPanel(props: {
       (left, right) => left.avgTokens - right.avgTokens,
     )[0] ?? null
     : null;
-  const fastestAgent = props.report
-    ? [...props.report.summaries].sort(
-      (left, right) => left.avgAgentMs - right.avgAgentMs,
+  const fastestText = props.report
+    ? [...props.report.summaries].filter(summary =>
+      summary.avgFirstTextTokenMs !== undefined
+    ).sort(
+      (left, right) => left.avgFirstTextTokenMs! - right.avgFirstTextTokenMs!,
     )[0] ?? null
     : null;
   const topJudge = props.report?.capabilities?.judge === 'disabled'
@@ -171,6 +181,15 @@ export function BenchReportPanel(props: {
           <>
             <div className='benchInsightGrid'>
               <div className='benchInsight'>
+                <span>
+                  <BenchCostLabel>Estimated cost (CNY)</BenchCostLabel>
+                </span>
+                <strong>
+                  <BenchCost cost={benchTotalCost(props.report.results)} />
+                </strong>
+                <small>Recorded generation runs</small>
+              </div>
+              <div className='benchInsight'>
                 <span>Lowest tokens</span>
                 <strong>{getGroupName(bestTokens)}</strong>
                 <div>
@@ -186,10 +205,10 @@ export function BenchReportPanel(props: {
                 </div>
               </div>
               <div className='benchInsight'>
-                <span>Fastest agent</span>
-                <strong>{getGroupName(fastestAgent)}</strong>
+                <span>Fastest 1st Text</span>
+                <strong>{getGroupName(fastestText)}</strong>
                 <small>
-                  {fastestAgent ? formatMs(fastestAgent.avgAgentMs) : 'n/a'}
+                  {formatMs(fastestText?.avgFirstTextTokenMs)}
                 </small>
               </div>
               <div className='benchInsight'>
@@ -207,10 +226,13 @@ export function BenchReportPanel(props: {
                   <tr>
                     <th>Comparison group</th>
                     <th>Tokens</th>
+                    <th>
+                      <BenchCostLabel>Est. cost (CNY)</BenchCostLabel>
+                    </th>
+                    <th title='Time from generation start to the first text delta, excluding reasoning. Averaged over recorded runs.'>
+                      1st Text
+                    </th>
                     <th>Agent</th>
-                    <th>FMP</th>
-                    <th>TTI</th>
-                    <th>Render</th>
                     <th>Attempts</th>
                     <th>Judge</th>
                   </tr>
@@ -229,6 +251,13 @@ export function BenchReportPanel(props: {
                               <small>
                                 {getBenchProtocolLabel(summary.protocol)}
                                 {summary.profile ? ` · ${summary.profile}` : ''}
+                                {groupsById.get(summary.groupId)
+                                    ?.reasoningEffort
+                                  ? ` · reasoning ${
+                                    groupsById.get(summary.groupId)!
+                                      .reasoningEffort
+                                  }`
+                                  : ''}
                               </small>
                             </span>
                           </div>
@@ -244,18 +273,32 @@ export function BenchReportPanel(props: {
                           </small>
                         </td>
                         <td>
+                          <BenchCost
+                            cost={benchGroupAverageCost(props.report!, summary)}
+                            average
+                          />
+                        </td>
+                        <td>
+                          <strong>
+                            {formatMs(summary.avgFirstTextTokenMs)}
+                          </strong>
+                          <small>
+                            {deltaText(
+                              summary.avgFirstTextTokenMs,
+                              baseline.avgFirstTextTokenMs,
+                            )}
+                          </small>
+                        </td>
+                        <td>
                           <strong>{formatMs(summary.avgAgentMs)}</strong>
                           <small>
                             {deltaText(summary.avgAgentMs, baseline.avgAgentMs)}
                           </small>
                         </td>
-                        <td>{formatMs(summary.avgFmpMs)}</td>
-                        <td>{formatMs(summary.avgTtiMs)}</td>
-                        <td>{formatMs(summary.avgRenderMs)}</td>
                         <td>{summary.avgAttempts.toFixed(1)}x</td>
                         <td>
                           {formatSummaryJudgeMetric(
-                            props.report,
+                            props.report!,
                             props.settings,
                             summary,
                           )}
@@ -308,8 +351,8 @@ export function BenchReportPanel(props: {
 
             <div className='benchReportNotes'>
               <span>
-                Agent, token, attempts, and validation data are collected by the
-                server. Unavailable Render or UI Judge data is explicitly
+                1st Text, Agent, token, attempts, and validation data are
+                collected by the server. Unavailable UI Judge data is explicitly
                 marked.
               </span>
             </div>

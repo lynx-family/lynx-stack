@@ -1,0 +1,37 @@
+.OpenUIChatProductFeature {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 22rpx;
+  padding: 20rpx;
+  border: 1rpx solid var(--openui-color-border);
+  border-radius: 16rpx;
+}
+.OpenUIChatProductImage {
+  width: 220rpx;
+  height: 220rpx;
+  flex-shrink: 0;
+}
+.OpenUIChatProductBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 220rpx;
+  gap: 12rpx;
+}
+.OpenUIChatProductTitle {
+  font-size: 28rpx;
+  line-height: 1.5;
+  font-weight: 700;
+  color: var(--openui-color-text);
+}
+.OpenUIChatProductSubtitle {
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--openui-color-text-muted);
+}
+.OpenUIChatProductPrice {
+  font-size: 28rpx;
+  color: var(--openui-color-primary);
+  font-weight: 700;
+}

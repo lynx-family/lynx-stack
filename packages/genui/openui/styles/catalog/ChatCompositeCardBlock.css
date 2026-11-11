@@ -1,0 +1,45 @@
+.OpenUIChatCompositeGrid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.OpenUIChatCompositeCard {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  flex-basis: 42%;
+  min-width: 220rpx;
+  padding: 18rpx;
+  border: 1rpx solid var(--openui-color-border);
+  border-radius: 18rpx;
+  background-color: var(--openui-color-surface-strong);
+}
+.OpenUIChatCompositeFixed {
+  min-width: 0;
+}
+.OpenUIChatCompositeBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  flex: 1;
+}
+.OpenUIChatCompositeFooter {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  padding-top: 20rpx;
+}
+.OpenUIChatCompositeScroll {
+  width: 100%;
+}
+.OpenUIChatCompositeCarousel {
+  flex-wrap: nowrap;
+}
+.OpenUIChatCompositeSlide {
+  width: 440rpx;
+  flex: none;
+}

@@ -2,6 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { readBenchTokenUsage } from '../../service/common/bench/usage.js';
+
+/** Normalize generation usage for client-side pricing; null means unreported. */
+export function extractTokenUsage(usage: unknown) {
+  const normalized = readBenchTokenUsage(usage);
+  return {
+    ...normalized,
+    inputTokens: normalized.inputTokens ?? null,
+    cachedTokens: normalized.cachedTokens ?? null,
+    outputTokens: normalized.outputTokens ?? null,
+  };
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

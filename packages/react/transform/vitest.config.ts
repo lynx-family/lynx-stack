@@ -10,7 +10,11 @@ export default defineConfig({
   test: {
     name: 'react/transform',
     coverage: {
-      exclude: ['./__test__/*.bench.js'],
+      exclude: [
+        './__test__/*.bench.js',
+        './crates/**/tests/__swc_snapshots__/**',
+        './tests/__swc_snapshots__/**',
+      ],
     },
   },
   plugins: [

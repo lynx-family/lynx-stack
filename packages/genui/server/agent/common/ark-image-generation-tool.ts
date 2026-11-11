@@ -6,6 +6,8 @@ import { RequestContext } from '@mastra/core/request-context';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
+import { emitToolPerformanceEvent } from './tool-performance.js';
+
 export const IMG_GEN_ARK_API_KEY_ENV = 'IMG_GEN_ARK_API_KEY';
 export const IMG_GEN_ARK_IMAGE_MODEL_ENV = 'IMG_GEN_ARK_IMAGE_MODEL';
 export const IMG_GEN_ARK_IMAGE_BASE_URL_ENV = 'IMG_GEN_ARK_IMAGE_BASE_URL';
@@ -260,6 +262,8 @@ function startPendingImageGeneration(
   reserveImageGenerationCall(requestContext);
   const { scopeId } = requestContext.get(ARK_IMAGE_GENERATION_RUN_STATE_KEY);
   const jobId = crypto.randomUUID();
+  const startedAt = performance.now();
+  const scope = { requestContext };
   const jobs = pendingImageJobsByScope.get(scopeId)
     ?? new Map<string, Promise<ArkImageGenerationResumeData>>();
   const pending: Promise<ArkImageGenerationResumeData> = generateArkImage(
@@ -268,18 +272,34 @@ function startPendingImageGeneration(
     fetchImpl,
     abortSignal,
   ).then(
-    (generated): ArkImageGenerationResumeData => ({
-      ok: true,
-      jobId,
-      url: generated.url,
-      ...(typeof generated.size === 'string' ? { size: generated.size } : {}),
-    }),
+    (generated): ArkImageGenerationResumeData => {
+      emitToolPerformanceEvent(scope, {
+        callId: jobId,
+        toolName: 'generate_image',
+        durationMs: performance.now() - startedAt,
+        status: 'success',
+      });
+      return {
+        ok: true,
+        jobId,
+        url: generated.url,
+        ...(typeof generated.size === 'string' ? { size: generated.size } : {}),
+      };
+    },
   ).catch(
-    (error: unknown): ArkImageGenerationResumeData => ({
-      ok: false,
-      jobId,
-      error: errorMessage(error),
-    }),
+    (error: unknown): ArkImageGenerationResumeData => {
+      emitToolPerformanceEvent(scope, {
+        callId: jobId,
+        toolName: 'generate_image',
+        durationMs: performance.now() - startedAt,
+        status: 'error',
+      });
+      return {
+        ok: false,
+        jobId,
+        error: errorMessage(error),
+      };
+    },
   );
   jobs.set(jobId, pending);
   pendingImageJobsByScope.set(scopeId, jobs);
@@ -434,14 +454,27 @@ export async function generateArkImageForRun(
   abortSignal?: AbortSignal,
 ): Promise<GeneratedImage> {
   reserveImageGenerationCall(scope.requestContext);
-  const generated = await generateArkImage(
-    config,
-    prompt,
-    fetchImpl,
-    abortSignal,
-  );
-  recordGeneratedImageURL(scope.requestContext, generated.url);
-  return generated;
+  const callId = crypto.randomUUID();
+  const startedAt = performance.now();
+  let status = 'error';
+  try {
+    const generated = await generateArkImage(
+      config,
+      prompt,
+      fetchImpl,
+      abortSignal,
+    );
+    recordGeneratedImageURL(scope.requestContext, generated.url);
+    status = 'success';
+    return generated;
+  } finally {
+    emitToolPerformanceEvent(scope, {
+      callId,
+      toolName: 'generate_image',
+      durationMs: performance.now() - startedAt,
+      status,
+    });
+  }
 }
 
 const imageGenerationInputSchema = z.object({

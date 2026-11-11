@@ -93,9 +93,6 @@ function collectSnapshotPatchOps(patch) {
       case SnapshotOperation.DEV_ONLY_AddSnapshot:
         i += 2;
         break;
-      case SnapshotOperation.DEV_ONLY_RegisterWorklet:
-        i += 2;
-        break;
       case SnapshotOperation.DEV_ONLY_SetSnapshotEntryName:
         i += 2;
         break;

@@ -2,15 +2,19 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { expect, test } from '@rstest/core';
+import { expect, rstest, test } from '@rstest/core';
 
 import eventsRoute from '../app/a2ui/bench/jobs/[jobId]/events/route.js';
 import { finishBenchRunProgress } from '../service/common/bench/progress.js';
-import { getBenchJobStore } from '../service/common/bench/store.js';
+import {
+  BenchJobStore,
+  getBenchJobStore,
+} from '../service/common/bench/store.js';
 import type {
   BenchJobRequest,
   BenchRunProgress,
 } from '../service/common/bench/types.js';
+import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 
 const request: BenchJobRequest = {
   provider: {},
@@ -35,6 +39,97 @@ const request: BenchJobRequest = {
     renderMetricsEnabled: false,
   },
 };
+
+test('keeps model-based plan ids correlated in snapshots, events and reports', () => {
+  const model = 'public-model';
+  rstest.stubEnv(
+    GENUI_MODEL_CONFIG_ENV,
+    JSON.stringify({
+      [model]: {
+        model,
+        apiKey: 'private-key',
+        baseURL: 'https://provider.example/v1',
+      },
+    }),
+  );
+  try {
+    const store = new BenchJobStore();
+    const groupId = `preset-${model}`;
+    const scenarioId = `scenario-${model}`;
+    const job = store.createJob({
+      ...request,
+      groups: [{ ...request.groups[0]!, id: groupId, model }],
+      scenarios: [{ ...request.scenarios[0]!, id: scenarioId }],
+    }, 2);
+    expect(store.getSnapshot(job.id)?.progress.runs?.[0]).toMatchObject({
+      groupId,
+      scenarioId,
+      phase: 'queued',
+    });
+    store.updateProgress(job.id, {
+      current: { groupId, scenarioId, repeatIndex: 1, phase: 'judge' },
+    });
+    store.emit(job.id, 'run-phase', {
+      runProgress: job.progress.runs?.[0],
+      error: `${model} private-key`,
+      unknown: { id: `unrecognized-${model}` },
+    });
+    expect(job.events.at(-1)?.data).toMatchObject({
+      runProgress: {
+        groupId,
+        scenarioId,
+        phase: 'judge',
+        generation: 'complete',
+        screenshot: 'complete',
+        judge: 'running',
+      },
+      error: '[REDACTED] [REDACTED]',
+      unknown: { id: 'unrecognized-[REDACTED]' },
+    });
+    expect(store.getSnapshot(job.id)?.progress.current?.groupId).toBe(groupId);
+    store.cancelJob(job.id);
+    store.setReport(job.id, {
+      id: 'report',
+      jobId: job.id,
+      createdAt: job.createdAt,
+      completedAt: job.updatedAt,
+      status: 'cancelled',
+      env: { model },
+      settings: job.request.settings,
+      capabilities: {
+        agent: 'enabled',
+        judge: 'enabled',
+        renderMetrics: 'disabled',
+      },
+      warnings: [],
+      groups: job.request.groups,
+      scenarios: job.request.scenarios,
+      results: [],
+      summaries: [],
+      summary: {
+        totalRuns: 2,
+        completedRuns: 0,
+        failedRuns: 0,
+        successRate: 0,
+        avgTokens: 0,
+        avgAgentMs: 0,
+        avgAttempts: 0,
+      },
+    });
+    expect(job.report?.groups[0]?.id).toBe(groupId);
+    expect(job.report?.scenarios[0]?.id).toBe(scenarioId);
+    expect(job.report?.runProgress?.[0]).toMatchObject({
+      groupId,
+      scenarioId,
+      phase: 'cancelled',
+      generation: 'complete',
+      screenshot: 'complete',
+      judge: 'cancelled',
+    });
+  } finally {
+    rstest.unstubAllEnvs();
+  }
+});
 
 test('a reconnect receives all run states even after their phase events were evicted', async () => {
   const store = getBenchJobStore();

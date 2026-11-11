@@ -7,6 +7,7 @@ import { Agent } from '@mastra/core/agent';
 import type { A2UICatalog } from './a2ui-catalog.js';
 import { loadBasicCatalog } from './a2ui-catalog.js';
 import { buildA2UISystemPrompt } from './a2ui-prompt.js';
+import { GENUI_DESIGN_GUIDANCE } from '../../design/design-guidance.js';
 import { createAgentCapabilities } from '../common/agent-capabilities.js';
 import type { GenerationAgentOptions } from '../common/agent-capabilities.js';
 import type { ArkImageGenerationRunScope } from '../common/ark-image-generation-tool.js';
@@ -73,6 +74,7 @@ export async function createA2UIAgent(opts: A2UIAgentOptions = {}) {
     IMAGE_GENERATION_TOOL_INSTRUCTIONS,
   );
   const appendix = [
+    opts.enableDesignGuidance === false ? undefined : GENUI_DESIGN_GUIDANCE,
     opts.systemAppendix,
     capabilities.instructions,
   ]

@@ -75,6 +75,7 @@ export const TemplateSectionLabel = /*#__PURE__*/ {
   CustomSections: 4,
   ElementTemplates: 5,
   Configurations: 6,
+  CustomSectionsStyleInfo: 7,
 } as const;
 
 /**

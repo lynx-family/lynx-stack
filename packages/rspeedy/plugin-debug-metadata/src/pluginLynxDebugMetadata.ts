@@ -44,7 +44,7 @@ function isLocalProductionBuild(isProd: boolean): boolean {
 
 /**
  * Delete every emitted `debug-metadata.json` from a build's output unless
- * `DEBUG=rspeedy`. `LynxEncodePlugin` only strips it (via its intermediate-asset
+ * `DEBUG=lynx`. `LynxEncodePlugin` only strips it (via its intermediate-asset
  * cleanup) when *not* under Rsdoctor — Rsdoctor keeps intermediate files split
  * so it can analyse them — which would otherwise leak debug metadata into
  * `RSDOCTOR=true` bundles. Dev builds keep the asset in memory so the
@@ -127,10 +127,12 @@ interface LynxTemplatePluginExposure {
 }
 
 /**
- * Register `debug-metadata.json` emission for every Lynx template build
- * and serve sub-field queries via a connect-style dev-server middleware.
+ * Register `debug-metadata.json` emission for Lynx template builds (`lynx`
+ * and `lynx-*` environments; skipped in local production builds and removed
+ * from non-development output unless `DEBUG=lynx`) and serve sub-field
+ * queries via a connect-style dev-server middleware.
  *
- * Auto-registered by Rspeedy core.
+ * Registered by `pluginLynx` from `@lynx-js/rsbuild-plugin`.
  *
  * The dev-server middleware exposes these endpoints (relative to each
  * entry's intermediate dir):

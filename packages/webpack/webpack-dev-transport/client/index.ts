@@ -8,7 +8,13 @@ import type { BuildErrors } from './logBuildErrors.js';
 import { parseURL } from './parseURL.js';
 import reloadApp from './reloadApp.js';
 import socket from './socket.js';
+import type { HotUpdateCoordinator } from './startHotDevServer.js';
 import { LynxTransportClient } from './transport.js';
+
+declare const __webpack_require__: {
+  h(): string;
+  lynxHMR?: HotUpdateCoordinator;
+};
 
 export interface Options {
   hot: boolean;
@@ -86,12 +92,19 @@ const onSocketMessage = {
       // We only need this once when reconnecting
       status.isReconnecting = false;
 
+      // A coordinated update must advance both runtimes by applying modules.
+      // Reconnection alone cannot make the background runtime match the server.
+      if (__webpack_require__.lynxHMR) {
+        status.previousHash = __webpack_hash__;
+        status.currentHash = hash;
+        return;
+      }
+
       // Here, we not only override the currentHash, but also override the
       // previousHash and the hash in webpack runtime.
       // In this way, we reset all the hash-related runtime status to match
       // the cold start.
       status.currentHash = status.previousHash = hash;
-      // @ts-expect-error webpack runtime hack
       /* webpack/runtime/getFullHash */ __webpack_require__.h = function() {
         return hash;
       };

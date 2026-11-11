@@ -13,21 +13,13 @@ async function runMainThreadLoader(
   buildInfo: Record<string, unknown>,
 ): Promise<{ code: string; map?: string }> {
   return new Promise((resolve, reject) => {
-    const loaderPath = path.resolve(
-      __dirname,
-      '../lib/loaders/main-thread.js',
-    );
     const transformPath = path.resolve(
       __dirname,
       './fixtures/mock-main-thread-transform.cjs',
     );
 
-    import(loaderPath).then(
-      (
-        mod: {
-          default: (this: Record<string, unknown>, content: string) => void;
-        },
-      ) => {
+    import('../src/loaders/main-thread.js').then(
+      (mod) => {
         const loader = mod.default;
 
         const ctx: Record<string, unknown> = {
@@ -54,13 +46,49 @@ async function runMainThreadLoader(
           },
         };
 
-        loader.call(ctx, content);
+        void loader.call(ctx as ThisParameterType<typeof loader>, content);
       },
     ).catch(reject);
   });
 }
 
 describe('main-thread loader', () => {
+  it('replaces semantic runtime requirements when a rebuilt module changes', async () => {
+    const buildInfo: Record<string, unknown> = {};
+
+    await runMainThreadLoader(
+      '/* __mainThreadProgrammability */ export function App() { return null; }',
+      buildInfo,
+    );
+
+    expect(buildInfo['lynx:react-runtime-requirements']).toEqual({
+      mainThreadProgrammability: true,
+    });
+
+    await runMainThreadLoader(
+      'export function App() { return null; }',
+      buildInfo,
+    );
+
+    expect(buildInfo['lynx:react-runtime-requirements']).toEqual({
+      mainThreadProgrammability: false,
+    });
+  });
+
+  it.each(['__missingRuntimeRequirements', '__invalidRuntimeRequirements'])(
+    'rejects a transform without the required module-delivery protocol: %s',
+    async (marker) => {
+      await expect(
+        runMainThreadLoader(
+          `/* ${marker} */ export function App() { return null; }`,
+          {},
+        ),
+      ).rejects.toThrow(
+        'upgrade the build plugins and @lynx-js/react (runtime and transform) together',
+      );
+    },
+  );
+
   it('clears stale element-template build info when recompilation stops emitting templates', async () => {
     const buildInfo: Record<string, unknown> = {};
 

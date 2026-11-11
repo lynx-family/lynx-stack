@@ -36,12 +36,15 @@ const parser = new XMLParser({
 
 interface GeneratorState {
   bindings: Map<string, string>;
+  classNames: Set<string>;
   lines: string[];
 }
 
 export interface GeneratedMainThreadScript {
   /** Only explicit XML ids are retained in the runtime nodeMap. */
   bindings: Record<string, string>;
+  /** Literal template classes available for optional preset stylesheet generation. */
+  classNames: string[];
   javascript: string;
 }
 
@@ -95,6 +98,9 @@ function appendAttribute(
 ): void {
   const value = javascriptString(String(rawValue));
   if (name === 'class') {
+    for (const className of String(rawValue).split(/\s+/u)) {
+      if (className) state.classNames.add(className);
+    }
     state.lines.push(`__SetClasses(${node}, ${value});`);
   } else if (name === 'id') {
     const bindingName = String(rawValue);
@@ -274,6 +280,7 @@ export function generateMainThreadScriptResult(
 
   const state: GeneratorState = {
     bindings: new Map(),
+    classNames: new Set(),
     lines: [],
   };
   for (const child of children) {
@@ -293,6 +300,7 @@ export function generateMainThreadScriptResult(
   }
   return {
     bindings: Object.fromEntries(state.bindings),
+    classNames: [...state.classNames],
     javascript: [
       'const nodeMap = Object.create(null);',
       'const parents = [page];',

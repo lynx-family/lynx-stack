@@ -9,6 +9,8 @@ import { Children as PreactChildren } from 'preact/compat';
  * Type of ReactLynx children utilities.
  *
  * @public
+ *
+ * @group Types
  */
 export type ReactLynxChildren = Omit<typeof PreactChildren, 'map' | 'forEach' | 'toArray'> & {
   map<T extends ComponentChild, R>(

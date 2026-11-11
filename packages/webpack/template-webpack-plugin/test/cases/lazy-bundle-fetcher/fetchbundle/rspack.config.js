@@ -7,6 +7,20 @@ import { LynxEncodePlugin, LynxTemplatePlugin } from '../../../../lib/index.js';
 export default {
   devtool: false,
   mode: 'development',
+  experiments: { layers: true },
+  module: {
+    rules: [
+      { test: /foo\.mts\.js$/, layer: 'react:main-thread' },
+      { test: /foo\.bts\.js$/, layer: 'react:background' },
+    ],
+  },
+  experiments: { layers: true },
+  module: {
+    rules: [
+      { test: /foo\.mts\.js$/, layer: 'react:main-thread' },
+      { test: /foo\.bts\.js$/, layer: 'react:background' },
+    ],
+  },
   plugins: [
     new LynxEncodePlugin(),
     new LynxTemplatePlugin({
@@ -46,7 +60,7 @@ export default {
           },
           (assets) => {
             for (const name of Object.keys(assets)) {
-              if (!name.includes(':main-thread')) continue;
+              if (!name.includes('main-thread')) continue;
               const asset = compilation.getAsset(name);
               if (!asset) continue;
               compilation.updateAsset(asset.name, asset.source, {

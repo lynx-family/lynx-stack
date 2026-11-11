@@ -4,9 +4,6 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginTypeCheck } from '@rsbuild/plugin-type-check';
 
 export default defineConfig({
-  environments: {
-    lynx: {},
-  },
   source: {
     entry: {
       main: './src/index.tsx',

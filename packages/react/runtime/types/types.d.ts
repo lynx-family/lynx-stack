@@ -11,6 +11,7 @@ import type { InitData, InitDataRaw } from '../src/lynx-api.js';
 
 interface ReactLynxRuntimeConfig {
   [key: string]: unknown;
+  globalPropsMode?: 'reactive' | 'event';
   transformBuiltinAttributeNames?:
     | boolean
     | TransformBuiltinAttributeNamesOptions;
@@ -21,18 +22,21 @@ declare global {
   declare const __REF_FIRE_IMMEDIATELY__: boolean;
   declare const __TESTING_FORCE_RENDER_TO_OPCODE__: boolean;
   declare const __FIRST_SCREEN_SYNC_TIMING__: 'immediately' | 'jsReady' | 'manual';
+  declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __DEV__: boolean;
   declare const __JS__: boolean;
   declare const __LEPUS__: boolean;
   declare const __BACKGROUND__: boolean;
   declare const __MAIN_THREAD__: boolean;
   declare const __PROFILE__: boolean;
+  declare const lepusng_gc: (() => void) | undefined;
   declare const __REACT_DEVTOOL__: boolean | undefined;
   declare const __ALOG__: boolean | undefined;
   declare const __ALOG_ELEMENT_API__: boolean | undefined;
   declare const __ENABLE_SSR__: boolean;
-  declare const __GLOBAL_PROPS_MODE__: 'reactive' | 'event' | undefined;
   declare const __LAZY_BUNDLE_FETCHER__: 'FetchBundle' | 'QueryComponent';
+  declare const __RUNTIME_VERSION__: string | undefined;
+  declare const __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: boolean | undefined;
   declare function __CreatePage(componentId: string, cssId: number): FiberElement;
   declare function __CreateElement(
     tag: string,
@@ -220,7 +224,8 @@ declare global {
     callDestroyLifetimeFun: () => void;
     updateGlobalProps: (newData: Record<string, unknown>) => void;
     updateCardData: (newData: Record<string, any>, options?: Record<string, unknown>) => void;
-    onAppReload: (updateData: Record<string, any>) => void;
+    onAppReload: (updateData: Record<string, any>, options?: Record<string, unknown>) => void;
+    reloadCard?: (updateData?: object, options?: Record<string, unknown>) => boolean;
     processCardConfig: () => void;
     callBeforePublishEvent?: (data: unknown) => void;
     getDynamicComponentExports: (schema: string) => { default: React.ComponentType<any> } | null | undefined;

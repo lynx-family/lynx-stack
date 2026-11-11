@@ -14,6 +14,7 @@ import { jsonWithCors } from '../../common/cors';
 import { errorMessage } from '../../common/errors';
 import { checkRateLimit, rateLimitJsonResponse } from '../../common/rate-limit';
 import { readJsonBodyWithLimit } from '../../common/request';
+import { extractTokenUsage } from '../../common/usage.js';
 import {
   normalizeRendererEvent,
   pickA2UIChatOptions,
@@ -31,6 +32,7 @@ interface A2UIActionBody extends A2UIRendererEventBody {
   model?: string;
   apiKey?: string;
   baseURL?: string;
+  enableDesignGuidance?: boolean;
   catalog?: A2UICatalog;
   maxRepairAttempts?: number;
 }
@@ -142,7 +144,10 @@ async function postA2UIAction(req: Request) {
       },
       req.signal,
     );
-    return jsonWithCors(req, validated);
+    return jsonWithCors(req, {
+      ...validated,
+      tokenUsage: extractTokenUsage(validated.usage),
+    });
   } catch (err: unknown) {
     const { message, name } = errorMessage(err, {
       secrets: [body.apiKey, opts.apiKey],

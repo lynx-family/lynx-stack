@@ -1,0 +1,72 @@
+root = Card([intro, overview, daysSection, transportTitle, transport, stayTitle, stays, foodTitle, foods, prepTitle, prepForm, progress, tips, refineTitle, refineForm], sources)
+
+$ready = {visa:false, jrp:false, hotel:false, clothes:false, insurance:false, cash:false, wifi:false, shoes:false}
+$departureDate = ""
+$travelers = ""
+$origin = ""
+
+intro = TextContent("**春节去北海道8天，推荐走「札幌+小樽+旭川+登别+函馆」经典道南路线。** 若按2027年春节假期出行，正好赶上札幌雪祭（2月4日–11日），是冬季北海道最热闹的时候。以下是可调整的8天7晚方案，具体出发日期可根据你的假期确认。[1][2]")
+
+overview = TextContent("### 路线总览
+札幌（3晚）→ 登别（1晚）→ 函馆（2晚）→ 札幌（1晚），共7晚。
+中间穿插小樽一日游、旭川动物园+美瑛一日游。
+**亮点**：札幌雪祭、小樽运河雪景、旭山动物园企鹅散步、登别地狱谷温泉、函馆百万夜景。")
+
+daysSection = SectionBlock([d1, d2, d3, d4, d5, d6, d7, d8], false)
+
+d1 = SectionItem("d1", "D1 · 抵达札幌 · 雪祭初体验", [ImageText("/api/assets/afc010aad8aa7f280babaae1", "札幌雪祭雪雕夜景", "春节期间正好赶上雪祭", "新千岁机场乘JR快速Airport号约37分钟到札幌站，放下行李后去大通公园看雪雕，晚上逛薄野吃晚饭。", true, "horizontal", 104), TextContent("**安排理由**：第一天不排太满，适应气温和时差。春节期间雪祭正在举办，大通会场的大型雪雕晚上亮灯后尤其有氛围。[1][2]
+**住宿**：札幌站/大通附近，交通最方便。")])
+
+d2 = SectionItem("d2", "D2 · 小樽一日游 · 运河雪景", [ImageText("/api/assets/95da45d40c1911a21b6b5e7d", "小樽运河冬季雪景", "雪中小樽是冬季北海道的招牌", "札幌站乘JR函馆本线约40分钟到小樽，南小樽站下车。路线：堺町通 → 北一硝子 → 八音盒堂 → 小樽运河 → 政寿司午餐。傍晚回札幌。", true, "horizontal", 104), TextContent("**安排理由**：小樽离札幌近，放在第二天体力好的时候逛。冬季运河积雪+煤气灯很出片，LeTAO甜品和玻璃工艺品店也集中在堺町通一带。[3][4]
+**小贴士**：朝里站可以顺路下车拍海边雪景，但车站周边设施少，注意保暖。")])
+
+d3 = SectionItem("d3", "D3 · 旭川动物园 + 美瑛青池", [ImageText("/api/assets/19883cb543daf709791a211c", "旭山动物园企鹅散步", "冬季限定的企鹅散步是必看项目", "札幌乘特急Lilac/Kamui号约1小时25分到旭川，上午看旭山动物园企鹅散步（冬季限定），下午去美瑛看青池和白须瀑布，傍晚回札幌。", true, "horizontal", 104), TextContent("**安排理由**：旭山动物园的企鹅散步是北海道冬季最有人气的活动之一，建议提前查好当天散步时间。美瑛青池冬季被雪环绕，蓝白色调很特别。[5][6]
+**注意**：美瑛冬季公交班次少，建议参加一日游巴士或包车，自驾需要雪地驾驶经验。青池景色受天气影响大，阴天可能看不到蓝色。")])
+
+d4 = SectionItem("d4", "D4 · 札幌 → 登别 · 地狱谷温泉", [ImageText("/api/assets/4dfb2d5d0f3576a69991fb99", "登别地狱谷冬季雪景", "火山地貌+积雪+硫磺蒸汽，很有北国特色", "札幌乘特急Suzuran号约1小时20分到登别站，转巴士约20分钟到温泉街。下午逛地狱谷，晚上住温泉旅馆泡汤、吃怀石料理。", true, "horizontal", 104), TextContent("**安排理由**：从札幌往函馆走，登别是中途最合适的温泉落脚点。地狱谷是北海道最具代表性的火山地热景观，冬季白雪配白烟很有冲击力。[7][8]
+**住宿**：登别温泉街的温泉旅馆，建议选带一泊二食的，体验会完整很多。")])
+
+d5 = SectionItem("d5", "D5 · 登别 → 函馆 · 百万夜景", [ImageText("/api/assets/ea91946cd497cc852dad8368", "函馆山冬季夜景", "函馆山夜景与香港、那不勒斯并称世界三大夜景", "登别乘特急北斗号到函馆，下午逛五棱郭公园（星形城郭雪景）和元町教会群，傍晚乘缆车上函馆山看夜景。", true, "horizontal", 104), TextContent("**安排理由**：函馆山夜景是函馆的王牌，扇形灯光+两侧海面非常震撼。冬天山顶风大温度低，一定要戴帽子手套。[5][9]
+**住宿**：函馆站附近，方便第二天逛早市和坐电车。")])
+
+d6 = SectionItem("d6", "D6 · 函馆市内 · 海港慢逛", [TextContent("**上午**：函馆早市吃海鲜盖饭，新鲜海胆、鲑鱼子、螃蟹是冬季的强项。
+**下午**：金森红砖仓库群 → 八幡坂 → 海边散步。八幡坂是函馆最美坡道，一路通向海边。
+**晚上**：吃小丑汉堡或函馆盐味拉面，逛函馆灯饰节（冬季限定）。[4][10]"), TextContent("**安排理由**：函馆是个适合慢慢逛的港口城市，一天时间不赶，把经典景点都走到。早市和红砖仓库都在海边，可以连起来走。")])
+
+d7 = SectionItem("d7", "D7 · 函馆 → 札幌 · 购物休整", [TextContent("上午从函馆乘特急北斗号回札幌（约4小时），下午可以逛狸小路商店街、大丸百货、丸井今井买伴手礼。白色恋人公园如果之前没去也可以安排在这天。
+晚上吃成吉思汗烤肉或汤咖喱，作为旅行收尾。[3][11]")])
+
+d8 = SectionItem("d8", "D8 · 札幌 → 返程", [TextContent("根据航班时间退房，乘JR快速Airport号约37分钟到新千岁机场。机场也有不少商店和白色恋人工厂店，可以最后补货。
+**建议**：国际航班提前3小时到机场，春节期间人多，留出充裕时间。")])
+
+transportTitle = TextContent("### 交通怎么安排")
+
+transport = Steps([StepsItem("JR北海道铁路周游券（5日券）", "5日券¥22,000，可在连续5日内不限次乘坐JR北海道特急等列车。建议先列出你计划使用Pass的日期和区间，与单独购票总价比较后再决定是否购买。巴士段需另外付费。[7][8]"), StepsItem("新千岁机场 ↔ 札幌", "JR快速Airport号，约37分钟，自由席¥1,230。班次很多，不用太担心衔接。[8]"), StepsItem("主要城市间特急", "札幌↔旭川约1小时25分、札幌↔登别约1小时20分、函馆↔札幌约4小时。具体票价可在JR北海道官网或JR-EAST预订系统查询。")])
+
+stayTitle = TextContent("### 住哪里最合适")
+
+stays = ListBlock([ListItem("札幌 · 札幌站/大通", "交通枢纽，去机场、小樽、旭川都方便。周边商场餐厅多，春节期间雪祭会场步行可达。", null, null, null), ListItem("登别 · 温泉街", "选带一泊二食的温泉旅馆，体验地狱谷+温泉+怀石的完整组合。冬季热门，建议提前订。", null, null, null), ListItem("函馆 · 函馆站附近", "去早市、坐市电都方便。想安静一点可以选元町/汤之川区域，但交通稍逊。", null, null, null)], "number", "default")
+
+foodTitle = TextContent("### 冬季必吃清单")
+
+foods = ListBlock([ListItem("成吉思汗烤肉", "北海道名物，冬天吃烤肉配啤酒特别过瘾。札幌站附近就有很多店。", null, null, null), ListItem("海鲜盖饭/螃蟹", "函馆早市、札幌二条市场都能吃到。冬季海产最肥美，海胆和螃蟹是重头戏。", null, null, null), ListItem("汤咖喱", "北海道特色，汤底浓郁配蔬菜和肉，冬天暖身首选。", null, null, null), ListItem("札幌拉面 / 函馆盐味拉面", "札幌味噌拉面浓郁，函馆盐味拉面清爽，各有风格。", null, null, null), ListItem("小樽甜品", "LeTAO的芝士蛋糕和草莓蛋糕是招牌，逛累了歇脚正好。", null, null, null)], "number", "default")
+
+prepTitle = TextContent("### 出发前准备 · 勾选记录进度")
+
+prepForm = Form("preparation", Buttons([]), [FormControl("证件与预订", CheckBoxGroup("ready", [CheckBoxItem("签证/入境手续", "按本人国籍核对日本签证或免签条件，保存机票酒店订单。", "visa", false), CheckBoxItem("JR Pass或交通票", "提前在国内买好兑换券，到日本后兑换；或直接刷IC卡。", "jrp", false), CheckBoxItem("住宿全部订好", "春节+雪祭期间是北海道旺季，温泉旅馆尤其紧张。", "hotel", false)], null, $ready)), FormControl("衣物与装备", CheckBoxGroup("ready", [CheckBoxItem("防滑雪地靴", "重中之重，北海道路面结冰很滑，一定要防滑。", "shoes", false), CheckBoxItem("保暖衣物", "美利奴打底+卫衣+羽绒服，薄绒秋裤+加绒裤。帽子手套围巾必备。", "clothes", false)], null, $ready)), FormControl("其他准备", CheckBoxGroup("ready", [CheckBoxItem("旅行保险", "建议覆盖滑雪/温泉等活动的意外和医疗。", "insurance", false), CheckBoxItem("现金与支付", "备2万日元左右现金，很多小店不能刷卡；微信支付宝在大城市普及。", "cash", false), CheckBoxItem("通信/WiFi", "随身WiFi或电话卡，Google Maps查交通必备。", "wifi", false)], null, $ready))])
+
+progress = TextContent("准备进度：" + (($ready.visa ? 1 : 0) + ($ready.jrp ? 1 : 0) + ($ready.hotel ? 1 : 0) + ($ready.shoes ? 1 : 0) + ($ready.clothes ? 1 : 0) + ($ready.insurance ? 1 : 0) + ($ready.cash ? 1 : 0) + ($ready.wifi ? 1 : 0)) + " / 8 项；勾选只记录你的准备状态。")
+
+tips = TextContent("### 几个重要提醒
+1. **雪祭期间人多**：大通公园和薄野会场周末尤其拥挤，建议工作日或早上去。
+2. **冬季日照短**：北海道冬天下午4点左右就天黑了，户外活动尽量安排在上午。
+3. **函馆山顶很冷**：看夜景一定要穿够，风大的时候体感温度比市区低很多。
+4. **企鹅散步时间**：旭山动物园的企鹅散步每天场次有限，出发前官网确认时间，别跑空。
+5. **雪地走路慢一点**：北海道人行道结冰很常见，穿防滑鞋，走路不要急。")
+
+refineTitle = TextContent("### 细化你的行程
+以上是通用方案。补充你的出发信息，可以帮你进一步调整交通衔接和住宿建议。")
+
+refineForm = Form("tripInfo", Buttons([Button("按我的信息细化行程", Action([@ToAssistant("根据提交的出发日期、出发地和人数细化北海道8天行程，调整交通衔接和住宿建议，保留当前准备清单进度")]))]), [FormControl("出发日期（可留空）", Input("departureDate", "例如 2027-02-06，尚未确定可留空", "text", null, $departureDate)), FormControl("从哪里出发（可留空）", Input("origin", "城市或机场", "text", null, $origin)), FormControl("出行人数（可留空）", Input("travelers", "例如 2人", "text", null, $travelers))])
+
+sources = [{url:"/api/links/ebd8401aaacd26bc", title:"札幌雪祭官方网站", sourceName:"さっぽろ雪まつり"}, {url:"/api/links/dc9886f6761d96e0", title:"2026札幌雪祭结果与2027会期", sourceName:"さっぽろ雪まつり"}, {url:"/api/links/bd2224725143c7fe", title:"8天7晚北海道旅行攻略", sourceName:"抖音"}, {url:"/api/links/f7058a46ba40f955", title:"北海道8天7晚行程手帐", sourceName:"抖音"}, {url:"/api/links/f7f3bacd4d119924", title:"北海道冬日限定攻略", sourceName:"抖音"}, {url:"/api/links/e5f703f3e340191a", title:"2-3月北海道旅游攻略", sourceName:"抖音"}, {url:"/api/links/2b3eac264451d4a1", title:"JR北海道推荐行程（冬季）", sourceName:"JR北海道"}, {url:"/api/links/60ef2da971da3840", title:"北海道铁路周游券与主要区间时间", sourceName:"JR北海道"}, {url:"/api/links/163e52310bea2c0e", title:"1-3月北海道旅游攻略", sourceName:"抖音"}, {url:"/api/links/40cf6d065f6e3e2d", title:"北海道冬季10天攻略", sourceName:"抖音"}, {url:"/api/links/e792d77b3b9369c1", title:"北海道7样代表美食", sourceName:"抖音"}]

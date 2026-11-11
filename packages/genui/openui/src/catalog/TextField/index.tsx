@@ -3,11 +3,15 @@
 // LICENSE file in the root directory of this source tree.
 import type { ActionPlan } from '@openuidev/lang-core';
 import { BuiltinActionType } from '@openuidev/lang-core';
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 import { Input, TextArea } from '@lynx-js/lynx-ui';
 import { useEffect, useRef, useState } from '@lynx-js/react';
 
+import {
+  TEXT_FIELD_VARIANTS,
+  TextField as TextFieldDefinition,
+} from './definition.js';
 import {
   useFormName,
   useGetFieldValue,
@@ -15,8 +19,7 @@ import {
   useSetFieldValue,
   useTriggerAction,
 } from '../../core/context.jsx';
-import { defineComponent } from '../../core/library.jsx';
-import { actionPropSchema } from '../Action/index.jsx';
+import type { DefinedComponent } from '../../core/library.jsx';
 
 import '../../../styles/catalog/TextField.css';
 
@@ -25,23 +28,7 @@ const CONTINUE_CONVERSATION_ACTION = String(
 );
 const OPEN_URL_ACTION = String(BuiltinActionType.OpenUrl);
 
-const TEXT_FIELD_VARIANTS = [
-  'longText',
-  'number',
-  'shortText',
-  'obscured',
-] as const;
-
-const textFieldPropsSchema = z.object({
-  label: z.string(),
-  value: z.string().optional(),
-  variant: z.enum(TEXT_FIELD_VARIANTS).optional(),
-  validationRegexp: z.string().optional(),
-  action: actionPropSchema.optional(),
-  name: z.string().optional(),
-});
-
-type TextFieldProps = z.infer<typeof textFieldPropsSchema>;
+type TextFieldProps = z.infer<typeof TextFieldDefinition.props>;
 
 function normalizeVariant(
   variant: unknown,
@@ -174,10 +161,7 @@ function TextFieldRenderer({ props }: { props: TextFieldProps }) {
   );
 }
 
-export const TextField = defineComponent({
-  name: 'TextField',
-  props: textFieldPropsSchema,
-  description:
-    'Single-line or multi-line text input. Supports shortText, number, obscured (password), and longText (multi-line) variants with optional regex validation.',
+export const TextField: DefinedComponent<typeof TextFieldDefinition.props> = {
+  ...TextFieldDefinition,
   component: TextFieldRenderer,
-});
+};

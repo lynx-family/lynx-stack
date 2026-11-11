@@ -6,14 +6,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { runOnMainThread, useEffect } from '@lynx-js/react';
 import { act, render } from '@lynx-js/react/testing-library';
 
-import * as motionLib from 'motion';
-import * as motionDom from 'motion-dom';
+import type * as motionLib from '../../src/upstream/full.js';
 
 import { animate, motionValue, stagger } from '../../src/animation/index.js';
 import { ElementCompt } from '../../src/polyfill/element.js';
 
 // Mock dependencies
-vi.mock('motion', async (importOriginal) => {
+vi.mock('../../src/upstream/full.js', async (importOriginal) => {
   const actual = await importOriginal<typeof motionLib>();
   return {
     ...actual,
@@ -25,13 +24,6 @@ vi.mock('motion', async (importOriginal) => {
       (globalThis as any).__STAGGER_ARGS = args;
       return (i: number) => i * 0.1;
     },
-  };
-});
-
-vi.mock('motion-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof motionDom>();
-  return {
-    ...actual,
     motionValue: (...args: any[]) => {
       (globalThis as any).__MOTION_VALUE_ARGS = args;
       return { set: () => {}, get: () => 0 };

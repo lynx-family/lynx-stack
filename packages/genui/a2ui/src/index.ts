@@ -38,6 +38,8 @@ export type {
   Surface,
   SurfaceId,
   UserActionPayload,
+  Action,
+  DataBinding,
 } from './store/index.js';
 // Helpers for IO that returns free-form text instead of structured
 // protocol messages.
@@ -118,7 +120,6 @@ export {
 } from './catalog/index.js';
 
 // A2UI basic-catalog functions — registered + announced when spread
-// into `<A2UI catalogs={[..., ...basicFunctions]}>`. Impls come from
-// `@a2ui/web_core` (the upstream basic-catalog package), so the wire
-// protocol is owned by this renderer.
+// into `<A2UI catalogs={[..., ...basicFunctions]}>`. The local implementations
+// and pinned schemas follow the current 1.0 contract.
 export { basicFunctions, registerBasicFunctions } from './functions/index.js';

@@ -3,12 +3,22 @@
 // LICENSE file in the root directory of this source tree.
 
 import fs from 'node:fs'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
-import { afterAll, beforeAll, describe, expect, it, rstest } from '@rstest/core'
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  rstest,
+} from '@rstest/core'
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { pluginLynx } from '@lynx-js/rsbuild-plugin'
@@ -38,11 +48,33 @@ async function inspectRspackConfig(
 }
 
 async function build(rslibConfig: RslibConfig) {
+  const cacheDirectory = await mkdtemp(
+    path.join(tmpdir(), 'external-bundle-cache-'),
+  )
+  onTestFinished(() => rm(cacheDirectory, { recursive: true, force: true }))
+  // Different compilers in this suite must not share a cache transaction.
+  rslibConfig = {
+    ...rslibConfig,
+    lib: rslibConfig.lib.map(lib => ({
+      ...lib,
+      performance: {
+        ...lib.performance,
+        buildCache: lib.performance?.buildCache === false ? false : {
+          ...(typeof lib.performance?.buildCache === 'object'
+            ? lib.performance.buildCache
+            : {}),
+          cacheDirectory,
+        },
+      },
+    })),
+  }
   const rslib = await createRslib({
     config: rslibConfig,
     cwd: __dirname,
   })
-  return await rslib.build()
+  const result = await rslib.build()
+  await result.close()
+  return result
 }
 
 function resolveExternal(
@@ -71,6 +103,30 @@ function resolveExternal(
     })
   })
 }
+
+describe('re-evaluation entry support', () => {
+  it('does not let external libraries mark the consumer entry', async () => {
+    const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+    const distRoot = path.join(fixtureDir, 'dist', 're-eval-entry-support')
+    await build(defineExternalBundleRslibConfig({
+      id: 'utils-re-eval',
+      source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+      output: { distPath: { root: distRoot }, minify: false },
+      plugins: [pluginReactLynx({ experimental_reEvalJSOnReload: true })],
+    }, { enableJsBytecode: false }))
+
+    const decoded = await decodeTemplate(
+      path.join(distRoot, 'utils-re-eval.lynx.bundle'),
+    )
+    const entryMarker =
+      /Symbol\.for\(['"]__LYNX_ENTRY_SUPPORTS_RE_EVAL__['"]\)\]\s*=(?!=)/
+    for (const name of ['utils', 'utils__main-thread']) {
+      const source = decoded['custom-sections'][name]
+      expect(source).toBeTypeOf('string')
+      expect(source).not.toMatch(entryMarker)
+    }
+  })
+})
 
 describe('define config', () => {
   it('should return entry config', () => {
@@ -1148,6 +1204,7 @@ describe('pluginReactLynx', () => {
         "@lynx-js/react/legacy-react-runtime$": "<ROOT>/packages/react/runtime/lib/core/compat/legacy-react-runtime.js",
         "@lynx-js/react/runtime-components$": "<ROOT>/packages/react/components/lib/index.js",
         "@lynx-js/react/worklet-runtime/bindings$": "<ROOT>/packages/react/runtime/lib/worklet-runtime/bindings/index.js",
+        "@lynx-js/react/worklet-runtime/init$": "<ROOT>/packages/react/runtime/lib/worklet-runtime/index.js",
         "@swc/helpers": "<PNPM_INNER>/@swc/helpers",
         "preact$": "preact/dist/preact.mjs",
         "preact/compat$": "preact/compat/dist/compat.mjs",

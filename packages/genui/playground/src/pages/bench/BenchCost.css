@@ -1,0 +1,47 @@
+/* Copyright 2026 The Lynx Authors. All rights reserved.
+ * Licensed under the Apache License Version 2.0 that can be found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.benchCostLabel,
+.benchCostInfo {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.benchCostLabel {
+  gap: 4px;
+}
+
+.benchCostInfoButton.btn {
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  padding: 3px;
+  color: var(--geist-secondary);
+}
+
+.benchCostPopover {
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  width: min(340px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  margin: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  border: 1px solid var(--geist-border);
+  border-radius: var(--geist-radius-md);
+  background: var(--geist-background);
+  color: var(--geist-foreground);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.6;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+}

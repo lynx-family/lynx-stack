@@ -1,5 +1,82 @@
 # @lynx-js/rsbuild-plugin
 
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`a5159b3`](https://github.com/lynx-family/lynx-stack/commit/a5159b333471d821daf2c1707a0cffd4411bc301)]:
+  - @lynx-js/template-webpack-plugin@0.16.7
+  - @lynx-js/web-rsbuild-server-middleware@0.26.7
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`70bcdf5`](https://github.com/lynx-family/lynx-stack/commit/70bcdf519a83fb2792fcc65ff739d893e96ecdc6), [`7d498ae`](https://github.com/lynx-family/lynx-stack/commit/7d498aece52a20e77abc19e2a4579333861c11da)]:
+  - @lynx-js/chunk-loading-webpack-plugin@0.4.3
+  - @lynx-js/webpack-dev-transport@0.4.1
+  - @lynx-js/web-rsbuild-server-middleware@0.26.6
+  - @lynx-js/template-webpack-plugin@0.16.6
+  - @lynx-js/cache-events-webpack-plugin@0.2.2
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.6
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`f3a9192`](https://github.com/lynx-family/lynx-stack/commit/f3a91921e53784b8255e5eda230ee8602648499e)]:
+  - @lynx-js/template-webpack-plugin@0.16.5
+  - @lynx-js/runtime-wrapper-webpack-plugin@0.2.5
+  - @lynx-js/web-rsbuild-server-middleware@0.26.5
+
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`16b45de`](https://github.com/lynx-family/lynx-stack/commit/16b45defdc76e822086b5207c0c290d51224da0e)]:
+  - @lynx-js/template-webpack-plugin@0.16.4
+  - @lynx-js/web-rsbuild-server-middleware@0.26.4
+
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @lynx-js/web-rsbuild-server-middleware@0.26.3
+  - @lynx-js/template-webpack-plugin@0.16.3
+
+## 0.1.3
+
+### Patch Changes
+
+- Default `output.dataUriLimit` to 2 KiB to align with Rspeedy. ([#3953](https://github.com/lynx-family/lynx-stack/pull/3953))
+
+- Default `environments` to `{ lynx: {} }` when none is configured, aligned with Rspeedy. The Rsbuild templates no longer set it. ([#3954](https://github.com/lynx-family/lynx-stack/pull/3954))
+
+- Default `performance.profile` to `true` in `pluginLynx` when `DEBUG` includes `lynx`, `rsbuild`, `rspeedy` or `*`, to align with Rspeedy. ([#3973](https://github.com/lynx-family/lynx-stack/pull/3973))
+- Updated dependencies [[`b5241dd`](https://github.com/lynx-family/lynx-stack/commit/b5241dd52770e97cb9bc5f08d9aa3bdbf7be9ce8), [`c5809d0`](https://github.com/lynx-family/lynx-stack/commit/c5809d097d6cd3c29ba8a140288fce0846b60b2c), [`4c453b9`](https://github.com/lynx-family/lynx-stack/commit/4c453b9ed1c58860f96cde9c4e91722f5d145470)]:
+  - @lynx-js/template-webpack-plugin@0.16.2
+  - @lynx-js/web-rsbuild-server-middleware@0.26.2
+
+## 0.1.2
+
+### Patch Changes
+
+- Fix `dev.assetPrefix` set by another plugin being replaced with the dev server address. It was resolved from the original user config only, so a plugin pointing the Lynx client at a proxy or a tunnel had its value silently discarded. ([#3897](https://github.com/lynx-family/lynx-stack/pull/3897))
+
+- Turn Rsbuild's lazy compilation off for a Lynx build, which cannot run the proxy module it serves in place of a dynamic import. ([#3843](https://github.com/lynx-family/lynx-stack/pull/3843))
+
+  Apply the dev plugin to `rsbuild preview` as well, so it prints the bundle URLs and resolves `dev.assetPrefix` to an address a device can reach. Rspeedy never needed this because it initializes its plugins before the action is known, which leaves the plugin's `apply` filter out of the picture.
+- Fix the CSS output defaults overwriting the values another plugin had already set. `output.distPath.css`, `output.filename.css` and `output.legalComments` were merged per environment at the default hook order, so under the Rspeedy CLI, where `pluginLynx` is applied after user plugins, a plugin's value was silently discarded. ([#3865](https://github.com/lynx-family/lynx-stack/pull/3865))
+
+- Use the active Rsbuild environments and their resolved entries when printing dev server URLs. This fixes startup failures when `--environment` excludes an environment declared in the configuration. ([#3901](https://github.com/lynx-family/lynx-stack/pull/3901))
+
+- Fix the CSS source map default overwriting the value another plugin had already set. `output.sourceMap.css` was enabled per environment at the default hook order, so under the Rspeedy CLI, where `pluginLynx` is applied after user plugins, a plugin's value was silently discarded. ([#3866](https://github.com/lynx-family/lynx-stack/pull/3866))
+- Updated dependencies [[`b900a78`](https://github.com/lynx-family/lynx-stack/commit/b900a78a43914adf2aae60849e2d6433be5eb797), [`2150f25`](https://github.com/lynx-family/lynx-stack/commit/2150f254528a5a575a6e3148b47ef422386f444e)]:
+  - @lynx-js/template-webpack-plugin@0.16.1
+  - @lynx-js/debug-metadata-rsbuild-plugin@0.2.3
+  - @lynx-js/web-rsbuild-server-middleware@0.26.1
+
 ## 0.1.1
 
 ### Patch Changes

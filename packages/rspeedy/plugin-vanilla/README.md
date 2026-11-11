@@ -2,14 +2,16 @@
 
 An Rsbuild plugin for building Vanilla Lynx applications directly with Element PAPI.
 
-## Usage with Rspeedy
+## Usage
 
 ```ts
-import { defineConfig } from '@lynx-js/rspeedy'
+import { pluginLynx } from '@lynx-js/rsbuild-plugin'
 import { pluginVanillaLynx } from '@lynx-js/vanilla-rsbuild-plugin'
+import { defineConfig } from '@rsbuild/core'
 
 export default defineConfig({
   plugins: [
+    pluginLynx(),
     pluginVanillaLynx({
       entries: {
         card: {
@@ -32,7 +34,7 @@ export default defineConfig({
       card: './src/card/main-thread.ts',
     },
   },
-  plugins: [pluginVanillaLynx()],
+  plugins: [pluginLynx(), pluginVanillaLynx()],
 })
 ```
 
@@ -74,4 +76,4 @@ pluginVanillaLynx({
 })
 ```
 
-When `bundleFilename` is omitted, the plugin uses Rspeedy's `output.filename.bundle`. Outside Rspeedy it defaults to `[name].[platform].bundle`.
+When `bundleFilename` is omitted, `pluginLynx`'s `output.filename.bundle` is used (default `'[name].[platform].bundle'`).

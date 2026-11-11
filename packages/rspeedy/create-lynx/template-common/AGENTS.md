@@ -19,6 +19,10 @@ Read docs below in advance to help you understand the library or frameworks this
 
 - `npm run test` - Run the tests with Rstest
 
+## Debugging
+
+- `agent-lynx` debugs a running Lynx page. Use it to inspect the UI, read logs, and interact with elements. The `lynx-devtool` skill lists the commands.
+
 ## Related Docs
 
 - Rsbuild: <https://rsbuild.rs/llms.txt>

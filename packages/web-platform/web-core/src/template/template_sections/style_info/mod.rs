@@ -8,6 +8,7 @@ pub(crate) mod css_property;
 pub(crate) mod decoded_style_data;
 pub(crate) mod flattened_style_info;
 pub(crate) mod raw_style_info;
+pub(crate) mod raw_style_info_map;
 pub(crate) mod style_info_decoder;
 use fnv::FnvHashMap;
 use raw_style_info::RawStyleInfo;

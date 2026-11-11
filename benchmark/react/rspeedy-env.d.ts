@@ -21,3 +21,5 @@ declare const Codspeed: {
 declare function runAfterLoadScript(cb: () => void): void;
 
 declare const __REPO_FILEPATH__: string;
+
+declare const __BENCHMARK_ELEMENT_TEMPLATE__: boolean;

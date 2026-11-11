@@ -19,16 +19,17 @@ const entryFiles = [
 ];
 
 const forbiddenExact = new Set([
-  path.resolve(runtimeSrc, 'snapshot.ts'),
-  path.resolve(runtimeSrc, 'backgroundSnapshot.ts'),
-  path.resolve(runtimeSrc, 'listUpdateInfo.ts'),
-  path.resolve(runtimeSrc, 'pendingListUpdates.ts'),
+  path.resolve(runtimeSrc, 'document.ts'),
+  path.resolve(runtimeSrc, 'index.ts'),
+  path.resolve(runtimeSrc, 'internal.ts'),
+  path.resolve(runtimeSrc, 'lynx-api.ts'),
+  path.resolve(runtimeSrc, 'lynx.ts'),
+  path.resolve(runtimeSrc, 'root.ts'),
+  path.resolve(runtimeSrc, 'runtime-marker.ts'),
 ]);
 
 const forbiddenDirs = [
-  path.resolve(runtimeSrc, 'lynx') + path.sep,
   path.resolve(runtimeSrc, 'snapshot') + path.sep,
-  path.resolve(runtimeSrc, 'lifecycle', 'patch') + path.sep,
 ];
 
 function isForbidden(filePath: string): boolean {

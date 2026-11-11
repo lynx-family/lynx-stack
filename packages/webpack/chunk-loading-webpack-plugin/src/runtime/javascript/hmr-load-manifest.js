@@ -11,8 +11,10 @@
 
 export default function() {
   $RuntimeGlobals_hmrDownloadManifest$ = function() {
+    var load = $RuntimeGlobals_lynxHMRLoad$
+      || lynx.requireModuleAsync.bind(lynx);
     return new Promise((resolve, reject) =>
-      lynx.requireModuleAsync(
+      load(
         $RuntimeGlobals_publicPath$
           + $RuntimeGlobals_getUpdateManifestFilename$(),
         (err, ret) => {

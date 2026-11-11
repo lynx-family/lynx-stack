@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/external-bundle-rsbuild-plugin",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "An rsbuild plugin for loading lynx external bundles.",
   "keywords": [
     "rsbuild",
@@ -47,7 +47,7 @@
     "@rsbuild/core": "catalog:rsbuild"
   },
   "peerDependencies": {
-    "@lynx-js/rspeedy": "^0.16.0 || ^0.17.0",
+    "@lynx-js/rspeedy": "^0.16.0 || ^0.17.0 || ^0.18.0",
     "@rsbuild/core": "^2.0.0"
   },
   "peerDependenciesMeta": {

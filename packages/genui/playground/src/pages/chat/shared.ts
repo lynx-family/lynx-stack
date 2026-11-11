@@ -13,6 +13,8 @@ import {
   assertCustomProviderRequestTarget,
   buildGenuiServerUrl,
 } from '../../config/genuiServer.js';
+import { readModelPrices } from '../../utils/modelPricing.js';
+import type { ModelPrices } from '../../utils/modelPricing.js';
 import type { ProtocolName } from '../../utils/protocol.js';
 import { isDevHost } from '../../utils/publishPayload.js';
 
@@ -40,24 +42,61 @@ export const CUSTOM_PROVIDER_BASE_URL_OPTIONS = [
     model: 'openrouter/auto',
   },
 ] as const;
+export const CUSTOM_JEV_PROVIDER_OPTION = {
+  value: 'https://api.typesafe.ai/v1',
+  label: 'TypeSafe Jev',
+  model: 'jev-latest',
+} as const;
+const COMPOSITION_CUSTOM_PROVIDER_BASE_URL_OPTIONS = [
+  ...CUSTOM_PROVIDER_BASE_URL_OPTIONS,
+  CUSTOM_JEV_PROVIDER_OPTION,
+];
 export const CUSTOM_PROVIDER_BASE_URL =
   CUSTOM_PROVIDER_BASE_URL_OPTIONS[0].value;
 export const CUSTOM_PROVIDER_MODEL = CUSTOM_PROVIDER_BASE_URL_OPTIONS[0].model;
 const MISSING_SERVER_MODEL_CONFIG_ERROR = 'GENUI_MODEL_CONFIG_JSON is required';
+const REASONING_EFFORT_OPTIONS = [
+  { value: '', label: 'Default' },
+  { value: 'none', label: 'None' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'xhigh', label: 'Extra high' },
+] as const;
+
+export type ReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'xhigh';
+
+function isReasoningEffort(value: unknown): value is ReasoningEffort {
+  return REASONING_EFFORT_OPTIONS.some((option) =>
+    option.value !== '' && option.value === value
+  );
+}
 
 function getCustomProviderDefaultModel(baseURL: string): string {
-  return CUSTOM_PROVIDER_BASE_URL_OPTIONS.find(
+  return COMPOSITION_CUSTOM_PROVIDER_BASE_URL_OPTIONS.find(
     (option) => option.value === baseURL,
   )?.model ?? CUSTOM_PROVIDER_MODEL;
 }
 
-export interface ProviderModel {
+export interface ProviderModel extends Partial<ModelPrices> {
   id: string;
   label: string;
+  composition?: boolean;
 }
 
 export interface ProviderSettings {
+  enableScriptReuse?: boolean;
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  stylePreset?: 'default' | false;
+  reasoningEffort?: ReasoningEffort;
   provider: string;
   apiKey: string;
   baseURL: string;
@@ -68,13 +107,19 @@ export interface ProviderSettings {
 }
 
 export interface ProviderRequestOptions {
+  enableDesignGuidance?: boolean;
   apiKey?: string;
   baseURL?: string;
   model?: string;
+  reasoningEffort?: ReasoningEffort;
 }
 
 export interface PersistedProviderSettings {
+  enableScriptReuse?: boolean;
+  enableDesignGuidance?: boolean;
   enableHtmlFragment?: boolean;
+  stylePreset?: 'default' | false;
+  reasoningEffort?: ReasoningEffort;
   provider: string;
 }
 
@@ -116,11 +161,24 @@ export function parseProviderSettings(value: unknown): ProviderSettings {
   }
   const enableHtmlFragment = record.enableHtmlFragment
     ?? record.enableHtmlFragmentTool;
+  const enableDesignGuidance = record.enableDesignGuidance;
   return {
     ...createDefaultProviderSettings(),
     provider,
+    ...(typeof record.enableScriptReuse === 'boolean'
+      ? { enableScriptReuse: record.enableScriptReuse }
+      : {}),
+    ...(record.stylePreset === 'default' || record.stylePreset === false
+      ? { stylePreset: record.stylePreset }
+      : {}),
     ...(typeof enableHtmlFragment === 'boolean'
       ? { enableHtmlFragment }
+      : {}),
+    ...(typeof enableDesignGuidance === 'boolean'
+      ? { enableDesignGuidance }
+      : {}),
+    ...(isReasoningEffort(record.reasoningEffort)
+      ? { reasoningEffort: record.reasoningEffort }
       : {}),
     // Never restore custom-provider fields from browser storage. Older
     // versions wrote them here, so ignoring them also migrates those values
@@ -146,9 +204,21 @@ export function serializeProviderSettings(
 ): PersistedProviderSettings {
   return {
     provider: settings.provider,
+    ...(settings.enableScriptReuse === undefined
+      ? {}
+      : { enableScriptReuse: settings.enableScriptReuse }),
+    ...(settings.stylePreset === undefined
+      ? {}
+      : { stylePreset: settings.stylePreset }),
+    ...(settings.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
     ...(settings.enableHtmlFragment === undefined
       ? {}
       : { enableHtmlFragment: settings.enableHtmlFragment }),
+    ...(settings.reasoningEffort === undefined
+      ? {}
+      : { reasoningEffort: settings.reasoningEffort }),
   };
 }
 
@@ -164,8 +234,16 @@ export function compactProviderLabel(settings: ProviderSettings): string {
 
 export function getProviderSettingsValidationError(
   settings: ProviderSettings,
+  protocol?: 'a2ui' | 'openui',
 ): string | undefined {
   if (settings.provider !== CUSTOM_PROVIDER_ID) return undefined;
+
+  if (
+    settings.baseURL === CUSTOM_JEV_PROVIDER_OPTION.value && protocol !== 'a2ui'
+    && protocol !== 'openui'
+  ) {
+    return 'TypeSafe Jev is available only in A2UI and OpenUI Create. Select another provider endpoint.';
+  }
 
   const hasModel = settings.model.trim().length > 0;
   const hasApiKey = settings.apiKey.trim().length > 0;
@@ -183,13 +261,31 @@ export function getProviderSettingsValidationError(
 
 export function toProviderRequestOptions(
   settings: ProviderSettings,
+  protocol?: 'a2ui' | 'openui',
 ): ProviderRequestOptions {
+  const isCompositionProvider = settings.provider === CUSTOM_PROVIDER_ID
+    ? settings.baseURL === CUSTOM_JEV_PROVIDER_OPTION.value
+    : settings.models.some((model) =>
+      model.id === settings.provider && model.composition === true
+    );
+  const reasoning = !isCompositionProvider && settings.reasoningEffort
+    ? { reasoningEffort: settings.reasoningEffort }
+    : {};
   if (settings.provider !== CUSTOM_PROVIDER_ID) {
     const model = settings.provider.trim();
-    return model ? { model } : {};
+    return {
+      ...(model ? { model } : {}),
+      ...(settings.enableDesignGuidance === false
+        ? { enableDesignGuidance: false }
+        : {}),
+      ...reasoning,
+    };
   }
 
-  const validationError = getProviderSettingsValidationError(settings);
+  const validationError = getProviderSettingsValidationError(
+    settings,
+    protocol,
+  );
   if (validationError) throw new Error(validationError);
 
   const apiKey = settings.apiKey.trim();
@@ -199,6 +295,10 @@ export function toProviderRequestOptions(
     apiKey,
     baseURL,
     model,
+    ...(settings.enableDesignGuidance === false
+      ? { enableDesignGuidance: false }
+      : {}),
+    ...reasoning,
   };
 }
 
@@ -219,7 +319,12 @@ function parseModelsResponse(value: unknown): {
     if (!item || typeof item !== 'object') return [];
     const model = item as Record<string, unknown>;
     return typeof model.id === 'string' && typeof model.label === 'string'
-      ? [{ id: model.id, label: model.label }]
+      ? [{
+        id: model.id,
+        label: model.label,
+        ...readModelPrices(model),
+        ...(model.composition === true ? { composition: true } : {}),
+      }]
       : [];
   });
   if (
@@ -231,10 +336,14 @@ function parseModelsResponse(value: unknown): {
   return { defaultModel: record.defaultModel, models };
 }
 
-export function getModelsEndpoint(host: ChatHost): string {
+export function getModelsEndpoint(
+  host: ChatHost,
+  protocol?: 'a2ui' | 'openui',
+): string {
   const endpoint = new URL(getChatEndpoint('a2ui', host));
   endpoint.pathname = '/models';
   endpoint.search = '';
+  if (protocol) endpoint.searchParams.set('protocol', protocol);
   endpoint.hash = '';
   return endpoint.toString();
 }
@@ -243,9 +352,10 @@ export async function loadProviderSettings(
   settings: ProviderSettings,
   host: ChatHost,
   signal: AbortSignal,
+  protocol?: 'a2ui' | 'openui',
 ): Promise<ProviderSettings> {
   try {
-    const response = await window.fetch(getModelsEndpoint(host), {
+    const response = await window.fetch(getModelsEndpoint(host, protocol), {
       headers: { Accept: 'application/json' },
       signal,
     });
@@ -289,101 +399,180 @@ export async function loadProviderSettings(
   }
 }
 
-export const CHAT_PROVIDER_SETTINGS_ADAPTER = {
-  storageKeys: [
-    CHAT_PROVIDER_SETTINGS_STORAGE_KEY,
-    LEGACY_A2UI_PROVIDER_SETTINGS_STORAGE_KEY,
-  ],
-  initial: createDefaultProviderSettings,
-  parseStored: parseStoredProviderSettings,
-  serialize: serializeProviderSettings,
-  load: loadProviderSettings,
-  controls(settings) {
-    const customOption = {
-      value: CUSTOM_PROVIDER_ID,
-      label: 'Custom API key',
-    };
-    let providerOptions;
-    if (settings.status === 'ready') {
-      providerOptions = [
-        ...settings.models.map((model) => ({
-          value: model.id,
-          label: model.label,
-        })),
-        customOption,
-      ];
-    } else if (settings.provider === CUSTOM_PROVIDER_ID) {
-      providerOptions = [customOption];
-    } else {
-      providerOptions = [{
-        value: '',
-        label: settings.status === 'error'
-          ? (settings.error ?? 'Models unavailable')
-          : 'Loading models...',
-      }];
-    }
-    const providerControl = {
-      id: 'provider',
-      label: 'Provider',
-      value: settings.provider,
-      kind: 'select' as const,
-      disabled: settings.status !== 'ready',
-      options: providerOptions,
-    };
-    if (settings.provider !== CUSTOM_PROVIDER_ID) return [providerControl];
-    return [
-      providerControl,
-      {
-        id: 'model',
-        label: 'Provider model',
-        value: settings.model,
-        kind: 'text' as const,
-        placeholder: getCustomProviderDefaultModel(settings.baseURL),
-      },
-      {
-        id: 'apiKey',
-        label: 'Provider API key',
-        value: settings.apiKey,
-        kind: 'password' as const,
-        placeholder: 'sk-...',
-      },
-      {
-        id: 'baseURL',
-        label: 'Provider endpoint',
-        value: settings.baseURL,
-        kind: 'select' as const,
-        options: CUSTOM_PROVIDER_BASE_URL_OPTIONS,
-      },
-    ];
-  },
-  update(settings, id, next) {
-    if (
-      id === 'provider'
-      && (settings.models.some((item) => item.id === next)
-        || next === CUSTOM_PROVIDER_ID)
-    ) {
-      return { ...settings, provider: next };
-    }
-    if (settings.provider === CUSTOM_PROVIDER_ID && id === 'baseURL') {
-      const option = CUSTOM_PROVIDER_BASE_URL_OPTIONS.find(
-        ({ value }) => value === next,
-      );
-      if (option) {
-        return { ...settings, baseURL: option.value, model: option.model };
+export function createProviderSettingsAdapter(protocol?: 'a2ui' | 'openui') {
+  const endpoints = protocol === 'a2ui' || protocol === 'openui'
+    ? COMPOSITION_CUSTOM_PROVIDER_BASE_URL_OPTIONS
+    : CUSTOM_PROVIDER_BASE_URL_OPTIONS;
+  return {
+    storageKeys: [
+      CHAT_PROVIDER_SETTINGS_STORAGE_KEY,
+      LEGACY_A2UI_PROVIDER_SETTINGS_STORAGE_KEY,
+    ],
+    initial: createDefaultProviderSettings,
+    parseStored: parseStoredProviderSettings,
+    serialize: serializeProviderSettings,
+    conversation: {
+      snapshot: (settings) => ({
+        ...(settings.provider ? { provider: settings.provider } : {}),
+        enableDesignGuidance: settings.enableDesignGuidance !== false,
+        ...(settings.reasoningEffort
+          ? { reasoningEffort: settings.reasoningEffort }
+          : {}),
+      }),
+      restore: (settings, saved) => ({
+        ...settings,
+        ...(saved.provider
+            && (settings.status !== 'ready'
+              || saved.provider === CUSTOM_PROVIDER_ID
+              || settings.models.some(model => model.id === saved.provider))
+          ? { provider: saved.provider }
+          : {}),
+        enableDesignGuidance: saved.enableDesignGuidance,
+        reasoningEffort: saved.reasoningEffort,
+      }),
+    },
+    load: (settings, host, signal) =>
+      loadProviderSettings(settings, host, signal, protocol),
+    usageModel: (settings) => ({
+      model: settings.provider === CUSTOM_PROVIDER_ID
+        ? settings.model
+        : settings.provider,
+      modelPrices: settings.provider === CUSTOM_PROVIDER_ID
+        ? undefined
+        : readModelPrices(
+          settings.models.find(model => model.id === settings.provider),
+        ),
+    }),
+    controls(settings) {
+      const customOption = {
+        value: CUSTOM_PROVIDER_ID,
+        label: 'Custom API key',
+      };
+      let providerOptions;
+      if (settings.status === 'ready') {
+        providerOptions = [
+          ...settings.models.map((model) => ({
+            value: model.id,
+            label: model.label,
+          })),
+          customOption,
+        ];
+      } else if (settings.provider === CUSTOM_PROVIDER_ID) {
+        providerOptions = [customOption];
+      } else {
+        providerOptions = [{
+          value: '',
+          label: settings.status === 'error'
+            ? (settings.error ?? 'Models unavailable')
+            : 'Loading models...',
+        }];
       }
-    }
-    if (
-      settings.provider === CUSTOM_PROVIDER_ID
-      && (id === 'apiKey' || id === 'model')
-    ) {
-      return { ...settings, [id]: next };
-    }
-    return settings;
-  },
-  validate: getProviderSettingsValidationError,
-  validateRequest: assertProviderRequestTarget,
-  badge: compactProviderLabel,
-} satisfies ChatSettingsAdapter<ProviderSettings>;
+      const providerControl = {
+        id: 'provider',
+        label: 'Provider',
+        value: settings.provider,
+        kind: 'select' as const,
+        disabled: settings.status !== 'ready',
+        options: providerOptions,
+      };
+      const designControl = {
+        id: 'enableDesignGuidance',
+        label: 'Design',
+        value: settings.enableDesignGuidance === false ? 'off' : 'on',
+        kind: 'checkbox' as const,
+      };
+      const isCompositionProvider = settings.provider === CUSTOM_PROVIDER_ID
+        ? settings.baseURL === CUSTOM_JEV_PROVIDER_OPTION.value
+        : settings.models.some((model) =>
+          model.id === settings.provider && model.composition === true
+        );
+      const reasoningControl = {
+        id: 'reasoningEffort',
+        label: 'Reasoning',
+        description: 'Override the selected model reasoning effort.',
+        value: settings.reasoningEffort ?? '',
+        kind: 'select' as const,
+        options: REASONING_EFFORT_OPTIONS,
+      };
+      if (settings.provider !== CUSTOM_PROVIDER_ID) {
+        return [
+          providerControl,
+          ...(isCompositionProvider ? [] : [reasoningControl]),
+          designControl,
+        ];
+      }
+      return [
+        providerControl,
+        {
+          id: 'model',
+          label: 'Provider model',
+          value: settings.model,
+          kind: 'text' as const,
+          placeholder: getCustomProviderDefaultModel(settings.baseURL),
+        },
+        {
+          id: 'apiKey',
+          label: 'Provider API key',
+          value: settings.apiKey,
+          kind: 'password' as const,
+          placeholder: 'sk-...',
+        },
+        {
+          id: 'baseURL',
+          label: 'Provider endpoint',
+          value: settings.baseURL,
+          kind: 'select' as const,
+          options: endpoints,
+        },
+        ...(isCompositionProvider ? [] : [reasoningControl]),
+        designControl,
+      ];
+    },
+    update(settings, id, next) {
+      if (id === 'enableDesignGuidance') {
+        return { ...settings, enableDesignGuidance: next !== 'off' };
+      }
+      if (id === 'reasoningEffort') {
+        if (next === '') {
+          const updated = { ...settings };
+          delete updated.reasoningEffort;
+          return updated;
+        }
+        return isReasoningEffort(next)
+          ? { ...settings, reasoningEffort: next }
+          : settings;
+      }
+      if (
+        id === 'provider'
+        && (settings.models.some((item) => item.id === next)
+          || next === CUSTOM_PROVIDER_ID)
+      ) {
+        return { ...settings, provider: next };
+      }
+      if (settings.provider === CUSTOM_PROVIDER_ID && id === 'baseURL') {
+        const option = endpoints.find(
+          ({ value }) => value === next,
+        );
+        if (option) {
+          return { ...settings, baseURL: option.value, model: option.model };
+        }
+      }
+      if (
+        settings.provider === CUSTOM_PROVIDER_ID
+        && (id === 'apiKey' || id === 'model')
+      ) {
+        return { ...settings, [id]: next };
+      }
+      return settings;
+    },
+    validate: settings =>
+      getProviderSettingsValidationError(settings, protocol),
+    validateRequest: assertProviderRequestTarget,
+    badge: compactProviderLabel,
+  } satisfies ChatSettingsAdapter<ProviderSettings>;
+}
+
+export const CHAT_PROVIDER_SETTINGS_ADAPTER = createProviderSettingsAdapter();
 
 function readTokenCount(value: unknown): number | undefined {
   const candidate = value && typeof value === 'object'

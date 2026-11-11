@@ -31,6 +31,8 @@ export type {
   Surface,
   SurfaceId,
   UserActionPayload,
+  Action,
+  DataBinding,
 } from './types.js';
 export { FunctionRegistry, functionRegistry } from './FunctionRegistry.js';
 export type { FunctionEntry, FunctionImpl } from './FunctionRegistry.js';

@@ -1,0 +1,8 @@
+{
+  "tsconfig": "./tsconfig.build.json",
+  "externalSymbolLinkMappings": {
+    "@rslib/core": {
+      "LibConfig": "https://rslib.rs/config/lib/"
+    }
+  }
+}

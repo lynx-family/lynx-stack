@@ -1,21 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../../../src/element-template/runtime/render/render-to-opcodes.js', async () => {
-  const actual = await vi.importActual('../../../../src/element-template/runtime/render/render-to-opcodes.js');
-  return {
-    ...actual,
-    render: vi.fn(),
-  };
-});
+import { h } from 'preact';
 
-import {
-  __OpAttr,
-  __OpBegin,
-  __OpEnd,
-  __OpSlot,
-  __OpText,
-  render as mockRender,
-} from '../../../../src/element-template/runtime/render/render-to-opcodes.js';
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
 import type { ElementTemplateHydrateCommitContext } from '../../../../src/element-template/protocol/types.js';
 import { createElementTemplatePage, setupPage } from '../../../../src/element-template/runtime/page/page.js';
@@ -53,7 +39,7 @@ describe('renderMainThread contract', () => {
 
     resetTemplateId();
     elementTemplateRegistry.clear();
-    setRoot({ __jsx: { type: 'test-root' } });
+    setRoot({ __jsx: h('_et_contract_root', { attributeSlots: ['main', 'lazy-entry'], $0: 'hello' }) });
     setupPage(createElementTemplatePage());
     globalThis.__MAIN_THREAD__ = true;
     globalThis.__BACKGROUND__ = false;
@@ -72,18 +58,6 @@ describe('renderMainThread contract', () => {
     (globalThis.lynx as typeof lynx & {
       getJSContext?: () => { dispatchEvent: typeof dispatchEvent };
     }).getJSContext = vi.fn(() => ({ dispatchEvent }));
-
-    vi.mocked(mockRender).mockReturnValue([
-      __OpBegin,
-      { type: '_et_contract_root' },
-      __OpAttr,
-      ['main', 'lazy-entry'],
-      __OpSlot,
-      0,
-      __OpText,
-      'hello',
-      __OpEnd,
-    ]);
 
     renderMainThread();
 

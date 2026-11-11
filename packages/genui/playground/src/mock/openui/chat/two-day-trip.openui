@@ -1,0 +1,10 @@
+root = Card([verdict, route, day1, day2, budget, prep], [{url:"./demos/openui/chat/references.html#area", title:"老街A与庭院B", sourceName:"示例地点搜索"}, {url:"./demos/openui/chat/references.html#c", title:"博物馆C", sourceName:"示例地点搜索"}])
+verdict = TextContent("**第一天把同街区的老街A与庭院B一起逛，第二天留给博物馆C。** 不来回赶路，更符合轻松游玩的要求。[1][2]")
+route = TextContent("### 路线
+D1：老街A → 庭院B；D2：博物馆C。以下时段是建议安排；本次没有精确步行导航和交通报价。")
+day1 = Steps([StepsItem("D1上午 · 老街A", "慢逛老街，把午餐安排在附近；不用急着增加跨区景点。"), StepsItem("D1午后 · 庭院B", "在同街区小憩，按当天状态决定停留多久。")])
+day2 = Steps([StepsItem("D2 · 博物馆C", "可建议10:00到馆；检索营业时间为10:00–17:00，票价30元，出发前再确认当日安排。")])
+budget = TextContent("### 费用口径
+博物馆门票30元为已取得信息；两天餐费200元是你的预算，合计230元是门票加餐费预算，**不含交通、住宿和其他消费**，不是整趟旅行的实时报价。")
+prep = TextContent("### 准备
+穿适合走路的鞋，带水；出发前确认博物馆当日开放/预约规则。若遇雨，可把博物馆安排在雨天，老街与庭院留给天气合适的时段。")

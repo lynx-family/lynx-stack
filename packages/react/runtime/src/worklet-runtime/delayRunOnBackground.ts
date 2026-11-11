@@ -36,7 +36,9 @@ function delayRunOnBackground(fnObj: JsFnHandle, task: (fnId: number, execId: nu
 }
 
 function clearDelayedBackgroundFunctions(): void {
-  impl!.delayedBackgroundFunctionArray.length = 0;
+  // PrimJS can keep truncated array storage alive; drop the consumed queue so
+  // its tasks and hydrated handles stop retaining their background executions.
+  impl!.delayedBackgroundFunctionArray = [];
 }
 
 function runDelayedBackgroundFunctions(): void {

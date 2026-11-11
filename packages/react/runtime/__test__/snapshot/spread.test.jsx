@@ -3,7 +3,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render } from 'preact';
+import { options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useState } from '../../src/index';
@@ -210,7 +210,7 @@ describe('spreadUpdate', () => {
     render(<Comp />, scratchBackground);
     patch = hydrate(JSON.parse(JSON.stringify(scratch)), scratchBackground);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
 
@@ -237,7 +237,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -314,7 +314,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_({
@@ -340,7 +340,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -417,7 +417,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_({});
@@ -433,7 +433,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -502,7 +502,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_(null);
@@ -518,7 +518,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -625,7 +625,7 @@ describe('spreadUpdate', () => {
     // this update could be removed later
     expect(patch).toMatchInlineSnapshot(`[]`);
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     globalEnvManager.switchToBackground();
     initGlobalSnapshotPatch();
     setSpread_({});
@@ -645,7 +645,7 @@ describe('spreadUpdate', () => {
     `);
 
     globalEnvManager.switchToMainThread();
-    snapshotPatchApply(patch);
+    snapshotPatchApply(patch, 42, false);
     expect(scratch.__element_root).toMatchInlineSnapshot(`
       <page
         cssId="default-entry-from-native:0"
@@ -690,7 +690,7 @@ describe('spreadUpdate', () => {
     `);
   });
 
-  it('circular reference', async () => {
+  it.each(['root', 'scheduled'])('circular reference during %s render', async (renderMode) => {
     await import('../../src/lynx');
     let patch;
     let setSpread_;
@@ -723,19 +723,26 @@ describe('spreadUpdate', () => {
     render(<Comp />, scratchBackground);
 
     initGlobalSnapshotPatch();
-    setSpread_(a);
+    const previousDebounce = options.debounceRendering;
+    let flushScheduledRender;
+    options.debounceRendering = callback => {
+      flushScheduledRender = callback;
+    };
+    try {
+      setSpread_(a);
 
-    expect(() => render(<Comp />, scratchBackground)).toThrowErrorMatchingInlineSnapshot(`
-      [TypeError: Converting circular structure to JSON
-          --> starting at object with constructor 'Object'
-          --- property 'a' closes the circle
-
-        in Bar
-        in Comp
-      ]
-    `);
-    patch = takeGlobalSnapshotPatch();
-    expect(patch).toMatchInlineSnapshot(`[]`);
+      expect(() => {
+        if (renderMode === 'scheduled') {
+          flushScheduledRender();
+        } else {
+          render(<Comp />, scratchBackground);
+        }
+      }).toThrowError(/Converting circular structure to JSON[\s\S]*in Bar\n  in Comp\n$/);
+      patch = takeGlobalSnapshotPatch();
+      expect(patch).toEqual([]);
+    } finally {
+      options.debounceRendering = previousDebounce;
+    }
   });
 
   it('should remove __self and __source when spreading props onto element', async function() {

@@ -41,6 +41,18 @@ function createProbeLibrary(
 }
 
 describe('OpenUI Query initial results', () => {
+  test('evaluates Append on the synchronous main-thread render', () => {
+    const observations: Observation[] = [];
+    render(
+      <OpenUiRenderer
+        response={'data = Query("load_data", {}, [1])\nroot = Probe(@Append(data, 2))'}
+        library={createProbeLibrary(observations)}
+      />,
+      { enableMainThread: true, enableBackgroundThread: false },
+    );
+    expect(observations[0]?.value).toEqual([1, 2]);
+  });
+
   test('renders Query defaults on the first screen without running tools', () => {
     const observations: Observation[] = [];
     const tool = rstest.fn(() => 'network');

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-signals",
-  "version": "0.0.3",
+  "version": "0.0.7",
   "description": "Thread-aware Preact Signals integration for ReactLynx.",
   "keywords": [
     "lynx",
@@ -34,10 +34,10 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rslib build"
+    "build": "rslib"
   },
   "dependencies": {
-    "@preact/signals": "^2.9.4",
+    "@preact/signals": "^2.11.2",
     "@preact/signals-core": "^1.14.4"
   },
   "devDependencies": {
@@ -46,7 +46,7 @@
     "preact": "catalog:lynxjs"
   },
   "peerDependencies": {
-    "@lynx-js/react": "^0.123.0 || ^0.124.0 || ^0.125.0 || ^0.126.0",
+    "@lynx-js/react": "^0.123.0 || ^0.124.0 || ^0.125.0 || ^0.126.0 || ^0.127.0 || ^0.128.0 || ^0.129.0",
     "preact": "*"
   },
   "engines": {

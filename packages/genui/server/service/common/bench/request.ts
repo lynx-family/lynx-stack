@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { MAX_BENCH_GROUPS } from './concurrency.js';
+import { BENCH_PROTOCOLS } from './protocol-types.js';
 import type {
   BenchCatalogLabel,
   BenchGroupRequest,
@@ -15,7 +16,7 @@ import type {
   BenchVariable,
 } from './types.js';
 import { configuredModelName } from '../model-config.js';
-import { BENCH_PROTOCOLS } from './protocol-types.js';
+import { parseReasoningEffort } from '../provider.js';
 
 const MAX_SCENARIOS = 20;
 const MAX_REPEATS = 10;
@@ -125,6 +126,9 @@ function readStringArray(value: unknown): string[] | undefined {
 
 function normalizeSettings(value: unknown): BenchSettings {
   const record = isRecord(value) ? value : {};
+  const uiJudgeModel = configuredModelName(
+    readOptionalString(record.uiJudgeModel, 240),
+  );
   const maxRepairAttempts = 'maxRepairAttempts' in record
     ? clampInt(record.maxRepairAttempts, 2, 0, 4)
     : (record.repairEnabled === false ? 0 : 2);
@@ -133,6 +137,7 @@ function normalizeSettings(value: unknown): BenchSettings {
     maxRepairAttempts,
     repairEnabled: maxRepairAttempts > 0,
     judgeEnabled: record.judgeEnabled === true,
+    ...(uiJudgeModel ? { uiJudgeModel } : {}),
     renderMetricsEnabled: record.renderMetricsEnabled === true
       || record.collectLiveRenderMetrics === true,
     ...(record.timeoutMs === undefined
@@ -162,11 +167,20 @@ function normalizeGroups(
         variable: readVariable(item.variable),
         enabled: item.enabled !== false,
         protocol,
+        enableDesignGuidance: item.enableDesignGuidance !== false,
         ...(protocol === 'lynx-xml'
-          ? { enableHtmlFragment: item.enableHtmlFragment === true }
+          ? {
+            enableHtmlFragment: item.enableHtmlFragment === true,
+            enableScriptReuse: item.enableScriptReuse === true,
+            ...(item.stylePreset === 'default'
+              ? { stylePreset: 'default' as const }
+              : {}),
+          }
           : {}),
         profile,
         ...(model ? { model } : {}),
+        reasoningEffort: parseReasoningEffort(item.reasoningEffort)
+          ?? 'default',
         ...(protocol === 'a2ui' && profile === 'native'
           ? { catalog: readCatalog(item.catalog) }
           : {}),
@@ -270,6 +284,49 @@ export function normalizeBenchJobRequest(
   const groups = normalizeGroups(value.groups);
   if (
     Array.isArray(value.groups)
+    && value.groups.some(group =>
+      isRecord(group) && group.reasoningEffort !== undefined
+      && group.reasoningEffort !== 'default'
+      && parseReasoningEffort(group.reasoningEffort) === undefined
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        'reasoningEffort must be default, none, minimal, low, medium, high, or xhigh',
+    };
+  }
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some(group =>
+      isRecord(group) && group.protocol === 'lynx-xml'
+      && group.enableScriptReuse !== undefined
+      && typeof group.enableScriptReuse !== 'boolean'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'enableScriptReuse must be a boolean',
+    };
+  }
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some(group =>
+      isRecord(group) && group.protocol === 'lynx-xml'
+      && group.stylePreset !== undefined && group.stylePreset !== false
+      && group.stylePreset !== 'default'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'stylePreset must be false or "default"',
+    };
+  }
+  if (
+    Array.isArray(value.groups)
     && value.groups.some((group) =>
       isRecord(group) && group.protocol === 'lynx-xml'
       && group.enableHtmlFragment !== undefined
@@ -280,6 +337,20 @@ export function normalizeBenchJobRequest(
       ok: false,
       status: 400,
       error: 'enableHtmlFragment must be a boolean',
+    };
+  }
+  if (
+    Array.isArray(value.groups)
+    && value.groups.some((group) =>
+      isRecord(group)
+      && group.enableDesignGuidance !== undefined
+      && typeof group.enableDesignGuidance !== 'boolean'
+    )
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'enableDesignGuidance must be a boolean',
     };
   }
   const enabledGroups = groups.filter((group) => group.enabled);
@@ -316,13 +387,15 @@ export function normalizeBenchJobRequest(
 
   if (
     enabledGroups.some((group) =>
-      group.protocol === 'html' && group.profile !== 'native'
+      (group.protocol === 'html' || group.protocol === 'reactweb'
+        || group.protocol === 'reactlynx')
+      && group.profile !== 'native'
     )
   ) {
     return {
       ok: false,
       status: 400,
-      error: 'html groups require the "native" profile',
+      error: 'html, reactweb and reactlynx groups require the "native" profile',
     };
   }
 
@@ -345,6 +418,8 @@ export function normalizeBenchJobRequest(
         group.profile === 'matched-core'
         || group.protocol === 'lynx-xml'
         || group.protocol === 'html'
+        || group.protocol === 'reactweb'
+        || group.protocol === 'reactlynx'
       ))
     && plannedGenerationAttempts > MAX_PLANNED_GENERATION_ATTEMPTS
   ) {

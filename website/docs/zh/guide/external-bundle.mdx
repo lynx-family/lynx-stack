@@ -1,0 +1,289 @@
+---
+description: '构建跨应用复用的外部 Bundle。'
+---
+
+import { PackageManagerTabs } from '@theme';
+
+# External Bundle
+
+> 需要 Lynx 3.5 及以上版本。
+
+External Bundle 用来把 Lynx 代码打成一份可复用的独立 bundle，并在多个 Lynx 应用里按需加载。它适合抽离 ReactLynx 组件库或跨应用共享的业务 bundle。
+
+和 [Chunk Splitting](../api/rspeedy.performance.chunksplit.md) 的区别可以简单理解为：External Bundle 解决跨应用复用，Chunk Splitting 解决单应用内拆包。
+
+整个流程分成两步：
+
+1. 用 [`@lynx-js/lynx-bundle-rslib-config`](../api/lynx-bundle-rslib-config.md) 构建 external bundle。
+2. 用 [`@lynx-js/external-bundle-rsbuild-plugin`](../api/external-bundle-rsbuild-plugin.md) 在宿主应用里加载它。
+
+对应的职责也很简单：
+
+- 构建侧负责产出 `.lynx.bundle`
+- 宿主侧负责声明 bundle 从哪里加载，以及运行时该请求哪个 section
+
+## 安装
+
+<PackageManagerTabs command="install @lynx-js/lynx-bundle-rslib-config @lynx-js/external-bundle-rsbuild-plugin @lynx-js/react-umd @rslib/core -D" />
+
+:::note 为什么需要 @lynx-js/react-umd
+
+`@lynx-js/react-umd` 提供的是 `reactlynx` 内置 preset 依赖的 ReactLynx 运行时 bundle。
+
+当你开启 `externalsPresets.reactlynx` 时，插件会根据 `NODE_ENV` 自动解析 `@lynx-js/react-umd/dev` 或 `@lynx-js/react-umd/prod`，产出 `react.lynx.bundle`，并通过当前运行时 public path 去加载它。
+
+对大多数项目来说，安装 `@lynx-js/react-umd` 并开启 `reactlynx` preset 就够了。
+
+:::
+
+## 构建 External Bundle
+
+对于 ReactLynx 组件 bundle，推荐直接使用下面这套配置：
+
+```ts title="rslib-comp-lib.config.ts"
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+
+export default defineExternalBundleRslibConfig({
+  id: 'comp-lib',
+  source: {
+    entry: {
+      './App.js': './external-bundle/CompLib.tsx',
+    },
+  },
+  plugins: [pluginReactLynx()],
+  output: {
+    externalsPresets: {
+      reactlynx: true,
+    },
+  },
+});
+```
+
+`externalsPresets.reactlynx` 会帮你补齐标准的 ReactLynx 运行时映射，让 ReactLynx 组件 bundle 可以直接依赖共享运行时。
+
+执行构建：
+
+<PackageManagerTabs command="exec rslib build --config rslib-comp-lib.config.ts" />
+
+构建成功后，会得到类似下面的产物目录：
+
+```text
+├── dist-external-bundle
+│   └── comp-lib.lynx.bundle
+```
+
+### 打包 CSS
+
+> 需要 Lynx 3.7 及以上版本。
+
+如果需要运行 External Bundle 中的 CSS，需要在构建该 bundle 时指定 `engineVersion: '3.7'`：
+
+```ts title="rslib-comp-lib.config.ts"
+export default defineExternalBundleRslibConfig({
+  plugins: [
+    pluginReactLynx({
+      engineVersion: '3.7',
+    }),
+  ],
+});
+```
+
+纯 JS / TS 的 External Bundle 不受这个要求影响。
+
+## 在宿主应用中加载
+
+宿主应用里使用同一个 request key：
+
+```ts title="lynx.config.ts"
+import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin';
+import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
+import { defineConfig } from '@lynx-js/rspeedy';
+
+export default defineConfig({
+  plugins: [
+    pluginReactLynx(),
+    pluginQRCode(),
+    pluginExternalBundle({
+      externalsPresets: {
+        reactlynx: true,
+      },
+      externals: {
+        './App.js': 'comp-lib.lynx.bundle',
+      },
+    }),
+  ],
+});
+```
+
+这里的简写，等价于下面这份展开后的配置：
+
+```ts
+externals: {
+  './App.js': {
+    bundlePath: 'comp-lib.lynx.bundle',
+    libraryName: './App.js',
+    background: { sectionPath: './App.js' },
+    mainThread: { sectionPath: './App.js__main-thread' },
+    async: true,
+  },
+}
+```
+
+如果 section name 和 request key 本来就一致，这就是最简洁的推荐写法。
+
+## 验证是否生效
+
+完成上面的配置后，可以用下面几个信号快速确认 External Bundle 已经接入成功：
+
+- 宿主应用在运行时成功请求到 `comp-lib.lynx.bundle`
+- 开启 `externalsPresets.reactlynx` 时，运行时能自动加载 `react.lynx.bundle`
+- 页面中的 External Bundle 组件能正常渲染，没有出现 section 不匹配或 bundle 加载失败
+
+如果此时仍然无法运行，再回头检查 `externals` 中的 request key、bundle path 和 section name 是否一致。
+
+## 进阶：什么时候配置 `globalObject`
+
+大多数项目都不需要配置 `globalObject`。
+
+只有在你的应用开启了后台线程之间共享 `globalThis`，并且希望后续 bundle 复用之前已经加载过的 externals 时，才需要设置 `globalObject: 'globalThis'`。
+
+需要时，构建侧和宿主侧都保持一致：
+
+```ts title="rslib-comp-lib.config.ts"
+output: {
+  externalsPresets: {
+    reactlynx: true,
+  },
+  globalObject: 'globalThis',
+}
+```
+
+```ts title="lynx.config.ts"
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynx: true,
+  },
+  externals: {
+    './App.js': 'comp-lib.lynx.bundle',
+  },
+  globalObject: 'globalThis',
+});
+```
+
+## 扩展 Presets
+
+推荐让构建侧和宿主侧使用同一个 preset 名称，这样“构建阶段的 external 映射”和“运行时的 bundle 加载规则”才能保持一致。
+
+### 从 Lib 侧扩展
+
+在 external bundle 构建侧，通过 `defineExternalBundleRslibConfig({ output })` 里的 `externalsPresets` 和 `externalsPresetDefinitions` 扩展：
+
+```ts title="rslib-comp-lib.config.ts"
+import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
+
+export default defineExternalBundleRslibConfig({
+  output: {
+    externalsPresets: {
+      reactlynxPlus: true,
+    },
+    externalsPresetDefinitions: {
+      reactlynxPlus: {
+        extends: 'reactlynx',
+        externals: {
+          '@lynx-js/lynx-ui': ['LynxUI', 'UI'],
+        },
+      },
+    },
+  },
+});
+```
+
+这一侧负责的是：构建时把 import 映射成 external global。
+
+### 从 Lynx 页面侧扩展
+
+在宿主应用侧，通过 `pluginExternalBundle({ externalsPresets, externalsPresetDefinitions })` 扩展：
+
+```ts title="lynx.config.ts"
+import { pluginExternalBundle } from '@lynx-js/external-bundle-rsbuild-plugin';
+
+pluginExternalBundle({
+  externalsPresets: {
+    reactlynxPlus: true,
+  },
+  externalsPresetDefinitions: {
+    reactlynxPlus: {
+      extends: 'reactlynx',
+      resolveExternals() {
+        return {
+          '@lynx-js/lynx-ui': {
+            libraryName: ['LynxUI', 'UI'],
+            bundlePath: 'lynx-ui.lynx.bundle',
+            background: { sectionPath: 'LynxUI' },
+            mainThread: { sectionPath: 'LynxUI__main-thread' },
+            async: false,
+          },
+        };
+      },
+    },
+  },
+});
+```
+
+这一侧负责的是：告诉运行时 bundle 从哪里加载，以及 section name 是什么。
+
+如果某个应用需要覆盖 preset 结果，依然可以直接写显式 `externals`。
+
+## 进阶：什么时候用对象形式的 `externals`
+
+当你需要自定义 section name、自定义导出 library name、设置 timeout，或者本地 bundle 输出到独立目录时，使用完整对象形式。
+
+`lynx-examples` 里的 `external-bundle` 示例就是这种写法：
+
+```ts title="lynx.config.mjs"
+pluginExternalBundle({
+  externalBundleRoot: 'dist-external-bundle',
+  externalsPresets: {
+    reactlynx: true,
+  },
+  externals: {
+    'lodash-es': {
+      bundlePath: 'lodash-es.lynx.bundle',
+      background: { sectionPath: 'lodash-es' },
+      mainThread: { sectionPath: 'lodash-es__main-thread' },
+      async: false,
+      timeout: 10000,
+    },
+    './components': {
+      bundlePath: 'comp.lynx.bundle',
+      background: { sectionPath: 'component' },
+      mainThread: { sectionPath: 'component__main-thread' },
+      async: true,
+      timeout: 5000,
+    },
+  },
+  timeout: 10000,
+});
+```
+
+适合这些场景：
+
+- 一个 bundle 里放多个业务模块
+- section name 和 request key 不一致
+- bundle 构建在 `dist-external-bundle`
+- 需要单独控制每个 bundle 的超时或加载方式
+
+## 示例
+
+文档里可以直接打开 `lynx-examples` 的 external-bundle 示例：
+
+参考 [`external-bundle` 示例](https://github.com/lynx-family/lynx-examples/tree/main/examples/external-bundle)。
+
+## API 参考
+
+- [`defineExternalBundleRslibConfig()`](../api/lynx-bundle-rslib-config.defineexternalbundlerslibconfig.md)
+- [`pluginExternalBundle()`](../api/external-bundle-rsbuild-plugin.pluginexternalbundle.md)
+- [`@lynx-js/lynx-bundle-rslib-config`](../api/lynx-bundle-rslib-config.md)
+- [`@lynx-js/external-bundle-rsbuild-plugin`](../api/external-bundle-rsbuild-plugin.md)

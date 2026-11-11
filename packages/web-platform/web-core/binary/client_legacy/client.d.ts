@@ -86,6 +86,27 @@ export class RawStyleInfo {
     push_rule(css_id: number, rule: Rule): void;
 }
 
+/**
+ *
+ * * The style sheets carried by the custom sections of a template.
+ * * Each custom section whose encoding is `CSS` is keyed by its section name.
+ *
+ */
+export class RawStyleInfoMap {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     *
+     *   * Sets the style info of the custom section identified by `name`.
+     *   * An existing style info with the same name is replaced.
+     *   * @param name - The name of the custom section.
+     *   * @param style_info - The style info of the custom section.
+     *
+     */
+    insert(name: string, style_info: RawStyleInfo): void;
+    constructor();
+}
+
 export class Rule {
     free(): void;
     [Symbol.dispose](): void;
@@ -195,6 +216,7 @@ export interface InitOutput {
     readonly __wbg_get_eventinfo_event_type: (a: number, b: number) => void;
     readonly __wbg_mainthreadwasmcontext_free: (a: number, b: number) => void;
     readonly __wbg_rawstyleinfo_free: (a: number, b: number) => void;
+    readonly __wbg_rawstyleinfomap_free: (a: number, b: number) => void;
     readonly __wbg_rule_free: (a: number, b: number) => void;
     readonly __wbg_ruleprelude_free: (a: number, b: number) => void;
     readonly __wbg_selector_free: (a: number, b: number) => void;
@@ -238,6 +260,8 @@ export interface InitOutput {
     readonly rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
     readonly rawstyleinfo_new: () => number;
     readonly rawstyleinfo_push_rule: (a: number, b: number, c: number) => void;
+    readonly rawstyleinfomap_insert: (a: number, b: number, c: number, d: number) => void;
+    readonly rawstyleinfomap_new: () => number;
     readonly rule_new: (a: number, b: number, c: number) => void;
     readonly rule_push_declaration: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly rule_push_rule_children: (a: number, b: number) => void;

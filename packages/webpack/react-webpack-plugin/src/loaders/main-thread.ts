@@ -17,8 +17,15 @@ import {
 } from './defines-import-by-boundary.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
+import { MAIN_THREAD_HMR } from '../hmr/enabled.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
+export const REACT_RUNTIME_REQUIREMENTS_BUILD_INFO =
+  'lynx:react-runtime-requirements';
+
+export interface ReactRuntimeRequirementsBuildInfo {
+  mainThreadProgrammability: boolean;
+}
 
 const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   this: LoaderContext<ReactLoaderOptions>,
@@ -111,6 +118,18 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     | undefined;
   if (buildInfo) {
     buildInfo[UI_SOURCE_MAP_RECORDS_BUILD_INFO] = result.uiSourceMapRecords;
+    if (
+      typeof result.runtimeRequirements !== 'object'
+      || result.runtimeRequirements === null
+      || typeof result.runtimeRequirements.mainThreadProgrammability
+        !== 'boolean'
+    ) {
+      throw new TypeError(
+        'react-transform must provide runtimeRequirements.mainThreadProgrammability as a boolean; upgrade the build plugins and @lynx-js/react (runtime and transform) together to the module-delivery release (^0.128.0).',
+      );
+    }
+    buildInfo[REACT_RUNTIME_REQUIREMENTS_BUILD_INFO] =
+      result.runtimeRequirements;
     if (result.elementTemplates && result.elementTemplates.length > 0) {
       buildInfo[ELEMENT_TEMPLATE_BUILD_INFO] = result.elementTemplates;
     } else {
@@ -137,6 +156,17 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
     null,
     result.code
       + (definesImport ? `\nimport ${JSON.stringify(definesImport)};` : '')
+      + (
+        this.hot
+          && (this._compiler as unknown as Record<symbol, unknown>)
+            ?.[MAIN_THREAD_HMR]
+          && (
+            (result.definesForSnapshot?.length ?? 0) > 0
+            || (result.definesForWorklet?.length ?? 0) > 0
+          )
+          ? '\nif (module.hot && !module.hot._selfAccepted && !module.hot._selfDeclined) module.hot.accept();'
+          : ''
+      )
       + (
         this.hot
           // TODO: temporary fix LEPUS error `$RefreshReg$ is not defined`

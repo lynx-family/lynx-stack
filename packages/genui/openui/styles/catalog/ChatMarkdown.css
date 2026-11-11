@@ -1,0 +1,103 @@
+.OpenUIChatMarkdown {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.OpenUIChatMarkdownText {
+  color: var(--openui-color-text);
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+.OpenUIChatMarkdown-small .OpenUIChatMarkdownText,
+.OpenUIChatMarkdown-small-heavy .OpenUIChatMarkdownText {
+  font-size: 22rpx;
+}
+.OpenUIChatMarkdown-large .OpenUIChatMarkdownText,
+.OpenUIChatMarkdown-large-heavy .OpenUIChatMarkdownText {
+  font-size: 30rpx;
+}
+.OpenUIChatMarkdown-small-heavy .OpenUIChatMarkdownText,
+.OpenUIChatMarkdown-large-heavy .OpenUIChatMarkdownText,
+.OpenUIChatMarkdown-strong {
+  font-weight: 700;
+}
+.OpenUIChatMarkdown-em {
+  font-style: italic;
+}
+.OpenUIChatMarkdown-del {
+  text-decoration: line-through;
+}
+.OpenUIChatHeading {
+  font-weight: 700;
+  font-size: 30rpx;
+}
+.OpenUIChatHeading-1 {
+  font-size: 40rpx;
+}
+.OpenUIChatHeading-2 {
+  font-size: 34rpx;
+}
+.OpenUIChatQuote {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  padding-left: 18rpx;
+  border-left: 4rpx solid var(--openui-color-border-strong);
+}
+.OpenUIChatCode {
+  font-family: monospace;
+  background-color: var(--openui-color-surface-subtle);
+}
+.OpenUIChatCodeBlock {
+  padding: 16rpx;
+  border-radius: 10rpx;
+  background-color: var(--openui-color-surface-subtle);
+}
+.OpenUIChatMarkdownRule {
+  height: 1rpx;
+  background-color: var(--openui-color-border);
+}
+.OpenUIChatMarkdownList {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.OpenUIChatMarkdownListRow {
+  display: flex;
+  flex-direction: row;
+  gap: 10rpx;
+}
+.OpenUIChatMarker {
+  min-width: 26rpx;
+}
+.OpenUIChatMarkdownListBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 10rpx;
+}
+.OpenUIChatMarkdownTable {
+  width: 100%;
+}
+.OpenUIChatMarkdownTableContent {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-width: 100%;
+}
+.OpenUIChatMarkdownTableRow {
+  display: flex;
+  flex-direction: row;
+}
+.OpenUIChatMarkdownCell {
+  width: 220rpx;
+  flex-grow: 1;
+  flex-shrink: 0;
+  padding: 12rpx;
+  border-bottom: 1rpx solid var(--openui-color-border);
+}
+.OpenUIChatLink {
+  color: var(--openui-color-primary);
+  text-decoration: underline;
+}

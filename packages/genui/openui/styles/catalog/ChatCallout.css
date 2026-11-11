@@ -1,0 +1,28 @@
+.OpenUIChatCallout {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  padding: 24rpx;
+  border: 1rpx solid var(--openui-color-border);
+  border-left-width: 6rpx;
+  border-radius: 16rpx;
+  background-color: var(--openui-color-surface-subtle);
+}
+.OpenUIChatCalloutTitle {
+  color: var(--openui-color-text);
+  font-size: 28rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.OpenUIChatCallout-info {
+  border-left-color: var(--openui-color-primary);
+  background-color: var(--openui-color-primary-surface);
+}
+.OpenUIChatCallout-warning,
+.OpenUIChatCallout-error {
+  border-left-color: var(--openui-color-error);
+  background-color: var(--openui-color-error-surface);
+}
+.OpenUIChatCallout-success {
+  border-left-color: var(--positive, var(--openui-color-primary));
+}

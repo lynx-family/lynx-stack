@@ -50,52 +50,67 @@ describe('HTML Bench adapter', () => {
     expect(result.judgePayload).toBeUndefined();
   });
 
-  test('repairs the document contract and preserves token usage and source', async () => {
-    const conversations: ChatMessage[][] = [];
-    const controller = new AbortController();
-    const adapter = createHtmlBenchAdapter({
-      generateRaw(messages, options, signal) {
-        conversations.push([...messages]);
-        expect(signal).toBe(controller.signal);
-        expect(options).toMatchObject({
-          model: 'test-model',
-          disableAgentCache: true,
-          maxRetries: 0,
-          enableWebSearch: false,
-          enableImageGeneration: false,
-        });
-        expect(options.inheritReasoningEffort).toBeUndefined();
-        return Promise.resolve({
-          text: conversations.length === 1
-            ? '<!doctype html>'
-            : `\`\`\`html\n${SOURCE}\n\`\`\``,
-          usage: {
-            inputTokens: { total: 12, cacheRead: 5, cacheWrite: 0 },
-            outputTokens: { total: 8, reasoning: 2 },
-          },
-          finishReason: 'stop',
-        });
-      },
-    });
-    const artifact = await adapter.generate(INPUT, controller.signal);
-    expect(artifact.attempts[0]?.usage).toMatchObject({
-      inputTokens: { total: 12, cacheRead: 5, cacheWrite: 0 },
-    });
-    expect(conversations.map((messages) => messages.length)).toEqual([1, 3]);
-    expect(conversations[0]?.[0]?.content).toContain(
-      'Required action: Refresh',
-    );
-    expect(conversations[1]?.[2]?.content).toContain('closing </html>');
-    expect(
-      artifact.attempts.map((attempt) => [attempt.valid, attempt.totalTokens]),
-    ).toEqual([[false, 20], [true, 20]]);
-    expect(artifact).toMatchObject({
-      finalValid: true,
-      finalText: SOURCE,
-      finalErrors: [],
-      judgePayload: { kind: 'html-source', rawText: SOURCE },
-    });
-  });
+  test.each(['stop', 'length'])(
+    'repairs invalid output ending with %s and preserves token usage and source',
+    async (finishReason) => {
+      const conversations: ChatMessage[][] = [];
+      const controller = new AbortController();
+      const adapter = createHtmlBenchAdapter({
+        generateRaw(messages, options, signal) {
+          conversations.push([...messages]);
+          expect(signal).toBe(controller.signal);
+          expect(options).toMatchObject({
+            model: 'test-model',
+            disableAgentCache: true,
+            maxRetries: 0,
+            enableWebSearch: false,
+            enableImageGeneration: false,
+          });
+          expect(options.inheritReasoningEffort).toBeUndefined();
+          return Promise.resolve({
+            text: conversations.length === 1
+              ? '<!doctype html>'
+              : `\`\`\`html\n${SOURCE}\n\`\`\``,
+            usage: {
+              inputTokens: { total: 12, cacheRead: 5, cacheWrite: 0 },
+              outputTokens: { total: 8, reasoning: 2 },
+            },
+            finishReason,
+          });
+        },
+      });
+      const artifact = await adapter.generate(INPUT, controller.signal);
+      expect(artifact.attempts[0]?.usage).toMatchObject({
+        inputTokens: { total: 12, cacheRead: 5, cacheWrite: 0 },
+      });
+      expect(conversations[0]?.[0]?.content).toContain(
+        'Required action: Refresh',
+      );
+      expect(conversations[1]?.[0]).toEqual(conversations[0]?.[0]);
+      if (finishReason === 'length') {
+        expect(conversations[1]).toHaveLength(2);
+        expect(conversations[1]?.[1]?.content).toContain(
+          'Regenerate a shorter',
+        );
+        expect(conversations[1]?.some(message => message.role === 'assistant'))
+          .toBe(false);
+      } else {
+        expect(conversations[1]).toHaveLength(3);
+        expect(conversations[1]?.[2]?.content).toContain('closing </html>');
+      }
+      expect(
+        artifact.attempts.map((
+          attempt,
+        ) => [attempt.valid, attempt.totalTokens]),
+      ).toEqual([[false, 20], [true, 20]]);
+      expect(artifact).toMatchObject({
+        finalValid: true,
+        finalText: SOURCE,
+        finalErrors: [],
+        judgePayload: { kind: 'html-source', rawText: SOURCE },
+      });
+    },
+  );
 
   test('bounds transport retries and never supplies invalid output to Judge', async () => {
     let calls = 0;

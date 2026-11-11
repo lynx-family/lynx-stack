@@ -141,11 +141,19 @@ impl RawStyleInfo {
    */
   #[cfg(feature = "encode")]
   pub fn encode(&mut self) -> Result<js_sys::Uint8Array, JsError> {
-    let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true, false, false, false)?;
-    self.style_content_str_size_hint = decoded_style_info.style_content.len();
+    self.update_style_content_str_size_hint()?;
     let serialized = rkyv::to_bytes::<_, 1024>(self)
       .map_err(|e| JsError::new(&format!("Failed to encode RawStyleInfo: {e:?}")))?;
     Ok(js_sys::Uint8Array::from(serialized.as_slice()))
+  }
+}
+
+#[cfg(feature = "encode")]
+impl RawStyleInfo {
+  pub(super) fn update_style_content_str_size_hint(&mut self) -> Result<(), JsError> {
+    let decoded_style_info = StyleInfoDecoder::new(self.clone(), None, true, false, false, false)?;
+    self.style_content_str_size_hint = decoded_style_info.style_content.len();
+    Ok(())
   }
 }
 

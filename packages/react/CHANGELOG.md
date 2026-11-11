@@ -1,5 +1,123 @@
 # @lynx-js/react
 
+## 0.129.2
+
+### Patch Changes
+
+- Clear pre-hydration delayed ref UI operations on Snapshot background destroy and reset Element Template commit state before unmounting on background teardown. ([#4251](https://github.com/lynx-family/lynx-stack/pull/4251))
+
+- Read GlobalProps mode from the host page's runtime configuration so lazy and external bundles use the host's mode. Preserve the `__GLOBAL_PROPS_MODE__` definition for historical consumers and retain the existing `globalPropsMode` build option. Hosts must inject the runtime mode to enable event mode in the new runtime. ([#4300](https://github.com/lynx-family/lynx-stack/pull/4300))
+
+- Keep ordinary Main Thread Function member captures working with older externalized ReactLynx runtimes that do not export `captureMainThreadObject`. MainThreadObject usage still requires a runtime that supports it. ([#4302](https://github.com/lynx-family/lynx-stack/pull/4302))
+
+## 0.129.1
+
+### Patch Changes
+
+- Preserve nullish bases (`null` and `undefined`) when narrowing worklet optional-chain member captures so creating a worklet does not eagerly dereference properties on nullish objects before guards inside the worklet body run. ([#4259](https://github.com/lynx-family/lynx-stack/pull/4259))
+
+- Reset main-thread patch pipeline state on exit and clear leaked component-stack render entries across root renders. ([#4254](https://github.com/lynx-family/lynx-stack/pull/4254))
+
+- Remove the disabled background-to-main-thread worklet HMR transport and its unused function copies from development bundles. ([#4205](https://github.com/lynx-family/lynx-stack/pull/4205))
+
+- Restore the lightweight `loadWorkletRuntime` compatibility export from the internal, lazy internal, and worklet runtime bindings entries for precompiled consumers. ([#4253](https://github.com/lynx-family/lynx-stack/pull/4253))
+
+- Correct the Lepus development JSX runtime export and use explicit JavaScript extensions in lazy runtime entries so they resolve under native ESM. ([#4237](https://github.com/lynx-family/lynx-stack/pull/4237))
+
+## 0.129.0
+
+### Minor Changes
+
+- Add the experimental `experimental_reEvalJSOnReload` option. When it is enabled, `reloadTemplate` evaluates the main-thread and background entries again, so module-level state starts over while the native element tree is reused. It is disabled by default. ([#4026](https://github.com/lynx-family/lynx-stack/pull/4026))
+
+  Re-evaluating the background entry requires `reloadCard` from the Lynx client. Without it, the background keeps the existing reload behavior.
+
+### Patch Changes
+
+- Drop stale cross-thread function calls and return values after `reloadTemplate`. This prevents delayed calls from looking up cleared Element Template function contexts or resolving a newer call with an old result. Calls queued by old main-thread ref cleanup retain the old reload version. ([#4214](https://github.com/lynx-family/lynx-stack/pull/4214))
+
+- Keep synchronous lazy import chains from changing unrelated Promise callbacks to run synchronously when the Lynx Promise polyfill caches fulfilled primitive values. This prevents a lazy component's mount effect from re-entering when it updates a parent component. ([#4204](https://github.com/lynx-family/lynx-stack/pull/4204))
+
+- Keep failed background-function handle registrations retryable and release consumed delayed callback queues so completed callbacks can be garbage collected. ([#4222](https://github.com/lynx-family/lynx-stack/pull/4222))
+
+- Send Element Template main-thread ref initialization in a separate event, independently of UI patch serialization and reload filtering. Add alog messages for initialization sends and receives in both Snapshot and Element Template. ([#4213](https://github.com/lynx-family/lynx-stack/pull/4213))
+
+- Preserve imports such as `runOnBackground` when injecting background-only worklet definitions into the main thread. Keep imported bindings isolated between definitions and resolve relative imports from their original module. ([#4221](https://github.com/lynx-family/lynx-stack/pull/4221))
+
+## 0.128.0
+
+### Minor Changes
+
+- Deliver the main-thread runtime through named imports from its init entry, including background-only definitions that carry their registration dependencies into the main-thread graph. Runtime code participates in business defines and release processing. Every supported transform supplies semantic runtime requirements, including for definitions injected from background-only modules; watch rebuilds refresh their dependencies and metadata. ([#4066](https://github.com/lynx-family/lynx-stack/pull/4066))
+
+  Upgrade the build plugins and `@lynx-js/react` together. This release requires `@lynx-js/react@^0.128.0`; its runtime and bundled transform use the same module-delivery protocol. The refresh plugin adds support for `@lynx-js/react-webpack-plugin@^0.13.0` while retaining its existing supported versions. Older compiler output is unsupported. The prebuilt worklet-runtime chunk, its package entries, and `loadWorkletRuntime` are removed. Combined lazy chunks share their paired main runtime, and standalone lazy bundles bootstrap themselves.
+
+  The worklet init entry follows `worklet.runtimePkg`: remove a trailing `/internal`, if present, and append `/worklet-runtime/init`. Its `registerWorklet` export uses the existing host registration function when the runtime is already initialized. Default worklet options use `@lynx-js/react/internal` for helpers.
+
+  Testing-library initializes module-delivered worklets on its emulated main thread in Vitest and Rstest.
+
+### Patch Changes
+
+- Add the `@lynx-js/react/worklet-runtime/init` entry and resolve it to the published, unbundled runtime module in normal and lazy builds. The entry uses the existing runtime initialization guard, so loading it again preserves the runtime and its registrations. ([#4065](https://github.com/lynx-family/lynx-stack/pull/4065))
+
+  Existing compiler output continues to use the legacy runtime-loading path.
+
+## 0.127.0
+
+### Minor Changes
+
+- Add typed `MainThreadObject` handles whose target factory is defined by a Main Thread Function, with identity-preserving capture and hydration, runtime-owned reference release, and exact-type handle downcasting for readonly creation-payload access. V1 intentionally exposes no user-land disposal API. Applications import the APIs from `@lynx-js/react`. ([#3788](https://github.com/lynx-family/lynx-stack/pull/3788))
+
+### Patch Changes
+
+- Exclude nested `node_modules` symlinks from published packages. ([#4117](https://github.com/lynx-family/lynx-stack/pull/4117))
+
+- Preserve MainThreadObject identity in member and nested captures, and support Main Thread object methods with receiver-bound captures. ([#3789](https://github.com/lynx-family/lynx-stack/pull/3789))
+
+- Forward MainThreadObject APIs directly from the host runtime in standalone lazy bundles without feature-specific mismatch assertions. ([#4064](https://github.com/lynx-family/lynx-stack/pull/4064))
+
+- Support MainThreadObject APIs and captures when using Element Template. ([#3788](https://github.com/lynx-family/lynx-stack/pull/3788))
+
+- Include operation type and commit ID in the ctx-not-found diagnostic message. ([#4111](https://github.com/lynx-family/lynx-stack/pull/4111))
+
+## 0.126.2
+
+### Patch Changes
+
+- Reduce profiling overhead in the Snapshot and Element Template backends by directly forwarding fixed arguments in diff, render, commit, and setState callbacks. Existing profiling events and state diagnostics are preserved. This change only affects execution with profiling hooks installed. ([#3998](https://github.com/lynx-family/lynx-stack/pull/3998))
+
+- Preserve first-screen MainThreadRef values and delayed `runOnBackground` calls when a nested main-thread function's original context is garbage-collected before hydration. Hydration now reads the context already owned by the bound function without retaining the original context. ([#3958](https://github.com/lynx-family/lynx-stack/pull/3958))
+
+- Add `registerRuntimeVersion()` and `getRuntimeVersion()` to record the host's `@lynx-js/react` runtime version and report versions from standalone lazy bundles. The build stamps each bundle with `__RUNTIME_VERSION__`; bundles built by older plugins that do not stamp the version are unaffected. ([#4035](https://github.com/lynx-family/lynx-stack/pull/4035))
+
+- Keep both layers of a lazy bundle that a `webpackChunkName` names. The name is the identity of a chunk group, so writing one collapsed the main-thread and the background compilation into a single chunk: the bundle shipped with an empty `lepusCode`, and its intermediate outputs landed outside of `.lynx/lazy-bundle/<name>/`. The transform now appends `-react__<layer>` to a user-written name and the plugin strips it again, the way it did for the names the transform used to inject, so a named lazy bundle is built exactly like an unnamed one. ([#4002](https://github.com/lynx-family/lynx-stack/pull/4002))
+
+- Preserve component owners in development error stacks after scheduled state updates, and enable background component stacks for Element Template. ([#3919](https://github.com/lynx-family/lynx-stack/pull/3919))
+
+- Run a GC pass after `reloadTemplate`, and after an update that arrives before ([#4022](https://github.com/lynx-family/lynx-stack/pull/4022))
+  the first screen is synced, when the engine exposes `lepusng_gc`. Both replace
+  the rendered tree, and under reference counting the replaced tree is not freed
+  on its own.
+- Fix SSR hydration of list snapshots with surrounding elements so list callbacks and recycling state are restored on the list element while preserving the snapshot root. ([#3983](https://github.com/lynx-family/lynx-stack/pull/3983))
+
+- Type `RenderResult.unmount` from `@lynx-js/react/testing-library` as returning `void`, matching the runtime. ([#3960](https://github.com/lynx-family/lynx-stack/pull/3960))
+
+## 0.126.1
+
+### Patch Changes
+
+- Type the context argument of `use` with React's `Context`, matching the rest of the public surface. `@lynx-js/react` re-exports `createContext` from `react`, so declaring `use` against Preact's `Context` made a context created through the package fail to type-check. ([#3837](https://github.com/lynx-family/lynx-stack/pull/3837))
+
+- Keep ordinary callback ref cleanup separate for each node binding. Sharing one callback between multiple nodes no longer cleans up another node's binding during attachment, replacement, or removal. Bindings retain their cleanup across hydration and keyed moves in both Snapshot and Element Template. ([#3902](https://github.com/lynx-family/lynx-stack/pull/3902))
+
+- `withLynxConfig()` now loads `rsbuild.config.*` in an Rsbuild project, not only `lynx.config.*` in an Rspeedy one, so Rstest runs in both. ([#3864](https://github.com/lynx-family/lynx-stack/pull/3864))
+
+- Clean up direct callback refs when they are set to `null` or `undefined` after hydration in the Snapshot backend. Call the binding's returned cleanup, or pass `null` to the callback when no cleanup was returned, without repeating cleanup on a later unmount. ([#3911](https://github.com/lynx-family/lynx-stack/pull/3911))
+
+- Fix the queries returned by `render` from `@lynx-js/react/testing-library` being typed as a union of every query's result when no `queries` option is passed, which made `fireEvent.tap(await findByText(...))` fail to type-check. ([#3864](https://github.com/lynx-family/lynx-stack/pull/3864))
+
+- Fix `use()` from `@lynx-js/react/compat` throwing `cannot read property '__cC0' of undefined` on the main thread. The main-thread renderer never set `_globalContext` on the components it builds, and `use` reads its context provider from there. `useContext` was unaffected because it reads `context` instead. ([#3838](https://github.com/lynx-family/lynx-stack/pull/3838))
+
 ## 0.126.0
 
 ### Minor Changes

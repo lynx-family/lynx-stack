@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { mkdtemp } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,15 +9,84 @@ import { fileURLToPath } from 'node:url'
 import type { RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
+import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
+
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 import { pluginStubRspeedyAPI } from './stub-rspeedy-api.plugin.js'
-import type { LynxTemplatePlugin, TemplateHooks } from '../src/index.js'
+import type {
+  LynxTemplatePlugin,
+  ReactCompileResult,
+  ReactCompileResultExposureV1,
+  TemplateHooks,
+} from '../src/index.js'
+
+const REACT_COMPILE_RESULT_EXPOSURE = Symbol.for(
+  '@lynx-js/react/internal:compile-result',
+)
 
 describe('Expose', () => {
+  test.each(
+    [
+      ['fixtures/lazy-main-thread-programmability/index.tsx', true],
+      ['fixtures/basic.tsx', false],
+    ] as const,
+  )(
+    'reports final runtime requirements for %s',
+    async (fixture, mainThreadProgrammability) => {
+      let exposure: ReactCompileResultExposureV1 | undefined
+      const { pluginReactLynx } = await import('../src/index.js')
+      const consumeReactCompileResult: RsbuildPlugin = {
+        name: 'consume-react-compile-result',
+        setup(api) {
+          exposure = api.useExposed<ReactCompileResultExposureV1>(
+            REACT_COMPILE_RESULT_EXPOSURE,
+          )
+        },
+      }
+      const tmp = await mkdtemp(
+        path.join(tmpdir(), 'rspeedy-react-test-compile-result-'),
+      )
+      try {
+        const rsbuild = await createRspeedy({
+          rspeedyConfig: {
+            source: {
+              entry: {
+                main: fileURLToPath(new URL(fixture, import.meta.url)),
+              },
+            },
+            output: { distPath: { root: tmp } },
+            plugins: [
+              pluginReactLynx(),
+              pluginStubRspeedyAPI(),
+              consumeReactCompileResult,
+            ],
+          },
+        })
+
+        const result = await rsbuild.build()
+        try {
+          expect(exposure?.version).toBe(1)
+          expect(result.stats).toBeDefined()
+          expect(exposure?.getCompileResult(result.stats!)).toEqual(
+            {
+              version: 1,
+              runtimeRequirements: { mainThreadProgrammability },
+            } satisfies ReactCompileResult,
+          )
+        } finally {
+          await result.close()
+        }
+      } finally {
+        await rm(tmp, { recursive: true, force: true })
+      }
+    },
+  )
+
   test('LynxTemplatePlugin', async () => {
     const { pluginReactLynx } = await import('../src/index.js')
 
     let expose: { LynxTemplatePlugin: LynxTemplatePlugin } | undefined
+    let engineTemplatePlugin: typeof LynxTemplatePluginClass
     let beforeEncodeArgs:
       | Parameters<Parameters<TemplateHooks['beforeEncode']['tap']>[1]>[0]
       | undefined
@@ -44,6 +113,17 @@ describe('Expose', () => {
           {
             name: 'pluginThatUsesTemplateHooks',
             setup(api) {
+              api.modifyBundlerChain({
+                order: 'pre',
+                handler: () => {
+                  const exposed = api.useExposed<{
+                    LynxTemplatePlugin: typeof LynxTemplatePluginClass
+                  }>(Symbol.for('LynxTemplatePlugin'))!
+                  const Original = exposed.LynxTemplatePlugin
+                  engineTemplatePlugin = class extends Original {}
+                  exposed.LynxTemplatePlugin = engineTemplatePlugin
+                },
+              })
               api.modifyBundlerChain(chain => {
                 // `pluginLynx` exposes this, and Rspeedy applies the engine
                 // after the user plugins, so it is read in a hook rather than
@@ -51,6 +131,11 @@ describe('Expose', () => {
                 expose = api.useExposed<
                   { LynxTemplatePlugin: LynxTemplatePlugin }
                 >(Symbol.for('LynxTemplatePlugin'))
+                expect(chain.plugin('lynx:template-main').get('plugin')).toBe(
+                  engineTemplatePlugin,
+                )
+                expect(chain.plugin('lynx:react').get('args'))
+                  .toMatchObject([{ LynxTemplatePlugin: engineTemplatePlugin }])
                 const PLUGIN_NAME = 'pluginThatUsesTemplateHooks'
                 chain.plugin(PLUGIN_NAME).use({
                   apply(compiler) {

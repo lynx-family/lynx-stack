@@ -25,7 +25,7 @@ import { lynxTheme } from './theme.js';
  * @param options.lynxPlugins - Controls which Lynx core plugins to enable
  * @param options.lynxUIPlugins - Controls which Lynx UI plugins to enable
  * @param options.debug - Whether to enable debug logging
- * @param options.theme - Custom theme configuration to merge with Lynx theme
+ * @param options.theme - Custom theme configuration. Shallowly merged; each top-level key replaces the Lynx value. Use `theme.extend` to add values.
  *
  * @returns A partial Tailwind configuration object
  *

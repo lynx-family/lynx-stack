@@ -7,10 +7,66 @@ import {
   collectElementTemplatesForChunkGroups,
   collectElementTemplatesForEntries,
   collectElementTemplatesFromModule,
+  collectReactCompileResult,
   mergeElementTemplate,
   mergeElementTemplatesFromModule,
 } from '../src/ReactWebpackPlugin.js';
-import type { ModuleWithElementTemplateBuildInfo } from '../src/ReactWebpackPlugin.js';
+import type {
+  ModuleWithElementTemplateBuildInfo,
+  ModuleWithReactRuntimeRequirementsBuildInfo,
+} from '../src/ReactWebpackPlugin.js';
+
+const moduleWithRequirement = (
+  mainThreadProgrammability: boolean,
+): ModuleWithReactRuntimeRequirementsBuildInfo => ({
+  buildInfo: {
+    'lynx:react-runtime-requirements': {
+      mainThreadProgrammability,
+    },
+  },
+});
+
+describe('collectReactCompileResult', () => {
+  it('aggregates reachable chunk modules and nested concatenated modules', () => {
+    const chunk = { id: 'main' };
+
+    expect(
+      collectReactCompileResult(
+        [chunk],
+        () => [
+          moduleWithRequirement(false),
+          {
+            modules: [moduleWithRequirement(true)],
+          },
+        ],
+      ),
+    ).toEqual({
+      version: 1,
+      runtimeRequirements: { mainThreadProgrammability: true },
+    });
+  });
+
+  it('returns explicit false when the semantic producer is present', () => {
+    expect(
+      collectReactCompileResult(
+        [{ id: 'main' }],
+        () => [moduleWithRequirement(false), { buildInfo: {} }],
+      ),
+    ).toEqual({
+      version: 1,
+      runtimeRequirements: { mainThreadProgrammability: false },
+    });
+  });
+
+  it('returns unknown when no final chunk module has the semantic producer', () => {
+    expect(
+      collectReactCompileResult(
+        [{ id: 'main' }],
+        () => [{ buildInfo: {} }],
+      ),
+    ).toBeUndefined();
+  });
+});
 
 describe('collectElementTemplatesFromModule', () => {
   it('collects templates from nested modules', () => {

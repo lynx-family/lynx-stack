@@ -167,8 +167,8 @@
         "variant": {
           "type": "string",
           "enum": [
-            "primary",
-            "borderless"
+            "borderless",
+            "primary"
           ]
         },
         "isValid": {
@@ -188,21 +188,6 @@
                     "userMessage": {
                       "oneOf": [
                         {
-                          "type": "string"
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "@path": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "@path"
-                          ],
-                          "additionalProperties": false
-                        },
-                        {
                           "type": "object",
                           "properties": {
                             "@call": {
@@ -220,6 +205,21 @@
                             "@call"
                           ],
                           "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "@path": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "@path"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "string"
                         }
                       ]
                     },
@@ -282,18 +282,6 @@
                   {
                     "type": "object",
                     "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
                       "@call": {
                         "type": "string"
                       },
@@ -308,6 +296,18 @@
                     "required": [
                       "@call",
                       "args"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -346,9 +346,9 @@
           "type": "string",
           "enum": [
             "elevated",
-            "outlined",
             "filled",
-            "ghost"
+            "ghost",
+            "outlined"
           ]
         },
         "weight": {
@@ -370,21 +370,6 @@
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -403,27 +388,27 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ]
         },
         "value": {
           "oneOf": [
             {
-              "type": "boolean"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -442,6 +427,21 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "boolean"
             }
           ]
         },
@@ -452,18 +452,6 @@
             "properties": {
               "condition": {
                 "oneOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
                   {
                     "type": "object",
                     "properties": {
@@ -481,6 +469,18 @@
                     "required": [
                       "@call",
                       "args"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -514,21 +514,6 @@
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -547,6 +532,21 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The label for the group of options."
@@ -567,21 +567,6 @@
               "label": {
                 "oneOf": [
                   {
-                    "type": "string"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
                     "type": "object",
                     "properties": {
                       "@call": {
@@ -600,6 +585,21 @@
                       "args"
                     ],
                     "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "string"
                   }
                 ],
                 "description": "The text to display for this option."
@@ -620,24 +620,6 @@
         "value": {
           "oneOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -656,6 +638,24 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           ],
           "description": "The list of currently selected values."
@@ -682,18 +682,6 @@
                   {
                     "type": "object",
                     "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
                       "@call": {
                         "type": "string"
                       },
@@ -708,6 +696,18 @@
                     "required": [
                       "@call",
                       "args"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -751,22 +751,22 @@
         "align": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ]
         },
         "justify": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
-            "stretch",
-            "spaceBetween",
             "spaceAround",
-            "spaceEvenly"
+            "spaceBetween",
+            "spaceEvenly",
+            "start",
+            "stretch"
           ]
         }
       },
@@ -785,9 +785,6 @@
         "value": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
                 "@path": {
@@ -798,27 +795,15 @@
                 "@path"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The current date/time value. Typically bound to a data path."
         },
         "label": {
           "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
             {
               "type": "object",
               "properties": {
@@ -838,6 +823,21 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The text label for the input field."
@@ -872,18 +872,6 @@
                   {
                     "type": "object",
                     "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
                       "@call": {
                         "type": "string"
                       },
@@ -898,6 +886,18 @@
                     "required": [
                       "@call",
                       "args"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -951,6 +951,18 @@
         "name": {
           "oneOf": [
             {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
               "type": "string",
               "enum": [
                 "account_circle"
@@ -977,37 +989,13 @@
             {
               "type": "string",
               "enum": [
-                "camera"
-              ]
-            },
-            {
-              "type": "string",
-              "enum": [
                 "calendar_today"
               ]
             },
             {
               "type": "string",
               "enum": [
-                "payment"
-              ]
-            },
-            {
-              "type": "string",
-              "enum": [
-                "phone"
-              ]
-            },
-            {
-              "type": "string",
-              "enum": [
-                "skip_next"
-              ]
-            },
-            {
-              "type": "string",
-              "enum": [
-                "skip_previous"
+                "camera"
               ]
             },
             {
@@ -1103,7 +1091,19 @@
             {
               "type": "string",
               "enum": [
+                "payment"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
                 "person"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "phone"
               ]
             },
             {
@@ -1145,6 +1145,18 @@
             {
               "type": "string",
               "enum": [
+                "skip_next"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "skip_previous"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
                 "star"
               ]
             },
@@ -1153,18 +1165,6 @@
               "enum": [
                 "warning"
               ]
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
             }
           ],
           "description": "Google Material icon ligature name, e.g. \"info\", \"account_circle\", \"arrow_back\"."
@@ -1172,17 +1172,17 @@
         "size": {
           "type": "string",
           "enum": [
-            "sm",
+            "lg",
             "md",
-            "lg"
+            "sm"
           ]
         },
         "color": {
           "type": "string",
           "enum": [
-            "primary",
+            "inherit",
             "muted",
-            "inherit"
+            "primary"
           ]
         }
       },
@@ -1201,21 +1201,6 @@
         "url": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -1233,6 +1218,21 @@
                 "@call"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "Image URL or path binding."
@@ -1250,21 +1250,21 @@
         "mode": {
           "type": "string",
           "enum": [
-            "center",
-            "scaleToFill",
+            "aspectFill",
             "aspectFit",
-            "aspectFill"
+            "center",
+            "scaleToFill"
           ]
         },
         "variant": {
           "type": "string",
           "enum": [
-            "icon",
             "avatar",
-            "smallFeature",
-            "mediumFeature",
+            "header",
+            "icon",
             "largeFeature",
-            "header"
+            "mediumFeature",
+            "smallFeature"
           ]
         },
         "weight": {
@@ -1326,11 +1326,28 @@
         "labels": {
           "oneOf": [
             {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
               "type": "array",
               "items": {
                 "type": "string"
               }
-            },
+            }
+          ],
+          "description": "Category labels shown along the x axis."
+        },
+        "series": {
+          "oneOf": [
             {
               "type": "object",
               "properties": {
@@ -1342,12 +1359,7 @@
                 "@path"
               ],
               "additionalProperties": false
-            }
-          ],
-          "description": "Category labels shown along the x axis."
-        },
-        "series": {
-          "oneOf": [
+            },
             {
               "type": "array",
               "items": {
@@ -1359,12 +1371,6 @@
                   "values": {
                     "oneOf": [
                       {
-                        "type": "array",
-                        "items": {
-                          "type": "number"
-                        }
-                      },
-                      {
                         "type": "object",
                         "properties": {
                           "@path": {
@@ -1375,6 +1381,12 @@
                           "@path"
                         ],
                         "additionalProperties": false
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
                       }
                     ]
                   },
@@ -1388,18 +1400,6 @@
                 ],
                 "additionalProperties": false
               }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
             }
           ],
           "description": "One or more line series to render over the shared labels."
@@ -1455,9 +1455,9 @@
         "align": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ]
         }
@@ -1477,8 +1477,8 @@
         "variant": {
           "type": "string",
           "enum": [
-            "inline",
-            "block"
+            "block",
+            "inline"
           ],
           "description": "Visual density for the skeleton placeholder."
         }
@@ -1510,8 +1510,8 @@
         "theme": {
           "type": "string",
           "enum": [
-            "light",
-            "dark"
+            "dark",
+            "light"
           ],
           "description": "Color theme passed to the nested Lynx page."
         },
@@ -1572,6 +1572,18 @@
         "data": {
           "oneOf": [
             {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
               "type": "array",
               "items": {
                 "type": "object",
@@ -1592,18 +1604,6 @@
                 ],
                 "additionalProperties": false
               }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
             }
           ],
           "description": "Pie slices to render."
@@ -1611,8 +1611,8 @@
         "variant": {
           "type": "string",
           "enum": [
-            "pie",
-            "donut"
+            "donut",
+            "pie"
           ],
           "description": "Render the chart as a flat pie or a donut."
         },
@@ -1663,24 +1663,6 @@
         "items": {
           "oneOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -1699,6 +1681,24 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           ],
           "description": "The list of string options to display."
@@ -1706,21 +1706,6 @@
         "value": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -1739,6 +1724,21 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The currently selected value."
@@ -1746,8 +1746,8 @@
         "usageHint": {
           "type": "string",
           "enum": [
-            "default",
             "card",
+            "default",
             "row"
           ],
           "description": "A hint for the visual style of the radio group."
@@ -1759,18 +1759,6 @@
             "properties": {
               "condition": {
                 "oneOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
                   {
                     "type": "object",
                     "properties": {
@@ -1788,6 +1776,18 @@
                     "required": [
                       "@call",
                       "args"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -1829,21 +1829,21 @@
         "justify": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
-            "stretch",
-            "spaceBetween",
             "spaceAround",
-            "spaceEvenly"
+            "spaceBetween",
+            "spaceEvenly",
+            "start",
+            "stretch"
           ]
         },
         "align": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ]
         }
@@ -1863,21 +1863,6 @@
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -1896,6 +1881,21 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The label for the slider."
@@ -1911,21 +1911,6 @@
         "value": {
           "oneOf": [
             {
-              "type": "number"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -1944,6 +1929,21 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "number"
             }
           ],
           "description": "The current value of the slider."
@@ -1955,18 +1955,6 @@
             "properties": {
               "condition": {
                 "oneOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
                   {
                     "type": "object",
                     "properties": {
@@ -1984,6 +1972,18 @@
                     "required": [
                       "@call",
                       "args"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -2056,21 +2056,6 @@
         "text": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
-              "type": "object",
-              "properties": {
-                "@path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "@path"
-              ],
-              "additionalProperties": false
-            },
-            {
               "type": "object",
               "properties": {
                 "@call": {
@@ -2089,6 +2074,21 @@
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "Literal text, path binding, or function call."
@@ -2096,13 +2096,13 @@
         "variant": {
           "type": "string",
           "enum": [
+            "body",
+            "caption",
             "h1",
             "h2",
             "h3",
             "h4",
             "h5",
-            "caption",
-            "body",
             "markdown"
           ]
         },
@@ -2129,9 +2129,6 @@
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
                 "@path": {
@@ -2142,6 +2139,9 @@
                 "@path"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The text label for the input field."
@@ -2149,9 +2149,6 @@
         "value": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
                 "@path": {
@@ -2162,6 +2159,9 @@
                 "@path"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The value of the text field."
@@ -2169,10 +2169,10 @@
         "variant": {
           "type": "string",
           "enum": [
-            "number",
             "longText",
-            "shortText",
-            "obscured"
+            "number",
+            "obscured",
+            "shortText"
           ],
           "description": "The type of input field to display."
         },
@@ -2190,18 +2190,6 @@
                   {
                     "type": "object",
                     "properties": {
-                      "@path": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "@path"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
                       "@call": {
                         "type": "string"
                       },
@@ -2213,15 +2201,6 @@
                         "additionalProperties": {
                           "oneOf": [
                             {
-                              "type": "string"
-                            },
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "boolean"
-                            },
-                            {
                               "type": "object",
                               "properties": {
                                 "@path": {
@@ -2232,6 +2211,15 @@
                                 "@path"
                               ],
                               "additionalProperties": false
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
                             }
                           ]
                         }
@@ -2239,6 +2227,18 @@
                     },
                     "required": [
                       "@call"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }

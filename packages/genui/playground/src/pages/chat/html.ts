@@ -3,12 +3,18 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  extractHtmlArtifact,
+  isCompleteHtmlArtifact,
+} from '@lynx-js/genui-html';
+
+import {
   CHAT_PROVIDER_SETTINGS_ADAPTER,
   getChatEndpoint,
   parseTokenUsage,
   toProviderRequestOptions,
 } from './shared.js';
 import type { ProviderSettings } from './shared.js';
+import { CHAT_PROMPT_SUGGESTIONS } from './suggestions.js';
 import type {
   ChatArtifact,
   ChatHydration,
@@ -30,58 +36,14 @@ export interface HtmlStreamState {
   source: string;
 }
 
-const HTML_DOCTYPE_PATTERN = /<!doctype\s+html\s*>/iu;
-const HTML_ROOT_END = '</html>';
-
 const WELCOME_MESSAGE: ChatMessageModel = {
   kind: 'assistant',
   text:
     'Describe the web interface you want. I will stream a complete, standalone HTML document and render it in an isolated Web Preview.',
 };
 
-const SUGGESTIONS = [
-  {
-    label: '📊 Analytics dashboard',
-    text:
-      'Create a responsive analytics dashboard with summary cards, a CSS chart, recent activity, and a working date-range control. Keep everything in one HTML file.',
-  },
-  {
-    label: '🛍️ Product page',
-    text:
-      'Create a polished mobile-first product page with an inline product illustration, variant selection, quantity controls, and an add-to-cart confirmation.',
-  },
-  {
-    label: '✅ Task planner',
-    text:
-      'Create an interactive task planner with filters, completion toggles, progress, and an add-task form. Use only self-contained HTML, CSS, and JavaScript.',
-  },
-] as const;
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-/** Keep partial source visible as soon as the HTML document begins. */
-export function extractHtmlSource(value: string): string {
-  const match = HTML_DOCTYPE_PATTERN.exec(value);
-  if (!match || match.index === undefined) return '';
-
-  const source = value.slice(match.index);
-  const end = source.toLowerCase().lastIndexOf(HTML_ROOT_END);
-  return source.slice(
-    0,
-    end === -1 ? undefined : end + HTML_ROOT_END.length,
-  ).trimEnd();
-}
-
-export function isCompleteHtmlSource(source: string): boolean {
-  const doctype = HTML_DOCTYPE_PATTERN.exec(source);
-  if (!doctype || doctype.index !== 0) return false;
-  const documentSource = source.slice(doctype[0].length).trimStart();
-  return /^<html(?:\s|>)/iu.test(documentSource)
-    && /<head(?:\s|>)/iu.test(documentSource)
-    && /<body(?:\s|>)/iu.test(documentSource)
-    && source.trimEnd().toLowerCase().endsWith(HTML_ROOT_END);
 }
 
 function readResponseText(value: unknown, fallback = ''): string {
@@ -106,8 +68,8 @@ function normalizeError(value: unknown): string {
 }
 
 function requireCompleteOutput(value: unknown, fallback = ''): HtmlOutput {
-  const source = extractHtmlSource(readResponseText(value, fallback));
-  if (!isCompleteHtmlSource(source)) {
+  const source = extractHtmlArtifact(readResponseText(value, fallback));
+  if (!isCompleteHtmlArtifact(source)) {
     throw new Error('The agent returned an incomplete HTML document');
   }
   return { source };
@@ -138,7 +100,7 @@ export const HTML_STREAM = {
         : '';
       if (!delta) return streamStep(state);
       const generatedText = state.generatedText + delta;
-      const source = extractHtmlSource(generatedText);
+      const source = extractHtmlArtifact(generatedText);
       const nextState = { generatedText, source };
       const emissions: ChatStreamEmission<HtmlOutput>[] = [
         { type: 'progress', text: source || generatedText },
@@ -173,25 +135,20 @@ export const HTML_STREAM = {
     );
   },
   finish(state: HtmlStreamState): HtmlOutput | null {
-    return isCompleteHtmlSource(state.source)
+    return isCompleteHtmlArtifact(state.source)
       ? { source: state.source }
       : null;
   },
   error: normalizeError,
 };
 
-function formatCharacterCount(source: string): string {
-  return `${source.length.toLocaleString()} chars`;
-}
-
-function generatedStatus(output: HtmlOutput): ChatMessageModel {
+function generatedStatus(): ChatMessageModel {
   return {
     kind: 'status',
     tone: 'success',
     icon: 'sparkles',
-    text: `Generated a complete HTML document (${
-      formatCharacterCount(output.source)
-    }). Web Preview is rendering it now.`,
+    text:
+      'Generated a complete HTML document. Web Preview is rendering it now.',
   };
 }
 
@@ -220,10 +177,22 @@ function hydrate(
       continue;
     }
     if (message.role !== 'assistant') continue;
-    const source = extractHtmlSource(message.content);
-    if (!isCompleteHtmlSource(source)) continue;
+    if (message.generationError) {
+      messages.push({
+        kind: 'status',
+        tone: 'error',
+        text: message.generationError,
+        generationUsage: message.generationUsage,
+      });
+      continue;
+    }
+    const source = extractHtmlArtifact(message.content);
+    if (!isCompleteHtmlArtifact(source)) continue;
     output = { source };
-    messages.push(generatedStatus(output));
+    messages.push({
+      ...generatedStatus(),
+      generationUsage: message.generationUsage,
+    });
   }
 
   const metrics = lastMetrics(history);
@@ -237,7 +206,7 @@ function hydrate(
 function createArtifact(output: HtmlOutput): ChatArtifact {
   return {
     title: 'Generated HTML Document',
-    meta: `.html · ${formatCharacterCount(output.source)}`,
+    meta: '.html',
     views: [{
       id: 'source',
       label: 'Source',
@@ -267,7 +236,7 @@ export const HTML_CHAT_ADAPTER = {
     progressLabel: 'Streaming HTML from the GenUI server...',
     failurePrefix: 'HTML generation failed',
   },
-  suggestions: SUGGESTIONS,
+  suggestions: CHAT_PROMPT_SUGGESTIONS,
   settings: CHAT_PROVIDER_SETTINGS_ADAPTER,
   createRequest({ prompt, conversation, settings, host }) {
     return {
@@ -301,18 +270,16 @@ export const HTML_CHAT_ADAPTER = {
         text: 'Streaming HTML from the GenUI server...',
       };
     },
-    progress(text) {
+    progress(_text: string) {
       return {
         kind: 'status',
         tone: 'pending',
         icon: 'spinner',
-        text: `Streaming HTML from the GenUI server... ${
-          formatCharacterCount(text)
-        }`,
+        text: 'Streaming HTML from the GenUI server...',
       };
     },
-    success(output) {
-      return [generatedStatus(output)];
+    success(_output: HtmlOutput) {
+      return [generatedStatus()];
     },
     failure(error) {
       return {

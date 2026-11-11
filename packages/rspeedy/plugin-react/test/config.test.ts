@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildInstance, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
@@ -440,6 +441,7 @@ describe('Config', () => {
         plugins: [
           pluginReactLynx({
             experimental_transformBuiltinAttributeNames: transformConfig,
+            globalPropsMode: 'event',
           }),
           pluginStubRspeedyAPI(),
         ],
@@ -483,6 +485,7 @@ describe('Config', () => {
       ).options,
     ).toEqual({
       transformBuiltinAttributeNames: transformConfig,
+      globalPropsMode: 'event',
     })
   })
 
@@ -492,9 +495,11 @@ describe('Config', () => {
       callerName: 'rspeedy',
       pluginOptions: {
         experimental_transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event' as const,
       },
       expectedRuntimeConfig: {
         transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event',
       },
     },
     {
@@ -503,6 +508,7 @@ describe('Config', () => {
       pluginOptions: {
         experimental_isLazyBundle: true,
         experimental_transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event' as const,
       },
       expectedRuntimeConfig: undefined,
     },
@@ -511,6 +517,7 @@ describe('Config', () => {
       callerName: 'rslib',
       pluginOptions: {
         experimental_transformBuiltinAttributeNames: true,
+        globalPropsMode: 'event' as const,
       },
       expectedRuntimeConfig: undefined,
     },
@@ -553,7 +560,7 @@ describe('Config', () => {
     ).toEqual(expectedRuntimeConfig)
   })
 
-  test('does not apply the runtime config plugin when all runtime configs are disabled', async () => {
+  test('injects the reactive default without disabled attribute-name settings', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
     const rsbuild = await createRspeedy({
@@ -569,11 +576,18 @@ describe('Config', () => {
 
     const [config] = await rsbuild.initConfigs()
 
-    expect(
-      config?.plugins?.find(
-        plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
-      ),
-    ).toBeUndefined()
+    const runtimePlugin = config?.plugins?.find(
+      plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
+    )
+    expect(runtimePlugin).toBeDefined()
+    expect((runtimePlugin as unknown as { options: unknown }).options).toEqual({
+      globalPropsMode: 'reactive',
+    })
+    const reactPlugin = config?.plugins?.find(
+      plugin => plugin?.constructor.name === 'ReactWebpackPlugin',
+    )
+    expect((reactPlugin as unknown as { options: unknown }).options)
+      .toHaveProperty('globalPropsMode', 'reactive')
   })
 
   test('experimental_useElementTemplate wires aliases and loader/plugin options', async () => {
@@ -909,34 +923,7 @@ describe('Config', () => {
       expect(firstScreenSyncTiming).toBe('immediately')
     })
 
-    test('globalPropsMode defaults to "reactive"', async () => {
-      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-      const rsbuild = await createRspeedy({
-        rspeedyConfig: {
-          plugins: [
-            pluginReactLynx(),
-            pluginStubRspeedyAPI(),
-          ],
-        },
-      })
-
-      const [config] = await rsbuild.initConfigs()
-
-      const ReactWebpackPlugin = config?.plugins?.find((
-        p,
-      ): p is ReactWebpackPlugin =>
-        p?.constructor.name === 'ReactWebpackPlugin'
-      )
-
-      expect(ReactWebpackPlugin).toBeDefined()
-
-      // @ts-expect-error private field
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
-      expect(globalPropsMode).toBe('reactive')
-    })
-
-    test('globalPropsMode respects configuration', async () => {
+    test('globalPropsMode uses runtime configuration for event mode', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
       const rsbuild = await createRspeedy({
         rspeedyConfig: {
@@ -948,19 +935,19 @@ describe('Config', () => {
       })
 
       const [config] = await rsbuild.initConfigs()
-
-      const ReactWebpackPlugin = config?.plugins?.find((
-        p,
-      ): p is ReactWebpackPlugin =>
-        p?.constructor.name === 'ReactWebpackPlugin'
+      const runtimePlugin = config?.plugins?.find(
+        plugin => plugin?.constructor.name === 'RuntimeConfigWebpackPlugin',
       )
-
-      expect(ReactWebpackPlugin).toBeDefined()
-
-      // @ts-expect-error private field
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const { globalPropsMode } = ReactWebpackPlugin?.options ?? {}
-      expect(globalPropsMode).toBe('event')
+      expect(runtimePlugin).toBeDefined()
+      expect((runtimePlugin as unknown as { options: unknown }).options)
+        .toEqual({
+          globalPropsMode: 'event',
+        })
+      const reactPlugin = config?.plugins?.find(
+        plugin => plugin?.constructor.name === 'ReactWebpackPlugin',
+      )
+      expect((reactPlugin as unknown as { options: unknown }).options)
+        .toHaveProperty('globalPropsMode', 'event')
     })
 
     test('environments.lynx.output.inlineScripts: false', async () => {
@@ -2044,6 +2031,45 @@ describe('Config', () => {
         `)
     })
 
+    test('splitChunks excludes chunks by runtime', async () => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx(),
+            pluginStubRspeedyAPI(),
+          ],
+          splitChunks: {
+            preset: 'default',
+          },
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      if (config?.optimization?.splitChunks === undefined) {
+        expect.fail('should have config.optimization.splitChunks')
+      }
+      if (config.optimization.splitChunks === false) {
+        expect.unreachable('splitChunks is not false')
+      }
+      if (typeof config.optimization.splitChunks.chunks !== 'function') {
+        expect.fail('splitChunks.chunks should be a function')
+      }
+
+      const chunks = config.optimization.splitChunks.chunks
+      const createChunk = (runtime: string[]) =>
+        ({ runtime: new Set(runtime) }) as unknown as Parameters<
+          typeof chunks
+        >[0]
+
+      expect(chunks(createChunk(['main__main-thread']))).toBe(false)
+      expect(chunks(createChunk(['lazy-main-thread']))).toBe(true)
+      expect(chunks(createChunk(['main']))).toBe(true)
+      expect(chunks(createChunk(['main__main-thread', 'main']))).toBe(true)
+    })
+
     test('splitChunks.preset: "default"', async () => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
@@ -2596,6 +2622,7 @@ describe('Config', () => {
         "enableCSSSelector": true,
         "enableNewGesture": false,
         "enableRemoveCSSScope": true,
+        "enableReuseLoadScriptExports": false,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".lynx/main",
@@ -2605,6 +2632,66 @@ describe('Config', () => {
       }
     `)
   })
+
+  test('reuses loadScript exports for experimental entry re-evaluation', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+    const rsbuild = await createRspeedy({
+      rspeedyConfig: {
+        plugins: [
+          pluginReactLynx({
+            experimental_reEvalJSOnReload: true,
+          }),
+          pluginStubRspeedyAPI(),
+        ],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    const templatePlugin = config?.plugins?.find((
+      p,
+    ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin')
+
+    expect(templatePlugin).toBeDefined()
+    const templateOptions = (templatePlugin as unknown as {
+      options: { enableReuseLoadScriptExports?: boolean }
+    }).options
+    expect(templateOptions.enableReuseLoadScriptExports).toBe(true)
+  })
+
+  test.each([
+    { callerName: 'rspeedy', expectedEntrySupport: true },
+    { callerName: 'rslib', expectedEntrySupport: false },
+  ])(
+    'marks re-evaluation entry support only for applications: $callerName',
+    async ({
+      callerName,
+      expectedEntrySupport,
+    }) => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+      const rsbuild = await createRspeedy({
+        callerName,
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({ experimental_reEvalJSOnReload: true }),
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+      const [config] = await rsbuild.initConfigs()
+      const wrapper = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'RuntimeWrapperWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+      const react = config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'ReactWebpackPlugin'
+      ) as unknown as { options: { experimental_reEvalJSOnReload: boolean } }
+
+      expect(wrapper.options.experimental_reEvalJSOnReload).toBe(
+        expectedEntrySupport,
+      )
+      expect(react.options.experimental_reEvalJSOnReload).toBe(true)
+    },
+  )
 
   test('targetSdkVersion', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
@@ -2974,101 +3061,6 @@ describe('Config', () => {
     })
   })
 
-  test('worklet runtime (mode: production)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'production',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
-  })
-
-  test('worklet runtime (mode: development)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'development',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-dev-runtime'),
-    )
-  })
-
-  test('worklet runtime (mode: none)', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-    const rspeedy = await createRspeedy({
-      rspeedyConfig: {
-        mode: 'none',
-        plugins: [
-          pluginReactLynx(),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rspeedy.initConfigs()
-
-    const reactWebpackPluginInstance = config?.plugins?.find((
-      p,
-    ): p is ReactWebpackPlugin =>
-      !!(p && p.constructor.name === 'ReactWebpackPlugin')
-    )
-
-    if (!reactWebpackPluginInstance) {
-      expect.fail('Should have ReactWebpackPlugin instance')
-    }
-
-    const require = createRequire(import.meta.url)
-
-    // @ts-expect-error private property
-    expect(reactWebpackPluginInstance.options).toHaveProperty(
-      'workletRuntimePath',
-      require.resolve('@lynx-js/react/worklet-runtime'),
-    )
-  })
-
   test('worklet runtime bindings resolve to the runtime-owned build output', () => {
     const require = createRequire(import.meta.url)
 
@@ -3186,8 +3178,9 @@ describe('Config', () => {
   describe('callerName: rstest', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
+    const rsbuild = await createRsbuild({
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+      rsbuildConfig: {
         plugins: [
           pluginReactLynx(),
         ],

@@ -222,64 +222,121 @@ describe('ElementTemplate commit hook', () => {
     expect(takeDelayedRunOnMainThreadData()).toEqual([]);
   });
 
-  it('dispatches MainThreadRef init-value patch after commit when hydrated', () => {
-    markElementTemplateHydrated();
+  it.each([false, true])('dispatches ref initialization separately (hydrated: %s)', (hydrated) => {
+    if (hydrated) markElementTemplateHydrated();
+    const dispatch = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
     new MainThreadRef('commit-init');
 
     options.__c?.({} as unknown as object, []);
 
-    envManager.switchToMainThread();
-    expect(updateEvents).toEqual([
-      {
-        ops: [],
-        flushOptions: { emptyPatch: true },
-        flowIds: undefined,
-        reloadVersion: getReloadVersion(),
-        mainThreadRefInitValuePatch: [[1, 'commit-init']],
-      },
-    ]);
-    envManager.switchToBackground();
+    expect(dispatch).toHaveBeenCalledExactlyOnceWith({
+      type: ElementTemplateLifecycleConstant.updateMTRefInitValue,
+      data: JSON.stringify([[1, 'commit-init']]),
+    });
     expect(takeMainThreadRefInitValuePatch()).toEqual([]);
+    envManager.switchToMainThread();
+    expect(updateEvents).toEqual([]);
+    envManager.switchToBackground();
   });
 
-  it('cleans commit state when update serialization throws', () => {
-    vi.useFakeTimers();
-    globalThis.__ALOG__ = false;
-    const serializeError = new Error('update serialization failed');
-    const throwingValue = {
-      toJSON() {
-        throw serializeError;
-      },
-    } as unknown as string;
+  it.each(['update', 'ref', 'circular-ref', 'dispatch'])(
+    'cleans commit state when %s fails and allows the next commit',
+    (failure) => {
+      vi.useFakeTimers();
+      globalThis.__ALOG__ = false;
+      const serializeError = new Error('update serialization failed');
+      const dispatch = vi.spyOn(lynx.getCoreContext(), 'dispatchEvent');
+      const throwingValue = {
+        toJSON() {
+          throw serializeError;
+        },
+      } as unknown as string;
+      const circularValue: { self?: unknown } = {};
+      circularValue.self = circularValue;
+      new MainThreadRef(
+        failure === 'ref' ? throwingValue : failure === 'circular-ref' ? circularValue : 'survives-ui-serialization',
+      );
+      if (failure === 'dispatch') {
+        dispatch.mockImplementationOnce(() => {
+          throw serializeError;
+        });
+      }
+      const ref = vi.fn();
+      const removedRoot = new BackgroundElementTemplateInstance('removed');
+      const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
+
+      try {
+        markElementTemplateHydrated();
+        queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
+        markRemovedSubtreeForPostDispatchTeardown(removedRoot);
+        globalCommitContext.ops = createRawTextOps(1, failure === 'update' ? throwingValue : 'failed');
+        enqueueDelayedRunOnMainThreadData({
+          worklet: { _wkltId: 'failed-serialize-main-thread-function' },
+          params: [],
+          resolveId: onFunctionCall(vi.fn()),
+        });
+
+        expect(() => options.__c?.({} as unknown as object, [])).toThrow(
+          failure === 'circular-ref' ? TypeError : serializeError,
+        );
+        if (failure === 'update' || failure === 'dispatch') {
+          expect(dispatch).toHaveBeenCalledExactlyOnceWith({
+            type: ElementTemplateLifecycleConstant.updateMTRefInitValue,
+            data: JSON.stringify([[1, 'survives-ui-serialization']]),
+          });
+        } else {
+          expect(dispatch).not.toHaveBeenCalled();
+        }
+        expect(takeMainThreadRefInitValuePatch()).toEqual([]);
+        expect(takeDelayedRunOnMainThreadData()).toEqual([]);
+        expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
+        expect(globalCommitContext.ops).toEqual([]);
+        expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
+
+        dispatch.mockClear();
+        new MainThreadRef('next-ref');
+        globalCommitContext.ops = createRawTextOps(2, 'next-commit');
+        options.__c?.({} as unknown as object, []);
+        expect(ref).not.toHaveBeenCalled();
+        expect(dispatch.mock.calls.map(([event]) => event.type)).toEqual([
+          ElementTemplateLifecycleConstant.updateMTRefInitValue,
+          ElementTemplateLifecycleConstant.update,
+        ]);
+        expect(dispatch.mock.calls[0]![0].data).toBe(JSON.stringify([[2, 'next-ref']]));
+        expect(parseElementTemplateUpdateEventPayload(dispatch.mock.calls[1]![0].data)).toMatchObject({
+          ops: createRawTextOps(2, 'next-commit'),
+        });
+        expect(parseElementTemplateUpdateEventPayload(dispatch.mock.calls[1]![0].data).delayedRunOnMainThreadData)
+          .toBeUndefined();
+
+        vi.advanceTimersByTime(10000);
+        expect(backgroundElementTemplateInstanceManager.get(removedRoot.instanceId)).toBeUndefined();
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
+  it('cleans a failed ref initialization commit before hydration', () => {
+    const circularValue: { self?: unknown } = {};
+    circularValue.self = circularValue;
+    new MainThreadRef(circularValue);
     const ref = vi.fn();
-    const removedRoot = new BackgroundElementTemplateInstance('removed');
+    queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
+    globalCommitContext.ops = createRawTextOps(1, 'failed');
+    enqueueDelayedRunOnMainThreadData({
+      worklet: { _wkltId: 'failed-ref-init' },
+      params: [],
+      resolveId: onFunctionCall(vi.fn()),
+    });
     const removeEventListener = vi.spyOn(lynx.getCoreContext(), 'removeEventListener');
 
-    try {
-      markElementTemplateHydrated();
-      queueRefAttrUpdate(null, ref, { instanceId: -2 }, 0);
-      markRemovedSubtreeForPostDispatchTeardown(removedRoot);
-      globalCommitContext.ops = createRawTextOps(1, throwingValue);
-      enqueueDelayedRunOnMainThreadData({
-        worklet: { _wkltId: 'failed-serialize-main-thread-function' },
-        params: [],
-        resolveId: onFunctionCall(vi.fn()),
-      });
-
-      expect(() => options.__c?.({} as unknown as object, [])).toThrow(serializeError);
-      expect(takeDelayedRunOnMainThreadData()).toEqual([]);
-      expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
-      expect(globalCommitContext.ops).toEqual([]);
-      expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
-
-      options.__c?.({} as unknown as object, []);
-      expect(ref).not.toHaveBeenCalled();
-
-      vi.advanceTimersByTime(10000);
-      expect(backgroundElementTemplateInstanceManager.get(removedRoot.instanceId)).toBeUndefined();
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(() => options.__c?.({} as unknown as object, [])).toThrow(TypeError);
+    expect(globalCommitContext.ops).toEqual([]);
+    expect(takeDelayedRunOnMainThreadData()).toEqual([]);
+    expect(removeEventListener).toHaveBeenCalledWith(WorkletEvents.FunctionCallRet, expect.any(Function));
+    options.__c?.({} as unknown as object, []);
+    expect(ref).not.toHaveBeenCalled();
   });
 
   it('dispatches triggerDataUpdated when useInitData observes a data change', () => {

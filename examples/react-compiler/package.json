@@ -17,7 +17,7 @@
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-babel": "2.0.1",
+    "@rsbuild/plugin-babel": "2.1.0",
     "@types/react": "^19.2.18",
     "babel-plugin-react-compiler": "1.0.0"
   }

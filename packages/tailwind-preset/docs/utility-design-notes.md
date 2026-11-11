@@ -90,7 +90,7 @@ preset therefore retains one composed declaration and adds native 3D axes:
 ```css
 transform: translate3d(var(--tw-tx), var(--tw-ty), var(--tw-tz))
   rotateX(var(--tw-rx)) rotateY(var(--tw-ry)) rotateZ(var(--tw-rz))
-  skew(var(--tw-skx), var(--tw-sky)) scale(var(--tw-sx), var(--tw-sy));
+  skewX(var(--tw-skx)) skewY(var(--tw-sky)) scale(var(--tw-sx), var(--tw-sy));
 ```
 
 The `defaults` plugin initializes the abbreviated variables on `*`. Each
@@ -116,11 +116,11 @@ Lynx SDK 3.4+.
 utilities also emit the same declaration because the common chain always
 starts with `translate3d`.
 
-Skew has a compatibility issue. `skewX(x) skewY(y)` and `skew(x, y)` produce
-different matrices when both angles are non-zero. Single-axis use is
-equivalent, which is all the current CLI fixture demonstrates. The shorthand
-keeps the composed declaration shorter but does not preserve v3 semantics when
-both Skew axes are present.
+Skew follows the v3 `skewX(x) skewY(y)` function order. Earlier preset
+versions used `skew(x, y)`, which produces a different matrix when both angles
+are non-zero. Single-axis use is equivalent. Applications that require the
+earlier two-argument geometry can use a complete arbitrary transform such as
+`transform-[skew(12deg,6deg)]`.
 
 **Tailwind CSS v4**
 
@@ -145,19 +145,25 @@ designed together.
 
 **Decision required**
 
-A follow-up implementation must:
+The Transform follow-up tracks these decisions:
 
-1. Add runtime coverage for combined `skew-x-*` and `skew-y-*`, mixed
-   Scale/Skew, reset, transition, `solo-*`, and arbitrary-transform cases on
-   native Lynx and Lynx for Web.
-2. Decide whether to restore the v3 `skewX(...) skewY(...)` chain. The change
-   would alter existing combined Skew output and animations, so it is a
-   user-visible breaking change. While the package remains pre-1.0, release it
-   with a minor changeset.
-3. Define whether `transform-cpu` and `transform-gpu` should remain aliases or
-   regain distinct output.
-4. Preserve the single-property Lynx model unless runtime support for the
-   individual properties is added and versioned.
+1. [ ] Add runtime coverage for combined `skew-x-*` and `skew-y-*`, mixed
+       Scale/Skew, reset, transition, `solo-*`, and arbitrary-transform cases on
+       native Lynx and Lynx for Web.
+2. [x] Decide whether to restore the v3 `skewX(...) skewY(...)` chain. The
+       preset now uses that chain while preserving the existing Translate, Rotate,
+       Scale, 3D axes, abbreviated variables, and single-property Lynx composition
+       model. This intentionally changes combined Skew output and animations, so
+       it is released as a breaking minor change while the package remains pre-1.0.
+3. [ ] Define whether `transform-cpu` and `transform-gpu` should remain aliases
+       or regain distinct output.
+4. [x] Preserve the single-property Lynx model unless runtime support for the
+       individual properties is added and versioned.
+
+Completing items 2 and 4 does not resolve items 1 or 3. This change leaves
+`transform-cpu` and `transform-gpu` as aliases. Raw `transform-[...]` and
+`solo-*` utilities continue to replace the complete `transform` value and are
+not part of the composed utility chain.
 
 ## Text Decoration Composition
 

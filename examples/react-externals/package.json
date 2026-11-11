@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "pnpm run build:comp-lib && pnpm run build:utils && rsbuild build && cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true pnpm run build:utils && cross-env REACTLYNX_ASYNC=true rsbuild build",
-    "build:comp-lib": "rslib build --config rslib-comp-lib.config.ts",
-    "build:comp-lib:dev": "cross-env NODE_ENV=development rslib build --config rslib-comp-lib.config.ts",
-    "build:utils": "rslib build --config rslib-utils.config.ts",
+    "build:comp-lib": "rslib --config rslib-comp-lib.config.ts",
+    "build:comp-lib:dev": "cross-env NODE_ENV=development rslib --config rslib-comp-lib.config.ts",
+    "build:utils": "rslib --config rslib-utils.config.ts",
     "dev": "pnpm run build:comp-lib && pnpm run build:utils && rsbuild dev",
     "dev:react-async": "cross-env REACTLYNX_ASYNC=true pnpm run build:comp-lib && cross-env REACTLYNX_ASYNC=true pnpm run build:utils && cross-env REACTLYNX_ASYNC=true rsbuild dev",
     "preview": "rsbuild preview",

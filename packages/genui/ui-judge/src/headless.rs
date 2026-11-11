@@ -10,6 +10,8 @@ use thiserror::Error;
 
 use crate::capture::shared_workers;
 
+pub(crate) const DEFAULT_SCREENSHOT_SETTLE_MS: u64 = 100;
+
 /// Options for capturing a trusted Lynx page without model evaluation.
 #[derive(Debug, Clone)]
 pub struct CapturePageRequest {
@@ -24,7 +26,7 @@ impl Default for CapturePageRequest {
   fn default() -> Self {
     Self {
       url: String::new(),
-      screenshot_settle: Duration::from_millis(16),
+      screenshot_settle: Duration::from_millis(DEFAULT_SCREENSHOT_SETTLE_MS),
       timeout: Duration::from_secs(60),
       global_props_json: None,
       initial_data_json: None,

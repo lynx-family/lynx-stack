@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { flushElementTemplate } from './flush.js';
 import { reloadMainThread } from './reload-main-thread.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
 import { createElementTemplatePage, setupPage } from '../runtime/page/page.js';
@@ -38,15 +39,11 @@ function updatePage(data: Record<string, unknown> | undefined, options?: UpdateP
   }
 
   applyUpdatePageData(data, options);
-  __FlushElementTree(undefined, options ?? {});
+  flushElementTemplate(options);
 }
 
 function updateGlobalProps(_data: unknown, options?: UpdatePageOption): void {
-  if (options) {
-    __FlushElementTree(undefined, options);
-  } else {
-    __FlushElementTree();
-  }
+  flushElementTemplate(options);
 }
 
 /**

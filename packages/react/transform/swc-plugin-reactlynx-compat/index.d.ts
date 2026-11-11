@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * {@inheritDoc CompatVisitorConfig.addComponentElement}
  * @public
  */
 export interface AddComponentElementConfig {
@@ -42,12 +42,12 @@ export interface DarkModeConfig {
 }
 
 /**
- * {@inheritdoc CompatVisitorConfig.addComponentElement}
+ * {@inheritDoc CompatVisitorConfig.addComponentElement}
  * @public
  */
 
 /**
- * {@inheritdoc PluginReactLynxOptions.compat}
+ * {@inheritDoc PluginReactLynxOptions.compat}
  * @public
  */
 export interface CompatVisitorConfig {

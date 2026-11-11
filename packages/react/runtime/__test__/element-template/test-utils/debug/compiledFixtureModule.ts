@@ -9,6 +9,7 @@ import {
   type CompiledFixtureTarget,
 } from './compiledFixtureCompiler.js';
 import { primeCompiledFixtureTemplates } from './compiledFixtureRegistry.js';
+import type { ElementTemplateEnvManager } from './envManager.js';
 
 export interface CompiledFixtureModuleExports {
   App: (props?: Record<string, unknown>) => JSX.Element;
@@ -33,6 +34,7 @@ export async function loadCompiledFixtureModule<T extends object = CompiledFixtu
 interface LoadCompiledFixturePairOptions {
   backgroundTarget?: CompiledFixtureTarget;
   enableWorkletTransform?: boolean;
+  envManager?: ElementTemplateEnvManager;
   isDynamicComponent?: boolean;
   mainTarget?: CompiledFixtureTarget;
   registerMainTemplates?: boolean;
@@ -48,6 +50,7 @@ export async function loadCompiledFixturePair<T extends object = CompiledFixture
   const {
     backgroundTarget = 'JS',
     enableWorkletTransform = false,
+    envManager,
     isDynamicComponent = false,
     mainTarget = 'LEPUS',
     registerMainTemplates = true,
@@ -61,6 +64,7 @@ export async function loadCompiledFixturePair<T extends object = CompiledFixture
   if (registerMainTemplates) {
     primeCompiledFixtureTemplates(mainArtifact);
   }
+  envManager?.switchToMainThread();
   const mainModule = await loadCompiledFixtureModule<T>(mainArtifact);
 
   const backgroundArtifact = await compileFixtureSource(sourcePath, {
@@ -68,6 +72,7 @@ export async function loadCompiledFixturePair<T extends object = CompiledFixture
     isDynamicComponent,
     target: backgroundTarget,
   });
+  envManager?.switchToBackground();
   const backgroundModule = await loadCompiledFixtureModule<T>(backgroundArtifact);
 
   return { backgroundModule, mainModule };

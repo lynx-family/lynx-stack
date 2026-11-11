@@ -1,7 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 import {
   DialogBackdrop,
@@ -14,24 +14,18 @@ import {
 import { useMemo, useState } from '@lynx-js/react';
 import type { ReactNode } from '@lynx-js/react';
 
+import { Modal as ModalDefinition } from './definition.js';
 import {
   OpenUIContext,
   useIsStreaming,
   useOpenUI,
 } from '../../core/context.jsx';
-import { defineComponent } from '../../core/library.jsx';
-import { stringLikeSchema, stringifyValue } from '../utils.js';
+import type { DefinedComponent } from '../../core/library.jsx';
+import { stringifyValue } from '../utils.js';
 
 import '../../../styles/catalog/Modal.css';
 
-const modalPropsSchema = z.object({
-  trigger: z.any(),
-  content: z.any(),
-  title: stringLikeSchema.optional(),
-  closeOnAction: z.boolean().optional(),
-});
-
-type ModalProps = z.infer<typeof modalPropsSchema>;
+type ModalProps = z.infer<typeof ModalDefinition.props>;
 
 function ModalRenderer(
   { props, renderNode }: {
@@ -125,9 +119,7 @@ function ModalRenderer(
   );
 }
 
-export const Modal = defineComponent({
-  name: 'Modal',
-  props: modalPropsSchema,
-  description: 'Tap-triggered modal container with custom content.',
+export const Modal: DefinedComponent<typeof ModalDefinition.props> = {
+  ...ModalDefinition,
   component: ModalRenderer,
-});
+};

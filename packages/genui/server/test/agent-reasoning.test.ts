@@ -4,6 +4,7 @@
 
 import { afterEach, expect, rstest, test } from '@rstest/core';
 
+import { lynxXmlTestText } from './helpers/lynx-xml.js';
 import A2UIAgentService from '../service/a2ui/a2ui-agent.js';
 import { GENUI_MODEL_CONFIG_ENV } from '../service/common/model-config.js';
 import HtmlAgentService from '../service/html/html-agent.js';
@@ -38,6 +39,7 @@ function streamResponse(chunks: unknown[]): Response {
 function modelResponse(
   api: 'chat' | 'responses',
   streaming: boolean,
+  text: string,
 ): Response {
   if (api === 'chat') {
     const response = {
@@ -52,7 +54,7 @@ function modelResponse(
         object: 'chat.completion.chunk',
         choices: [{
           index: 0,
-          delta: { role: 'assistant', content },
+          delta: { role: 'assistant', content: text },
           finish_reason: null,
         }],
       }, {
@@ -65,7 +67,7 @@ function modelResponse(
         object: 'chat.completion',
         choices: [{
           index: 0,
-          message: { role: 'assistant', content },
+          message: { role: 'assistant', content: text },
           finish_reason: 'stop',
         }],
       });
@@ -74,7 +76,7 @@ function modelResponse(
     id: 'message-1',
     type: 'message',
     role: 'assistant',
-    content: [{ type: 'output_text', text: content, annotations: [] }],
+    content: [{ type: 'output_text', text, annotations: [] }],
   };
   const response = {
     id: 'response-1',
@@ -93,7 +95,7 @@ function modelResponse(
         type: 'response.output_text.delta',
         output_index: 0,
         item_id: item.id,
-        delta: content,
+        delta: text,
       },
       { type: 'response.output_item.done', output_index: 0, item },
       { type: 'response.completed', response },
@@ -101,7 +103,11 @@ function modelResponse(
     : Response.json(response);
 }
 
-function captureRequests(api: 'chat' | 'responses') {
+function captureRequests(
+  api: 'chat' | 'responses',
+  text = content,
+  maxOutputTokens?: number,
+) {
   rstest.stubEnv(
     GENUI_MODEL_CONFIG_ENV,
     JSON.stringify({
@@ -111,6 +117,7 @@ function captureRequests(api: 'chat' | 'responses') {
         model,
         api,
         reasoningEffort: 'low',
+        maxOutputTokens,
       },
       Default: { apiKey: 'test-secret', baseURL, model, api },
     }),
@@ -125,16 +132,96 @@ function captureRequests(api: 'chat' | 'responses') {
       typeof init?.body === 'string' ? init.body : '',
     ) as Record<string, unknown>;
     requests.push(body);
-    return Promise.resolve(modelResponse(api, body.stream === true));
+    return Promise.resolve(modelResponse(api, body.stream === true, text));
   });
   return requests;
 }
 
 for (const api of ['chat', 'responses'] as const) {
+  test(`observes first text before raw ${api} generation completes`, async () => {
+    captureRequests(api);
+    let releaseCompletion!: () => void;
+    const completionGate = new Promise<void>(resolve => {
+      releaseCompletion = resolve;
+    });
+    let observeFirstText!: () => void;
+    const firstText = new Promise<void>(resolve => {
+      observeFirstText = resolve;
+    });
+    rstest.mocked(globalThis.fetch).mockImplementation(async () => {
+      const data = await modelResponse(api, true, content).text();
+      const boundary = data.lastIndexOf('data: ');
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            controller.enqueue(
+              new TextEncoder().encode(data.slice(0, boundary)),
+            );
+            await completionGate;
+            controller.enqueue(new TextEncoder().encode(data.slice(boundary)));
+            controller.close();
+          },
+        }),
+        { headers: { 'Content-Type': 'text/event-stream' } },
+      );
+    });
+    let completed = false;
+    const generation = new HtmlAgentService().generateRaw(messages, {
+      model: 'Fast',
+      streamRawGeneration: true,
+      reasoningEffort: 'none',
+      enableWebSearch: false,
+      enableImageGeneration: false,
+      onPerformanceEvent(event) {
+        if (event === 'agent.model.first_text_token') observeFirstText();
+      },
+    }).then(result => {
+      completed = true;
+      return result;
+    });
+    try {
+      await firstText;
+      expect(completed).toBe(false);
+    } finally {
+      releaseCompletion();
+    }
+    const result = await generation;
+    expect(result.text).toBe(content);
+  });
+
+  test.each(services.filter(([name]) => name !== 'mcp-apps'))(
+    `%s streams raw Bench generation with an explicit reasoning override over ${api}`,
+    async (name, create) => {
+      const output = name === 'lynx-xml' ? lynxXmlTestText(content) : content;
+      const requests = captureRequests(api, output);
+      const log = rstest.fn();
+      const generated = await create().generateRaw(messages, {
+        model: 'Fast',
+        enableWebSearch: false,
+        enableImageGeneration: false,
+        streamRawGeneration: true,
+        reasoningEffort: 'high',
+        onPerformanceEvent: log,
+      });
+      expect(generated.text).toBe(output);
+      expect(requests).toHaveLength(1);
+      expect(requests[0]?.stream).toBe(true);
+      expect(
+        api === 'chat' ? requests[0]?.reasoning_effort : requests[0]?.reasoning,
+      )
+        .toEqual(api === 'chat' ? 'high' : { effort: 'high' });
+      expect(log).toHaveBeenCalledWith(
+        'agent.model.first_text_token',
+        expect.any(Object),
+      );
+    },
+  );
+
   test.each(services)(
     `%s sends configured effort through real Mastra ${api} generation and streaming`,
     async (name, create) => {
-      const requests = captureRequests(api);
+      const output = name === 'lynx-xml' ? lynxXmlTestText(content) : content;
+      const requests = captureRequests(api, output);
       const service = create();
       const log = rstest.fn();
       const options = {
@@ -144,22 +231,24 @@ for (const api of ['chat', 'responses'] as const) {
         onPerformanceEvent: log,
       };
       const generated = await service.generateRaw(messages, options);
-      expect(generated.text).toBe(content);
+      expect(generated.text).toBe(output);
       if ('streamAsAsyncIterable' in service) {
         const result = await service.streamAsAsyncIterable(messages, options);
         let streamed = '';
         for await (const chunk of result.textStream) streamed += chunk;
-        expect(streamed).toBe(content);
+        expect(streamed).toBe(output);
         const finalized = await result.finalize();
-        expect(finalized.text).toBe(content);
+        expect(finalized.text).toBe(output);
       }
       expect(requests).toHaveLength('streamAsAsyncIterable' in service ? 2 : 1);
       for (const body of requests) {
         expect(body.model).toBe(model);
         if (api === 'chat') {
           expect(body.reasoning_effort).toBe('low');
+          expect(body.max_completion_tokens).toBe(32768);
         } else {
           expect(body.reasoning).toEqual({ effort: 'low' });
+          expect(body.max_output_tokens).toBe(32768);
         }
         const input = api === 'chat' ? body.messages : body.input;
         expect(input).toEqual(expect.arrayContaining([
@@ -170,6 +259,38 @@ for (const api of ['chat', 'responses'] as const) {
         'agent.model.started',
         expect.objectContaining({ agent: name, reasoningEffort: 'low' }),
       );
+    },
+  );
+
+  test.each(services)(
+    `%s respects the configured output ceiling through real Mastra ${api} generation and streaming`,
+    async (name, create) => {
+      const output = name === 'lynx-xml' ? lynxXmlTestText(content) : content;
+      const requests = captureRequests(api, output, 8192);
+      const service = create();
+      const options = {
+        model: 'Fast',
+        enableWebSearch: false,
+        enableImageGeneration: false,
+        maxRetries: 0,
+        onPerformanceEvent: rstest.fn(),
+      };
+      const generated = await service.generateRaw(messages, options);
+      expect(generated.text).toBe(output);
+      if ('streamAsAsyncIterable' in service) {
+        const result = await service.streamAsAsyncIterable(messages, options);
+        for await (const _chunk of result.textStream) { /* consume */ }
+        const finalized = await result.finalize();
+        expect(finalized.text).toBe(output);
+      }
+      expect(requests).toHaveLength('streamAsAsyncIterable' in service ? 2 : 1);
+      for (const body of requests) {
+        expect(body.model).toBe(model);
+        expect(
+          body[api === 'chat' ? 'max_completion_tokens' : 'max_output_tokens'],
+        )
+          .toBe(8192);
+      }
     },
   );
 }

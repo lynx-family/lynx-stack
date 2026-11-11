@@ -1,0 +1,57 @@
+.OpenUIChatChecks {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.OpenUIChatCheckRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14rpx;
+  padding: 8rpx 0;
+}
+.OpenUIChatCheckRow.ui-disabled {
+  opacity: 0.4;
+}
+.OpenUIChatCheckIndicator {
+  width: 34rpx;
+  height: 34rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid var(--line, var(--openui-color-border-input));
+  border-radius: 8rpx;
+}
+.OpenUIChatCheckIndicator.ui-checked {
+  background-color: var(--primary, var(--openui-color-primary));
+  border-color: var(--primary, var(--openui-color-primary));
+}
+.OpenUIChatCheckMark {
+  font-size: 24rpx;
+  color: var(--primary-content, var(--openui-color-on-primary));
+  opacity: 0;
+}
+.OpenUIChatCheckIndicator.ui-checked .OpenUIChatCheckMark {
+  opacity: 1;
+}
+.OpenUIChatCheckLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+}
+.OpenUIChatCheckLabel {
+  font-size: 26rpx;
+  color: var(--content, var(--openui-color-text));
+  line-height: 1.5;
+}
+.OpenUIChatCheckDescription {
+  font-size: 22rpx;
+  color: var(--content-muted, var(--openui-color-text-muted));
+  line-height: 1.5;
+}
+.OpenUIChatCheckError {
+  font-size: 22rpx;
+  color: var(--openui-color-error);
+}

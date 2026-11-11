@@ -398,6 +398,7 @@ describe('runBenchUiJudge', () => {
 
     expect(result).toEqual({
       errors: ['ui-judge failed: capture failed'],
+      retryable: false,
       score: 0,
       status: 'failed',
       warnings: [],
@@ -433,6 +434,7 @@ describe('runBenchUiJudge', () => {
       errors: [
         'ui-judge consistency-standards failed: dimension request timed out',
       ],
+      retryable: false,
       score: 0,
       status: 'failed',
       warnings: [],
@@ -879,7 +881,9 @@ describe('screenshot evaluation boundary', () => {
         expect(result).toMatchObject({
           status: 'failed',
           score: 0,
-          errors: ['GenUI screenshot evaluation failed.'],
+          errors: [
+            expect.stringContaining('GenUI screenshot evaluation failed:'),
+          ],
         });
         expect(cancel).toHaveBeenCalledTimes(1);
         expect(pull).not.toHaveBeenCalled();
@@ -898,7 +902,9 @@ describe('screenshot evaluation boundary', () => {
       expect(result).toMatchObject({
         status: 'failed',
         score: 0,
-        errors: ['GenUI screenshot evaluation failed.'],
+        errors: [
+          expect.stringContaining('GenUI screenshot evaluation failed:'),
+        ],
       });
       expect(evaluate).not.toHaveBeenCalled();
     });

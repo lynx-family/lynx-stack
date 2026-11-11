@@ -1,5 +1,6 @@
-import { loadWorkletRuntime as __loadWorkletRuntime } from "@lynx-js/react";
-var loadWorkletRuntime = __loadWorkletRuntime;
+import { registerWorklet as __registerWorklet } from "@lynx-js/react/worklet-runtime/init";
+import { captureMainThreadObject as __captureMainThreadObject } from "@lynx-js/react";
+var captureMainThreadObject = __captureMainThreadObject;
 let onTapLepus = {
     _c: {
         aaaa,
@@ -10,27 +11,31 @@ let onTapLepus = {
     _wkltId: "a123:test:1",
     ...{
         aaaa: this.aaaa,
-        bbbb: {
-            cccc: {
-                dddd: this.bbbb.cccc.dddd
-            }
-        },
+        bbbb: ((__mainThreadObjectSource)=>captureMainThreadObject?.(__mainThreadObjectSource) ?? {
+                cccc: ((__mainThreadObjectSource)=>captureMainThreadObject?.(__mainThreadObjectSource) ?? {
+                        dddd: __mainThreadObjectSource.dddd
+                    })(__mainThreadObjectSource.cccc)
+            })(this.bbbb),
         eeee: this.eeee,
         ffff: this.ffff,
-        hhhh: {
-            'iiii': this.hhhh['iiii'],
-            kkkk: this.hhhh.kkkk
-        },
+        hhhh: ((__mainThreadObjectSource)=>captureMainThreadObject?.(__mainThreadObjectSource) ?? {
+                'iiii': __mainThreadObjectSource['iiii'],
+                kkkk: __mainThreadObjectSource.kkkk
+            })(this.hhhh),
         llll: this.llll,
-        mmmm: {
-            nnnn: {
-                'oooo': this.mmmm.nnnn['oooo']
-            }
-        }
+        mmmm: ((__mainThreadObjectSource)=>captureMainThreadObject?.(__mainThreadObjectSource) ?? {
+                nnnn: ((__mainThreadObjectSource)=>captureMainThreadObject?.(__mainThreadObjectSource) ?? {
+                        'oooo': __mainThreadObjectSource['oooo']
+                    })(__mainThreadObjectSource.nnnn)
+            })(this.mmmm),
+        pppp: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject?.(__mainThreadObjectSource) ?? {
+                qqqq: ((__mainThreadObjectSource)=>__mainThreadObjectSource == null ? __mainThreadObjectSource : captureMainThreadObject?.(__mainThreadObjectSource) ?? {
+                        rrrr: __mainThreadObjectSource.rrrr
+                    })(__mainThreadObjectSource.qqqq)
+            })(this.pppp)
     }
 };
-const __workletRuntimeLoaded = loadWorkletRuntime(typeof globDynamicComponentEntry === 'undefined' ? undefined : globDynamicComponentEntry);
-__workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", function() {
+__registerWorklet("main-thread", "a123:test:1", function() {
     const onTapLepus = lynxWorkletImpl._workletMap["a123:test:1"].bind(this);
     let { aaaa, bbbb, eeee, ffff } = this["_c"];
     "main thread";
@@ -47,6 +52,7 @@ __workletRuntimeLoaded && registerWorkletInternal("main-thread", "a123:test:1", 
     this.hhhh.kkkk;
     this.hhhh.iiii.jjjj;
     this.llll[this.mmmm.nnnn['oooo']];
+    this.pppp?.qqqq?.rrrr;
     aaaa;
     bbbb;
     eeee;

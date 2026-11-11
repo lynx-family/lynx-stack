@@ -24,6 +24,7 @@ import {
   adaptEventAttrSlot,
   adaptMTEventAttrSlot,
   adaptMTRefAttrSlot,
+  adaptSpreadAttrSlot,
   clearEtAttrPlanMap,
 } from '../../../../src/element-template/runtime/template/attr-slot-plan.js';
 import { hydrateBackground as hydrate } from '../../test-utils/debug/hydrate.js';
@@ -212,13 +213,13 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
-  it('forces MTRef hydrate clears when native serialization already contains null', () => {
+  it.each([null, undefined])('forces MTRef hydrate clears when native serialization contains %s', (before) => {
     __etAttrPlanMap.root = [0, adaptMTRefAttrSlot];
     const root = new BackgroundElementTemplateInstance('root', [null]);
 
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [null],
+        attributeSlots: [before],
       }),
       root,
     );
@@ -259,6 +260,75 @@ describe('hydrate', () => {
     root.setAttribute('attributeSlots', [{ _wkltId: 'tap' }]);
 
     expect(globalCommitContext.ops).toEqual([]);
+  });
+
+  it('forces spread slot hydration only when live main-thread capabilities or main-thread:ref keys exist', () => {
+    __etAttrPlanMap.root = [
+      0,
+      adaptSpreadAttrSlot,
+      1,
+      adaptSpreadAttrSlot,
+      2,
+      adaptSpreadAttrSlot,
+      3,
+      adaptSpreadAttrSlot,
+      4,
+      adaptSpreadAttrSlot,
+      5,
+      adaptSpreadAttrSlot,
+    ];
+    const gestureSpread = {
+      'main-thread:gesture': { type: 'gesture', value: [] },
+    };
+    const eventSpread = {
+      'main-thread:bindtap': { type: 'worklet', value: { _wkltId: 'tap' } },
+    };
+    const clearedRefSpread = {
+      'main-thread:ref': null,
+    };
+    const clearedEventAndGestureSpread = {
+      id: 'same',
+      'main-thread:gesture': null,
+      'main-thread:bindtap': null,
+    };
+    const root = new BackgroundElementTemplateInstance('root');
+    root.attributeSlots = [
+      null,
+      { id: 'same' },
+      gestureSpread,
+      eventSpread,
+      clearedRefSpread,
+      clearedEventAndGestureSpread,
+    ];
+
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', {
+        attributeSlots: [
+          null,
+          { id: 'same' },
+          { 'main-thread:gesture': { type: 'gesture', value: [] } },
+          { 'main-thread:bindtap': { type: 'worklet', value: { _wkltId: 'tap' } } },
+          { 'main-thread:ref': null },
+          { id: 'same', 'main-thread:gesture': null, 'main-thread:bindtap': null },
+        ],
+      }),
+      root,
+    );
+
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      2,
+      gestureSpread,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      3,
+      eventSpread,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      4,
+      clearedRefSpread,
+    ]);
   });
 
   it('patches attribute slots while creating and inserting background-only children', () => {
@@ -1206,41 +1276,51 @@ describe('hydrate', () => {
     (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
   });
 
-  it('drops the hydrate stream when a matched child fails to hydrate', () => {
-    const oldReportError = lynx.reportError;
-    const reportError = vi.fn();
-    lynx.reportError = reportError;
+  it.each(['matching', 'reordered'])(
+    'drops the hydrate stream when a matched child fails with %s siblings',
+    (order) => {
+      const oldReportError = lynx.reportError;
+      const reportError = vi.fn();
+      lynx.reportError = reportError;
 
-    try {
-      const root = new BackgroundElementTemplateInstance('root', ['after-root']);
-      const child = new BackgroundElementTemplateInstance('child');
-      root.appendChild(child);
-      const oldRootId = root.instanceId;
-      const oldChildId = child.instanceId;
+      try {
+        const root = new BackgroundElementTemplateInstance('root', ['after-root']);
+        const child = new BackgroundElementTemplateInstance('child');
+        const sibling = new BackgroundElementTemplateInstance('sibling');
+        root.appendChild(child);
+        root.appendChild(sibling);
+        const serializedChildren = [
+          createHydrationChild(-1, 'child'),
+          createHydrationChild(-10, 'sibling'),
+        ];
+        if (order === 'reordered') {
+          serializedChildren.reverse();
+        }
+        const oldRootId = root.instanceId;
+        const oldChildId = child.instanceId;
 
-      const stream = hydrate(
-        createHydrationTemplate(-1, 'root', {
-          attributeSlots: ['before-root'],
-          childSlots: [[
-            createHydrationChild(-1, 'child'),
-          ]],
-        }),
-        root,
-      );
+        const stream = hydrate(
+          createHydrationTemplate(-1, 'root', {
+            attributeSlots: ['before-root'],
+            childSlots: [serializedChildren],
+          }),
+          root,
+        );
 
-      expect(stream).toEqual([]);
-      expect(reportError).toHaveBeenCalledTimes(1);
-      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'invalid uid -1 for \'child\'',
-      );
-      expect(backgroundElementTemplateInstanceManager.get(oldRootId)).toBeUndefined();
-      expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(root);
-      expect(backgroundElementTemplateInstanceManager.get(oldChildId)).toBe(child);
-    } finally {
-      lynx.reportError = oldReportError;
-      (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
-    }
-  });
+        expect(stream).toEqual([]);
+        expect(reportError).toHaveBeenCalledTimes(1);
+        expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+          'invalid uid -1 for \'child\'',
+        );
+        expect(backgroundElementTemplateInstanceManager.get(oldRootId)).toBeUndefined();
+        expect(backgroundElementTemplateInstanceManager.get(-1)).toBe(root);
+        expect(backgroundElementTemplateInstanceManager.get(oldChildId)).toBe(child);
+      } finally {
+        lynx.reportError = oldReportError;
+        (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
+      }
+    },
+  );
 
   it('treats missing serialized slot arrays as empty', () => {
     const root = new BackgroundElementTemplateInstance('root');
@@ -1299,18 +1379,52 @@ describe('hydrate', () => {
     expect(stream).toEqual([]);
   });
 
-  it('does not patch serialized null when the background attribute slot is missing', () => {
-    const root = new BackgroundElementTemplateInstance('root');
+  it.each([
+    { before: [null], after: [] },
+    { before: [], after: [null] },
+    { before: [undefined], after: [undefined] },
+    { before: [undefined], after: [null] },
+    { before: [null], after: [undefined] },
+  ])('does not patch absent hydration slots: $before -> $after', ({ before, after }) => {
+    const root = new BackgroundElementTemplateInstance('root', after);
+    const stream = hydrate(
+      createHydrationTemplate(root.instanceId, 'root', { attributeSlots: before }),
+      root,
+    );
+    expect(stream).toEqual([]);
+    expect(root.attributeSlots).toEqual(after.map(value => value ?? null));
+  });
 
+  it('preserves real changes and removals around absent hydration slots', () => {
+    const root = new BackgroundElementTemplateInstance('root', [undefined, 0, false, '', '1']);
     const stream = hydrate(
       createHydrationTemplate(root.instanceId, 'root', {
-        attributeSlots: [null],
+        attributeSlots: ['remove', undefined, null, undefined, 1],
       }),
       root,
     );
-
-    expect(stream).toEqual([]);
-    expect(root.attributeSlots).toEqual([]);
+    expect(stream).toEqual([
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      0,
+      null,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      1,
+      0,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      2,
+      false,
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      3,
+      '',
+      ElementTemplateUpdateOps.setAttribute,
+      root.instanceId,
+      4,
+      '1',
+    ]);
   });
 
   it('skips sparse background slot indexes when checking trailing slots', () => {

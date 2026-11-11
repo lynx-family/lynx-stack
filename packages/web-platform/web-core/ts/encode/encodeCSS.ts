@@ -1,6 +1,7 @@
 import * as CSS from '@lynx-js/css-serializer';
 import {
   RawStyleInfo,
+  RawStyleInfoMap,
   Rule,
   Selector,
   RulePrelude,
@@ -35,6 +36,26 @@ function restoreCSSVarValue(decl: CSS.Declaration): string {
 export function encodeCSS(
   cssMap: Record<string, CSS.LynxStyleNode[]>,
 ): Uint8Array {
+  return createRawStyleInfo(cssMap).encode();
+}
+
+/**
+ * Encodes the style sheets of the custom sections, keyed by section name.
+ */
+export function encodeCSSMap(
+  ruleListMap: Record<string, CSS.LynxStyleNode[]>,
+): Uint8Array {
+  const rawStyleInfoMap = new RawStyleInfoMap();
+  for (const [name, ruleList] of Object.entries(ruleListMap)) {
+    // A custom section is a single style sheet, the way `cssMap[0]` is.
+    rawStyleInfoMap.insert(name, createRawStyleInfo({ '0': ruleList }));
+  }
+  return rawStyleInfoMap.encode();
+}
+
+function createRawStyleInfo(
+  cssMap: Record<string, CSS.LynxStyleNode[]>,
+): RawStyleInfo {
   const rawStyleInfo = new RawStyleInfo();
 
   for (const [cssId, nodes] of Object.entries(cssMap)) {
@@ -168,5 +189,5 @@ export function encodeCSS(
     }
   }
 
-  return rawStyleInfo.encode();
+  return rawStyleInfo;
 }

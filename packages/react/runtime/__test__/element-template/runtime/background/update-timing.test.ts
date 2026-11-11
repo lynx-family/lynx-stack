@@ -124,4 +124,19 @@ describe('ElementTemplate update timing (background commit)', () => {
       ['pipelineID', 'packChangesEnd'],
     ]);
   });
+
+  it('does not consume a previous environment timing flag during commit', () => {
+    markElementTemplateHydrated();
+    markTimingLegacy('updateSetStateTrigger', 'stale-flag');
+
+    envManager.resetEnv('background');
+    nativeMarkTiming.mockClear();
+    globalCommitContext.ops = createRawTextOps(1, 'payload');
+
+    options.__c?.({} as unknown as object, []);
+
+    envManager.switchToMainThread();
+    expect(updateEvents).toHaveLength(1);
+    expect(nativeMarkTiming).not.toHaveBeenCalled();
+  });
 });

@@ -14,8 +14,7 @@ import {
   easeIn as easeIn_,
   easeOut as easeOut_,
   noop as linear_,
-} from 'motion-utils';
-
+} from '../../upstream/mini.js';
 import { registerCallable } from '../../utils/registeredFunction.js';
 
 let anticipateHandle = 'anticipateHandle';

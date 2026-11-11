@@ -7,6 +7,7 @@ export const __wbg_get_eventinfo_event_name: (a: number, b: number) => void;
 export const __wbg_get_eventinfo_event_type: (a: number, b: number) => void;
 export const __wbg_mainthreadwasmcontext_free: (a: number, b: number) => void;
 export const __wbg_rawstyleinfo_free: (a: number, b: number) => void;
+export const __wbg_rawstyleinfomap_free: (a: number, b: number) => void;
 export const __wbg_rule_free: (a: number, b: number) => void;
 export const __wbg_ruleprelude_free: (a: number, b: number) => void;
 export const __wbg_selector_free: (a: number, b: number) => void;
@@ -50,6 +51,8 @@ export const mainthreadwasmcontext_update_css_og_style: (a: number, b: number, c
 export const rawstyleinfo_append_import: (a: number, b: number, c: number) => void;
 export const rawstyleinfo_new: () => number;
 export const rawstyleinfo_push_rule: (a: number, b: number, c: number) => void;
+export const rawstyleinfomap_insert: (a: number, b: number, c: number, d: number) => void;
+export const rawstyleinfomap_new: () => number;
 export const rule_new: (a: number, b: number, c: number) => void;
 export const rule_push_declaration: (a: number, b: number, c: number, d: number, e: number) => void;
 export const rule_push_rule_children: (a: number, b: number) => void;

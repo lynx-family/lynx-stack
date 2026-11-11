@@ -13,6 +13,7 @@ import {
   withBenchProtocol,
 } from './benchData.js';
 import {
+  createBenchSettingsFromReport,
   migrateBenchHistoryEntries,
   serializeBenchHistoryEntries,
 } from './benchHistory.js';
@@ -55,31 +56,29 @@ test('renders a Lynx XML comparison with native capability and no catalog', () =
       onAdd: noop,
       onCatalogChange: noop,
       onFragmentChange: noop,
+      onStylePresetChange: noop,
+      onDesignGuidanceChange: noop,
       onEnabledChange: noop,
       onModelChange: noop,
+      onReasoningChange: noop,
       onNameChange: noop,
-      onProfileChange: noop,
       onPromptChange: noop,
       onProtocolChange: noop,
       onRemove: noop,
-      onRoleChange: noop,
     }),
   );
-  expect(markup).toContain('data-protocol="lynx-xml"');
   expect(markup).toContain('Lynx XML');
-  expect(markup).toContain('Not applicable');
   expect(markup).toMatch(
-    /aria-label="Baseline XML fragment"><span>Off<\/span>/u,
+    /aria-label="Baseline Reasoning"><span>default<\/span>/u,
   );
-  expect(markup).toContain(
-    'title="This protocol generates a complete page without a component catalog."',
+  expect(markup).toMatch(
+    /aria-label="Baseline Template"><span>On<\/span>/u,
   );
+  expect(markup).toMatch(/aria-label="Baseline StylePreset"><span>On<\/span>/u);
   expect(markup).not.toContain('<p class="benchFieldHint">');
-  expect(markup).toMatch(
-    /aria-label="Baseline Profile" disabled=""><span>native<\/span>/u,
-  );
-  expect(markup).toMatch(/aria-label="Baseline Catalog" disabled=""/u);
-  expect(markup).not.toContain('fixed shared catalog');
+  expect(markup).not.toContain('Baseline Profile');
+  expect(markup).not.toContain('Baseline Catalog');
+  expect(markup).not.toContain('Not applicable');
 });
 
 function createCompletedHistoryEntry(id: string, jobId: string) {
@@ -234,14 +233,15 @@ describe('BenchPage', () => {
         onAdd: noop,
         onCatalogChange: noop,
         onFragmentChange: noop,
+        onStylePresetChange: noop,
+        onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
+        onReasoningChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(
@@ -286,14 +286,15 @@ describe('BenchPage', () => {
         onAdd: noop,
         onCatalogChange: noop,
         onFragmentChange: noop,
+        onStylePresetChange: noop,
+        onDesignGuidanceChange: noop,
         onEnabledChange: noop,
         onModelChange: noop,
+        onReasoningChange: noop,
         onNameChange: noop,
-        onProfileChange: noop,
         onPromptChange: noop,
         onProtocolChange: noop,
         onRemove: noop,
-        onRoleChange: noop,
       }),
     );
     const runMarkup = renderToStaticMarkup(
@@ -311,8 +312,6 @@ describe('BenchPage', () => {
     expect(groupMarkup).toContain('Baseline Model');
     expect(groupMarkup).toContain('Model comparison Model');
     expect(groupMarkup).toContain('Test model');
-    expect(groupMarkup).toContain('title="test-model"');
-    expect(groupMarkup).toContain('title="other-model"');
     expect(groupMarkup).toContain('Other model');
     expect(groupMarkup).not.toContain('Custom model');
     expect(runMarkup).not.toContain('Provider');
@@ -729,6 +728,36 @@ describe('BenchPage', () => {
     ).toEqual(['bench-draft-1:job-2', 'history-1:job-1']);
   });
 
+  test('preserves a custom name when a draft completes and its report is reloaded', () => {
+    const completed = createCompletedHistoryEntry(
+      'bench-draft-1',
+      '059a758e-4cbf-4053-bbe4-9f8cb47f7444',
+    );
+    const draft = {
+      ...completed,
+      report: null,
+      title: 'New Bench',
+      titleIsCustom: true,
+    };
+    const saved = saveBenchHistoryEntry([draft] as never, completed as never);
+    expect(saved[0]).toMatchObject({
+      title: 'New Bench',
+      titleIsCustom: true,
+      report: completed.report,
+    });
+    const restored = upsertBenchHistoryEntry(saved, {
+      ...completed,
+      id: 'reloaded-report',
+      title: 'Generated report summary',
+    } as never);
+    expect(restored).toHaveLength(1);
+    expect(restored[0]).toMatchObject({
+      title: 'New Bench',
+      titleIsCustom: true,
+      report: completed.report,
+    });
+  });
+
   test('retains a new Bench draft before it has a report', () => {
     const draft = {
       id: 'bench-draft-1',
@@ -769,4 +798,54 @@ test('HTML-only Judge shows current-tab sharing guidance without requiring a sid
   }));
   expect(markup).toContain('share this tab');
   expect(markup).not.toContain('UI_JUDGE_SERVER_URL');
+  expect(markup).toContain('Screenshot delay (ms)');
+  expect(markup).toContain('value="100"');
 });
+
+test('UI Judge selects from the complete model list and defaults to the first model', () => {
+  const followGenerationMarkup = renderToStaticMarkup(
+    React.createElement(BenchRunPanel, {
+      locked: false,
+      modelOptions: [{ id: 'judge-model', label: 'Judge model' }],
+      settings: DEFAULT_BENCH_SETTINGS,
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }),
+  );
+  expect(followGenerationMarkup).toContain('value="judge-model"');
+  expect(followGenerationMarkup).toContain('Judge model');
+
+  const dedicatedMarkup = renderToStaticMarkup(
+    React.createElement(BenchRunPanel, {
+      locked: false,
+      modelOptions: [{ id: 'judge-model', label: 'Judge model' }],
+      settings: { ...DEFAULT_BENCH_SETTINGS, uiJudgeModel: 'judge-model' },
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }),
+  );
+  expect(dedicatedMarkup).toContain('value="judge-model"');
+});
+
+test.each([undefined, 0, 3000])(
+  'restores screenshot delay %s and displays it in the locked plan',
+  screenshotSettleMs => {
+    const settings = createBenchSettingsFromReport({
+      settings: { ...DEFAULT_BENCH_SETTINGS, screenshotSettleMs },
+    });
+    expect(settings.screenshotSettleMs).toBe(screenshotSettleMs);
+    const markup = renderToStaticMarkup(React.createElement(BenchRunPanel, {
+      locked: true,
+      settings,
+      uiJudgeServerUrl: '',
+      onSettingsChange: noop,
+      onUiJudgeServerUrlChange: noop,
+    }));
+    expect(markup).toContain('Screenshot delay (ms)');
+    expect(markup).toContain(`value="${screenshotSettleMs ?? 100}"`);
+    expect(markup).toContain('min="0"');
+    expect(markup).toContain('step="1"');
+  },
+);

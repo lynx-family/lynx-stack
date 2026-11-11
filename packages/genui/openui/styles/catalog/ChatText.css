@@ -1,0 +1,38 @@
+.OpenUIChatTextBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.OpenUIChatText {
+  color: var(--openui-color-text);
+  line-height: 1.45;
+}
+.OpenUIChatText-xs {
+  font-size: 22rpx;
+}
+.OpenUIChatText-sm {
+  font-size: 26rpx;
+}
+.OpenUIChatText-md {
+  font-size: 30rpx;
+}
+.OpenUIChatText-lg {
+  font-size: 36rpx;
+}
+.OpenUIChatBold {
+  font-weight: 700;
+}
+.OpenUIChatNumber {
+  font-family: monospace;
+}
+.OpenUIChatSubtext {
+  color: var(--openui-color-text-muted);
+  font-size: 22rpx;
+  line-height: 1.45;
+}
+.OpenUIChatPositive {
+  color: var(--positive, var(--openui-color-primary));
+}
+.OpenUIChatNegative {
+  color: var(--openui-color-error);
+}

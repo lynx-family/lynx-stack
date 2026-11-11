@@ -22,7 +22,7 @@ import {
   VALUE,
   VNODE,
 } from '../../shared/render-constants.js';
-import { getDisplayName, hook } from '../../utils.js';
+import { getDisplayName } from '../../utils.js';
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 
@@ -103,33 +103,35 @@ export function initProfileHook(): void {
     type PatchedComponent = Component & { [sFlowID]?: number };
 
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-      hook(
-        Component.prototype,
-        'setState',
-        function(this: PatchedComponent & { [NEXT_STATE]: unknown }, old, state, callback) {
-          old?.call(this, state, callback);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const oldSetState = Component.prototype.setState;
+      Component.prototype.setState = function(this: PatchedComponent & { [NEXT_STATE]: unknown }, state, callback) {
+        oldSetState?.call(this, state, callback);
 
-          if (this[BITS] & COMPONENT_DIRTY) {
-            const type = this[VNODE]!.type;
-            const isClassComponent = typeof type === 'function' && ('prototype' in type)
-              && ('render' in type.prototype);
+        if (this[BITS] & COMPONENT_DIRTY) {
+          const type = this[VNODE]!.type;
+          const isClassComponent = typeof type === 'function' && ('prototype' in type)
+            && ('render' in type.prototype);
 
-            if (isClassComponent) {
-              profileMark('ReactLynx::setState', {
-                flowId: this[sFlowID] ??= profileFlowId(),
-                args: buildSetStateProfileMarkArgs(
-                  type,
-                  this.state,
-                  this[NEXT_STATE],
-                ),
-              });
-            }
+          if (isClassComponent) {
+            profileMark('ReactLynx::setState', {
+              flowId: this[sFlowID] ??= profileFlowId(),
+              args: buildSetStateProfileMarkArgs(
+                type,
+                this.state,
+                this[NEXT_STATE],
+              ),
+            });
           }
-        },
-      );
+        }
+      };
     }
 
-    hook(options, DIFF2, (old, vnode, oldVNode) => {
+    // These hot callbacks have fixed signatures; avoid collecting and spreading
+    // an argument array for every host and component visited.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldDiff2 = options[DIFF2];
+    options[DIFF2] = (vnode, oldVNode) => {
       // We only add profiling trace for Component
       if (typeof vnode.type === 'function') {
         const profileOptions: TraceOption = {};
@@ -152,10 +154,12 @@ export function initProfileHook(): void {
           profileOptions,
         );
       }
-      old?.(vnode, oldVNode);
-    });
+      oldDiff2?.(vnode, oldVNode);
+    };
 
-    hook(options, DIFFED, (old, vnode) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldDiffed = options[DIFFED];
+    options[DIFFED] = vnode => {
       if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
         const hooks = vnode[COMPONENT]?.[HOOKS];
         const hookList = hooks?.[LIST];
@@ -205,11 +209,13 @@ export function initProfileHook(): void {
       if (typeof vnode.type === 'function') {
         profileEnd(); // for options[DIFF2]
       }
-      old?.(vnode);
-    });
+      oldDiffed?.(vnode);
+    };
 
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
-      hook(options, COMMIT, (old, vnode, commitQueue) => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const oldCommit = options[COMMIT];
+      options[COMMIT] = (vnode, commitQueue) => {
         profileStart('ReactLynx::commit', {
           ...globalPatchOptions.flowIds
             ? {
@@ -218,14 +224,16 @@ export function initProfileHook(): void {
             }
             : {},
         });
-        old?.(vnode, commitQueue);
+        oldCommit?.(vnode, commitQueue);
         profileEnd();
-      });
+      };
     }
   }
 
   // Profile the user-provided `render`.
-  hook(options, RENDER, (old, vnode: VNode) => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const oldRender = options[RENDER];
+  options[RENDER] = (vnode: VNode) => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalRender = vnode[COMPONENT]!.render;
     vnode[COMPONENT]!.render = function render(this, props, state, context) {
@@ -237,22 +245,26 @@ export function initProfileHook(): void {
         vnode[COMPONENT]!.render = originalRender;
       }
     };
-    old?.(vnode);
-  });
+    oldRender?.(vnode);
+  };
 
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     const sPatchLength = Symbol('PATCH_LENGTH');
 
     type PatchedVNode = VNode & { [sPatchLength]?: number };
 
-    hook(options, DIFF, (old, vnode: PatchedVNode) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldDiff = options[DIFF];
+    options[DIFF] = (vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function' && __globalSnapshotPatch) {
         vnode[sPatchLength] = __globalSnapshotPatch.length;
       }
-      old?.(vnode);
-    });
+      oldDiff?.(vnode);
+    };
 
-    hook(options, DIFFED, (old, vnode: PatchedVNode) => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldPatchDiffed = options[DIFFED];
+    options[DIFFED] = (vnode: PatchedVNode) => {
       if (typeof vnode.type === 'function') {
         const patchLength = vnode[sPatchLength];
         delete vnode[sPatchLength];
@@ -265,7 +277,7 @@ export function initProfileHook(): void {
           });
         }
       }
-      old?.(vnode);
-    });
+      oldPatchDiffed?.(vnode);
+    };
   }
 }

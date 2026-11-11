@@ -25,7 +25,7 @@ export function pluginInspect(config: Config): RsbuildPlugin {
           /** path */ path.join(
             api.context.distPath,
             DIST_PATH_INTERMEDIATE,
-            'rspeedy.config.js',
+            'rspeedy.config.mjs',
           ),
           /** verbose */ false,
         )

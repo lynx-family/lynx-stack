@@ -10,6 +10,8 @@ import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { registerBackgroundFunctionCtx } from '../background-function/run-on-background.js';
 import { isMainThreadFunction } from '../main-thread-function.js';
 import { isMtsEnabled } from '../mts-capability.js';
+import { dispatchReloadScopedEvent } from '../reload-scoped-event.js';
+import { isRuntimeDestroyed } from '../runtime-destroy.js';
 
 interface RunOnMainThreadOptions {
   shouldDispatchRunOnMainThreadDirectly: () => boolean;
@@ -44,6 +46,7 @@ export function createRunOnMainThread(
     }
     return async (...params: Parameters<Fn>): Promise<R> => {
       return new Promise((resolve) => {
+        if (isRuntimeDestroyed()) return;
         const worklet = fn as unknown as Worklet;
         prepareMainThreadFunctionCtx(worklet);
         const data = {
@@ -74,8 +77,5 @@ function prepareMainThreadFunctionCtx(worklet: unknown): void {
 }
 
 function dispatchRunOnMainThreadEvent(data: RunWorkletCtxData): void {
-  lynx.getCoreContext().dispatchEvent({
-    type: WorkletEvents.runWorkletCtx,
-    data: JSON.stringify(data),
-  });
+  dispatchReloadScopedEvent(lynx.getCoreContext(), { type: WorkletEvents.runWorkletCtx, data });
 }
