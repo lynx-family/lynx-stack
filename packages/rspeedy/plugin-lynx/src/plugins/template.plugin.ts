@@ -15,6 +15,11 @@ export function pluginTemplate(): RsbuildPlugin {
     name: 'lynx:rsbuild:template',
     setup(api) {
       api.expose(Symbol.for('LynxTemplatePlugin'), { LynxTemplatePlugin })
+      api.expose(Symbol.for('LynxEncodePlugin'), { LynxEncodePlugin })
+      api.expose(Symbol.for('WebEncodePlugin'), { WebEncodePlugin })
+      api.expose(Symbol.for('RuntimeWrapperWebpackPlugin'), {
+        RuntimeWrapperWebpackPlugin,
+      })
 
       if (api.context.callerName !== 'rslib') {
         return

@@ -8,6 +8,11 @@ import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
+import { RuntimeWrapperWebpackPlugin } from '@lynx-js/runtime-wrapper-webpack-plugin'
+import {
+  LynxEncodePlugin,
+  WebEncodePlugin,
+} from '@lynx-js/template-webpack-plugin'
 import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { pluginLynx } from '../src/index.js'
@@ -20,8 +25,13 @@ interface LynxTemplatePluginExposure {
 }
 
 describe('pluginTemplate', () => {
-  test('exposes LynxTemplatePlugin without a DSL plugin', async () => {
-    let exposed: LynxTemplatePluginExposure | undefined
+  test('exposes the template plugins without a DSL plugin', async () => {
+    let exposedTemplate: LynxTemplatePluginExposure | undefined
+    let exposedEncode: { LynxEncodePlugin: unknown } | undefined
+    let exposedWebEncode: { WebEncodePlugin: unknown } | undefined
+    let exposedRuntimeWrapper:
+      | { RuntimeWrapperWebpackPlugin: unknown }
+      | undefined
 
     const rsbuild = await createRsbuild({
       cwd: path.dirname(fileURLToPath(import.meta.url)),
@@ -33,8 +43,13 @@ describe('pluginTemplate', () => {
             name: 'test:capture',
             setup(api: RsbuildPluginAPI) {
               api.modifyBundlerChain(() => {
-                exposed = api.useExposed<LynxTemplatePluginExposure>(
+                exposedTemplate = api.useExposed<LynxTemplatePluginExposure>(
                   Symbol.for('LynxTemplatePlugin'),
+                )
+                exposedEncode = api.useExposed(Symbol.for('LynxEncodePlugin'))
+                exposedWebEncode = api.useExposed(Symbol.for('WebEncodePlugin'))
+                exposedRuntimeWrapper = api.useExposed(
+                  Symbol.for('RuntimeWrapperWebpackPlugin'),
                 )
               })
             },
@@ -45,7 +60,14 @@ describe('pluginTemplate', () => {
 
     await rsbuild.initConfigs()
 
-    expect(typeof exposed?.LynxTemplatePlugin.getLynxTemplatePluginHooks)
+    expect(
+      typeof exposedTemplate?.LynxTemplatePlugin.getLynxTemplatePluginHooks,
+    )
       .toBe('function')
+    expect(exposedEncode?.LynxEncodePlugin).toBe(LynxEncodePlugin)
+    expect(exposedWebEncode?.WebEncodePlugin).toBe(WebEncodePlugin)
+    expect(exposedRuntimeWrapper?.RuntimeWrapperWebpackPlugin).toBe(
+      RuntimeWrapperWebpackPlugin,
+    )
   })
 })
