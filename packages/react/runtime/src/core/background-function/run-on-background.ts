@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { BackgroundFunctionExecMap } from './exec-map.js';
-import { isSdkVersionGt } from '../../utils.js';
+import { isSdkVersionGt } from '../../shared/version.js';
 import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';

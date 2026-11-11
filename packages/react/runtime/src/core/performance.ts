@@ -4,7 +4,8 @@
 import { options } from 'preact';
 
 import { RENDER_COMPONENT, ROOT } from '../shared/render-constants.js';
-import { hook, isSdkVersionGt } from '../utils.js';
+import { hook } from '../shared/utils.js';
+import { isSdkVersionGt } from '../shared/version.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',
