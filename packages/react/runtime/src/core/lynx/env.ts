@@ -1,10 +1,11 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createProcessData } from '../../core/lynx-data-processors.js';
-import type { DataProcessorDefinition } from '../../core/lynx-data-processors.js';
 
-export function setupLynxEnv(): void {
+import { createProcessData } from '../lynx-data-processors.js';
+import type { DataProcessorDefinition } from '../lynx-data-processors.js';
+
+export function setupSharedLynxEnv(): void {
   if (!__LEPUS__) {
     let initData: Record<string, unknown> = {};
     let updateData: Record<string, unknown> = {};
@@ -30,7 +31,7 @@ export function setupLynxEnv(): void {
 
     lynx.triggerGlobalEventFromLepus = function(
       eventName: string,
-      params: any,
+      params: unknown,
     ) {
       __OnLifecycleEvent(['globalEventFromLepus', [eventName, params]]);
     };
@@ -54,6 +55,7 @@ export function setupLynxEnv(): void {
       globalThis.processData = createProcessData(dataProcessorDefinition);
     };
 
+    // register empty DataProcessors to make sure `globalThis.processData` is set
     lynx.registerDataProcessors();
   }
 }

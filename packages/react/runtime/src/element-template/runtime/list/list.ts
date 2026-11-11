@@ -3,6 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 import { isDirectOrDeepEqual } from '../../../core/deep-equal.js';
+import {
+  COMPONENT_AT_INDEXES_ATTR,
+  COMPONENT_AT_INDEX_ATTR,
+  ENQUEUE_COMPONENT_ATTR,
+  UPDATE_LIST_INFO_ATTR,
+} from '../../protocol/list.js';
 import type {
   RuntimeAttributeSlotValue,
   RuntimeTypedElementAttributes,
@@ -10,9 +16,6 @@ import type {
 } from '../../protocol/types.js';
 
 const LIST_CHILD_SLOT_INDEX = 0;
-const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
-const COMPONENT_AT_INDEXES_ATTR = 'component-at-indexes';
-const ENQUEUE_COMPONENT_ATTR = 'enqueue-component';
 
 export type ETListItemPlatformInfo = Record<string, SerializableValue>;
 
@@ -383,7 +386,7 @@ export function composeElementTemplateListAttributes(
     [ENQUEUE_COMPONENT_ATTR]: callbacks.enqueueComponent as unknown as RuntimeAttributeSlotValue,
   };
   if (updateListInfo) {
-    nextAttributes['update-list-info'] = updateListInfo as unknown as RuntimeAttributeSlotValue;
+    nextAttributes[UPDATE_LIST_INFO_ATTR] = updateListInfo as unknown as RuntimeAttributeSlotValue;
   }
   return nextAttributes;
 }
