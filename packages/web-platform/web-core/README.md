@@ -33,6 +33,21 @@ document.body.innerHTML = `
 </lynx-view>`;
 ```
 
+### Enable profiling
+
+Profiling is off by default. Add `is-profiling` to enable it for a view:
+
+```html
+<lynx-view is-profiling url="https://example.com/main.web.bundle" style="height:100vh; width:100vw"></lynx-view>
+```
+
+You can also set `view.isProfiling = true` before loading the view. An absent
+attribute, `is-profiling="false"`, or `view.isProfiling = false` disables profiling.
+The value is read once when the view instance is created and passed to the
+background worker at startup. Changes require reloading the view.
+`lynx.performance.isProfileRecording()` returns `true` only when profiling
+is enabled for that view and the browser supports User Timing marks and measures.
+
 ### Enable mouse-drag scrolling
 
 To make `<scroll-view>` respond to mouse dragging like a touchscreen, import

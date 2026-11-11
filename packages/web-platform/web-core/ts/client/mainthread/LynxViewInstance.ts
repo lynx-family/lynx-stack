@@ -71,6 +71,7 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly mainThreadGlobalThis: MainThreadGlobalThis;
   readonly mtsWasmBinding: WASMJSBinding;
   readonly backgroundThread: BackgroundThread;
+  readonly isProfiling: boolean;
   readonly i18nManager: I18nManager;
   readonly exposureServices: ExposureServices;
   readonly intersectionObserverService: IntersectionObserverService;
@@ -122,6 +123,7 @@ export class LynxViewInstance implements AsyncDisposable {
     private readonly transformREM: boolean = false,
     browserConfig?: Record<string, any>,
   ) {
+    this.isProfiling = parentDom.isProfiling;
     this.systemInfo = createSystemInfo(browserConfig);
     if (!isSSR) {
       this.rootDom.append(linkElement.cloneNode(false));

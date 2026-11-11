@@ -181,6 +181,7 @@ export class BackgroundThread implements AsyncDisposable {
         nativeModulesMap,
         napiModulesMap,
         entryTemplateUrl: this.#lynxViewInstance.templateUrl,
+        isProfiling: this.#lynxViewInstance.isProfiling,
       } as WorkerStartMessage,
       [messageChannel.port2],
     );

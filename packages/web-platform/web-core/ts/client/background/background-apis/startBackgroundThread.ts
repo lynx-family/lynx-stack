@@ -23,6 +23,7 @@ export function startBackgroundThread(
     customSections,
     cardType,
     entryTemplateUrl,
+    isProfiling,
   } = startMessage;
   const mainThreadPort = mainThreadMessagePort;
   const mainThreadRpc = new Rpc(mainThreadPort, 'bg-to-main');
@@ -34,6 +35,7 @@ export function startBackgroundThread(
     nativeModulesMap,
     entryTemplateUrl,
     cardType,
+    isProfiling,
   );
   const lynxCore = import(
     /* webpackChunkName: "lynx-core-chunk" */

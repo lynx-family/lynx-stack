@@ -50,9 +50,11 @@ export async function createNativeApp(
   nativeModulesMap: NativeModulesMap,
   entryTemplateUrl: string,
   cardType: string,
+  isProfiling = false,
 ): Promise<NativeApp> {
   const performanceApis = createPerformanceApis(
     timingSystem,
+    isProfiling,
   );
   const callLepusMethod = mainThreadRpc.createCallbackify(
     callLepusMethodEndpoint,

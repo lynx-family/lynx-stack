@@ -94,6 +94,31 @@ export class LynxViewElement extends HTMLElement {
   #url?: string;
 
   /**
+   * Enables profiling for this view when browser User Timing is available.
+   *
+   * Reflects the `is-profiling` attribute. An absent attribute or the value
+   * `"false"` disables profiling. Set this before loading the view. The value
+   * is read once per view instance; changes require reloading the view.
+   *
+   * @defaultValue false
+   * @example
+   * ```html
+   * <lynx-view is-profiling url="https://example.com/main.web.bundle"></lynx-view>
+   * ```
+   */
+  get isProfiling(): boolean {
+    const value = this.getAttribute('is-profiling');
+    return value !== null && value !== 'false';
+  }
+  set isProfiling(value: boolean) {
+    if (value) {
+      this.setAttribute('is-profiling', '');
+    } else {
+      this.removeAttribute('is-profiling');
+    }
+  }
+
+  /**
    * Resolves image source and placeholder URLs before loading them.
    *
    * Set this synchronous hook before loading the view. It receives the original
@@ -604,6 +629,7 @@ export class LynxViewElement extends HTMLElement {
     this.#upgradeProperty('transformVW');
     this.#upgradeProperty('transformVH');
     this.#upgradeProperty('transformREM');
+    this.#upgradeProperty('isProfiling');
     if (this.url) {
       this.#url = this.url;
     }
