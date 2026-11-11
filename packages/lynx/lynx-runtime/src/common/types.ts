@@ -349,7 +349,9 @@ export interface HostBTSApp {
  * @internal
  */
 export interface HostPerformanceObject {
-  _generatePipelineOptions?: (() => unknown) | undefined;
+  _generatePipelineOptions?:
+    | (() => PipelineOptions | null | undefined)
+    | undefined;
   _onPipelineStart?:
     | ((pipelineID: string, options?: string | PipelineOptions) => void)
     | undefined;

@@ -662,8 +662,6 @@ describe('MTS page flush', () => {
   it('fails explicitly when the host page flush capability is unavailable', () => {
     hostGlobal.lynx = {};
     expect(() => flushElementTree()).toThrow(/requires __FlushElementTree/);
-    hostGlobal.__FlushElementTree =
-      1 as unknown as HostGlobalScope['__FlushElementTree'];
     expect(() => flushElementTree({})).toThrow(/requires __FlushElementTree/);
   });
 
@@ -798,15 +796,15 @@ describe('MTS host services', () => {
     expect(hostGlobal.SystemInfo).toBe(info);
   });
 
-  it('ignores non-plain SystemInfo candidates and replaces only an invalid global alias', () => {
+  it('falls back when SystemInfo is nullish and aliases lynx.SystemInfo when global SystemInfo is unset', () => {
     const info = Object.assign(Object.create(null) as LynxSystemInfo, {
       pixelRatio: 2,
     });
-    for (const invalid of [null, [], 3, new Date()]) {
-      hostGlobal.lynx = { SystemInfo: invalid as unknown as LynxSystemInfo };
+    for (const absent of [undefined, null]) {
+      hostGlobal.lynx = { SystemInfo: absent as unknown as LynxSystemInfo };
       hostGlobal.SystemInfo = { platform: 'global' };
       expect(getSystemInfo()).toBe(hostGlobal.SystemInfo);
-      hostGlobal.SystemInfo = invalid as unknown as LynxSystemInfo;
+      hostGlobal.SystemInfo = absent as unknown as LynxSystemInfo;
       expect(getSystemInfo()).toEqual({});
       hostGlobal.lynx.SystemInfo = info;
       expect(getSystemInfo()).toBe(info);
@@ -932,7 +930,7 @@ describe('MTS host services', () => {
     }
   });
 
-  it.each([undefined, '', 'host-origin', 3])(
+  it.each([undefined, '', 'host-origin'])(
     'uses the MTS start signature for generated origin %s',
     origin => {
       const pipeline = { pipelineID: 'mts', pipelineOrigin: origin };
@@ -943,9 +941,7 @@ describe('MTS host services', () => {
       };
       expect(createPipeline()).toBe(pipeline);
       expect(start.mock.calls).toEqual(
-        typeof origin === 'string' && origin.length > 0
-          ? [['mts', origin]]
-          : [['mts']],
+        origin ? [['mts', origin]] : [['mts']],
       );
     },
   );
@@ -1003,11 +999,7 @@ describe('MTS host services', () => {
     };
     hostGlobal.lynx!.performance = perf;
     expect(createPipeline()).toBeUndefined();
-    for (
-      const result of [undefined, null, 2, 'id', {}, [], { pipelineID: '' }, {
-        pipelineID: 1,
-      }]
-    ) {
+    for (const result of [undefined, null, {}, { pipelineID: '' }]) {
       perf._generatePipelineOptions = () => result;
       expect(createPipeline({ timingFlag: 'flag' })).toBeUndefined();
     }

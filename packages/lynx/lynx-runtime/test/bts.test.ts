@@ -710,7 +710,7 @@ describe('BTS host services', () => {
     >();
   });
 
-  it('resolves card info before global and host info, ignoring non-plain candidates', () => {
+  it('resolves card info before global and host info, falling back when absent', () => {
     const cardInfo = { platform: 'card' };
     const globalInfo = { platform: 'global' };
     const hostInfo = { platform: 'host' };
@@ -721,12 +721,12 @@ describe('BTS host services', () => {
     const card = services.bindPage();
     expect(card.getSystemInfo()).toBe(cardInfo);
     expect(services.bindPage().getSystemInfo()).toBe(cardInfo);
-    for (const invalid of [null, [], 3, new Date()]) {
-      app.lynx!.SystemInfo = invalid as unknown as LynxSystemInfo;
+    for (const absent of [undefined, null]) {
+      app.lynx!.SystemInfo = absent as unknown as LynxSystemInfo;
       expect(card.getSystemInfo()).toBe(globalInfo);
-      hostGlobal.SystemInfo = invalid as unknown as LynxSystemInfo;
+      hostGlobal.SystemInfo = absent as unknown as LynxSystemInfo;
       expect(card.getSystemInfo()).toBe(hostInfo);
-      hostGlobal.lynx.SystemInfo = invalid as unknown as LynxSystemInfo;
+      hostGlobal.lynx.SystemInfo = absent as unknown as LynxSystemInfo;
       expect(card.getSystemInfo()).toEqual({});
       hostGlobal.SystemInfo = globalInfo;
       hostGlobal.lynx.SystemInfo = hostInfo;
@@ -1002,7 +1002,7 @@ describe('BTS host services', () => {
     expect(unrelated).not.toHaveBeenCalled();
   });
 
-  it('ignores malformed host pipelines, missing methods, missing IDs and empty keys', () => {
+  it('ignores absent host pipelines, missing methods, missing IDs and empty keys', () => {
     hostGlobal.tt = {};
     expect(services.bindPage().createPipeline()).toBeUndefined();
     expect(services.bindPage().markTiming('id', 'key')).toBeUndefined();
@@ -1012,11 +1012,7 @@ describe('BTS host services', () => {
     };
     hostGlobal.lynx = { performance: perf };
     expect(services.bindPage().createPipeline()).toBeUndefined();
-    for (
-      const result of [undefined, null, 4, 'id', {}, [], { pipelineID: '' }, {
-        pipelineID: 3,
-      }]
-    ) {
+    for (const result of [undefined, null, {}, { pipelineID: '' }]) {
       perf._generatePipelineOptions = () => result;
       expect(services.bindPage().createPipeline()).toBeUndefined();
     }
@@ -1151,10 +1147,11 @@ describe('BTS global events', () => {
     stop1();
     expect(appModuleEmitter.count('host:event')).toBe(0);
 
-    // Falls back to app.GlobalEventEmitter when app.getJSModule does not return an emitter:
-    app.getJSModule = () => ({ invalid: true });
+    // Falls back to app.GlobalEventEmitter when app.getJSModule returns undefined/null:
+    app.getJSModule = () => undefined;
     const propSpy = vi.fn();
     const stop2 = page.onGlobalEvent('prop:event', propSpy);
+    expect(getLynxJSModule).not.toHaveBeenCalled();
     appPropEmitter.emit('prop:event', [42]);
     expect(propSpy).toHaveBeenCalledExactlyOnceWith(42);
     stop2();
@@ -1163,20 +1160,12 @@ describe('BTS global events', () => {
     app.GlobalEventEmitter = null;
     const lynxSpy = vi.fn();
     const stop3 = page.onGlobalEvent('lynx:event', lynxSpy);
+    expect(getLynxJSModule).toHaveBeenCalledExactlyOnceWith(
+      'GlobalEventEmitter',
+    );
     lynxModuleEmitter.emit('lynx:event', ['from-lynx']);
     expect(lynxSpy).toHaveBeenCalledExactlyOnceWith('from-lynx');
-
-    // Replacing the host emitter migrates active channel registrations cleanly:
-    const replacedEmitter = createHostEventEmitter();
-    app.GlobalEventEmitter = replacedEmitter;
-    const replacedSpy = vi.fn();
-    page.onGlobalEvent('lynx:event', replacedSpy);
-    expect(lynxModuleEmitter.count('lynx:event')).toBe(0);
-    expect(replacedEmitter.count('lynx:event')).toBe(1);
     stop3();
-    replacedEmitter.emit('lynx:event', ['migrated']);
-    expect(lynxSpy).toHaveBeenCalledTimes(1);
-    expect(replacedSpy).toHaveBeenCalledExactlyOnceWith('migrated');
 
     app.GlobalEventEmitter = undefined;
     delete app.lynx!.getJSModule;

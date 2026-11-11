@@ -159,14 +159,19 @@ function getAliveMTSState(host: HostGlobalScope): MTSHostState {
   return state;
 }
 
-function syncMTSInitData(state: MTSHostState, data: unknown): void {
-  state.initData = isPlainRecord(data) ? copyHostData(data) : {};
+function syncMTSInitData(
+  state: MTSHostState,
+  data: Record<string, unknown> | null | undefined,
+): void {
+  state.initData = data ? copyHostData(data) : {};
 }
 
-function syncMTSGlobalProps(host: HostGlobalScope, data: unknown): void {
-  const next = isPlainRecord(data) ? data : {};
+function syncMTSGlobalProps(
+  host: HostGlobalScope,
+  data: Record<string, unknown> | null | undefined,
+): void {
   if (host.lynx) {
-    host.lynx.__globalProps = next;
+    host.lynx.__globalProps = data ?? {};
   }
 }
 
@@ -192,7 +197,7 @@ function ensureMTSHostSlots(host: HostGlobalScope, state: MTSHostState): void {
       host[globalKey] ??= noop;
     }
   }
-  if (isPlainRecord(host.lynx?.SystemInfo) && !isPlainRecord(host.SystemInfo)) {
+  if (host.lynx?.SystemInfo && !host.SystemInfo) {
     // Native updates global SystemInfo.pixelRatio in place after initialization.
     host.SystemInfo = host.lynx.SystemInfo;
   }
@@ -202,9 +207,7 @@ function ensureMTSHostSlots(host: HostGlobalScope, state: MTSHostState): void {
 }
 
 function resolveSystemInfo(host: HostGlobalScope): LynxSystemInfo {
-  if (isPlainRecord(host.lynx?.SystemInfo)) return host.lynx.SystemInfo;
-  if (isPlainRecord(host.SystemInfo)) return host.SystemInfo;
-  return {};
+  return host.lynx?.SystemInfo ?? host.SystemInfo ?? {};
 }
 
 function isMTSHostDestroyed(host: HostGlobalScope): boolean {
@@ -230,11 +233,7 @@ function isMTSHostDestroyed(host: HostGlobalScope): boolean {
 /** Read live host environment information without claiming MTS input slots. */
 export function getSystemInfo(): Readonly<LynxSystemInfo> {
   const host = globalThis as unknown as HostGlobalScope;
-  if (
-    !isMTSHostDestroyed(host)
-    && isPlainRecord(host.lynx?.SystemInfo)
-    && !isPlainRecord(host.SystemInfo)
-  ) {
+  if (!isMTSHostDestroyed(host) && host.lynx?.SystemInfo && !host.SystemInfo) {
     // Native UpdateScreenMetrics updates global `SystemInfo.pixelRatio` in place.
     host.SystemInfo = host.lynx.SystemInfo;
   }
@@ -373,9 +372,7 @@ function associateHostLifetime(
       lifetime.destroying = true;
       for (const boundState of lifetime.states) {
         const liveProps = host.lynx?.__globalProps;
-        boundState.globalProps = isPlainRecord(liveProps)
-          ? copyHostData(liveProps)
-          : {};
+        boundState.globalProps = liveProps ? copyHostData(liveProps) : {};
         boundState.destroying = true;
       }
       try {
@@ -456,7 +453,7 @@ export function flushElementTree(options?: Readonly<MTSFlushOptions>): void {
   const host = globalThis as unknown as HostGlobalScope;
   getAliveMTSState(host);
   const flush = host.__FlushElementTree;
-  if (typeof flush !== 'function') {
+  if (!flush) {
     throw new Error(
       '[@lynx-js/lynx-runtime/mts] Page flush requires __FlushElementTree(). Ensure flushElementTree() is called on the main thread (MTS).',
     );
@@ -647,12 +644,12 @@ function createEngineInputListener(
     data: Record<string, unknown>,
     options?: MTSRenderOptions & MTSReloadOptions,
   ) => void,
-): (event: HostMessageEvent<unknown>) => void {
+): (event: HostMessageEvent<unknown[]>) => void {
   return (event) => {
-    const raw = Array.isArray(event.data) ? event.data : [event.data];
+    const [data, options] = event.data;
     onInput(
-      (raw[0] ?? {}) as Record<string, unknown>,
-      raw[1] as (MTSRenderOptions & MTSReloadOptions) | undefined,
+      (data ?? {}) as Record<string, unknown>,
+      options as (MTSRenderOptions & MTSReloadOptions) | undefined,
     );
   };
 }
@@ -727,8 +724,7 @@ export function getGlobalProps<T = Record<string, unknown>>(): Readonly<T> {
     return state.globalProps as Readonly<T>;
   }
   ensureMTSGlobalPropsInput(host, state);
-  const live = host.lynx?.__globalProps;
-  return (isPlainRecord(live) ? live : state.globalProps) as Readonly<T>;
+  return (host.lynx?.__globalProps ?? state.globalProps) as Readonly<T>;
 }
 
 /**

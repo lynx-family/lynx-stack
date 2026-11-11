@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import vm from 'node:vm';
-
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -76,12 +74,12 @@ describe('host slot subscriptions', () => {
   });
 });
 
-describe('cross-realm plain records', () => {
-  it('recognizes and copies cross-realm object literals while rejecting non-plain prototypes', () => {
-    const foreignRecord = vm.runInNewContext(
-      '({ count: 1, items: [{ ok: true }] })',
-    ) as { count: number; items: Array<{ ok: boolean }> };
-    const foreignInstance: unknown = vm.runInNewContext('new (class Box {})()');
+describe('plain records', () => {
+  it('recognizes object literals and null-prototype records while rejecting non-plain prototypes', () => {
+    const nullRecord = Object.assign(
+      Object.create(null) as { count: number; items: Array<{ ok: boolean }> },
+      { count: 1, items: [{ ok: true }] },
+    );
     const nullProtoChain: unknown = Object.create(
       Object.create(null) as object,
     );
@@ -91,14 +89,17 @@ describe('cross-realm plain records', () => {
       }
     }
 
-    expect(isPlainRecord(foreignRecord)).toBe(true);
-    expect(isPlainRecord(foreignInstance)).toBe(false);
+    expect(isPlainRecord({ count: 1 })).toBe(true);
+    expect(isPlainRecord(nullRecord)).toBe(true);
+    expect(isPlainRecord(null)).toBe(false);
+    expect(isPlainRecord([])).toBe(false);
+    expect(isPlainRecord(new Date())).toBe(false);
     expect(isPlainRecord(nullProtoChain)).toBe(false);
     expect(isPlainRecord(new NullBase())).toBe(false);
 
-    const copied = copyHostData(foreignRecord);
+    const copied = copyHostData(nullRecord);
     expect(copied).toEqual({ count: 1, items: [{ ok: true }] });
-    expect(Object.getPrototypeOf(copied)).toBe(Object.prototype);
+    expect(Object.getPrototypeOf(copied)).toBeNull();
     expect(Object.getPrototypeOf(copied.items[0])).toBe(Object.prototype);
   });
 });

@@ -19,14 +19,7 @@ export function isPlainRecord(
     return false;
   }
   const prototype = Object.getPrototypeOf(value) as object | null;
-  if (prototype === Object.prototype || prototype === null) {
-    return true;
-  }
-  if (Object.getPrototypeOf(prototype) !== null) {
-    return false;
-  }
-  const ctor: unknown = (prototype as { constructor?: unknown }).constructor;
-  return typeof ctor === 'function' && ctor instanceof ctor;
+  return prototype === Object.prototype || prototype === null;
 }
 
 type AnySlotFn = (...args: unknown[]) => void;

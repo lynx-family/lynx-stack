@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { isPlainRecord } from './protocol.js';
 import type {
   CreatePipelineOptions,
   CreatedPipelineOptions,
@@ -16,11 +15,9 @@ export function createHostPipeline(
   side: 'mts' | 'bts',
   sdkVersion?: string,
 ): CreatedPipelineOptions | undefined {
-  const generated = perf?._generatePipelineOptions?.();
-  if (!isPlainRecord(generated)) return undefined;
-  const pipeline = generated as PipelineOptions;
-  const id = pipeline.pipelineID;
-  if (typeof id !== 'string' || id.length === 0) return undefined;
+  const pipeline = perf?._generatePipelineOptions?.();
+  const id = pipeline?.pipelineID;
+  if (!pipeline || !id) return undefined;
 
   if (options?.needTimestamps !== undefined) {
     pipeline.needTimestamps = options.needTimestamps;
@@ -31,17 +28,13 @@ export function createHostPipeline(
   if (options?.dsl !== undefined) pipeline.dsl = options.dsl;
   if (options?.stage !== undefined) pipeline.stage = options.stage;
   if (side === 'mts') {
-    const origin = pipeline.pipelineOrigin;
-    if (typeof origin === 'string' && origin.length > 0) {
-      perf?._onPipelineStart?.(id, origin);
+    if (pipeline.pipelineOrigin) {
+      perf?._onPipelineStart?.(id, pipeline.pipelineOrigin);
     } else {
       perf?._onPipelineStart?.(id);
     }
   } else {
-    const versionText = typeof sdkVersion === 'string' && sdkVersion.length > 0
-      ? sdkVersion
-      : '1.0';
-    const [major = 0, minor = 0] = versionText.split('.').map(Number);
+    const [major = 0, minor = 0] = (sdkVersion ?? '1.0').split('.').map(Number);
     if (major > 3 || (major === 3 && minor > 0)) {
       perf?._onPipelineStart?.(id, pipeline);
     } else {
@@ -49,7 +42,7 @@ export function createHostPipeline(
     }
   }
   const flag = options?.timingFlag;
-  if (typeof flag === 'string' && flag.length > 0) {
+  if (flag) {
     const bind = side === 'mts'
       ? perf?._bindPipelineIDWithTimingFlag
         ?? perf?._bindPipelineIdWithTimingFlag
@@ -65,18 +58,7 @@ export function markHostTiming(
   pipeline: string | PipelineOptions | undefined,
   timingKey: string,
 ): void {
-  const id = typeof pipeline === 'string'
-    ? pipeline
-    : (isPlainRecord(pipeline)
-      ? pipeline.pipelineID
-      : undefined);
-  if (
-    typeof id !== 'string'
-    || id.length === 0
-    || typeof timingKey !== 'string'
-    || timingKey.length === 0
-  ) {
-    return;
-  }
+  const id = typeof pipeline === 'string' ? pipeline : pipeline?.pipelineID;
+  if (!id || !timingKey) return;
   perf?._markTiming?.(id, timingKey);
 }

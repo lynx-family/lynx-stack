@@ -5,11 +5,7 @@
 import { clearMessages, subscribeMessage } from './common/messages.js';
 import type { MessageSubscriptions } from './common/messages.js';
 import { createHostPipeline, markHostTiming } from './common/performance.js';
-import {
-  copyHostData,
-  isPlainRecord,
-  subscribeSlot,
-} from './common/protocol.js';
+import { copyHostData, subscribeSlot } from './common/protocol.js';
 import type {
   BTSEventHandler,
   BTSPageRuntime,
@@ -142,31 +138,37 @@ function getScopeMap(host: HostGlobalScope): WeakMap<HostBTSApp, BTSPageScope> {
   return map;
 }
 
-function getScopeLynx(scope: BTSPageScope): HostLynxObject | undefined {
-  if (scope.app.lynx) {
-    return scope.app.lynx;
-  }
-  if (scope.lynx) {
-    return scope.lynx;
-  }
-  const host = globalThis as unknown as HostGlobalScope;
+function resolveHostLynx(
+  app: HostBTSApp,
+  host: HostGlobalScope,
+): HostLynxObject | undefined {
+  const hostLynx = host.lynx;
   if (
-    host.lynx
-    && (host.lynx.getApp?.() === scope.app
-      || (!host.lynx.getApp && !host.multiApps && host.tt === scope.app))
+    hostLynx
+    && (hostLynx.getApp?.() === app
+      || (!hostLynx.getApp && !host.multiApps && host.tt === app))
   ) {
-    return host.lynx;
+    return hostLynx;
   }
   return undefined;
 }
 
+function getScopeLynx(scope: BTSPageScope): HostLynxObject | undefined {
+  return (
+    scope.app.lynx
+      ?? scope.lynx
+      ?? resolveHostLynx(scope.app, globalThis as unknown as HostGlobalScope)
+  );
+}
+
 function scopeGetSystemInfo(scope: BTSPageScope): Readonly<LynxSystemInfo> {
   const host = globalThis as unknown as HostGlobalScope;
-  const info = getScopeLynx(scope)?.SystemInfo;
-  if (isPlainRecord(info)) return info;
-  if (isPlainRecord(host.SystemInfo)) return host.SystemInfo;
-  if (isPlainRecord(host.lynx?.SystemInfo)) return host.lynx.SystemInfo;
-  return {};
+  return (
+    getScopeLynx(scope)?.SystemInfo
+      ?? host.SystemInfo
+      ?? host.lynx?.SystemInfo
+      ?? {}
+  );
 }
 
 function scopeCreatePipeline(
@@ -221,52 +223,35 @@ function scopeOnMessage<T>(
   return subscribeMessage(scope.messages, proxy, type, listener);
 }
 
-function isGlobalEventEmitter(
-  candidate: unknown,
-): candidate is HostGlobalEventEmitter {
-  return (
-    typeof candidate === 'object'
-    && candidate !== null
-    && typeof (candidate as HostGlobalEventEmitter).addListener === 'function'
-    && typeof (candidate as HostGlobalEventEmitter).removeListener
-      === 'function'
-  );
-}
-
 function getGlobalEventEmitter(scope: BTSPageScope): HostGlobalEventEmitter {
-  const fromAppModule = scope.app.getJSModule?.('GlobalEventEmitter');
-  if (isGlobalEventEmitter(fromAppModule)) {
-    return fromAppModule;
-  }
-  if (isGlobalEventEmitter(scope.app.GlobalEventEmitter)) {
-    return scope.app.GlobalEventEmitter;
-  }
-  const scopeLynx = getScopeLynx(scope);
-  if (scopeLynx && (!scopeLynx.getApp || scopeLynx.getApp() === scope.app)) {
-    const fromLynxModule = scopeLynx.getJSModule?.('GlobalEventEmitter');
-    if (isGlobalEventEmitter(fromLynxModule)) {
-      return fromLynxModule;
+  let emitter = (scope.app.getJSModule?.('GlobalEventEmitter') as
+    | HostGlobalEventEmitter
+    | null
+    | undefined) ?? scope.app.GlobalEventEmitter;
+  if (!emitter) {
+    const scopeLynx = getScopeLynx(scope);
+    if (scopeLynx && (!scopeLynx.getApp || scopeLynx.getApp() === scope.app)) {
+      emitter = scopeLynx.getJSModule?.('GlobalEventEmitter') as
+        | HostGlobalEventEmitter
+        | null
+        | undefined;
     }
   }
-  throw new Error(
-    '[@lynx-js/lynx-runtime/bts] Global event subscription requires GlobalEventEmitter. Ensure the BTS host environment is initialized before calling onGlobalEvent().',
-  );
-}
-
-function releaseGlobalEventEntry(
-  name: string,
-  entry: GlobalEventSubscription,
-): void {
-  for (const registration of entry.listeners) {
-    registration.callback = undefined;
+  if (!emitter) {
+    throw new Error(
+      '[@lynx-js/lynx-runtime/bts] Global event subscription requires GlobalEventEmitter. Ensure the BTS host environment is initialized before calling onGlobalEvent().',
+    );
   }
-  entry.listeners.clear();
-  entry.emitter.removeListener(name, entry.dispatch);
+  return emitter;
 }
 
 function clearGlobalEvents(subscriptions: GlobalEventSubscriptions): void {
   for (const [name, entry] of subscriptions) {
-    releaseGlobalEventEntry(name, entry);
+    for (const registration of entry.listeners) {
+      registration.callback = undefined;
+    }
+    entry.listeners.clear();
+    entry.emitter.removeListener(name, entry.dispatch);
   }
   subscriptions.clear();
 }
@@ -282,16 +267,11 @@ function scopeOnGlobalEvent<Args extends unknown[]>(
   listener: (this: void, ...args: Args) => void,
 ): Unsubscribe {
   assertScopeAlive(scope);
-  const emitter = getGlobalEventEmitter(scope);
   scope.globalEvents ??= new Map<string, GlobalEventSubscription>();
   const subscriptions = scope.globalEvents;
   let entry = subscriptions.get(name);
-  if (entry && entry.emitter !== emitter) {
-    releaseGlobalEventEntry(name, entry);
-    subscriptions.delete(name);
-    entry = undefined;
-  }
   if (!entry) {
+    const emitter = getGlobalEventEmitter(scope);
     const listeners = new Set<GlobalEventRegistration>();
     const dispatch = (...args: unknown[]): void => {
       let failed = false;
@@ -337,19 +317,17 @@ function scopeOnGlobalEvent<Args extends unknown[]>(
 
 function syncScopeGlobalProps(
   scope: BTSPageScope,
-  newData: Record<string, unknown> | undefined,
+  newData: Record<string, unknown> | null | undefined,
 ): void {
-  scope.globalProps = isPlainRecord(newData) ? copyHostData(newData) : {};
+  scope.globalProps = newData ? copyHostData(newData) : {};
 }
 
 function mergeBTSInitData(
   rawInitData: Record<string, unknown> | undefined,
-  dynamicData: Record<string, unknown> | undefined,
+  dynamicData: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> {
   const base = rawInitData ? copyHostData(rawInitData) : undefined;
-  const next = isPlainRecord(dynamicData)
-    ? copyHostData(dynamicData)
-    : undefined;
+  const next = dynamicData ? copyHostData(dynamicData) : undefined;
   return { ...base, ...next };
 }
 
@@ -449,7 +427,7 @@ function activateGlobalProps(scope: BTSPageScope): void {
   }
   // Unmigrated DSL handlers may have updated or replaced this value since binding.
   const liveProps = getScopeLynx(scope)?.__globalProps;
-  scope.globalProps = isPlainRecord(liveProps) ? copyHostData(liveProps) : {};
+  scope.globalProps = liveProps ? copyHostData(liveProps) : {};
   scope.unsubGlobalPropsSync = subscribeSlot<
     [Record<string, unknown> | undefined]
   >(scope.app, 'updateGlobalProps', noop, (newData) => {
@@ -545,17 +523,11 @@ function createBTSPageScope(
     && (!lexicalLynx.getApp || lexicalLynx.getApp() === targetApp)
   ) {
     boundLynx = lexicalLynx;
-  } else if (
-    !boundLynx
-    && host.lynx
-    && (host.lynx.getApp?.() === targetApp
-      || (!host.lynx.getApp && !host.multiApps && host.tt === targetApp))
-  ) {
-    boundLynx = host.lynx;
   }
+  boundLynx ??= resolveHostLynx(targetApp, host);
 
   const params = targetApp._params;
-  const rawInitData = isPlainRecord(params?.initData)
+  const rawInitData = params?.initData
     ? copyHostData(params.initData)
     : undefined;
   const initData = mergeBTSInitData(rawInitData, params?.updateData);
@@ -566,7 +538,7 @@ function createBTSPageScope(
     lynx: boundLynx,
     rawInitData,
     initData,
-    globalProps: isPlainRecord(boundLynx?.__globalProps)
+    globalProps: boundLynx?.__globalProps
       ? copyHostData(boundLynx.__globalProps)
       : {},
     destroying: false,
@@ -588,9 +560,7 @@ function createBTSPageScope(
       const scopeLynx = getScopeLynx(scope);
       if (!scope.unsubGlobalPropsSync) {
         const liveProps = scopeLynx?.__globalProps;
-        scope.globalProps = isPlainRecord(liveProps)
-          ? copyHostData(liveProps)
-          : {};
+        scope.globalProps = liveProps ? copyHostData(liveProps) : {};
       }
       scope.destroying = true;
       if (scope.globalEvents) {
