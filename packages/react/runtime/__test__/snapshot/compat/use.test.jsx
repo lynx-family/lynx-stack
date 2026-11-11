@@ -9,12 +9,13 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createContext } from '../../../src/index';
 import { use } from '../../../compat';
 import { setupBackgroundDocument } from '../../../src/document';
-import { backgroundSnapshotInstanceManager, setupPage } from '../../../src/snapshot';
+import { backgroundSnapshotInstanceManager } from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 
 describe('use', () => {
-  /** @type {import('../../../src/snapshot').SnapshotInstance} */
+  /** @type {import('../../../src/snapshot/snapshot/snapshot.js').SnapshotInstance} */
   let scratch;
 
   beforeAll(() => {

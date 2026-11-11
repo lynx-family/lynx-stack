@@ -10,11 +10,10 @@ import { initElementPAPICallAlog } from '../../../../runtime/lib/snapshot/alog/e
 import { addCtxNotFoundEventListener } from '../../../../runtime/lib/snapshot/lifecycle/patch/error.js';
 import { setRoot } from '../../../../runtime/lib/root.js';
 import {
-  SnapshotInstance,
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
-  snapshotInstanceManager,
-} from '../../../../runtime/lib/snapshot/index.js';
+} from '../../../../runtime/lib/snapshot/snapshot/backgroundSnapshot.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../../../runtime/lib/snapshot/snapshot/snapshot.js';
 import { destroyWorklet } from '../../../../runtime/lib/snapshot/worklet/destroy.js';
 import { initApiEnv } from '../../../../runtime/lib/worklet-runtime/api/lynxApi.js';
 import { initEventListeners } from '../../../../runtime/lib/worklet-runtime/listeners.js';

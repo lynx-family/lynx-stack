@@ -9,7 +9,7 @@ import { act } from 'preact/test-utils';
 import { __root } from '@lynx-js/react/internal';
 
 import { flushDelayedLifecycleEvents } from '../../runtime/lib/snapshot/lynx/tt.js';
-import { clearPage } from '../../runtime/lib/snapshot/index.js';
+import { clearPage } from '../../runtime/lib/snapshot/snapshot/definition.js';
 
 export function waitSchedule() {
   return new Promise(resolve => {

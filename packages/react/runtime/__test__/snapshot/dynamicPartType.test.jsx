@@ -2,7 +2,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as ReactLynx from '../../src/internal';
-import { setupPage, SnapshotInstance, backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { backgroundSnapshotInstanceManager } from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance } from '../../src/snapshot/snapshot/snapshot.js';
 import { hydrate } from '../../src/snapshot/renderToOpcodes/hydrate';
 import {
   BackgroundSnapshotInstance,

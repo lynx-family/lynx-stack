@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { cloneElement, createElement } from '../../lepus';
 import { jsx } from '../../lepus/jsx-runtime';
-import { SnapshotInstance, snapshotCreatorMap } from '../../src/snapshot';
+import { SnapshotInstance, snapshotCreatorMap } from '../../src/snapshot/snapshot/snapshot.js';
 
 describe('lepus jsx-runtime createVNode', () => {
   beforeEach(() => {

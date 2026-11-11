@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree } from './utils/nativeMethod';
-import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot';
+import { SnapshotInstance, snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
 
 const HOLE = null;
 

@@ -4,11 +4,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { setupBackgroundDocument } from '../../../src/document';
 import {
-  setupPage,
-  SnapshotInstance,
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
-} from '../../../src/snapshot';
+} from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot.js';
 import { backgroundSnapshotInstanceToJSON } from '../utils/debug';
 import { useState } from 'preact/compat';
 import { useInitData, withInitDataInState } from '../../../src/lynx-api';

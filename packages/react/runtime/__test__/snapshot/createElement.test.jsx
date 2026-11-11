@@ -6,11 +6,11 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { elementTree, waitSchedule } from './utils/nativeMethod';
-import { setupPage } from '../../src/snapshot';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
 import { createElement } from '../../src/snapshot/lynx/element';
 import { __root } from '../../src/root';
 import { globalEnvManager } from './utils/envManager';
-import { snapshotManager } from '../../src/snapshot';
+import { snapshotManager } from '../../src/snapshot/snapshot/definition.js';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __globalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { createRef, render } from 'preact';

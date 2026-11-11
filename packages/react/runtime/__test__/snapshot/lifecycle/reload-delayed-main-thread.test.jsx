@@ -15,7 +15,7 @@ import { __root } from '../../../src/root.js';
 import { destroyBackground } from '../../../src/snapshot/lifecycle/destroy.js';
 import { globalCommitTaskMap } from '../../../src/snapshot/lifecycle/patch/commit.js';
 import { reloadBackground } from '../../../src/snapshot/lifecycle/reload.js';
-import { setupPage } from '../../../src/snapshot/index.js';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { runOnMainThread } from '../../../src/snapshot/worklet/call/runOnMainThread.js';
 import { registerWorklet } from '../../../src/worklet-runtime/bindings/index.js';
 import { initWorklet } from '../../../src/worklet-runtime/workletRuntime.js';

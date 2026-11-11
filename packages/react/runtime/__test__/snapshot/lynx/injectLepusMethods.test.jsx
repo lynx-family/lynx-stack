@@ -1,6 +1,6 @@
 import { Component, h, options, render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { setupPage } from '../../../src/snapshot';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { __root } from '../../../src/root';

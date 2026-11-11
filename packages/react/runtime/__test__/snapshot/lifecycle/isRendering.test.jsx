@@ -10,7 +10,7 @@ import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/up
 import { root } from '../../../src/lynx-api';
 import { installComponentCompat } from '../../../src/core/component';
 import { __root } from '../../../src/root';
-import { setupPage } from '../../../src/snapshot';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree, waitSchedule } from '../utils/nativeMethod';
 import { isRendering } from '../../../src/snapshot/lifecycle/isRendering';
