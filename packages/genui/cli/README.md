@@ -88,6 +88,28 @@ The target directory must be empty. The generated `package.json` replaces the
 template workspace dependency placeholders with installable package versions
 resolved from the parent `@lynx-js/genui` package metadata.
 
+### Install a PR preview
+
+Use the same commit for GenUI and its React peer. Replace `<commit>` with the
+commit shown in the PR's pkg.pr.new comment:
+
+```bash
+pnpm add --config.blockExoticSubdeps=false \
+  https://pkg.pr.new/lynx-family/lynx-stack/@lynx-js/genui@<commit> \
+  https://pkg.pr.new/lynx-family/lynx-stack/@lynx-js/react@<commit> \
+  @lynx-js/lynx-ui
+```
+
+pnpm 11 blocks URL dependencies within packages by default. The flag allows
+them for this command without changing your global configuration. Install both
+preview URLs explicitly so pnpm does not look for the React preview on npm.
+Lynx UI may report a React peer-range warning because preview packages use
+`0.0.0-preview-<commit>` versions.
+
+When you create a project with a preview CLI, the generated manifest keeps
+pkg.pr.new URLs. Follow the printed install command, which includes the same
+flag. Stable releases use npm versions and the normal install command.
+
 ### `genui a2ui generate catalog`
 
 Delegates catalog extraction to `@lynx-js/genui/a2ui-catalog-extractor`.

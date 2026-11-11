@@ -13,6 +13,7 @@
         "a2ui/package.json",
         "a2ui/tsconfig.json",
         "a2ui/tsconfig.build.json",
+        "a2ui/rslib.config.ts",
         "a2ui-catalog-extractor/src/**",
         "a2ui-catalog-extractor/bin/**",
         "a2ui-catalog-extractor/package.json",

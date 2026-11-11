@@ -176,7 +176,6 @@
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true});\""
   },
   "dependencies": {
-    "@cfworker/json-schema": "4.1.4",
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:^",
     "@lynx-js/react-signals": "workspace:*",

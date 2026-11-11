@@ -30,6 +30,7 @@ interface ParsedCreateArgs {
 interface PackageManifest {
   name?: string;
   version?: string;
+  repository?: { url?: string } | string;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
@@ -78,6 +79,7 @@ export function runA2UICreateCli(
   // Replace {{projectName}} and resolve workspace:* versions in package.json
   const pkgName = path.basename(targetDir);
   const pkgJsonPath = path.join(targetDir, 'package.json');
+  let usesPreviewDependencies = false;
   if (fs.existsSync(pkgJsonPath)) {
     const require = createRequire(import.meta.url);
     const versionMap = resolveVersionMap(
@@ -87,14 +89,24 @@ export function runA2UICreateCli(
     let content = fs.readFileSync(pkgJsonPath, 'utf-8');
     content = content.replaceAll('{{projectName}}', pkgName);
     content = replaceWorkspaceVersions(content, versionMap, require);
+    usesPreviewDependencies = content.includes('https://pkg.pr.new/');
     fs.writeFileSync(pkgJsonPath, content);
   }
 
   console.info(`\nProject created at ${projectName}/\n`);
   console.info(`Next steps:\n`);
   console.info(`  cd ${projectName}`);
-  console.info(`  pnpm install`);
+  if (usesPreviewDependencies) {
+    console.info(`  pnpm install --config.blockExoticSubdeps=false`);
+  } else {
+    console.info(`  pnpm install`);
+  }
   console.info(`  pnpm run dev\n`);
+  if (usesPreviewDependencies) {
+    console.info(
+      'Preview packages use URL dependencies. The install flag allows them for this command only.',
+    );
+  }
 
   return 0;
 }
@@ -157,8 +169,8 @@ function resolvePackageVersion(
   requireFn: (id: string) => unknown,
 ): string | undefined {
   try {
-    const pkg = requireFn(`${name}/package.json`) as { version: string };
-    return `^${pkg.version}`;
+    const pkg = requireFn(`${name}/package.json`) as PackageManifest;
+    return packageSpecifier(pkg);
   } catch {
     // Package might have strict exports; try resolving via main entry
     try {
@@ -171,12 +183,11 @@ function resolvePackageVersion(
       while (dir !== path.dirname(dir)) {
         const pkgPath = path.join(dir, 'package.json');
         if (fs.existsSync(pkgPath)) {
-          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as {
-            name?: string;
-            version?: string;
-          };
+          const pkg = JSON.parse(
+            fs.readFileSync(pkgPath, 'utf-8'),
+          ) as PackageManifest;
           if (pkg.name === name && pkg.version) {
-            return `^${pkg.version}`;
+            return packageSpecifier(pkg);
           }
         }
         dir = path.dirname(dir);
@@ -188,11 +199,26 @@ function resolvePackageVersion(
   }
 }
 
+function packageSpecifier(manifest: PackageManifest): string | undefined {
+  if (!manifest.version) return undefined;
+  const preview = /^0\.0\.0-preview-([a-f\d]+)$/.exec(manifest.version);
+  const repository = typeof manifest.repository === 'string'
+    ? manifest.repository
+    : manifest.repository?.url;
+  if (preview && manifest.name && repository) {
+    const match = /^(?:git\+)?https:\/\/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/
+      .exec(repository);
+    if (match) {
+      return `https://pkg.pr.new/${match[1]}/${manifest.name}@${preview[1]}`;
+    }
+  }
+  return `^${manifest.version}`;
+}
+
 /**
  * Resolve workspace:^ / workspace:* values to real versions.
- * The CLI is also shipped inside @lynx-js/genui, where cli/package.json is a
- * nested workspace manifest that pnpm does not rewrite on publish. Use the
- * parent package manifest as the generated app's dependency version source.
+ * The public @lynx-js/genui tarball omits cli/package.json. Use the parent
+ * package manifest as the generated app's dependency version source.
  */
 function resolveVersionMap(
   manifests: PackageManifest[],
@@ -201,7 +227,7 @@ function resolveVersionMap(
   const resolved: Record<string, string> = {};
   for (const manifest of manifests) {
     if (manifest.name && manifest.version && !resolved[manifest.name]) {
-      resolved[manifest.name] = `^${manifest.version}`;
+      resolved[manifest.name] = packageSpecifier(manifest)!;
     }
 
     for (const deps of getManifestDependencyFields(manifest)) {

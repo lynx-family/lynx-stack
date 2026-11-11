@@ -10,6 +10,8 @@
         "src/**",
         "styles/**",
         "tsconfig.json",
+        "tsconfig.build.json",
+        "rslib.config.ts",
         "package.json"
       ],
       "outputs": [
@@ -23,6 +25,7 @@
         "styles/**",
         "tsconfig.json",
         "tsconfig.build.json",
+        "rslib.config.ts",
         "package.json"
       ],
       "outputs": [

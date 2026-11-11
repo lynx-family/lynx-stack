@@ -2,4 +2,4 @@
 applyTo: "packages/genui/cli/**"
 ---
 
-When maintaining `genui a2ui create`, remember that the CLI is shipped inside the `@lynx-js/genui` package and `cli/package.json` remains a nested workspace manifest in the published tarball. Do not use `packages/genui/cli/package.json` for generated-template dependency versions; use the parent `packages/genui/package.json` manifest or another publish-rewritten source so generated apps never keep `workspace:` dependency specifiers.
+The CLI ships inside `@lynx-js/genui`; the public tarball does not include `cli/package.json`. Read the umbrella package manifest for both CLI version output and generated-template dependency versions. Preview versions must produce pkg.pr.new URLs instead of npm semver ranges, preserving explicit React preview dependencies. Test built CLI files in an isolated umbrella package layout without workspace symlinks. For pnpm 11 previews, print a command-scoped blockExoticSubdeps override rather than changing global package-manager settings.

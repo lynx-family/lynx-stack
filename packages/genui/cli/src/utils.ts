@@ -17,6 +17,6 @@ export function readValue(
 
 export function printPackageVersion(): void {
   const require = createRequire(import.meta.url);
-  const packageJson = require('../package.json') as Record<string, unknown>;
+  const packageJson = require('../../package.json') as Record<string, unknown>;
   console.info(packageJson['version']);
 }
