@@ -2511,6 +2511,9 @@ importers:
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
+      supports-terminal-graphics:
+        specifier: 0.1.0
+        version: 0.1.0
       uqr:
         specifier: 0.1.3
         version: 0.1.3
@@ -12450,6 +12453,10 @@ packages:
   supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
+
+  supports-terminal-graphics@0.1.0:
+    resolution: {integrity: sha512-+KdfozhS0Fw8y5Sghw8kkZNGT8nWYzJ1EzcoIvVjxhl+26TJTs26y02yfBgvc1jh5AS/c8jcI3xtahhR95KRyQ==}
+    engines: {node: '>=20'}
 
   svgo@4.0.0:
     resolution: {integrity: sha512-VvrHQ+9uniE+Mvx3+C9IEe/lWasXCU0nXMY2kZeLrHNICuRiC8uMPyM14UEaMOFA5mhyQqEkB02VoQ16n3DLaw==}
@@ -22877,6 +22884,8 @@ snapshots:
       supports-color: 10.2.2
 
   supports-preserve-symlinks-flag@1.0.0: {}
+
+  supports-terminal-graphics@0.1.0: {}
 
   svgo@4.0.0:
     dependencies:
