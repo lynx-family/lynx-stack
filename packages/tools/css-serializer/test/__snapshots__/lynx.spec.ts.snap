@@ -2747,6 +2747,161 @@ exports[`nested-at-rules 1`] = `
 ]
 `;
 
+exports[`nested-rules 1`] = `
+[
+  {
+    "selectorText": {
+      "loc": {
+        "column": 3,
+        "line": 1,
+      },
+      "value": ".a",
+    },
+    "style": [
+      {
+        "keyLoc": {
+          "column": 8,
+          "line": 2,
+        },
+        "name": "color",
+        "valLoc": {
+          "column": 14,
+          "line": 2,
+        },
+        "value": "red",
+      },
+    ],
+    "type": "StyleRule",
+    "variables": {},
+  },
+  {
+    "selectorText": {
+      "loc": {
+        "column": 5,
+        "line": 3,
+      },
+      "value": ".a .b",
+    },
+    "style": [
+      {
+        "keyLoc": {
+          "column": 10,
+          "line": 4,
+        },
+        "name": "color",
+        "valLoc": {
+          "column": 17,
+          "line": 4,
+        },
+        "value": "blue",
+      },
+    ],
+    "type": "StyleRule",
+    "variables": {},
+  },
+  {
+    "selectorText": {
+      "loc": {
+        "column": 5,
+        "line": 6,
+      },
+      "value": ".a .c",
+    },
+    "style": [
+      {
+        "keyLoc": {
+          "column": 10,
+          "line": 7,
+        },
+        "name": "color",
+        "valLoc": {
+          "column": 18,
+          "line": 7,
+        },
+        "value": "green",
+      },
+    ],
+    "type": "StyleRule",
+    "variables": {},
+  },
+  {
+    "selectorText": {
+      "loc": {
+        "column": 7,
+        "line": 8,
+      },
+      "value": ".a .c .d",
+    },
+    "style": [
+      {
+        "keyLoc": {
+          "column": 12,
+          "line": 9,
+        },
+        "name": "order",
+        "valLoc": {
+          "column": 16,
+          "line": 9,
+        },
+        "value": "1",
+      },
+    ],
+    "type": "StyleRule",
+    "variables": {},
+  },
+  {
+    "selectorText": {
+      "loc": {
+        "column": 7,
+        "line": 11,
+      },
+      "value": ".a .c .e",
+    },
+    "style": [
+      {
+        "keyLoc": {
+          "column": 12,
+          "line": 12,
+        },
+        "name": "order",
+        "valLoc": {
+          "column": 16,
+          "line": 12,
+        },
+        "value": "2",
+      },
+    ],
+    "type": "StyleRule",
+    "variables": {},
+  },
+  {
+    "selectorText": {
+      "loc": {
+        "column": 9,
+        "line": 15,
+      },
+      "value": ".a .f,.a .g",
+    },
+    "style": [
+      {
+        "keyLoc": {
+          "column": 10,
+          "line": 16,
+        },
+        "name": "order",
+        "valLoc": {
+          "column": 14,
+          "line": 16,
+        },
+        "value": "3",
+      },
+    ],
+    "type": "StyleRule",
+    "variables": {},
+  },
+]
+`;
+
 exports[`no-space-within-name-value 1`] = `
 [
   {
@@ -2892,31 +3047,6 @@ exports[`rules 1`] = `
   {
     "selectorText": {
       "loc": {
-        "column": 24,
-        "line": 20,
-      },
-      "value": ".test-1 div p,.test-1 .test-6::not",
-    },
-    "style": [
-      {
-        "keyLoc": {
-          "column": 20,
-          "line": 21,
-        },
-        "name": "flex-shrink",
-        "valLoc": {
-          "column": 24,
-          "line": 21,
-        },
-        "value": "0",
-      },
-    ],
-    "type": "StyleRule",
-    "variables": {},
-  },
-  {
-    "selectorText": {
-      "loc": {
         "column": 12,
         "line": 10,
       },
@@ -2959,6 +3089,31 @@ exports[`rules 1`] = `
           "line": 14,
         },
         "value": "1",
+      },
+    ],
+    "type": "StyleRule",
+    "variables": {},
+  },
+  {
+    "selectorText": {
+      "loc": {
+        "column": 24,
+        "line": 20,
+      },
+      "value": ".test-1 div p,.test-1 .test-6::not",
+    },
+    "style": [
+      {
+        "keyLoc": {
+          "column": 20,
+          "line": 21,
+        },
+        "name": "flex-shrink",
+        "valLoc": {
+          "column": 24,
+          "line": 21,
+        },
+        "value": "0",
       },
     ],
     "type": "StyleRule",

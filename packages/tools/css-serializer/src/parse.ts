@@ -262,6 +262,9 @@ export function parse(content: string, options: {
         list.remove(item);
       } else if (node.type === 'Rule') {
         const parent = node;
+        // Insert nested rules before the parent's original next sibling, so
+        // they stay in source order.
+        const next = item.next;
         node.block?.children.filter(node => node.type === 'Raw').forEach(
           (child, childItem, childList) => {
             childList.remove(childItem);
@@ -269,7 +272,7 @@ export function parse(content: string, options: {
               positions: true,
               ...child.loc?.start,
             });
-            csstree.walk(childAst, (subParseChild, subParseChildItem) => {
+            csstree.walk(childAst, (subParseChild) => {
               if (subParseChild.type === 'Rule') {
                 if (
                   subParseChild.prelude.type === 'SelectorList'
@@ -288,9 +291,11 @@ export function parse(content: string, options: {
                     selector.children.prependList(parentSelectorList.copy());
                   });
                 }
-                item.next
-                  ? list.insert(subParseChildItem, item.next)
-                  : list.append(subParseChildItem);
+                // Insert a new item. The walked one still belongs to the list
+                // of `childAst`, and moving it keeps its `next` pointing there.
+                next
+                  ? list.insertData(subParseChild, next)
+                  : list.appendData(subParseChild);
               }
             });
           },
