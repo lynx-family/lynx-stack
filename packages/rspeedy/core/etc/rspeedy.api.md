@@ -257,6 +257,7 @@ export interface Output {
     inlineScripts?: InlineChunkConfig | undefined;
     legalComments?: 'none' | 'inline' | 'linked' | undefined;
     minify?: Minify | boolean | undefined;
+    polyfill?: 'off' | 'usage' | 'entry' | undefined;
     sourceMap?: boolean | SourceMap | undefined;
 }
 
