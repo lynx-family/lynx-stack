@@ -73,6 +73,17 @@ describe('ElementCompt (unit tests)', () => {
     expect(mockSetStyleProperty).toHaveBeenCalledWith('opacity', '0.5');
   });
 
+  test('style proxy writes camel-case properties using Lynx CSS names', () => {
+    const compt = new ElementCompt(mockElement);
+
+    compt.style.backgroundColor = 'red';
+
+    expect(mockSetStyleProperty).toHaveBeenCalledWith(
+      'background-color',
+      'red',
+    );
+  });
+
   test('style proxy set with transform=none should use scale(1,1)', () => {
     const compt = new ElementCompt(mockElement);
 
