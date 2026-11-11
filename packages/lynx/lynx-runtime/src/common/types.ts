@@ -186,6 +186,25 @@ export interface BTSPageRuntime {
   onEnterForeground(this: void, listener: () => void): Unsubscribe;
   onEnterBackground(this: void, listener: () => void): Unsubscribe;
   /**
+   * Subscribe to host global events delivered to this page's `GlobalEventEmitter`
+   * (such as client `sendGlobalEvent`, `exposure` / `disexposure`, and
+   * `keyboardstatuschanged`) while the page and emitter are available.
+   *
+   * @remarks
+   * Resolves `GlobalEventEmitter` from the bound page so asynchronous subscriptions
+   * in a shared `LynxGroup` context remain isolated from peer pages. Shares one host
+   * listener per event `name` on this page, deduplicates identical `(name, listener)`
+   * callbacks, forwards all positional arguments with `undefined` `this`, and removes
+   * all listeners before DSL `onDestroy` callbacks run. Does not replay earlier events
+   * or validate `Args` at runtime; dispose when an owning entry retires across in-place
+   * reloads (`onReload`).
+   */
+  onGlobalEvent<Args extends unknown[] = unknown[]>(
+    this: void,
+    name: string,
+    listener: (this: void, ...args: Args) => void,
+  ): Unsubscribe;
+  /**
    * Claim both raw page and component event slots with one synchronous handler.
    * Latest registration wins; disposal clears the current handler without restoring
    * an earlier owner. Page events have no componentId; component events retain it.
@@ -269,6 +288,21 @@ export interface HostContextProxy {
 /**
  * @internal
  */
+export interface HostGlobalEventEmitter {
+  addListener(
+    eventName: string,
+    listener: (...args: unknown[]) => void,
+    context?: unknown,
+  ): void;
+  removeListener(
+    eventName: string,
+    listener: (...args: unknown[]) => void,
+  ): void;
+}
+
+/**
+ * @internal
+ */
 export interface HostBTSApp {
   publishEvent?:
     | ((handlerName: string, data: unknown, ...hostArgs: unknown[]) => unknown)
@@ -290,6 +324,8 @@ export interface HostBTSApp {
     srcName?: string | undefined;
   } | undefined;
   lynx?: HostLynxObject | undefined;
+  GlobalEventEmitter?: HostGlobalEventEmitter | null | undefined;
+  getJSModule?: ((moduleName: string) => unknown) | undefined;
   updateCardData?:
     | ((
       data: Record<string, unknown>,
@@ -337,6 +373,7 @@ export interface HostLynxObject {
   getCoreContext?: (() => HostContextProxy | undefined) | undefined;
   getJSContext?: (() => HostContextProxy | undefined) | undefined;
   getApp?: (() => HostBTSApp | undefined) | undefined;
+  getJSModule?: ((moduleName: string) => unknown) | undefined;
 }
 
 /**

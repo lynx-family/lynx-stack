@@ -19,6 +19,7 @@ import type {
   CreatedPipelineOptions,
   HostBTSApp,
   HostContextProxy,
+  HostGlobalEventEmitter,
   HostGlobalScope,
   HostLynxObject,
   LynxSystemInfo,
@@ -52,9 +53,23 @@ interface BTSPageScope {
   destroyed: boolean;
   runtime?: BTSPageRuntime | undefined;
   eventEntry?: BTSEventEntry | undefined;
+  globalEvents?: GlobalEventSubscriptions | undefined;
   messages?: MessageSubscriptions | undefined;
   notifications: Map<string, Map<object, Unsubscribe>>;
 }
+
+interface GlobalEventRegistration {
+  callback: ((...args: unknown[]) => void) | undefined;
+  dispose: Unsubscribe;
+}
+
+interface GlobalEventSubscription {
+  emitter: HostGlobalEventEmitter;
+  listeners: Set<GlobalEventRegistration>;
+  dispatch: (...args: unknown[]) => void;
+}
+
+type GlobalEventSubscriptions = Map<string, GlobalEventSubscription>;
 
 interface BTSEventEntry {
   current: { handler: BTSEventHandler } | undefined;
@@ -204,6 +219,120 @@ function scopeOnMessage<T>(
   const proxy = getCoreContext(scope);
   scope.messages ??= new Map();
   return subscribeMessage(scope.messages, proxy, type, listener);
+}
+
+function isGlobalEventEmitter(
+  candidate: unknown,
+): candidate is HostGlobalEventEmitter {
+  return (
+    typeof candidate === 'object'
+    && candidate !== null
+    && typeof (candidate as HostGlobalEventEmitter).addListener === 'function'
+    && typeof (candidate as HostGlobalEventEmitter).removeListener
+      === 'function'
+  );
+}
+
+function getGlobalEventEmitter(scope: BTSPageScope): HostGlobalEventEmitter {
+  const fromAppModule = scope.app.getJSModule?.('GlobalEventEmitter');
+  if (isGlobalEventEmitter(fromAppModule)) {
+    return fromAppModule;
+  }
+  if (isGlobalEventEmitter(scope.app.GlobalEventEmitter)) {
+    return scope.app.GlobalEventEmitter;
+  }
+  const scopeLynx = getScopeLynx(scope);
+  if (scopeLynx && (!scopeLynx.getApp || scopeLynx.getApp() === scope.app)) {
+    const fromLynxModule = scopeLynx.getJSModule?.('GlobalEventEmitter');
+    if (isGlobalEventEmitter(fromLynxModule)) {
+      return fromLynxModule;
+    }
+  }
+  throw new Error(
+    '[@lynx-js/lynx-runtime/bts] Global event subscription requires GlobalEventEmitter. Ensure the BTS host environment is initialized before calling onGlobalEvent().',
+  );
+}
+
+function releaseGlobalEventEntry(
+  name: string,
+  entry: GlobalEventSubscription,
+): void {
+  for (const registration of entry.listeners) {
+    registration.callback = undefined;
+  }
+  entry.listeners.clear();
+  entry.emitter.removeListener(name, entry.dispatch);
+}
+
+function clearGlobalEvents(subscriptions: GlobalEventSubscriptions): void {
+  for (const [name, entry] of subscriptions) {
+    releaseGlobalEventEntry(name, entry);
+  }
+  subscriptions.clear();
+}
+
+/**
+ * Share one host listener per event name on the bound page's GlobalEventEmitter so
+ * disposing one subscriber does not disable shared host detectors (such as
+ * `keyboardstatuschanged`) or mutate lynx-core's array during `forEach` dispatch.
+ */
+function scopeOnGlobalEvent<Args extends unknown[]>(
+  scope: BTSPageScope,
+  name: string,
+  listener: (this: void, ...args: Args) => void,
+): Unsubscribe {
+  assertScopeAlive(scope);
+  const emitter = getGlobalEventEmitter(scope);
+  scope.globalEvents ??= new Map<string, GlobalEventSubscription>();
+  const subscriptions = scope.globalEvents;
+  let entry = subscriptions.get(name);
+  if (entry && entry.emitter !== emitter) {
+    releaseGlobalEventEntry(name, entry);
+    subscriptions.delete(name);
+    entry = undefined;
+  }
+  if (!entry) {
+    const listeners = new Set<GlobalEventRegistration>();
+    const dispatch = (...args: unknown[]): void => {
+      let failed = false;
+      let firstError: unknown;
+      for (const registration of [...listeners]) {
+        if (!listeners.has(registration)) continue;
+        const callback = registration.callback!;
+        try {
+          callback(...args);
+        } catch (error) {
+          if (!failed) {
+            failed = true;
+            firstError = error;
+          }
+        }
+      }
+      if (failed) throw firstError;
+    };
+    entry = { emitter, listeners, dispatch };
+    emitter.addListener(name, dispatch);
+    subscriptions.set(name, entry);
+  }
+  const current = entry;
+  const callback = listener as (...args: unknown[]) => void;
+  for (const registration of current.listeners) {
+    if (registration.callback === callback) return registration.dispose;
+  }
+  const registration: GlobalEventRegistration = {
+    callback,
+    dispose: () => {
+      if (!current.listeners.delete(registration)) return;
+      registration.callback = undefined;
+      if (current.listeners.size > 0 || subscriptions.get(name) !== current) {
+        return;
+      }
+      current.emitter.removeListener(name, current.dispatch);
+      subscriptions.delete(name);
+    },
+  };
+  current.listeners.add(registration);
+  return registration.dispose;
 }
 
 function syncScopeGlobalProps(
@@ -464,6 +593,10 @@ function createBTSPageScope(
           : {};
       }
       scope.destroying = true;
+      if (scope.globalEvents) {
+        clearGlobalEvents(scope.globalEvents);
+        scope.globalEvents = undefined;
+      }
       if (scope.messages) {
         clearMessages(scope.messages);
         scope.messages = undefined;
@@ -564,6 +697,10 @@ export function bindPage(): BTSPageRuntime {
       hookScope(scope, 'onAppEnterForeground', listener),
     onEnterBackground: (listener: () => void) =>
       hookScope(scope, 'onAppEnterBackground', listener),
+    onGlobalEvent: <Args extends unknown[] = unknown[]>(
+      name: string,
+      listener: (this: void, ...args: Args) => void,
+    ) => scopeOnGlobalEvent(scope, name, listener),
     setEventHandler: <T = unknown>(handler: BTSEventHandler<T>) =>
       scopeSetEventHandler(scope, handler),
     sendMessage: (type: string, data?: unknown) =>

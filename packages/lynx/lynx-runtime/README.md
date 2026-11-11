@@ -28,6 +28,7 @@ are integration code for a host-provided page, not standalone Node.js programs.
 | `getInitData()`                                                   | Activate MTS capture before the first input; BTS capture starts at binding                 | Copies plain records/arrays from the initial or reload baseline; incremental updates do not accumulate here. Opaque values remain shared.                |
 | `getGlobalProps()`                                                | First read/subscription activates its channel; do this during bootstrap                    | MTS borrows live host data; BTS borrows a captured snapshot. Neither may be mutated, including nested values.                                            |
 | `onRenderPage` / `onUpdateData` / `onReload`                      | MTS listeners register before the first input; BTS uses the bound handle for update/reload | Read-only notifications, not a state store. MTS retains channel ownership after unsubscribe. No replay of inputs missed before registration.             |
+| `page.onGlobalEvent(name, listener)`                              | BTS bound handle, while page and `GlobalEventEmitter` are available                        | Subscribes to the bound page's `GlobalEventEmitter` (`sendGlobalEvent` / exposure / keyboard), sharing one host listener per event name until teardown.  |
 | `sendMessage` / `onMessage`                                       | Same-page peer thread; receiver must already be installed                                  | Sending returns `void`, not a receipt. No startup buffer, RPC, or cross-type ordering guarantee. The DSL owns payload validation and completion replies. |
 | `flushElementTree(options?)`                                      | MTS, after applying an update                                                              | Submits the page root, not a List subtree. Preserve the input's options even for an empty update. Returning is not layout/paint completion.              |
 | `setDataProcessor` / `setPageDataGetter` / `page.setEventHandler` | Install on the owning thread while alive                                                   | Single owner, latest registration wins. Disposing the current owner restores the default, not the previous owner. Host calls are synchronous.            |
@@ -58,7 +59,7 @@ matrix. Peer messaging still requires the corresponding host ContextProxy.
 
 - `@lynx-js/lynx-runtime`: Shared TypeScript types only (`BTSPageRuntime`, `BTSEventHandler`, `CreatedPipelineOptions`, `CreatePipelineOptions`, `LynxSystemInfo`, `MTSFlushContext`, `MTSFlushOptions`, `MTSReloadOptions`, `MTSRenderOptions`, `MTSUpdateOptions`, `BTSUpdateOptions`, `BTSReloadOptions`, `PipelineOptions`, `Unsubscribe`). The package declares `"sideEffects": false`, and runtime entrypoints are imported from `/mts` or `/bts` with zero module-evaluation side effects so bundlers can tree-shake unused imports cleanly. In dual-thread shared files, import types from `@lynx-js/lynx-runtime` and guard runtime calls to `/mts` or `/bts` behind compile-time thread constants (such as `__LEPUS__` / `__JS__`) so dead-code elimination removes cross-thread references before module-graph resolution.
 - `@lynx-js/lynx-runtime/mts`: Main-thread (Lepus) host lifecycle, data flow, single-owner hooks, peer communication, page-level flush and host services (`isDestroyed`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onRenderPage`, `onUpdateData`, `onReload`, `onGlobalPropsChanged`, `setDataProcessor`, `setPageDataGetter`, `sendMessage`, `onMessage`, `flushElementTree`, `createPipeline`, `markTiming`, `onDestroy`).
-- `@lynx-js/lynx-runtime/bts`: Background-thread (JS) page binding entrypoint (`bindPage(): BTSPageRuntime`). All BTS page capabilities (`isDestroyed`, `getId`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onUpdateData`, `onGlobalPropsChanged`, `onReload`, `onConfigChanged`, `onEnterForeground`, `onEnterBackground`, `setEventHandler`, `sendMessage`, `onMessage`, `createPipeline`, `markTiming`, `onDestroy`) are accessed on the bound `BTSPageRuntime` handle, ensuring deterministic page ownership across synchronous and asynchronous work.
+- `@lynx-js/lynx-runtime/bts`: Background-thread (JS) page binding entrypoint (`bindPage(): BTSPageRuntime`). All BTS page capabilities (`isDestroyed`, `getId`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onUpdateData`, `onGlobalPropsChanged`, `onReload`, `onConfigChanged`, `onEnterForeground`, `onEnterBackground`, `onGlobalEvent`, `setEventHandler`, `sendMessage`, `onMessage`, `createPipeline`, `markTiming`, `onDestroy`) are accessed on the bound `BTSPageRuntime` handle, ensuring deterministic page ownership across synchronous and asynchronous work.
 
 ## MTS input ownership
 
@@ -186,6 +187,26 @@ const stop = bindPage().setEventHandler((handlerName, data, componentId) => {
 - Synchronous return values and thrown exceptions propagate directly to the host;
   `false` is treated as ordinary data, and `Promise`/thenable return values are
   not awaited.
+
+## BTS host global events (`page.onGlobalEvent`)
+
+`page.onGlobalEvent<Args extends unknown[] = unknown[]>(name, listener)` subscribes
+to host/client global events delivered to this page's `GlobalEventEmitter` (such as
+client `sendGlobalEvent`, `exposure` / `disexposure`, and `keyboardstatuschanged`):
+
+- Resolves `GlobalEventEmitter` from the bound page (`app.getJSModule('GlobalEventEmitter')`
+  / `app.GlobalEventEmitter` before falling back to a page-bound `lynx.getJSModule('GlobalEventEmitter')`),
+  so asynchronous subscriptions in a shared `LynxGroup` context stay isolated from
+  peer pages. Missing `GlobalEventEmitter` fails explicitly.
+- Lazily attaches one shared host listener per event `name` on that page and
+  deduplicates identical `(name, listener)` pairs. Host `removeListener` is invoked
+  only when the last subscriber for `name` unsubscribes or when page destruction
+  begins, avoiding premature host capability teardown (such as disabling
+  `keyboardstatuschanged` detection while another subscriber on the same page
+  remains active) and in-place listener-array mutation hazards during dispatch.
+- Forwards all positional arguments emitted by the host with `undefined` `this`.
+  Does not replay events emitted before registration, and removes all listeners
+  before DSL `onDestroy` callbacks run.
 
 ## Registration lifetime
 

@@ -10,6 +10,7 @@ import { NATIVE_EVENT_DESTROY_LIFETIME } from '../src/common/protocol.js';
 import type {
   HostBTSApp,
   HostContextProxy,
+  HostGlobalEventEmitter,
   HostGlobalScope,
   HostMessageEvent,
   HostPerformanceObject,
@@ -653,6 +654,7 @@ describe('BTS runtime functions', () => {
         () => card.onConfigChanged(vi.fn()),
         () => card.onEnterForeground(vi.fn()),
         () => card.onEnterBackground(vi.fn()),
+        () => card.onGlobalEvent('evt', vi.fn()),
         () => card.onDestroy(vi.fn()),
         () => card.setEventHandler(vi.fn()),
         () => bindPage().onDestroy(vi.fn()),
@@ -1034,5 +1036,318 @@ describe('BTS host services', () => {
         pipelineID: 'minimal',
       });
     expect(services.bindPage().markTiming('minimal', 'key')).toBeUndefined();
+  });
+});
+
+function createHostEventEmitter(
+  callLynxSetModule?: (method: string, args: unknown[]) => void,
+) {
+  const events = new Map<
+    string,
+    Array<{ listener: (...args: unknown[]) => void; context?: unknown }>
+  >();
+  const addListenerSpy = vi.fn(
+    (
+      eventName: string,
+      listener: (...args: unknown[]) => void,
+      context?: unknown,
+    ) => {
+      if (eventName === 'keyboardstatuschanged') {
+        callLynxSetModule?.('switchKeyBoardDetect', [true]);
+      }
+      const list = events.get(eventName);
+      if (list) {
+        list.push({ listener, context });
+      } else {
+        events.set(eventName, [{ listener, context }]);
+      }
+    },
+  );
+  const removeListenerSpy = vi.fn(
+    (eventName: string, listener: (...args: unknown[]) => void) => {
+      const list = events.get(eventName);
+      if (list) {
+        const index = list.findIndex((item) => item.listener === listener);
+        if (index !== -1) list.splice(index, 1);
+      }
+      // Mirrors lynx-core EventEmitter's unconditional switchKeyBoardDetect(false).
+      if (eventName === 'keyboardstatuschanged') {
+        callLynxSetModule?.('switchKeyBoardDetect', [false]);
+      }
+    },
+  );
+  const emitter = {
+    addListenerSpy,
+    removeListenerSpy,
+    addListener: addListenerSpy,
+    removeListener: removeListenerSpy,
+    emit(eventName: string, data: unknown[] = []): void {
+      const list = events.get(eventName);
+      // Mirrors lynx-core EventEmitter's live Array.forEach + emitter `this`.
+      list?.forEach(({ listener, context }) => {
+        listener.apply(context ?? emitter, data);
+      });
+    },
+    trigger(eventName: string, params: unknown): void {
+      const list = events.get(eventName);
+      list?.forEach(({ listener, context }) => {
+        listener.call(context ?? emitter, params);
+      });
+    },
+    count(eventName: string): number {
+      return events.get(eventName)?.length ?? 0;
+    },
+  } satisfies HostGlobalEventEmitter & Record<string, unknown>;
+  return emitter;
+}
+
+describe('BTS global events', () => {
+  it('lazily resolves GlobalEventEmitter in page-priority order and fails explicitly when unavailable', () => {
+    const appModuleEmitter = createHostEventEmitter();
+    const appPropEmitter = createHostEventEmitter();
+    const lynxModuleEmitter = createHostEventEmitter();
+    const getAppJSModule = vi.fn((name: string) =>
+      name === 'GlobalEventEmitter' ? appModuleEmitter : undefined
+    );
+    const getLynxJSModule = vi.fn((name: string) =>
+      name === 'GlobalEventEmitter' ? lynxModuleEmitter : undefined
+    );
+    const app: HostBTSApp = {
+      getJSModule: getAppJSModule,
+      GlobalEventEmitter: appPropEmitter,
+      lynx: { getJSModule: getLynxJSModule },
+    };
+    hostGlobal.tt = app;
+
+    const page = bindPage();
+    expect(getAppJSModule).not.toHaveBeenCalled();
+    expect(getLynxJSModule).not.toHaveBeenCalled();
+
+    const seen: unknown[] = [];
+    let receiver: unknown = 'unset';
+    const stop1 = page.onGlobalEvent(
+      'host:event',
+      function(this: void, ...args) {
+        receiver = this;
+        seen.push(args);
+      },
+    );
+    expect(getAppJSModule).toHaveBeenCalledExactlyOnceWith(
+      'GlobalEventEmitter',
+    );
+    expect(appModuleEmitter.count('host:event')).toBe(1);
+    expect(appPropEmitter.count('host:event')).toBe(0);
+    expect(lynxModuleEmitter.count('host:event')).toBe(0);
+
+    appModuleEmitter.emit('host:event', ['alpha', 2, { ok: true }]);
+    appModuleEmitter.emit('host:event', []);
+    appModuleEmitter.trigger('host:event', { triggered: true });
+    expect(receiver).toBeUndefined();
+    expect(seen).toEqual([
+      ['alpha', 2, { ok: true }],
+      [],
+      [{ triggered: true }],
+    ]);
+    stop1();
+    expect(appModuleEmitter.count('host:event')).toBe(0);
+
+    // Falls back to app.GlobalEventEmitter when app.getJSModule does not return an emitter:
+    app.getJSModule = () => ({ invalid: true });
+    const propSpy = vi.fn();
+    const stop2 = page.onGlobalEvent('prop:event', propSpy);
+    appPropEmitter.emit('prop:event', [42]);
+    expect(propSpy).toHaveBeenCalledExactlyOnceWith(42);
+    stop2();
+
+    // Falls back to page-bound lynx.getJSModule('GlobalEventEmitter') when app properties are absent:
+    app.GlobalEventEmitter = null;
+    const lynxSpy = vi.fn();
+    const stop3 = page.onGlobalEvent('lynx:event', lynxSpy);
+    lynxModuleEmitter.emit('lynx:event', ['from-lynx']);
+    expect(lynxSpy).toHaveBeenCalledExactlyOnceWith('from-lynx');
+
+    // Replacing the host emitter migrates active channel registrations cleanly:
+    const replacedEmitter = createHostEventEmitter();
+    app.GlobalEventEmitter = replacedEmitter;
+    const replacedSpy = vi.fn();
+    page.onGlobalEvent('lynx:event', replacedSpy);
+    expect(lynxModuleEmitter.count('lynx:event')).toBe(0);
+    expect(replacedEmitter.count('lynx:event')).toBe(1);
+    stop3();
+    replacedEmitter.emit('lynx:event', ['migrated']);
+    expect(lynxSpy).toHaveBeenCalledTimes(1);
+    expect(replacedSpy).toHaveBeenCalledExactlyOnceWith('migrated');
+
+    app.GlobalEventEmitter = undefined;
+    delete app.lynx!.getJSModule;
+    expect(() => page.onGlobalEvent('missing', vi.fn())).toThrow(
+      /GlobalEventEmitter/,
+    );
+  });
+
+  it('shares one host listener per event name, deduplicates callbacks, and avoids premature keyboard detector teardown', () => {
+    const setModule = vi.fn();
+    const emitter = createHostEventEmitter(setModule);
+    hostGlobal.tt = { GlobalEventEmitter: emitter };
+    const page = bindPage();
+
+    const first = vi.fn();
+    const second = vi.fn();
+    const stopFirst = page.onGlobalEvent('keyboardstatuschanged', first);
+    const stopDuplicate = page.onGlobalEvent('keyboardstatuschanged', first);
+    const stopSecond = page.onGlobalEvent('keyboardstatuschanged', second);
+
+    expect(stopDuplicate).toBe(stopFirst);
+    expect(emitter.count('keyboardstatuschanged')).toBe(1);
+    expect(setModule.mock.calls).toEqual([['switchKeyBoardDetect', [true]]]);
+
+    emitter.emit('keyboardstatuschanged', ['on', 320, 320]);
+    expect(first).toHaveBeenCalledExactlyOnceWith('on', 320, 320);
+    expect(second).toHaveBeenCalledExactlyOnceWith('on', 320, 320);
+
+    // Disposing the first subscriber while `second` remains active must NOT call host removeListener:
+    stopFirst();
+    const stopReadded = page.onGlobalEvent('keyboardstatuschanged', first);
+    stopFirst();
+    stopDuplicate();
+    expect(emitter.count('keyboardstatuschanged')).toBe(1);
+    expect(setModule).toHaveBeenCalledTimes(1);
+
+    emitter.emit('keyboardstatuschanged', ['off', 0, 0]);
+    expect(first).toHaveBeenCalledTimes(2);
+    expect(second).toHaveBeenCalledTimes(2);
+
+    stopReadded();
+    expect(setModule).toHaveBeenCalledTimes(1);
+    stopSecond();
+    expect(emitter.count('keyboardstatuschanged')).toBe(0);
+    expect(setModule.mock.calls).toEqual([
+      ['switchKeyBoardDetect', [true]],
+      ['switchKeyBoardDetect', [false]],
+    ]);
+  });
+
+  it('protects dispatch snapshot mutations and notifies remaining listeners before rethrowing the first error', () => {
+    const emitter = createHostEventEmitter();
+    hostGlobal.tt = { GlobalEventEmitter: emitter };
+    const page = bindPage();
+
+    const order: string[] = [];
+    const firstFailure = new Error('first global listener failed');
+    let stopMiddle: () => void = vi.fn();
+    page.onGlobalEvent('mutate', () => {
+      order.push('first');
+      stopMiddle();
+      page.onGlobalEvent('mutate', () => {
+        order.push('late');
+      });
+      throw firstFailure;
+    });
+    stopMiddle = page.onGlobalEvent('mutate', () => {
+      order.push('middle-removed');
+    });
+    page.onGlobalEvent('mutate', () => {
+      order.push('third');
+      throw new Error('second failure');
+    });
+
+    expect(() => emitter.emit('mutate', [1])).toThrow(firstFailure);
+    expect(order).toEqual(['first', 'third']);
+
+    expect(() => emitter.emit('mutate', [2])).toThrow(firstFailure);
+    expect(order).toEqual(['first', 'third', 'first', 'third', 'late']);
+  });
+
+  it('keeps LynxGroup pages isolated across async subscriptions and unsubscribes all global events before onDestroy and app.destroy()', async () => {
+    const emitterA = createHostEventEmitter();
+    const emitterB = createHostEventEmitter();
+    const appA: HostBTSApp = {
+      nativeAppId: 'card-a',
+      getJSModule: (name) =>
+        name === 'GlobalEventEmitter' ? emitterA : undefined,
+      GlobalEventEmitter: emitterA,
+    };
+    const appB: HostBTSApp = {
+      nativeAppId: 'card-b',
+      getJSModule: (name) =>
+        name === 'GlobalEventEmitter' ? emitterB : undefined,
+      GlobalEventEmitter: emitterB,
+    };
+    hostGlobal.multiApps = { 'card-a': appA };
+    hostGlobal.currentAppId = 'card-a';
+    hostGlobal.lynx = {
+      getApp: () => hostGlobal.multiApps?.[hostGlobal.currentAppId ?? ''],
+      getJSModule: (name) => hostGlobal.lynx?.getApp?.()?.getJSModule?.(name),
+    };
+    const pageA = bindPage();
+
+    // Load card-b so hostGlobal.currentAppId and hostGlobal.lynx.getApp() now point to card-b:
+    hostGlobal.multiApps['card-b'] = appB;
+    hostGlobal.currentAppId = 'card-b';
+    const pageB = bindPage();
+
+    await Promise.resolve();
+
+    const eventsA: string[] = [];
+    const listenerB = vi.fn();
+    const stopA = pageA.onGlobalEvent<[string]>('shared:event', (value) => {
+      eventsA.push(`first:${value}`);
+      if (value === 'destroy-now') {
+        appA.callDestroyLifetimeFun?.();
+        // Simulate lynx-core app.destroy() clearing GlobalEventEmitter after callDestroyLifetimeFun:
+        appA.GlobalEventEmitter = null;
+        delete appA.getJSModule;
+      }
+    });
+    pageA.onGlobalEvent<[string]>('shared:event', (value) => {
+      eventsA.push(`second:${value}`);
+    });
+    pageB.onGlobalEvent<[string]>('shared:event', listenerB);
+
+    pageA.onDestroy(() => {
+      expect(emitterA.count('shared:event')).toBe(0);
+      emitterA.emit('shared:event', ['during-destroy']);
+      eventsA.push('onDestroy');
+    });
+
+    expect(emitterA.count('shared:event')).toBe(1);
+    expect(emitterB.count('shared:event')).toBe(1);
+
+    emitterA.emit('shared:event', ['alive']);
+    emitterB.emit('shared:event', ['for-b']);
+    expect(eventsA).toEqual(['first:alive', 'second:alive']);
+    expect(listenerB).toHaveBeenCalledExactlyOnceWith('for-b');
+
+    const capturedHostDispatch = emitterA.addListenerSpy.mock.calls[0]![1];
+    emitterA.emit('shared:event', ['destroy-now']);
+    // Second listener on pageA is cancelled immediately when destruction begins:
+    expect(eventsA).toEqual([
+      'first:alive',
+      'second:alive',
+      'first:destroy-now',
+      'onDestroy',
+    ]);
+    expect(emitterA.count('shared:event')).toBe(0);
+    expect(emitterB.count('shared:event')).toBe(1);
+
+    // Captured host listener and disposer are inert after destruction:
+    capturedHostDispatch('stale');
+    stopA();
+    stopA();
+    expect(eventsA).toHaveLength(4);
+
+    // Page B remains active and isolated; broken page without own emitter does not hijack Page B via shared host.lynx:
+    emitterB.emit('shared:event', ['still-live']);
+    expect(listenerB).toHaveBeenCalledTimes(2);
+
+    const appC: HostBTSApp = { nativeAppId: 'card-c' };
+    hostGlobal.multiApps['card-c'] = appC;
+    hostGlobal.currentAppId = 'card-c';
+    const pageC = bindPage();
+    hostGlobal.currentAppId = 'card-b';
+    expect(() => pageC.onGlobalEvent('shared:event', vi.fn())).toThrow(
+      /GlobalEventEmitter/,
+    );
+    expect(emitterB.count('shared:event')).toBe(1);
   });
 });

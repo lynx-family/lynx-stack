@@ -105,6 +105,7 @@ it('caches each card handle and reports destruction before the original host cal
       'onConfigChanged',
       'onEnterForeground',
       'onEnterBackground',
+      'onGlobalEvent',
     ] as const
   ) {
     expect(typeof card[method]).toBe('function');
@@ -253,6 +254,27 @@ it('requires typed message payloads and exposes semantic update, flush and pipel
     card.onConfigChanged<{ mode: string }>((config) => {
       expectTypeOf(config).toEqualTypeOf<Readonly<{ mode: string }>>();
     });
+    card.onGlobalEvent('untyped', (...args) => {
+      expectTypeOf(args).toEqualTypeOf<unknown[]>();
+    });
+    card.onGlobalEvent<[{ visible: boolean }]>('visibility', (payload) => {
+      expectTypeOf(payload).toEqualTypeOf<{ visible: boolean }>();
+    });
+    card.onGlobalEvent<
+      [status: 'on' | 'off', height: number, compatHeight: number]
+    >('keyboardstatuschanged', (status, height, compatHeight) => {
+      expectTypeOf(status).toEqualTypeOf<'on' | 'off'>();
+      expectTypeOf(height).toEqualTypeOf<number>();
+      expectTypeOf(compatHeight).toEqualTypeOf<number>();
+    });
+    card.onGlobalEvent(
+      'exposure',
+      (entries: Array<{ 'exposure-id': string }>) => {
+        expectTypeOf(entries).toEqualTypeOf<Array<{ 'exposure-id': string }>>();
+      },
+    );
+    // @ts-expect-error Explicit type argument must be a positional argument tuple.
+    card.onGlobalEvent<{ visible: boolean }>('visibility', () => undefined);
     expectTypeOf<MTSFlushOptions>().toMatchTypeOf<MTSFlushContext>();
   };
   expectTypeOf(checkTypes).returns.toBeVoid();
