@@ -2941,8 +2941,8 @@ importers:
   packages/testing-library/kitten-lynx:
     dependencies:
       '@lynx-js/devtool-connector':
-        specifier: 0.13.2
-        version: 0.13.2
+        specifier: 0.18.8
+        version: 0.18.8
       '@yume-chan/adb':
         specifier: catalog:adb
         version: 2.6.4
@@ -5239,10 +5239,6 @@ packages:
     resolution: {integrity: sha512-3N+Wgc/kIc4/aG5KpdPWKsC9MsNngygeyg9JS6IOayS8AQJ37xjVEzlz1U3aYzT9al0RJKL7w4poa0tGaXBv1g==}
     engines: {node: '>=18'}
     hasBin: true
-
-  '@lynx-js/devtool-connector@0.13.2':
-    resolution: {integrity: sha512-7NXFJFogGJAOQmIk4x95Ef9b9JbBJK5J5xviDF5OWmOeW+ZiSfCAALUMwRUlU9nXPMeH/rdtT3Kis0QtV4WDfA==}
-    engines: {node: '>=18.19'}
 
   '@lynx-js/devtool-connector@0.18.8':
     resolution: {integrity: sha512-LoZ9HRHLrBj8KObiJ8u/zTSvPQRtasG2gDumIJS8MFP5vrUWIHJKwqBnhvEV6hQE3+CUM/u+AtpKJwUL3cI/7A==}
@@ -14937,16 +14933,6 @@ snapshots:
   '@lynx-js/animax@0.1.0-alpha.0': {}
 
   '@lynx-js/debug-metadata@0.1.0': {}
-
-  '@lynx-js/devtool-connector@0.13.2':
-    dependencies:
-      jpeg-js: 0.4.4
-      obug: 2.1.4
-      semver: 7.8.5
-      ws: 8.21.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   '@lynx-js/devtool-connector@0.18.8':
     dependencies:
