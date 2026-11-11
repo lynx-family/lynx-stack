@@ -12,7 +12,7 @@ import { resetElementTemplateCommitState } from '../background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.js';
 import { setupBackgroundElementTemplateDocument } from '../background/document.js';
 import { installElementTemplateHydrationListener } from '../background/hydration-listener.js';
-import { BackgroundPageRootInstance } from '../background/instance.js';
+import { BackgroundPageRootInstance } from '../background/typed-instance.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { resetEventStateForRuntime } from '../prop-adapters/event.js';
 import { __root, setRoot } from '../runtime/page/root-instance.js';

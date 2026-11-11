@@ -10,8 +10,8 @@ import {
   takeRemovedSubtreesForPostDispatchTeardown,
 } from './commit-context.js';
 import { dropDelayedRunOnMainThreadReturnIds, packElementTemplateCommitUpdateEvent } from './commit-event.js';
-import type { BackgroundElementTemplateInstance } from './instance.js';
 import { clearElementTemplateRenderScope, resetElementTemplateRenderScope } from './render-scope.js';
+import type { BackgroundElementTemplateInstance } from './shadow-instance.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
 import {
   delayedRunOnMainThreadData,

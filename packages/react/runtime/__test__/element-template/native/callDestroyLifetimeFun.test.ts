@@ -20,10 +20,8 @@ import {
   installElementTemplateHydrationListener,
   resetElementTemplateHydrationListener,
 } from '../../../src/element-template/background/hydration-listener.js';
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundPageRootInstance,
-} from '../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../src/element-template/background/shadow-instance.js';
+import { BackgroundPageRootInstance } from '../../../src/element-template/background/typed-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../src/element-template/background/manager.js';
 import { root, useEffect } from '../../../src/element-template/index.js';
 import { clearRefState } from '../../../src/element-template/prop-adapters/ref.js';
