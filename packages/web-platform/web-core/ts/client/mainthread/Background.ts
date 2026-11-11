@@ -42,6 +42,7 @@ import type { LynxViewInstance } from './LynxViewInstance.js';
 import { registerInvokeUIMethodHandler } from './crossThreadHandlers/registerInvokeUIMethodHandler.js';
 import { registerNativePropsHandler } from './crossThreadHandlers/registerSetNativePropsHandler.js';
 import { registerGetPathInfoHandler } from './crossThreadHandlers/registerGetPathInfoHandler.js';
+import { registerGetFieldsHandler } from './crossThreadHandlers/registerGetFieldsHandler.js';
 import { registerSelectComponentHandler } from './crossThreadHandlers/registerSelectComponentHandler.js';
 import { registerTriggerComponentEventHandler } from './crossThreadHandlers/registerTriggerComponentEventHandler.js';
 import { registerTriggerElementMethodEndpointHandler } from './crossThreadHandlers/registerTriggerElementMethodEndpointHandler.js';
@@ -292,6 +293,7 @@ export class BackgroundThread implements AsyncDisposable {
     );
     registerReloadHandler(this.#rpc, this.#lynxViewInstance);
     registerGetPathInfoHandler(this.#rpc, this.#lynxViewInstance);
+    registerGetFieldsHandler(this.#rpc, this.#lynxViewInstance);
     registerInvokeUIMethodHandler(this.#rpc, this.#lynxViewInstance);
     registerNapiModulesCallHandler(this.#rpc, this.#lynxViewInstance);
     registerNativeModulesCallHandler(this.#rpc, this.#lynxViewInstance);
