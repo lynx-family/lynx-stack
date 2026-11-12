@@ -15,7 +15,8 @@
       "./assets/lynx-logo.png"
     ],
     null,
-    -1
+    -1,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -25,7 +26,8 @@
       " src/App.tsx "
     ],
     [],
-    -2
+    -2,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -58,7 +60,8 @@
         }
       ]
     ],
-    -3
+    -3,
+    null
   ],
   [
     "__InsertNodeToElementTemplate",

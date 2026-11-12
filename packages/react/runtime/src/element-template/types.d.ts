@@ -7,12 +7,9 @@ import type {
   RuntimeChildSlots,
   RuntimeOptions,
   RuntimeTypedElementAttributes,
-  RuntimeTypedListOptions,
   SerializableValue,
   SerializedEtNode,
   SerializedRuntimeOptions,
-  SerializedTypedListOptions,
-  UpdateTypedListItemCommand,
 } from './protocol/types.js';
 
 export {};
@@ -52,19 +49,11 @@ declare global {
   ): ElementTemplateHandle;
 
   function __CreateTypedElementTemplate(
-    type: 'list',
-    attributes: RuntimeTypedElementAttributes | null | undefined,
-    childSlots: RuntimeChildSlots | null | undefined,
-    uid: number,
-    options?: RuntimeTypedListOptions | null,
-  ): ElementTemplateHandle;
-
-  function __CreateTypedElementTemplate(
     type: string,
     attributes: RuntimeTypedElementAttributes | null | undefined,
     childSlots: RuntimeChildSlots | null | undefined,
     uid: number,
-    options?: RuntimeOptions | RuntimeTypedListOptions | null,
+    options?: RuntimeOptions | null,
   ): ElementTemplateHandle;
 
   function __SetAttributeOfElementTemplate(
@@ -126,13 +115,4 @@ type SerializedEtNodeRejectStringUid = AssertFalse<
 >;
 type SerializedRuntimeOptionsRejectEtNode = AssertFalse<
   IsAssignable<SerializedEtNode, SerializedRuntimeOptions[string]>
->;
-type RuntimeTypedListOptionsAcceptElementTemplateHandle = AssertTrue<
-  IsAssignable<ElementTemplateHandle, RuntimeTypedListOptions['listChildren'][number]>
->;
-type SerializedTypedListOptionsAcceptEtNode = AssertTrue<
-  IsAssignable<SerializedEtNode, SerializedTypedListOptions['listChildren'][number]>
->;
-type TypedListOptionsCommandAcceptItem = AssertTrue<
-  IsAssignable<UpdateTypedListItemCommand, TypedListOptionsCommand['listChildren'][number]>
 >;

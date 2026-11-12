@@ -42,6 +42,7 @@ interface ParsedCreateTemplateOp {
   bundleUrl: string | null | undefined;
   attributeSlots: SerializableValue[] | null | undefined;
   childSlots: number[][] | null | undefined;
+  options: Record<string, SerializableValue> | null;
 }
 
 interface ParsedInsertNodeOp {
@@ -214,6 +215,7 @@ function parseUpdateOps(stream: ElementTemplateUpdateCommandStream): ParsedOp[] 
           bundleUrl: stream[i++] as string | null | undefined,
           attributeSlots: stream[i++] as SerializableValue[] | null | undefined,
           childSlots: stream[i++] as number[][] | null | undefined,
+          options: stream[i++] as Record<string, SerializableValue> | null,
         });
         break;
       }

@@ -315,6 +315,7 @@ describe('Compiled authored ET page fixtures', () => {
         bundleUrl: null,
         attributeSlots: [],
         childSlots: [],
+        options: null,
       },
       {
         op: 'insertNode',
@@ -368,6 +369,7 @@ describe('Compiled authored ET page fixtures', () => {
         bundleUrl: null,
         attributeSlots: [],
         childSlots: [],
+        options: null,
       },
       {
         op: 'insertNode',

@@ -336,20 +336,9 @@ interface SerializedTypedNodeForMock extends SerializedEtNodeBaseForMock {
   attributes?: SerializableValueForMock | null;
 }
 
-interface SerializedTypedListOptionsForMock {
-  listChildren: SerializedEtNodeForMock[];
-}
-
-interface SerializedTypedListNodeForMock extends Omit<SerializedEtNodeBaseForMock, 'options'> {
-  tag: 'list';
-  attributes?: SerializableValueForMock | null;
-  options?: SerializedTypedListOptionsForMock | null;
-}
-
 type SerializedEtNodeForMock =
   | SerializedCompiledNodeForMock
-  | SerializedTypedNodeForMock
-  | SerializedTypedListNodeForMock;
+  | SerializedTypedNodeForMock;
 
 function getSlotId(node: Record<string, unknown>): number | undefined {
   const attrs = node['attributes'];
@@ -478,40 +467,6 @@ function serializeRuntimeOptions(
   return serialized;
 }
 
-function serializeTypedListOptions(
-  value: unknown,
-): SerializedTypedListOptionsForMock | undefined {
-  if (!isRecord(value) || isTemplateInstanceForSerialization(value)) {
-    return undefined;
-  }
-  const listChildren = value['listChildren'];
-  if (!isUnknownArray(listChildren)) {
-    return undefined;
-  }
-
-  const genericOptions: Record<string, SerializableValueForMock> = {};
-  for (const [key, nestedValue] of Object.entries(value)) {
-    if (key === 'listChildren') {
-      continue;
-    }
-    const nextValue = serializePlainSerializableValue(nestedValue);
-    if (nextValue !== undefined) {
-      genericOptions[key] = nextValue;
-    }
-  }
-
-  const serializedChildren: SerializedEtNodeForMock[] = [];
-  for (const child of listChildren) {
-    if (isTemplateInstanceForSerialization(child)) {
-      serializedChildren.push(serializeTemplateNode(child));
-    }
-  }
-  return {
-    ...genericOptions,
-    listChildren: serializedChildren,
-  };
-}
-
 function normalizeAttributeSlots(value: unknown): SerializableValueForMock[] {
   return isUnknownArray(value)
     ? value.map((slotValue) => serializePlainSerializableValue(slotValue) ?? null)
@@ -603,17 +558,6 @@ function serializeTemplateNode(
     const childSlots = isUnknownArray(root['__childSlots'])
       ? serializeChildSlotsFromSlots(root['__childSlots'])
       : null;
-    if (typedElementType === 'list') {
-      const options = serializeTypedListOptions(root['__options']);
-      return {
-        tag: 'list',
-        attributes: attributeSlots[0] ?? null,
-        childSlots,
-        uid: handleId,
-        ...(options ? { options } : {}),
-      };
-    }
-
     const options = serializeRuntimeOptions(root['__options']);
     return {
       tag: typedElementType,

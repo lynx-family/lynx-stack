@@ -38,18 +38,6 @@ export type FormattedElementTemplateUpdateCommand =
     value: unknown;
   }
   | {
-    op: 'insertTypedListItem';
-    targetId: number;
-    item: unknown;
-    beforeId: number;
-  }
-  | {
-    op: 'removeTypedListItem';
-    targetId: number;
-    itemId: number;
-    removedSubtreeHandleIds: number[];
-  }
-  | {
     op: 'updateTypedListItem';
     targetId: number;
     item: unknown;

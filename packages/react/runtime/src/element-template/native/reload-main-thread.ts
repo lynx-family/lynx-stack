@@ -118,8 +118,4 @@ function collectSerializedSubtreeHandleIds(
       collectSerializedSubtreeHandleIds(child, handleIds);
     }
   }
-  const listChildren = (node as { options?: { listChildren?: SerializedEtNode[] } }).options?.listChildren;
-  for (const child of listChildren ?? []) {
-    collectSerializedSubtreeHandleIds(child, handleIds);
-  }
 }

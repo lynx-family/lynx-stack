@@ -52,15 +52,7 @@ export interface UpdateTypedListItemCommand extends ElementTemplateHandleRefComm
 
 export type RuntimeOptionsCommand = Record<string, SerializableValue>;
 
-export interface RuntimeTypedListOptions {
-  listChildren: ElementTemplateHandle[];
-}
-
 export type SerializedRuntimeOptions = Record<string, SerializableValue>;
-
-export interface SerializedTypedListOptions {
-  listChildren: SerializedEtNode[];
-}
 
 export interface SerializedEtNodeBase {
   attributeSlots?: SerializableValue[] | null;

@@ -7,9 +7,8 @@ import { Suspense } from 'preact/compat';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  createElementTemplateListState,
   destroyAllElementTemplateListStates,
-  flushInitialElementTemplateListUpdates,
+  updateElementTemplateListAttributes,
 } from '../../../../src/element-template/runtime/list/list.js';
 import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page.js';
 import { createElementTemplatePage, setupPage } from '../../../../src/element-template/runtime/page/page.js';
@@ -163,18 +162,16 @@ describe('direct renderer Suspense', () => {
     }));
 
     const abandonedUid = __SerializeElementTemplate(createItem.mock.results[0]!.value).uid;
-    expect(() => createElementTemplateListState([abandonedUid])).toThrow('non-list-item root');
+    expect(elementTemplateRegistry.has(abandonedUid)).toBe(false);
     expect(createList).toHaveBeenCalledTimes(1);
-    const children = createList.mock.calls[0]![4]!.listChildren!;
+    const children = createList.mock.calls[0]![2]![0]!;
     expect(children.map(ref => __SerializeElementTemplate(ref).attributeSlots)).toEqual([['fallback']]);
-    const updates = flushInitialElementTemplateListUpdates();
-    expect(updates).toHaveLength(1);
-    expect(updates[0]!.attributes['update-list-info']).toMatchObject({
-      insertAction: [{ 'item-key': 'fallback' }],
+    expect(__SerializeElementTemplate(children[0]!).options).toEqual({
+      __listItemPlatformInfo: { 'item-key': 'fallback' },
     });
   });
 
-  it('discards pending list items when a later child fails before its list is created', () => {
+  it('releases list items when a later child fails before its list is created', () => {
     function Failure(): never {
       throw new Error('list child failed');
     }
@@ -192,21 +189,21 @@ describe('direct renderer Suspense', () => {
     ).toThrow('list child failed');
 
     const abandonedUid = __SerializeElementTemplate(createItem.mock.results[0]!.value).uid;
-    expect(() => createElementTemplateListState([abandonedUid])).toThrow('non-list-item root');
-    expect(flushInitialElementTemplateListUpdates()).toEqual([]);
+    expect(elementTemplateRegistry.has(abandonedUid)).toBe(false);
   });
 
-  it('does not flush a completed list discarded by Suspense', () => {
+  it('releases a completed list discarded by Suspense', () => {
     const createList = vi.spyOn(globalThis, '__CreateTypedElementTemplate');
     renderToElementTemplate(
       h(Suspense, { fallback: 'loading' }, h('list', { attributes: { id: 'abandoned-list' } }), h(Pending, null)),
     );
 
     expect(createList).toHaveBeenCalledTimes(1);
-    expect(flushInitialElementTemplateListUpdates()).toEqual([]);
+    expect(elementTemplateRegistry.has(createList.mock.calls[0]![3])).toBe(false);
+    expect(updateElementTemplateListAttributes(createList.mock.calls[0]![3], {})).toBeNull();
   });
 
-  it('does not flush a completed list after an unhandled render failure', () => {
+  it('releases a completed list after an unhandled render failure', () => {
     function Failure(): never {
       throw new Error('later sibling failed');
     }
@@ -218,9 +215,10 @@ describe('direct renderer Suspense', () => {
     renderMainThread();
 
     expect(createList).toHaveBeenCalledTimes(1);
+    expect(elementTemplateRegistry.has(createList.mock.calls[0]![3])).toBe(false);
+    expect(updateElementTemplateListAttributes(createList.mock.calls[0]![3], {})).toBeNull();
     expect(reportError).toHaveBeenCalledWith(expect.objectContaining({ message: 'later sibling failed' }));
     expect(setAttribute.mock.calls.some(call => call[0] === createList.mock.results[0]!.value)).toBe(false);
-    expect(flushInitialElementTemplateListUpdates()).toEqual([]);
   });
 
   it('replaces abandoned authored page metadata with the fallback page', () => {
@@ -264,6 +262,8 @@ describe('direct renderer Suspense', () => {
       ]);
       const previousUid = __SerializeElementTemplate(previous.rootRefs[0]!).uid;
       const liveListUid = __SerializeElementTemplate(previous.rootRefs[1]!).uid;
+      const liveListAttributes = updateElementTemplateListAttributes(liveListUid, { id: 'live-list' });
+      expect(liveListAttributes).toMatchObject({ id: 'live-list' });
       expect(getMainThreadDynamicAttrState(previousUid, 1)).toMatchObject({ kind: 'mt-ref' });
       expect(getMainThreadDynamicAttrState(previousUid, 2)).toMatchObject({ kind: 'mt-event' });
       const createNative = globalThis.__CreateElementTemplate;
@@ -319,14 +319,15 @@ describe('direct renderer Suspense', () => {
         ];
         for (const uid of abandonedUids) {
           expect(elementTemplateRegistry.has(uid)).toBe(false);
+          expect(updateElementTemplateListAttributes(uid, {})).toBeNull();
           expect(getMainThreadDynamicAttrState(uid, 1)).toBeUndefined();
           expect(getMainThreadDynamicAttrState(uid, 2)).toBeUndefined();
         }
         expect(elementTemplateRegistry.get(previousUid)).toBe(previous.rootRefs[0]);
         expect(elementTemplateRegistry.get(liveListUid)).toBe(previous.rootRefs[1]);
+        expect(updateElementTemplateListAttributes(liveListUid, { id: 'live-list' })).toEqual(liveListAttributes);
         expect(getMainThreadDynamicAttrState(previousUid, 1)).toMatchObject({ kind: 'mt-ref' });
         expect(getMainThreadDynamicAttrState(previousUid, 2)).toMatchObject({ kind: 'mt-event' });
-        expect(flushInitialElementTemplateListUpdates().map(update => update.uid)).toEqual([liveListUid]);
         const retry = renderToElementTemplate(leaf('retry'));
         expect(__SerializeElementTemplate(retry.rootRefs[0]!).uid).toBeLessThan(Math.min(...abandonedUids));
       } finally {
@@ -376,6 +377,6 @@ describe('direct renderer Suspense', () => {
       }
     }
     expect(new Set(create.mock.calls.map(call => call[4])).size).toBe(create.mock.calls.length);
-    expect(flushInitialElementTemplateListUpdates().map(update => update.uid)).toEqual([liveIds[1]]);
+    expect(elementTemplateRegistry.get(liveIds[1]!)).toBe(result.rootRefs[1]);
   });
 });

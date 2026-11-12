@@ -13,7 +13,8 @@
     "lazy-entry",
     null,
     null,
-    -1
+    -1,
+    null
   ],
   [
     "__InsertNodeToElementTemplate",

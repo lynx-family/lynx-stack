@@ -14,6 +14,7 @@ Array [
     null,
     null,
     -1,
+    undefined,
   ],
   Array [
     "__CreateElementTemplate",
@@ -22,6 +23,7 @@ Array [
     null,
     null,
     -2,
+    undefined,
   ],
   Array [
     "__CreateElementTemplate",
@@ -45,6 +47,7 @@ Array [
       ],
     ],
     -3,
+    undefined,
   ],
   Array [
     "__InsertNodeToElementTemplate",

@@ -6,6 +6,7 @@ Object {
     null,
     Array [],
     Array [],
+    null,
     3,
     -1,
     0,

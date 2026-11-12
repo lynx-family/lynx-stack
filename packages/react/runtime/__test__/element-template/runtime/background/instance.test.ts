@@ -89,6 +89,7 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       0,
       0,
@@ -217,7 +218,7 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(globalCommitContext.ops).toEqual([ElementTemplateUpdateOps.setAttribute, -10, 0, 'changed']);
   });
 
-  it('emits exact list create as typed holder with logical children in command options', () => {
+  it('emits exact list create with logical child slots and ref candidates', () => {
     const list = new BackgroundListElementTemplateInstance();
     const item = new BackgroundElementTemplateInstance('_et_list_item');
     list.setAttribute('attributes', { id: 'feed' });
@@ -231,16 +232,22 @@ describe('BackgroundElementTemplateInstance', () => {
       list.instanceId,
       'list',
       { id: 'feed' },
+      [[item.instanceId]],
       null,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
       {
-        listChildren: [{
-          __etHandleRef: item.instanceId,
-          type: '_et_list_item',
-          platformInfo: {},
-          subtreeHandleIds: [],
-        }],
+        __etHandleRef: item.instanceId,
+        type: '_et_list_item',
+        platformInfo: null,
+        subtreeHandleIds: [],
       },
     ]);
+
+    globalCommitContext.ops = [];
+    list.emitCreate();
+
+    expect(globalCommitContext.ops).toEqual([]);
   });
 
   it('owns empty attributes in the generic typed attribute slot', () => {
@@ -351,7 +358,7 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
-  it('emits logical list insertions as incremental typed list item patches', () => {
+  it('emits logical list insertions through the shared child slot commands', () => {
     const list = new BackgroundListElementTemplateInstance();
     const oldListId = list.instanceId;
     backgroundElementTemplateInstanceManager.updateId(oldListId, -10);
@@ -376,15 +383,13 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [],
       [],
-      ElementTemplateUpdateOps.insertTypedListItem,
+      { __listItemPlatformInfo: { 'item-key': 'b' } },
+      ElementTemplateUpdateOps.insertNode,
       -10,
-      {
-        __etHandleRef: second.instanceId,
-        type: '_et_item_b',
-        platformInfo: { 'item-key': 'b' },
-        subtreeHandleIds: [],
-      },
+      0,
+      second.instanceId,
       -11,
+      null,
     ]);
   });
 
@@ -411,7 +416,7 @@ describe('BackgroundElementTemplateInstance', () => {
         __etHandleRef: -11,
         type: '_et_item_a',
         platformInfo: { 'item-key': 'a', 'estimated-height': 42 },
-        subtreeHandleIds: [],
+        subtreeHandleIds: null,
       },
     ]);
   });
@@ -438,6 +443,7 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       -11,
       0,
@@ -514,8 +520,9 @@ describe('BackgroundElementTemplateInstance', () => {
     flushPendingRefs();
 
     expect(globalCommitContext.ops).toEqual([
-      ElementTemplateUpdateOps.removeTypedListItem,
+      ElementTemplateUpdateOps.removeNode,
       -10,
+      0,
       -11,
       [-11],
     ]);
@@ -559,19 +566,17 @@ describe('BackgroundElementTemplateInstance', () => {
     newList.appendChild(item);
 
     expect(globalCommitContext.ops).toEqual([
-      ElementTemplateUpdateOps.removeTypedListItem,
+      ElementTemplateUpdateOps.removeNode,
       -10,
+      0,
       -11,
       [],
-      ElementTemplateUpdateOps.insertTypedListItem,
+      ElementTemplateUpdateOps.insertNode,
       -20,
-      {
-        __etHandleRef: -11,
-        type: '_et_item_a',
-        platformInfo: { 'item-key': 'a' },
-        subtreeHandleIds: [],
-      },
       0,
+      -11,
+      0,
+      null,
     ]);
   });
 
@@ -605,7 +610,7 @@ describe('BackgroundElementTemplateInstance', () => {
       {
         __etHandleRef: item.instanceId,
         type: '_et_item',
-        platformInfo: {},
+        platformInfo: null,
         subtreeHandleIds: [child.instanceId],
       },
     ]);
@@ -637,13 +642,13 @@ describe('BackgroundElementTemplateInstance', () => {
       {
         __etHandleRef: item.instanceId,
         type: '_et_item',
-        platformInfo: {},
+        platformInfo: null,
         subtreeHandleIds: [],
       },
     ]);
   });
 
-  it('emits incremental list mutations instead of full children snapshots during one render', () => {
+  it('emits structural and platform info updates for list mutations during one render', () => {
     const list = new BackgroundListElementTemplateInstance();
     backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
     list.markMaterializedByHydration();
@@ -670,17 +675,16 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [],
       [],
-      ElementTemplateUpdateOps.insertTypedListItem,
+      null,
+      ElementTemplateUpdateOps.insertNode,
       -10,
-      {
-        __etHandleRef: third.instanceId,
-        type: '_et_item_c',
-        platformInfo: {},
-        subtreeHandleIds: [],
-      },
+      0,
+      third.instanceId,
       -12,
-      ElementTemplateUpdateOps.removeTypedListItem,
+      null,
+      ElementTemplateUpdateOps.removeNode,
       -10,
+      0,
       -11,
       [-11],
       ElementTemplateUpdateOps.updateTypedListItem,
@@ -689,7 +693,7 @@ describe('BackgroundElementTemplateInstance', () => {
         __etHandleRef: -12,
         type: '_et_item_b',
         platformInfo: { 'item-key': 'b', 'full-span': true },
-        subtreeHandleIds: [],
+        subtreeHandleIds: null,
       },
     ]);
   });
@@ -784,17 +788,6 @@ describe('BackgroundElementTemplateInstance', () => {
       expect(parent.lastChild).toBe(child);
     });
 
-    it('supports silent append on regular parents', () => {
-      const parent = new BackgroundElementTemplateInstance('view');
-      const child = new BackgroundElementTemplateInstance('text');
-      globalCommitContext.ops = [];
-
-      parent.insertBefore(child, null, true);
-
-      expect(parent.firstChild).toBe(child);
-      expect(globalCommitContext.ops).toEqual([]);
-    });
-
     it('emits create with initialized attrs before inserting a post-hydration template', () => {
       const parent = new BackgroundElementTemplateInstance('view');
       parent.emitCreate();
@@ -816,6 +809,7 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         ['logo.png'],
         [],
+        null,
         3,
         parent.instanceId,
         0,
@@ -846,6 +840,7 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         [`${child.instanceId}-0`],
         [],
+        null,
         3,
         parent.instanceId,
         0,
@@ -870,7 +865,7 @@ describe('BackgroundElementTemplateInstance', () => {
       child.appendChild(ordinaryDescendant);
       parent.appendChild(child);
 
-      expect(globalCommitContext.ops[12]).toBe(ElementTemplateUpdateOps.insertNode);
+      expect(globalCommitContext.ops[14]).toBe(ElementTemplateUpdateOps.insertNode);
       expect(globalCommitContext.ops.at(-1)).toEqual([child.instanceId]);
     });
 
@@ -957,32 +952,14 @@ describe('BackgroundElementTemplateInstance', () => {
       expect(parent.childNodes).toEqual([owner, anchor]);
       expect(owner.firstChild).toBe(nested);
       expect(nested.firstChild).toBe(leaf);
-      expect(globalCommitContext.ops).toEqual(
-        parentKind === 'list'
-          ? [
-            ElementTemplateUpdateOps.removeTypedListItem,
-            parent.instanceId,
-            owner.instanceId,
-            [],
-            ElementTemplateUpdateOps.insertTypedListItem,
-            parent.instanceId,
-            {
-              __etHandleRef: owner.instanceId,
-              type: '_et_owner',
-              platformInfo: {},
-              subtreeHandleIds: [leaf.instanceId],
-            },
-            anchor.instanceId,
-          ]
-          : [
-            ElementTemplateUpdateOps.insertNode,
-            parent.instanceId,
-            0,
-            owner.instanceId,
-            anchor.instanceId,
-            [leaf.instanceId],
-          ],
-      );
+      expect(globalCommitContext.ops).toEqual([
+        ElementTemplateUpdateOps.insertNode,
+        parent.instanceId,
+        0,
+        owner.instanceId,
+        anchor.instanceId,
+        parentKind === 'list' ? null : [leaf.instanceId],
+      ]);
     });
 
     it('creates new descendants once when moving their materialized owner', () => {
@@ -1017,12 +994,14 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         [`${leaf.instanceId}-0`],
         [],
+        null,
         ElementTemplateUpdateOps.createTemplate,
         nested.instanceId,
         '_et_nested',
         null,
         [],
         [[leaf.instanceId]],
+        null,
         ElementTemplateUpdateOps.insertNode,
         owner.instanceId,
         0,
@@ -1067,12 +1046,14 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         ['nested'],
         [],
+        null,
         1,
         owner.instanceId,
         'view',
         null,
         [],
         [[nested.instanceId]],
+        null,
         3,
         parent.instanceId,
         0,
@@ -1096,14 +1077,14 @@ describe('BackgroundElementTemplateInstance', () => {
 
       parent.appendChild(child);
 
-      const serializedSlots = globalCommitContext.ops[11] as unknown[];
-      expect(globalCommitContext.ops[6]).toBe(1);
-      expect(globalCommitContext.ops[7]).toBe(child.instanceId);
+      const serializedSlots = globalCommitContext.ops[12] as unknown[];
+      expect(globalCommitContext.ops[7]).toBe(1);
+      expect(globalCommitContext.ops[8]).toBe(child.instanceId);
       expect(serializedSlots).toHaveLength(2);
       expect(0 in serializedSlots).toBe(false);
       expect(1 in serializedSlots).toBe(true);
       expect(serializedSlots[1]).toEqual([grandchild.instanceId]);
-      expect(globalCommitContext.ops.slice(12)).toEqual([
+      expect(globalCommitContext.ops.slice(14)).toEqual([
         3,
         parent.instanceId,
         0,
@@ -1135,24 +1116,27 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         [],
         [],
+        null,
         ElementTemplateUpdateOps.createTemplate,
         item.instanceId,
         '_et_item',
         null,
         [],
         [[nested.instanceId]],
+        null,
         ElementTemplateUpdateOps.createTypedElement,
         list.instanceId,
         'list',
         null,
+        [[item.instanceId]],
         null,
+        ElementTemplateUpdateOps.updateTypedListItem,
+        list.instanceId,
         {
-          listChildren: [{
-            __etHandleRef: item.instanceId,
-            type: '_et_item',
-            platformInfo: {},
-            subtreeHandleIds: [],
-          }],
+          __etHandleRef: item.instanceId,
+          type: '_et_item',
+          platformInfo: null,
+          subtreeHandleIds: [],
         },
         ElementTemplateUpdateOps.insertNode,
         parent.instanceId,
@@ -1270,6 +1254,7 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         [],
         [],
+        null,
         ElementTemplateUpdateOps.insertNode,
         parent.instanceId,
         1,
@@ -1302,6 +1287,7 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         [],
         [],
+        null,
         ElementTemplateUpdateOps.insertNode,
         parent.instanceId,
         1,
@@ -1385,12 +1371,14 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         ['inside'],
         [],
+        null,
         ElementTemplateUpdateOps.createTemplate,
         child.instanceId,
         'view',
         null,
         [],
         [[grandchild.instanceId]],
+        null,
         ElementTemplateUpdateOps.insertNode,
         parent.instanceId,
         0,
@@ -1425,12 +1413,14 @@ describe('BackgroundElementTemplateInstance', () => {
         null,
         ['inside'],
         [],
+        null,
         ElementTemplateUpdateOps.createTemplate,
         -2,
         'view',
         null,
         [],
         [[-3]],
+        null,
         ElementTemplateUpdateOps.insertNode,
         parent.instanceId,
         0,
@@ -1802,7 +1792,7 @@ describe('BackgroundElementTemplateInstance', () => {
     expect(ref.current).toBeNull();
   });
 
-  it('reports error for emitCreate with illegal handleId 0 in dev', () => {
+  it('reports errors for compiled and List emitCreate with illegal handleId 0 in dev', () => {
     const lynxObj = globalThis.lynx as typeof lynx & { reportError?: (error: Error) => void };
     const oldReportError = lynxObj.reportError;
     const reportErrorSpy = vi.fn();
@@ -1813,6 +1803,16 @@ describe('BackgroundElementTemplateInstance', () => {
     instance.emitCreate();
 
     expect(reportErrorSpy).toHaveBeenCalledTimes(1);
+
+    const list = new BackgroundListElementTemplateInstance();
+    list.appendChild(new BackgroundElementTemplateInstance('_et_list_item'));
+    list.instanceId = 0;
+    globalCommitContext.ops = [];
+
+    list.emitCreate();
+
+    expect(reportErrorSpy).toHaveBeenCalledTimes(2);
+    expect(globalCommitContext.ops).toEqual([]);
 
     lynxObj.reportError = oldReportError;
   });
@@ -1843,6 +1843,7 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [null],
       [],
+      null,
     ]);
   });
 
@@ -2181,6 +2182,7 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [],
       [],
+      null,
     ]);
   });
 
@@ -2198,6 +2200,7 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       [],
       [],
+      null,
     ]);
   });
 
@@ -2232,6 +2235,7 @@ describe('BackgroundElementTemplateInstance', () => {
       null,
       ['deferred'],
       [],
+      null,
       3,
       parent.instanceId,
       0,
@@ -2377,6 +2381,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
       null,
       nextSlots,
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -2525,6 +2530,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
       null,
       [eventValue],
       [],
+      null,
     ]);
   });
 
@@ -2653,6 +2659,7 @@ describe('BackgroundElementTemplateInstance Shadow State', () => {
       null,
       [preparedSpread],
       [],
+      null,
     ]);
   });
 
@@ -2718,14 +2725,14 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
     expect(root.childSlots[3]).toEqual([text]);
   });
 
-  it('should detach a moved child from the old slot shadow state when silent reparenting', () => {
+  it('should detach a moved child from the old slot shadow state when reparenting', () => {
     const root = new BackgroundElementTemplateInstance('element-template-view');
     const text = createTextNode('move');
 
     root.appendChild(text);
 
     text.__slotIndex = 1;
-    root.insertBefore(text, null, true);
+    root.insertBefore(text, null);
 
     expect(root.childSlots[0]).toBeUndefined();
     expect(root.childSlots[1]).toEqual([text]);
@@ -2739,7 +2746,7 @@ describe('BackgroundElementTemplateInstance slot-index children', () => {
 
     rootA.appendChild(text);
 
-    rootB.insertBefore(text, null, true);
+    rootB.insertBefore(text, null);
 
     expect(rootA.childSlots).toEqual([]);
     expect(rootB.firstChild).toBe(text);
