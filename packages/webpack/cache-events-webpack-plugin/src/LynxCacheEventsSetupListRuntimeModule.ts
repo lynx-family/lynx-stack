@@ -223,7 +223,16 @@ export function createLynxCacheEventsSetupListRuntimeModule(
         ];
 
       return `// lynx cache events setup list
-${LynxRuntimeGlobals.lynxCacheEvents} = {};
+${
+        this.isMainThread
+          ? `// Establish compatibility globals before async entry dependencies run.
+globalThis.SystemInfo = lynx.SystemInfo ?? {};
+if (!('NativeModules' in globalThis)) {
+  globalThis.NativeModules = undefined;
+}
+`
+          : ''
+      }${LynxRuntimeGlobals.lynxCacheEvents} = {};
 ${LynxRuntimeGlobals.lynxCacheEventsSetupList} = ${
         Template.asString(
           '['
