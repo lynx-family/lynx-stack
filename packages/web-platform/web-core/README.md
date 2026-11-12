@@ -92,6 +92,35 @@ moved to another shadow-root host. Changing the hook does not reload images that
 are already connected. Without a hook, URLs are used unchanged. This hook does
 not resolve CSS URLs or bundle URLs.
 
+### Expose main-thread modules
+
+Set `mainThreadModules` before loading the view to provide synchronous host
+methods to main-thread scripts:
+
+```typescript
+import type { LynxViewElement } from '@lynx-js/web-core/client';
+import '@lynx-js/web-core/client';
+
+const view = document.createElement('lynx-view') as LynxViewElement;
+view.mainThreadModules = {
+  DeviceInfo: {
+    invoke(method) {
+      if (method === 'getPlatform') return 'web';
+      throw new Error(`Unknown method: ${method}`);
+    },
+  },
+};
+view.url = 'https://example.com/main.web.bundle';
+document.body.append(view);
+```
+
+Main-thread code can call `lynx.module('DeviceInfo')?.invoke('getPlatform')`.
+Modules belong to each view, and each lookup reads the current map. Missing
+modules return `undefined`, as do module lookups during server rendering.
+These objects run on the main thread; background-thread `NativeModules` still
+use `nativeModulesMap`. The host controls method access, including any read-only
+restrictions, and synchronization of shared data between threads.
+
 ## Document
 
 See our website for more information.
