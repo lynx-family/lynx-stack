@@ -257,51 +257,6 @@ export function updateElementTemplateListAttributes(
   return composeElementTemplateListAttributes(attributes, state, updateListInfo);
 }
 
-export function insertElementTemplateListItem(
-  uid: number,
-  item: ETListUpdateItem,
-  beforeUid: number,
-): void {
-  const state = listStateByUid.get(uid)!;
-  const pendingUpdate = markPendingListUpdate(uid, state);
-  const previousIndex = pendingUpdate.beforeIndexByUid.get(item.uid);
-  const previousRecord = previousIndex === undefined ? undefined : pendingUpdate.beforeItems[previousIndex];
-
-  const needsAttachMove = previousRecord?.attached === true;
-  const record: ETListItemRecord = {
-    uid: item.uid,
-    ref: item.ref,
-    templateKey: item.templateKey,
-    platformInfo: item.platformInfo,
-    attached: previousRecord?.attached ?? false,
-    needsAttachMove,
-    skipNextEnqueue: previousRecord?.skipNextEnqueue ?? false,
-  };
-  if (needsAttachMove) {
-    state.hasAttachedMoves = true;
-  }
-  if (beforeUid === 0) {
-    state.items.push(record);
-  } else {
-    state.items.splice(findListItemIndexByUid(state.items, beforeUid), 0, record);
-  }
-  pendingUpdate.insertUids.add(item.uid);
-}
-
-export function removeElementTemplateListItem(
-  uid: number,
-  itemUid: number,
-  removedSubtreeHandleIds: readonly number[],
-): void {
-  const state = listStateByUid.get(uid)!;
-  const pendingUpdate = markPendingListUpdate(uid, state);
-  state.items.splice(findListItemIndexByUid(state.items, itemUid), 1);
-  pendingUpdate.removeUids.add(itemUid);
-  if (removedSubtreeHandleIds.length > 0) {
-    (pendingUpdate.removedSubtreeHandleIds ??= []).push(...removedSubtreeHandleIds);
-  }
-}
-
 export function updateElementTemplateListItem(
   uid: number,
   item: ETListUpdateItem,

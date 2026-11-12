@@ -54,7 +54,7 @@ export function createRenderedHost(
   host?: ElementTemplateHost,
 ): ElementTemplateHandle {
   if (type === TYPED_LIST_HOST_TYPE) {
-    const listChildren = childSlots?.[0] ?? [];
+    // TODO: Support main-thread events on List.
     const preparedTypedAttributes = prepareTypedElementAttributes(
       handleId,
       attributes as RuntimeTypedElementAttributes | undefined,
@@ -71,10 +71,12 @@ export function createRenderedHost(
       handleId,
       TYPED_LIST_HOST_TYPE,
       attrsWithCallbacks,
-      null,
-      { listChildren },
+      childSlots ?? null,
+      {},
     );
-    registerElementTemplateListState(handleId, listState, true, elementRef);
+    // Native records initial items from childSlots, so skip the initial JS
+    // insert flush.
+    registerElementTemplateListState(handleId, listState, false, elementRef);
     return elementRef;
   }
 
@@ -106,6 +108,11 @@ export function createRenderedHost(
     preparedAttributeSlots,
     childSlots ?? null,
     !plain,
+    // Pass List item platform info through native ET options during initial
+    // rendering.
+    listItemPlatformInfo === undefined
+      ? undefined
+      : { __listItemPlatformInfo: listItemPlatformInfo },
   );
   if (hasMainThreadRef) {
     materializationHandles.push({
