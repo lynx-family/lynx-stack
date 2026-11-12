@@ -5,6 +5,7 @@
 // Built separately so runtime substitution also covers transitive dependencies.
 export { animate, clamp, progress, stagger } from 'motion';
 export {
+  attachSpring,
   mapValue,
   mix,
   MotionValue,

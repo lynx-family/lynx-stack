@@ -37,3 +37,12 @@ export type {
   MotionViewProps,
 } from './declarative/types.js';
 export { useMotionValue } from './hooks/useMotionValue.js';
+
+export {
+  useMotionTemplate,
+  useSpring,
+  useTransform,
+} from './hooks/useMotionTransforms.js';
+export type { MotionTransformOptions } from './hooks/useMotionTransforms.js';
+export { useScroll } from './hooks/useScroll.js';
+export type { ScrollMotionValues } from './hooks/useScroll.js';
