@@ -36,13 +36,20 @@ export interface A2UIProps {
    * `<A2UI>` subscribes via `useSyncExternalStore` and processes new
    * messages incrementally.
    *
+   * Pass `null` to show `renderEmpty` (or nothing) and end the current
+   * rendering session. Passing a store afterward starts a new session
+   * and processes all messages already in that store.
+   *
    * The internal `MessageProcessor` (surfaces, signals, resources) is
-   * created once per mount and is **not reset** if `messageStore` is
-   * later replaced with a different instance. Pass a `key` prop derived
+   * retained while `messageStore` stays non-null and is **not reset** if
+   * replaced directly with a different instance. Pass a `key` prop derived
    * from the store's identity if you want a fresh session, e.g.
    * `<A2UI key={turnId} messageStore={turnStore} ... />`.
+   *
+   * @example
+   * <A2UI messageStore={store ?? null} catalogs={catalogs} />
    */
-  messageStore: MessageStore;
+  messageStore: MessageStore | null;
   /**
    * Components the renderer is allowed to instantiate. Each item is either
    * a bare component (name read from `displayName ?? name`) or a tuple
@@ -78,7 +85,7 @@ export interface A2UIProps {
     children: ReactNode,
     ctx: { surfaceId: string },
   ) => ReactNode;
-  /** Render before the first `beginRendering` arrives from the buffer. */
+  /** Render when messageStore is null or before the first surface is ready. */
   renderEmpty?: () => ReactNode;
   /** Render while the active resource is pending. */
   renderFallback?: () => ReactNode;
@@ -117,6 +124,15 @@ interface InternalSession {
  * />
  */
 function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
+  if (props.messageStore === null) {
+    return props.renderEmpty?.() ?? null;
+  }
+  return <A2UISession {...props} messageStore={props.messageStore} />;
+}
+
+function A2UISession(
+  props: A2UIProps & { messageStore: MessageStore },
+): ReactNode {
   const {
     messageStore,
     catalogs,

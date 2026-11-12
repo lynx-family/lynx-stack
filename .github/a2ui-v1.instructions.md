@@ -27,3 +27,7 @@ When merging main, migrate new A2UI producers and fixtures to the current wire c
 Jev action responses must update the live surface without repeating createSurface. When changing public A2UI types or API comments, keep exports and `docs/i18n/zh.json` translations complete so the full docs build passes.
 
 Bundle the argument schema validator with a host-independent base URI. Lynx Web can expose self.location while leaving the sandbox's location global undefined; a dependency that reads location during import can blank the renderer before onMessage is attached. Verify the built schema module in that environment and check a packed consumer in the actual Web runtime, not just Node or source-level tests. Keep the schema bundler configuration in both A2UI and umbrella Turbo inputs.
+
+Treat A2UI messageStore=null as an empty-state boundary that unmounts the rendering session and unsubscribes from the previous store. Mount a fresh session when a store arrives, processing its buffered messages and subsequent updates. Keep hooks in the non-null session component; do not conditionally skip hooks inside a persistent renderer. Direct non-null store replacement still requires a key to reset the session.
+
+Run A2UI rendering tests with pluginReactLynx from the A2UI package directory. Like OpenUI, this project must run separately from the root Rstest aggregate because the compiler changes shared bundler transforms. Keep its standalone coverage command in both Linux and Windows CI jobs when adjusting test discovery.

@@ -168,6 +168,7 @@
     "@lynx-js/genui-cli": "workspace:*",
     "@lynx-js/lynx-ui": "^3.135.4",
     "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
