@@ -61,9 +61,11 @@ describe('worklet-runtime init entry', () => {
   });
 
   it('initializes the main-thread runtime through the public entry', async () => {
+    globalThis.lynx.SystemInfo = { lynxSdkVersion: '2.15' };
     const { registerWorklet } = await import('@lynx-js/react/worklet-runtime/init');
 
     expect(globalThis.lynxWorkletImpl).toBeDefined();
+    expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager).toBeDefined();
     expect(globalThis.registerWorklet).toBeTypeOf('function');
     expect(globalThis.registerWorkletInternal).toBeTypeOf('function');
     expect(globalThis.runWorklet).toBeTypeOf('function');
@@ -73,6 +75,16 @@ describe('worklet-runtime init entry', () => {
     registerWorklet('main-thread', 'cold-entry', worklet);
     expect(globalThis.lynxWorkletImpl._workletMap['cold-entry']).toBe(worklet);
     expect(globalThis.runWorklet({ _wkltId: 'cold-entry' }, [41])).toBe(42);
+  });
+
+  it('uses host SystemInfo when initialized before the global alias', async () => {
+    delete globalThis.SystemInfo;
+    globalThis.lynx.SystemInfo = { lynxSdkVersion: '2.16' };
+
+    await import('@lynx-js/react/worklet-runtime/init');
+
+    expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager).toBeDefined();
+    expect('SystemInfo' in globalThis).toBe(false);
   });
 
   it('preserves runtime state when the init entry is evaluated again', async () => {
