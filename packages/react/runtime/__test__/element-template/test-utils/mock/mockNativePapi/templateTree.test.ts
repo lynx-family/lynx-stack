@@ -67,16 +67,15 @@ describe('mock native template tree spread slots', () => {
     const root = {
       tag: 'list',
       attributes: {},
-      children: [],
+      children: [child],
       __typedElementType: 'list',
       __handleId: 1,
       __attributeSlots: [{
         'component-at-index': componentAtIndex,
         'update-list-info': { insertAction: [] },
       }],
-      __childSlots: null,
+      __childSlots: [[child]],
       __options: {
-        listChildren: [child],
         estimatedHeight: 80,
         callback: componentAtIndex,
       },
@@ -92,10 +91,9 @@ describe('mock native template tree spread slots', () => {
     expect(serializeTemplateInstance(root)).toEqual({
       tag: 'list',
       attributes: { 'update-list-info': { insertAction: [] } },
-      childSlots: null,
+      childSlots: [[serializedChild]],
       uid: 1,
       options: {
-        listChildren: [serializedChild],
         estimatedHeight: 80,
       },
     });

@@ -15,7 +15,8 @@
       "2"
     ],
     [],
-    -1
+    -1,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -25,7 +26,8 @@
       "3"
     ],
     [],
-    -2
+    -2,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -55,7 +57,8 @@
         }
       ]
     ],
-    -3
+    -3,
+    null
   ],
   [
     "__InsertNodeToElementTemplate",

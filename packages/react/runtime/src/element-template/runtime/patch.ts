@@ -3,12 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  flushInitialElementTemplateListUpdates,
-  flushPendingElementTemplateListUpdates,
+  composeElementTemplateListAttributes,
+  createElementTemplateListState,
   markElementTemplateListDestroyed,
+  registerElementTemplateListState,
   updateElementTemplateListAttributes,
 } from './list/list.js';
-import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { insertElementTemplateSubtree } from './template/handle.js';
 import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
 import type { MTEventNativeWrapper } from './template/main-thread-event-ctx.js';
@@ -17,11 +17,7 @@ import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
-import {
-  elementTemplateIdentityKey,
-  elementTemplateTypeTag,
-  parseElementTemplateType,
-} from '../protocol/template-type.js';
+import { elementTemplateTypeTag } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
@@ -225,9 +221,13 @@ export function applyElementTemplateUpdateCommands(
         // Attributes have already been adapted on BTS.
         // Native initializes logical List items from childSlots[0] and records
         // their initial insertions.
+        const listState = isTypedList ? createElementTemplateListState() : null;
+        const nativeAttributes = listState === null
+          ? attributes
+          : composeElementTemplateListAttributes(attributes, listState);
         const nativeRef = __CreateTypedElementTemplate(
           type,
-          attributes,
+          nativeAttributes,
           resolvedChildSlots,
           handleId,
           options,
@@ -235,6 +235,9 @@ export function applyElementTemplateUpdateCommands(
 
         if (nativeRef) {
           elementTemplateRegistry.set(handleId, nativeRef);
+          if (listState !== null) {
+            registerElementTemplateListState(handleId, listState, nativeRef);
+          }
         }
         break;
       }
@@ -243,14 +246,14 @@ export function applyElementTemplateUpdateCommands(
         // Consume the List handle to keep the command stream aligned.
         void stream[i++];
         const item = stream[i++] as UpdateTypedListItemCommand;
-        const resolvedItem = resolveTypedListItem(item, 'typed list update item');
-        if (resolvedItem === null) {
+        const itemRef = resolveTargetHandle(item.__etHandleRef, 'typed list update item');
+        if (itemRef === null) {
           continue;
         }
         if (item.platformInfo !== null) {
           // Update item ET options when platform info is provided. Native List
           // records the change.
-          __SetListItemInfoOfTemplate(resolvedItem.ref, item.platformInfo);
+          __SetListItemInfoOfTemplate(itemRef, item.platformInfo);
         }
         if (item.subtreeHandleIds != null) {
           // TODO: Handle subtreeHandleIds updates.
@@ -315,42 +318,15 @@ export function applyElementTemplateUpdateCommands(
   if (isHydration) {
     reconcileUnhydratedSpreadMTRefSlots();
   }
-  flushPendingListUpdates();
-}
-
-function flushPendingListUpdates(): void {
-  applyListFlushResults(flushPendingElementTemplateListUpdates());
-  applyListFlushResults(flushInitialElementTemplateListUpdates());
-}
-
-function applyListFlushResults(results: ETListFlushResult[]): void {
-  for (let index = 0; index < results.length; index += 1) {
-    const result = results[index]!;
-    const listRef = resolveTargetHandle(result.uid, 'typed list');
-    if (!listRef) {
-      continue;
-    }
-    __SetAttributeOfElementTemplate(
-      listRef,
-      TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
-      result.attributes,
-    );
-    if (result.removedSubtreeHandleIds) {
-      releaseRemovedSubtreeHandles(result.removedSubtreeHandleIds);
-    }
-  }
 }
 
 function releaseRemovedSubtreeHandles(
   removedSubtreeHandleIds: number[],
 ): void {
   for (const handleId of removedSubtreeHandleIds) {
-    const pendingRemovedSubtreeHandleIds = markElementTemplateListDestroyed(handleId);
+    markElementTemplateListDestroyed(handleId);
     elementTemplateRegistry.delete(handleId);
     deleteMainThreadDynamicAttrStateForSubtree([handleId]);
-    if (pendingRemovedSubtreeHandleIds) {
-      releaseRemovedSubtreeHandles(pendingRemovedSubtreeHandleIds);
-    }
   }
 }
 
@@ -392,27 +368,6 @@ function resolveChildSlots(
     return undefined;
   }
   return value;
-}
-
-function resolveTypedListItem(
-  item: UpdateTypedListItemCommand,
-  role: string,
-): ETListUpdateItem | null {
-  const ref = resolveTargetHandle(item.__etHandleRef, role);
-  if (ref === null) {
-    return null;
-  }
-  // `item.type` is the full `${globDynamicComponentEntry}:${key}` tag; the
-  // native list identifies items by the same identity key the templates were
-  // registered under (see the `createTemplate` op above), so normalize it.
-  const nativeTemplate = parseElementTemplateType(item.type);
-  return {
-    uid: item.__etHandleRef,
-    ref,
-    templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
-    // Normalize omitted platform info to an empty object.
-    platformInfo: item.platformInfo ?? {},
-  };
 }
 
 function resolveSubtreeHandles(

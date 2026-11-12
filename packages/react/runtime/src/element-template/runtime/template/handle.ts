@@ -15,7 +15,6 @@ import type {
   RuntimeChildSlots,
   RuntimeOptions,
   RuntimeTypedElementAttributes,
-  RuntimeTypedListOptions,
   SerializableValue,
 } from '../../protocol/types.js';
 
@@ -71,7 +70,7 @@ export function createTypedElementTemplateWithReservedHandle(
   type: string,
   attributes: RuntimeTypedElementAttributes | null | undefined,
   childSlots: RuntimeChildSlots | null | undefined,
-  options: RuntimeOptions | RuntimeTypedListOptions | null | undefined,
+  options: RuntimeOptions | null | undefined,
 ): ElementTemplateHandle {
   const nativeRef = __CreateTypedElementTemplate(
     type,

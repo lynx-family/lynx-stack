@@ -154,7 +154,6 @@ export function renderComponentVNode(
   result: unknown,
   parentType?: string,
   subtreeHandles?: unknown[],
-  listItemUids?: number[],
 ): void {
   let cctx = context;
   let rendered;
@@ -216,7 +215,6 @@ export function renderComponentVNode(
     ? {
       rootSubtreeHandlesLength: result.rootSubtreeHandles.length,
       subtreeHandlesLength: subtreeHandles?.length,
-      listItemUidsLength: listItemUids?.length,
       nextId: getNextElementTemplateId(),
       pageAttributes: result.pageAttributes,
       isInsideAuthoredPage: result.isInsideAuthoredPage,
@@ -224,7 +222,7 @@ export function renderComponentVNode(
     : undefined;
 
   try {
-    renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
+    renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles);
   } catch (e) {
     if (
       checkpoint && e && typeof e === 'object' && e.then
@@ -236,11 +234,10 @@ export function renderComponentVNode(
       output.length = outputLength;
       result.rootSubtreeHandles.length = checkpoint.rootSubtreeHandlesLength;
       if (subtreeHandles) subtreeHandles.length = checkpoint.subtreeHandlesLength;
-      if (listItemUids) listItemUids.length = checkpoint.listItemUidsLength;
       discardRenderedHostsSince(checkpoint.nextId);
       result.pageAttributes = checkpoint.pageAttributes;
       if (__DEV__) result.isInsideAuthoredPage = checkpoint.isInsideAuthoredPage;
-      renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles, listItemUids);
+      renderVNode(rendered, context, vnode, output, result, parentType, subtreeHandles);
     } else {
       throw e;
     }

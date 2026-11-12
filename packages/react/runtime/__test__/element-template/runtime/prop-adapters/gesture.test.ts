@@ -237,6 +237,7 @@ describe('ET Gesture callback handoff and lifecycle', () => {
             null,
             [first],
             null,
+            null,
           ]);
       if (outcome === 'throw') expect(apply).toThrow(error);
       else apply();

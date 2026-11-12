@@ -5,7 +5,6 @@ import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
-  registerElementTemplateListItem,
   registerElementTemplateListState,
 } from '../../../src/element-template/runtime/list/list.js';
 import {
@@ -247,7 +246,6 @@ describe('mts-destroy', () => {
 
   it('marks list callbacks destroyed on main-thread runtime destruction', () => {
     const listRef = { __isNativeRef: true, id: 'list', __mockNativeId: 100 } as unknown as ElementTemplateHandle;
-    const itemRef = { __isNativeRef: true, id: 'item', __mockNativeId: 101 } as unknown as ElementTemplateHandle;
     const listElement = { __isNativeRef: true, id: 'list-element' } as unknown as FiberElement;
     const insertNode = vi.fn();
     const removeNode = vi.fn();
@@ -256,20 +254,19 @@ describe('mts-destroy', () => {
     vi.stubGlobal('__RemoveNodeFromElementTemplate', removeNode);
     vi.stubGlobal('__FlushElementTree', flush);
     elementTemplateRegistry.set(100, listRef);
-    elementTemplateRegistry.set(101, itemRef);
-    registerElementTemplateListItem(101, itemRef, {
-      templateKey: '_et_item',
-      platformInfo: { 'item-key': 'a' },
-    });
-    const state = createElementTemplateListState([101]);
-    registerElementTemplateListState(100, state, false, listRef);
+    const state = createElementTemplateListState();
+    registerElementTemplateListState(100, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
+    const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
 
     onMtsDestruction();
 
+    expect(state.destroyed).toBe(true);
+    expect(state.holderRef).toBeNull();
     expect(componentAtIndex(listElement, 7, 0, 91, false)).toBe(-1);
+    componentAtIndexes(listElement, 7, [0], [91], false, false);
     enqueueComponent(listElement, 7, 101);
     expect(insertNode).not.toHaveBeenCalled();
     expect(removeNode).not.toHaveBeenCalled();

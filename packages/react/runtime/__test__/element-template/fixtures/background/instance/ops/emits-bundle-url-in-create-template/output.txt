@@ -5,4 +5,5 @@ Array [
   "dynamic-entry",
   Array [],
   Array [],
+  null,
 ]

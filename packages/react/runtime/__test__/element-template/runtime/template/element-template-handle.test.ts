@@ -79,6 +79,7 @@ describe('ElementTemplateHandle', () => {
       ['text'],
       null,
       -1,
+      undefined,
     );
     expect(elementTemplateRegistry.get(-1)).toBe(mockCreatedNativeRef);
   });
@@ -180,6 +181,7 @@ describe('ElementTemplateHandle', () => {
         [null],
         null,
         -1,
+        undefined,
       );
       expect(updateWorkletRef).not.toHaveBeenCalled();
       expect(getMainThreadDynamicAttrState(-1, 0)).toEqual({
@@ -213,7 +215,7 @@ describe('ElementTemplateHandle', () => {
     expect(elementTemplateRegistry.get(-1)).toBe(mockCreatedNativeRef);
   });
 
-  it('passes list-specific options to typed-list native create', () => {
+  it('passes logical child slots to typed-list native create', () => {
     const id = reserveElementTemplateId();
     const listChildren = [mockNativeRef as unknown as ElementTemplateHandle];
 
@@ -221,17 +223,17 @@ describe('ElementTemplateHandle', () => {
       id,
       'list',
       { id: 'list' },
-      null,
-      { listChildren },
+      [listChildren],
+      {},
     );
 
     expect(nativeRef).toBe(mockCreatedNativeRef);
     expect(mockCreateTypedElementTemplate).toHaveBeenCalledWith(
       'list',
       { id: 'list' },
-      null,
+      [listChildren],
       -1,
-      { listChildren },
+      {},
     );
     expect(elementTemplateRegistry.get(-1)).toBe(mockCreatedNativeRef);
   });
