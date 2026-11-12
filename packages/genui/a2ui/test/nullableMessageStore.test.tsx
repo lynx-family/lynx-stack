@@ -39,9 +39,18 @@ describe('A2UI nullable messageStore', () => {
     expect(view.container.textContent).toBe('');
   });
 
-  test('renders a populated store after initially showing the empty state', async () => {
+  test('does not call renderEmpty for null', () => {
+    const empty = rstest.fn(renderEmpty);
+    const view = render(
+      <A2UI messageStore={null} catalogs={catalogs} renderEmpty={empty} />,
+    );
+    expect(empty).not.toHaveBeenCalled();
+    expect(view.container.textContent).toBe('');
+  });
+
+  test('renders a populated store after initially rendering nothing', async () => {
     const view = render(element(null));
-    expect(view.getByText('Waiting for messages')).toBeTruthy();
+    expect(view.container.textContent).toBe('');
     const store = createMessageStore({
       initialMessages: [message('First response')],
     });
@@ -99,11 +108,11 @@ describe('A2UI nullable messageStore', () => {
       view.rerender(element(null));
       await waitFor(() => expect(unsubscribe).toHaveBeenCalled());
       expect(view.queryByText('Original')).toBeNull();
-      expect(view.getByText('Waiting for messages')).toBeTruthy();
+      expect(view.container.textContent).toBe('');
       await act(() =>
         store.push({ version: '1.0', deleteSurface: { surfaceId: 'test' } })
       );
-      expect(view.getByText('Waiting for messages')).toBeTruthy();
+      expect(view.container.textContent).toBe('');
       const next = mode === 'same'
         ? store
         : createMessageStore();
