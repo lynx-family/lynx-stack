@@ -12,7 +12,6 @@ import type {
   SerializedEtNode,
   SerializedRuntimeOptions,
   SerializedTypedListOptions,
-  TypedListOptionsCommand,
   UpdateTypedListItemCommand,
 } from './protocol/types.js';
 
@@ -72,6 +71,11 @@ declare global {
     element: ElementTemplateHandle,
     attrSlotIndex: number,
     value: RuntimeAttributeSlotValue | null,
+  ): void;
+
+  function __SetListItemInfoOfTemplate(
+    element: ElementTemplateHandle,
+    platformInfo: Record<string, SerializableValue> | null | undefined,
   ): void;
 
   function __InsertNodeToElementTemplate(

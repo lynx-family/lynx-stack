@@ -3,16 +3,10 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
-  composeElementTemplateListAttributes,
-  createElementTemplateListStateFromItems,
   flushInitialElementTemplateListUpdates,
   flushPendingElementTemplateListUpdates,
-  insertElementTemplateListItem,
   markElementTemplateListDestroyed,
-  registerElementTemplateListState,
-  removeElementTemplateListItem,
   updateElementTemplateListAttributes,
-  updateElementTemplateListItem,
 } from './list/list.js';
 import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { insertElementTemplateSubtree } from './template/handle.js';
@@ -32,10 +26,8 @@ import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
   RuntimeChildSlots,
-  RuntimeOptions,
   RuntimeOptionsCommand,
   RuntimeTypedElementAttributes,
-  RuntimeTypedListOptions,
   SerializableValue,
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
@@ -75,7 +67,9 @@ export function applyElementTemplateUpdateCommands(
         const bundleUrl = stream[i++] as string | null | undefined;
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
         const childSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
-
+        // Read options in the same order as BTS emits them. Every create
+        // command includes this field.
+        const options = stream[i++] as RuntimeOptionsCommand | null;
         if (__DEV__) {
           const createError = validateCreateTemplatePayload(
             handleId,
@@ -104,6 +98,7 @@ export function applyElementTemplateUpdateCommands(
           nativeAttributeSlots,
           resolvedChildSlots,
           handleId,
+          options,
         );
 
         if (nativeRef) {
@@ -214,93 +209,52 @@ export function applyElementTemplateUpdateCommands(
         if (
           __DEV__
           && isTypedList
-          && !isTypedListChildSlotsEmpty(childSlots)
+          && childSlots?.some(
+            (children, slotIndex) => slotIndex !== 0 && (children?.length ?? 0) > 0,
+          )
         ) {
           lynx.reportError(
-            new Error('ElementTemplate typed list create must keep logical children in options.listChildren.'),
+            new Error('ElementTemplate typed list only supports logical slot 0.'),
           );
           continue;
         }
-        const resolvedChildSlots = isTypedList ? null : resolveChildSlots(childSlots);
+        const resolvedChildSlots = resolveChildSlots(childSlots);
         if (resolvedChildSlots === undefined) {
           continue;
         }
-        let resolvedListItems: ETListUpdateItem[] | null = null;
-        let nativeOptions: RuntimeOptions | RuntimeTypedListOptions | null | undefined;
-        if (isTypedList) {
-          const listChildren = getTypedListChildren(options);
-          if (__DEV__ && !Array.isArray(listChildren)) {
-            lynx.reportError(
-              new Error('ElementTemplate typed list create must keep logical children in options.listChildren.'),
-            );
-            continue;
-          }
-          resolvedListItems = resolveTypedListItems(listChildren);
-          if (resolvedListItems === null) {
-            continue;
-          }
-          nativeOptions = resolveTypedListOptions(options, resolvedListItems);
-        } else {
-          nativeOptions = options as RuntimeOptions | null | undefined;
-        }
-        const listState = resolvedListItems
-          ? createElementTemplateListStateFromItems(
-            resolvedListItems,
-            attributes,
-          )
-          : null;
-        const typedAttributes = listState
-          ? composeElementTemplateListAttributes(
-            undefined,
-            listState,
-          )
-          : attributes;
-
+        // Attributes have already been adapted on BTS.
+        // Native initializes logical List items from childSlots[0] and records
+        // their initial insertions.
         const nativeRef = __CreateTypedElementTemplate(
           type,
-          typedAttributes,
-          isTypedList ? null : resolvedChildSlots!,
+          attributes,
+          resolvedChildSlots,
           handleId,
-          nativeOptions,
+          options,
         );
 
         if (nativeRef) {
           elementTemplateRegistry.set(handleId, nativeRef);
-          if (listState) {
-            registerElementTemplateListState(handleId, listState, true, nativeRef);
-          }
         }
-        break;
-      }
-
-      case ElementTemplateUpdateOps.insertTypedListItem: {
-        const listId = stream[i++] as number;
-        const item = stream[i++] as UpdateTypedListItemCommand;
-        const beforeId = stream[i++] as number;
-        const resolvedItem = resolveTypedListItem(item, 'typed list insert item');
-        if (resolvedItem === null) {
-          continue;
-        }
-        insertElementTemplateListItem(listId, resolvedItem, beforeId);
-        break;
-      }
-
-      case ElementTemplateUpdateOps.removeTypedListItem: {
-        const listId = stream[i++] as number;
-        const itemId = stream[i++] as number;
-        const removedSubtreeHandleIds = stream[i++] as number[];
-        removeElementTemplateListItem(listId, itemId, removedSubtreeHandleIds);
         break;
       }
 
       case ElementTemplateUpdateOps.updateTypedListItem: {
-        const listId = stream[i++] as number;
+        // Consume the List handle to keep the command stream aligned.
+        void stream[i++];
         const item = stream[i++] as UpdateTypedListItemCommand;
         const resolvedItem = resolveTypedListItem(item, 'typed list update item');
         if (resolvedItem === null) {
           continue;
         }
-        updateElementTemplateListItem(listId, resolvedItem);
+        if (item.platformInfo !== null) {
+          // Update item ET options when platform info is provided. Native List
+          // records the change.
+          __SetListItemInfoOfTemplate(resolvedItem.ref, item.platformInfo);
+        }
+        if (item.subtreeHandleIds != null) {
+          // TODO: Handle subtreeHandleIds updates.
+        }
         break;
       }
 
@@ -440,36 +394,6 @@ function resolveChildSlots(
   return value;
 }
 
-function resolveTypedListOptions(
-  options: RuntimeOptionsCommand | null | undefined,
-  items: ETListUpdateItem[],
-): RuntimeTypedListOptions {
-  return {
-    ...options!,
-    listChildren: items.map(item => item.ref),
-  };
-}
-
-function getTypedListChildren(
-  options: RuntimeOptionsCommand | null | undefined,
-): UpdateTypedListItemCommand[] {
-  return (__DEV__ ? options?.['listChildren'] : options!['listChildren']!)! as UpdateTypedListItemCommand[];
-}
-
-function resolveTypedListItems(
-  items: UpdateTypedListItemCommand[],
-): ETListUpdateItem[] | null {
-  const resolvedItems: ETListUpdateItem[] = [];
-  for (let index = 0; index < items.length; index += 1) {
-    const resolvedItem = resolveTypedListItem(items[index]!, `typed list item ${index}`);
-    if (resolvedItem === null) {
-      return null;
-    }
-    resolvedItems.push(resolvedItem);
-  }
-  return resolvedItems;
-}
-
 function resolveTypedListItem(
   item: UpdateTypedListItemCommand,
   role: string,
@@ -486,7 +410,8 @@ function resolveTypedListItem(
     uid: item.__etHandleRef,
     ref,
     templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
-    platformInfo: item.platformInfo,
+    // Normalize omitted platform info to an empty object.
+    platformInfo: item.platformInfo ?? {},
   };
 }
 
@@ -504,13 +429,6 @@ function resolveSubtreeHandles(
     subtreeHandles.push({ uid, ref });
   }
   return subtreeHandles;
-}
-
-function isTypedListChildSlotsEmpty(childSlots: ElementTemplateHandleSlotsCommand | null | undefined): boolean {
-  if (!Array.isArray(childSlots)) {
-    return true;
-  }
-  return childSlots.every(slot => slot == null || (Array.isArray(slot) && slot.length === 0));
 }
 
 function resolveTargetHandle(id: number, role: string): ElementTemplateHandle | null {

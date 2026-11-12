@@ -38,6 +38,7 @@ export function createElementTemplateWithReservedHandle(
   attributeSlots: SerializableValue[] | null | undefined,
   childSlots: RuntimeChildSlots | null | undefined,
   hasDynamicAttributes = true,
+  options?: RuntimeOptions | null,
 ): ElementTemplateHandle {
   // Adapter-free compiled hosts need neither dynamic state nor native slot preparation.
   const templateType = hasDynamicAttributes ? elementTemplateTypeTag(templateKey, bundleUrl) : undefined;
@@ -50,6 +51,7 @@ export function createElementTemplateWithReservedHandle(
     nativeAttributeSlots,
     childSlots,
     handleId,
+    options,
   );
   if (nativeRef) {
     setElementTemplateNativeRef(handleId, nativeRef);
