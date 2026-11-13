@@ -1460,6 +1460,32 @@ test.describe('reactlynx3 tests', () => {
         'animationstart animationiteration animationend animationstart animationiteration animationend',
       );
     });
+    test('api-get-fields', async ({ page }, { title }) => {
+      await goto(page, title);
+      await expect.poll(async () =>
+        JSON.parse(await page.locator('#results').innerText())
+      ).toEqual({
+        single: {
+          data: {
+            id: 'target',
+            dataset: {
+              hello: 'world',
+              count: 0,
+              enabled: false,
+              detail: { answer: 42 },
+            },
+            tag: 'text',
+          },
+          status: { code: 0, data: 'success' },
+        },
+        all: {
+          data: [{ id: 'target', tag: 'text' }, { id: 'second', tag: 'view' }],
+          status: { code: 0, data: 'success' },
+        },
+        missing: { data: null, status: { code: 2, data: 'node not found' } },
+        empty: { data: [], status: { code: 0, data: 'success' } },
+      });
+    });
     test('api-get-path-info', async ({ page }, { title }) => {
       await goto(page, title);
       await wait(500);

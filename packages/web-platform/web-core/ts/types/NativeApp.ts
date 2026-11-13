@@ -107,6 +107,11 @@ export interface InvokeCallbackRes {
   data?: unknown;
 }
 
+export interface FieldsCallbackRes {
+  data: Record<string, unknown> | Record<string, unknown>[] | null;
+  status: { code: ErrorCode; data: string };
+}
+
 export interface NativeApp {
   id: string;
 
@@ -164,6 +169,16 @@ export interface NativeApp {
     component_id: string,
     first_only: boolean,
     callback: (ret: InvokeCallbackRes) => void,
+    root_unique_id?: number,
+  ) => void;
+
+  getFields: (
+    type: IdentifierType,
+    identifier: string,
+    component_id: string,
+    first_only: boolean,
+    fields: string[],
+    callback: (ret: FieldsCallbackRes) => void,
     root_unique_id?: number,
   ) => void;
 
