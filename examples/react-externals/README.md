@@ -58,3 +58,16 @@ The timing mode is a Web simulation of the host ordering, not an Android reprodu
 `SERVE_ONLY=true` runs only the diagnostic static server. Omit
 `EXTERNAL_BUNDLE_TARGET=web` when building native bundles. Stop the server before
 running another experiment on the same port.
+
+For native Explorer verification, use `PORT=3307 LYNX_HOST=127.0.0.1
+COMP_LIB_MAIN_THREAD_DELAY_MS=2000 HOST_RENDER_PAGE_DELAY_MS=0` with the same
+Turbo build command, then start the runner with `SERVE_ONLY=true` (without
+`REACTLYNX_ASYNC`). Forward port 3307 with ADB and open
+`http://127.0.0.1:3307/main.lynx.bundle?fullscreen=true` in Lynx Explorer.
+The native host supplies the early `renderPage` call; no simulated host delay
+is needed. Check that component evaluation finishes before first-screen
+handover, then tap the logo to verify a background update.
+
+Verified with the official Lynx Explorer 4.2.0 on Android 16 ARM64: the early
+native call waits for component evaluation, the first screen has two children,
+the hydration patch is empty, and tapping the logo switches to the React logo.
