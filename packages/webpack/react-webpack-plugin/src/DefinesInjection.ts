@@ -204,7 +204,9 @@ export function applyDefinesInjection(
           await inject(request);
           requirementsByRequest.set(request, {
             mainThreadProgrammability: missingWorklet.some(
-              define => define.runtimeRequirements!.mainThreadProgrammability,
+              define =>
+                define.runtimeRequirements?.mainThreadProgrammability
+                  ?? false,
             ),
           });
         }

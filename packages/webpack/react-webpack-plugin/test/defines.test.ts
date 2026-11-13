@@ -638,6 +638,24 @@ describe('missing definitions injection', () => {
     )).rejects.toThrowError(/cannot be merged/);
   });
 
+  it('accepts older worklet definitions without runtime requirements', async () => {
+    await expect(compile(
+      {
+        'empty.js': {
+          worklet: [define('legacy-worklet', 'registerLegacyWorklet;')],
+        },
+      },
+      {
+        'main__main-thread': {
+          import: './fixtures/empty2.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+    )).resolves.toBeTypeOf('string');
+  });
+
   it('accepts an unmergeable worklet the main thread already has', async () => {
     const definesByResource = {
       'empty.js': {
