@@ -6,7 +6,7 @@
 ## Asset Files
 - Bundle: rspack-bundle.js
 - Manifest: main.LAST_HASH.hot-update.json, size: 28
-- Update: main.LAST_HASH.hot-update.js, size: 4456
+- Update: main.LAST_HASH.hot-update.js, size: 4685
 
 ## Manifest
 
@@ -93,6 +93,13 @@ function App() {
 
 
 // @ts-nocheck
+function $RefreshSig$() {
+  return _runtime_refresh_mjs__rspack_import_3.createSignatureFunctionForTransform();
+}
+function $RefreshReg$(type, id) {
+  return _runtime_refresh_mjs__rspack_import_3.register(type, module.id, id);
+}
+
 const isPrefreshComponent = _runtime_refresh_mjs__rspack_import_3.shouldBind(module);
 
 const moduleHot = module.hot;

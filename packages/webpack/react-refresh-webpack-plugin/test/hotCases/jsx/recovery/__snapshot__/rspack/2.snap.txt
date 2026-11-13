@@ -5,12 +5,12 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.567bf7563370307f.hot-update.json, size: 28
-- Update: main.567bf7563370307f.hot-update.js, size: 3708
+- Manifest: main.9710ae6769007a2c.hot-update.json, size: 28
+- Update: main.9710ae6769007a2c.hot-update.js, size: 3937
 
 ## Manifest
 
-### main.567bf7563370307f.hot-update.json
+### main.9710ae6769007a2c.hot-update.json
 
 ```json
 {"c":["main"],"r":[],"m":[]}
@@ -20,7 +20,7 @@
 ## Update
 
 
-### main.567bf7563370307f.hot-update.js
+### main.9710ae6769007a2c.hot-update.js
 
 #### Changed Modules
 - ./app.jsx
@@ -74,6 +74,13 @@ function App() {
 
 
 // @ts-nocheck
+function $RefreshSig$() {
+  return _runtime_refresh_mjs__rspack_import_2.createSignatureFunctionForTransform();
+}
+function $RefreshReg$(type, id) {
+  return _runtime_refresh_mjs__rspack_import_2.register(type, module.id, id);
+}
+
 const isPrefreshComponent = _runtime_refresh_mjs__rspack_import_2.shouldBind(module);
 
 const moduleHot = module.hot;
