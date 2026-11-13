@@ -17,6 +17,8 @@ const { default: playwright } = await import(
 );
 const { chromium } = playwright;
 const port = Number(process.env.PORT ?? 3307);
+const timeout = Number(process.env.SNAPSHOT_RACE_TIMEOUT_MS ?? 15000);
+assert(Number.isFinite(timeout) && timeout > 0, 'Expected a positive timeout');
 const output = process.env.REACTLYNX_ASYNC === 'true'
   ? 'dist-react-async'
   : 'dist';
@@ -77,7 +79,17 @@ try {
   );
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${port}`);
-  await page.waitForTimeout(5000);
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (
+      messages.some(message => message.text.includes('Snapshot not found'))
+      || await page.getByText('Tap the logo and have fun!', { exact: true })
+        .count()
+    ) {
+      break;
+    }
+    await page.waitForTimeout(100);
+  }
   const text = await page.locator('body').innerText();
   const rendered = await page.getByText('Tap the logo and have fun!', {
     exact: true,
