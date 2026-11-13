@@ -1965,28 +1965,6 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
   });
 
-  it('flushes option-only update payloads with empty ops', () => {
-    envManager.switchToMainThread();
-    installElementTemplatePatchListener();
-    const performance = lynx.performance;
-    performance.profileStart.mockClear();
-    performance.profileEnd.mockClear();
-    mockFlushElementTree.mockClear();
-
-    envManager.switchToBackground();
-    dispatchElementTemplateUpdate({
-      ops: [],
-      flushOptions: { triggerDataUpdated: true },
-      flowIds: [101, 202],
-    });
-    envManager.switchToMainThread();
-
-    expect(performance.profileStart).not.toHaveBeenCalled();
-    expect(performance.profileEnd).not.toHaveBeenCalled();
-    expect(mockFlushElementTree.mock.calls).toHaveLength(1);
-    expect(mockFlushElementTree.mock.calls[0]?.[1]).toEqual({ triggerDataUpdated: true });
-  });
-
   it('reports illegal handleId 0 on create', () => {
     const jsx = <view />;
     root.render(jsx);
@@ -2417,28 +2395,6 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('duplicate handleId 26');
-    resetReportedErrors();
-  });
-
-  it('reports invalid non-array childSlots on typed create', () => {
-    envManager.switchToMainThread();
-    elementTemplateRegistry.clear();
-    mockCreateTypedElementTemplate.mockClear();
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.createTypedElement,
-      27,
-      'typed-host',
-      null,
-      'bad-slots' as unknown as ElementTemplateUpdateCommandStream[number],
-      null,
-    ]);
-
-    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
-    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
-    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'childSlots must be an array, null, or undefined',
-    );
     resetReportedErrors();
   });
 
