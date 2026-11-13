@@ -66,4 +66,7 @@ It runs in the generated runtime with `SystemInfo` (falling back to
 `lynx.SystemInfo` or `{}`). The callback must return a boolean synchronously and
 cannot capture build-time imports or variables. Use an arrow or function
 expression. Callback externals always use promise module semantics, including
-when synchronous loading is selected. Boolean options retain their behavior.
+when synchronous loading is selected. Successful synchronous loads mount the
+namespace directly, so existing bundles can read its subpaths synchronously;
+loading failures remain cached as rejected promises. Boolean options retain their
+behavior.

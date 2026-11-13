@@ -31,7 +31,10 @@ const external = (libraryName: string | string[]) => ({
 });
 
 const cases = ['main-thread', 'background'].flatMap(layer =>
-  ['global', 'lynx', 'web', 'sync', 'missing'].map(info => ({ layer, info }))
+  ['global', 'lynx', 'web', 'sync', 'android', 'missing'].map(info => ({
+    layer,
+    info,
+  }))
 );
 
 describe('runtime async selection', () => {
@@ -89,6 +92,7 @@ describe('runtime async selection', () => {
     'selects loading at first import ($layer, systemInfo: $info)',
     async ({ layer, info }) => {
       const isAsync = info === 'global' || info === 'lynx' || info === 'web';
+      const syncPlatform = info === 'android' ? 'Android' : 'iOS';
       const state = { ready: false, events: [] as string[] };
       const component = { run: () => state.events.push('run') };
       const wait = rstest.fn(() => {
@@ -101,21 +105,27 @@ describe('runtime async selection', () => {
         }
         queueMicrotask(() => callback({ code: 0, url: 'component.bundle' }));
       });
+      const namespace = { ...component, Nested: component };
+      const globals: Record<
+        string,
+        typeof namespace | Promise<typeof namespace>
+      > = {};
       const loadScript = rstest.fn(() => {
         expect(state.ready).toBe(true);
         state.events.push('load');
-        return { ...component, Nested: component };
+        return namespace;
       });
       runInNewContext(sources.get(layer)!, {
         __externalOrder: state,
-        ...(info === 'global' || info === 'sync' || info === 'web'
+        ...(info === 'global' || info === 'sync' || info === 'android'
+            || info === 'web'
           ? {
             SystemInfo: {
               platform: info === 'web'
                 ? 'web'
                 : (info === 'global'
                   ? 'Harmony'
-                  : 'iOS'),
+                  : syncPlatform),
             },
           }
           : {}),
@@ -128,9 +138,17 @@ describe('runtime async selection', () => {
               ? Promise.resolve({ code: 0, url: 'component.bundle' })
               : { wait, then },
           loadScript,
+          [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
         },
         __LoadStyleSheet: () => null,
       });
+      if (!isAsync) {
+        expect(globals['Component']).toBe(namespace);
+        expect((globals['Component'] as typeof namespace).Nested).toBe(
+          component,
+        );
+        expect(globals['Alias']).toBe(namespace);
+      }
       await setImmediate();
       expect(state.events).toEqual(['init', 'load', 'run', 'run', 'run']);
       expect(loadScript).toHaveBeenCalledTimes(1);
@@ -163,7 +181,7 @@ describe('runtime async selection', () => {
       await setImmediate();
       expect(loadScript).toHaveBeenCalledTimes(1);
       const rejected = globals['Unused'];
-      // The executor runs immediately, preserving synchronous fetch timing.
+      // First access runs the synchronous loader immediately.
       expect(loadScript).toHaveBeenCalledTimes(2);
       expect(globals['Unused']).toBe(rejected);
       await expect(rejected).rejects.toThrow('Failed to load script');

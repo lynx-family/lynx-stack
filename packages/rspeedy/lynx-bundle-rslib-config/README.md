@@ -35,6 +35,12 @@ export default defineExternalBundleRslibConfig({
 This produces an external bundle whose React-related requests are mapped to the
 built-in `reactlynx` preset instead of a hand-written externals table.
 
+The preset awaits the mounted ReactLynx namespace before reading subpaths. This
+supports the host's default runtime-selected loading on Harmony, web, Android,
+and iOS, as well as a namespace mounted synchronously. Set
+`reactlynx: { async: false }` only when targeting a host that mounts ReactLynx
+synchronously.
+
 ### Custom presets
 
 If your business bundle needs extra preset mappings, define them next to

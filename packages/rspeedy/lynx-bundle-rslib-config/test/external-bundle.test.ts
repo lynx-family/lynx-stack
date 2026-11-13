@@ -7,6 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runInNewContext } from 'node:vm'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
@@ -863,18 +864,26 @@ describe('mount externals library', () => {
       plugins: [pluginReactLynx()],
     })
 
-    await expect(resolveExternal(rslibConfig, 'react')).resolves
-      .toEqual([
-        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
-        'ReactLynx',
-        'React',
-      ])
-    await expect(resolveExternal(rslibConfig, '@lynx-js/react')).resolves
-      .toEqual([
-        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
-        'ReactLynx',
-        'React',
-      ])
+    const expression =
+      'Promise.resolve(globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["React"]; })'
+    for (const request of ['react', '@lynx-js/react']) {
+      await expect(resolveExternal(rslibConfig, request)).resolves.toBe(
+        expression,
+      )
+    }
+    const react = { memo: () => 'memo' }
+    let resolveNamespace!: (namespace: { React: typeof react }) => void
+    const pendingNamespace = new Promise<{ React: typeof react }>(resolve => {
+      resolveNamespace = resolve
+    })
+    const result = runInNewContext(expression, {
+      [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: { ReactLynx: pendingNamespace },
+    }) as Promise<typeof react>
+    resolveNamespace({ React: react })
+    await expect(result).resolves.toBe(react)
+    await expect(runInNewContext(expression, {
+      [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: { ReactLynx: { React: react } },
+    }) as Promise<typeof react>).resolves.toBe(react)
 
     await build(rslibConfig)
 
@@ -890,9 +899,7 @@ describe('mount externals library', () => {
       'utils',
       'utils__main-thread',
     ])
-    expect(decodedResult['custom-sections']['utils']).toContain(
-      'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")].ReactLynx.React',
-    )
+    expect(decodedResult['custom-sections']['utils']).toContain(expression)
 
     // MTS should be bytecode
     expect(
@@ -900,6 +907,28 @@ describe('mount externals library', () => {
     ).toBe(true)
     expect(decodedResult['custom-sections']['utils__main-thread']![0])
       .toBeTypeOf('number')
+  })
+
+  it.each([true, {}, { async: true }])(
+    'should await ReactLynx with preset %j',
+    async (preset) => {
+      const config = defineExternalBundleRslibConfig({
+        output: { externalsPresets: { reactlynx: preset } },
+      })
+      await expect(resolveExternal(config, '@lynx-js/react')).resolves
+        .toContain('Promise.resolve(')
+    },
+  )
+
+  it('should preserve an explicit synchronous ReactLynx preset', async () => {
+    const config = defineExternalBundleRslibConfig({
+      output: { externalsPresets: { reactlynx: { async: false } } },
+    })
+    await expect(resolveExternal(config, '@lynx-js/react')).resolves.toEqual([
+      'lynx[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
+      'ReactLynx',
+      'React',
+    ])
   })
 
   it('should let explicit externals override the reactlynx preset', async () => {
@@ -989,11 +1018,9 @@ describe('mount externals library', () => {
         'React',
       ])
     await expect(resolveExternal(rslibConfig, '@lynx-js/react/jsx-runtime'))
-      .resolves.toEqual([
-        'globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]',
-        'ReactLynx',
-        'ReactJSXRuntime',
-      ])
+      .resolves.toBe(
+        'Promise.resolve(globalThis[Symbol.for("__LYNX_EXTERNAL_GLOBAL__")]["ReactLynx"]).then(function (m) { return m["ReactJSXRuntime"]; })',
+      )
   })
 
   it('should allow custom externals presets that are not built in', async () => {
