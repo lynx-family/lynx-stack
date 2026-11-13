@@ -6,6 +6,7 @@ import type {
   Cloneable,
   I18nResourceTranslationOptions,
   InitI18nResources,
+  MainThreadModule,
   NapiModulesCall,
   NapiModulesMap,
   NativeModulesCall,
@@ -143,6 +144,29 @@ export class LynxViewElement extends HTMLElement {
    * the lexical `console` for this view's background bundles.
    */
   nativeModulesMap: NativeModulesMap | undefined;
+
+  /**
+   * Host-provided modules exposed synchronously through main-thread `lynx.module(name)`.
+   *
+   * Set this property before loading the view for first-frame calls. Each lookup
+   * reads the current map, so replacing or removing modules takes effect on the
+   * next lookup. The host controls which methods are available and keeps any
+   * shared data in sync with the background thread.
+   *
+   * @defaultValue undefined
+   * @example
+   * ```ts
+   * view.mainThreadModules = {
+   *   DeviceInfo: {
+   *     invoke(method) {
+   *       if (method === 'getPlatform') return 'web';
+   *       throw new Error(`Unknown method: ${method}`);
+   *     },
+   *   },
+   * };
+   * ```
+   */
+  mainThreadModules: Record<string, MainThreadModule> | undefined;
 
   /**
    * @param

@@ -22,6 +22,9 @@ function createMainThreadLynx(
   const setIntervalBrowserImpl = setInterval;
   const clearIntervalBrowserImpl = clearInterval;
   return {
+    module(name) {
+      return lynxViewInstance.parentDom.mainThreadModules?.[name];
+    },
     performance: createMainThreadLynxPerformance(
       lynxViewInstance.backgroundThread.markTiming.bind(
         lynxViewInstance.backgroundThread,
