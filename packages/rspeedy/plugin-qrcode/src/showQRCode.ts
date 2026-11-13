@@ -10,7 +10,7 @@ import color from 'picocolors'
 import { createSupportsTerminalGraphics } from 'supports-terminal-graphics'
 import { encode, renderUnicodeCompact } from 'uqr'
 
-export type TerminalImageProtocol = 'kitty' | null
+export type TerminalImageProtocol = 'kitty' | 'iterm2' | null
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
 const DEFAULT_QR_ROWS = 14
@@ -19,11 +19,12 @@ const QR_BORDER = 4
 const QR_SCALE = 8
 
 /**
- * Detect whether the current terminal supports inline graphics via the Kitty
- * Graphics Protocol using `supports-terminal-graphics`.
+ * Detect whether the current terminal supports inline graphics protocols
+ * (Kitty Graphics Protocol or iTerm2 Inline Images Protocol) via
+ * `supports-terminal-graphics`.
  *
  * Returns `null` when running in non-TTY streams, inside terminal multiplexers
- * (`tmux` / `screen`), or on terminals without Kitty graphics support.
+ * (`tmux` / `screen`), or on terminals without graphics support.
  */
 export function detectTerminalImageProtocol(
   stream: { isTTY?: boolean } = process.stdout,
@@ -46,13 +47,23 @@ export function detectTerminalImageProtocol(
   }
 
   const support = createSupportsTerminalGraphics(stream)
+  const termProgram = process.env['TERM_PROGRAM']?.toLowerCase() ?? ''
 
-  // Although iTerm2 3.6+ reports Kitty support, it does not reliably render
-  // Kitty placements (consistent with `terminal-image`).
-  const isITerm2 = process.env['TERM_PROGRAM']?.toLowerCase() === 'iterm.app'
+  // Although iTerm2 3.6+ reports Kitty support, its native inline-image
+  // protocol (OSC 1337) is more reliable (consistent with `terminal-image`).
+  // Only prefer iTerm2 when `support.iterm2` confirms version compatibility.
+  const isITerm2 = termProgram === 'iterm.app'
 
   if (!isITerm2 && support.kitty) {
     return 'kitty'
+  }
+
+  // VS Code's integrated terminal (`TERM_PROGRAM=vscode`) defaults
+  // `terminal.integrated.enableImages` to `false` and silently ignores OSC 1337
+  // sequences unless the user explicitly opted in, so keep Unicode rendering
+  // there by default.
+  if (support.iterm2 && termProgram !== 'vscode') {
+    return 'iterm2'
   }
 
   return null
@@ -148,6 +159,27 @@ export function formatKittyImage(
 }
 
 /**
+ * Format a PNG buffer using the iTerm2 Inline Images Protocol (`OSC 1337`).
+ * Pre-allocates `rows - 1` lines first, then moves the cursor up on the last
+ * line to emit the image so `@clack/prompts` renders the guide bar on all rows
+ * without overwriting the image.
+ */
+export function formatITerm2Image(
+  pngBuffer: Buffer,
+  columns: number,
+  rows: number,
+): string {
+  const base64Data = pngBuffer.toString('base64')
+  const osc =
+    `\u001b]1337;File=inline=1;width=${columns};height=${rows};preserveAspectRatio=1;size=${pngBuffer.byteLength}:${base64Data}\u0007`
+  const rowOffset = Math.max(0, rows - 1)
+  if (rowOffset === 0) {
+    return osc
+  }
+  return '\n'.repeat(rowOffset) + `\u001b[${rowOffset}A` + osc
+}
+
+/**
  * Compute target cell dimensions (`columns` x `rows`) for a square QR code,
  * respecting small terminal sizes. Terminal cells have an ~1:2 width-to-height
  * aspect ratio, so `columns = rows * 2`.
@@ -175,8 +207,9 @@ export function calculateQRCellSize(
 }
 
 /**
- * Render a QR code string for the given URL using the Kitty Graphics Protocol
- * when supported, or fall back to `uqr` compact Unicode block characters.
+ * Render a QR code string for the given URL using terminal graphics protocols
+ * (`kitty` or `iterm2`) when supported, or fall back to `uqr` compact Unicode
+ * block characters.
  */
 export function renderQRCode(
   url: string,
@@ -187,14 +220,16 @@ export function renderQRCode(
   } = process.stdout,
 ): string {
   const protocol = detectTerminalImageProtocol(stream)
-  if (protocol === 'kitty') {
+  if (protocol) {
     const cellSize = calculateQRCellSize(stream.columns, stream.rows)
     if (cellSize) {
       try {
         const qr = encode(url, { border: QR_BORDER })
         if (Array.isArray(qr?.data) && qr.data.length > 0) {
           const pngBuffer = encodeQRMatrixToPng(qr.data)
-          return formatKittyImage(pngBuffer, cellSize.columns, cellSize.rows)
+          return protocol === 'kitty'
+            ? formatKittyImage(pngBuffer, cellSize.columns, cellSize.rows)
+            : formatITerm2Image(pngBuffer, cellSize.columns, cellSize.rows)
         }
       } catch {
         // Fall back to compact Unicode rendering if encoding fails or `uqr` is mocked in tests
