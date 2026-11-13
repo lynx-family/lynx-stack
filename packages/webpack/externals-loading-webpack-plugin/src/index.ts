@@ -122,8 +122,34 @@ export interface ExternalValue {
    * Use this when the external bundle is hosted outside the current build
    * output, such as on a CDN. If both `url` and `bundlePath` are provided,
    * `url` takes precedence because it is already the fully resolved address.
+   * A resolver runs lazily in each realm and may return a Promise. Resolvers
+   * are serialized, cannot capture build-time variables, and require
+   * `async: true` (the default).
    */
-  url?: string;
+  url?: string | (() => string | Promise<string>);
+
+  /**
+   * Override evaluation of an asynchronously fetched bundle section.
+   *
+   * The callback is serialized into each realm and cannot capture build-time
+   * variables. It must handle failed responses and stylesheet adoption itself.
+   * Use this to adapt bundle namespaces or retry a missing offline file on CDN.
+   * Requires `async: true` (the default).
+   *
+   * @example
+   * ```ts
+   * { load: (response, section) => globalThis.bundleLoader.load(response, section) }
+   * ```
+   */
+  load?: (
+    response: {
+      code: number;
+      url: string;
+      errorMsg?: string;
+      error_msg?: string;
+    },
+    sectionPath: string,
+  ) => unknown;
 
   /**
    * The bundle path resolved against the runtime public path.
@@ -289,6 +315,14 @@ function getLynxExternalGlobal(globalObject?: string) {
 
 function validateExternals(externals: Record<string, ExternalValue>): void {
   for (const [request, external] of Object.entries(externals)) {
+    if (
+      (typeof external.url === 'function' || external.load)
+      && external.async !== undefined && external.async !== true
+    ) {
+      throw new Error(
+        `Runtime URL resolvers and custom loaders require async: true for external "${request}".`,
+      );
+    }
     if (external.url || external.bundlePath) {
       continue;
     }
@@ -419,14 +453,15 @@ function deferExternal(name, load) {
   });
 }
 
-function createRetryingHandler(fetchBundle, retries) {
+function createRetryingHandler(fetchBundle, retries, lazy = false) {
   let cachedResponse = null
   let asyncPromise = null
-  let currentHandler = fetchBundle()
+  let currentHandler = lazy ? null : fetchBundle()
   let attemptsUsed = 0
   return {
     then(onFulfilled, onRejected) {
       if (asyncPromise === null) {
+        if (currentHandler === null) currentHandler = fetchBundle()
         asyncPromise = new Promise((resolve, reject) => {
           const tryNext = (response) => {
             if (cachedResponse !== null) {
@@ -449,6 +484,7 @@ function createRetryingHandler(fetchBundle, retries) {
     },
     wait(timeout) {
       if (cachedResponse !== null) return cachedResponse
+      if (currentHandler === null) currentHandler = fetchBundle()
       let response = currentHandler.wait(timeout)
       while (response.code === -2 && attemptsUsed < retries) {
         attemptsUsed++
@@ -461,9 +497,13 @@ function createRetryingHandler(fetchBundle, retries) {
   }
 }
 
-function createLoadExternalAsync(handler, sectionPath) {
+function createLoadExternalAsync(handler, sectionPath, load) {
   return new Promise((resolve, reject) => {
     handler.then((response) => {
+      if (load) {
+        Promise.resolve().then(() => load(response, sectionPath)).then(resolve, reject);
+        return;
+      }
       if (response.code === 0) {
         try {
           const result = lynx.loadScript(sectionPath, { bundleName: response.url });
@@ -491,7 +531,7 @@ function createLoadExternalAsync(handler, sectionPath) {
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
       }
-    })
+    }, reject)
   })
 }
 
@@ -526,7 +566,6 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
   }
 }
 `;
-
         const hasUrlLibraryNamePairInjected = new Set();
         // Track which (urlKey, sectionPath) pairs have already generated a loadScript call.
         // Maps to the mountVar of the first external that triggered the load, so subsequent
@@ -544,6 +583,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             retries = externalsLoadingPluginOptions.retries ?? 0,
           } = external;
           const layerOptions = external[layer];
+          const loadArgument = external.load
+            ? `, (${external.load.toString()})`
+            : '';
           // Lynx fetchBundle timeout is in seconds
           const timeout = timeoutInMs / 1000;
 
@@ -563,21 +605,31 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               bundlePath: bundlePath.replace(/^\/+/, ''),
             }
             : external;
-          const urlKey = url ?? `bundlePath:${normalizedExternal.bundlePath}`;
+          const runtimeUrl = typeof url === 'function';
+          const urlKey = runtimeUrl
+            ? `resolver:${url.toString()}`
+            : (url ?? `bundlePath:${normalizedExternal.bundlePath}`);
           const hash = `${urlKey}-${libraryNameStr}`;
           if (hasUrlLibraryNamePairInjected.has(hash)) {
             continue;
           }
           hasUrlLibraryNamePairInjected.add(hash);
 
-          const fetchExpr = normalizedExternal.url
-            ? JSON.stringify(normalizedExternal.url)
-            : `${compiler.webpack.RuntimeGlobals.publicPath} + ${
-              JSON.stringify(normalizedExternal.bundlePath)
-            }`;
+          const fetchExpr = runtimeUrl
+            ? `(${url.toString()})()`
+            : (normalizedExternal.url
+              ? JSON.stringify(normalizedExternal.url)
+              : `${compiler.webpack.RuntimeGlobals.publicPath} + ${
+                JSON.stringify(normalizedExternal.bundlePath)
+              }`);
           url2fetchCode.set(
             urlKey,
-            `() => lynx.fetchBundle(${fetchExpr}, {})`,
+            runtimeUrl
+              ? `() => Promise.resolve().then(() => ${fetchExpr}).then(url => {
+                  if (typeof url !== "string" || !url) throw new Error("External bundle URL resolver must return a non-empty string");
+                  return new Promise(resolve => lynx.fetchBundle(url, {}).then(resolve));
+                })`
+              : `() => lynx.fetchBundle(${fetchExpr}, {})`,
           );
           url2retries.set(
             urlKey,
@@ -597,7 +649,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           // so they must not be merged even when they share the same section.
           const sectionKey = `${urlKey}||${layerOptions.sectionPath}||${
             String(async)
-          }`;
+          }||${external.load?.toString() ?? ''}`;
           const existingMountVar = sectionLoadTracker.get(sectionKey);
           if (existingMountVar !== undefined) {
             // Preserve any value the host may have pre-populated for this global,
@@ -615,7 +667,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             const predicate =
               `(${async.toString()})({ systemInfo: typeof SystemInfo !== "undefined" ? SystemInfo : (lynx.SystemInfo ?? {}) })`;
             const loadAsync =
-              `createLoadExternalAsync(handler${handlerIndex}, ${sectionPath})`;
+              `createLoadExternalAsync(handler${handlerIndex}, ${sectionPath}${loadArgument})`;
             const loadSync =
               `new Promise(resolve => resolve(createLoadExternalSync(handler${handlerIndex}, ${sectionPath}, ${timeout})))`;
             const load =
@@ -626,7 +678,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           const loader = async
             ? 'createLoadExternalAsync'
             : 'createLoadExternalSync';
-          const timeoutArgument = async ? '' : `, ${timeout}`;
+          const timeoutArgument = async ? loadArgument : `, ${timeout}`;
           const load =
             `deferExternal(${externalName}, () => ${loader}(handler${handlerIndex}, ${sectionPath}${timeoutArgument}));`;
           loadCode.add(load);
@@ -638,9 +690,17 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           ...[...url2fetchCode.entries()].map(([urlKey, fetchCode], index) =>
             `const handler${index} = createRetryingHandler(${fetchCode}, ${
               url2retries.get(urlKey) ?? 0
-            });`
+            }${urlKey.startsWith('resolver:') ? ', true' : ''});`
           ),
           ...loadCode,
+          ...(finalExternals.some(([, external]) => external.async !== false)
+            ? [
+              `if (typeof ${compiler.webpack.RuntimeGlobals.startup} === "function") {
+  const start = ${compiler.webpack.RuntimeGlobals.startup};
+  ${compiler.webpack.RuntimeGlobals.startup} = () => Promise.resolve(start());
+}`,
+            ]
+            : []),
         ].join('\n');
       }
     }
@@ -668,7 +728,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               );
               let layer: string | undefined;
               for (const module of modules) {
-                if (module.layer) {
+                if (
+                  module.layer === externalsLoadingPluginOptions.backgroundLayer
+                  || module.layer
+                    === externalsLoadingPluginOptions.mainThreadLayer
+                ) {
                   layer = module.layer;
                   break;
                 }

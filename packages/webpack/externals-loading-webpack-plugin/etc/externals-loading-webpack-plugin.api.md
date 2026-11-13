@@ -32,10 +32,16 @@ export interface ExternalValue {
     background?: LayerOptions;
     bundlePath?: string;
     libraryName?: string | string[];
+    load?: (response: {
+        code: number;
+        url: string;
+        errorMsg?: string;
+        error_msg?: string;
+    }, sectionPath: string) => unknown;
     mainThread?: LayerOptions;
     retries?: number;
     timeout?: number;
-    url?: string;
+    url?: string | (() => string | Promise<string>);
 }
 
 // @public
