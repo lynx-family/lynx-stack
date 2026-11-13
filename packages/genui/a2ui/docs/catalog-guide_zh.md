@@ -169,8 +169,16 @@ const catalog = defineCatalog([Text, ...basicFunctions]);
 失败时，动态绑定解析为 `null` 并发送关联的协议错误。`openUrl` 仅能由用户操作触发，
 不能在被动绑定或校验规则中执行。
 
+内置格式化函数使用英文（美国）格式，不依赖 `Intl`。
+在原生 Lynx 中，通过 `createBasicFunctions({ openUrl: url => hostNavigation.open(url) })`
+注入应用自己的导航适配器，并将返回的函数展开到 `catalogs`。
+回调接收已校验的 `http`、`https`、`mailto` 或 `tel` URL，可以返回 Promise；
+失败时走渲染器的函数错误处理。未配置回调时，浏览器使用 `window.open`，
+没有导航能力的宿主会明确报错。每次创建的回调只作用于对应目录，不影响其他实例。
+
 如果你构建自己的 renderer 而不用 `<A2UI>`，调用一次 `registerBasicFunctions()`
-就能把这些相同的实现注册进共享的 `functionRegistry`。
+就能把这些相同的实现注册进共享的 `functionRegistry`。原生宿主可传入同样的
+`registerBasicFunctions({ openUrl: url => hostNavigation.open(url) })` 回调。
 
 ## 为什么没有 `catalog/all`
 

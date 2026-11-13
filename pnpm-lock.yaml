@@ -218,6 +218,7 @@ overrides:
 packageExtensionsChecksum: sha256-Y9ZLHWMP51V1VaeUicx/UxFRX96fq7QFLXtege8aEOA=
 
 patchedDependencies:
+  '@cfworker/json-schema@4.1.4': 4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2
   '@napi-rs/cli@2.18.4': ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
   '@rollup/plugin-typescript': 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
 
@@ -1360,7 +1361,7 @@ importers:
         version: link:../rspeedy/plugin-lynx
       '@openuidev/lang-core':
         specifier: ^0.3.0
-        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
+        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2))(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.2.9(core-js@3.50.0)
@@ -1422,7 +1423,7 @@ importers:
     devDependencies:
       '@cfworker/json-schema':
         specifier: 4.1.4
-        version: 4.1.4
+        version: 4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2)
       '@lynx-js/genui-cli':
         specifier: workspace:*
         version: link:../cli
@@ -1450,6 +1451,9 @@ importers:
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
+      uri-js:
+        specifier: 4.4.1
+        version: 4.4.1
 
   packages/genui/a2ui-catalog-extractor:
     dependencies:
@@ -1551,7 +1555,7 @@ importers:
     dependencies:
       '@openuidev/lang-core':
         specifier: ^0.3.0
-        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
+        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2))(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
       marked:
         specifier: ^14.0.0
         version: 14.0.0
@@ -1606,7 +1610,7 @@ importers:
         version: link:../../web-platform/web-elements
       '@openuidev/lang-core':
         specifier: ^0.3.0
-        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
+        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2))(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
       '@radix-ui/react-select':
         specifier: ^2.3.7
         version: 2.3.7(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1783,7 +1787,7 @@ importers:
         version: 1.70.0(express@5.2.1(supports-color@10.2.2))(rxjs@7.8.2)(supports-color@10.2.2)(zod-to-json-schema@3.25.2(zod@4.6.7))(zod@4.6.7)
       '@openuidev/lang-core':
         specifier: ^0.3.0
-        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
+        version: 0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2))(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)
       '@volcengine/tos-sdk':
         specifier: ^2.9.1
         version: 2.9.1(supports-color@10.2.2)
@@ -13941,7 +13945,7 @@ snapshots:
 
   '@bufbuild/protobuf@2.6.0': {}
 
-  '@cfworker/json-schema@4.1.4': {}
+  '@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2)': {}
 
   '@changesets/apply-release-plan@8.1.1':
     dependencies:
@@ -15739,7 +15743,7 @@ snapshots:
 
   '@microsoft/tsdoc@0.17.0': {}
 
-  '@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.6.7)':
+  '@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2))(supports-color@10.2.2)(zod@4.6.7)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.13.13)
       ajv: 8.20.0
@@ -15759,7 +15763,7 @@ snapshots:
       zod: 4.6.7
       zod-to-json-schema: 3.25.2(zod@4.6.7)
     optionalDependencies:
-      '@cfworker/json-schema': 4.1.4
+      '@cfworker/json-schema': 4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2)
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -15801,12 +15805,12 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@openuidev/lang-core@0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)':
+  '@openuidev/lang-core@0.3.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2))(supports-color@10.2.2)(zod@4.6.7))(zod@4.6.7)':
     dependencies:
       ci-info: 4.4.0
       zod: 4.6.7
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.29.0(@cfworker/json-schema@4.1.4)(supports-color@10.2.2)(zod@4.6.7)
+      '@modelcontextprotocol/sdk': 1.29.0(@cfworker/json-schema@4.1.4(patch_hash=4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2))(supports-color@10.2.2)(zod@4.6.7)
 
   '@oxc-project/types@0.139.0': {}
 

@@ -122,4 +122,10 @@ export {
 // A2UI basic-catalog functions — registered + announced when spread
 // into `<A2UI catalogs={[..., ...basicFunctions]}>`. The local implementations
 // and pinned schemas follow the current 1.0 contract.
-export { basicFunctions, registerBasicFunctions } from './functions/index.js';
+export {
+  basicFunctions,
+  createBasicFunctions,
+  registerBasicFunctions,
+} from './functions/index.js';
+
+export type { BasicFunctionOptions } from './functions/index.js';
