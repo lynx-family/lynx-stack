@@ -3,61 +3,72 @@
   "description": "Example of restaurant card",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-restaurant-card",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-restaurant-card",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["restaurant-image", "content"]
+            "children": [
+              "restaurant_image",
+              "content"
+            ]
           },
           {
-            "id": "restaurant-image",
+            "id": "restaurant_image",
             "component": "Image",
             "url": {
-              "path": "/image"
+              "@path": "/image"
             },
             "fit": "cover"
           },
           {
             "id": "content",
             "component": "Column",
-            "children": ["name-row", "cuisine", "rating-row", "details-row"]
+            "children": [
+              "name_row",
+              "cuisine",
+              "rating_row",
+              "details_row"
+            ]
           },
           {
-            "id": "name-row",
+            "id": "name_row",
             "component": "Row",
-            "children": ["restaurant-name", "price-range"],
+            "children": [
+              "restaurant_name",
+              "price_range"
+            ],
             "justify": "spaceBetween",
             "align": "center"
           },
           {
-            "id": "restaurant-name",
+            "id": "restaurant_name",
             "component": "Text",
             "text": {
-              "path": "/name"
+              "@path": "/name"
             },
             "variant": "h3"
           },
           {
-            "id": "price-range",
+            "id": "price_range",
             "component": "Text",
             "text": {
-              "path": "/priceRange"
+              "@path": "/priceRange"
             },
             "variant": "body"
           },
@@ -65,18 +76,22 @@
             "id": "cuisine",
             "component": "Text",
             "text": {
-              "path": "/cuisine"
+              "@path": "/cuisine"
             },
             "variant": "caption"
           },
           {
-            "id": "rating-row",
+            "id": "rating_row",
             "component": "Row",
-            "children": ["star-icon", "rating", "reviews"],
+            "children": [
+              "star_icon",
+              "rating",
+              "reviews"
+            ],
             "align": "center"
           },
           {
-            "id": "star-icon",
+            "id": "star_icon",
             "component": "Icon",
             "name": "star"
           },
@@ -84,7 +99,7 @@
             "id": "rating",
             "component": "Text",
             "text": {
-              "path": "/rating"
+              "@path": "/rating"
             },
             "variant": "body"
           },
@@ -92,28 +107,31 @@
             "id": "reviews",
             "component": "Text",
             "text": {
-              "path": "/reviewCount"
+              "@path": "/reviewCount"
             },
             "variant": "caption"
           },
           {
-            "id": "details-row",
+            "id": "details_row",
             "component": "Row",
-            "children": ["distance", "delivery-time"]
+            "children": [
+              "distance",
+              "delivery_time"
+            ]
           },
           {
             "id": "distance",
             "component": "Text",
             "text": {
-              "path": "/distance"
+              "@path": "/distance"
             },
             "variant": "caption"
           },
           {
-            "id": "delivery-time",
+            "id": "delivery_time",
             "component": "Text",
             "text": {
-              "path": "/deliveryTime"
+              "@path": "/deliveryTime"
             },
             "variant": "caption"
           }
@@ -121,14 +139,14 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-restaurant-card",
         "value": {
           "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=300&h=150&fit=crop",
           "name": "The Italian Kitchen",
           "priceRange": "$$$",
-          "cuisine": "Italian \u2022 Pasta \u2022 Wine Bar",
+          "cuisine": "Italian • Pasta • Wine Bar",
           "rating": "4.8",
           "reviewCount": "(2,847 reviews)",
           "distance": "0.8 mi",

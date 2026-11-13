@@ -64,6 +64,9 @@ export function resolveDeepValue(
       : next;
   }
 
+  if (isDataBinding(value) && Object.keys(value).some(key => key !== '@path')) {
+    throw new Error('Invalid data binding shape');
+  }
   if (isObject(value) && !isDataBinding(value) && !isFunctionCall(value)) {
     const previousObject = (
       previousResolved && typeof previousResolved === 'object'
@@ -77,11 +80,20 @@ export function resolveDeepValue(
     ) {
       const resolved = resolveDeepValue(
         item,
-        previousObject?.[key],
+        previousObject?.[key.startsWith('@@') ? key.slice(1) : key],
         resolveLeaf,
       );
-      next[key] = resolved;
-      if (!Object.is(resolved, previousObject?.[key])) changed = true;
+      if (key.startsWith('@') && !key.startsWith('@@')) {
+        throw new Error(`Unknown dynamic directive: ${key}`);
+      }
+      const literalKey = key.startsWith('@@') ? key.slice(1) : key;
+      Object.defineProperty(next, literalKey, {
+        value: resolved,
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
+      if (!Object.is(resolved, previousObject?.[literalKey])) changed = true;
     }
     return !changed && previousObject ? previousObject : next;
   }
@@ -110,8 +122,7 @@ export function createResolveFunctionCall(
       surfaceId,
       dataContextPath,
       {
-        functions: options.functions,
-        registry: options.registry,
+        ...options,
       },
     );
 }
@@ -127,13 +138,7 @@ function resolveSignal(
   const resolvedPath = processor.resolvePath(path, dataContextPath);
   const signal = store.getSignal(resolvedPath);
   const raw = signal.value;
-  if (raw === undefined || raw === null) return raw;
-  if (typeof raw !== 'string') return raw;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return raw;
-  }
+  return raw;
 }
 
 /**
@@ -156,7 +161,7 @@ export function resolveDynamicValue(
       if (isDataBinding(leaf)) {
         return resolveSignal(
           processor,
-          leaf.path,
+          leaf['@path'],
           surfaceId,
           dataContextPath,
         );

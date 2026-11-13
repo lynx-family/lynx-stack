@@ -1040,14 +1040,14 @@ describe('A2UI Bench UI Judge integration', () => {
           return Promise.resolve({
             text: JSON.stringify([
               {
-                version: 'v0.9',
+                version: '1.0',
                 createSurface: {
                   surfaceId: 'main',
                   catalogId: options.catalog?.id,
                 },
               },
               {
-                version: 'v0.9',
+                version: '1.0',
                 updateComponents: {
                   surfaceId: 'main',
                   components: [{
@@ -1122,14 +1122,14 @@ describe('A2UI Bench UI Judge integration', () => {
         return Promise.resolve({
           text: JSON.stringify([
             {
-              version: 'v0.9',
+              version: '1.0',
               createSurface: {
                 surfaceId: 'main',
                 catalogId: options.catalog?.id,
               },
             },
             {
-              version: 'v0.9',
+              version: '1.0',
               updateComponents: {
                 surfaceId: 'main',
                 components: [{

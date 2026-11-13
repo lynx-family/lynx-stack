@@ -26,6 +26,7 @@ import {
   startOfMonth,
   withDate,
 } from './utils.js';
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
@@ -72,19 +73,12 @@ function getPartsKey(parts: ReturnType<typeof normalizeDateTimeInputValue>) {
  */
 export interface DateTimeInputProps extends GenericComponentProps {
   /** The current date/time value. Typically bound to a data path. */
-  value: string | { path: string };
+  value: string | { '@path': string };
   /** The text label for the input field. */
-  label?: string | { path: string } | {
-    call: string;
+  label?: string | { '@path': string } | {
+    '@call': string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** Whether to show the date picker. */
   enableDate?: boolean;
@@ -97,22 +91,15 @@ export interface DateTimeInputProps extends GenericComponentProps {
   /** Maximum allowed date/time value. */
   max?: string;
   /** A list of checks to perform. */
-  checks?: Array<{
+  '@checks'?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
-      call: string;
+    condition: { '@path': string } | {
+      '@call': string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    /** The error message to display if the check fails. */
-    message: string;
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 
@@ -143,7 +130,7 @@ export function DateTimeInput(
   const [visibleMonth, setVisibleMonth] = useState(
     startOfMonth(dateTimePartsToDate(initialParts)),
   );
-  const checks = props.checks as CheckLike[] | undefined;
+  const checks = props['@checks'] as CheckLike[] | undefined;
 
   const { ok, firstFailureMessage } = useChecks({
     checks,
@@ -221,7 +208,7 @@ export function DateTimeInput(
   ]);
 
   return (
-    <view key={id} className={rootClassName}>
+    <view {...accessibilityProps(props)} key={id} className={rootClassName}>
       {labelText
         ? <text className='datetime-input-label'>{labelText}</text>
         : null}
@@ -348,7 +335,8 @@ export function DateTimeInput(
                       </text>
                       <view
                         className='datetime-time-stepper'
-                        bindtap={() => handleTimeStep('hour', -1)}
+                        bindtap={() =>
+                          handleTimeStep('hour', -1)}
                         event-through={false}
                       >
                         <text className='datetime-time-stepper-icon'>

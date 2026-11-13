@@ -16,11 +16,11 @@ rstest.mock('../agent/a2ui/a2ui-agent.js', { mock: true });
 const validText = JSON.stringify(
   [
     {
-      version: 'v0.9',
+      version: '1.0',
       createSurface: { surfaceId: 'main', catalogId: BASIC_CATALOG.id },
     },
     {
-      version: 'v0.9',
+      version: '1.0',
       updateComponents: {
         surfaceId: 'main',
         components: [{

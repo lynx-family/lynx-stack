@@ -1,11 +1,13 @@
 [
   {
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "default",
-      "catalogId": "demo-trip-planner"
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -14,7 +16,12 @@
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["header", "summary", "divider", "itinerary"]
+          "children": [
+            "header",
+            "summary",
+            "divider",
+            "itinerary"
+          ]
         },
         {
           "id": "header",
@@ -43,6 +50,7 @@
     }
   },
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -55,8 +63,8 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -64,31 +72,53 @@
           "id": "itinerary",
           "component": "Column",
           "align": "stretch",
-          "children": ["day1"]
+          "children": [
+            "day1"
+          ]
         },
-        { "id": "day1", "component": "Card", "child": "day1-body" },
         {
-          "id": "day1-body",
+          "id": "day1",
+          "component": "Card",
+          "child": "day1_body"
+        },
+        {
+          "id": "day1_body",
           "component": "Column",
           "align": "stretch",
-          "children": ["day1-header", "day1-cover", "day1-stops"]
+          "children": [
+            "day1_header",
+            "day1_cover",
+            "day1_stops"
+          ]
         },
         {
-          "id": "day1-header",
+          "id": "day1_header",
           "component": "Row",
-          "alignment": "center",
-          "distribution": "spaceBetween",
-          "children": ["day1-title", "day1-weather"]
+          "children": [
+            "day1_title",
+            "day1_weather"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
         },
-        { "id": "day1-title", "component": "Text", "variant": "h4", "text": "Day 1 · East Kyoto" },
-        { "id": "day1-weather", "component": "Loading", "variant": "inline" },
         {
-          "id": "day1-cover",
+          "id": "day1_title",
+          "component": "Text",
+          "variant": "h4",
+          "text": "Day 1 · East Kyoto"
+        },
+        {
+          "id": "day1_weather",
+          "component": "Loading",
+          "variant": "inline"
+        },
+        {
+          "id": "day1_cover",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-kyoto-day1/640/280"
         },
         {
-          "id": "day1-stops",
+          "id": "day1_stops",
           "component": "Column",
           "align": "stretch",
           "children": []
@@ -97,50 +127,80 @@
     }
   },
   {
-    "updateComponents": {
-      "surfaceId": "default",
-      "components": [
-        { "id": "day1-weather", "component": "Text", "variant": "caption", "text": "Sunny · 22°C · light breeze" }
-      ]
-    }
-  },
-
-  {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "day1-stops",
+          "id": "day1_weather",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Sunny · 22°C · light breeze"
+        }
+      ]
+    }
+  },
+  {
+    "version": "1.0",
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "day1_stops",
           "component": "Column",
           "align": "stretch",
-          "children": ["d1-stop1"]
+          "children": [
+            "d1_stop1"
+          ]
         },
         {
-          "id": "d1-stop1",
+          "id": "d1_stop1",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "start",
-          "children": ["d1-stop1-time", "d1-stop1-info"]
+          "children": [
+            "d1_stop1_time",
+            "d1_stop1_info"
+          ],
+          "align": "start",
+          "justify": "start"
         },
-        { "id": "d1-stop1-time", "component": "Text", "variant": "label", "weight": 2, "text": "08:30" },
         {
-          "id": "d1-stop1-info",
+          "id": "d1_stop1_time",
+          "component": "Text",
+          "variant": "caption",
+          "text": "08:30",
+          "weight": 2
+        },
+        {
+          "id": "d1_stop1_info",
           "component": "Column",
           "align": "start",
-          "weight": 7,
-          "children": ["d1-stop1-title", "d1-stop1-desc"]
+          "children": [
+            "d1_stop1_title",
+            "d1_stop1_desc"
+          ],
+          "weight": 7
         },
-        { "id": "d1-stop1-title", "component": "Text", "variant": "h5", "text": "Kiyomizu-dera" },
-        { "id": "d1-stop1-desc", "component": "Loading", "variant": "inline" }
+        {
+          "id": "d1_stop1_title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Kiyomizu-dera"
+        },
+        {
+          "id": "d1_stop1_desc",
+          "component": "Loading",
+          "variant": "inline"
+        }
       ]
     }
   },
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "d1-stop1-desc",
+          "id": "d1_stop1_desc",
           "component": "Text",
           "variant": "caption",
           "text": "Wooden terrace over the valley. Arrive early to beat the crowds and catch clean light for photos."
@@ -148,35 +208,55 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "day1-stops",
+          "id": "day1_stops",
           "component": "Column",
           "align": "stretch",
-          "children": ["d1-stop1", "d1-stop2"]
+          "children": [
+            "d1_stop1",
+            "d1_stop2"
+          ]
         },
         {
-          "id": "d1-stop2",
+          "id": "d1_stop2",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "start",
-          "children": ["d1-stop2-time", "d1-stop2-info"]
+          "children": [
+            "d1_stop2_time",
+            "d1_stop2_info"
+          ],
+          "align": "start",
+          "justify": "start"
         },
-        { "id": "d1-stop2-time", "component": "Text", "variant": "label", "weight": 2, "text": "11:00" },
         {
-          "id": "d1-stop2-info",
+          "id": "d1_stop2_time",
+          "component": "Text",
+          "variant": "caption",
+          "text": "11:00",
+          "weight": 2
+        },
+        {
+          "id": "d1_stop2_info",
           "component": "Column",
           "align": "start",
-          "weight": 7,
-          "children": ["d1-stop2-title", "d1-stop2-desc"]
+          "children": [
+            "d1_stop2_title",
+            "d1_stop2_desc"
+          ],
+          "weight": 7
         },
-        { "id": "d1-stop2-title", "component": "Text", "variant": "h5", "text": "Philosopher's Path" },
         {
-          "id": "d1-stop2-desc",
+          "id": "d1_stop2_title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Philosopher's Path"
+        },
+        {
+          "id": "d1_stop2_desc",
           "component": "Text",
           "variant": "caption",
           "text": "A quiet canal walk lined with cherry trees. Pair it with a matcha stop halfway through."
@@ -184,35 +264,56 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "day1-stops",
+          "id": "day1_stops",
           "component": "Column",
           "align": "stretch",
-          "children": ["d1-stop1", "d1-stop2", "d1-stop3"]
+          "children": [
+            "d1_stop1",
+            "d1_stop2",
+            "d1_stop3"
+          ]
         },
         {
-          "id": "d1-stop3",
+          "id": "d1_stop3",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "start",
-          "children": ["d1-stop3-time", "d1-stop3-info"]
+          "children": [
+            "d1_stop3_time",
+            "d1_stop3_info"
+          ],
+          "align": "start",
+          "justify": "start"
         },
-        { "id": "d1-stop3-time", "component": "Text", "variant": "label", "weight": 2, "text": "18:30" },
         {
-          "id": "d1-stop3-info",
+          "id": "d1_stop3_time",
+          "component": "Text",
+          "variant": "caption",
+          "text": "18:30",
+          "weight": 2
+        },
+        {
+          "id": "d1_stop3_info",
           "component": "Column",
           "align": "start",
-          "weight": 7,
-          "children": ["d1-stop3-title", "d1-stop3-desc"]
+          "children": [
+            "d1_stop3_title",
+            "d1_stop3_desc"
+          ],
+          "weight": 7
         },
-        { "id": "d1-stop3-title", "component": "Text", "variant": "h5", "text": "Pontocho Alley Dinner" },
         {
-          "id": "d1-stop3-desc",
+          "id": "d1_stop3_title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Pontocho Alley Dinner"
+        },
+        {
+          "id": "d1_stop3_desc",
           "component": "Text",
           "variant": "caption",
           "text": "Lantern-lit alley by the river. Pick a small counter spot for seasonal kaiseki."
@@ -220,8 +321,8 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -229,31 +330,55 @@
           "id": "itinerary",
           "component": "Column",
           "align": "stretch",
-          "children": ["day1", "day2"]
+          "children": [
+            "day1",
+            "day2"
+          ]
         },
-        { "id": "day2", "component": "Card", "child": "day2-body" },
         {
-          "id": "day2-body",
+          "id": "day2",
+          "component": "Card",
+          "child": "day2_body"
+        },
+        {
+          "id": "day2_body",
           "component": "Column",
           "align": "stretch",
-          "children": ["day2-header", "day2-cover", "day2-stops"]
+          "children": [
+            "day2_header",
+            "day2_cover",
+            "day2_stops"
+          ]
         },
         {
-          "id": "day2-header",
+          "id": "day2_header",
           "component": "Row",
-          "alignment": "center",
-          "distribution": "spaceBetween",
-          "children": ["day2-title", "day2-weather"]
+          "children": [
+            "day2_title",
+            "day2_weather"
+          ],
+          "align": "center",
+          "justify": "spaceBetween"
         },
-        { "id": "day2-title", "component": "Text", "variant": "h4", "text": "Day 2 · Arashiyama" },
-        { "id": "day2-weather", "component": "Text", "variant": "caption", "text": "Cloudy · 20°C · cool morning" },
         {
-          "id": "day2-cover",
+          "id": "day2_title",
+          "component": "Text",
+          "variant": "h4",
+          "text": "Day 2 · Arashiyama"
+        },
+        {
+          "id": "day2_weather",
+          "component": "Text",
+          "variant": "caption",
+          "text": "Cloudy · 20°C · cool morning"
+        },
+        {
+          "id": "day2_cover",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-kyoto-day2/640/280"
         },
         {
-          "id": "day2-stops",
+          "id": "day2_stops",
           "component": "Column",
           "align": "stretch",
           "children": []
@@ -261,35 +386,54 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "day2-stops",
+          "id": "day2_stops",
           "component": "Column",
           "align": "stretch",
-          "children": ["d2-stop1"]
+          "children": [
+            "d2_stop1"
+          ]
         },
         {
-          "id": "d2-stop1",
+          "id": "d2_stop1",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "start",
-          "children": ["d2-stop1-time", "d2-stop1-info"]
+          "children": [
+            "d2_stop1_time",
+            "d2_stop1_info"
+          ],
+          "align": "start",
+          "justify": "start"
         },
-        { "id": "d2-stop1-time", "component": "Text", "variant": "label", "weight": 2, "text": "09:00" },
         {
-          "id": "d2-stop1-info",
+          "id": "d2_stop1_time",
+          "component": "Text",
+          "variant": "caption",
+          "text": "09:00",
+          "weight": 2
+        },
+        {
+          "id": "d2_stop1_info",
           "component": "Column",
           "align": "start",
-          "weight": 7,
-          "children": ["d2-stop1-title", "d2-stop1-desc"]
+          "children": [
+            "d2_stop1_title",
+            "d2_stop1_desc"
+          ],
+          "weight": 7
         },
-        { "id": "d2-stop1-title", "component": "Text", "variant": "h5", "text": "Bamboo Grove" },
         {
-          "id": "d2-stop1-desc",
+          "id": "d2_stop1_title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Bamboo Grove"
+        },
+        {
+          "id": "d2_stop1_desc",
           "component": "Text",
           "variant": "caption",
           "text": "Walk the grove path before tour buses arrive. The sound of the bamboo is the real reason to come."
@@ -297,35 +441,55 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "day2-stops",
+          "id": "day2_stops",
           "component": "Column",
           "align": "stretch",
-          "children": ["d2-stop1", "d2-stop2"]
+          "children": [
+            "d2_stop1",
+            "d2_stop2"
+          ]
         },
         {
-          "id": "d2-stop2",
+          "id": "d2_stop2",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "start",
-          "children": ["d2-stop2-time", "d2-stop2-info"]
+          "children": [
+            "d2_stop2_time",
+            "d2_stop2_info"
+          ],
+          "align": "start",
+          "justify": "start"
         },
-        { "id": "d2-stop2-time", "component": "Text", "variant": "label", "weight": 2, "text": "12:30" },
         {
-          "id": "d2-stop2-info",
+          "id": "d2_stop2_time",
+          "component": "Text",
+          "variant": "caption",
+          "text": "12:30",
+          "weight": 2
+        },
+        {
+          "id": "d2_stop2_info",
           "component": "Column",
           "align": "start",
-          "weight": 7,
-          "children": ["d2-stop2-title", "d2-stop2-desc"]
+          "children": [
+            "d2_stop2_title",
+            "d2_stop2_desc"
+          ],
+          "weight": 7
         },
-        { "id": "d2-stop2-title", "component": "Text", "variant": "h5", "text": "Riverside Soba Lunch" },
         {
-          "id": "d2-stop2-desc",
+          "id": "d2_stop2_title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Riverside Soba Lunch"
+        },
+        {
+          "id": "d2_stop2_desc",
           "component": "Text",
           "variant": "caption",
           "text": "Handmade soba with a view of the Hozu River. Keep lunch light before the hillside walk."
@@ -333,35 +497,56 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
         {
-          "id": "day2-stops",
+          "id": "day2_stops",
           "component": "Column",
           "align": "stretch",
-          "children": ["d2-stop1", "d2-stop2", "d2-stop3"]
+          "children": [
+            "d2_stop1",
+            "d2_stop2",
+            "d2_stop3"
+          ]
         },
         {
-          "id": "d2-stop3",
+          "id": "d2_stop3",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "start",
-          "children": ["d2-stop3-time", "d2-stop3-info"]
+          "children": [
+            "d2_stop3_time",
+            "d2_stop3_info"
+          ],
+          "align": "start",
+          "justify": "start"
         },
-        { "id": "d2-stop3-time", "component": "Text", "variant": "label", "weight": 2, "text": "16:00" },
         {
-          "id": "d2-stop3-info",
+          "id": "d2_stop3_time",
+          "component": "Text",
+          "variant": "caption",
+          "text": "16:00",
+          "weight": 2
+        },
+        {
+          "id": "d2_stop3_info",
           "component": "Column",
           "align": "start",
-          "weight": 7,
-          "children": ["d2-stop3-title", "d2-stop3-desc"]
+          "children": [
+            "d2_stop3_title",
+            "d2_stop3_desc"
+          ],
+          "weight": 7
         },
-        { "id": "d2-stop3-title", "component": "Text", "variant": "h5", "text": "Monkey Park Viewpoint" },
         {
-          "id": "d2-stop3-desc",
+          "id": "d2_stop3_title",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Monkey Park Viewpoint"
+        },
+        {
+          "id": "d2_stop3_desc",
           "component": "Text",
           "variant": "caption",
           "text": "Short uphill hike ends with a wide city overlook. A calm way to close out the trip."

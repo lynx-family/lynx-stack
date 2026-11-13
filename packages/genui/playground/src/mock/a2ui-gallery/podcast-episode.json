@@ -3,68 +3,80 @@
   "description": "Example of podcast episode demonstrating AudioPlayer and date formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-podcast-episode",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-podcast-episode",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-row"
+            "child": "main_row"
           },
           {
-            "id": "main-row",
+            "id": "main_row",
             "component": "Row",
-            "children": ["artwork", "content"],
+            "children": [
+              "artwork",
+              "content"
+            ],
             "align": "start"
           },
           {
             "id": "artwork",
             "component": "Image",
             "url": {
-              "path": "/artwork"
+              "@path": "/artwork"
             },
             "fit": "cover"
           },
           {
             "id": "content",
             "component": "Column",
-            "children": ["show-name", "episode-title", "meta-row", "description", "audio-player"]
+            "children": [
+              "show_name",
+              "episode_title",
+              "meta_row",
+              "description",
+              "audio_player"
+            ]
           },
           {
-            "id": "show-name",
+            "id": "show_name",
             "component": "Text",
             "text": {
-              "path": "/showName"
+              "@path": "/showName"
             },
             "variant": "caption"
           },
           {
-            "id": "episode-title",
+            "id": "episode_title",
             "component": "Text",
             "text": {
-              "path": "/episodeTitle"
+              "@path": "/episodeTitle"
             },
             "variant": "h4"
           },
           {
-            "id": "meta-row",
+            "id": "meta_row",
             "component": "Row",
-            "children": ["duration", "date"]
+            "children": [
+              "duration",
+              "date"
+            ]
           },
           {
             "id": "duration",
             "component": "Text",
             "text": {
-              "path": "/duration"
+              "@path": "/duration"
             },
             "variant": "caption"
           },
@@ -72,14 +84,13 @@
             "id": "date",
             "component": "Text",
             "text": {
-              "call": "formatDate",
+              "@call": "formatDate",
               "args": {
                 "value": {
-                  "path": "/date"
+                  "@path": "/date"
                 },
                 "format": "MMM d, yyyy"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           },
@@ -87,25 +98,35 @@
             "id": "description",
             "component": "Text",
             "text": {
-              "path": "/description"
+              "@path": "/description"
             },
             "variant": "body"
           },
           {
-            "id": "audio-player",
-            "component": "AudioPlayer",
-            "url": {
-              "path": "/audioUrl"
-            },
-            "description": {
-              "path": "/episodeTitle"
+            "id": "audio_player",
+            "component": "Button",
+            "child": "media_label",
+            "action": {
+              "functionCall": {
+                "@call": "openUrl",
+                "args": {
+                  "url": {
+                    "@path": "/audioUrl"
+                  }
+                }
+              }
             }
+          },
+          {
+            "id": "media_label",
+            "component": "Text",
+            "text": "Listen to episode"
           }
         ]
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-podcast-episode",
         "value": {

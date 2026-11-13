@@ -172,10 +172,28 @@ test('accepts A2UI arrays, wrappers, single messages and NDJSON in order', () =>
       '{"version":"v0.8","createSurface":{"surfaceId":"demo"}}',
       'a2ui',
     )
-  ).toThrow('v0.9');
+  ).toThrow('1.0');
   expect(() =>
     core.parsePreviewSource(`${JSON.stringify(messages[0])}\ninvalid`, 'a2ui')
   ).toThrow('第 2 行');
+});
+
+test('accepts current 1.0 RPC envelopes without a surface and rejects old versions', () => {
+  const { core } = loadCore();
+  for (const operation of ['callRendererFunction', 'agentFunctionResponse']) {
+    const message = { version: '1.0', [operation]: { functionCallId: 'rpc' } };
+    expect(core.parsePreviewSource(JSON.stringify(message), 'a2ui')).toEqual([
+      message,
+    ]);
+  }
+  for (const version of ['v0.9', 'v1.0']) {
+    expect(() =>
+      core.parsePreviewSource(
+        JSON.stringify({ version, createSurface: { surfaceId: 'main' } }),
+        'a2ui',
+      )
+    ).toThrow('1.0');
+  }
 });
 
 test('preserves Markdown whitespace and limits input size before rendering', () => {

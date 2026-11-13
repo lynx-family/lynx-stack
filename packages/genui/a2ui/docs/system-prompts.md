@@ -2,7 +2,7 @@
 
 Generate and customize the system instructions that teach an LLM to emit valid A2UI messages.
 
-Generate a reusable prompt with the CLI for most deployments, or build one programmatically when the backend needs request-specific catalog or policy inputs. The prompt tells the model how to produce A2UI v0.9 JSON. It includes the protocol rules, the component catalog, function signatures, validated examples, and hard constraints that keep the renderer output safe and parseable.
+Generate a reusable prompt with the CLI for most deployments, or build one programmatically when the backend needs request-specific catalog or policy inputs. The prompt tells the model how to produce A2UI v1.0 JSON. It includes the protocol rules, the component catalog, function signatures, validated examples, and hard constraints that keep the renderer output safe and parseable.
 
 ## 1. CLI
 
@@ -103,10 +103,10 @@ For fully in-memory catalog construction, use `createA2UICatalogFromManifests(..
 
 The generated prompt includes:
 
-- A2UI v0.9 protocol overview and design principles.
+- A2UI v1.0 protocol overview and design principles.
 - Required server-to-client message types: `createSurface`, `updateComponents`, `updateDataModel`, and `deleteSurface`.
 - Required message ordering for a fresh response.
-- Data binding rules for `{ "path": "/..." }` values and list children.
+- Data binding rules for `{ "@path": "/..." }` values and list children.
 - Client action rules for events and function calls.
 - A rendered catalog reference with component summaries, props, required fields, container shape, enum values, and function signatures.
 - Hard rules for JSON-only output, catalog id matching, flat component trees, `root` component requirements, button labels/actions, modal confirmation flows, loadable image sources, and action-response patches.
@@ -118,14 +118,14 @@ The model should return a JSON array of A2UI messages, not Markdown or prose:
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "main",
-      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v0.9",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [

@@ -159,14 +159,14 @@ const pendingUntilAbortedFetch: typeof fetch = (_input, init) =>
 function a2uiWithOpenURL(url: unknown): string {
   return JSON.stringify([
     {
-      version: 'v0.9',
+      version: '1.0',
       createSurface: {
         surfaceId: 'main',
         catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
-      version: 'v0.9',
+      version: '1.0',
       updateComponents: {
         surfaceId: 'main',
         components: [{
@@ -175,9 +175,8 @@ function a2uiWithOpenURL(url: unknown): string {
           child: 'source-label',
           action: {
             functionCall: {
-              call: 'openUrl',
+              '@call': 'openUrl',
               args: { url },
-              returnType: 'void',
             },
           },
         }, {
@@ -193,14 +192,14 @@ function a2uiWithOpenURL(url: unknown): string {
 function a2uiWithImage(url: unknown): string {
   return JSON.stringify([
     {
-      version: 'v0.9',
+      version: '1.0',
       createSurface: {
         surfaceId: 'main',
         catalogId: 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
       },
     },
     {
-      version: 'v0.9',
+      version: '1.0',
       updateComponents: {
         surfaceId: 'main',
         components: [{
@@ -596,7 +595,7 @@ describe('A2UI web-search source validation', () => {
 
   test('rejects dynamically bound openUrl targets', async () => {
     const catalog = await loadBasicCatalog();
-    const binding = { path: '/sources/0/url' };
+    const binding = { '@path': '/sources/0/url' };
     const result = validateA2UIOutput(
       a2uiWithOpenURL(binding),
       catalog,
@@ -605,7 +604,7 @@ describe('A2UI web-search source validation', () => {
 
     expect(result.ok).toBe(false);
     expect(result.errors).toContain(
-      'Function "openUrl" at component.root.action.functionCall has untrusted url {"path":"/sources/0/url"}. Use a URL supplied by the request or returned by web_search or image_search.',
+      'Function "openUrl" at component.root.action.functionCall has untrusted url {"@path":"/sources/0/url"}. Use a URL supplied by the request or returned by web_search or image_search.',
     );
   });
 
@@ -644,7 +643,7 @@ describe('A2UI web-search source validation', () => {
   test('does not stream a component containing a bound openUrl', () => {
     const streamed = new A2UIProtocolMessageStreamParser({
       isOpenUrlAllowed: () => true,
-    }).push(a2uiWithOpenURL({ path: '/sources/0/url' }));
+    }).push(a2uiWithOpenURL({ '@path': '/sources/0/url' }));
 
     expect(JSON.stringify(streamed)).toContain('"component":"Loading"');
     expect(JSON.stringify(streamed)).not.toContain('/sources/0/url');

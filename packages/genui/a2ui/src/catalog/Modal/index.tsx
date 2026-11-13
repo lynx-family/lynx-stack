@@ -10,7 +10,9 @@ import {
 import { useState } from '@lynx-js/react';
 
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
+import { accessibilityProps } from '../../react/accessibility.js';
 import type {
+  ComponentId,
   ComponentInstance,
   GenericComponentProps,
 } from '../../store/types.js';
@@ -23,10 +25,14 @@ import '../../../styles/catalog/Modal.css';
  * @a2uiCatalog Modal
  */
 export interface ModalProps extends GenericComponentProps {
-  /** The ID of the component that opens the modal when interacted with. */
-  trigger: string;
-  /** The ID of the component to display inside the modal. */
-  content: string;
+  /** The ID of the component that opens the modal when interacted with.
+   * @a2uiComponentId
+   */
+  trigger: ComponentId;
+  /** The ID of the component to display inside the modal.
+   * @a2uiComponentId
+   */
+  content: ComponentId;
 }
 
 function childWithContext(
@@ -50,12 +56,8 @@ export function Modal(
   } = props;
   const [open, setOpen] = useState(false);
 
-  const compatibleProps = props as ModalProps & {
-    contentChild?: string;
-    entryPointChild?: string;
-  };
-  const triggerId = compatibleProps.trigger ?? compatibleProps.entryPointChild;
-  const contentId = compatibleProps.content ?? compatibleProps.contentChild;
+  const triggerId = props.trigger;
+  const contentId = props.content;
 
   const trigger = childWithContext(
     triggerId ? surface.components.get(triggerId) : undefined,
@@ -77,7 +79,11 @@ export function Modal(
         setOpen(nextOpen);
       }}
     >
-      <view className='modal-trigger' bindtap={handleOpen}>
+      <view
+        {...accessibilityProps(props)}
+        className='modal-trigger'
+        bindtap={handleOpen}
+      >
         {trigger
           ? (
             <NodeRenderer
@@ -94,7 +100,11 @@ export function Modal(
           clickToClose={true}
           transition={true}
         />
-        <DialogContent className='modal-content' transition={true}>
+        <DialogContent
+          {...accessibilityProps(props)}
+          className='modal-content'
+          transition={true}
+        >
           {content
             ? <NodeRenderer component={content} surface={surface} />
             : null}

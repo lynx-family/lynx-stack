@@ -1,11 +1,13 @@
 [
   {
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "default",
-      "catalogId": "demo-cast-grid"
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -14,12 +16,16 @@
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "children": ["label", "summary", "castGrid"]
+          "children": [
+            "label",
+            "summary",
+            "castGrid"
+          ]
         },
         {
           "id": "label",
           "component": "Text",
-          "variant": "label",
+          "variant": "caption",
           "text": "AI generated answer"
         },
         {
@@ -33,118 +39,207 @@
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "children": ["castRow-1", "castRow-2"]
+          "children": [
+            "castRow_1",
+            "castRow_2"
+          ]
         },
         {
-          "id": "castRow-1",
+          "id": "castRow_1",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "spaceBetween",
-          "children": ["cast-1", "cast-2", "cast-3"]
+          "children": [
+            "cast_1",
+            "cast_2",
+            "cast_3"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
         },
         {
-          "id": "castRow-2",
+          "id": "castRow_2",
           "component": "Row",
-          "alignment": "start",
-          "distribution": "spaceBetween",
-          "children": ["cast-4", "cast-5", "cast-6"]
+          "children": [
+            "cast_4",
+            "cast_5",
+            "cast_6"
+          ],
+          "align": "start",
+          "justify": "spaceBetween"
         },
-
         {
-          "id": "cast-1",
+          "id": "cast_1",
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "weight": 1,
-          "children": ["cast-1-img", "cast-1-name", "cast-1-role"]
+          "children": [
+            "cast_1_img",
+            "cast_1_name",
+            "cast_1_role"
+          ],
+          "weight": 1
         },
         {
-          "id": "cast-1-img",
+          "id": "cast_1_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-cast-1/96/120"
         },
-        { "id": "cast-1-name", "component": "Text", "variant": "h5", "text": "Lin Xia" },
-        { "id": "cast-1-role", "component": "Text", "variant": "caption", "text": "as The Pathfinder" },
-
         {
-          "id": "cast-2",
+          "id": "cast_1_name",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Lin Xia"
+        },
+        {
+          "id": "cast_1_role",
+          "component": "Text",
+          "variant": "caption",
+          "text": "as The Pathfinder"
+        },
+        {
+          "id": "cast_2",
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "weight": 1,
-          "children": ["cast-2-img", "cast-2-name", "cast-2-role"]
+          "children": [
+            "cast_2_img",
+            "cast_2_name",
+            "cast_2_role"
+          ],
+          "weight": 1
         },
         {
-          "id": "cast-2-img",
+          "id": "cast_2_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-cast-2/96/120"
         },
-        { "id": "cast-2-name", "component": "Text", "variant": "h5", "text": "Xu Shuo" },
-        { "id": "cast-2-role", "component": "Text", "variant": "caption", "text": "as The Chronicler" },
-
         {
-          "id": "cast-3",
+          "id": "cast_2_name",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Xu Shuo"
+        },
+        {
+          "id": "cast_2_role",
+          "component": "Text",
+          "variant": "caption",
+          "text": "as The Chronicler"
+        },
+        {
+          "id": "cast_3",
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "weight": 1,
-          "children": ["cast-3-img", "cast-3-name", "cast-3-role"]
+          "children": [
+            "cast_3_img",
+            "cast_3_name",
+            "cast_3_role"
+          ],
+          "weight": 1
         },
         {
-          "id": "cast-3-img",
+          "id": "cast_3_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-cast-3/96/120"
         },
-        { "id": "cast-3-name", "component": "Text", "variant": "h5", "text": "Qiao Ran" },
-        { "id": "cast-3-role", "component": "Text", "variant": "caption", "text": "as The Guide" },
-
         {
-          "id": "cast-4",
+          "id": "cast_3_name",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Qiao Ran"
+        },
+        {
+          "id": "cast_3_role",
+          "component": "Text",
+          "variant": "caption",
+          "text": "as The Guide"
+        },
+        {
+          "id": "cast_4",
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "weight": 1,
-          "children": ["cast-4-img", "cast-4-name", "cast-4-role"]
+          "children": [
+            "cast_4_img",
+            "cast_4_name",
+            "cast_4_role"
+          ],
+          "weight": 1
         },
         {
-          "id": "cast-4-img",
+          "id": "cast_4_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-cast-4/96/120"
         },
-        { "id": "cast-4-name", "component": "Text", "variant": "h5", "text": "He Yu" },
-        { "id": "cast-4-role", "component": "Text", "variant": "caption", "text": "as The Composer" },
-
         {
-          "id": "cast-5",
+          "id": "cast_4_name",
+          "component": "Text",
+          "variant": "h5",
+          "text": "He Yu"
+        },
+        {
+          "id": "cast_4_role",
+          "component": "Text",
+          "variant": "caption",
+          "text": "as The Composer"
+        },
+        {
+          "id": "cast_5",
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "weight": 1,
-          "children": ["cast-5-img", "cast-5-name", "cast-5-role"]
+          "children": [
+            "cast_5_img",
+            "cast_5_name",
+            "cast_5_role"
+          ],
+          "weight": 1
         },
         {
-          "id": "cast-5-img",
+          "id": "cast_5_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-cast-5/96/120"
         },
-        { "id": "cast-5-name", "component": "Text", "variant": "h5", "text": "Tang Yi" },
-        { "id": "cast-5-role", "component": "Text", "variant": "caption", "text": "as The Courier" },
-
         {
-          "id": "cast-6",
+          "id": "cast_5_name",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Tang Yi"
+        },
+        {
+          "id": "cast_5_role",
+          "component": "Text",
+          "variant": "caption",
+          "text": "as The Courier"
+        },
+        {
+          "id": "cast_6",
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "weight": 1,
-          "children": ["cast-6-img", "cast-6-name", "cast-6-role"]
+          "children": [
+            "cast_6_img",
+            "cast_6_name",
+            "cast_6_role"
+          ],
+          "weight": 1
         },
         {
-          "id": "cast-6-img",
+          "id": "cast_6_img",
           "component": "Image",
           "url": "https://picsum.photos/seed/a2ui-cast-6/96/120"
         },
-        { "id": "cast-6-name", "component": "Text", "variant": "h5", "text": "Zhou Ning" },
-        { "id": "cast-6-role", "component": "Text", "variant": "caption", "text": "as The Fixer" }
+        {
+          "id": "cast_6_name",
+          "component": "Text",
+          "variant": "h5",
+          "text": "Zhou Ning"
+        },
+        {
+          "id": "cast_6_role",
+          "component": "Text",
+          "variant": "caption",
+          "text": "as The Fixer"
+        }
       ]
     }
   }

@@ -30,18 +30,18 @@ import { PROTOCOLS } from '../../utils/protocol.js';
 rstest.mock('../../components/QrCode.js', () => ({ QrCode: () => null }));
 
 const create = {
-  version: 'v0.9',
+  version: '1.0',
   createSurface: { surfaceId: 'main', catalogId: 'catalog' },
 };
 const update = (text: string) => ({
-  version: 'v0.9',
+  version: '1.0',
   updateComponents: {
     surfaceId: 'main',
     components: [{ id: 'root', component: 'Text', text }],
   },
 });
 const loading = {
-  version: 'v0.9',
+  version: '1.0',
   updateComponents: {
     surfaceId: 'main',
     components: [{ id: 'root', component: 'Loading' }],
@@ -293,14 +293,14 @@ test('replays the final bound image when streaming withheld it as loading', asyn
   const frame = await send();
   const post = await ready(frame);
   const data = {
-    version: 'v0.9',
+    version: '1.0',
     updateDataModel: {
       surfaceId: 'main',
       value: { photo: 'https://images.example.com/weather.jpg' },
     },
   };
   const image = {
-    version: 'v0.9',
+    version: '1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [{ id: 'root', component: 'Image', url: { path: '/photo' } }],

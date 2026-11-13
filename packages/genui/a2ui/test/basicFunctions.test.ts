@@ -1,11 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-//
-// Smoke tests for the upstream-`BASIC_FUNCTIONS` adapter. Per-function
-// behavior is covered by `@a2ui/web_core`'s own test suite — we only verify
-// here that the adapter wires upstream impls into our `FunctionRegistry`
-// and that the `email` omission is honored.
+// Shared function registry and declared argument contracts.
 import { afterAll, beforeAll, describe, expect, test } from '@rstest/core';
 
 import {
@@ -65,8 +61,20 @@ describe('basicFunctions adapter', () => {
     const parameters = add?.definition?.parameters as
       | { properties?: Record<string, unknown> }
       | undefined;
-    expect(parameters?.properties?.['a']).toMatchObject({ type: 'number' });
-    expect(parameters?.properties?.['b']).toMatchObject({ type: 'number' });
+    expect(parameters?.properties?.['a']).toMatchObject({
+      $ref: 'common_types.json#/$defs/DynamicNumber',
+    });
+    expect(parameters?.properties?.['b']).toMatchObject({
+      $ref: 'common_types.json#/$defs/DynamicNumber',
+    });
+  });
+
+  test('requires formatString.value in its schema and implementation', () => {
+    const formatter = basicFunctions.find(fn => fn.name === 'formatString')!;
+    expect(formatter.definition?.parameters['required']).toEqual(['value']);
+    expect(() => formatter.impl!({})).toThrow('formatString requires a value');
+    expect(formatter.impl!({ value: '' })).toBe('');
+    expect(formatter.impl!({ value: 'Hello' })).toBe('Hello');
   });
 
   describe('registerBasicFunctions', () => {
@@ -91,8 +99,8 @@ describe('basicFunctions adapter', () => {
       registerBasicFunctions();
       const required = functionRegistry.resolve('required');
       expect(required).toBeDefined();
-      expect(required!({ value: '' })).toBe(false);
-      expect(required!({ value: 'hi' })).toBe(true);
+      expect(required!({ value: '' })).toEqual({ valid: false });
+      expect(required!({ value: 'hi' })).toEqual({ valid: true });
     });
   });
 });

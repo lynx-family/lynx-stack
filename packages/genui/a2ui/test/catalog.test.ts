@@ -87,15 +87,15 @@ describe('defineCatalog', () => {
       [Button, BUTTON_MANIFEST],
     ]);
     expect(cat.components[0]!.name).toBe('Text');
-    expect(cat.components[0]!.schema).toEqual(TEXT_MANIFEST.Text);
+    expect(cat.components[0]!.schema).toEqual(TEXT_MANIFEST['Text']);
     expect(cat.components[1]!.name).toBe('Button');
-    expect(cat.components[1]!.schema).toEqual(BUTTON_MANIFEST.Button);
+    expect(cat.components[1]!.schema).toEqual(BUTTON_MANIFEST['Button']);
   });
 
   test('mixes bare and tuple inputs in one call', () => {
     const cat = defineCatalog([Text, [Button, BUTTON_MANIFEST]]);
     expect(cat.components[0]!.schema).toBeUndefined();
-    expect(cat.components[1]!.schema).toEqual(BUTTON_MANIFEST.Button);
+    expect(cat.components[1]!.schema).toEqual(BUTTON_MANIFEST['Button']);
   });
 
   test('passes through already-resolved entries', () => {
@@ -145,19 +145,21 @@ describe('resolveCatalog', () => {
 });
 
 describe('serializeCatalog', () => {
-  test('emits version + components, omitting schema when absent', () => {
+  test('requires a schema when announcing a component', () => {
     const cat = defineCatalog([Text]);
-    const out = serializeCatalog(cat);
-    expect(out.version).toBe('0.9');
-    expect(out.components).toEqual([{ name: 'Text' }]);
+    expect(() => serializeCatalog(cat)).toThrow('without a schema');
   });
 
   test('attaches schema when present', () => {
     const cat = defineCatalog([[Text, TEXT_MANIFEST]]);
     const out = serializeCatalog(cat);
-    expect(out.components[0]).toEqual({
-      name: 'Text',
-      schema: TEXT_MANIFEST.Text,
+    expect(out.components['Text']).toMatchObject({
+      properties: { component: { const: 'Text' } },
+      required: ['component'],
+    });
+    expect(out.catalogId).toBe(out.$id);
+    expect(out.$defs['anyComponent']).toEqual({
+      oneOf: [{ $ref: '#/components/Text' }],
     });
   });
 });
@@ -175,13 +177,13 @@ describe('user composes their own all-builtins catalog', () => {
       [Tabs, TABS_MANIFEST],
     ]);
     const manifest = serializeCatalog(all);
-    expect(manifest.components.map((c) => c.name)).toEqual([
+    expect(Object.keys(manifest.components)).toEqual([
       'Text',
       'Button',
       'Icon',
       'LineChart',
       'Tabs',
     ]);
-    expect(manifest.components.every((c) => c.schema)).toBe(true);
+    expect(Object.values(manifest.components).every(Boolean)).toBe(true);
   });
 });

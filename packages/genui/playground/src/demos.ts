@@ -30,7 +30,7 @@ function collectComponentNamesFromMessages(
 
   const v = value as Record<string, unknown>;
 
-  // Standard v0.9 message: { updateComponents: { components: [...] } }
+  // Standard v1.0 message: { updateComponents: { components: [...] } }
   const updateComponents = v.updateComponents;
   if (updateComponents && typeof updateComponents === 'object') {
     const uc = updateComponents as Record<string, unknown>;

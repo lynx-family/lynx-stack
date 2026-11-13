@@ -23,6 +23,23 @@ export async function streamJevComposition(
   abortSignal?: AbortSignal,
 ) {
   const catalog = opts.catalog ?? await loadBasicCatalog();
+  const actionMessage = messages.at(-1)?.content;
+  let actionSurfaceId: string | undefined;
+  if (actionMessage?.startsWith('A2UI_USER_ACTION: ')) {
+    try {
+      const action: unknown = JSON.parse(
+        actionMessage.slice('A2UI_USER_ACTION: '.length),
+      );
+      if (
+        action && typeof action === 'object' && 'surfaceId' in action
+        && typeof action.surfaceId === 'string'
+      ) {
+        actionSurfaceId = action.surfaceId;
+      }
+    } catch {
+      // Only a complete server-generated action envelope identifies a live surface.
+    }
+  }
   return createJevCompositionStream(
     opts,
     abortSignal,
@@ -50,8 +67,13 @@ export async function streamJevComposition(
           ...runtime,
         })
       ) {
-        text = JSON.stringify(snapshot);
-        const delta = snapshots === 0 ? snapshot : snapshot.slice(2);
+        // Actions update an existing surface; 1.0 forbids creating it again.
+        const output = snapshot.filter(message =>
+          !('createSurface' in message
+            && message.createSurface.surfaceId === actionSurfaceId)
+        );
+        text = JSON.stringify(output);
+        const delta = snapshots === 0 ? output : snapshot.slice(2);
         yield {
           text,
           delta: `${snapshots === 0 ? '[' : ','}${

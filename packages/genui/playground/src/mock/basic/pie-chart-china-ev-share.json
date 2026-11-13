@@ -1,11 +1,13 @@
 [
   {
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "default",
-      "catalogId": "demo-pie-chart-china-ev-share"
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -14,7 +16,11 @@
           "component": "Column",
           "align": "start",
           "justify": "start",
-          "children": ["title", "subtitle", "stageList"]
+          "children": [
+            "title",
+            "subtitle",
+            "stageList"
+          ]
         },
         {
           "id": "title",
@@ -38,8 +44,8 @@
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -48,28 +54,33 @@
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["stage-1"]
+          "children": [
+            "stage_1"
+          ]
         },
         {
-          "id": "stage-1",
+          "id": "stage_1",
           "component": "Card",
-          "child": "stage-1-body"
+          "child": "stage_1_body"
         },
         {
-          "id": "stage-1-body",
+          "id": "stage_1_body",
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["stage-1-label", "stage-1-chart"]
+          "children": [
+            "stage_1_label",
+            "stage_1_chart"
+          ]
         },
         {
-          "id": "stage-1-label",
+          "id": "stage_1_label",
           "component": "Text",
           "variant": "h4",
           "text": "Snapshot 1 · Top 3 brands"
         },
         {
-          "id": "stage-1-chart",
+          "id": "stage_1_chart",
           "component": "PieChart",
           "variant": "donut",
           "title": "China EV brand share",
@@ -77,17 +88,33 @@
           "paddingAngle": 2,
           "showPercentages": true,
           "data": [
-            { "name": "BYD", "value": 27.2, "color": "#0057d9" },
-            { "name": "Geely", "value": 12.2, "color": "#0a8f8f" },
-            { "name": "Changan", "value": 6.2, "color": "#8a5cf6" },
-            { "name": "Other", "value": 54.4, "color": "#64748b" }
+            {
+              "name": "BYD",
+              "value": 27.2,
+              "color": "#0057d9"
+            },
+            {
+              "name": "Geely",
+              "value": 12.2,
+              "color": "#0a8f8f"
+            },
+            {
+              "name": "Changan",
+              "value": 6.2,
+              "color": "#8a5cf6"
+            },
+            {
+              "name": "Other",
+              "value": 54.4,
+              "color": "#64748b"
+            }
           ]
         }
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -96,28 +123,34 @@
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["stage-1", "stage-2"]
+          "children": [
+            "stage_1",
+            "stage_2"
+          ]
         },
         {
-          "id": "stage-2",
+          "id": "stage_2",
           "component": "Card",
-          "child": "stage-2-body"
+          "child": "stage_2_body"
         },
         {
-          "id": "stage-2-body",
+          "id": "stage_2_body",
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["stage-2-label", "stage-2-chart"]
+          "children": [
+            "stage_2_label",
+            "stage_2_chart"
+          ]
         },
         {
-          "id": "stage-2-label",
+          "id": "stage_2_label",
           "component": "Text",
           "variant": "h4",
           "text": "Snapshot 2 · Mid-tier brands added"
         },
         {
-          "id": "stage-2-chart",
+          "id": "stage_2_chart",
           "component": "PieChart",
           "variant": "donut",
           "title": "China EV brand share",
@@ -125,20 +158,48 @@
           "paddingAngle": 2,
           "showPercentages": true,
           "data": [
-            { "name": "BYD", "value": 27.2, "color": "#0057d9" },
-            { "name": "Geely", "value": 12.2, "color": "#0a8f8f" },
-            { "name": "Changan", "value": 6.2, "color": "#8a5cf6" },
-            { "name": "SAIC-GM-Wuling", "value": 6.0, "color": "#d92d20" },
-            { "name": "Tesla China", "value": 4.9, "color": "#2d6a4f" },
-            { "name": "HIMA", "value": 4.6, "color": "#b26a00" },
-            { "name": "Other", "value": 38.9, "color": "#64748b" }
+            {
+              "name": "BYD",
+              "value": 27.2,
+              "color": "#0057d9"
+            },
+            {
+              "name": "Geely",
+              "value": 12.2,
+              "color": "#0a8f8f"
+            },
+            {
+              "name": "Changan",
+              "value": 6.2,
+              "color": "#8a5cf6"
+            },
+            {
+              "name": "SAIC-GM-Wuling",
+              "value": 6.0,
+              "color": "#d92d20"
+            },
+            {
+              "name": "Tesla China",
+              "value": 4.9,
+              "color": "#2d6a4f"
+            },
+            {
+              "name": "HIMA",
+              "value": 4.6,
+              "color": "#b26a00"
+            },
+            {
+              "name": "Other",
+              "value": 38.9,
+              "color": "#64748b"
+            }
           ]
         }
       ]
     }
   },
-
   {
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "default",
       "components": [
@@ -147,28 +208,35 @@
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["stage-1", "stage-2", "stage-3"]
+          "children": [
+            "stage_1",
+            "stage_2",
+            "stage_3"
+          ]
         },
         {
-          "id": "stage-3",
+          "id": "stage_3",
           "component": "Card",
-          "child": "stage-3-body"
+          "child": "stage_3_body"
         },
         {
-          "id": "stage-3-body",
+          "id": "stage_3_body",
           "component": "Column",
           "align": "stretch",
           "justify": "start",
-          "children": ["stage-3-label", "stage-3-chart"]
+          "children": [
+            "stage_3_label",
+            "stage_3_chart"
+          ]
         },
         {
-          "id": "stage-3-label",
+          "id": "stage_3_label",
           "component": "Text",
           "variant": "h4",
           "text": "Snapshot 3 · Final full breakdown"
         },
         {
-          "id": "stage-3-chart",
+          "id": "stage_3_chart",
           "component": "PieChart",
           "variant": "donut",
           "title": "China EV brand share",
@@ -176,17 +244,61 @@
           "paddingAngle": 2,
           "showPercentages": true,
           "data": [
-            { "name": "BYD", "value": 27.2, "color": "#0057d9" },
-            { "name": "Geely", "value": 12.2, "color": "#0a8f8f" },
-            { "name": "Changan", "value": 6.2, "color": "#8a5cf6" },
-            { "name": "SAIC-GM-Wuling", "value": 6.0, "color": "#d92d20" },
-            { "name": "Tesla China", "value": 4.9, "color": "#2d6a4f" },
-            { "name": "HIMA", "value": 4.6, "color": "#b26a00" },
-            { "name": "Chery", "value": 4.1, "color": "#a855f7" },
-            { "name": "Leapmotor", "value": 4.1, "color": "#ea580c" },
-            { "name": "Seres", "value": 3.3, "color": "#0891b2" },
-            { "name": "Xiaomi EV", "value": 3.2, "color": "#111827" },
-            { "name": "Other", "value": 24.2, "color": "#64748b" }
+            {
+              "name": "BYD",
+              "value": 27.2,
+              "color": "#0057d9"
+            },
+            {
+              "name": "Geely",
+              "value": 12.2,
+              "color": "#0a8f8f"
+            },
+            {
+              "name": "Changan",
+              "value": 6.2,
+              "color": "#8a5cf6"
+            },
+            {
+              "name": "SAIC-GM-Wuling",
+              "value": 6.0,
+              "color": "#d92d20"
+            },
+            {
+              "name": "Tesla China",
+              "value": 4.9,
+              "color": "#2d6a4f"
+            },
+            {
+              "name": "HIMA",
+              "value": 4.6,
+              "color": "#b26a00"
+            },
+            {
+              "name": "Chery",
+              "value": 4.1,
+              "color": "#a855f7"
+            },
+            {
+              "name": "Leapmotor",
+              "value": 4.1,
+              "color": "#ea580c"
+            },
+            {
+              "name": "Seres",
+              "value": 3.3,
+              "color": "#0891b2"
+            },
+            {
+              "name": "Xiaomi EV",
+              "value": 3.2,
+              "color": "#111827"
+            },
+            {
+              "name": "Other",
+              "value": 24.2,
+              "color": "#64748b"
+            }
           ]
         }
       ]

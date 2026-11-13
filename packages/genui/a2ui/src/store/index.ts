@@ -17,13 +17,22 @@ export {
 export type {
   A2UIClientEventMessage,
   ComponentInstance,
+  ComponentId,
+  ChildList,
   GenericComponentProps,
   Resource,
   ResourceInfo,
   ServerToClientMessage,
+  ProtocolVersion,
+  ProtocolFunctionCall,
+  FunctionResponse,
+  V1Message,
+  RendererToAgentMessage,
   Surface,
   SurfaceId,
   UserActionPayload,
+  Action,
+  DataBinding,
 } from './types.js';
 export { FunctionRegistry, functionRegistry } from './FunctionRegistry.js';
 export type { FunctionEntry, FunctionImpl } from './FunctionRegistry.js';

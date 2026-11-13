@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { accessibilityProps } from '../../react/accessibility.js';
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Icon.css';
@@ -22,6 +23,11 @@ export interface IconProps extends GenericComponentProps {
     | 'arrow_back'
     | 'arrow_forward'
     | 'camera'
+    | 'calendar_today'
+    | 'payment'
+    | 'phone'
+    | 'skip_next'
+    | 'skip_previous'
     | 'check'
     | 'close'
     | 'delete'
@@ -46,7 +52,7 @@ export interface IconProps extends GenericComponentProps {
     | 'share'
     | 'star'
     | 'warning'
-    | { path: string };
+    | { '@path': string };
   size?: 'sm' | 'md' | 'lg';
   color?: 'primary' | 'muted' | 'inherit';
 }
@@ -62,6 +68,7 @@ export function Icon(
 
   return (
     <text
+      {...accessibilityProps(props)}
       key={id}
       className={`a2ui-icon a2ui-icon-${size} a2ui-icon-color-${color}`}
     >

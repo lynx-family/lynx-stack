@@ -23,7 +23,7 @@ export interface FunctionCallContext {
 /**
  * Function implementations live on the client; the agent only references
  * functions by name. The registry is the bridge from the wire-level
- * `FunctionCall.call` string to the actual code that runs locally.
+ * `FunctionCall.@call` string to the actual code that runs locally.
  */
 export type FunctionImpl = (
   args: Record<string, unknown>,
@@ -37,6 +37,8 @@ export type FunctionImpl = (
  */
 export interface FunctionDefinition {
   name: string;
+  allowedCallers?: 'rendererOnly' | 'agentOnly' | 'rendererOrAgent';
+  requiresUserActivation?: boolean;
   description?: string;
   parameters: Record<string, unknown>;
   returnType:
@@ -46,7 +48,8 @@ export interface FunctionDefinition {
     | 'array'
     | 'object'
     | 'any'
-    | 'void';
+    | 'void'
+    | 'validationResult';
 }
 
 /**
@@ -60,7 +63,7 @@ export interface FunctionEntry {
 }
 
 /**
- * Lookup table that routes protocol `FunctionCall.call` names to local
+ * Lookup table that routes protocol `FunctionCall.@call` names to local
  * JavaScript implementations.
  */
 export class FunctionRegistry {

@@ -2,7 +2,7 @@
 
 生成和定制用于指导 LLM 输出合法 A2UI 消息的系统提示词。
 
-大多数部署场景可以用 CLI 生成一份可复用的 prompt 文件；如果后端需要按请求、环境或 catalog 动态拼装提示词，也可以在 Node.js 代码里通过 API 构建。生成的 prompt 会告诉模型如何输出 A2UI v0.9 JSON，内容包含协议规则、组件 catalog、函数签名、已验证示例，以及保证渲染输出安全、可解析的硬性约束。
+大多数部署场景可以用 CLI 生成一份可复用的 prompt 文件；如果后端需要按请求、环境或 catalog 动态拼装提示词，也可以在 Node.js 代码里通过 API 构建。生成的 prompt 会告诉模型如何输出 A2UI v1.0 JSON，内容包含协议规则、组件 catalog、函数签名、已验证示例，以及保证渲染输出安全、可解析的硬性约束。
 
 ## 1. CLI
 
@@ -103,10 +103,10 @@ const systemPrompt = buildA2UISystemPrompt({ catalog });
 
 生成的 prompt 会包含：
 
-- A2UI v0.9 协议概览和设计原则。
+- A2UI v1.0 协议概览和设计原则。
 - 必需的服务端到客户端消息类型：`createSurface`、`updateComponents`、`updateDataModel` 和 `deleteSurface`。
 - 新 UI 响应的消息顺序要求。
-- `{ "path": "/..." }` 数据绑定和列表 children 的规则。
+- `{ "@path": "/..." }` 数据绑定和列表 children 的规则。
 - 客户端 action、event 和 function call 的规则。
 - catalog reference：组件摘要、props、必填字段、容器形态、枚举值和函数签名。
 - 硬性规则：只能输出 JSON、catalog id 必须匹配、组件树必须扁平、必须有 `root` 组件、Button 标签和 action 规则、Modal 确认流程、可加载图片资源处理，以及 action response 的 patch 规则。
@@ -118,14 +118,14 @@ const systemPrompt = buildA2UISystemPrompt({ catalog });
 ```json
 [
   {
-    "version": "v0.9",
+    "version": "1.0",
     "createSurface": {
       "surfaceId": "main",
-      "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json"
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json"
     }
   },
   {
-    "version": "v0.9",
+    "version": "1.0",
     "updateComponents": {
       "surfaceId": "main",
       "components": [

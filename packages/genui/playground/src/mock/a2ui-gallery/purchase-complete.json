@@ -3,38 +3,38 @@
   "description": "Example of purchase complete demonstrating currency formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-purchase-complete",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-purchase-complete",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
             "children": [
-              "success-icon",
+              "success_icon",
               "title",
-              "product-row",
+              "product_row",
               "divider",
-              "details-col",
-              "view-btn"
+              "details_col",
+              "view_btn"
             ],
             "align": "center"
           },
           {
-            "id": "success-icon",
+            "id": "success_icon",
             "component": "Icon",
             "name": "check"
           },
@@ -45,44 +45,49 @@
             "variant": "h2"
           },
           {
-            "id": "product-row",
+            "id": "product_row",
             "component": "Row",
-            "children": ["product-image", "product-info"],
+            "children": [
+              "product_image",
+              "product_info"
+            ],
             "align": "center"
           },
           {
-            "id": "product-image",
+            "id": "product_image",
             "component": "Image",
             "url": {
-              "path": "/productImage"
+              "@path": "/productImage"
             },
             "fit": "cover"
           },
           {
-            "id": "product-info",
+            "id": "product_info",
             "component": "Column",
-            "children": ["product-name", "product-price"]
+            "children": [
+              "product_name",
+              "product_price"
+            ]
           },
           {
-            "id": "product-name",
+            "id": "product_name",
             "component": "Text",
             "text": {
-              "path": "/productName"
+              "@path": "/productName"
             },
             "variant": "h4"
           },
           {
-            "id": "product-price",
+            "id": "product_price",
             "component": "Text",
             "text": {
-              "call": "formatCurrency",
+              "@call": "formatCurrency",
               "args": {
                 "value": {
-                  "path": "/price"
+                  "@path": "/price"
                 },
                 "currency": "USD"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "body"
           },
@@ -91,57 +96,66 @@
             "component": "Divider"
           },
           {
-            "id": "details-col",
+            "id": "details_col",
             "component": "Column",
-            "children": ["delivery-row", "seller-row"]
+            "children": [
+              "delivery_row",
+              "seller_row"
+            ]
           },
           {
-            "id": "delivery-row",
+            "id": "delivery_row",
             "component": "Row",
-            "children": ["delivery-icon", "delivery-text"],
+            "children": [
+              "delivery_icon",
+              "delivery_text"
+            ],
             "align": "center"
           },
           {
-            "id": "delivery-icon",
+            "id": "delivery_icon",
             "component": "Icon",
-            "name": "arrowForward"
+            "name": "arrow_forward"
           },
           {
-            "id": "delivery-text",
+            "id": "delivery_text",
             "component": "Text",
             "text": {
-              "path": "/deliveryDate"
+              "@path": "/deliveryDate"
             },
             "variant": "body"
           },
           {
-            "id": "seller-row",
+            "id": "seller_row",
             "component": "Row",
-            "children": ["seller-label", "seller-name"]
+            "children": [
+              "seller_label",
+              "seller_name"
+            ]
           },
           {
-            "id": "seller-label",
+            "id": "seller_label",
             "component": "Text",
             "text": "Sold by:",
             "variant": "caption"
           },
           {
-            "id": "seller-name",
+            "id": "seller_name",
             "component": "Text",
             "text": {
-              "path": "/seller"
+              "@path": "/seller"
             },
             "variant": "body"
           },
           {
-            "id": "view-btn-text",
+            "id": "view_btn_text",
             "component": "Text",
             "text": "View Order Details"
           },
           {
-            "id": "view-btn",
+            "id": "view_btn",
             "component": "Button",
-            "child": "view-btn-text",
+            "child": "view_btn_text",
             "action": {
               "event": {
                 "name": "view_details",
@@ -153,7 +167,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-purchase-complete",
         "value": {

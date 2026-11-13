@@ -22,15 +22,24 @@ export { createMessageStore, MessageProcessor } from './store/index.js';
 export type {
   A2UIClientEventMessage,
   ComponentInstance,
+  ComponentId,
+  ChildList,
   GenericComponentProps,
   MessageStore,
   MessageStoreOptions,
   Resource,
   ResourceInfo,
   ServerToClientMessage,
+  ProtocolVersion,
+  ProtocolFunctionCall,
+  FunctionResponse,
+  V1Message,
+  RendererToAgentMessage,
   Surface,
   SurfaceId,
   UserActionPayload,
+  Action,
+  DataBinding,
 } from './store/index.js';
 // Helpers for IO that returns free-form text instead of structured
 // protocol messages.
@@ -110,8 +119,7 @@ export {
   Icon,
 } from './catalog/index.js';
 
-// A2UI 0.9 basic-catalog functions — registered + announced when spread
-// into `<A2UI catalogs={[..., ...basicFunctions]}>`. Impls come from
-// `@a2ui/web_core` (the upstream basic-catalog package), so the wire
-// contract stays aligned with the spec for free.
+// A2UI basic-catalog functions — registered + announced when spread
+// into `<A2UI catalogs={[..., ...basicFunctions]}>`. The local implementations
+// and pinned schemas follow the current 1.0 contract.
 export { basicFunctions, registerBasicFunctions } from './functions/index.js';

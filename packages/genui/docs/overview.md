@@ -9,7 +9,7 @@ artifacts using Vanilla Lynx.
 
 | Component        | A2UI                                         | OpenUI                                               | ReactLynx                        | Lynx XML                                                     |
 | ---------------- | -------------------------------------------- | ---------------------------------------------------- | -------------------------------- | ------------------------------------------------------------ |
-| Output format    | A2UI v0.9 messages                           | OpenUI Lang v0.5 assignments                         | `App.tsx` + `App.css`            | Standalone `.lynxml` artifact                                |
+| Output format    | A2UI 1.0 messages                            | OpenUI Lang v0.5 assignments                         | `App.tsx` + `App.css`            | Standalone `.lynxml` artifact                                |
 | UI contract      | Catalog                                      | Library                                              | ReactLynx                        | Vanilla Lynx and Element PAPI                                |
 | Client input     | Incremental protocol messages                | Accumulated OpenUI text                              | Compiled Web or Native bundle    | Normalized final artifact after any enabled transformation   |
 | Primary renderer | `<A2UI>`                                     | `<OpenUiRenderer>`                                   | Lynx host                        | Lynx XML runtime                                             |

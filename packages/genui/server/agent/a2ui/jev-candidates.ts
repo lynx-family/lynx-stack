@@ -8,7 +8,7 @@ import type {
   A2UIComponentSpec,
 } from './a2ui-catalog.js';
 import type { A2UIMessage } from './a2ui-validator.js';
-import { isLoadableImageSource } from './a2ui-validator.js';
+import { expandA2UIMessage, isLoadableImageSource } from './a2ui-validator.js';
 import type { JevCandidate, JevComponent } from '../common/jev-tree.js';
 import {
   JEV_STRUCTURAL_PROPS,
@@ -34,6 +34,7 @@ export interface JevContent {
 
 /** Read a complete content snapshot, independently of its business domain. */
 export function readJevContent(messages: A2UIMessage[]): JevContent {
+  messages = messages.flatMap(message => expandA2UIMessage(message));
   const surfaces = messages.filter(message => 'createSurface' in message);
   if (surfaces.length !== 1) {
     throw new Error(
@@ -177,7 +178,7 @@ export function buildJevCandidates(
     const schema = prop.schema
       ?? { type: prop.type, ...(prop.enums ? { enum: prop.enums } : {}) };
     const encodedBindings: JevValueBinding[] = bindings.map(binding => ({
-      value: { path: binding.path },
+      value: { '@path': binding.path },
       resolved: binding.value,
       name: binding.path.split('/').at(-1)!,
       description: `Bind to ${binding.path} (${
@@ -188,7 +189,7 @@ export function buildJevCandidates(
       bindings: encodedBindings,
       // Empty initial input state is valid; empty generated display content is not.
       allowPlaceholder: !prop.required || (prop.name === 'value'
-        && prop.schema?.oneOf?.some(branch => branch.properties?.path)
+        && prop.schema?.oneOf?.some(branch => branch.properties?.['@path'])
           === true),
       accept(value, resolved) {
         if (
@@ -197,7 +198,8 @@ export function buildJevCandidates(
         ) return false;
         // Image bindings are supported even by string-only Catalogs.
         return matches(value, schema)
-          || (imageSource && isRecord(value) && typeof value.path === 'string');
+          || (imageSource && isRecord(value)
+            && typeof value['@path'] === 'string');
       },
     }).map(({ value, description, placeholder }) => ({
       value,

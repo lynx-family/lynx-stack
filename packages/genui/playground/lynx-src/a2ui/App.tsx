@@ -667,15 +667,23 @@ export function App() {
                     key={storeRevisionRef.current}
                     messageStore={store}
                     catalogs={ALL_BUILTINS}
-                    onAction={(action) => {
-                      if (effectiveData.liveAction) {
-                        NativeModules.bridge.call(
-                          'A2UI_USER_ACTION',
-                          action as unknown as Record<string, unknown>,
-                          () => undefined,
-                        );
-                        return;
+                    onMessage={(message, metadata) => {
+                      if (effectiveData.liveAction && !('error' in message)) {
+                        NativeModules.bridge.call('A2UI_PROTOCOL_MESSAGE', {
+                          message,
+                          metadata,
+                        }, () => undefined);
                       }
+                      if ('error' in message) {
+                        const { code, message: detail } = message.error;
+                        setError((previous) =>
+                          previous || `${code}: ${detail}`
+                        );
+                        agentRef.current?.stop();
+                      }
+                    }}
+                    onAction={(action) => {
+                      if (effectiveData.liveAction) return;
                       // Forward user actions to the mock agent — it pushes
                       // the canned response messages back into the same store.
                       void agentRef.current?.onAction(action);
