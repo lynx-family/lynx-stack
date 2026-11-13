@@ -1,5 +1,30 @@
 # @lynx-js/genui
 
+## 0.8.0
+
+### Minor Changes
+
+- **Breaking change:** Migrate the ReactLynx renderer and GenUI server to A2UI v1.0 only. Reject older protocol messages and action requests; regenerate existing v0.9 streams and send versioned action envelopes. Replace imports from `@lynx-js/genui/a2ui/0.9` with `@lynx-js/genui/a2ui` or `@lynx-js/genui/a2ui/1.0`. Support inline surface initialization, typed data-model replacement and deletion, structured validation results, and catalog-scoped function messages. Preserve v1.0 state when compacting snapshots and expose an `onMessage` callback for protocol events and transport metadata. ([#3933](https://github.com/lynx-family/lynx-stack/pull/3933))
+
+  Catalog serialization now requires component manifests and emits catalog IDs, discriminators, and standard union definitions. Preserve validation logic composition, system-function interpolation, and resolved action userMessage values.
+
+  Align the client, server, catalogs, prompts, examples, and snapshots with the current A2UI 1.0 wire contract (`version: "1.0"`, `@path`, `@call`, and prefixed component envelope fields). Remove the older Web SDK dependency and protocol aliases; enforce function permissions, argument validation, correlated RPC errors, and composition rules.
+
+### Patch Changes
+
+- Allow `A2UI` to receive `messageStore={null}` and render nothing without calling `renderEmpty`. Passing a store afterward starts a new rendering session and processes buffered and subsequent messages. Switching back to null unsubscribes from the store and clears the rendered surface. `renderEmpty` applies only to a non-null store with no surface ready yet. ([#3933](https://github.com/lynx-family/lynx-stack/pull/3933))
+
+- Fix A2UI schema validation initialization in the Lynx Web runtime. Fix CLI version output in published packages and preserve pkg.pr.new dependency URLs when creating projects from a preview release. Print the pnpm install flag needed for preview URL dependencies. ([#3933](https://github.com/lynx-family/lynx-stack/pull/3933))
+
+- Fix A2UI native bundle loading by removing BigInt operations and the global URL dependency from the bundled schema validator while preserving exact decimal multipleOf checks. Invalidate the schema build cache when dependency patches change. ([#4346](https://github.com/lynx-family/lynx-stack/pull/4346))
+
+  Make A2UI number, currency, date, and plural formatting work without Intl. Remove DateTimeInput's replaceAll dependency and add createBasicFunctions for per-catalog native URL navigation callbacks. Report unavailable navigation instead of silently ignoring it.
+- Updated dependencies [[`3ff5a02`](https://github.com/lynx-family/lynx-stack/commit/3ff5a0282f904f44fb1425e051a1251feeb87255)]:
+  - @lynx-js/rsbuild-plugin@0.1.9
+  - @lynx-js/react-rsbuild-plugin@0.22.3
+  - @lynx-js/react-signals@0.0.7
+  - @lynx-js/config-rsbuild-plugin@0.2.5
+
 ## 0.7.3
 
 ### Patch Changes

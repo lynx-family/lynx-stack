@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.22.3
+
+### Patch Changes
+
+- Support opt-in Rsbuild polyfills for Lynx builds. Install `core-js` in the application and set `output.polyfill` to `usage` or `entry` to enable them. ([#4257](https://github.com/lynx-family/lynx-stack/pull/4257))
+- Updated dependencies [[`3ff5a02`](https://github.com/lynx-family/lynx-stack/commit/3ff5a0282f904f44fb1425e051a1251feeb87255)]:
+  - @lynx-js/rsbuild-plugin@0.1.9
+  - @lynx-js/react-alias-rsbuild-plugin@0.22.3
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.6
+  - @lynx-js/react-webpack-plugin@0.15.1
+  - @lynx-js/template-webpack-plugin@0.16.8
+  - @lynx-js/css-extract-webpack-plugin@0.11.2
+
 ## 0.22.2
 
 ### Patch Changes

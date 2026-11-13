@@ -1,5 +1,13 @@
 # @lynx-js/react
 
+## 0.129.3
+
+### Patch Changes
+
+- Export `useDeferredValue` from `@lynx-js/react/compat`. It is Preact's implementation, so it has no concurrent rendering. ([#4327](https://github.com/lynx-family/lynx-stack/pull/4327))
+
+- Allow the worklet runtime to read the SDK version from `lynx.SystemInfo` when it initializes before the global `SystemInfo` alias is available. ([#4342](https://github.com/lynx-family/lynx-stack/pull/4342))
+
 ## 0.129.2
 
 ### Patch Changes
