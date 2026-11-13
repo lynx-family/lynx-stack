@@ -1,4 +1,11 @@
 // @ts-nocheck
+function $RefreshSig$() {
+  return __prefresh_utils__.createSignatureFunctionForTransform();
+}
+function $RefreshReg$(type, id) {
+  return __prefresh_utils__.register(type, module.id, id);
+}
+
 const isPrefreshComponent = __prefresh_utils__.shouldBind(module);
 
 const moduleHot = module.hot;
