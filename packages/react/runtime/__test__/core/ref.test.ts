@@ -142,9 +142,14 @@ describe('core/ref ordinary ref semantics', () => {
     });
     const unchangedRef = vi.fn();
     const reportError = stubReportError();
+    const owner = {};
+
+    queue.queue(null, oldRef, owner, 0, 'old-node');
+    queue.flush(token => `proxy:${token}`);
+    calls.length = 0;
 
     queue.queue(unchangedRef, unchangedRef, {}, 0, 'ignored');
-    queue.queue(oldRef, newRef, {}, 0, 'node');
+    queue.queue(oldRef, newRef, owner, 0, 'node');
     expect(queue.hasPending()).toBe(true);
 
     queue.flush(token => `proxy:${token}`);
@@ -213,6 +218,36 @@ describe('core/ref ordinary ref semantics', () => {
     expect(cleanup).toHaveBeenCalledTimes(1);
     expect(discardedRef).not.toHaveBeenCalled();
     expect(ref).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not detach a reentrant attachment when an aborted ref adds a duplicate clear', () => {
+    const queue = new OrdinaryRefEffectQueue<string, string>();
+    const owner = {};
+    const calls: string[] = [];
+    const replacement = vi.fn((value: string | null) => {
+      calls.push(`replacement:${value}`);
+    });
+    const cleanup = vi.fn(() => {
+      calls.push('cleanup');
+      queue.queue(null, replacement, owner, 0, 'replacement');
+      queue.flush(token => token);
+    });
+    const mountedRef = vi.fn(() => cleanup);
+    const abortedRef = vi.fn();
+
+    queue.queue(null, mountedRef, owner, 0, 'mounted');
+    queue.flush(token => token);
+    queue.queue(mountedRef, abortedRef, owner, 0, 'aborted');
+    queue.discardPendingAttachments();
+    queue.queue(abortedRef, null, owner, 0, 'aborted');
+    queue.flush(token => token);
+
+    expect(calls).toEqual(['cleanup', 'replacement:replacement']);
+    expect(abortedRef).not.toHaveBeenCalled();
+    expect(cleanup).toHaveBeenCalledTimes(1);
+    queue.queue(replacement, null, owner, 0, 'replacement');
+    queue.flush(token => token);
+    expect(calls).toEqual(['cleanup', 'replacement:replacement', 'replacement:null']);
   });
 
   it('consumes throwing cleanup before reporting its error', () => {

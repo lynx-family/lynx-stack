@@ -305,8 +305,13 @@ describe('ElementTemplate attr slot plan registry', () => {
     const oldRef = vi.fn();
     const newRef = vi.fn();
     __etAttrPlanMap._et_ref = [0, adaptRefAttrSlot];
+    const instance = { instanceId: -2 };
 
-    queueRefAttributeSlotUpdates('_et_ref', { instanceId: -2 }, [oldRef], [newRef]);
+    queueRefAttributeSlotUpdates('_et_ref', instance, undefined, [oldRef]);
+    flushPendingRefs();
+    oldRef.mockClear();
+
+    queueRefAttributeSlotUpdates('_et_ref', instance, [oldRef], [newRef]);
     flushPendingRefs();
 
     expect(oldRef).toHaveBeenCalledWith(null);
@@ -359,9 +364,15 @@ describe('ElementTemplate attr slot plan registry', () => {
       adaptSpreadAttrSlot,
     ];
 
+    const instance = { instanceId: -7 };
+    queueRefAttributeSlotUpdates('_et_multi_ref', instance, undefined, [directRef, { ref: spreadRef }]);
+    flushPendingRefs();
+    directRef.mockClear();
+    spreadRef.mockClear();
+
     queueRefAttributeSlotUpdates(
       '_et_multi_ref',
-      { instanceId: -7 },
+      instance,
       [directRef, { ref: spreadRef }],
       [directRef, { ref: undefined }],
     );
