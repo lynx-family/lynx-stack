@@ -498,7 +498,11 @@ function createUnionReferences(
 ): JsonSchema {
   const names = Object.keys(schemas);
   return names.length > 0
-    ? { oneOf: names.map(name => ({ $ref: `#/${section}/${name}` })) }
+    ? {
+      oneOf: names.map(name => ({
+        $ref: `#/${section}/${name.replace(/~/g, '~0').replace(/\//g, '~1')}`,
+      })),
+    }
     : { not: {} };
 }
 

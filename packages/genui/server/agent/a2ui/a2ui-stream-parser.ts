@@ -149,34 +149,7 @@ function collectChildRefs(component: ComponentRecord): string[] {
 
 interface JsonFrame {
   start: number;
-  kind: 'array' | 'object';
-  role:
-    | 'messages'
-    | 'message'
-    | 'update'
-    | 'components'
-    | 'component'
-    | 'other';
-  key: string;
-  expectingKey: boolean;
-  surfaceId?: string;
-  version?: A2UIMessage['version'];
-}
-
-function childFrameRole(
-  frame: JsonFrame,
-  kind: JsonFrame['kind'],
-): JsonFrame['role'] {
-  if (frame.role === 'messages' && kind === 'object') return 'message';
-  if (
-    frame.role === 'message' && frame.key === 'updateComponents'
-    && kind === 'object'
-  ) return 'update';
-  if (
-    frame.role === 'update' && frame.key === 'components' && kind === 'array'
-  ) return 'components';
-  if (frame.role === 'components' && kind === 'object') return 'component';
-  return 'other';
+  role: 'messages' | 'message' | 'other';
 }
 
 interface SurfaceComponents {
@@ -192,7 +165,6 @@ export class A2UIProtocolMessageStreamParser {
   private cursor = 0;
   private inString = false;
   private escaped = false;
-  private stringStart = 0;
   private frames: JsonFrame[] = [];
   private surfaces = new Map<string, SurfaceComponents>();
   private createdSurfaceIds = new Set<string>();
@@ -217,46 +189,23 @@ export class A2UIProtocolMessageStreamParser {
           this.escaped = true;
         } else if (ch === '"') {
           this.inString = false;
-          if (frame?.kind === 'object') {
-            if (frame.expectingKey) {
-              frame.key = this.parse(this.stringStart, i) as string;
-              frame.expectingKey = false;
-            } else if (frame.role === 'message' && frame.key === 'version') {
-              const value = this.parse(this.stringStart, i);
-              if (value === '1.0') {
-                frame.version = value;
-              }
-            } else if (frame.role === 'update' && frame.key === 'surfaceId') {
-              const value = this.parse(this.stringStart, i);
-              if (typeof value === 'string') frame.surfaceId = value;
-            }
-          }
         }
         continue;
       }
       if (!frame) {
-        if (ch === '[') this.openFrame(i, 'array', 'messages');
+        if (ch === '[') this.openFrame(i, 'messages');
         continue;
       }
       if (ch === '"') {
         this.inString = true;
-        this.stringStart = i;
-      } else if (ch === ',' && frame.kind === 'object') {
-        frame.expectingKey = true;
-        frame.key = '';
       } else if (ch === '{' || ch === '[') {
-        const kind = ch === '{' ? 'object' : 'array';
-        const role = childFrameRole(frame, kind);
-        this.openFrame(i, kind, role);
+        const role = frame.role === 'messages' && ch === '{'
+          ? 'message'
+          : 'other';
+        this.openFrame(i, role);
       } else if (ch === '}' || ch === ']') {
         this.frames.pop();
-        if (frame.role === 'component') {
-          const update = this.frames.at(-2);
-          const envelope = this.frames.at(-3);
-          if (update?.surfaceId && envelope?.version) {
-            this.addComponent(update.surfaceId, this.parse(frame.start, i));
-          }
-        } else if (frame.role === 'message') {
+        if (frame.role === 'message') {
           this.completeMessage(this.parse(frame.start, i), messages);
         }
       }
@@ -273,22 +222,17 @@ export class A2UIProtocolMessageStreamParser {
         ?? this.buffer.length;
     this.buffer = this.buffer.slice(keepFrom);
     for (const frame of this.frames) frame.start -= keepFrom;
-    this.stringStart -= keepFrom;
     this.cursor = this.buffer.length;
     return messages;
   }
 
   private openFrame(
     start: number,
-    kind: JsonFrame['kind'],
     role: JsonFrame['role'],
   ): void {
     this.frames.push({
       start,
-      kind,
       role,
-      key: '',
-      expectingKey: kind === 'object',
     });
   }
 
@@ -314,8 +258,8 @@ export class A2UIProtocolMessageStreamParser {
       return;
     }
     if (isUpdateComponentsMessage(value)) {
-      // Also handle legal JSON with surfaceId after components. A component is
-      // only streamed early when its enclosing update has already identified it.
+      // Publish components only after their complete envelope passes validation.
+      // A later field can invalidate an otherwise well-formed component update.
       for (const component of value.updateComponents.components) {
         this.addComponent(value.updateComponents.surfaceId, component);
       }

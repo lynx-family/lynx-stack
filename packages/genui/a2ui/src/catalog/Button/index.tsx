@@ -35,14 +35,14 @@ export interface ButtonProps extends GenericComponentProps {
     functionCall: {
       '@call': string;
       catalogId?: string;
-      args: Record<string, unknown>;
+      args?: Record<string, unknown>;
     };
   };
   '@checks'?: Array<{
     condition: { '@path': string } | {
       '@call': string;
       catalogId?: string;
-      args: Record<string, unknown>;
+      args?: Record<string, unknown>;
     };
     /** Fallback when the validation result does not include a message. */
     message?: string;

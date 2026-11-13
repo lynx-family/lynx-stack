@@ -9,6 +9,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import { createElement } from '@lynx-js/react';
 import { act, renderHook } from '@lynx-js/react/testing-library';
 
+import type { ButtonProps } from '../src/catalog/Button/index.jsx';
 import type { SerializedCatalog } from '../src/catalog/defineCatalog.js';
 import {
   defineCatalog,
@@ -129,7 +130,7 @@ const regex = (pattern: string) => ({
   args: { value: { '@path': '/input' }, pattern },
 });
 
-function schemaValidator(manifest = catalog) {
+function schemaValidator(manifest: SerializedCatalog = catalog) {
   const ajv = new Ajv2020({
     strict: false,
     validateFormats: false,
@@ -143,6 +144,76 @@ function schemaValidator(manifest = catalog) {
   ajv.addSchema(manifest, 'https://a2ui.org/specification/v1_0/catalog.json');
   return ajv;
 }
+
+test('serialized catalog resolves component and function names containing JSON Pointer characters', () => {
+  const name = 'section/~entry';
+  const manifest = serializeCatalog({
+    components: [{ name, component: Text, schema: { type: 'object' } }],
+    functions: [{
+      kind: 'function',
+      name,
+      definition: { name, parameters: {}, returnType: 'boolean' },
+    }],
+  }, 'https://example.com/catalog.json');
+  const ajv = schemaValidator(manifest);
+  const component = ajv.compile({
+    $ref: `${manifest.$id}#/$defs/anyComponent`,
+  });
+  const call = ajv.compile({
+    $ref: `${manifest.$id}#/$defs/anyFunction`,
+  });
+  expect(component({ component: name })).toBe(true);
+  expect(component({ component: 'section' })).toBe(false);
+  expect(call({ '@call': name, args: {} })).toBe(true);
+  expect(call({ '@call': 'section', args: {} })).toBe(false);
+});
+
+test('generated Button schema accepts no-argument calls and still enforces function arguments', () => {
+  const button = {
+    id: 'root',
+    component: 'Button',
+    child: 'label',
+    action: { functionCall: { '@call': 'ready' } },
+    '@checks': [{ condition: { '@call': 'ready' } }],
+  } satisfies Omit<ButtonProps, 'surface'> & { component: string };
+  const manifest = {
+    ...catalog,
+    functions: {
+      ...catalog.functions,
+      ready: {
+        type: 'object',
+        properties: { '@call': { const: 'ready' } },
+        required: ['@call'],
+        returnType: 'boolean',
+      },
+    },
+    $defs: {
+      ...catalog.$defs,
+      anyFunction: {
+        oneOf: [
+          ...Object.keys(catalog.functions ?? {}).map(name => ({
+            $ref: `#/functions/${name}`,
+          })),
+          { $ref: '#/functions/ready' },
+        ],
+      },
+    },
+  };
+  const ajv = schemaValidator(manifest);
+  const validate = ajv.compile(agentSchema);
+  expect(validate(message(button)), JSON.stringify(validate.errors)).toBe(true);
+  // The function's catalog schema, rather than Button's props, owns its args.
+  const validateCall = ajv.compile({
+    $ref: `${commonSchema.$id}#/$defs/FunctionCall`,
+  });
+  expect(validateCall(button.action.functionCall)).toBe(true);
+  expect(validateCall(button['@checks'][0]!.condition)).toBe(true);
+  expect(validateCall({ '@call': 'regex' })).toBe(false);
+  expect(validateCall({
+    '@call': 'regex',
+    args: { value: 'ABC', pattern: '^[A-Z]+$' },
+  })).toBe(true);
+});
 
 function setup() {
   const processor = new MessageProcessor();

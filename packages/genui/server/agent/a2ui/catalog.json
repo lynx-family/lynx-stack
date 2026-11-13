@@ -258,8 +258,7 @@
                     }
                   },
                   "required": [
-                    "@call",
-                    "args"
+                    "@call"
                   ],
                   "additionalProperties": false
                 }
@@ -294,8 +293,7 @@
                       }
                     },
                     "required": [
-                      "@call",
-                      "args"
+                      "@call"
                     ],
                     "additionalProperties": false
                   },

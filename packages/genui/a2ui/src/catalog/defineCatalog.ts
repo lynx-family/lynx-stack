@@ -359,7 +359,7 @@ export function serializeCatalog(
     Object.keys(schemas).length > 0
       ? {
         oneOf: Object.keys(schemas).map(name => ({
-          $ref: `#/${section}/${name}`,
+          $ref: `#/${section}/${name.replace(/~/g, '~0').replace(/\//g, '~1')}`,
         })),
       }
       : { not: {} };

@@ -164,21 +164,51 @@ describe('A2UI incremental parsing', () => {
     },
   );
 
-  test('renders a complete component before its message ends without resending its parent', () => {
+  test('waits for a validated message while keeping the surrounding array open', () => {
     const parser = new A2UIProtocolMessageStreamParser();
     parser.push(JSON.stringify([create]));
-    const first = parser.push(
+    expect(parser.push(
       '[{"version":"1.0","updateComponents":{"surfaceId":"s","components":['
         + JSON.stringify(root),
-    );
-    expect(components(first)).toEqual([root, {
-      id: 'title',
-      component: 'Loading',
-      variant: 'block',
-    }]);
-    const second = parser.push(',' + JSON.stringify(title));
-    expect(components(second)).toEqual([title]);
-    expect(parser.push(']}}]')).toEqual([]);
+    )).toEqual([]);
+    expect(parser.push(',' + JSON.stringify(title))).toEqual([]);
+    expect(parser.push(']}}')).toEqual([update([root, title])]);
+    expect(parser.push(']')).toEqual([]);
+  });
+
+  test.each([
+    ',"version":"0.9"}',
+    ',"deleteSurface":{"surfaceId":"s"}}',
+    ',"unexpected":true}',
+  ])(
+    'discards components when a later envelope field is invalid: %s',
+    (suffix) => {
+      const parser = new A2UIProtocolMessageStreamParser();
+      parser.push(JSON.stringify([create, update([root, title])]));
+      const changedTitle = { ...title, text: 'Must not leak' };
+      const prefix = JSON.stringify(update([changedTitle])).slice(0, -1);
+      expect(parser.push('[' + prefix)).toEqual([]);
+      expect(parser.push(suffix + ']')).toEqual([]);
+      // Invalid updates must not enter the deduplication state either.
+      expect(parser.push(JSON.stringify([update([title])]))).toEqual([]);
+      expect(parser.push(JSON.stringify([update([changedTitle])]))).toEqual([
+        update([changedTitle]),
+      ]);
+    },
+  );
+
+  test('does not leak a valid component from a message containing an invalid component', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    parser.push(JSON.stringify([create, update([root, title])]));
+    const changedTitle = { ...title, text: 'Must not leak' };
+    const prefix =
+      '[{"version":"1.0","updateComponents":{"surfaceId":"s","components":[';
+    expect(parser.push(prefix + JSON.stringify(changedTitle))).toEqual([]);
+    expect(parser.push(',{"id":"broken"}]}}]')).toEqual([]);
+    expect(parser.push(JSON.stringify([update([title])]))).toEqual([]);
+    expect(parser.push(JSON.stringify([update([changedTitle])]))).toEqual([
+      update([changedTitle]),
+    ]);
   });
 
   test('does not parse component-shaped data or nested component props as protocol updates', () => {

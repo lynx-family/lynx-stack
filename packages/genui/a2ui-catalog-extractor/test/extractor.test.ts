@@ -123,6 +123,21 @@ describe('extractCatalogComponents', () => {
     });
   });
 
+  test('escapes component and function names in catalog JSON Pointer references', () => {
+    const name = 'section/~entry';
+    const catalog = createA2UICatalog({
+      catalogId: 'https://example.com/catalog.json',
+      components: { [name]: { type: 'object' } },
+      functions: [{ name, parameters: {}, returnType: 'boolean' }],
+    });
+    expect(catalog.$defs).toEqual({
+      anyComponent: { oneOf: [{ $ref: '#/components/section~1~0entry' }] },
+      anyFunction: { oneOf: [{ $ref: '#/functions/section~1~0entry' }] },
+    });
+    expect(Object.keys(catalog.components ?? {})).toEqual([name]);
+    expect(Object.keys(catalog.functions ?? {})).toEqual([name]);
+  });
+
   test('creates a full catalog from TSX-extracted components', async () => {
     const components = await extractCatalogComponents({
       cwd: fixtureDir,
