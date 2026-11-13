@@ -1830,8 +1830,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0
       i18next:
-        specifier: 26.3.6
-        version: 26.3.6(typescript@6.0.3)
+        specifier: 27.0.1
+        version: 27.0.1(typescript@6.0.3)
       i18next-cli:
         specifier: 1.67.7
         version: 1.67.7(@swc/helpers@0.5.23)(@types/node@24.13.3)(react-dom@19.3.0(react@19.3.0))(typescript@6.0.3)
@@ -9612,6 +9612,15 @@ packages:
 
   i18next@26.3.6:
     resolution: {integrity: sha512-Bu5Z2nAXgfVyM8xvW3jk9EKRIuX37PudsrBViThNFx7CR7aaYTpP01cxNB/E4c4UUzTDiAZRstEhsRfPOL/8xA==}
+    peerDependencies:
+      typescript: ^5 || ^6 || ^7
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  i18next@27.0.1:
+    resolution: {integrity: sha512-KaE5ozP8UUeVpOJIwMVbbnpRKpyYQuxd9ZbseJoDzezE3nvLnZZQn20pkzyIJwPI2Uet/Qs3WzPTG812f6F/Eg==}
+    engines: {node: '>=22'}
     peerDependencies:
       typescript: ^5 || ^6 || ^7
     peerDependenciesMeta:
@@ -19723,6 +19732,10 @@ snapshots:
       - '@swc/helpers'
 
   i18next@26.3.6(typescript@6.0.3):
+    optionalDependencies:
+      typescript: 6.0.3
+
+  i18next@27.0.1(typescript@6.0.3):
     optionalDependencies:
       typescript: 6.0.3
 
