@@ -20,7 +20,8 @@
     "*.rs": [
       "cargo fmt --"
     ],
-    "package.json": "sort-package-json"
+    "package.json": "sort-package-json",
+    "pnpm-lock.yaml": "pnpm dedupe --check"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
