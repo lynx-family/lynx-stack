@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { RsbuildPluginAPI } from '@rsbuild/core'
+import type { ModifyEnvironmentConfigFn, RsbuildPluginAPI } from '@rsbuild/core'
 
 import type { PluginReactLynxOptions } from './pluginReactLynx.js'
 
@@ -10,7 +10,21 @@ export function applyOptimizeBundleSize(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
 ): void {
-  api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) => {
+  const handler: ModifyEnvironmentConfigFn = (config, utils) => {
+    const { name, mergeEnvironmentConfig } = utils
+    const currentConfig = api.getRsbuildConfig('current')
+    const environmentMinify = currentConfig.environments?.[name]?.output
+      ?.minify
+    const hookEnabledMinify = currentConfig.output?.minify !== true
+      && config.output?.minify === true
+    if (
+      config.output?.minify === false
+      || environmentMinify === true
+      || hookEnabledMinify
+    ) {
+      return config
+    }
+
     const optimizeBundleSize = options.optimizeBundleSize
     const optimizeBackground = typeof optimizeBundleSize === 'boolean'
       ? optimizeBundleSize
@@ -42,7 +56,7 @@ export function applyOptimizeBundleSize(
         }
       }
 
-      return mergeRsbuildConfig(config, {
+      return mergeEnvironmentConfig(config, {
         output: {
           minify: minifyConfig,
         },
@@ -50,5 +64,7 @@ export function applyOptimizeBundleSize(
     }
 
     return config
-  })
+  }
+
+  api.modifyEnvironmentConfig({ order: 'pre', handler })
 }
