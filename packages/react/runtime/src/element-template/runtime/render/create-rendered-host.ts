@@ -3,17 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { ElementTemplateHost } from './host.js';
-import {
-  MAIN_BUNDLE_URL_SENTINEL,
-  elementTemplateIdentityKey,
-  parseElementTemplateType,
-} from '../../protocol/template-type.js';
+import { MAIN_BUNDLE_URL_SENTINEL, parseElementTemplateType } from '../../protocol/template-type.js';
 import type { RuntimeTypedElementAttributes, SerializableValue } from '../../protocol/types.js';
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
   markElementTemplateListDestroyed,
-  registerElementTemplateListItem,
   registerElementTemplateListState,
 } from '../list/list.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
@@ -29,7 +24,6 @@ import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread
 import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
 
 const TYPED_LIST_HOST_TYPE = 'list';
-const EMPTY_LIST_ITEM_UIDS: readonly number[] = [];
 
 export type RenderAttributes = SerializableValue[] | RuntimeTypedElementAttributes | undefined;
 
@@ -48,33 +42,31 @@ export function createRenderedHost(
   type: string,
   attributes: RenderAttributes,
   childSlots: ElementTemplateHandle[][] | undefined,
-  listItemUids: number[] | undefined,
   materializationHandles: MainThreadDynamicAttrSubtreeHandle[],
   listItemPlatformInfo: ETListItemPlatformInfo | undefined,
   host?: ElementTemplateHost,
 ): ElementTemplateHandle {
   if (type === TYPED_LIST_HOST_TYPE) {
-    const listChildren = childSlots?.[0] ?? [];
+    // TODO: Support main-thread events on List.
     const preparedTypedAttributes = prepareTypedElementAttributes(
       handleId,
       attributes as RuntimeTypedElementAttributes | undefined,
     );
-    const listState = createElementTemplateListState(
-      listItemUids ?? EMPTY_LIST_ITEM_UIDS,
-      preparedTypedAttributes,
-    );
+    const listState = createElementTemplateListState();
     const attrsWithCallbacks = composeElementTemplateListAttributes(
-      undefined,
+      preparedTypedAttributes,
       listState,
     );
     const elementRef = createTypedElementTemplateWithReservedHandle(
       handleId,
       TYPED_LIST_HOST_TYPE,
       attrsWithCallbacks,
-      null,
-      { listChildren },
+      childSlots ?? null,
+      {},
     );
-    registerElementTemplateListState(handleId, listState, true, elementRef);
+    if (elementRef) {
+      registerElementTemplateListState(handleId, listState, elementRef);
+    }
     return elementRef;
   }
 
@@ -106,20 +98,16 @@ export function createRenderedHost(
     preparedAttributeSlots,
     childSlots ?? null,
     !plain,
+    // Pass List item platform info through native ET options during initial
+    // rendering.
+    listItemPlatformInfo === undefined
+      ? undefined
+      : { __listItemPlatformInfo: listItemPlatformInfo },
   );
   if (hasMainThreadRef) {
     materializationHandles.push({
       uid: handleId,
       ref: elementRef,
-    });
-  }
-  if (listItemPlatformInfo !== undefined) {
-    registerElementTemplateListItem(handleId, elementRef, {
-      // The native list identifies items by the same identity the template
-      // was registered under (sentinel stripped for the main card), so the
-      // update path (`resolveTypedListItem`) stays consistent with it.
-      templateKey: elementTemplateIdentityKey(templateKey, bundleUrl),
-      platformInfo: listItemPlatformInfo,
     });
   }
   return elementRef;

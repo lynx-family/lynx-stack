@@ -59,6 +59,7 @@ function createRawTextOps(id: number, text: string) {
     null,
     [text],
     [],
+    null,
   ];
 }
 
@@ -684,12 +685,14 @@ describe('ElementTemplate commit hook', () => {
         null,
         ['value'],
         [],
+        null,
         ElementTemplateUpdateOps.createTemplate,
         root.instanceId,
         'root',
         null,
         [],
         [[child.instanceId]],
+        null,
         ElementTemplateUpdateOps.insertNode,
         parent.instanceId,
         0,

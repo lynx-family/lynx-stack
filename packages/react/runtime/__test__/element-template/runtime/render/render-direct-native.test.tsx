@@ -9,7 +9,7 @@ import { renderToElementTemplate } from '../../../../src/element-template/runtim
 import { __ElementTemplatePage } from '../../../../src/element-template/runtime/page/authored-page.js';
 import {
   destroyAllElementTemplateListStates,
-  flushInitialElementTemplateListUpdates,
+  updateElementTemplateListAttributes,
 } from '../../../../src/element-template/runtime/list/list.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
@@ -72,6 +72,7 @@ describe('direct renderer native contracts', () => {
       ['hello'],
       [],
       -1,
+      undefined,
     );
     expect(elementTemplateRegistry.get(-1)).toBe(rootTextRef);
   });
@@ -107,7 +108,7 @@ describe('direct renderer native contracts', () => {
     });
   });
 
-  it('creates exact list through typed native create with slot-0 refs as listChildren', () => {
+  it('creates exact list through typed native create with logical slot-0 refs', () => {
     const itemRef = { kind: 'item-ref' };
     const listRef = { kind: 'list-ref' };
     const handler = vi.fn();
@@ -131,6 +132,7 @@ describe('direct renderer native contracts', () => {
       null,
       null,
       -1,
+      { __listItemPlatformInfo: { 'item-key': 'a' } },
     );
     expect(createElementTemplate.mock.invocationCallOrder[0]).toBeLessThan(
       createTypedElementTemplate.mock.invocationCallOrder[0]!,
@@ -145,25 +147,9 @@ describe('direct renderer native contracts', () => {
       'component-at-indexes': expect.any(Function),
       'enqueue-component': expect.any(Function),
     });
-    expect(typedCreateCall[2]).toBe(null);
+    expect(typedCreateCall[2]).toEqual([[itemRef]]);
     expect(typedCreateCall[3]).toBe(-2);
-    expect(typedCreateCall[4]).toEqual({ listChildren: [itemRef] });
-    expect(flushInitialElementTemplateListUpdates()).toEqual([{
-      uid: -2,
-      attributes: {
-        bindtap: '-2:0:bindtap',
-        class: 'feed',
-        id: 'typed-list',
-        'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
-        'enqueue-component': expect.any(Function),
-        'update-list-info': {
-          insertAction: [{ position: 0, type: '_et_item', 'item-key': 'a' }],
-          removeAction: [],
-          updateAction: [],
-        },
-      },
-    }]);
+    expect(typedCreateCall[4]).toEqual({});
     expect(elementTemplateRegistry.get(-1)).toBe(itemRef);
     expect(elementTemplateRegistry.get(-2)).toBe(listRef);
   });
@@ -194,7 +180,15 @@ describe('direct renderer native contracts', () => {
     );
 
     expect(result.rootRefs).toEqual([parentRef]);
-    expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_item', null, itemAttributes, null, -1);
+    expect(createElementTemplate).toHaveBeenNthCalledWith(
+      1,
+      '_et_item',
+      null,
+      itemAttributes,
+      null,
+      -1,
+      { __listItemPlatformInfo: { 'item-key': 'a' } },
+    );
     expect(createTypedElementTemplate).toHaveBeenCalledWith(
       'list',
       {
@@ -204,9 +198,9 @@ describe('direct renderer native contracts', () => {
         'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
-      null,
+      [[itemRef]],
       -2,
-      { listChildren: [itemRef] },
+      {},
     );
     expect(createElementTemplate).toHaveBeenNthCalledWith(
       2,
@@ -215,6 +209,7 @@ describe('direct renderer native contracts', () => {
       ['-3:0:', 'parent'],
       [[listRef]],
       -3,
+      undefined,
     );
     expect(parentAttributes).toEqual([handleTap, 'parent']);
     expect(createElementTemplate.mock.calls[1]![2]).not.toBe(parentAttributes);
@@ -234,7 +229,7 @@ describe('direct renderer native contracts', () => {
       h('_et_without_attrs', {}),
     ]);
 
-    expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_with_attrs', null, ['compiled'], null, -1);
+    expect(createElementTemplate).toHaveBeenNthCalledWith(1, '_et_with_attrs', null, ['compiled'], null, -1, undefined);
     expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
       1,
       'list',
@@ -245,7 +240,7 @@ describe('direct renderer native contracts', () => {
       },
       null,
       -2,
-      { listChildren: [] },
+      {},
     );
     expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
       2,
@@ -258,20 +253,26 @@ describe('direct renderer native contracts', () => {
       },
       null,
       -3,
-      { listChildren: [] },
+      {},
     );
-    expect(createElementTemplate).toHaveBeenNthCalledWith(2, '_et_without_attrs', null, null, null, -4);
+    expect(createElementTemplate).toHaveBeenNthCalledWith(2, '_et_without_attrs', null, null, null, -4, undefined);
   });
 
-  it('creates empty exact lists without logical children or typed attributes', () => {
+  it('creates empty exact lists after a failed native creation', () => {
     const listRef = { kind: 'list-ref' };
-    createTypedElementTemplate.mockReturnValueOnce(listRef);
+    createTypedElementTemplate.mockReturnValueOnce(null).mockReturnValueOnce(listRef);
+
+    renderToElementTemplate(h('list', {}));
+
+    expect(elementTemplateRegistry.has(-1)).toBe(false);
+    expect(updateElementTemplateListAttributes(-1, {})).toBeNull();
 
     const result = renderToElementTemplate(h('list', {}));
 
     expect(result.rootRefs).toEqual([listRef]);
     expect(result.rootSubtreeHandles).toEqual([[]]);
-    expect(createTypedElementTemplate).toHaveBeenCalledWith(
+    expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
+      2,
       'list',
       {
         'component-at-index': expect.any(Function),
@@ -279,22 +280,11 @@ describe('direct renderer native contracts', () => {
         'enqueue-component': expect.any(Function),
       },
       null,
-      -1,
-      { listChildren: [] },
+      -2,
+      {},
     );
-    expect(flushInitialElementTemplateListUpdates()).toEqual([{
-      uid: -1,
-      attributes: {
-        'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
-        'enqueue-component': expect.any(Function),
-        'update-list-info': {
-          insertAction: [],
-          removeAction: [],
-          updateAction: [],
-        },
-      },
-    }]);
+    expect(elementTemplateRegistry.get(-2)).toBe(listRef);
+    expect(updateElementTemplateListAttributes(-2, {})).toEqual(createTypedElementTemplate.mock.calls[1]![1]);
   });
 
   it('installs first-screen list callbacks', () => {
@@ -321,75 +311,21 @@ describe('direct renderer native contracts', () => {
     const componentAtIndex = attrs['component-at-index']!;
     const componentAtIndexes = attrs['component-at-indexes']!;
     const enqueueComponent = attrs['enqueue-component']!;
-    expect(componentAtIndex(materializedListRef, 9, 1, 72, true)).toBe(102);
-    expect(insertNodeToElementTemplate).toHaveBeenLastCalledWith(
-      listRef,
-      0,
-      itemBRef,
-      null,
-    );
-    expect(flushElementTree).toHaveBeenLastCalledWith(itemBRef, {
-      triggerLayout: true,
-      operationID: 72,
-      elementID: 102,
-      listID: 9,
-    });
-
-    expect(componentAtIndex(materializedListRef, 9, 0, 71, true)).toBe(101);
-    expect(insertNodeToElementTemplate).toHaveBeenLastCalledWith(
-      listRef,
-      0,
-      itemARef,
-      itemBRef,
-    );
-    expect(flushElementTree).toHaveBeenLastCalledWith(itemARef, {
-      triggerLayout: true,
-      operationID: 71,
-      elementID: 101,
-      listID: 9,
-    });
-
-    insertNodeToElementTemplate.mockClear();
-    flushElementTree.mockClear();
-    expect(() => componentAtIndex(materializedListRef, 9, 99, 73, true)).toThrow(
-      'Element Template typed list item at index 99 was not found.',
-    );
-    expect(insertNodeToElementTemplate).not.toHaveBeenCalled();
-    expect(flushElementTree).not.toHaveBeenCalled();
-
-    expect(() => componentAtIndexes(materializedListRef, 9, [99], [84], false, true)).toThrow(
-      'Element Template typed list item at index 99 was not found.',
-    );
-    expect(insertNodeToElementTemplate).not.toHaveBeenCalled();
-    expect(flushElementTree).not.toHaveBeenCalled();
-
-    enqueueComponent(materializedListRef, 9, 102);
-    expect(removeNodeFromElementTemplate).toHaveBeenLastCalledWith(listRef, 0, itemBRef);
+    expect(createTypedElementTemplate.mock.calls[0]![2]).toEqual([[itemARef, itemBRef]]);
     expect(elementTemplateRegistry.get(-1)).toBe(itemARef);
     expect(elementTemplateRegistry.get(-2)).toBe(itemBRef);
-
-    flushElementTree.mockClear();
+    expect(elementTemplateRegistry.get(-3)).toBe(listRef);
+    expect(componentAtIndex(materializedListRef, 9, 1, 72, true)).toBe(-1);
+    expect(componentAtIndex(materializedListRef, 9, 0, 71, true)).toBe(-1);
+    expect(componentAtIndex(materializedListRef, 9, 99, 73, true)).toBe(-1);
     componentAtIndexes(materializedListRef, 9, [0, 1], [81, 82], true, false);
-    expect(flushElementTree).toHaveBeenCalledWith(listRef, {
-      triggerLayout: true,
-      operationIDs: [81, 82],
-      elementIDs: [101, 102],
-      listID: 9,
-    });
-    expect(flushElementTree.mock.calls[0]![1]).not.toHaveProperty('listReuseNotification');
-
-    enqueueComponent(materializedListRef, 9, 102);
-    flushElementTree.mockClear();
     componentAtIndexes(materializedListRef, 9, [1], [83], true, true);
-    expect(flushElementTree.mock.calls).toEqual([
-      [itemBRef, { asyncFlush: true }],
-      [listRef, {
-        triggerLayout: true,
-        operationIDs: [83],
-        elementIDs: [102],
-        listID: 9,
-      }],
-    ]);
+    componentAtIndexes(materializedListRef, 9, [99], [84], false, true);
+    enqueueComponent(materializedListRef, 9, 102);
+    expect(insertNodeToElementTemplate).not.toHaveBeenCalled();
+    expect(removeNodeFromElementTemplate).not.toHaveBeenCalled();
+    expect(flushElementTree).not.toHaveBeenCalled();
+    expect(getElementUniqueID).not.toHaveBeenCalled();
   });
 
   it('prepares direct event slots before native create', () => {
@@ -412,6 +348,7 @@ describe('direct renderer native contracts', () => {
       ['-1:0:', 'title', '-1:2:'],
       null,
       -1,
+      undefined,
     );
     expect(addEvent).not.toHaveBeenCalled();
   });
@@ -429,6 +366,7 @@ describe('direct renderer native contracts', () => {
       [null],
       null,
       -1,
+      undefined,
     );
   });
 
@@ -454,6 +392,7 @@ describe('direct renderer native contracts', () => {
       [null, null, null, '-1:3:'],
       null,
       -1,
+      undefined,
     );
     expect(addEvent).not.toHaveBeenCalled();
   });
@@ -472,6 +411,7 @@ describe('direct renderer native contracts', () => {
       ['-1-0'],
       null,
       -1,
+      undefined,
     );
     expect(ref).not.toHaveBeenCalled();
   });
@@ -501,6 +441,7 @@ describe('direct renderer native contracts', () => {
       [{ id: 'cta', class: 'primary', bindtap: '-1:0:bindtap', catchtouchstart: null }],
       null,
       -1,
+      undefined,
     );
     expect(addEvent).not.toHaveBeenCalled();
   });
@@ -521,6 +462,7 @@ describe('direct renderer native contracts', () => {
       [{ id: 'cta', ref: '-1-0' }],
       null,
       -1,
+      undefined,
     );
     expect(ref).not.toHaveBeenCalled();
   });
@@ -541,6 +483,7 @@ describe('direct renderer native contracts', () => {
       [{ id: 'cta', 'has-react-ref': true, flatten: false }],
       null,
       -1,
+      undefined,
     );
     expect(rendered.rootSubtreeHandles).toEqual([[{ uid: -1, ref: rootRef }]]);
   });

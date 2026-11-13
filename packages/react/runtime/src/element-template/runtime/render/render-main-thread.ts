@@ -12,12 +12,10 @@ import { profileEnd, profileStart } from '../../debug/profile.js';
 import { ElementTemplateLifecycleConstant } from '../../protocol/lifecycle-constant.js';
 import { ELEMENT_TEMPLATE_PAGE_ROOT_SLOT_INDEX } from '../../protocol/page.js';
 import type { ElementTemplateHydrateCommitContext, SerializedPageRoot } from '../../protocol/types.js';
-import { flushInitialElementTemplateListUpdates } from '../list/list.js';
 import { __page } from '../page/page.js';
 import { __root } from '../page/root-instance.js';
 import { insertElementTemplateSubtree } from '../template/handle.js';
 import { applyPendingMainThreadRefAttachments } from '../template/main-thread-dynamic-attr-state.js';
-import { getElementTemplateNativeRef } from '../template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from '../template/typed-attributes.js';
 
 function renderMainThread(): void {
@@ -48,7 +46,6 @@ function renderMainThread(): void {
         rootSubtreeHandles[index]!,
       );
     }
-    flushInitialListUpdates();
     applyPendingMainThreadRefAttachments();
   } finally {
     profileEnd();
@@ -67,17 +64,6 @@ function renderMainThread(): void {
     });
   } finally {
     profileEnd();
-  }
-}
-
-function flushInitialListUpdates(): void {
-  const results = flushInitialElementTemplateListUpdates();
-  for (let index = 0; index < results.length; index += 1) {
-    const result = results[index]!;
-    const listRef = getElementTemplateNativeRef(result.uid);
-    if (listRef) {
-      __SetAttributeOfElementTemplate(listRef, TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, result.attributes);
-    }
   }
 }
 

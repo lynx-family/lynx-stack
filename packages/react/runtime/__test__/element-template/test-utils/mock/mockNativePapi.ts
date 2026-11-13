@@ -31,6 +31,7 @@ export interface MockNativePapi {
   mockSetAttribute: any;
   mockSerializeElementTemplate: any;
   mockSetElementTemplateAttributeSlot: any;
+  mockSetListItemInfoOfTemplate: any;
   mockInsertElementTemplateNodeIntoSlot: any;
   mockRemoveElementTemplateNodeFromSlot: any;
   mockReportError: any;
@@ -82,18 +83,15 @@ export function installMockNativePapi(
     handleId: number,
     options?: unknown,
   ) => {
-    const createLog = [
+    nativeLog.push([
       '__CreateElementTemplate',
       templateKey,
       bundleUrl,
       attributeSlots,
       childSlots,
       handleId,
-    ];
-    if (options !== undefined) {
-      createLog.push(options);
-    }
-    nativeLog.push(createLog);
+      options,
+    ]);
 
     if (!templateRepo.has(templateKey)) {
       throw new Error(
@@ -334,6 +332,16 @@ export function installMockNativePapi(
     },
   );
 
+  const mockSetListItemInfoOfTemplate = vi.fn().mockImplementation(
+    (nativeRef: unknown, platformInfo: unknown) => {
+      nativeLog.push(['__SetListItemInfoOfTemplate', formatNode(nativeRef), platformInfo]);
+      if (isRecord(nativeRef)) {
+        const options = isRecord(nativeRef['__options']) ? nativeRef['__options'] : {};
+        nativeRef['__options'] = { ...options, __listItemPlatformInfo: platformInfo };
+      }
+    },
+  );
+
   const mockRemoveElementTemplateNodeFromSlot = vi.fn().mockImplementation(
     (nativeRef: unknown, childSlotIndex: number, node: unknown) => {
       nativeLog.push([
@@ -392,6 +400,7 @@ export function installMockNativePapi(
   vi.stubGlobal('__SetID', mockSetID);
   vi.stubGlobal('__GetElementUniqueID', vi.fn().mockImplementation(getElementUniqueID));
   vi.stubGlobal('__SetAttributeOfElementTemplate', mockSetElementTemplateAttributeSlot);
+  vi.stubGlobal('__SetListItemInfoOfTemplate', mockSetListItemInfoOfTemplate);
   vi.stubGlobal('__InsertNodeToElementTemplate', mockInsertElementTemplateNodeIntoSlot);
   vi.stubGlobal('__RemoveNodeFromElementTemplate', mockRemoveElementTemplateNodeFromSlot);
   vi.stubGlobal('__SerializeElementTemplate', mockSerializeElementTemplate);
@@ -423,6 +432,7 @@ export function installMockNativePapi(
     mockSetAttribute: mockSetAttribute,
     mockSerializeElementTemplate: mockSerializeElementTemplate,
     mockSetElementTemplateAttributeSlot: mockSetElementTemplateAttributeSlot,
+    mockSetListItemInfoOfTemplate,
     mockInsertElementTemplateNodeIntoSlot: mockInsertElementTemplateNodeIntoSlot,
     mockRemoveElementTemplateNodeFromSlot: mockRemoveElementTemplateNodeFromSlot,
     mockReportError: mockReportError,

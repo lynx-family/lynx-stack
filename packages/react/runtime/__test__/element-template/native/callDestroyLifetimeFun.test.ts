@@ -74,6 +74,7 @@ describe('callDestroyLifetimeFun', () => {
       null,
       [],
       [],
+      null,
     ];
 
     callDestroyLifetimeFun();

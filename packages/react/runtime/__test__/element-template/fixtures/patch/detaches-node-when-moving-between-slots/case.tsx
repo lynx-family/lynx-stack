@@ -17,6 +17,7 @@ function createRawTextOps(id: number, text: string) {
     null,
     [text],
     [],
+    null,
   ] as const;
 }
 
@@ -50,6 +51,7 @@ export function run() {
       null,
       [],
       [],
+      null,
     ]);
     const page = __page as unknown as { children?: unknown[] };
     page.children ??= [];

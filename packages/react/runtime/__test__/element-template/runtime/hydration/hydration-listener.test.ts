@@ -426,11 +426,8 @@ describe('ElementTemplate hydration listener', () => {
         {
           tag: 'list',
           attributes: { id: 'feed' },
-          childSlots: null,
+          childSlots: [[createSerializedTemplate(-2, '_et_list_item')]],
           uid: -1,
-          options: {
-            listChildren: [createSerializedTemplate(-2, '_et_list_item')],
-          },
         } satisfies SerializedTypedListNode,
       ]);
 
@@ -488,6 +485,7 @@ describe('ElementTemplate hydration listener', () => {
           null,
           ['after'],
           [],
+          null,
           ElementTemplateUpdateOps.insertNode,
           0,
           0,
@@ -533,6 +531,7 @@ describe('ElementTemplate hydration listener', () => {
         null,
         [],
         [],
+        null,
         ElementTemplateUpdateOps.insertNode,
         0,
         0,

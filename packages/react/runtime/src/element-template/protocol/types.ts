@@ -46,27 +46,13 @@ export interface ElementTemplateHandleRefCommandValue {
 
 export interface UpdateTypedListItemCommand extends ElementTemplateHandleRefCommandValue {
   type: string;
-  platformInfo: Record<string, SerializableValue>;
-  subtreeHandleIds: number[];
+  platformInfo: Record<string, SerializableValue> | null;
+  subtreeHandleIds: number[] | null;
 }
 
 export type RuntimeOptionsCommand = Record<string, SerializableValue>;
 
-// Deferred typed-list create carries logical item records here. Its future
-// main-thread consumer resolves these refs into the list-specific runtime carrier.
-export interface TypedListOptionsCommand extends RuntimeOptionsCommand {
-  listChildren: UpdateTypedListItemCommand[];
-}
-
-export interface RuntimeTypedListOptions {
-  listChildren: ElementTemplateHandle[];
-}
-
 export type SerializedRuntimeOptions = Record<string, SerializableValue>;
-
-export interface SerializedTypedListOptions {
-  listChildren: SerializedEtNode[];
-}
 
 export interface SerializedEtNodeBase {
   attributeSlots?: SerializableValue[] | null;
@@ -87,10 +73,10 @@ export interface SerializedTypedNode extends SerializedEtNodeBase {
   attributes?: TypedElementAttributesCommand | null;
 }
 
-export interface SerializedTypedListNode extends Omit<SerializedEtNodeBase, 'options'> {
+// Logical List items are stored in childSlots[0].
+// Options use the same format as other typed nodes.
+export interface SerializedTypedListNode extends SerializedTypedNode {
   tag: 'list';
-  attributes?: TypedElementAttributesCommand | null;
-  options?: SerializedTypedListOptions | null;
 }
 
 export type SerializedEtNode = SerializedCompiledNode | SerializedTypedNode | SerializedTypedListNode;
@@ -112,6 +98,8 @@ export type CreateTemplateCommand = [
   bundleUrl: string | null | undefined,
   attributeSlots: SerializableValue[] | null | undefined,
   childSlots: ElementTemplateHandleSlotsCommand | null | undefined,
+  // Use null when no options are needed to keep the flat command's arity fixed.
+  options: RuntimeOptionsCommand | null,
 ];
 
 export type SetAttributeCommand = [
@@ -165,24 +153,10 @@ export type CreateTypedElementCommand = [
   type: string,
   attributes: TypedElementAttributesCommand | null | undefined,
   childSlots: ElementTemplateHandleSlotsCommand | null | undefined,
-  options: RuntimeOptionsCommand | TypedListOptionsCommand | null | undefined,
+  options: RuntimeOptionsCommand | null | undefined,
 ];
 
-export type InsertTypedListItemCommand = [
-  typeof ElementTemplateUpdateOps.insertTypedListItem,
-  listHandleId: number,
-  item: UpdateTypedListItemCommand,
-  beforeHandleId: number,
-];
-
-export type RemoveTypedListItemCommand = [
-  typeof ElementTemplateUpdateOps.removeTypedListItem,
-  listHandleId: number,
-  itemHandleId: number,
-  removedSubtreeHandleIds: number[],
-];
-
-export type UpdateTypedListItemInfoCommand = [
+export type UpdateTypedListItemPatchCommand = [
   typeof ElementTemplateUpdateOps.updateTypedListItem,
   listHandleId: number,
   item: UpdateTypedListItemCommand,
@@ -197,9 +171,7 @@ export type ElementTemplateUpdateCommand =
   | InsertNodeCommand
   | RemoveNodeCommand
   | CreateTypedElementCommand
-  | InsertTypedListItemCommand
-  | RemoveTypedListItemCommand
-  | UpdateTypedListItemInfoCommand;
+  | UpdateTypedListItemPatchCommand;
 
 // Commands are transported as a flat stream to match the native update payload.
 // Tuple aliases above define each opcode's shape; this item union preserves the

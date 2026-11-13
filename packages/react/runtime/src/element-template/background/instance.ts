@@ -20,7 +20,6 @@ import type {
   RuntimeOptionsCommand,
   SerializableValue,
   TypedElementAttributesCommand,
-  TypedListOptionsCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
 import type { AuthoredPageAttributes } from '../runtime/page/authored-page.js';
@@ -140,6 +139,8 @@ export class BackgroundElementTemplateInstance {
     }
     const nativeTemplate = parseElementTemplateType(this.type);
 
+    // Pass List item platform info to native with the create command for
+    // serialization and List diffing.
     pushOp(
       ElementTemplateUpdateOps.createTemplate,
       this.instanceId,
@@ -147,6 +148,9 @@ export class BackgroundElementTemplateInstance {
       nativeTemplate.bundleUrl,
       this.attributeSlots,
       serializedSlots,
+      this.listItemPlatformInfo === undefined
+        ? null
+        : { __listItemPlatformInfo: this.listItemPlatformInfo },
     );
     this.isMaterializedOnMainThread = true;
   }
@@ -262,7 +266,6 @@ export class BackgroundElementTemplateInstance {
   insertBefore(
     child: BackgroundElementTemplateInstance,
     beforeChild: BackgroundElementTemplateInstance | null,
-    silent?: boolean,
   ): void {
     if (beforeChild === child) {
       throw new Error('Cannot insert a node before itself');
@@ -273,7 +276,19 @@ export class BackgroundElementTemplateInstance {
 
     const previousParent = child.parent;
     if (previousParent) {
+      const shouldRecordOldListRemove = previousParent !== this
+        && previousParent instanceof BackgroundListElementTemplateInstance
+        && previousParent.canEmitUpdatePatch();
       previousParent.removeChild(child, true);
+      if (shouldRecordOldListRemove) {
+        pushOp(
+          ElementTemplateUpdateOps.removeNode,
+          previousParent.instanceId,
+          0,
+          child.instanceId,
+          EMPTY_REMOVED_SUBTREE_HANDLE_IDS,
+        );
+      }
     }
 
     child.parent = this;
@@ -299,7 +314,7 @@ export class BackgroundElementTemplateInstance {
       child.nextSibling = null;
     }
 
-    if (silent || !this.canEmitUpdatePatch()) {
+    if (!this.canEmitUpdatePatch()) {
       return;
     }
 
@@ -320,7 +335,7 @@ export class BackgroundElementTemplateInstance {
       && containingListItem
       && previousParent !== this
     ) {
-      notifyListItemSubtreeUpdated(containingListItem);
+      notifyListItemSubtreeUpdated(containingListItem, false);
     }
   }
 
@@ -367,7 +382,7 @@ export class BackgroundElementTemplateInstance {
       && containingListItem
       && collectMainThreadRefSubtreeHandleIds(child) !== null
     ) {
-      notifyListItemSubtreeUpdated(containingListItem);
+      notifyListItemSubtreeUpdated(containingListItem, false);
     }
   }
 
@@ -468,7 +483,7 @@ export class BackgroundElementTemplateInstance {
       const next = value as Record<string, SerializableValue>;
       this.listItemPlatformInfo = next;
       if (!isDirectOrDeepEqual(previous, next)) {
-        notifyListItemSubtreeUpdated(this);
+        notifyListItemSubtreeUpdated(this, true);
       }
     } else if (key === 'attributeSlots' && Array.isArray(value)) {
       const previousSlots = this.attributeSlots;
@@ -567,9 +582,10 @@ export function getContainingListItem(
 
 function notifyListItemSubtreeUpdated(
   listItem: BackgroundElementTemplateInstance,
+  isUpdatePlatformInfo: boolean,
 ): void {
   if (listItem.parent instanceof BackgroundListElementTemplateInstance) {
-    listItem.parent.notifyLogicalChildUpdated(listItem);
+    listItem.parent.emitTypedListItemUpdate(listItem, isUpdatePlatformInfo);
   }
 }
 
@@ -674,103 +690,67 @@ export class BackgroundListElementTemplateInstance extends BackgroundTypedElemen
     super('list');
   }
 
-  protected override getRuntimeOptionsForCreate(): TypedListOptionsCommand {
-    const listChildren: UpdateTypedListItemCommand[] = [];
+  override emitCreate(): void {
+    // Skip creation and candidate initialization for an existing List.
+    if (this.isMaterializedOnMainThread) {
+      return;
+    }
+    // The base class emits the List create command with the initial item UIDs
+    // in childSlots.
+    super.emitCreate();
+    // Queue initial ref candidates after the List create command has been
+    // emitted.
+    if (!this.isMaterializedOnMainThread) {
+      return;
+    }
+    let item = this.firstChild;
+    while (item) {
+      // Collect main-thread ref candidates separately for each direct item.
+      // Passing false sends only ref candidates and leaves platformInfo null.
+      pushOp(
+        ElementTemplateUpdateOps.updateTypedListItem,
+        this.instanceId,
+        toUpdateTypedListItemCommand(item, false),
+      );
+      item = item.nextSibling;
+    }
+  }
+
+  protected override getChildSlotsForCreate(): ElementTemplateHandleSlotsCommand {
+    const childSlots: ElementTemplateHandleSlotsCommand = [];
     let child = this.firstChild;
     while (child) {
-      listChildren.push(toUpdateTypedListItemCommand(child));
+      // Group child UIDs by their logical slot.
+      // Direct List children belong to slot 0, which MTS validates.
+      (childSlots[child.__slotIndex] ??= []).push(child.instanceId);
       child = child.nextSibling;
     }
-    return {
-      listChildren,
-    };
+    return childSlots;
   }
 
-  override insertBefore(
-    child: BackgroundElementTemplateInstance,
-    beforeChild: BackgroundElementTemplateInstance | null,
-    silent?: boolean,
-  ): void {
-    const previousParent = child.parent;
-    super.insertBefore(child, beforeChild, true);
-    if (!silent) {
-      if (previousParent instanceof BackgroundListElementTemplateInstance) {
-        previousParent.emitTypedListItemRemove(child, EMPTY_REMOVED_SUBTREE_HANDLE_IDS);
-      }
-      this.emitTypedListItemInsert(child, beforeChild);
-    }
-  }
-
-  override removeChild(child: BackgroundElementTemplateInstance, silent?: boolean): void {
-    super.removeChild(child, true);
-    if (!silent) {
-      const canEmitUpdatePatch = this.canEmitUpdatePatch();
-      const removedSubtreeHandleIds = canEmitUpdatePatch
-        ? collectElementTemplateSubtreeHandleIds(child)
-        : EMPTY_REMOVED_SUBTREE_HANDLE_IDS;
-      this.cleanupDetachedChildForLifetimeRemoval(child, canEmitUpdatePatch);
-      this.emitTypedListItemRemove(child, removedSubtreeHandleIds);
-    }
-  }
-
-  notifyLogicalChildUpdated(child: BackgroundElementTemplateInstance): void {
-    this.emitTypedListItemUpdate(child);
-  }
-
-  private emitTypedListItemInsert(
-    child: BackgroundElementTemplateInstance,
-    beforeChild: BackgroundElementTemplateInstance | null,
-  ): void {
+  emitTypedListItemUpdate(child: BackgroundElementTemplateInstance, isUpdatePlatformInfo: boolean): void {
     if (!isElementTemplateHydrated() || !this.isMaterializedOnMainThread) {
       return;
     }
-
-    child.emitMainThreadCreateIfNeeded();
-    pushOp(
-      ElementTemplateUpdateOps.insertTypedListItem,
-      this.instanceId,
-      toUpdateTypedListItemCommand(child),
-      beforeChild?.instanceId ?? 0,
-    );
-  }
-
-  private emitTypedListItemRemove(
-    child: BackgroundElementTemplateInstance,
-    removedSubtreeHandleIds: number[],
-  ): void {
-    if (!isElementTemplateHydrated() || !this.isMaterializedOnMainThread) {
-      return;
-    }
-
-    pushOp(
-      ElementTemplateUpdateOps.removeTypedListItem,
-      this.instanceId,
-      child.instanceId,
-      removedSubtreeHandleIds,
-    );
-  }
-
-  private emitTypedListItemUpdate(child: BackgroundElementTemplateInstance): void {
-    if (!isElementTemplateHydrated() || !this.isMaterializedOnMainThread) {
-      return;
-    }
-
     pushOp(
       ElementTemplateUpdateOps.updateTypedListItem,
       this.instanceId,
-      toUpdateTypedListItemCommand(child),
+      toUpdateTypedListItemCommand(child, isUpdatePlatformInfo),
     );
   }
 }
 
 export function toUpdateTypedListItemCommand(
   child: BackgroundElementTemplateInstance,
+  isUpdatePlatformInfo: boolean,
 ): UpdateTypedListItemCommand {
   return {
     __etHandleRef: child.instanceId,
     type: child.type,
-    platformInfo: child.getListItemPlatformInfo(),
-    subtreeHandleIds: collectMainThreadRefSubtreeHandleIds(child) ?? [],
+    platformInfo: isUpdatePlatformInfo ? child.getListItemPlatformInfo() : null,
+    subtreeHandleIds: isUpdatePlatformInfo
+      ? null
+      : collectMainThreadRefSubtreeHandleIds(child) ?? [],
   };
 }
 
@@ -796,6 +776,13 @@ function collectMainThreadRefSubtreeHandleIdsImpl(
     handles ??= [];
     handles.push(instance.instanceId);
   }
+
+  // The List's own ref is collected above. Item refs follow their own
+  // materialization and binding lifecycle.
+  if (instance instanceof BackgroundListElementTemplateInstance) {
+    return handles;
+  }
+
   let child = instance.firstChild;
   while (child) {
     handles = collectMainThreadRefSubtreeHandleIdsImpl(child, handles);

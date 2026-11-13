@@ -13,7 +13,8 @@
     null,
     null,
     null,
-    -1
+    -1,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -32,7 +33,8 @@
         }
       ]
     ],
-    -2
+    -2,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -40,7 +42,8 @@
     null,
     null,
     null,
-    -3
+    -3,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -59,7 +62,8 @@
         }
       ]
     ],
-    -4
+    -4,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -116,7 +120,8 @@
         }
       ]
     ],
-    -5
+    -5,
+    null
   ],
   [
     "__InsertNodeToElementTemplate",

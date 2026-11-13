@@ -4,17 +4,11 @@
 
 import {
   composeElementTemplateListAttributes,
-  createElementTemplateListStateFromItems,
-  flushInitialElementTemplateListUpdates,
-  flushPendingElementTemplateListUpdates,
-  insertElementTemplateListItem,
+  createElementTemplateListState,
   markElementTemplateListDestroyed,
   registerElementTemplateListState,
-  removeElementTemplateListItem,
   updateElementTemplateListAttributes,
-  updateElementTemplateListItem,
 } from './list/list.js';
-import type { ETListFlushResult, ETListUpdateItem } from './list/list.js';
 import { insertElementTemplateSubtree } from './template/handle.js';
 import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
 import type { MTEventNativeWrapper } from './template/main-thread-event-ctx.js';
@@ -23,19 +17,13 @@ import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
-import {
-  elementTemplateIdentityKey,
-  elementTemplateTypeTag,
-  parseElementTemplateType,
-} from '../protocol/template-type.js';
+import { elementTemplateTypeTag } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
   RuntimeChildSlots,
-  RuntimeOptions,
   RuntimeOptionsCommand,
   RuntimeTypedElementAttributes,
-  RuntimeTypedListOptions,
   SerializableValue,
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
@@ -75,7 +63,9 @@ export function applyElementTemplateUpdateCommands(
         const bundleUrl = stream[i++] as string | null | undefined;
         const attributeSlots = stream[i++] as SerializableValue[] | null | undefined;
         const childSlots = stream[i++] as ElementTemplateHandleSlotsCommand | null | undefined;
-
+        // Read options in the same order as BTS emits them. Every create
+        // command includes this field.
+        const options = stream[i++] as RuntimeOptionsCommand | null;
         if (__DEV__) {
           const createError = validateCreateTemplatePayload(
             handleId,
@@ -104,6 +94,7 @@ export function applyElementTemplateUpdateCommands(
           nativeAttributeSlots,
           resolvedChildSlots,
           handleId,
+          options,
         );
 
         if (nativeRef) {
@@ -214,93 +205,59 @@ export function applyElementTemplateUpdateCommands(
         if (
           __DEV__
           && isTypedList
-          && !isTypedListChildSlotsEmpty(childSlots)
+          && childSlots?.some(
+            (children, slotIndex) => slotIndex !== 0 && (children?.length ?? 0) > 0,
+          )
         ) {
           lynx.reportError(
-            new Error('ElementTemplate typed list create must keep logical children in options.listChildren.'),
+            new Error('ElementTemplate typed list only supports logical slot 0.'),
           );
           continue;
         }
-        const resolvedChildSlots = isTypedList ? null : resolveChildSlots(childSlots);
+        const resolvedChildSlots = resolveChildSlots(childSlots);
         if (resolvedChildSlots === undefined) {
           continue;
         }
-        let resolvedListItems: ETListUpdateItem[] | null = null;
-        let nativeOptions: RuntimeOptions | RuntimeTypedListOptions | null | undefined;
-        if (isTypedList) {
-          const listChildren = getTypedListChildren(options);
-          if (__DEV__ && !Array.isArray(listChildren)) {
-            lynx.reportError(
-              new Error('ElementTemplate typed list create must keep logical children in options.listChildren.'),
-            );
-            continue;
-          }
-          resolvedListItems = resolveTypedListItems(listChildren);
-          if (resolvedListItems === null) {
-            continue;
-          }
-          nativeOptions = resolveTypedListOptions(options, resolvedListItems);
-        } else {
-          nativeOptions = options as RuntimeOptions | null | undefined;
-        }
-        const listState = resolvedListItems
-          ? createElementTemplateListStateFromItems(
-            resolvedListItems,
-            attributes,
-          )
-          : null;
-        const typedAttributes = listState
-          ? composeElementTemplateListAttributes(
-            undefined,
-            listState,
-          )
-          : attributes;
-
+        // Attributes have already been adapted on BTS.
+        // Native initializes logical List items from childSlots[0] and records
+        // their initial insertions.
+        const listState = isTypedList ? createElementTemplateListState() : null;
+        const nativeAttributes = listState === null
+          ? attributes
+          : composeElementTemplateListAttributes(attributes, listState);
         const nativeRef = __CreateTypedElementTemplate(
           type,
-          typedAttributes,
-          isTypedList ? null : resolvedChildSlots!,
+          nativeAttributes,
+          resolvedChildSlots,
           handleId,
-          nativeOptions,
+          options,
         );
 
         if (nativeRef) {
           elementTemplateRegistry.set(handleId, nativeRef);
-          if (listState) {
-            registerElementTemplateListState(handleId, listState, true, nativeRef);
+          if (listState !== null) {
+            registerElementTemplateListState(handleId, listState, nativeRef);
           }
         }
         break;
       }
 
-      case ElementTemplateUpdateOps.insertTypedListItem: {
-        const listId = stream[i++] as number;
-        const item = stream[i++] as UpdateTypedListItemCommand;
-        const beforeId = stream[i++] as number;
-        const resolvedItem = resolveTypedListItem(item, 'typed list insert item');
-        if (resolvedItem === null) {
-          continue;
-        }
-        insertElementTemplateListItem(listId, resolvedItem, beforeId);
-        break;
-      }
-
-      case ElementTemplateUpdateOps.removeTypedListItem: {
-        const listId = stream[i++] as number;
-        const itemId = stream[i++] as number;
-        const removedSubtreeHandleIds = stream[i++] as number[];
-        removeElementTemplateListItem(listId, itemId, removedSubtreeHandleIds);
-        break;
-      }
-
       case ElementTemplateUpdateOps.updateTypedListItem: {
-        const listId = stream[i++] as number;
+        // Consume the List handle to keep the command stream aligned.
+        void stream[i++];
         const item = stream[i++] as UpdateTypedListItemCommand;
-        const resolvedItem = resolveTypedListItem(item, 'typed list update item');
-        if (resolvedItem === null) {
+        const itemRef = resolveTargetHandle(item.__etHandleRef, 'typed list update item');
+        if (itemRef === null) {
           continue;
         }
-        updateElementTemplateListItem(listId, resolvedItem);
+        if (item.platformInfo !== null) {
+          // Update item ET options when platform info is provided. Native List
+          // records the change.
+          __SetListItemInfoOfTemplate(itemRef, item.platformInfo);
+        }
+        if (item.subtreeHandleIds != null) {
+          // TODO: Handle subtreeHandleIds updates.
+        }
         break;
       }
 
@@ -361,42 +318,15 @@ export function applyElementTemplateUpdateCommands(
   if (isHydration) {
     reconcileUnhydratedSpreadMTRefSlots();
   }
-  flushPendingListUpdates();
-}
-
-function flushPendingListUpdates(): void {
-  applyListFlushResults(flushPendingElementTemplateListUpdates());
-  applyListFlushResults(flushInitialElementTemplateListUpdates());
-}
-
-function applyListFlushResults(results: ETListFlushResult[]): void {
-  for (let index = 0; index < results.length; index += 1) {
-    const result = results[index]!;
-    const listRef = resolveTargetHandle(result.uid, 'typed list');
-    if (!listRef) {
-      continue;
-    }
-    __SetAttributeOfElementTemplate(
-      listRef,
-      TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
-      result.attributes,
-    );
-    if (result.removedSubtreeHandleIds) {
-      releaseRemovedSubtreeHandles(result.removedSubtreeHandleIds);
-    }
-  }
 }
 
 function releaseRemovedSubtreeHandles(
   removedSubtreeHandleIds: number[],
 ): void {
   for (const handleId of removedSubtreeHandleIds) {
-    const pendingRemovedSubtreeHandleIds = markElementTemplateListDestroyed(handleId);
+    markElementTemplateListDestroyed(handleId);
     elementTemplateRegistry.delete(handleId);
     deleteMainThreadDynamicAttrStateForSubtree([handleId]);
-    if (pendingRemovedSubtreeHandleIds) {
-      releaseRemovedSubtreeHandles(pendingRemovedSubtreeHandleIds);
-    }
   }
 }
 
@@ -440,56 +370,6 @@ function resolveChildSlots(
   return value;
 }
 
-function resolveTypedListOptions(
-  options: RuntimeOptionsCommand | null | undefined,
-  items: ETListUpdateItem[],
-): RuntimeTypedListOptions {
-  return {
-    ...options!,
-    listChildren: items.map(item => item.ref),
-  };
-}
-
-function getTypedListChildren(
-  options: RuntimeOptionsCommand | null | undefined,
-): UpdateTypedListItemCommand[] {
-  return (__DEV__ ? options?.['listChildren'] : options!['listChildren']!)! as UpdateTypedListItemCommand[];
-}
-
-function resolveTypedListItems(
-  items: UpdateTypedListItemCommand[],
-): ETListUpdateItem[] | null {
-  const resolvedItems: ETListUpdateItem[] = [];
-  for (let index = 0; index < items.length; index += 1) {
-    const resolvedItem = resolveTypedListItem(items[index]!, `typed list item ${index}`);
-    if (resolvedItem === null) {
-      return null;
-    }
-    resolvedItems.push(resolvedItem);
-  }
-  return resolvedItems;
-}
-
-function resolveTypedListItem(
-  item: UpdateTypedListItemCommand,
-  role: string,
-): ETListUpdateItem | null {
-  const ref = resolveTargetHandle(item.__etHandleRef, role);
-  if (ref === null) {
-    return null;
-  }
-  // `item.type` is the full `${globDynamicComponentEntry}:${key}` tag; the
-  // native list identifies items by the same identity key the templates were
-  // registered under (see the `createTemplate` op above), so normalize it.
-  const nativeTemplate = parseElementTemplateType(item.type);
-  return {
-    uid: item.__etHandleRef,
-    ref,
-    templateKey: elementTemplateIdentityKey(nativeTemplate.templateKey, nativeTemplate.bundleUrl),
-    platformInfo: item.platformInfo,
-  };
-}
-
 function resolveSubtreeHandles(
   subtreeHandleIds: readonly number[],
   role: string,
@@ -504,13 +384,6 @@ function resolveSubtreeHandles(
     subtreeHandles.push({ uid, ref });
   }
   return subtreeHandles;
-}
-
-function isTypedListChildSlotsEmpty(childSlots: ElementTemplateHandleSlotsCommand | null | undefined): boolean {
-  if (!Array.isArray(childSlots)) {
-    return true;
-  }
-  return childSlots.every(slot => slot == null || (Array.isArray(slot) && slot.length === 0));
 }
 
 function resolveTargetHandle(id: number, role: string): ElementTemplateHandle | null {

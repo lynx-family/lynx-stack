@@ -29,6 +29,7 @@ function createRawTextOps(id: number, text: string) {
     null,
     [text],
     [],
+    null,
   ];
 }
 

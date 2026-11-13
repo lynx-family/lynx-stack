@@ -36,6 +36,7 @@ function createHydrationTemplate(
     attributeSlots?: unknown[] | null;
     bundleUrl?: string;
     childSlots?: SerializedEtNode[][] | null;
+    options?: SerializedCompiledNode['options'];
   } = {},
 ): SerializedCompiledNode {
   const serialized: SerializedCompiledNode = {
@@ -51,6 +52,9 @@ function createHydrationTemplate(
   if ('childSlots' in options) {
     serialized.childSlots = options.childSlots as SerializedCompiledNode['childSlots'];
   }
+  if (options.options !== undefined) {
+    serialized.options = options.options;
+  }
   return serialized;
 }
 
@@ -61,6 +65,7 @@ function createHydrationChild(
     attributeSlots?: unknown[] | null;
     bundleUrl?: string;
     childSlots?: SerializedCompiledNode[][] | null;
+    options?: SerializedCompiledNode['options'];
   } = {},
 ): SerializedCompiledNode {
   return createHydrationTemplate(handleId, templateKey, options);
@@ -369,12 +374,14 @@ describe('hydrate', () => {
       null,
       ['NEW'],
       [],
+      null,
       ElementTemplateUpdateOps.createTemplate,
       card.instanceId,
       'card',
       null,
       ['background-card'],
       [[rawText.instanceId]],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -417,24 +424,27 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.createTemplate,
       item.instanceId,
       '_et_list_item',
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.createTypedElement,
       list.instanceId,
       'list',
       null,
+      [[item.instanceId]],
       null,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
       {
-        listChildren: [{
-          __etHandleRef: item.instanceId,
-          type: '_et_list_item',
-          platformInfo: {},
-          subtreeHandleIds: [],
-        }],
+        __etHandleRef: item.instanceId,
+        type: '_et_list_item',
+        platformInfo: null,
+        subtreeHandleIds: [],
       },
       ElementTemplateUpdateOps.createTemplate,
       holder.instanceId,
@@ -442,6 +452,7 @@ describe('hydrate', () => {
       null,
       [],
       [[dependent.instanceId, list.instanceId]],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -454,6 +465,7 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -616,6 +628,7 @@ describe('hydrate', () => {
       null,
       ['after'],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       1,
@@ -697,6 +710,7 @@ describe('hydrate', () => {
       null,
       ['after'],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       1,
@@ -735,6 +749,7 @@ describe('hydrate', () => {
       null,
       ['after'],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -793,6 +808,7 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       1,
@@ -805,6 +821,7 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       1,
@@ -841,12 +858,14 @@ describe('hydrate', () => {
       null,
       ['NEW'],
       [],
+      null,
       ElementTemplateUpdateOps.createTemplate,
       child.instanceId,
       'child',
       null,
       ['background-child'],
       [[rawText.instanceId]],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -897,6 +916,7 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -1133,7 +1153,7 @@ describe('hydrate', () => {
     }
   });
 
-  it('fails serialized-only typed list removal when listChildren is missing', () => {
+  it('removes serialized-only empty typed lists with no logical slot', () => {
     const oldReportError = lynx.reportError;
     const reportError = vi.fn();
     lynx.reportError = reportError;
@@ -1153,18 +1173,21 @@ describe('hydrate', () => {
         root,
       );
 
-      expect(stream).toEqual([]);
-      expect(reportError).toHaveBeenCalledTimes(1);
-      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'requires options.listChildren',
-      );
+      expect(stream).toEqual([
+        ElementTemplateUpdateOps.removeNode,
+        root.instanceId,
+        0,
+        -10,
+        [-10],
+      ]);
+      expect(reportError).not.toHaveBeenCalled();
     } finally {
       lynx.reportError = oldReportError;
       (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
     }
   });
 
-  it('fails serialized-only typed list removal when generic child slots are present', () => {
+  it('fails serialized-only typed list removal when logical children occupy a nonzero slot', () => {
     const oldReportError = lynx.reportError;
     const reportError = vi.fn();
     lynx.reportError = reportError;
@@ -1177,11 +1200,8 @@ describe('hydrate', () => {
           childSlots: [[{
             tag: 'list',
             attributes: null,
-            childSlots: [[createHydrationChild(-11, '_et_list_item')]],
+            childSlots: [[], [createHydrationChild(-11, '_et_list_item')]],
             uid: -10,
-            options: {
-              listChildren: [],
-            },
           } as SerializedTypedListNode]],
         }),
         root,
@@ -1190,7 +1210,7 @@ describe('hydrate', () => {
       expect(stream).toEqual([]);
       expect(reportError).toHaveBeenCalledTimes(1);
       expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'does not support childSlots',
+        'only supports logical slot 0',
       );
     } finally {
       lynx.reportError = oldReportError;
@@ -1211,11 +1231,8 @@ describe('hydrate', () => {
           childSlots: [[{
             tag: 'list',
             attributes: null,
-            childSlots: [],
+            childSlots: [[createHydrationChild(0, '_et_list_item')]],
             uid: -10,
-            options: {
-              listChildren: [createHydrationChild(0, '_et_list_item')],
-            },
           } as SerializedTypedListNode]],
         }),
         root,
@@ -1356,6 +1373,7 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
@@ -1466,19 +1484,21 @@ describe('hydrate', () => {
     );
 
     expect(stream).toEqual([
-      1,
+      ElementTemplateUpdateOps.createTemplate,
       grandchild.instanceId,
       'grandchild',
       null,
       [],
       [],
-      1,
+      null,
+      ElementTemplateUpdateOps.createTemplate,
       child.instanceId,
       'child',
       null,
       [],
       [[grandchild.instanceId]],
-      3,
+      null,
+      ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,
       child.instanceId,
@@ -1510,24 +1530,27 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.createTemplate,
       item.instanceId,
       '_et_item',
       null,
       [],
       [[nested.instanceId]],
+      null,
       ElementTemplateUpdateOps.createTypedElement,
       list.instanceId,
       'list',
       null,
+      [[item.instanceId]],
       null,
+      ElementTemplateUpdateOps.updateTypedListItem,
+      list.instanceId,
       {
-        listChildren: [{
-          __etHandleRef: item.instanceId,
-          type: '_et_item',
-          platformInfo: {},
-          subtreeHandleIds: [],
-        }],
+        __etHandleRef: item.instanceId,
+        type: '_et_item',
+        platformInfo: null,
+        subtreeHandleIds: [],
       },
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
@@ -1555,17 +1578,14 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        childSlots: null,
+        childSlots: [[createHydrationChild(-11, '_et_item', {
+          childSlots: [[
+            createHydrationChild(-12, 'a'),
+            createHydrationChild(-13, 'b'),
+            createHydrationChild(-14, 'c'),
+          ]],
+        })]],
         uid: -10,
-        options: {
-          listChildren: [createHydrationChild(-11, '_et_item', {
-            childSlots: [[
-              createHydrationChild(-12, 'a'),
-              createHydrationChild(-13, 'b'),
-              createHydrationChild(-14, 'c'),
-            ]],
-          })],
-        },
       } satisfies SerializedTypedNode,
       list,
     );
@@ -1583,24 +1603,17 @@ describe('hydrate', () => {
       null,
       [],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       -11,
       0,
       inserted.instanceId,
       0,
       null,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      -10,
-      {
-        __etHandleRef: -11,
-        type: '_et_item',
-        platformInfo: {},
-        subtreeHandleIds: [],
-      },
     ]);
   });
 
-  it('hydrates native typed list roots from options listChildren', () => {
+  it('hydrates native typed list roots from logical slot 0', () => {
     const list = new BackgroundListElementTemplateInstance();
     const item = new BackgroundElementTemplateInstance('_et_list_item');
     list.setAttribute('attributes', { id: 'feed' });
@@ -1611,31 +1624,14 @@ describe('hydrate', () => {
     const stream = hydrate(
       {
         tag: 'list',
-        attributes: {
-          id: 'feed',
-          'component-at-index': null,
-          'component-at-indexes': null,
-          'enqueue-component': null,
-          'update-list-info': {
-            insertAction: [{ position: 0, type: '_et_list_item' }],
-            removeAction: [],
-            updateAction: [],
-          },
-        },
-        childSlots: null,
+        attributes: { id: 'feed' },
+        childSlots: [[createHydrationChild(-11, '_et_list_item')], null],
         uid: -10,
-        options: {
-          listChildren: [createHydrationChild(-11, '_et_list_item')],
-        },
       } satisfies SerializedTypedListNode,
       list,
     );
 
-    expect(stream).toEqual([
-      ElementTemplateUpdateOps.updateTypedListItem,
-      -10,
-      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {}, subtreeHandleIds: [] },
-    ]);
+    expect(stream).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(oldItemId)).toBeUndefined();
     expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
@@ -1660,15 +1656,9 @@ describe('hydrate', () => {
         attributes: {
           bindtap: '-10:0:bindtap',
           ref: '-10-0',
-          'component-at-index': null,
-          'component-at-indexes': null,
-          'enqueue-component': null,
         },
-        childSlots: null,
+        childSlots: [[]],
         uid: -10,
-        options: {
-          listChildren: [],
-        },
       } satisfies SerializedTypedNode,
       list,
     );
@@ -1688,36 +1678,30 @@ describe('hydrate', () => {
     expect(refProxy).toMatchObject({ selector: '[ref=-10-0]' });
   });
 
-  it('hydrates typed lists outside development while dropping transient native list attributes', () => {
+  it('hydrates typed list attributes outside development', () => {
     const originalDev = globalThis.__DEV__;
     globalThis.__DEV__ = false;
     try {
       const list = new BackgroundListElementTemplateInstance();
+      list.setAttribute('attributes', { id: 'background' });
       const oldListId = list.instanceId;
 
       const stream = hydrate(
         {
           tag: 'list',
-          attributes: {
-            'component-at-index': null,
-            'component-at-indexes': null,
-            'enqueue-component': null,
-            'update-list-info': {
-              insertAction: [],
-              removeAction: [],
-              updateAction: [],
-            },
-          },
-          childSlots: null,
+          attributes: { id: 'native' },
+          childSlots: [[]],
           uid: -10,
-          options: {
-            listChildren: [],
-          },
         } satisfies SerializedTypedListNode,
         list,
       );
 
-      expect(stream).toEqual([]);
+      expect(stream).toEqual([
+        ElementTemplateUpdateOps.setAttribute,
+        -10,
+        0,
+        { id: 'background' },
+      ]);
       expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBeUndefined();
       expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
     } finally {
@@ -1738,21 +1722,16 @@ describe('hydrate', () => {
         childSlots: [[{
           tag: 'list',
           attributes: { id: 'feed' },
-          childSlots: null,
+          childSlots: [[createHydrationChild(-11, '_et_list_item', {
+            options: { __listItemPlatformInfo: [] },
+          })]],
           uid: -10,
-          options: {
-            listChildren: [createHydrationChild(-11, '_et_list_item')],
-          },
         } as SerializedTypedListNode]],
       }),
       root,
     );
 
-    expect(stream).toEqual([
-      ElementTemplateUpdateOps.updateTypedListItem,
-      -10,
-      { __etHandleRef: -11, type: '_et_list_item', platformInfo: {}, subtreeHandleIds: [] },
-    ]);
+    expect(stream).toEqual([]);
     expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(item);
   });
@@ -1771,11 +1750,10 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        childSlots: [],
+        childSlots: [[createHydrationChild(-11, '_et_item_a', {
+          options: { __listItemPlatformInfo: { 'item-key': 'a' } },
+        })]],
         uid: -10,
-        options: {
-          listChildren: [createHydrationChild(-11, '_et_item_a')],
-        },
       } satisfies SerializedTypedListNode,
       list,
     );
@@ -1787,23 +1765,19 @@ describe('hydrate', () => {
       null,
       ['second'],
       [],
-      ElementTemplateUpdateOps.insertTypedListItem,
+      { __listItemPlatformInfo: { 'item-key': 'b' } },
+      ElementTemplateUpdateOps.insertNode,
       -10,
-      {
-        __etHandleRef: secondLocalId,
-        type: '_et_item_b',
-        platformInfo: { 'item-key': 'b' },
-        subtreeHandleIds: [],
-      },
       0,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
+      secondLocalId,
+      0,
+      null,
     ]);
+    expect(first.instanceId).toBe(-11);
     expect(backgroundElementTemplateInstanceManager.get(secondLocalId)).toBe(second);
   });
 
-  it('orders typed list hydrate inserts so pending anchors exist before earlier siblings', () => {
+  it('orders typed list hydrate inserts against retained native anchors', () => {
     const list = new BackgroundListElementTemplateInstance();
     const extraFirst = new BackgroundElementTemplateInstance('_et_item_x', ['x']);
     const extraSecond = new BackgroundElementTemplateInstance('_et_item_y', ['y']);
@@ -1821,50 +1795,43 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        childSlots: [],
+        childSlots: [[createHydrationChild(-11, '_et_item_a', {
+          options: { __listItemPlatformInfo: { 'item-key': 'a' } },
+        })]],
         uid: -10,
-        options: {
-          listChildren: [createHydrationChild(-11, '_et_item_a')],
-        },
       } satisfies SerializedTypedListNode,
       list,
     );
 
     expect(stream).toEqual([
       ElementTemplateUpdateOps.createTemplate,
-      extraSecondLocalId,
-      '_et_item_y',
-      null,
-      ['y'],
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      -10,
-      {
-        __etHandleRef: extraSecondLocalId,
-        type: '_et_item_y',
-        platformInfo: { 'item-key': 'y' },
-        subtreeHandleIds: [],
-      },
-      -11,
-      ElementTemplateUpdateOps.createTemplate,
       extraFirstLocalId,
       '_et_item_x',
       null,
       ['x'],
       [],
-      ElementTemplateUpdateOps.insertTypedListItem,
+      { __listItemPlatformInfo: { 'item-key': 'x' } },
+      ElementTemplateUpdateOps.insertNode,
       -10,
-      {
-        __etHandleRef: extraFirstLocalId,
-        type: '_et_item_x',
-        platformInfo: { 'item-key': 'x' },
-        subtreeHandleIds: [],
-      },
+      0,
+      extraFirstLocalId,
+      -11,
+      null,
+      ElementTemplateUpdateOps.createTemplate,
       extraSecondLocalId,
-      ElementTemplateUpdateOps.updateTypedListItem,
+      '_et_item_y',
+      null,
+      ['y'],
+      [],
+      { __listItemPlatformInfo: { 'item-key': 'y' } },
+      ElementTemplateUpdateOps.insertNode,
       -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
+      0,
+      extraSecondLocalId,
+      -11,
+      null,
     ]);
+    expect(existing.instanceId).toBe(-11);
   });
 
   it('reconciles typed list hydrate when serialized list has stale item roots', () => {
@@ -1877,27 +1844,27 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        childSlots: [],
+        childSlots: [[
+          createHydrationChild(-11, '_et_item_a', {
+            options: { __listItemPlatformInfo: { 'item-key': 'a' } },
+          }),
+          createHydrationChild(-12, '_et_item_b', {
+            options: { __listItemPlatformInfo: { 'item-key': 'b' } },
+          }),
+        ]],
         uid: -10,
-        options: {
-          listChildren: [
-            createHydrationChild(-11, '_et_item_a'),
-            createHydrationChild(-12, '_et_item_b'),
-          ],
-        },
       } satisfies SerializedTypedListNode,
       list,
     );
 
     expect(stream).toEqual([
-      ElementTemplateUpdateOps.removeTypedListItem,
+      ElementTemplateUpdateOps.removeNode,
       -10,
+      0,
       -12,
       [-12],
-      ElementTemplateUpdateOps.updateTypedListItem,
-      -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
     ]);
+    expect(first.instanceId).toBe(-11);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBeUndefined();
   });
 
@@ -1913,16 +1880,13 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          childSlots: [],
+          childSlots: [[{
+            tag: 'scroll-view',
+            attributes: null,
+            childSlots: [],
+            uid: -11,
+          } as SerializedTypedNode]],
           uid: -10,
-          options: {
-            listChildren: [{
-              tag: 'scroll-view',
-              attributes: null,
-              childSlots: [],
-              uid: -11,
-            } as SerializedTypedNode],
-          },
         } satisfies SerializedTypedListNode,
         list,
       );
@@ -1938,7 +1902,7 @@ describe('hydrate', () => {
     }
   });
 
-  it('reconciles typed list hydrate reorder through incremental list mutations', () => {
+  it('reconciles typed list hydrate reorder through a retained item insertion', () => {
     const list = new BackgroundListElementTemplateInstance();
     const itemA = new BackgroundElementTemplateInstance('_et_item_a');
     const itemB = new BackgroundElementTemplateInstance('_et_item_b');
@@ -1951,30 +1915,26 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        childSlots: [],
+        childSlots: [[
+          createHydrationChild(-11, '_et_item_a', {
+            options: { __listItemPlatformInfo: { 'item-key': 'a' } },
+          }),
+          createHydrationChild(-12, '_et_item_b', {
+            options: { __listItemPlatformInfo: { 'item-key': 'b' } },
+          }),
+        ]],
         uid: -10,
-        options: {
-          listChildren: [
-            createHydrationChild(-11, '_et_item_a'),
-            createHydrationChild(-12, '_et_item_b'),
-          ],
-        },
       } satisfies SerializedTypedListNode,
       list,
     );
 
     expect(stream).toEqual([
-      ElementTemplateUpdateOps.removeTypedListItem,
+      ElementTemplateUpdateOps.insertNode,
       -10,
-      -11,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      -10,
-      { __etHandleRef: -11, type: '_et_item_a', platformInfo: { 'item-key': 'a' }, subtreeHandleIds: [] },
       0,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      -10,
-      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' }, subtreeHandleIds: [] },
+      -11,
+      0,
+      null,
     ]);
     expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(itemA);
     expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(itemB);
@@ -1997,59 +1957,61 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        childSlots: [],
+        childSlots: [[
+          createHydrationChild(-11, '_et_item_a', {
+            options: { __listItemPlatformInfo: { 'item-key': 'a', 'reuse-identifier': 'before' } },
+          }),
+          createHydrationChild(-12, '_et_item_b', {
+            options: { __listItemPlatformInfo: { 'item-key': 'b' } },
+          }),
+          createHydrationChild(-13, '_et_item_c', {
+            options: { __listItemPlatformInfo: { 'item-key': 'c' } },
+          }),
+        ]],
         uid: -10,
-        options: {
-          listChildren: [
-            createHydrationChild(-11, '_et_item_a'),
-            createHydrationChild(-12, '_et_item_b'),
-            createHydrationChild(-13, '_et_item_c'),
-          ],
-        },
       } satisfies SerializedTypedListNode,
       list,
     );
 
     expect(stream).toEqual([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      -10,
-      -11,
-      [],
-      ElementTemplateUpdateOps.removeTypedListItem,
-      -10,
-      -13,
-      [-13],
-      ElementTemplateUpdateOps.insertTypedListItem,
+      ElementTemplateUpdateOps.updateTypedListItem,
       -10,
       {
         __etHandleRef: -11,
         type: '_et_item_a',
         platformInfo: { 'item-key': 'a', 'reuse-identifier': 'next' },
-        subtreeHandleIds: [],
+        subtreeHandleIds: null,
       },
+      ElementTemplateUpdateOps.removeNode,
+      -10,
       0,
+      -13,
+      [-13],
       ElementTemplateUpdateOps.createTemplate,
       extraLocalId,
       '_et_item_x',
       null,
       ['x'],
       [],
-      ElementTemplateUpdateOps.insertTypedListItem,
+      { __listItemPlatformInfo: { 'item-key': 'x' } },
+      ElementTemplateUpdateOps.insertNode,
       -10,
-      {
-        __etHandleRef: extraLocalId,
-        type: '_et_item_x',
-        platformInfo: { 'item-key': 'x' },
-        subtreeHandleIds: [],
-      },
+      0,
+      extraLocalId,
+      0,
+      null,
+      ElementTemplateUpdateOps.insertNode,
+      -10,
+      0,
       -11,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      -10,
-      { __etHandleRef: -12, type: '_et_item_b', platformInfo: { 'item-key': 'b' }, subtreeHandleIds: [] },
+      0,
+      null,
     ]);
+    expect(backgroundElementTemplateInstanceManager.get(-11)).toBe(itemA);
+    expect(backgroundElementTemplateInstanceManager.get(-12)).toBe(itemB);
   });
 
-  it('treats typed list item type mismatch as list replacement instead of hydrate failure', () => {
+  it('replaces typed list items with incompatible templates during hydrate', () => {
     const oldReportError = lynx.reportError;
     const reportError = vi.fn();
     lynx.reportError = reportError;
@@ -2065,19 +2027,19 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          childSlots: [],
+          childSlots: [[createHydrationChild(-11, '_et_old_item', {
+            options: { __listItemPlatformInfo: { 'item-key': 'next' } },
+          })]],
           uid: -10,
-          options: {
-            listChildren: [createHydrationChild(-11, '_et_old_item')],
-          },
         } satisfies SerializedTypedListNode,
         list,
       );
 
       expect(reportError).not.toHaveBeenCalled();
       expect(stream).toEqual([
-        ElementTemplateUpdateOps.removeTypedListItem,
+        ElementTemplateUpdateOps.removeNode,
         -10,
+        0,
         -11,
         [-11],
         ElementTemplateUpdateOps.createTemplate,
@@ -2086,15 +2048,13 @@ describe('hydrate', () => {
         null,
         ['next'],
         [],
-        ElementTemplateUpdateOps.insertTypedListItem,
+        { __listItemPlatformInfo: { 'item-key': 'next' } },
+        ElementTemplateUpdateOps.insertNode,
         -10,
-        {
-          __etHandleRef: nextLocalId,
-          type: '_et_next_item',
-          platformInfo: { 'item-key': 'next' },
-          subtreeHandleIds: [],
-        },
         0,
+        nextLocalId,
+        0,
+        null,
       ]);
       expect(backgroundElementTemplateInstanceManager.get(-11)).toBeUndefined();
     } finally {
@@ -2113,11 +2073,10 @@ describe('hydrate', () => {
       {
         tag: 'list',
         attributes: null,
-        childSlots: [],
+        childSlots: [[createHydrationChild(-11, '_et_item', {
+          options: { __listItemPlatformInfo: { 'item-key': 'after', 'reuse-identifier': 'before' } },
+        })]],
         uid: -10,
-        options: {
-          listChildren: [createHydrationChild(-11, '_et_item')],
-        },
       } satisfies SerializedTypedListNode,
       list,
     );
@@ -2129,7 +2088,7 @@ describe('hydrate', () => {
         __etHandleRef: -11,
         type: '_et_item',
         platformInfo: { 'item-key': 'after', 'reuse-identifier': 'next' },
-        subtreeHandleIds: [],
+        subtreeHandleIds: null,
       },
     ]);
   });
@@ -2148,11 +2107,8 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          childSlots: [],
+          childSlots: [[createHydrationChild(0, '_et_item')]],
           uid: -10,
-          options: {
-            listChildren: [createHydrationChild(0, '_et_item')],
-          },
         } satisfies SerializedTypedListNode,
         list,
       );
@@ -2166,7 +2122,7 @@ describe('hydrate', () => {
     }
   });
 
-  it('rejects typed list payloads without options listChildren before rebinding handles', () => {
+  it('hydrates empty typed lists with no logical slot', () => {
     const oldReportError = lynx.reportError;
     const reportError = vi.fn();
     lynx.reportError = reportError;
@@ -2186,11 +2142,9 @@ describe('hydrate', () => {
       );
 
       expect(stream).toEqual([]);
-      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'requires options.listChildren',
-      );
-      expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBe(list);
-      expect(backgroundElementTemplateInstanceManager.get(-10)).toBeUndefined();
+      expect(reportError).not.toHaveBeenCalled();
+      expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBeUndefined();
+      expect(backgroundElementTemplateInstanceManager.get(-10)).toBe(list);
     } finally {
       lynx.reportError = oldReportError;
       (globalThis as { __LYNX_REPORT_ERROR_CALLS?: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
@@ -2210,11 +2164,8 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          childSlots: [],
+          childSlots: [[]],
           uid: 0,
-          options: {
-            listChildren: [],
-          },
         } satisfies SerializedTypedListNode,
         list,
       );
@@ -2229,7 +2180,7 @@ describe('hydrate', () => {
     }
   });
 
-  it('rejects typed list payloads with generic childSlots before rebinding handles', () => {
+  it('rejects typed list payloads with logical children outside slot 0 before rebinding handles', () => {
     const oldReportError = lynx.reportError;
     const reportError = vi.fn();
     lynx.reportError = reportError;
@@ -2242,18 +2193,15 @@ describe('hydrate', () => {
         {
           tag: 'list',
           attributes: null,
-          childSlots: [[createHydrationChild(-11, '_et_list_item')]],
+          childSlots: [[], [createHydrationChild(-11, '_et_list_item')]],
           uid: -10,
-          options: {
-            listChildren: [],
-          },
         } satisfies SerializedTypedListNode,
         list,
       );
 
       expect(stream).toEqual([]);
       expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-        'does not support childSlots',
+        'only supports logical slot 0',
       );
       expect(backgroundElementTemplateInstanceManager.get(oldListId)).toBe(list);
       expect(backgroundElementTemplateInstanceManager.get(-10)).toBeUndefined();
@@ -2272,11 +2220,8 @@ describe('hydrate', () => {
         childSlots: [[{
           tag: 'list',
           attributes: null,
-          childSlots: null,
+          childSlots: [[createHydrationChild(-11, '_et_list_item')], null],
           uid: -10,
-          options: {
-            listChildren: [createHydrationChild(-11, '_et_list_item')],
-          },
         } as SerializedTypedListNode]],
       }),
       root,

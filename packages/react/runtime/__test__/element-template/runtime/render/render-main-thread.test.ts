@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderMainThread } from '../../../../src/element-template/runtime/render/render-main-thread.js';
 import { getReloadVersion } from '../../../../src/core/reload-version.js';
-import {
-  createElementTemplateListState,
-  destroyAllElementTemplateListStates,
-  registerElementTemplateListState,
-} from '../../../../src/element-template/runtime/list/list.js';
+import { destroyAllElementTemplateListStates } from '../../../../src/element-template/runtime/list/list.js';
 import { setupPage } from '../../../../src/element-template/runtime/page/page.js';
 import { setRoot } from '../../../../src/element-template/runtime/page/root-instance.js';
 import {
@@ -223,61 +219,6 @@ describe('renderMainThread', () => {
       vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]!,
     );
     expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
-    );
-  });
-
-  it('flushes initial list metadata after page insertion and before serialize', () => {
-    const rootRef = { type: 'root-ref' } as unknown as ElementTemplateHandle;
-    const listRef = { type: 'list-ref' } as unknown as ElementTemplateHandle;
-    const serializedPage = {
-      tag: 'page',
-      attributes: null,
-      childSlots: [[{
-        templateKey: '_et_root',
-        attributeSlots: [],
-        childSlots: [],
-        uid: -1,
-      }]],
-      uid: 0,
-    };
-    vi.mocked(mockRender).mockReturnValue({
-      pageAttributes: null,
-      rootRefs: [rootRef],
-      rootSubtreeHandles: [[]],
-    });
-    vi.mocked(__SerializeElementTemplate).mockReturnValue(
-      serializedPage as unknown as ReturnType<typeof __SerializeElementTemplate>,
-    );
-    elementTemplateRegistry.set(-2, listRef);
-    registerElementTemplateListState(
-      -2,
-      createElementTemplateListState([], { id: 'feed' }),
-      true,
-      listRef,
-    );
-
-    renderMainThread();
-
-    expect(__SetAttributeOfElementTemplate).toHaveBeenCalledWith(
-      listRef,
-      0,
-      {
-        id: 'feed',
-        'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
-        'enqueue-component': expect.any(Function),
-        'update-list-info': {
-          insertAction: [],
-          removeAction: [],
-          updateAction: [],
-        },
-      },
-    );
-    expect(vi.mocked(__InsertNodeToElementTemplate).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[1]!,
-    );
-    expect(vi.mocked(__SetAttributeOfElementTemplate).mock.invocationCallOrder[1]).toBeLessThan(
       vi.mocked(__SerializeElementTemplate).mock.invocationCallOrder[0]!,
     );
   });

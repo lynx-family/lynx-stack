@@ -304,6 +304,7 @@ describe('render transform contract', () => {
       null,
       null,
       -1,
+      undefined,
     ]);
   });
 
@@ -346,6 +347,7 @@ describe('render transform contract', () => {
       null,
       null,
       -1,
+      undefined,
     ]);
   });
 
@@ -375,15 +377,12 @@ describe('render transform contract', () => {
         'enqueue-component': expect.any(Function),
       },
       __handleId: -2,
-      __childSlots: null,
-      __options: {
-        listChildren: [
-          expect.objectContaining({
-            tag: 'list-item',
-            __handleId: -1,
-          }),
-        ],
-      },
+      __childSlots: [[expect.objectContaining({
+        tag: 'list-item',
+        __handleId: -1,
+        __options: { __listItemPlatformInfo: { 'item-key': 'first' } },
+      })]],
+      __options: {},
     });
     expect(typedCreateLog[2]).toEqual(expect.objectContaining({
       id: 'feed',
@@ -391,25 +390,20 @@ describe('render transform contract', () => {
       'component-at-indexes': expect.any(Function),
       'enqueue-component': expect.any(Function),
     }));
-    expect(typedCreateLog[3]).toBe(null);
-    expect(typedCreateLog[5]).toEqual({
-      listChildren: [expect.objectContaining({ tag: 'list-item' })],
-    });
+    expect(typedCreateLog[3]).toEqual([[expect.objectContaining({ tag: 'list-item' })]]);
+    expect(typedCreateLog[5]).toEqual({});
 
     const serialized = __SerializeElementTemplate(rootRef);
-    expect(serialized.childSlots ?? []).toEqual([]);
     expect(serialized).toMatchObject({
       tag: 'list',
       attributes: { id: 'feed' },
       uid: -2,
-      options: {
-        listChildren: [
-          expect.objectContaining({
-            templateKey: expect.stringMatching(/^_et_/),
-            uid: -1,
-          }),
-        ],
-      },
+      childSlots: [[expect.objectContaining({
+        templateKey: expect.stringMatching(/^_et_/),
+        uid: -1,
+        options: { __listItemPlatformInfo: { 'item-key': 'first' } },
+      })]],
+      options: {},
     });
   });
 
@@ -431,7 +425,7 @@ describe('render transform contract', () => {
     expect(result.code).toContain('"item-key": "late"');
   });
 
-  it('chains create, serialize, update, and callbacks', async () => {
+  it('chains create, serialize, hydrate, and structural updates', async () => {
     const { rootRef } = await compileAndRender(`
       export function App() {
         return (
@@ -443,7 +437,7 @@ describe('render transform contract', () => {
       }
     `);
     const serialized = __SerializeElementTemplate(rootRef) as SerializedTypedListNode;
-    const serializedChildren = serialized.options?.listChildren;
+    const serializedChildren = serialized.childSlots?.[0];
     if (!serializedChildren || serializedChildren.length !== 2) {
       throw new Error('Expected first-screen typed list serialize to include two list children.');
     }
@@ -472,24 +466,7 @@ describe('render transform contract', () => {
     list.appendChild(second);
 
     const hydrateOps = hydrateBackground(serialized, list);
-    expect(hydrateOps).toEqual([
-      ElementTemplateUpdateOps.updateTypedListItem,
-      serialized.uid,
-      {
-        __etHandleRef: firstSerializedChild.uid,
-        type: firstSerializedChild.templateKey,
-        platformInfo: { 'item-key': 'first' },
-        subtreeHandleIds: [],
-      },
-      ElementTemplateUpdateOps.updateTypedListItem,
-      serialized.uid,
-      {
-        __etHandleRef: secondSerializedChild.uid,
-        type: secondSerializedChild.templateKey,
-        platformInfo: { 'item-key': 'second' },
-        subtreeHandleIds: [],
-      },
-    ]);
+    expect(hydrateOps).toEqual([]);
 
     globalThis.__LEPUS__ = true;
     globalThis.__JS__ = false;
@@ -514,57 +491,23 @@ describe('render transform contract', () => {
 
     applyElementTemplateUpdateCommands(updateOps);
 
-    expect(rootRef).toMatchObject({
-      attributes: expect.objectContaining({
-        'update-list-info': {
-          insertAction: [],
-          removeAction: [0],
-          updateAction: [],
-        },
-      }),
-      __childSlots: null,
-    });
-
-    const listHandle = rootRef as ElementTemplateHandle & { attributes: Record<string, unknown> };
-    const attrs = listHandle.attributes;
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    const secondRef = elementTemplateRegistry.get(secondSerializedChild.uid);
-    if (!secondRef) {
-      throw new Error('Expected hydrated second item handle to stay registered.');
-    }
-    const materializedList = { __mockNativeId: 1000 } as unknown as FiberElement;
-    const listID = __GetElementUniqueID(materializedList);
-    const sign = componentAtIndex(materializedList, listID, 0, 91, false);
-    const secondNativeLabel = `<${secondSerializedChild.templateKey} />`;
-
-    expect(sign).toBe(__GetElementUniqueID(secondRef as unknown as FiberElement));
-    expect(lastMock!.nativeLog).toContainEqual([
-      '__InsertNodeToElementTemplate',
-      '<list />',
+    expect(updateOps).toEqual([
+      ElementTemplateUpdateOps.removeNode,
+      serialized.uid,
       0,
-      secondNativeLabel,
-      null,
+      firstSerializedChild.uid,
+      [firstSerializedChild.uid],
     ]);
-    expect(lastMock!.nativeLog).toContainEqual([
-      '__FlushElementTree',
-      secondNativeLabel,
-      {
-        triggerLayout: true,
-        operationID: 91,
-        elementID: sign,
-        listID,
-      },
-    ]);
-
-    enqueueComponent(materializedList, listID, sign);
-
     expect(lastMock!.nativeLog).toContainEqual([
       '__RemoveNodeFromElementTemplate',
       '<list />',
       0,
-      secondNativeLabel,
+      `<${firstSerializedChild.templateKey} />`,
     ]);
-    expect(elementTemplateRegistry.get(secondSerializedChild.uid)).toBe(secondRef);
+    expect(__SerializeElementTemplate(rootRef).childSlots?.[0]).toMatchObject([
+      { uid: secondSerializedChild.uid },
+    ]);
+    expect(elementTemplateRegistry.has(firstSerializedChild.uid)).toBe(false);
+    expect(elementTemplateRegistry.get(secondSerializedChild.uid)).toBeDefined();
   });
 });

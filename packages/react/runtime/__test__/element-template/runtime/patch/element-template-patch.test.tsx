@@ -36,9 +36,8 @@ import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
   markElementTemplateListDestroyed,
-  registerElementTemplateListItem,
   registerElementTemplateListState,
-  removeElementTemplateListItem,
+  updateElementTemplateListAttributes,
 } from '../../../../src/element-template/runtime/list/list.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
@@ -92,6 +91,7 @@ function createRawTextOps(id: number, text: string) {
     null,
     [text],
     [],
+    null,
   ] as const;
 }
 
@@ -103,14 +103,6 @@ function resetReportedErrors(): void {
   const lynxObj = globalThis.lynx as unknown as LynxWithReportErrorMock;
   lynxObj.reportError.mockClear();
   (globalThis as unknown as { __LYNX_REPORT_ERROR_CALLS: Error[] }).__LYNX_REPORT_ERROR_CALLS = [];
-}
-
-function createMaterializedListForFrontendTest(nativeId: number): FiberElement {
-  return {
-    __isNativeRef: true,
-    id: 'materialized-list',
-    __mockNativeId: nativeId,
-  } as unknown as FiberElement;
 }
 
 const MT_EVENT_TEMPLATE = '_et_mt_event';
@@ -493,6 +485,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         null,
         [{ type: 'worklet', value: ctx }],
         [],
+        null,
       ],
       flushOptions: {},
     });
@@ -534,6 +527,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         'lazy-entry',
         [{ type: 'worklet', value: ctx }],
         [],
+        null,
       ],
       flushOptions: {},
     });
@@ -577,6 +571,7 @@ describe('ElementTemplate patch stream (apply)', () => {
           null,
           [{ type: 'main-thread-ref', value: ref }],
           [],
+          null,
         ],
         flushOptions: {},
       });
@@ -627,6 +622,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         null,
         [{ type: 'main-thread-ref', value: ref }],
         [],
+        null,
       ]);
 
       const nativeRef = elementTemplateRegistry.get(handleId);
@@ -688,6 +684,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         null,
         [{ type: 'main-thread-ref', value: ref }],
         [],
+        null,
       ]);
       mockInsertElementTemplateNodeIntoSlot.mockImplementationOnce(() => {
         throw new Error('insert failed');
@@ -2011,6 +2008,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
       ['x'],
       [],
+      null,
     ]);
 
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
@@ -2030,6 +2028,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
       ['x'],
       [],
+      null,
     ]);
 
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
@@ -2047,6 +2046,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
       'bad-attrs' as unknown as ElementTemplateUpdateCommandStream[number],
       [],
+      null,
     ]);
 
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
@@ -2066,6 +2066,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
       [],
       'bad-slots' as unknown as ElementTemplateUpdateCommandStream[number],
+      null,
     ]);
 
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
@@ -2112,6 +2113,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
       [],
       childSlots,
+      null,
     ]);
 
     const parentCall = createTemplateMock.mock.calls.find((call) => call[0] === '_et_sparse_slot_parent');
@@ -2171,11 +2173,11 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.has(21)).toBe(true);
   });
 
-  it('creates a typed list with callbacks and logical children', () => {
+  it('creates a typed list with logical children in slot 0', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
 
-    const itemRef = createMockElementTemplateHandle('option-child', 101);
+    const itemRef = createMockElementTemplateHandle('logical-child', 101);
     elementTemplateRegistry.set(12, itemRef);
     mockCreateTypedElementTemplate.mockClear();
 
@@ -2184,52 +2186,44 @@ describe('ElementTemplate patch stream (apply)', () => {
       28,
       'list',
       { id: 'typed-list' },
-      [],
-      {
-        listChildren: [{ __etHandleRef: 12, type: '_et_item', platformInfo: { 'item-key': 'a' } }],
-        estimatedHeight: 80,
-      },
+      [[12], null],
+      { estimatedHeight: 80 },
     ]);
 
-    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(1);
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[0]).toBe('list');
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[1]).toEqual({
-      id: 'typed-list',
-      'component-at-index': expect.any(Function),
-      'component-at-indexes': expect.any(Function),
-      'enqueue-component': expect.any(Function),
-    });
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[2]).toBe(null);
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[3]).toBe(28);
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[4]).toEqual({
-      listChildren: [itemRef],
-      estimatedHeight: 80,
-    });
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toEqual([[
-      expect.anything(),
-      0,
+    expect(mockCreateTypedElementTemplate.mock.calls).toEqual([[
+      'list',
       {
         id: 'typed-list',
         'component-at-index': expect.any(Function),
         'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
-        'update-list-info': {
-          insertAction: [{ position: 0, type: '_et_item', 'item-key': 'a' }],
-          removeAction: [],
-          updateAction: [],
-        },
+      },
+      [[itemRef]],
+      28,
+      { estimatedHeight: 80 },
+    ]]);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
+    expect(elementTemplateRegistry.has(28)).toBe(true);
+
+    const listRef = elementTemplateRegistry.get(28);
+    const createdAttributes = mockCreateTypedElementTemplate.mock.calls[0]?.[1] as Record<string, unknown>;
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.setAttribute,
+      28,
+      0,
+      { id: 'updated-list' },
+    ]);
+
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toEqual([[
+      listRef,
+      0,
+      {
+        id: 'updated-list',
+        'component-at-index': createdAttributes['component-at-index'],
+        'component-at-indexes': createdAttributes['component-at-indexes'],
+        'enqueue-component': createdAttributes['enqueue-component'],
       },
     ]]);
-    expect(elementTemplateRegistry.has(28)).toBe(true);
-    const listRef = elementTemplateRegistry.get(28)!;
-    const materializedListRef = createMaterializedListForFrontendTest(1001);
-    const componentAtIndex = (mockCreateTypedElementTemplate.mock.calls[0]![1] as Record<string, unknown>)[
-      'component-at-index'
-    ] as ComponentAtIndexCallback;
-
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-    expect(componentAtIndex(materializedListRef, 7, 0, 88, false)).toBe(101);
-    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[listRef, 0, itemRef, null]]);
   });
 
   it('creates a typed list outside development', () => {
@@ -2238,7 +2232,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     try {
       envManager.switchToMainThread();
       elementTemplateRegistry.clear();
-      const itemRef = createMockElementTemplateHandle('option-child');
+      const itemRef = createMockElementTemplateHandle('logical-child');
       elementTemplateRegistry.set(12, itemRef);
       mockCreateTypedElementTemplate.mockClear();
 
@@ -2247,18 +2241,21 @@ describe('ElementTemplate patch stream (apply)', () => {
         33,
         'list',
         null,
-        [],
-        {
-          listChildren: [{ __etHandleRef: 12, type: '_et_item', platformInfo: {} }],
-          estimatedHeight: 80,
-        },
+        [[12]],
+        { estimatedHeight: 80 },
       ]);
 
-      expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(1);
-      expect(mockCreateTypedElementTemplate.mock.calls[0]?.[4]).toEqual({
-        listChildren: [itemRef],
-        estimatedHeight: 80,
-      });
+      expect(mockCreateTypedElementTemplate.mock.calls).toEqual([[
+        'list',
+        {
+          'component-at-index': expect.any(Function),
+          'component-at-indexes': expect.any(Function),
+          'enqueue-component': expect.any(Function),
+        },
+        [[itemRef]],
+        33,
+        { estimatedHeight: 80 },
+      ]]);
       expect(elementTemplateRegistry.has(33)).toBe(true);
     } finally {
       globalThis.__DEV__ = originalDev;
@@ -2270,24 +2267,38 @@ describe('ElementTemplate patch stream (apply)', () => {
     elementTemplateRegistry.clear();
     mockCreateTypedElementTemplate.mockClear();
 
-    applyElementTemplateUpdateCommands([
+    const stream: ElementTemplateUpdateCommandStream = [
       ElementTemplateUpdateOps.createTypedElement,
       29,
       'list',
       null,
       null,
-      { listChildren: [] },
-    ]);
+      {},
+    ];
+    vi.mocked(__CreateTypedElementTemplate).mockReturnValueOnce(null as unknown as ElementTemplateHandle);
+    applyElementTemplateUpdateCommands(stream);
 
-    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(1);
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[2]).toBe(null);
-    expect(mockCreateTypedElementTemplate.mock.calls[0]?.[4]).toEqual({
-      listChildren: [],
-    });
+    expect(elementTemplateRegistry.has(29)).toBe(false);
+    expect(updateElementTemplateListAttributes(29, null)).toBeNull();
+    mockCreateTypedElementTemplate.mockClear();
+
+    applyElementTemplateUpdateCommands(stream);
+
+    expect(mockCreateTypedElementTemplate.mock.calls).toEqual([[
+      'list',
+      {
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      null,
+      29,
+      {},
+    ]]);
     expect(elementTemplateRegistry.has(29)).toBe(true);
   });
 
-  it('rejects exact typed list create without logical children options', () => {
+  it('creates an empty typed list without command options', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     mockCreateTypedElementTemplate.mockClear();
@@ -2301,22 +2312,29 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
     ]);
 
-    expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
-    expect(elementTemplateRegistry.has(32)).toBe(false);
+    expect(mockCreateTypedElementTemplate.mock.calls).toEqual([[
+      'list',
+      {
+        'component-at-index': expect.any(Function),
+        'component-at-indexes': expect.any(Function),
+        'enqueue-component': expect.any(Function),
+      },
+      [],
+      32,
+      null,
+    ]]);
+    expect(elementTemplateRegistry.has(32)).toBe(true);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
-    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'logical children in options.listChildren',
-    );
-    resetReportedErrors();
+    expect(reportError.mock.calls).toHaveLength(0);
   });
 
-  it('rejects exact typed list create with visible child slots', () => {
+  it('rejects typed list create with logical children outside slot 0', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
-    const slotChildRef = createMockElementTemplateHandle('slot-child');
-    const itemRef = createMockElementTemplateHandle('item');
-    elementTemplateRegistry.set(11, slotChildRef);
-    elementTemplateRegistry.set(12, itemRef);
+    const firstItemRef = createMockElementTemplateHandle('first-item');
+    const secondItemRef = createMockElementTemplateHandle('second-item');
+    elementTemplateRegistry.set(11, firstItemRef);
+    elementTemplateRegistry.set(12, secondItemRef);
     mockCreateTypedElementTemplate.mockClear();
 
     applyElementTemplateUpdateCommands([
@@ -2324,15 +2342,15 @@ describe('ElementTemplate patch stream (apply)', () => {
       30,
       'list',
       null,
-      [[11]],
-      { listChildren: [{ __etHandleRef: 12, type: '_et_item', platformInfo: {} }] },
+      [[11], [12]],
+      {},
     ]);
 
     expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
     expect(elementTemplateRegistry.has(30)).toBe(false);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'logical children in options.listChildren',
+      'only supports logical slot 0',
     );
     resetReportedErrors();
   });
@@ -2473,68 +2491,37 @@ describe('ElementTemplate patch stream (apply)', () => {
       42,
       'list',
       null,
-      [],
-      { listChildren: [{ __etHandleRef: 404, type: '_et_item', platformInfo: {} }] },
+      [[404]],
+      {},
     ]);
 
     expect(mockCreateTypedElementTemplate.mock.calls).toHaveLength(0);
     expect(elementTemplateRegistry.has(42)).toBe(false);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
-    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'typed list item 0 handle 404 not found',
-    );
+    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('child handle 404 not found');
     resetReportedErrors();
   });
 
-  it('skips typed list item patches when the item handle is unresolved', () => {
+  it('skips typed list item updates when the item handle is unresolved', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
     const listRef = createMockElementTemplateHandle('typed-list', 41);
     elementTemplateRegistry.set(41, listRef);
-    registerElementTemplateListState(41, createElementTemplateListState([]), false, listRef);
-    mockSetElementTemplateAttributeSlot.mockClear();
 
     applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.insertTypedListItem,
-      41,
-      { __etHandleRef: 404, type: '_et_item', platformInfo: {} },
-      0,
       ElementTemplateUpdateOps.updateTypedListItem,
       41,
-      { __etHandleRef: 405, type: '_et_item', platformInfo: {} },
+      { __etHandleRef: 405, type: '_et_item', platformInfo: {}, subtreeHandleIds: null },
     ]);
 
+    expect(__SetListItemInfoOfTemplate).not.toHaveBeenCalled();
     expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
-    expect(reportError.mock.calls).toHaveLength(2);
+    expect(reportError.mock.calls).toHaveLength(1);
     expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
-      'typed list insert item handle 404 not found',
-    );
-    expect(String(reportError.mock.calls[1]?.[0]?.message ?? '')).toContain(
       'typed list update item handle 405 not found',
     );
     resetReportedErrors();
-  });
-
-  it('skips pending typed list flushes when the list handle is unresolved', () => {
-    envManager.switchToMainThread();
-    elementTemplateRegistry.clear();
-    const listRef = createMockElementTemplateHandle('typed-list');
-    registerElementTemplateListState(91, createElementTemplateListState([]), true, listRef);
-    mockSetElementTemplateAttributeSlot.mockClear();
-
-    applyElementTemplateUpdateCommands([]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
-    const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
-    expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain('typed list handle 91 not found');
-    resetReportedErrors();
-  });
-
-  it('reports missing list item records when constructing typed list state', () => {
-    expect(() => createElementTemplateListState([404])).toThrow(
-      'Element Template typed list received a non-list-item root in logical slot $0.',
-    );
   });
 
   it('sets typed slot 0 attributes through the standard attr-slot PAPI', () => {
@@ -2544,22 +2531,18 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockSetAttribute.mockClear();
     mockSetElementTemplateAttributeSlot.mockClear();
 
-    const updateListInfo = {
-      insertAction: [],
-      removeAction: [],
-      updateAction: [],
-    };
+    const attributes = { id: 'updated-list' };
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.setAttribute,
       31,
       0,
-      { 'update-list-info': updateListInfo },
+      attributes,
     ]);
 
     expect(mockSetElementTemplateAttributeSlot.mock.calls).toEqual([[
       targetRef,
       0,
-      { 'update-list-info': updateListInfo },
+      attributes,
     ]]);
     expect(mockSetAttribute.mock.calls).toHaveLength(0);
   });
@@ -2568,7 +2551,9 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToMainThread();
     const listRef = createMockElementTemplateHandle('typed-list', 95);
     elementTemplateRegistry.set(29, listRef);
-    registerElementTemplateListState(29, createElementTemplateListState([], { id: 'old' }), false, listRef);
+    const state = createElementTemplateListState();
+    registerElementTemplateListState(29, state, listRef);
+    const initialAttributes = composeElementTemplateListAttributes({ id: 'old', class: 'initial' }, state);
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.setAttribute,
@@ -2582,9 +2567,26 @@ describe('ElementTemplate patch stream (apply)', () => {
       0,
       {
         id: 'next',
-        'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
-        'enqueue-component': expect.any(Function),
+        'component-at-index': initialAttributes['component-at-index'],
+        'component-at-indexes': initialAttributes['component-at-indexes'],
+        'enqueue-component': initialAttributes['enqueue-component'],
+      },
+    ]);
+
+    applyElementTemplateUpdateCommands([
+      ElementTemplateUpdateOps.setAttribute,
+      29,
+      0,
+      null,
+    ]);
+
+    expect(mockSetElementTemplateAttributeSlot.mock.calls[1]).toEqual([
+      listRef,
+      0,
+      {
+        'component-at-index': initialAttributes['component-at-index'],
+        'component-at-indexes': initialAttributes['component-at-indexes'],
+        'enqueue-component': initialAttributes['enqueue-component'],
       },
     ]);
   });
@@ -2611,805 +2613,161 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockSetAttribute.mock.calls).toHaveLength(0);
   });
 
-  it('inserts before writing update-list-info', () => {
+  it('inserts logical List items through the standard child-slot PAPI', () => {
     envManager.switchToMainThread();
     const listRef = createMockElementTemplateHandle('typed-list', 100);
-    const materializedList = createMaterializedListForFrontendTest(100);
     const firstRef = createMockElementTemplateHandle('first', 101);
     const secondRef = createMockElementTemplateHandle('second', 102);
     elementTemplateRegistry.set(31, listRef);
     elementTemplateRegistry.set(32, firstRef);
     elementTemplateRegistry.set(33, secondRef);
-    registerElementTemplateListItem(32, firstRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    const state = createElementTemplateListState([32]);
-    registerElementTemplateListState(31, state, false, listRef);
-    const attrs = composeElementTemplateListAttributes({ id: 'feed' }, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    mockSetElementTemplateAttributeSlot.mockImplementationOnce((...args: unknown[]) => {
-      expect(componentAtIndex(materializedList, 7, 1, 99, false)).toBe(102);
-      expect(mockInsertElementTemplateNodeIntoSlot.mock.calls[0]).toEqual([listRef, 0, secondRef, null]);
-      lastMock!.mockSetElementTemplateAttributeSlot(...args);
-    });
 
     applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.insertTypedListItem,
+      ElementTemplateUpdateOps.insertNode,
       31,
-      {
-        __etHandleRef: 33,
-        type: '_et_item_b',
-        platformInfo: { 'item-key': 'b' },
-      },
       0,
+      33,
+      32,
+      null,
     ]);
 
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[
       listRef,
       0,
-      {
-        id: 'feed',
-        'component-at-index': attrs['component-at-index'],
-        'component-at-indexes': attrs['component-at-indexes'],
-        'enqueue-component': attrs['enqueue-component'],
-        'update-list-info': {
-          insertAction: [{ position: 1, type: '_et_item_b', 'item-key': 'b' }],
-          removeAction: [],
-          updateAction: [],
-        },
-      },
-    ]);
+      secondRef,
+      firstRef,
+    ]]);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
     expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(elementTemplateRegistry.get(32)).toBe(firstRef);
   });
 
-  it('preserves update-list-info when list attributes update after list mutation in the same stream', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 105);
-    const firstRef = createMockElementTemplateHandle('first', 106);
-    const secondRef = createMockElementTemplateHandle('second', 107);
-    elementTemplateRegistry.set(35, listRef);
-    elementTemplateRegistry.set(36, firstRef);
-    elementTemplateRegistry.set(37, secondRef);
-    registerElementTemplateListItem(36, firstRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListState(
-      35,
-      createElementTemplateListState([36], { id: 'feed' }),
-      false,
-      listRef,
-    );
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.insertTypedListItem,
-      35,
-      {
-        __etHandleRef: 37,
-        type: '_et_item_b',
-        platformInfo: { 'item-key': 'b' },
-      },
-      0,
-      ElementTemplateUpdateOps.setAttribute,
-      35,
-      0,
-      { id: 'next' },
-    ]);
-
-    const attrWrite = mockSetElementTemplateAttributeSlot.mock.calls[0]![2] as Record<string, unknown>;
-    const finalWrite = mockSetElementTemplateAttributeSlot.mock.calls[1]![2] as Record<string, unknown>;
-    const updateListInfo = {
-      insertAction: [{ position: 1, type: '_et_item_b', 'item-key': 'b' }],
-      removeAction: [],
-      updateAction: [],
-    };
-    expect(attrWrite).toEqual(expect.objectContaining({
-      id: 'next',
-      'component-at-index': expect.any(Function),
-      'component-at-indexes': expect.any(Function),
-      'enqueue-component': expect.any(Function),
-    }));
-    expect(attrWrite).not.toHaveProperty('update-list-info');
-    expect(finalWrite).toEqual(expect.objectContaining({
-      id: 'next',
-      'update-list-info': updateListInfo,
-      'component-at-index': attrWrite['component-at-index'],
-      'component-at-indexes': attrWrite['component-at-indexes'],
-      'enqueue-component': attrWrite['enqueue-component'],
-    }));
-  });
-
-  it('coalesces multiple incremental list mutations into one Snapshot-shaped update-list-info write', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 200);
-    const refs = [201, 202, 203, 204, 205].map(id =>
-      ({ __isNativeRef: true, id: `item-${id}`, __mockNativeId: id }) as unknown as ElementTemplateHandle
-    );
-    elementTemplateRegistry.set(200, listRef);
-    for (let index = 0; index < refs.length; index += 1) {
-      const handleId = 201 + index;
-      elementTemplateRegistry.set(handleId, refs[index]!);
-      if (handleId <= 203) {
-        registerElementTemplateListItem(handleId, refs[index]!, {
-          templateKey: `_et_item_${handleId}`,
-          platformInfo: { 'item-key': String(handleId) },
-        });
-      }
-    }
-    registerElementTemplateListState(200, createElementTemplateListState([201, 202, 203]), false, listRef);
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.insertTypedListItem,
-      200,
-      { __etHandleRef: 204, type: '_et_item_204', platformInfo: { 'item-key': '204' } },
-      202,
-      ElementTemplateUpdateOps.insertTypedListItem,
-      200,
-      { __etHandleRef: 205, type: '_et_item_205', platformInfo: { 'item-key': '205' } },
-      204,
-      ElementTemplateUpdateOps.removeTypedListItem,
-      200,
-      202,
-      [202],
-      ElementTemplateUpdateOps.removeTypedListItem,
-      200,
-      203,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      200,
-      { __etHandleRef: 203, type: '_et_item_203', platformInfo: { 'item-key': '203' } },
-      0,
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
-      listRef,
-      0,
-      {
-        'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
-        'enqueue-component': expect.any(Function),
-        'update-list-info': {
-          insertAction: [
-            { position: 1, type: '_et_item_205', 'item-key': '205' },
-            { position: 2, type: '_et_item_204', 'item-key': '204' },
-            { position: 3, type: '_et_item_203', 'item-key': '203' },
-          ],
-          removeAction: [1, 2],
-          updateAction: [],
-        },
-      },
-    ]);
-    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
-  });
-
-  it('coalesces platform info updates and indexes them after same-batch insertions', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 210);
-    const aRef = createMockElementTemplateHandle('a', 211);
-    const bRef = createMockElementTemplateHandle('b', 212);
-    const dRef = createMockElementTemplateHandle('d', 213);
-    elementTemplateRegistry.set(210, listRef);
-    elementTemplateRegistry.set(211, aRef);
-    elementTemplateRegistry.set(212, bRef);
-    elementTemplateRegistry.set(213, dRef);
-    registerElementTemplateListItem(211, aRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListItem(212, bRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    registerElementTemplateListState(210, createElementTemplateListState([211, 212]), false, listRef);
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.insertTypedListItem,
-      210,
-      { __etHandleRef: 213, type: '_et_item_d', platformInfo: { 'item-key': 'd' } },
-      212,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      210,
-      { __etHandleRef: 211, type: '_et_item_a', platformInfo: { 'item-key': 'a', 'full-span': true } },
-      ElementTemplateUpdateOps.updateTypedListItem,
-      210,
-      { __etHandleRef: 212, type: '_et_item_b', platformInfo: { 'item-key': 'b', 'estimated-height': 42 } },
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
-      'update-list-info': {
-        insertAction: [{ position: 1, type: '_et_item_d', 'item-key': 'd' }],
-        removeAction: [],
-        updateAction: [
-          { from: 0, to: 0, type: '_et_item_a', flush: false, 'item-key': 'a', 'full-span': true },
-          { from: 2, to: 2, type: '_et_item_b', flush: false, 'item-key': 'b', 'estimated-height': 42 },
-        ],
-      },
-    }));
-  });
-
-  it('skips no-op list item platform info updates', () => {
+  it('skips native platform info updates when the payload omits platform info', () => {
     envManager.switchToMainThread();
     const listRef = createMockElementTemplateHandle('typed-list', 214);
     const itemRef = createMockElementTemplateHandle('a', 2141);
     elementTemplateRegistry.set(214, listRef);
     elementTemplateRegistry.set(2141, itemRef);
-    registerElementTemplateListItem(2141, itemRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListState(214, createElementTemplateListState([2141]), false, listRef);
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.updateTypedListItem,
       214,
-      { __etHandleRef: 2141, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
+      { __etHandleRef: 2141, type: '_et_item_a', platformInfo: null, subtreeHandleIds: null },
     ]);
 
+    expect(__SetListItemInfoOfTemplate).not.toHaveBeenCalled();
     expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
   });
 
-  it('folds moved item platform info into the incremental insert action', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 215);
-    const aRef = createMockElementTemplateHandle('a', 216);
-    const bRef = createMockElementTemplateHandle('b', 217);
-    elementTemplateRegistry.set(215, listRef);
-    elementTemplateRegistry.set(216, aRef);
-    elementTemplateRegistry.set(217, bRef);
-    registerElementTemplateListItem(216, aRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListItem(217, bRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    registerElementTemplateListState(215, createElementTemplateListState([216, 217]), false, listRef);
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      215,
-      217,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      215,
-      { __etHandleRef: 217, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
-      216,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      215,
-      { __etHandleRef: 217, type: '_et_item_b', platformInfo: { 'item-key': 'b', 'full-span': true } },
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
-      'update-list-info': {
-        insertAction: [{ position: 0, type: '_et_item_b', 'item-key': 'b', 'full-span': true }],
-        removeAction: [1],
-        updateAction: [],
-      },
-    }));
-  });
-
-  it('places an insertion before a moved item at the moved item final position', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 218);
-    const aRef = createMockElementTemplateHandle('a', 2181);
-    const bRef = createMockElementTemplateHandle('b', 2182);
-    const cRef = createMockElementTemplateHandle('c', 2183);
-    const xRef = createMockElementTemplateHandle('x', 2184);
-    elementTemplateRegistry.set(218, listRef);
-    elementTemplateRegistry.set(2181, aRef);
-    elementTemplateRegistry.set(2182, bRef);
-    elementTemplateRegistry.set(2183, cRef);
-    elementTemplateRegistry.set(2184, xRef);
-    registerElementTemplateListItem(2181, aRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListItem(2182, bRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    registerElementTemplateListItem(2183, cRef, {
-      templateKey: '_et_item_c',
-      platformInfo: { 'item-key': 'c' },
-    });
-    registerElementTemplateListState(218, createElementTemplateListState([2181, 2182, 2183]), false, listRef);
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      218,
-      2181,
-      [],
-      ElementTemplateUpdateOps.removeTypedListItem,
-      218,
-      2183,
-      [2183],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      218,
-      { __etHandleRef: 2181, type: '_et_item_a', platformInfo: { 'item-key': 'a', 'reuse-identifier': 'next' } },
-      0,
-      ElementTemplateUpdateOps.insertTypedListItem,
-      218,
-      { __etHandleRef: 2184, type: '_et_item_x', platformInfo: { 'item-key': 'x' } },
-      2181,
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(1);
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
-      'update-list-info': {
-        insertAction: [
-          { position: 1, type: '_et_item_x', 'item-key': 'x' },
-          { position: 2, type: '_et_item_a', 'item-key': 'a', 'reuse-identifier': 'next' },
-        ],
-        removeAction: [0, 2],
-        updateAction: [],
-      },
-    }));
-  });
-
-  it('flushes incremental list updates with the latest slot 0 attributes regardless of stream order', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 220);
-    const firstRef = createMockElementTemplateHandle('first', 221);
-    const secondRef = createMockElementTemplateHandle('second', 222);
-    elementTemplateRegistry.set(220, listRef);
-    elementTemplateRegistry.set(221, firstRef);
-    elementTemplateRegistry.set(222, secondRef);
-    registerElementTemplateListItem(221, firstRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListState(220, createElementTemplateListState([221], { id: 'old' }), false, listRef);
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.setAttribute,
-      220,
-      0,
-      { id: 'intermediate' },
-      ElementTemplateUpdateOps.insertTypedListItem,
-      220,
-      { __etHandleRef: 222, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
-      0,
-      ElementTemplateUpdateOps.setAttribute,
-      220,
-      0,
-      { id: 'final' },
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(3);
-    const latestAttrWrite = mockSetElementTemplateAttributeSlot.mock.calls[1]![2] as Record<string, unknown>;
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[2]![2]).toEqual(expect.objectContaining({
-      id: 'final',
-      'update-list-info': {
-        insertAction: [{ position: 1, type: '_et_item_b', 'item-key': 'b' }],
-        removeAction: [],
-        updateAction: [],
-      },
-      'component-at-index': latestAttrWrite['component-at-index'],
-      'component-at-indexes': latestAttrWrite['component-at-indexes'],
-      'enqueue-component': latestAttrWrite['enqueue-component'],
-    }));
-  });
-
-  it('moves an attached item on native request', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 225);
-    const materializedList = createMaterializedListForFrontendTest(225);
-    const aRef = createMockElementTemplateHandle('a', 226);
-    const bRef = createMockElementTemplateHandle('b', 227);
-    elementTemplateRegistry.set(225, listRef);
-    elementTemplateRegistry.set(226, aRef);
-    elementTemplateRegistry.set(227, bRef);
-    registerElementTemplateListItem(226, aRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListItem(227, bRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    const state = createElementTemplateListState([226, 227]);
-    registerElementTemplateListState(225, state, false, listRef);
-    const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(226);
-    expect(componentAtIndex(materializedList, 7, 1, 89, false)).toBe(227);
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-    mockRemoveElementTemplateNodeFromSlot.mockClear();
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      225,
-      227,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      225,
-      { __etHandleRef: 227, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
-      226,
-    ]);
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-    mockRemoveElementTemplateNodeFromSlot.mockClear();
-
-    expect(componentAtIndex(materializedList, 7, 0, 90, false)).toBe(227);
-
-    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[listRef, 0, bRef, aRef]]);
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
-    enqueueComponent(materializedList, 7, 227);
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
-    enqueueComponent(materializedList, 7, 227);
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[listRef, 0, bRef]]);
-  });
-
-  it('places multiple attached moves', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 240);
-    const materializedList = createMaterializedListForFrontendTest(240);
-    const aRef = createMockElementTemplateHandle('a', 241);
-    const bRef = createMockElementTemplateHandle('b', 242);
-    const cRef = createMockElementTemplateHandle('c', 243);
-    elementTemplateRegistry.set(240, listRef);
-    elementTemplateRegistry.set(241, aRef);
-    elementTemplateRegistry.set(242, bRef);
-    elementTemplateRegistry.set(243, cRef);
-    registerElementTemplateListItem(241, aRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListItem(242, bRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    registerElementTemplateListItem(243, cRef, {
-      templateKey: '_et_item_c',
-      platformInfo: { 'item-key': 'c' },
-    });
-    const state = createElementTemplateListState([241, 242, 243]);
-    registerElementTemplateListState(240, state, false, listRef);
-    const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    expect(componentAtIndex(materializedList, 7, 0, 80, false)).toBe(241);
-    expect(componentAtIndex(materializedList, 7, 1, 81, false)).toBe(242);
-    expect(componentAtIndex(materializedList, 7, 2, 82, false)).toBe(243);
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-    mockRemoveElementTemplateNodeFromSlot.mockClear();
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      240,
-      243,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      240,
-      { __etHandleRef: 243, type: '_et_item_c', platformInfo: { 'item-key': 'c' } },
-      241,
-      ElementTemplateUpdateOps.removeTypedListItem,
-      240,
-      241,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      240,
-      { __etHandleRef: 241, type: '_et_item_a', platformInfo: { 'item-key': 'a' } },
-      0,
-    ]);
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-    mockRemoveElementTemplateNodeFromSlot.mockClear();
-
-    expect(componentAtIndex(materializedList, 7, 0, 90, false)).toBe(243);
-
-    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([
-      [listRef, 0, aRef, null],
-      [listRef, 0, cRef, bRef],
-    ]);
-    enqueueComponent(materializedList, 7, 243);
-    enqueueComponent(materializedList, 7, 241);
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
-    expect(componentAtIndex(materializedList, 7, 1, 91, false)).toBe(242);
-  });
-
-  it('preserves moved item registry during removal', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 230);
-    const materializedList = createMaterializedListForFrontendTest(230);
-    const firstRef = createMockElementTemplateHandle('first', 231);
-    const secondRef = createMockElementTemplateHandle('second', 232);
-    elementTemplateRegistry.set(230, listRef);
-    elementTemplateRegistry.set(231, firstRef);
-    elementTemplateRegistry.set(232, secondRef);
-    registerElementTemplateListItem(231, firstRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListItem(232, secondRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    const state = createElementTemplateListState([231, 232]);
-    registerElementTemplateListState(230, state, false, listRef);
-    const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    expect(componentAtIndex(materializedList, 7, 1, 88, false)).toBe(232);
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-    mockRemoveElementTemplateNodeFromSlot.mockClear();
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      230,
-      232,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      230,
-      { __etHandleRef: 232, type: '_et_item_b', platformInfo: { 'item-key': 'b' } },
-      231,
-      ElementTemplateUpdateOps.removeTypedListItem,
-      230,
-      231,
-      [231],
-    ]);
-    enqueueComponent(materializedList, 7, 232);
-    enqueueComponent(materializedList, 7, 231);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
-      'update-list-info': {
-        insertAction: [{ position: 0, type: '_et_item_b', 'item-key': 'b' }],
-        removeAction: [0, 1],
-        updateAction: [],
-      },
-    }));
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[listRef, 0, secondRef]]);
-    expect(elementTemplateRegistry.get(231)).toBeUndefined();
-    expect(elementTemplateRegistry.get(232)).toBe(secondRef);
-  });
-
-  it('retains callback lookup until native enqueue', () => {
+  it('keeps list callbacks stable after removing a logical item', () => {
     envManager.switchToMainThread();
     const listRef = createMockElementTemplateHandle('typed-list', 110);
-    const materializedList = createMaterializedListForFrontendTest(110);
-    const firstRef = createMockElementTemplateHandle('first', 111);
+    const itemRef = createMockElementTemplateHandle('item', 111);
+    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
     elementTemplateRegistry.set(41, listRef);
-    elementTemplateRegistry.set(42, firstRef);
-    registerElementTemplateListItem(42, firstRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    const state = createElementTemplateListState([42]);
-    registerElementTemplateListState(41, state, false, listRef);
+    elementTemplateRegistry.set(42, itemRef);
+    const state = createElementTemplateListState();
+    registerElementTemplateListState(41, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
+    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
 
-    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(111);
-    mockRemoveElementTemplateNodeFromSlot.mockClear();
-    let enqueueComponent: EnqueueComponentCallback | undefined;
-    mockSetElementTemplateAttributeSlot.mockImplementationOnce((...args: unknown[]) => {
-      const attrs = args[2] as Record<string, unknown>;
-      enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-      enqueueComponent(materializedList, 7, 111);
-      lastMock!.mockSetElementTemplateAttributeSlot(...args);
-    });
+    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(-1);
 
     applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
+      ElementTemplateUpdateOps.removeNode,
       41,
+      0,
       42,
       [42],
     ]);
 
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[listRef, 0, firstRef]]);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[listRef, 0, itemRef]]);
     expect(elementTemplateRegistry.get(42)).toBeUndefined();
-    enqueueComponent!(materializedList, 7, 111);
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(1);
-  });
-
-  it('detaches by attached state', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 140);
-    const materializedList = createMaterializedListForFrontendTest(140);
-    const itemRef = createMockElementTemplateHandle('item', 141);
-    elementTemplateRegistry.set(140, listRef);
-    elementTemplateRegistry.set(141, itemRef);
-    registerElementTemplateListItem(141, itemRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    const state = createElementTemplateListState([141]);
-    registerElementTemplateListState(140, state, false, listRef);
-    const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-
-    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(141);
-    state.items[0]!.attached = false;
+    expect(state.destroyed).toBe(false);
+    expect(state.holderRef).toBe(listRef);
+    expect(state.callbacks.componentAtIndex).toBe(componentAtIndex);
+    expect(state.callbacks.enqueueComponent).toBe(enqueueComponent);
     mockRemoveElementTemplateNodeFromSlot.mockClear();
 
-    enqueueComponent(materializedList, 7, 141);
-    enqueueComponent(materializedList, 7, 141);
+    enqueueComponent(materializedList, 7, 111);
+    enqueueComponent(materializedList, 7, 111);
 
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
     expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
+    expect(mockFlushElementTree.mock.calls).toHaveLength(0);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
   });
 
-  it('releases removed list item subtrees after the final update-list-info write', () => {
+  it('keeps typed list callbacks free of JS mounting and recycling', () => {
     envManager.switchToMainThread();
-    const outerListRef = {
-      __isNativeRef: true,
-      id: 'outer-list',
-      __mockNativeId: 300,
-    } as unknown as ElementTemplateHandle;
+    const listRef = createMockElementTemplateHandle('typed-list', 140);
+    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
+    const state = createElementTemplateListState();
+    registerElementTemplateListState(140, state, listRef);
+    const attrs = composeElementTemplateListAttributes(null, state);
+    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
+    const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
+    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
+
+    expect(state).toEqual({
+      listHandleId: 140,
+      holderRef: listRef,
+      destroyed: false,
+      callbacks: {
+        componentAtIndex,
+        componentAtIndexes,
+        enqueueComponent,
+      },
+    });
+    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(-1);
+    componentAtIndexes(materializedList, 7, [0, 1], [88, 89], false, true);
+    enqueueComponent(materializedList, 7, 141);
+    enqueueComponent(materializedList, 7, 141);
+    enqueueComponent(materializedList, 7, 999);
+
+    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
+    expect(mockFlushElementTree.mock.calls).toHaveLength(0);
+  });
+
+  it('releases removed List item subtrees after the native child-slot remove succeeds', () => {
+    envManager.switchToMainThread();
+    const outerListRef = createMockElementTemplateHandle('outer-list', 300);
     const itemRef = createMockElementTemplateHandle('item', 301);
-    const nestedListRef = {
-      __isNativeRef: true,
-      id: 'nested-list',
-      __mockNativeId: 302,
-    } as unknown as ElementTemplateHandle;
-    const nestedItemRef = {
-      __isNativeRef: true,
-      id: 'nested-item',
-      __mockNativeId: 303,
-    } as unknown as ElementTemplateHandle;
+    const nestedListRef = createMockElementTemplateHandle('nested-list', 302);
+    const nestedItemRef = createMockElementTemplateHandle('nested-item', 303);
     elementTemplateRegistry.set(300, outerListRef);
     elementTemplateRegistry.set(301, itemRef);
     elementTemplateRegistry.set(302, nestedListRef);
     elementTemplateRegistry.set(303, nestedItemRef);
-    registerElementTemplateListItem(301, itemRef, {
-      templateKey: '_et_item',
-      platformInfo: { 'item-key': 'outer' },
-    });
-    registerElementTemplateListState(300, createElementTemplateListState([301]), false, outerListRef);
-    registerElementTemplateListItem(303, nestedItemRef, {
-      templateKey: '_et_nested_item',
-      platformInfo: { 'item-key': 'nested' },
-    });
-    const nestedState = createElementTemplateListState([303]);
-    registerElementTemplateListState(302, nestedState, false, nestedListRef);
-    const nestedAttrs = composeElementTemplateListAttributes(null, nestedState);
-    const nestedComponentAtIndex = nestedAttrs['component-at-index'] as ComponentAtIndexCallback;
+    const nestedState = createElementTemplateListState();
+    registerElementTemplateListState(302, nestedState, nestedListRef);
 
     applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      300,
-      301,
-      [301, 302, 303],
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![0]).toBe(outerListRef);
-    expect(elementTemplateRegistry.get(301)).toBeUndefined();
-    expect(elementTemplateRegistry.get(302)).toBeUndefined();
-    expect(elementTemplateRegistry.get(303)).toBeUndefined();
-    expect(nestedComponentAtIndex(createMaterializedListForFrontendTest(302), 8, 0, 91, false)).toBe(-1);
-    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
-  });
-
-  it('drains pending item cleanup when the list holder is removed in the same patch', () => {
-    envManager.switchToMainThread();
-    const parentRef = createMockElementTemplateHandle('parent', 299);
-    const listRef = createMockElementTemplateHandle('list', 300);
-    const itemRef = createMockElementTemplateHandle('item', 301);
-    const nestedListRef = {
-      __isNativeRef: true,
-      id: 'nested-list',
-      __mockNativeId: 302,
-    } as unknown as ElementTemplateHandle;
-    const nestedItemRef = {
-      __isNativeRef: true,
-      id: 'nested-item',
-      __mockNativeId: 303,
-    } as unknown as ElementTemplateHandle;
-    elementTemplateRegistry.set(299, parentRef);
-    elementTemplateRegistry.set(300, listRef);
-    elementTemplateRegistry.set(301, itemRef);
-    elementTemplateRegistry.set(302, nestedListRef);
-    elementTemplateRegistry.set(303, nestedItemRef);
-    registerElementTemplateListItem(301, itemRef, {
-      templateKey: '_et_item',
-      platformInfo: { 'item-key': 'outer' },
-    });
-    registerElementTemplateListState(300, createElementTemplateListState([301]), false, listRef);
-    registerElementTemplateListItem(303, nestedItemRef, {
-      templateKey: '_et_nested_item',
-      platformInfo: { 'item-key': 'nested' },
-    });
-    const nestedState = createElementTemplateListState([303]);
-    registerElementTemplateListState(302, nestedState, false, nestedListRef);
-    const nestedAttrs = composeElementTemplateListAttributes(null, nestedState);
-    const nestedComponentAtIndex = nestedAttrs['component-at-index'] as ComponentAtIndexCallback;
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      300,
-      301,
-      [301, 302, 303],
       ElementTemplateUpdateOps.removeNode,
-      299,
-      0,
       300,
-      [300],
+      0,
+      301,
+      [301, 302, 303],
     ]);
 
-    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[parentRef, 0, listRef]]);
-    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
-    expect(elementTemplateRegistry.get(300)).toBeUndefined();
+    expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[outerListRef, 0, itemRef]]);
     expect(elementTemplateRegistry.get(301)).toBeUndefined();
     expect(elementTemplateRegistry.get(302)).toBeUndefined();
     expect(elementTemplateRegistry.get(303)).toBeUndefined();
-    expect(nestedComponentAtIndex(createMaterializedListForFrontendTest(302), 8, 0, 91, false)).toBe(-1);
+    expect(nestedState.destroyed).toBe(true);
+    expect(nestedState.holderRef).toBeNull();
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
   });
 
-  it('emits Snapshot-shaped update-list-info for incremental reorder with platform info changes', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 115);
-    const firstRef = createMockElementTemplateHandle('first', 116);
-    const secondRef = createMockElementTemplateHandle('second', 117);
-    elementTemplateRegistry.set(51, listRef);
-    elementTemplateRegistry.set(52, firstRef);
-    elementTemplateRegistry.set(53, secondRef);
-    registerElementTemplateListItem(52, firstRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a', 'reuse-identifier': 'old' },
-    });
-    registerElementTemplateListItem(53, secondRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    const state = createElementTemplateListState([52, 53]);
-    registerElementTemplateListState(51, state, false, listRef);
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      51,
-      52,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      51,
-      {
-        __etHandleRef: 52,
-        type: '_et_item_a',
-        platformInfo: { 'item-key': 'a', 'reuse-identifier': 'old' },
-      },
-      0,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      51,
-      {
-        __etHandleRef: 52,
-        type: '_et_item_a',
-        platformInfo: { 'item-key': 'a', 'reuse-identifier': 'new' },
-      },
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
-      listRef,
-      0,
-      {
-        'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
-        'enqueue-component': expect.any(Function),
-        'update-list-info': {
-          insertAction: [{ position: 1, type: '_et_item_a', 'item-key': 'a', 'reuse-identifier': 'new' }],
-          removeAction: [0],
-          updateAction: [],
-        },
-      },
-    ]);
-  });
-
-  it('emits Snapshot-shaped update-list-info for standalone platform info updates', () => {
+  it('forwards List item platform info updates to native', () => {
     envManager.switchToMainThread();
     const listRef = createMockElementTemplateHandle('typed-list', 145);
     const itemRef = createMockElementTemplateHandle('item', 146);
     elementTemplateRegistry.set(81, listRef);
     elementTemplateRegistry.set(82, itemRef);
-    registerElementTemplateListItem(82, itemRef, {
-      templateKey: '_et_item',
-      platformInfo: { 'item-key': 'a' },
-    });
-    const state = createElementTemplateListState([82]);
-    registerElementTemplateListState(81, state, false, listRef);
+    const platformInfo = { 'item-key': 'a', 'reuse-identifier': 'next' };
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.updateTypedListItem,
@@ -3417,129 +2775,20 @@ describe('ElementTemplate patch stream (apply)', () => {
       {
         __etHandleRef: 82,
         type: '_et_item',
-        platformInfo: { 'item-key': 'a', 'reuse-identifier': 'next' },
+        platformInfo,
+        subtreeHandleIds: null,
       },
     ]);
 
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]).toEqual([
-      listRef,
-      0,
-      {
-        'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
-        'enqueue-component': expect.any(Function),
-        'update-list-info': {
-          insertAction: [],
-          removeAction: [],
-          updateAction: [{
-            from: 0,
-            to: 0,
-            type: '_et_item',
-            flush: false,
-            'item-key': 'a',
-            'reuse-identifier': 'next',
-          }],
-        },
-      },
-    ]);
-  });
-
-  it('moves attached items without detached siblings', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 135);
-    const materializedList = createMaterializedListForFrontendTest(135);
-    const firstRef = createMockElementTemplateHandle('first', 136);
-    const secondRef = createMockElementTemplateHandle('second', 137);
-    elementTemplateRegistry.set(71, listRef);
-    elementTemplateRegistry.set(72, firstRef);
-    elementTemplateRegistry.set(73, secondRef);
-    registerElementTemplateListItem(72, firstRef, {
-      templateKey: '_et_item_a',
-      platformInfo: { 'item-key': 'a' },
-    });
-    registerElementTemplateListItem(73, secondRef, {
-      templateKey: '_et_item_b',
-      platformInfo: { 'item-key': 'b' },
-    });
-    const state = createElementTemplateListState([72, 73]);
-    registerElementTemplateListState(71, state, false, listRef);
-    const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-
-    expect(componentAtIndex(materializedList, 7, 0, 91, false)).toBe(136);
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-    mockFlushElementTree.mockClear();
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      71,
-      72,
-      [],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      71,
-      {
-        __etHandleRef: 72,
-        type: '_et_item_a',
-        platformInfo: { 'item-key': 'a' },
-      },
-      0,
-    ]);
-    mockInsertElementTemplateNodeIntoSlot.mockClear();
-
-    expect(componentAtIndex(materializedList, 7, 1, 92, false)).toBe(136);
-    expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toEqual([[listRef, 0, firstRef, null]]);
-  });
-
-  it('treats same-key list item replacement with a new ref as remove and insert', () => {
-    envManager.switchToMainThread();
-    const listRef = createMockElementTemplateHandle('typed-list', 125);
-    const oldRef = createMockElementTemplateHandle('old', 126);
-    const nextRef = createMockElementTemplateHandle('next', 127);
-    elementTemplateRegistry.set(61, listRef);
-    elementTemplateRegistry.set(62, oldRef);
-    elementTemplateRegistry.set(63, nextRef);
-    registerElementTemplateListItem(62, oldRef, {
-      templateKey: '_et_item',
-      platformInfo: { 'item-key': 'same' },
-    });
-    const state = createElementTemplateListState([62]);
-    registerElementTemplateListState(61, state, false, listRef);
-
-    applyElementTemplateUpdateCommands([
-      ElementTemplateUpdateOps.removeTypedListItem,
-      61,
-      62,
-      [62],
-      ElementTemplateUpdateOps.insertTypedListItem,
-      61,
-      {
-        __etHandleRef: 63,
-        type: '_et_item',
-        platformInfo: { 'item-key': 'same' },
-      },
-      0,
-    ]);
-
-    expect(mockSetElementTemplateAttributeSlot.mock.calls[0]![2]).toEqual(expect.objectContaining({
-      'update-list-info': {
-        insertAction: [{ position: 0, type: '_et_item', 'item-key': 'same' }],
-        removeAction: [0],
-        updateAction: [],
-      },
-    }));
-    expect(elementTemplateRegistry.get(62)).toBeUndefined();
+    expect(vi.mocked(__SetListItemInfoOfTemplate).mock.calls).toEqual([[itemRef, platformInfo]]);
+    expect(mockSetElementTemplateAttributeSlot.mock.calls).toHaveLength(0);
   });
 
   it('keeps destroyed typed list callbacks Snapshot-safe', () => {
     envManager.switchToMainThread();
     const listRef = 120 as unknown as ElementTemplateHandle;
-    const itemRef = 121 as unknown as ElementTemplateHandle;
-    registerElementTemplateListItem(121, itemRef, {
-      templateKey: '_et_item',
-      platformInfo: { 'item-key': 'a' },
-    });
-    const state = createElementTemplateListState([121]);
-    registerElementTemplateListState(120, state, false, listRef);
+    const state = createElementTemplateListState();
+    registerElementTemplateListState(120, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
@@ -3548,6 +2797,8 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     markElementTemplateListDestroyed(120);
 
+    expect(state.destroyed).toBe(true);
+    expect(state.holderRef).toBeNull();
     expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
     componentAtIndexes(materializedList, 7, [0], [99], false, true);
     enqueueComponent(materializedList, 7, 121);
@@ -3722,32 +2973,28 @@ describe('ElementTemplate patch stream (apply)', () => {
     elementTemplateRegistry.set(71, childRef);
     elementTemplateRegistry.set(72, listRef);
     elementTemplateRegistry.set(73, itemRef);
-    registerElementTemplateListItem(73, itemRef, {
-      templateKey: '_et_item',
-      platformInfo: { 'item-key': 'a' },
-    });
-    const state = createElementTemplateListState([73]);
-    registerElementTemplateListState(72, state, false, listRef);
+    const state = createElementTemplateListState();
+    registerElementTemplateListState(72, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
     const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
     const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
 
-    removeElementTemplateListItem(72, 73, [73]);
-
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.removeNode,
       70,
       0,
       71,
-      [71, 72],
+      [71, 72, 73],
     ]);
 
     expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toEqual([[targetRef, 0, childRef]]);
     expect(elementTemplateRegistry.has(71)).toBe(false);
     expect(elementTemplateRegistry.has(72)).toBe(false);
     expect(elementTemplateRegistry.has(73)).toBe(false);
+    expect(state.destroyed).toBe(true);
+    expect(state.holderRef).toBeNull();
     mockRemoveElementTemplateNodeFromSlot.mockClear();
 
     expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
@@ -3793,6 +3040,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
       null,
       null,
+      null,
     ]);
 
     expect(serializeToJSX(__page)).toMatchInlineSnapshot(`
@@ -3820,6 +3068,7 @@ describe('ElementTemplate patch stream (apply)', () => {
         null,
         rawSlots as unknown as ElementTemplateUpdateCommandStream[number],
         [],
+        null,
       ],
       flushOptions: {},
     });
@@ -3832,13 +3081,14 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(createTemplateMock.mock.calls[0]?.[2]).toBe(attributeSlots);
   });
 
-  it('passes bundleUrl from createTemplate patch to native create', () => {
+  it('passes bundleUrl and List item platform info from createTemplate to native create', () => {
     envManager.switchToMainThread();
     const createTemplateMock = globalThis.__CreateElementTemplate as unknown as {
       mockClear: () => void;
       mock: { calls: unknown[][] };
     };
     createTemplateMock.mockClear();
+    const options = { __listItemPlatformInfo: { 'item-key': 'a', 'reuse-identifier': 'item' } };
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.createTemplate,
@@ -3847,9 +3097,17 @@ describe('ElementTemplate patch stream (apply)', () => {
       'dynamic-entry',
       ['x'],
       [],
+      options,
     ]);
 
-    expect(createTemplateMock.mock.calls[0]?.[1]).toBe('dynamic-entry');
+    expect(createTemplateMock.mock.calls).toEqual([[
+      '_et_builtin_raw_text',
+      'dynamic-entry',
+      ['x'],
+      [],
+      9,
+      options,
+    ]]);
   });
 
   it('reports unsupported opcodes', () => {
@@ -3889,6 +3147,7 @@ describe('ElementTemplate patch stream (apply)', () => {
       null,
       [],
       [[11, 404], 'bad-slot' as unknown as number[]],
+      null,
     ]);
 
     const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
