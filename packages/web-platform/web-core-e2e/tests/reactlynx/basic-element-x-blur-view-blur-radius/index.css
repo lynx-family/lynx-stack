@@ -13,3 +13,7 @@
   background-size: contain;
   background-repeat: no-repeat;
 }
+
+blur-view {
+  --blur-tag-selector: matched;
+}
