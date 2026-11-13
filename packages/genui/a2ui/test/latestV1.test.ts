@@ -5,7 +5,10 @@ import { describe, expect, test } from '@rstest/core';
 
 import { defineCatalog } from '../src/catalog/defineCatalog.js';
 import type { CatalogFunctionEntry } from '../src/catalog/defineCatalog.js';
-import { basicFunctions } from '../src/functions/index.js';
+import {
+  basicFunctions,
+  createBasicFunctions,
+} from '../src/functions/index.js';
 import { accessibilityProps } from '../src/react/accessibility.js';
 import { evaluateChecks } from '../src/react/useChecks.js';
 import { resolveProperties } from '../src/react/useDataBinding.js';
@@ -39,6 +42,54 @@ function setup(functions: CatalogFunctionEntry[] = []) {
 }
 
 describe('current official 1.0 contract', () => {
+  test('native navigation keeps user activation and async error handling', async () => {
+    const opened: string[] = [];
+    const functions = createBasicFunctions({
+      openUrl: async url => {
+        await Promise.resolve();
+        opened.push(url);
+        if (url.endsWith('/fail')) throw new Error('navigation failed');
+      },
+    });
+    const { processor, events } = setup();
+    processor.registerCatalog('test', defineCatalog(functions));
+    const call = { '@call': 'openUrl', args: { url: 'https://example.com' } };
+    expect(executeFunctionCall(processor, call, 's')).toBeNull();
+    expect(events[events.length - 1]).toMatchObject({
+      error: {
+        code: 'EXPRESSION_ERROR',
+        message: 'Function "openUrl" is not allowed in this evaluation context',
+      },
+    });
+    expect(() =>
+      executeFunctionCall(processor, call, 's', undefined, {
+        caller: 'agent',
+        userActivated: true,
+        throwOnError: true,
+      })
+    ).toThrow('not allowed');
+    expect(opened).toEqual([]);
+    const options = {
+      userActivated: true,
+      awaitResult: true,
+    };
+    await executeFunctionCall(processor, call, 's', undefined, options);
+    await executeFunctionCall(processor, call, 's', undefined, options);
+    expect(opened).toEqual(['https://example.com', 'https://example.com']);
+    await expect(
+      executeFunctionCall(
+        processor,
+        { '@call': 'openUrl', args: { url: 'https://example.com/fail' } },
+        's',
+        undefined,
+        options,
+      ),
+    ).rejects.toThrow('navigation failed');
+    expect(events[events.length - 1]).toMatchObject({
+      error: { code: 'EXECUTION_ERROR', message: 'navigation failed' },
+    });
+  });
+
   test.each(['v1.0', 'v0.9', 'v0.9.1', undefined])(
     'rejects earlier wire version %s',
     version => {

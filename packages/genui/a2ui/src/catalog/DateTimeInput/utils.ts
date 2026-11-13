@@ -358,11 +358,11 @@ export function formatDateTimeInputValue(
     : getDefaultOutputFormat(mode);
 
   return format
-    .replaceAll('YYYY', pad4(parts.year))
-    .replaceAll('MM', pad2(parts.month))
-    .replaceAll('DD', pad2(parts.day))
-    .replaceAll('HH', pad2(parts.hour))
-    .replaceAll('mm', pad2(parts.minute));
+    .replace(/YYYY/g, pad4(parts.year))
+    .replace(/MM/g, pad2(parts.month))
+    .replace(/DD/g, pad2(parts.day))
+    .replace(/HH/g, pad2(parts.hour))
+    .replace(/mm/g, pad2(parts.minute));
 }
 
 export function getDateTimeInputPlaceholder(mode: DateTimeInputMode): string {

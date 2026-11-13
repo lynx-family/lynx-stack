@@ -182,9 +182,28 @@ Include `...basicFunctions` whenever your Agent might emit any of these. Calls w
 Failures resolve dynamic bindings to `null` and emit a correlated protocol error.
 `openUrl` requires a user gesture and is blocked in passive bindings and checks.
 
+The built-in formatters use English (US) conventions and work without `Intl`.
+On native Lynx, provide your app's navigation callback when creating the functions:
+
+```tsx
+import { createBasicFunctions } from '@lynx-js/genui/a2ui';
+
+const functions = createBasicFunctions({
+  openUrl: url => hostNavigation.open(url), // Your app's native navigation adapter.
+});
+// Use [...components, ...functions] as the A2UI catalogs prop.
+```
+
+The callback receives validated `http`, `https`, `mailto`, or `tel` URLs.
+It can return a promise; failures follow the renderer's function error handling.
+Without a callback, `openUrl` uses `window.open` in browsers and throws an
+explicit error when navigation is unavailable. Callbacks are scoped to the
+created catalog and do not change other renderer instances.
+
 If you build your own renderer instead of using `<A2UI>`, call
 `registerBasicFunctions()` once to register the same implementations into
-the shared `functionRegistry`.
+the shared `functionRegistry`. Native hosts can pass the same callbacks to
+`registerBasicFunctions({ openUrl: url => hostNavigation.open(url) })`.
 
 ## Why there is no `catalog/all`
 
