@@ -1451,6 +1451,9 @@ importers:
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
+      uri-js:
+        specifier: 4.4.1
+        version: 4.4.1
 
   packages/genui/a2ui-catalog-extractor:
     dependencies:

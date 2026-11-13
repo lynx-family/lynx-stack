@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 
 import { expect, test } from '@rstest/core';
 
-test('built schema validation works without BigInt or a global location', () => {
+test('built schema validation works without native host globals', () => {
   const schemaUrl = new URL('../dist/store/schema.js', import.meta.url).href;
   const source = readFileSync(new URL(schemaUrl), 'utf8');
   expect(source).not.toMatch(
@@ -17,7 +17,9 @@ test('built schema validation works without BigInt or a global location', () => 
     '-e',
     `
     import assert from 'node:assert/strict';
-    globalThis.BigInt = undefined;
+    for (const name of ['BigInt', 'URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder']) {
+      globalThis[name] = undefined;
+    }
     globalThis.self = { location: { origin: 'https://example.com', pathname: '/worker.js' } };
     assert.equal(typeof location, 'undefined');
     const { validateArguments } = await import(${JSON.stringify(schemaUrl)});
@@ -29,6 +31,28 @@ test('built schema validation works without BigInt or a global location', () => 
     };
     assert.deepEqual(validateArguments({ value: 'Ada' }, schema), { value: 'Ada' });
     assert.throws(() => validateArguments({ value: '' }, schema));
+    const references = {
+      $id: 'https://example.com/schemas/root.json?revision=1',
+      type: 'object',
+      $defs: {
+        name: { $id: '../shared/name.json', type: 'string', minLength: 1 },
+        count: { $anchor: 'count', type: 'integer', minimum: 1 },
+        code: { $id: 'urn:example:code', type: 'string', pattern: '^[A-Z]+$' },
+        'a/b~c': { type: 'boolean' },
+      },
+      properties: {
+        name: { $ref: '../shared/name.json' },
+        count: { $ref: '#count' },
+        code: { $ref: 'urn:example:code' },
+        enabled: { $ref: '#/$defs/a~1b~0c' },
+      },
+      required: ['name', 'count', 'code', 'enabled'],
+    };
+    const validReferences = { name: 'Ada', count: 2, code: 'ABC', enabled: true };
+    assert.deepEqual(validateArguments(validReferences, references), validReferences);
+    for (const invalid of [{ name: '' }, { count: 0 }, { code: 'abc' }, { enabled: 'true' }]) {
+      assert.throws(() => validateArguments({ ...validReferences, ...invalid }, references), /Invalid function arguments/);
+    }
     for (const [value, multipleOf, valid] of [
       [0.3, 0.1, true], [-0.3, 0.1, true], [0.31, 0.1, false],
       [0.30000000000000004, 0.1, false], [-1.234, 0.001, true],
@@ -49,6 +73,8 @@ test('built schema validation works without BigInt or a global location', () => 
     }
     assert.equal(typeof location, 'undefined');
     assert.equal(typeof BigInt, 'undefined');
+    assert.equal(typeof URL, 'undefined');
+    assert.equal(typeof URLSearchParams, 'undefined');
     console.log('passed');
   `,
   ], { encoding: 'utf8' });

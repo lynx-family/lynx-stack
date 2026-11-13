@@ -173,7 +173,8 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^19.2.18",
-    "ajv": "^8.20.0"
+    "ajv": "^8.20.0",
+    "uri-js": "4.4.1"
   },
   "peerDependencies": {
     "@lynx-js/lynx-ui": ">=3.133.0",

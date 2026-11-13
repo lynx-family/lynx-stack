@@ -20,6 +20,19 @@ const config: RslibConfig = defineConfig({
     define: { self: 'undefined' },
     tsconfigPath: './tsconfig.build.json',
   },
+  tools: {
+    rspack: (config, { rspack }) => {
+      config.plugins ??= [];
+      config.plugins.push(
+        new rspack.ProvidePlugin({
+          URL: [
+            fileURLToPath(new URL('./src/store/schemaUrl.ts', import.meta.url)),
+            'SchemaURL',
+          ],
+        }),
+      );
+    },
+  },
   performance: {
     buildCache: {
       // Invalidate resolved dependency paths when pnpm applies a new patch.
