@@ -17,7 +17,9 @@ export class SchemaURL {
 
   get hash(): string {
     const index = this.href.indexOf('#');
-    return index === -1 ? '' : this.href.slice(index);
+    return index === -1 || index === this.href.length - 1
+      ? ''
+      : this.href.slice(index);
   }
 
   set hash(value: string) {

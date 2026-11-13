@@ -53,6 +53,18 @@ test('built schema validation works without native host globals', () => {
     for (const invalid of [{ name: '' }, { count: 0 }, { code: 'abc' }, { enabled: 'true' }]) {
       assert.throws(() => validateArguments({ ...validReferences, ...invalid }, references), /Invalid function arguments/);
     }
+    const recursive = {
+      $id: 'https://example.com/tree.json#',
+      type: 'object',
+      properties: {
+        name: { type: 'string', minLength: 1 },
+        child: { $ref: '#' },
+      },
+      required: ['name'],
+    };
+    const tree = { name: 'root', child: { name: 'leaf' } };
+    assert.deepEqual(validateArguments(tree, recursive), tree);
+    assert.throws(() => validateArguments({ name: 'root', child: { name: '' } }, recursive), /Invalid function arguments/);
     for (const [value, multipleOf, valid] of [
       [0.3, 0.1, true], [-0.3, 0.1, true], [0.31, 0.1, false],
       [0.30000000000000004, 0.1, false], [-1.234, 0.001, true],
