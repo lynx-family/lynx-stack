@@ -34,6 +34,10 @@ export {
 
 export { __page, __pageId, __root };
 
+export { createMainThreadRenderer } from './snapshot/independent/main-thread.js';
+export { createBackgroundRenderer } from './snapshot/independent/background.js';
+export { diagnostics as transferDiagnostics, registry as TransferRegistry } from './snapshot/independent/transfer.js';
+
 export {
   BackgroundSnapshotInstance,
   SnapshotInstance,

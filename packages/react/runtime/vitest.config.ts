@@ -126,6 +126,7 @@ export default defineConfig({
       },
     },
     coverage: {
+      include: [path.join(__dirname, '**')],
       exclude: [
         'debug',
         'jsx-runtime',
@@ -166,7 +167,7 @@ export default defineConfig({
         '__test__/snapshot/page.test.jsx',
         '**/*.d.ts',
         '**/*.test-d.*',
-      ],
+      ].map(pattern => pattern.startsWith('**/') ? pattern : path.join(__dirname, pattern)),
       thresholds: {
         lines: 100,
         functions: 100,

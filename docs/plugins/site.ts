@@ -61,7 +61,9 @@ export const LYNX_STACK: Site = {
     '@lynx-js/react': 'react',
     '@lynx-js/genui': 'genui',
   },
-  additionalPackages: ['@lynx-js/testing-environment'],
+  additionalPackages: [
+    '@lynx-js/testing-environment',
+  ],
   configReference: {
     plugin: '@lynx-js/rsbuild-plugin',
     config: '@lynx-js/rspeedy',
