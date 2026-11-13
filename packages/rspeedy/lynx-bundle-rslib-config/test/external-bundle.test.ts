@@ -7,6 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runInNewContext } from 'node:vm'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
@@ -105,6 +106,49 @@ function resolveExternal(
 }
 
 describe('re-evaluation entry support', () => {
+  it.each(['index', 'eager'])(
+    'registers background-only %s view snapshots before returning main-thread exports',
+    async (entry) => {
+      const fixtureDir = path.join(__dirname, './fixtures/background-view')
+      const distRoot = path.join(fixtureDir, 'dist', entry)
+      await build(defineExternalBundleRslibConfig({
+        id: 'background-view',
+        source: { entry: { component: path.join(fixtureDir, `${entry}.ts`) } },
+        output: {
+          distPath: { root: distRoot },
+          minify: false,
+          globalObject: 'lynx',
+          externalsPresets: { reactlynx: true },
+        },
+        plugins: [pluginReactLynx()],
+      }, { enableJsBytecode: false }))
+
+      const decoded = await decodeTemplate(
+        path.join(distRoot, 'background-view.lynx.bundle'),
+      )
+      const snapshots: string[] = []
+      const internal = {
+        snapshotCreatorMap: {} as Record<string, (id: string) => void>,
+        createSnapshot: (id: string) => snapshots.push(id),
+      }
+      const result = runInNewContext(
+        decoded['custom-sections']['component__main-thread']!,
+        {
+          lynx: {
+            [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: {
+              ReactLynx: { ReactInternal: internal },
+            },
+          },
+        },
+      ) as { marker: number }
+      expect(result.marker).toBe(42)
+      for (const [id, create] of Object.entries(internal.snapshotCreatorMap)) {
+        create(id)
+      }
+      expect(snapshots.length).toBeGreaterThan(0)
+    },
+  )
+
   it('does not let external libraries mark the consumer entry', async () => {
     const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
     const distRoot = path.join(fixtureDir, 'dist', 're-eval-entry-support')

@@ -84,7 +84,12 @@ export function applyDefinesInjection(
             if (!next) {
               continue;
             }
-            if (connection.dependency?.type?.startsWith('import()')) {
+            // Eager imports execute asynchronously but stay in the owning
+            // chunk, so their definitions belong to the same entry scope.
+            if (
+              connection.dependency?.type?.startsWith('import()')
+              && connection.dependency.type !== 'import() eager'
+            ) {
               const resource = (next as ModuleWithMeta).resource;
               if (resource) {
                 asyncBoundaries.set(resource, next);
