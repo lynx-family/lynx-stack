@@ -1,5 +1,13 @@
 # @lynx-js/rspeedy
 
+## 0.18.6
+
+### Patch Changes
+
+- Support opt-in Rsbuild polyfills for Lynx builds. Install `core-js` in the application and set `output.polyfill` to `usage` or `entry` to enable them. ([#4257](https://github.com/lynx-family/lynx-stack/pull/4257))
+- Updated dependencies [[`3ff5a02`](https://github.com/lynx-family/lynx-stack/commit/3ff5a0282f904f44fb1425e051a1251feeb87255)]:
+  - @lynx-js/rsbuild-plugin@0.1.9
+
 ## 0.18.5
 
 ### Patch Changes
