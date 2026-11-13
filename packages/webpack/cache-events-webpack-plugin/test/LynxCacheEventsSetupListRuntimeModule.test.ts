@@ -69,11 +69,13 @@ function createRuntimeSandbox(options: {
     options.isMainThread,
   );
 
-  module.compilation = {
-    compiler: {
-      webpack: rspack,
-    },
-  } as Compilation;
+  Object.assign(module, {
+    compilation: {
+      compiler: {
+        webpack: rspack,
+      },
+    } as Compilation,
+  });
 
   const generatedCode = module.generate();
   if (generatedCode === null) {
@@ -308,5 +310,82 @@ describe('LynxCacheEventsSetupListRuntimeModule', () => {
     expect(sandbox.processData?.({ x: 2 })).toEqual({ x: 2 });
 
     cleanup();
+  });
+
+  it('keeps renderPage cached when the runtime registers it before async entry dependencies settle', () => {
+    const { runtimeCache, sandbox } = createRuntimeSandbox({
+      isMainThread: true,
+    });
+    runtimeCache.loaded = false;
+    runtimeCache.cachedActions = [];
+    const cleanup = getSetupItem(runtimeCache, 'renderPage').setup();
+    const realRenderPage = rstest.fn(() => {
+      // Restore the ordinary property before replaying native calls.
+      expect(sandbox.renderPage).toBe(realRenderPage);
+      return 'rendered';
+    });
+
+    // ReactLynx initializes synchronously, but a component external still
+    // blocks the entry's root.render(). Native calls renderPage in this gap.
+    Object.assign(sandbox, { renderPage: realRenderPage });
+    const cachedRenderPage = sandbox.renderPage;
+    sandbox.renderPage?.({ revision: 1 });
+    sandbox.renderPage?.({ revision: 2 });
+
+    expect(realRenderPage).not.toHaveBeenCalled();
+    expect(runtimeCache.cachedActions.map(action => action.data.args)).toEqual([
+      [{ revision: 1 }],
+      [{ revision: 2 }],
+    ]);
+
+    runtimeCache.loaded = true;
+    cleanup();
+
+    expect(realRenderPage.mock.calls).toEqual([
+      [{ revision: 1 }],
+      [{ revision: 2 }],
+    ]);
+    expect(Object.getOwnPropertyDescriptor(sandbox, 'renderPage'))
+      .toMatchObject({
+        value: realRenderPage,
+        writable: true,
+        configurable: true,
+      });
+    expect(sandbox.renderPage?.({ revision: 3 })).toBe('rendered');
+    // A native caller may retain the startup proxy after cleanup.
+    expect(cachedRenderPage?.({ revision: 4 })).toBe('rendered');
+    expect(realRenderPage).toHaveBeenCalledTimes(4);
+  });
+
+  it('replays renderPage calls against the latest registration during startup', () => {
+    const { runtimeCache, sandbox } = createRuntimeSandbox({
+      isMainThread: true,
+    });
+    runtimeCache.loaded = false;
+    runtimeCache.cachedActions = [];
+    const original = rstest.fn();
+    const first = rstest.fn();
+    const latest = rstest.fn();
+    sandbox.renderPage = original;
+    const cleanup = getSetupItem(runtimeCache, 'renderPage').setup();
+    sandbox.renderPage?.('before registration');
+    Object.assign(sandbox, { renderPage: first });
+    sandbox.renderPage?.('after first registration');
+    Object.assign(sandbox, { renderPage: latest });
+    sandbox.renderPage?.('after latest registration');
+
+    expect(original).not.toHaveBeenCalled();
+    expect(first).not.toHaveBeenCalled();
+    expect(latest).not.toHaveBeenCalled();
+
+    runtimeCache.loaded = true;
+    cleanup();
+
+    expect(latest.mock.calls).toEqual([
+      ['before registration'],
+      ['after first registration'],
+      ['after latest registration'],
+    ]);
+    expect(sandbox.renderPage).toBe(latest);
   });
 });

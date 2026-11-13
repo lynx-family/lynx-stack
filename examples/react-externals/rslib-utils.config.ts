@@ -24,4 +24,4 @@ export default defineExternalBundleRslibConfig({
       distPath: { root: 'dist-external-bundle-react-async' },
     }),
   },
-});
+}, process.env['EXTERNAL_BUNDLE_TARGET'] === 'web' ? { target: 'web' } : {});

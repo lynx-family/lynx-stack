@@ -13,6 +13,9 @@ import { pluginLynxBundleAnalysisStats } from '../bundle-analysis-stats.plugin.j
 // isolated in `dist-react-async` / `dist-external-bundle-react-async` so the
 // default (sync) build is untouched.
 const isAsync = process.env['REACTLYNX_ASYNC'] === 'true';
+const externalTarget = process.env['EXTERNAL_BUNDLE_TARGET'] === 'web'
+  ? 'web'
+  : 'lynx';
 
 // The `react.lynx.bundle` / `comp-lib.lynx.bundle` externals are loaded at
 // runtime via `lynx.loadScript`, which needs an absolute URL — a root-relative
@@ -33,6 +36,17 @@ const assetPrefix = `http://${detectLanHost()}:${port}/`;
 
 export default defineConfig({
   source: {
+    ...(process.env['COMP_LIB_MAIN_THREAD_DELAY_MS'] && {
+      preEntry: ['./src/main-thread-delay.ts'],
+      define: {
+        __COMP_LIB_MAIN_THREAD_DELAY_MS__: JSON.stringify(
+          Number(process.env['COMP_LIB_MAIN_THREAD_DELAY_MS']),
+        ),
+        __HOST_RENDER_PAGE_DELAY_MS__: JSON.stringify(
+          Number(process.env['HOST_RENDER_PAGE_DELAY_MS'] ?? 0),
+        ),
+      },
+    }),
     entry: {
       main: './src/index.tsx',
     },
@@ -53,9 +67,9 @@ export default defineConfig({
         ? { reactlynx: { async: true } }
         : { reactlynx: true },
       externals: {
-        './App.js': 'comp-lib.lynx.bundle',
+        './App.js': `comp-lib.${externalTarget}.bundle`,
         './utils.js': {
-          bundlePath: 'utils.lynx.bundle',
+          bundlePath: `utils.${externalTarget}.bundle`,
           libraryName: './utils.js',
           background: { sectionPath: './utils.js' },
           async: true,
@@ -66,7 +80,9 @@ export default defineConfig({
     pluginLynxBundleAnalysisStats(),
   ],
   environments: {
-    ...(isAsync ? {} : { web: {} }),
+    ...(isAsync && externalTarget !== 'web'
+      ? {}
+      : { web: {} }),
     lynx: {},
   },
   output: {

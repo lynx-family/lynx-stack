@@ -15,7 +15,9 @@ function createContext(
 ) {
   const Module = createLynxCacheEventsSetupListRuntimeModule(rspack);
   const module = new Module(list => list, isMainThread);
-  module.compilation = { compiler: { webpack: rspack } } as Compilation;
+  Object.assign(module, {
+    compilation: { compiler: { webpack: rspack } } as Compilation,
+  });
   const context = vm.createContext({ __webpack_require__: {}, ...globals });
   vm.runInContext(module.generate()!, context);
   return context;
