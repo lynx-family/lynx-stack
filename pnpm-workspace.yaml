@@ -187,6 +187,7 @@ packageExtensions:
       wast-loader: ^1.14.1
 
 patchedDependencies:
+  "@cfworker/json-schema@4.1.4": patches/@cfworker__json-schema@4.1.4.patch
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 

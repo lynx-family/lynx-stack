@@ -1,0 +1,217 @@
+diff --git a/dist/commonjs/validate.js b/dist/commonjs/validate.js
+index 5b5fb07669888dfec916128c5fe8b5de7803ec36..4bb13931a972d3b306ea4ec69cd4401f9904b898 100644
+--- a/dist/commonjs/validate.js
++++ b/dist/commonjs/validate.js
+@@ -10,32 +10,45 @@ function hasOwnProperty(instance, key) {
+     return Object.prototype.hasOwnProperty.call(instance, key);
+ }
+ function decimalInteger(value) {
+-    const coefficientAndExponent = Math.abs(value).toString().split('e');
+-    const coefficient = coefficientAndExponent[0];
+-    const exponent = coefficientAndExponent[1] ?? '0';
+-    const point = coefficient.indexOf('.');
+-    const fractionLength = point === -1 ? 0 : coefficient.length - point - 1;
+-    return [
+-        BigInt(coefficient.replace('.', '')),
+-        Number(exponent) - fractionLength
+-    ];
++  const [coefficient, exponent = '0'] = Math.abs(value).toString().split('e');
++  const point = coefficient.indexOf('.');
++  const fractionLength = point === -1 ? 0 : coefficient.length - point - 1;
++  return [
++    coefficient.replace('.', '').replace(/^0+/, '') || '0',
++    Number(exponent) - fractionLength
++  ];
+ }
++
++// Decimal long division avoids both floating-point rounding and BigInt bytecode,
++// which cannot be deserialized by the native Lynx runtime.
+ function isMultipleOf(instance, divisor) {
+-    if (!Number.isFinite(instance) || !Number.isFinite(divisor) || divisor <= 0) {
+-        return false;
++  if (!Number.isFinite(instance) || !Number.isFinite(divisor) || divisor <= 0) {
++    return false;
++  }
++  const [instanceCoefficient, instanceExponent] = decimalInteger(instance);
++  const [divisorCoefficient, divisorExponent] = decimalInteger(divisor);
++  const difference = instanceExponent - divisorExponent;
++  const numerator = instanceCoefficient + '0'.repeat(Math.max(difference, 0));
++  const denominator = divisorCoefficient + '0'.repeat(Math.max(-difference, 0));
++  let remainder = '0';
++  for (const digit of numerator) {
++    remainder = (remainder + digit).replace(/^0+/, '') || '0';
++    while (remainder.length > denominator.length ||
++      (remainder.length === denominator.length && remainder >= denominator)) {
++      const padded = denominator.padStart(remainder.length, '0');
++      let result = '';
++      let borrow = 0;
++      for (let i = remainder.length - 1; i >= 0; i--) {
++        const digitDifference = Number(remainder[i]) - Number(padded[i]) - borrow;
++        result = String((digitDifference + 10) % 10) + result;
++        borrow = digitDifference < 0 ? 1 : 0;
++      }
++      remainder = result.replace(/^0+/, '') || '0';
+     }
+-    const [instanceCoefficient, instanceExponent] = decimalInteger(instance);
+-    const [divisorCoefficient, divisorExponent] = decimalInteger(divisor);
+-    const exponentDifference = instanceExponent - divisorExponent;
+-    if (exponentDifference >= 0) {
+-        return ((instanceCoefficient * 10n ** BigInt(exponentDifference)) %
+-            divisorCoefficient ===
+-            0n);
+-    }
+-    return (instanceCoefficient %
+-        (divisorCoefficient * 10n ** BigInt(-exponentDifference)) ===
+-        0n);
++  }
++  return remainder === '0';
+ }
++
+ function validate(instance, schema, draft = '2019-09', lookup = (0, dereference_js_1.dereference)(schema), shortCircuit = true, recursiveAnchor = null, instanceLocation = '#', schemaLocation = '#', evaluated = Object.create(null)) {
+     if (schema === true) {
+         return { valid: true, errors: [] };
+diff --git a/dist/esm/validate.js b/dist/esm/validate.js
+index 1fed1c002331f1c9ba1f6fb567ed29eb4903aec6..93872f0548bc649cf646f427396ecf1d9b7b4f8d 100644
+--- a/dist/esm/validate.js
++++ b/dist/esm/validate.js
+@@ -7,32 +7,45 @@ function hasOwnProperty(instance, key) {
+     return Object.prototype.hasOwnProperty.call(instance, key);
+ }
+ function decimalInteger(value) {
+-    const coefficientAndExponent = Math.abs(value).toString().split('e');
+-    const coefficient = coefficientAndExponent[0];
+-    const exponent = coefficientAndExponent[1] ?? '0';
+-    const point = coefficient.indexOf('.');
+-    const fractionLength = point === -1 ? 0 : coefficient.length - point - 1;
+-    return [
+-        BigInt(coefficient.replace('.', '')),
+-        Number(exponent) - fractionLength
+-    ];
++  const [coefficient, exponent = '0'] = Math.abs(value).toString().split('e');
++  const point = coefficient.indexOf('.');
++  const fractionLength = point === -1 ? 0 : coefficient.length - point - 1;
++  return [
++    coefficient.replace('.', '').replace(/^0+/, '') || '0',
++    Number(exponent) - fractionLength
++  ];
+ }
++
++// Decimal long division avoids both floating-point rounding and BigInt bytecode,
++// which cannot be deserialized by the native Lynx runtime.
+ function isMultipleOf(instance, divisor) {
+-    if (!Number.isFinite(instance) || !Number.isFinite(divisor) || divisor <= 0) {
+-        return false;
++  if (!Number.isFinite(instance) || !Number.isFinite(divisor) || divisor <= 0) {
++    return false;
++  }
++  const [instanceCoefficient, instanceExponent] = decimalInteger(instance);
++  const [divisorCoefficient, divisorExponent] = decimalInteger(divisor);
++  const difference = instanceExponent - divisorExponent;
++  const numerator = instanceCoefficient + '0'.repeat(Math.max(difference, 0));
++  const denominator = divisorCoefficient + '0'.repeat(Math.max(-difference, 0));
++  let remainder = '0';
++  for (const digit of numerator) {
++    remainder = (remainder + digit).replace(/^0+/, '') || '0';
++    while (remainder.length > denominator.length ||
++      (remainder.length === denominator.length && remainder >= denominator)) {
++      const padded = denominator.padStart(remainder.length, '0');
++      let result = '';
++      let borrow = 0;
++      for (let i = remainder.length - 1; i >= 0; i--) {
++        const digitDifference = Number(remainder[i]) - Number(padded[i]) - borrow;
++        result = String((digitDifference + 10) % 10) + result;
++        borrow = digitDifference < 0 ? 1 : 0;
++      }
++      remainder = result.replace(/^0+/, '') || '0';
+     }
+-    const [instanceCoefficient, instanceExponent] = decimalInteger(instance);
+-    const [divisorCoefficient, divisorExponent] = decimalInteger(divisor);
+-    const exponentDifference = instanceExponent - divisorExponent;
+-    if (exponentDifference >= 0) {
+-        return ((instanceCoefficient * 10n ** BigInt(exponentDifference)) %
+-            divisorCoefficient ===
+-            0n);
+-    }
+-    return (instanceCoefficient %
+-        (divisorCoefficient * 10n ** BigInt(-exponentDifference)) ===
+-        0n);
++  }
++  return remainder === '0';
+ }
++
+ export function validate(instance, schema, draft = '2019-09', lookup = dereference(schema), shortCircuit = true, recursiveAnchor = null, instanceLocation = '#', schemaLocation = '#', evaluated = Object.create(null)) {
+     if (schema === true) {
+         return { valid: true, errors: [] };
+diff --git a/src/validate.ts b/src/validate.ts
+index 3a6709ea020d0317944a910c7a39b53c0b89cc66..bf16ebdc5adadbd8b810c91e7a8ef6aa6396b36f 100644
+--- a/src/validate.ts
++++ b/src/validate.ts
+@@ -17,42 +17,44 @@ function hasOwnProperty(instance: object, key: PropertyKey): boolean {
+   return Object.prototype.hasOwnProperty.call(instance, key);
+ }
+ 
+-function decimalInteger(
+-  value: number
+-): [coefficient: bigint, exponent: number] {
+-  const coefficientAndExponent = Math.abs(value).toString().split('e');
+-  const coefficient = coefficientAndExponent[0]!;
+-  const exponent = coefficientAndExponent[1] ?? '0';
+-  const point = coefficient.indexOf('.');
+-  const fractionLength = point === -1 ? 0 : coefficient.length - point - 1;
++function decimalInteger(value: number): [string, number] {
++  const [coefficient, exponent = '0'] = Math.abs(value).toString().split('e');
++  const point = coefficient!.indexOf('.');
++  const fractionLength = point === -1 ? 0 : coefficient!.length - point - 1;
+   return [
+-    BigInt(coefficient.replace('.', '')),
++    coefficient!.replace('.', '').replace(/^0+/, '') || '0',
+     Number(exponent) - fractionLength
+   ];
+ }
+ 
++// Decimal long division avoids both floating-point rounding and BigInt bytecode,
++// which cannot be deserialized by the native Lynx runtime.
+ function isMultipleOf(instance: number, divisor: number): boolean {
+   if (!Number.isFinite(instance) || !Number.isFinite(divisor) || divisor <= 0) {
+     return false;
+   }
+-
+   const [instanceCoefficient, instanceExponent] = decimalInteger(instance);
+   const [divisorCoefficient, divisorExponent] = decimalInteger(divisor);
+-  const exponentDifference = instanceExponent - divisorExponent;
+-
+-  if (exponentDifference >= 0) {
+-    return (
+-      (instanceCoefficient * 10n ** BigInt(exponentDifference)) %
+-        divisorCoefficient ===
+-      0n
+-    );
++  const difference = instanceExponent - divisorExponent;
++  const numerator = instanceCoefficient + '0'.repeat(Math.max(difference, 0));
++  const denominator = divisorCoefficient + '0'.repeat(Math.max(-difference, 0));
++  let remainder = '0';
++  for (const digit of numerator) {
++    remainder = (remainder + digit).replace(/^0+/, '') || '0';
++    while (remainder.length > denominator.length ||
++      (remainder.length === denominator.length && remainder >= denominator)) {
++      const padded = denominator.padStart(remainder.length, '0');
++      let result = '';
++      let borrow = 0;
++      for (let i = remainder.length - 1; i >= 0; i--) {
++        const digitDifference = Number(remainder[i]) - Number(padded[i]) - borrow;
++        result = String((digitDifference + 10) % 10) + result;
++        borrow = digitDifference < 0 ? 1 : 0;
++      }
++      remainder = result.replace(/^0+/, '') || '0';
++    }
+   }
+-
+-  return (
+-    instanceCoefficient %
+-      (divisorCoefficient * 10n ** BigInt(-exponentDifference)) ===
+-    0n
+-  );
++  return remainder === '0';
+ }
+ 
+ export function validate(
