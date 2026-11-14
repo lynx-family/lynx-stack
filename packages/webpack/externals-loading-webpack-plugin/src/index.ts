@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { Script } from 'node:vm';
+
 /**
  * @packageDocumentation
  *
@@ -10,8 +12,6 @@
  * @remarks
  * Requires Lynx version 3.5 or later.
  */
-
-import { Script } from 'node:vm';
 
 import type {
   Compiler,
