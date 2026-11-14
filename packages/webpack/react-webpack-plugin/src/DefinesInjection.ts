@@ -150,6 +150,7 @@ export function applyDefinesInjection(
         request: string,
         inject: (request: string) => Promise<void>,
         keepEmpty = false,
+        mainThreadModules = new Map<string, Module>(),
       ): Promise<void> => {
         const background = traverse(backgroundRoots);
         const mainThread = traverse(mainThreadRoots);
@@ -206,16 +207,15 @@ export function applyDefinesInjection(
             mainThreadProgrammability: missingWorklet.some(
               define =>
                 define.runtimeRequirements?.mainThreadProgrammability
-                  ?? false,
+                  ?? true,
             ),
           });
         }
         for (
           const [resource, backgroundBoundary] of background.asyncBoundaries
         ) {
-          const mainThreadBoundary = mainThread.asyncBoundaries.get(
-            resource,
-          );
+          const mainThreadBoundary = mainThread.asyncBoundaries.get(resource)
+            ?? mainThreadModules.get(resource);
           if (!mainThreadBoundary || ancestors.has(resource)) {
             continue;
           }
@@ -236,12 +236,31 @@ export function applyDefinesInjection(
               await rebuildModule(mainThreadBoundary);
             },
             keepEmpty,
+            mainThreadModules,
           );
         }
       };
 
       await Promise.all(
         entryPairs.map(async ({ mainThread, background }) => {
+          // Thread transforms can put the same module behind different lazy
+          // boundaries. Index the whole paired main-thread graph so a nested
+          // background boundary can still find its actual main-thread owner.
+          const mainThreadModules = new Map<string, Module>();
+          const visited = new Set<Module>();
+          const queue = entryRoots(mainThread);
+          while (queue.length > 0) {
+            const module = queue.pop()!;
+            if (visited.has(module)) continue;
+            visited.add(module);
+            const resource = (module as ModuleWithMeta).resource;
+            if (resource) mainThreadModules.set(resource, module);
+            for (
+              const connection of moduleGraph.getOutgoingConnections(module)
+            ) {
+              if (connection.module) queue.push(connection.module);
+            }
+          }
           await processScope(
             entryRoots(background),
             entryRoots(mainThread),
@@ -277,6 +296,7 @@ export function applyDefinesInjection(
             Boolean(
               (compiler as unknown as Record<symbol, unknown>)[MAIN_THREAD_HMR],
             ),
+            mainThreadModules,
           );
         }),
       );
