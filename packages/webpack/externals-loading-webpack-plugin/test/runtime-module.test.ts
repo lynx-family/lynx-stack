@@ -43,7 +43,7 @@ describe('runtime loader modules', () => {
 
   async function compile(mode: string, external: ExternalValue) {
     const compiler = rspack({
-      mode: 'development',
+      mode: mode === 'production' ? 'production' : 'development',
       context: directory,
       target: 'node',
       resolve: { extensions: ['.ts', '.js', '.json'] },
@@ -55,7 +55,9 @@ describe('runtime loader modules', () => {
         rules: [{
           test: /\.ts$/,
           loader: 'builtin:swc-loader',
-          options: { jsc: { parser: { syntax: 'typescript' } } },
+          options: {
+            jsc: { parser: { syntax: 'typescript' }, target: 'es2022' },
+          },
         }],
       },
       output: {
@@ -133,6 +135,15 @@ export default function createRuntime({ lynx: host, thread }) {
       mainThread: { sectionPath: 'Component__main-thread' },
     };
     await compile('dynamic', external);
+    await compile('production', external);
+    await fs.writeFile(
+      path.join(directory, 'async-runtime.ts'),
+      `await Promise.resolve(); export { default } from './runtime.ts';`,
+    );
+    await compile('async-module', {
+      ...external,
+      runtime: './async-runtime.ts',
+    });
     await compile('fixed', {
       ...external,
       url: 'https://fixed.example/component.bundle',
@@ -181,6 +192,32 @@ export default function createRuntime({ lynx: host, thread }) {
         value: `https://dynamic.example/component.bundle:Component${
           layer === 'background' ? '' : '__main-thread'
         }`,
+      });
+      expect(host.instances).toBe(1);
+    },
+  );
+
+  it.each(layers)(
+    'retains factory exports and dependencies in production (%s)',
+    async layer => {
+      const host = createHost();
+      expect(await execute('production', layer, host)).toMatchObject({
+        instance: 1,
+        otherInstance: 1,
+        value: `https://dynamic.example/component.bundle:Component${
+          layer === 'background' ? '' : '__main-thread'
+        }`,
+      });
+    },
+  );
+
+  it.each(layers)(
+    'awaits asynchronous module dependencies before creating a runtime (%s)',
+    async layer => {
+      const host = createHost();
+      expect(await execute('async-module', layer, host)).toMatchObject({
+        instance: 1,
+        otherInstance: 1,
       });
       expect(host.instances).toBe(1);
     },

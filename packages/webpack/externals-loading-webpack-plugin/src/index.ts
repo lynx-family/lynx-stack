@@ -431,19 +431,25 @@ export class ExternalsLoadingPlugin {
           ? path.resolve(compiler.context, request)
           : request;
         virtualSources[wrapper] = `
-import createRuntime from ${JSON.stringify(factory)};
 const instances = new WeakMap();
-export default function getRuntime(context) {
-  let runtime = instances.get(context.lynx);
-  if (!runtime) {
-    runtime = createRuntime(context);
-    if (!runtime || typeof runtime.load !== 'function' || typeof runtime.then === 'function') {
-      throw new Error('External runtime factory must synchronously return an object with a load method');
-    }
-    instances.set(context.lynx, runtime);
+module.exports = function getRuntime(context) {
+  let pending = instances.get(context.lynx);
+  if (!pending) {
+    pending = Promise.resolve().then(() => require(${
+          JSON.stringify(factory)
+        })).then(module => {
+      const createRuntime = module.default || module;
+      const runtime = createRuntime(context);
+      if (!runtime || typeof runtime.load !== 'function' || typeof runtime.then === 'function') {
+        throw new Error('External runtime factory must synchronously return an object with a load method');
+      }
+      return runtime;
+    });
+    instances.set(context.lynx, pending);
   }
-  return runtime;
+  return pending;
 }
+
 `;
         return [request, wrapper];
       }));
@@ -765,9 +771,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
   return Promise.resolve().then(() => ${compiler.webpack.RuntimeGlobals.require}(${
               JSON.stringify(id)
             }))
-    .then(module => module.default({ lynx: host, thread: ${
-              JSON.stringify(layer)
-            } }))
+    .then(module => module({ lynx: host, thread: ${JSON.stringify(layer)} }))
     .then(runtime => runtime.load({ request: ${
               JSON.stringify(pkgName)
             }, sectionPath: ${
