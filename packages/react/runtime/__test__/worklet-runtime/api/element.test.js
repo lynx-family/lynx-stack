@@ -34,6 +34,14 @@ afterEach(() => {
 });
 
 describe('Element', () => {
+  it('should hide the native element from serialization', () => {
+    const element = new Element('element-instance');
+
+    expect(element.element).toBe('element-instance');
+    expect(Object.keys(element)).not.toContain('element');
+    expect(JSON.stringify(element)).toBe('{}');
+  });
+
   it('should set attribute and flush', async () => {
     const element = new Element('element-instance');
     element.setAttribute('foo', 'bar');
