@@ -2,6 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import path from 'node:path';
+
 /**
  * @packageDocumentation
  *
@@ -12,10 +14,12 @@
  */
 
 import type {
+  Compilation,
   Compiler,
   ExternalItemFunctionData,
   ExternalItemValue,
   ExternalsType,
+  Module,
 } from '@rspack/core';
 
 /**
@@ -124,6 +128,27 @@ export interface ExternalValue {
    * `url` takes precedence because it is already the fully resolved address.
    */
   url?: string;
+
+  /**
+   * A module exporting a runtime loader factory for this external.
+   *
+   * The module and its dependencies are bundled normally in each configured
+   * layer. Its default export receives an {@link ExternalRuntimeContext} and
+   * returns an {@link ExternalRuntime}. Instances are shared by externals
+   * using the same module within a bundle runtime and Lynx instance.
+   *
+   * The loader receives the configured URL, or `publicPath + bundlePath`,
+   * when supplied. Otherwise it determines the URL itself. It owns fetching,
+   * section evaluation, stylesheet adoption, and failure recovery.
+   * Requires `async: true` (the default). The module must not import an
+   * external handled by a runtime loader, which would create a loading cycle.
+   *
+   * @example
+   * ```ts
+   * { runtime: require.resolve('./component-runtime.js'), async: true }
+   * ```
+   */
+  runtime?: string;
 
   /**
    * The bundle path resolved against the runtime public path.
@@ -272,6 +297,39 @@ export interface ExternalValue {
 }
 
 /**
+ * The context passed to a runtime loader factory in its executing realm.
+ * @public
+ */
+export interface ExternalRuntimeContext {
+  /** The layer currently loading the external. */
+  readonly thread: 'background' | 'mainThread';
+  /** The current container's Lynx host object; use the platform's host types. */
+  readonly lynx: object;
+}
+
+/**
+ * The external requested from a runtime loader.
+ * @public
+ */
+export interface ExternalRuntimeRequest {
+  /** The configured external module request. */
+  readonly request: string;
+  /** The section configured for the executing layer. */
+  readonly sectionPath: string;
+  /** The configured resource address, if one was supplied. */
+  readonly url: string | undefined;
+}
+
+/**
+ * A realm-local loader returned synchronously by a runtime module's factory.
+ * @public
+ */
+export interface ExternalRuntime {
+  /** Resolve to the module exports only after all required initialization completes. */
+  load(request: ExternalRuntimeRequest): Promise<unknown>;
+}
+
+/**
  * The options of the background or main-thread layer.
  *
  * @public
@@ -289,12 +347,25 @@ function getLynxExternalGlobal(globalObject?: string) {
 
 function validateExternals(externals: Record<string, ExternalValue>): void {
   for (const [request, external] of Object.entries(externals)) {
-    if (external.url || external.bundlePath) {
+    if (typeof external.url === 'function' || 'load' in external) {
+      throw new Error(
+        `External "${request}" must put URL resolution and loading in a runtime module.`,
+      );
+    }
+    if (
+      external.runtime
+      && external.async !== undefined && external.async !== true
+    ) {
+      throw new Error(
+        `Runtime loader modules require async: true for external "${request}".`,
+      );
+    }
+    if (external.url || external.bundlePath || external.runtime) {
       continue;
     }
 
     throw new Error(
-      `ExternalsLoadingPlugin requires \`url\` or \`bundlePath\` for external "${request}".`,
+      `ExternalsLoadingPlugin requires \`url\`, \`bundlePath\`, or \`runtime\` for external "${request}".`,
     );
   }
 }
@@ -337,7 +408,123 @@ export class ExternalsLoadingPlugin {
   }
 
   apply(compiler: Compiler): void {
-    const { RuntimeModule } = compiler.webpack;
+    const { RuntimeModule, EntryPlugin, experiments } = compiler.webpack;
+    const modulesByCompilation = new WeakMap<
+      Compilation,
+      Map<string, Module>
+    >();
+    const runtimeRequests = [
+      ...new Set(
+        Object.values(this.options.externals)
+          .flatMap(external => external.runtime ? [external.runtime] : []),
+      ),
+    ];
+    if (runtimeRequests.length > 0) {
+      const virtualSources: Record<string, string> = {};
+      const wrappers = new Map(runtimeRequests.map((request, index) => {
+        const wrapper = path.join(
+          compiler.context,
+          '__lynx_external_runtime__',
+          `${index}.js`,
+        );
+        const factory = request.startsWith('.')
+          ? path.resolve(compiler.context, request)
+          : request;
+        virtualSources[wrapper] = `
+const instances = new WeakMap();
+module.exports = function getRuntime(context) {
+  let pending = instances.get(context.lynx);
+  if (!pending) {
+    pending = Promise.resolve().then(() => require(${
+          JSON.stringify(factory)
+        })).then(module => {
+      const createRuntime = module.default || module;
+      const runtime = createRuntime(context);
+      if (!runtime || typeof runtime.load !== 'function' || typeof runtime.then === 'function') {
+        throw new Error('External runtime factory must synchronously return an object with a load method');
+      }
+      return runtime;
+    });
+    instances.set(context.lynx, pending);
+  }
+  return pending;
+}
+
+`;
+        return [request, wrapper];
+      }));
+      new experiments.VirtualModulesPlugin(virtualSources).apply(compiler);
+      compiler.hooks.finishMake.tapPromise(
+        ExternalsLoadingPlugin.name,
+        async compilation => {
+          const modules = new Map<string, Module>();
+          modulesByCompilation.set(compilation, modules);
+          await Promise.all(
+            [...compilation.entries].flatMap(([name, entry]) => {
+              const layer = entry.options.layer;
+              if (
+                layer !== this.options.mainThreadLayer
+                && layer !== this.options.backgroundLayer
+              ) return [];
+              const thread = layer === this.options.mainThreadLayer
+                ? 'mainThread'
+                : 'background';
+              const requests = runtimeRequests.filter(runtime =>
+                Object.values(this.options.externals)
+                  .some(external =>
+                    external.runtime === runtime
+                    && external[thread]?.sectionPath
+                  )
+              );
+              return requests.map(request =>
+                new Promise<void>((resolve, reject) => {
+                  compilation.addInclude(
+                    compiler.context,
+                    EntryPlugin.createDependency(wrappers.get(request)!),
+                    { name, layer },
+                    (error, module) => {
+                      if (error) reject(error);
+                      else if (module) {
+                        modules.set(`${layer}:${request}`, module);
+                        resolve();
+                      } else {
+                        reject(
+                          new Error(
+                            `Failed to include external runtime ${request}`,
+                          ),
+                        );
+                      }
+                    },
+                  );
+                })
+              );
+            }),
+          );
+          // These modules execute while resolving externals, so their own
+          // dependency graph must not require a runtime-managed external.
+          const visited = new Set<Module>();
+          const queue = [...modules.values()];
+          while (queue.length > 0) {
+            const module = queue.pop()!;
+            if (visited.has(module)) continue;
+            visited.add(module);
+            for (
+              const connection of compilation.moduleGraph
+                .getOutgoingConnections(module)
+            ) {
+              const request =
+                (connection.dependency as { request?: string } | null)?.request;
+              if (request && this.options.externals[request]?.runtime) {
+                throw new Error(
+                  `External runtime modules cannot import runtime-managed external "${request}".`,
+                );
+              }
+              if (connection.module) queue.push(connection.module);
+            }
+          }
+        },
+      );
+    }
 
     const externalsLoadingPluginOptions = this.options;
     const externals = externalsLoadingPluginOptions.externals ?? {};
@@ -370,7 +557,7 @@ export class ExternalsLoadingPlugin {
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
           string | string[],
-          ExternalsLoadingPluginOptions['externals'][string]
+          [string, ExternalsLoadingPluginOptions['externals'][string]]
         >();
         let layer: 'background' | 'mainThread';
         if (chunkLayer === externalsLoadingPluginOptions.backgroundLayer) {
@@ -388,9 +575,12 @@ export class ExternalsLoadingPlugin {
             externals,
           )
         ) {
-          externalsMap.set(external.libraryName ?? pkgName, external);
+          externalsMap.set(external.libraryName ?? pkgName, [
+            pkgName,
+            external,
+          ]);
         }
-        const finalExternals = Array.from(externalsMap.entries());
+        const finalExternals = Array.from(externalsMap.values());
 
         if (finalExternals.length === 0) {
           return '';
@@ -491,7 +681,7 @@ function createLoadExternalAsync(handler, sectionPath) {
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
       }
-    })
+    }, reject)
   })
 }
 
@@ -526,7 +716,6 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
   }
 }
 `;
-
         const hasUrlLibraryNamePairInjected = new Set();
         // Track which (urlKey, sectionPath) pairs have already generated a loadScript call.
         // Maps to the mountVar of the first external that triggered the load, so subsequent
@@ -563,6 +752,37 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               bundlePath: bundlePath.replace(/^\/+/, ''),
             }
             : external;
+          const fetchExpr = normalizedExternal.url
+            ? JSON.stringify(normalizedExternal.url)
+            : (external.bundlePath
+              ? `${compiler.webpack.RuntimeGlobals.publicPath} + ${
+                JSON.stringify(normalizedExternal.bundlePath)
+              }`
+              : 'undefined');
+          if (external.runtime) {
+            const module = modulesByCompilation.get(this.compilation!)?.get(
+              `${chunkLayer}:${external.runtime}`,
+            );
+            if (!module) {
+              throw new Error(
+                `External runtime module was not included: ${external.runtime}`,
+              );
+            }
+            const id = this.compilation!.chunkGraph.getModuleId(module);
+            loadCode.add(`deferExternal(${externalName}, () => {
+  const host = lynx;
+  return Promise.resolve().then(() => ${compiler.webpack.RuntimeGlobals.require}(${
+              JSON.stringify(id)
+            }))
+    .then(module => module({ lynx: host, thread: ${JSON.stringify(layer)} }))
+    .then(runtime => runtime.load({ request: ${
+              JSON.stringify(pkgName)
+            }, sectionPath: ${
+              JSON.stringify(layerOptions.sectionPath)
+            }, url: ${fetchExpr} }));
+});`);
+            continue;
+          }
           const urlKey = url ?? `bundlePath:${normalizedExternal.bundlePath}`;
           const hash = `${urlKey}-${libraryNameStr}`;
           if (hasUrlLibraryNamePairInjected.has(hash)) {
@@ -570,15 +790,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           }
           hasUrlLibraryNamePairInjected.add(hash);
 
-          const fetchExpr = normalizedExternal.url
-            ? JSON.stringify(normalizedExternal.url)
-            : `${compiler.webpack.RuntimeGlobals.publicPath} + ${
-              JSON.stringify(normalizedExternal.bundlePath)
-            }`;
-          url2fetchCode.set(
-            urlKey,
-            `() => lynx.fetchBundle(${fetchExpr}, {})`,
-          );
+          url2fetchCode.set(urlKey, `() => lynx.fetchBundle(${fetchExpr}, {})`);
           url2retries.set(
             urlKey,
             Math.max(url2retries.get(urlKey) ?? 0, retries),
@@ -641,6 +853,14 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             });`
           ),
           ...loadCode,
+          ...(finalExternals.some(([, external]) => external.async !== false)
+            ? [
+              `if (typeof ${compiler.webpack.RuntimeGlobals.startup} === "function") {
+  const start = ${compiler.webpack.RuntimeGlobals.startup};
+  ${compiler.webpack.RuntimeGlobals.startup} = () => Promise.resolve(start());
+}`,
+            ]
+            : []),
         ].join('\n');
       }
     }
@@ -668,7 +888,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               );
               let layer: string | undefined;
               for (const module of modules) {
-                if (module.layer) {
+                if (
+                  module.layer === externalsLoadingPluginOptions.backgroundLayer
+                  || module.layer
+                    === externalsLoadingPluginOptions.mainThreadLayer
+                ) {
                   layer = module.layer;
                   break;
                 }
@@ -680,6 +904,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               runtimeRequirements.add(
                 compiler.webpack.RuntimeGlobals.publicPath,
               );
+              if (runtimeRequests.length > 0) {
+                runtimeRequirements.add(
+                  compiler.webpack.RuntimeGlobals.require,
+                );
+              }
               compilation.addRuntimeModule(
                 chunk,
                 new ExternalsLoadingRuntimeModule(runtimeRequirements, {

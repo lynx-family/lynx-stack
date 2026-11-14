@@ -7,6 +7,24 @@
 import type { Compiler } from '@rspack/core';
 
 // @public
+export interface ExternalRuntime {
+    load(request: ExternalRuntimeRequest): Promise<unknown>;
+}
+
+// @public
+export interface ExternalRuntimeContext {
+    readonly lynx: object;
+    readonly thread: 'background' | 'mainThread';
+}
+
+// @public
+export interface ExternalRuntimeRequest {
+    readonly request: string;
+    readonly sectionPath: string;
+    readonly url: string | undefined;
+}
+
+// @public
 export class ExternalsLoadingPlugin {
     constructor(options: ExternalsLoadingPluginOptions);
     // (undocumented)
@@ -34,6 +52,7 @@ export interface ExternalValue {
     libraryName?: string | string[];
     mainThread?: LayerOptions;
     retries?: number;
+    runtime?: string;
     timeout?: number;
     url?: string;
 }

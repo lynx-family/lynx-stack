@@ -21,6 +21,12 @@ import type {
 } from '@lynx-js/externals-loading-webpack-plugin'
 import { ExternalsLoadingPlugin } from '@lynx-js/externals-loading-webpack-plugin'
 
+export type {
+  ExternalRuntime,
+  ExternalRuntimeContext,
+  ExternalRuntimeRequest,
+} from '@lynx-js/externals-loading-webpack-plugin'
+
 interface ExposedLayers {
   readonly BACKGROUND: string
   readonly MAIN_THREAD: string
@@ -746,12 +752,15 @@ function resolvePluginExternals(
 
   for (const [request, external] of Object.entries(externals)) {
     const normalizedExternal = normalizePluginExternal(request, external)
-    if (normalizedExternal.url || normalizedExternal.bundlePath) {
+    if (
+      normalizedExternal.url || normalizedExternal.bundlePath
+      || normalizedExternal.runtime
+    ) {
       continue
     }
 
     throw new Error(
-      `external-bundle-rsbuild-plugin requires \`url\` or \`bundlePath\` for external "${request}".`,
+      `external-bundle-rsbuild-plugin requires \`url\`, \`bundlePath\`, or \`runtime\` for external "${request}".`,
     )
   }
 
