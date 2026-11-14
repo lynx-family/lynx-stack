@@ -3,4 +3,4 @@
 '@lynx-js/external-bundle-rsbuild-plugin': patch
 ---
 
-Support realm-local asynchronous bundle URL resolvers and custom section evaluation. Propagate resolver failures and support deferred async externals when the entry startup is synchronous.
+Support normally bundled runtime loader modules for dynamic external URLs and custom section evaluation, with per-container factory instances and explicit configured URL inputs. Preserve standalone async predicates and deferred asynchronous startup.

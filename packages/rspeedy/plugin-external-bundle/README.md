@@ -246,3 +246,59 @@ remain asynchronous even when the callback returns `false`. Existing boolean
 options retain their behavior. External bundles that consume this ReactLynx
 namespace must also use `output.externalsPresets.reactlynx: { async: true }` in
 `defineExternalBundleRslibConfig` so subpath imports await the namespace.
+
+### Runtime loader modules
+
+Use `runtime` when an external needs runtime URL selection or custom fetching and
+evaluation. The module is compiled in each configured layer, including its normal
+imports. It must default-export a synchronous factory returning a `load` method:
+
+```ts
+import type {
+  ExternalRuntime,
+  ExternalRuntimeContext,
+} from '@lynx-js/external-bundle-rsbuild-plugin'
+import { createLoader } from './renderer-loader'
+
+export default function createRuntime(
+  context: ExternalRuntimeContext,
+): ExternalRuntime {
+  const loader = createLoader(context)
+  return {
+    load: ({ request, sectionPath, url }) =>
+      loader.load(request, sectionPath, url),
+  }
+}
+```
+
+Configure the module on the external:
+
+```js
+pluginExternalBundle({
+  externals: {
+    component: {
+      runtime: require.resolve('./component-runtime.ts'),
+      async: true,
+      background: { sectionPath: 'Component' },
+      mainThread: { sectionPath: 'Component__main-thread' },
+    },
+  },
+})
+```
+
+`url` can coexist with `runtime`: the loader receives that address, or
+`publicPath + bundlePath` when configured. Without either address it selects its
+own URL. `url` retains precedence over `bundlePath`.
+
+The factory runs in the target realm on first use. Externals using the same
+runtime module share its instance within the bundle runtime and Lynx host object.
+Keep container state inside the factory. `load` must resolve to the external's
+exports only after required initialization completes, including stylesheet
+adoption and any application-owned cross-thread preparation. The plugin does not
+provide a cross-thread readiness protocol. Reject failures normally.
+
+Runtime modules require `async: true` (the default). They cannot import other
+runtime-managed externals, which would create a loading cycle. Their dependencies
+must be compilable by the project's existing loaders. The standalone `async`
+predicate for fixed URLs remains supported; URL and loader functions in the Node
+configuration are not supported.

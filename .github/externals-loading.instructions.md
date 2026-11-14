@@ -2,6 +2,4 @@
 applyTo: "packages/webpack/externals-loading-webpack-plugin/**"
 ---
 
-External bundle URL resolvers and section loaders are serialized into each runtime realm. Keep callbacks independent of build-time closures, preserve synchronous loading for fixed URLs, and wrap native callback-only `fetchBundle` handlers in a Promise before chaining asynchronous work. Validate observable module exports and rejected imports using emitted bundles.
-
-Callback serialization must accept object methods as well as function expressions; parse without executing build-time callbacks before choosing an expression or object-method wrapper. Forward native Promise rejections as well as fulfillment when adapting callback-only handlers.
+Runtime loaders are normal modules exporting a synchronous factory and a Promise-returning load method. Bundle their imports through the module graph; never stringify URL resolvers or load callbacks. Share factory instances by runtime module and Lynx host object, preserving container and layer isolation. Runtime modules may use configured URLs or resolve their own, and must not import runtime-managed externals. Keep fixed-URL loading and the existing standalone async predicate compatible. Validate module exports, pending initialization, dependency imports, and failures by executing emitted bundles with callback-only native handlers.

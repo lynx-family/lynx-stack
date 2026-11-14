@@ -21,6 +21,12 @@ import type {
 } from '@lynx-js/externals-loading-webpack-plugin'
 import { ExternalsLoadingPlugin } from '@lynx-js/externals-loading-webpack-plugin'
 
+export type {
+  ExternalRuntime,
+  ExternalRuntimeContext,
+  ExternalRuntimeRequest,
+} from '@lynx-js/externals-loading-webpack-plugin'
+
 interface ExposedLayers {
   readonly BACKGROUND: string
   readonly MAIN_THREAD: string
