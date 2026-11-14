@@ -11,12 +11,25 @@
  * Requires Lynx version 3.5 or later.
  */
 
+import { Script } from 'node:vm';
+
 import type {
   Compiler,
   ExternalItemFunctionData,
   ExternalItemValue,
   ExternalsType,
 } from '@rspack/core';
+
+// Object methods are valid callbacks but are not standalone function expressions.
+function serializeCallback(callback: { toString(): string }): string {
+  const source = callback.toString();
+  try {
+    new Script(`(${source})`);
+    return `(${source})`;
+  } catch {
+    return `Object.values({${source}})[0]`;
+  }
+}
 
 /**
  * The options of the `ExternalsLoadingPlugin`.
@@ -584,7 +597,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           } = external;
           const layerOptions = external[layer];
           const loadArgument = external.load
-            ? `, (${external.load.toString()})`
+            ? `, ${serializeCallback(external.load)}`
             : '';
           // Lynx fetchBundle timeout is in seconds
           const timeout = timeoutInMs / 1000;
@@ -616,7 +629,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           hasUrlLibraryNamePairInjected.add(hash);
 
           const fetchExpr = runtimeUrl
-            ? `(${url.toString()})()`
+            ? `${serializeCallback(url)}()`
             : (normalizedExternal.url
               ? JSON.stringify(normalizedExternal.url)
               : `${compiler.webpack.RuntimeGlobals.publicPath} + ${
@@ -627,7 +640,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             runtimeUrl
               ? `() => Promise.resolve().then(() => ${fetchExpr}).then(url => {
                   if (typeof url !== "string" || !url) throw new Error("External bundle URL resolver must return a non-empty string");
-                  return new Promise(resolve => lynx.fetchBundle(url, {}).then(resolve));
+                  return new Promise((resolve, reject) => lynx.fetchBundle(url, {}).then(resolve, reject));
                 })`
               : `() => lynx.fetchBundle(${fetchExpr}, {})`,
           );

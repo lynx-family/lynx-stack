@@ -27,7 +27,7 @@ describe('runtime bundle URLs', () => {
       path.join(directory, 'index.js'),
       'export { value } from "component";',
     );
-    for (const custom of [false, true]) {
+    for (const custom of [false, true, 'method', 'async-method'] as const) {
       const external: ExternalValue = {
         url: resolver,
         async: true,
@@ -42,6 +42,38 @@ describe('runtime bundle URLs', () => {
           }
           : {}),
       };
+      if (custom === 'method' || custom === 'async-method') {
+        const methods = {
+          url(this: void) {
+            return (globalThis as unknown as { bundleUrl: string }).bundleUrl;
+          },
+          load(this: void, response: unknown, section: string) {
+            return (globalThis as unknown as {
+              evaluateBundle: (response: unknown, section: string) => unknown;
+            }).evaluateBundle(response, section);
+          },
+        };
+        // Async methods must also be independent of build-time closures.
+        if (custom === 'async-method') {
+          external.url = {
+            async url(this: void) {
+              return await Promise.resolve(
+                (globalThis as unknown as { bundleUrl: string }).bundleUrl,
+              );
+            },
+          }.url;
+          external.load = {
+            async load(this: void, response: unknown, section: string) {
+              return await Promise.resolve((globalThis as unknown as {
+                evaluateBundle: (response: unknown, section: string) => unknown;
+              }).evaluateBundle(response, section));
+            },
+          }.load;
+        } else {
+          external.url = methods.url;
+          external.load = methods.load;
+        }
+      }
       const output = path.join(directory, String(custom));
       await new Promise<void>((resolve, reject) => {
         const compiler = rspack({
@@ -177,6 +209,39 @@ describe('runtime bundle URLs', () => {
       );
     },
   );
+
+  it.each(['method', 'async-method'])(
+    'executes %s URL and loader callbacks in the emitted runtime',
+    async custom => {
+      const module = { exports: {} };
+      runInNewContext(sources.get(`${custom}:main-thread`)!, {
+        module,
+        exports: module.exports,
+        bundleUrl: 'https://cdn.example/component.bundle',
+        lynx: { fetchBundle: (url: string) => Promise.resolve({ url }) },
+        evaluateBundle: (response: { url: string }, section: string) => ({
+          value: `${response.url}:${section}`,
+        }),
+      });
+      expect(await Promise.resolve(module.exports)).toHaveProperty(
+        'value',
+        'https://cdn.example/component.bundle:Component__main-thread',
+      );
+    },
+  );
+
+  it('propagates native fetch rejection to the importing module', async () => {
+    const module = { exports: {} };
+    runInNewContext(sources.get('false:background')!, {
+      module,
+      exports: module.exports,
+      bundleUrl: 'https://cdn.example/component.bundle',
+      lynx: {
+        fetchBundle: () => Promise.reject(new Error('bundle unavailable')),
+      },
+    });
+    await expect(module.exports).rejects.toThrow('bundle unavailable');
+  });
 
   it('rejects runtime resolvers configured for synchronous loading', () => {
     expect(() =>
