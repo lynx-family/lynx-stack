@@ -414,19 +414,51 @@ describe('missing definitions injection', () => {
     >,
     entries: Record<string, { import: string; layer: string }>,
     entryPairs: Array<{ mainThread: string; background: string }>,
-    options?: { mainThreadDefines?: boolean },
+    options?: {
+      mainThreadDefines?: boolean;
+      node?: boolean;
+      compiledPlugin?: boolean;
+      onCompileResult?: (result: unknown) => void;
+    },
   ) {
+    // Real loaders execute outside the test runner's module isolation.
+    const Plugin = options?.compiledPlugin
+      ? (require('@lynx-js/react-webpack-plugin') as {
+        ReactWebpackPlugin: typeof ReactWebpackPlugin;
+      }).ReactWebpackPlugin
+      : ReactWebpackPlugin;
     const compiler = rspack({
       context: __dirname,
       mode: 'none',
       entry: entries,
+      target: options?.node ? 'node' : undefined,
+      module: options?.node
+        ? {
+          rules: [{
+            test: /empty2\.js$/,
+            issuerLayer: LAYERS.MAIN_THREAD,
+            use: [ReactWebpackPlugin.loaders.MAIN_THREAD],
+          }],
+        }
+        : undefined,
+      resolve: options?.node
+        ? {
+          alias: {
+            '@lynx-js/react/internal': path.join(
+              __dirname,
+              'fixtures/internal-stub.js',
+            ),
+          },
+        }
+        : undefined,
       experiments: { layers: true },
       output: {
         path: mkdtempSync(path.join(tmpdir(), 'defines-')),
         filename: '[name].js',
+        ...(options?.node ? { library: { type: 'commonjs2' } } : {}),
       },
       plugins: [
-        new ReactWebpackPlugin({
+        new Plugin({
           mainThreadChunks: entryPairs.map(({ mainThread }) =>
             `${mainThread}.js`
           ),
@@ -468,6 +500,11 @@ describe('missing definitions injection', () => {
           reject(err ?? new Error(stats!.toString()));
           return;
         }
+        options?.onCompileResult?.(
+          (stats!.compilation as unknown as Record<symbol, unknown>)[
+            Symbol.for('@lynx-js/react/internal:compilation-result')
+          ],
+        );
         resolve(compiler.options.output.path!);
       });
     });
@@ -636,6 +673,86 @@ describe('missing definitions injection', () => {
       },
       [{ mainThread: 'main__main-thread', background: 'main' }],
     )).rejects.toThrowError(/cannot be merged/);
+  });
+
+  it.each([undefined, false, true])(
+    'preserves worklet registration and capability requirements (%s)',
+    async requirement => {
+      let result: unknown;
+      delete (globalThis as Record<string, unknown>).__legacyWorkletRegistered;
+      const outputPath = await compile(
+        {
+          'empty.js': {
+            worklet: [{
+              ...define(
+                'legacy-worklet',
+                'globalThis.__legacyWorkletRegistered = true;',
+              ),
+              ...(requirement === undefined ? {} : {
+                runtimeRequirements: { mainThreadProgrammability: requirement },
+              }),
+            }],
+          },
+        },
+        {
+          'main__main-thread': {
+            import: './fixtures/empty2.js',
+            layer: LAYERS.MAIN_THREAD,
+          },
+          main: { import: './fixtures/empty.js', layer: LAYERS.BACKGROUND },
+        },
+        [{ mainThread: 'main__main-thread', background: 'main' }],
+        {
+          node: true,
+          onCompileResult: value => {
+            result = value;
+          },
+        },
+      );
+      require(path.join(outputPath, 'main__main-thread.js'));
+      expect((globalThis as Record<string, unknown>).__legacyWorkletRegistered)
+        .toBe(true);
+      expect(result).toEqual({
+        version: 1,
+        runtimeRequirements: { mainThreadProgrammability: requirement ?? true },
+      });
+    },
+  );
+
+  it('registers a nested lazy definition when its parent is eager only in the background', async () => {
+    delete (globalThis as Record<string, unknown>).__nestedDefinitionRegistered;
+    const outputPath = await compile(
+      {
+        'empty2.js': {
+          snapshot: [
+            define(
+              'nested-lazy',
+              'globalThis.__nestedDefinitionRegistered = true;',
+            ),
+          ],
+        },
+      },
+      {
+        'main__main-thread': {
+          import: './fixtures/asymmetric-main.js',
+          layer: LAYERS.MAIN_THREAD,
+        },
+        main: {
+          import: './fixtures/asymmetric-parent.js',
+          layer: LAYERS.BACKGROUND,
+        },
+      },
+      [{ mainThread: 'main__main-thread', background: 'main' }],
+      { node: true, compiledPlugin: true },
+    );
+    const entry = require(path.join(outputPath, 'main__main-thread.js')) as {
+      load: () => Promise<{ other: number }>;
+    };
+    expect((globalThis as Record<string, unknown>).__nestedDefinitionRegistered)
+      .toBeUndefined();
+    expect(await entry.load()).toHaveProperty('other', 2);
+    expect((globalThis as Record<string, unknown>).__nestedDefinitionRegistered)
+      .toBe(true);
   });
 
   it('accepts an unmergeable worklet the main thread already has', async () => {

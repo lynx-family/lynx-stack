@@ -65,6 +65,10 @@ export function applyEntry(
     experimental_reEvalJSOnReload,
   } = options
 
+  const entryPairsByEnvironment = new Map<
+    string,
+    Array<{ mainThread: string, background: string }>
+  >()
   const lazyBundleFetcher = resolveLazyBundleFetcher(targetSdkVersion)
   const runtimeConfig: RuntimeConfigWebpackPluginOptions = {}
 
@@ -86,6 +90,7 @@ export function applyEntry(
       }>(Symbol.for('LynxTemplatePlugin'))!
     const mainThreadChunks: string[] = []
     const entryPairs: Array<{ mainThread: string, background: string }> = []
+    entryPairsByEnvironment.set(environment.name, entryPairs)
 
     const { splitChunks, chunkSplitStrategy } = getUserSplitChunks(
       api.getRsbuildConfig('original'),
@@ -172,11 +177,6 @@ export function applyEntry(
         const backgroundEntry = entryName
 
         mainThreadChunks.push(mainThreadName)
-
-        entryPairs.push({
-          mainThread: mainThreadEntry,
-          background: backgroundEntry,
-        })
 
         chain
           .entry(mainThreadEntry)
@@ -366,6 +366,39 @@ export function applyEntry(
 
       return lynxConfig?.performance.profile
     }
+  })
+
+  // Collect after chain transforms: applications split their entries above,
+  // whereas rslib's external-bundle config supplies already-layered entries.
+  // The same array is passed to ReactWebpackPlugin before it is applied.
+  api.modifyRspackConfig({
+    order: 'post',
+    handler(config, { environment }) {
+      const entryPairs = entryPairsByEnvironment.get(environment.name)
+      if (!entryPairs) return
+      entryPairs.length = 0
+      if (
+        !config.entry || typeof config.entry !== 'object'
+        || Array.isArray(config.entry)
+      ) return
+      const layers = new Map(
+        Object.entries(config.entry).map(([name, entry]) => [
+          name,
+          typeof entry === 'object' && !Array.isArray(entry)
+            ? entry.layer
+            : undefined,
+        ]),
+      )
+      for (const [background, layer] of layers) {
+        const mainThread = `${background}__main-thread`
+        if (
+          layer === LAYERS.BACKGROUND
+          && layers.get(mainThread) === LAYERS.MAIN_THREAD
+        ) {
+          entryPairs.push({ mainThread, background })
+        }
+      }
+    },
   })
 }
 

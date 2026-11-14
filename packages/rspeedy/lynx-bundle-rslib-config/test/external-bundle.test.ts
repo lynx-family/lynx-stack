@@ -7,6 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runInNewContext } from 'node:vm'
 
 import { createRslib } from '@rslib/core'
 import type { RslibConfig, Rspack, rsbuild } from '@rslib/core'
@@ -105,6 +106,65 @@ function resolveExternal(
 }
 
 describe('re-evaluation entry support', () => {
+  it.each([
+    { entry: 'index', layered: false },
+    { entry: 'eager', layered: false },
+    { entry: 'index', layered: true },
+    { entry: 'eager', layered: true },
+  ])(
+    'registers background-only $entry view snapshots (layered=$layered) before returning exports',
+    async ({ entry, layered }) => {
+      const fixtureDir = path.join(__dirname, './fixtures/background-view')
+      const distRoot = path.join(fixtureDir, 'dist', `${entry}-${layered}`)
+      const source = path.join(fixtureDir, `${entry}.ts`)
+      await build(defineExternalBundleRslibConfig({
+        id: 'background-view',
+        source: {
+          entry: layered
+            ? {
+              component: { import: source, layer: LAYERS.BACKGROUND },
+              'component__main-thread': {
+                import: source,
+                layer: LAYERS.MAIN_THREAD,
+              },
+            }
+            : { component: source },
+        },
+        output: {
+          distPath: { root: distRoot },
+          minify: false,
+          globalObject: 'lynx',
+          externalsPresets: { reactlynx: true },
+        },
+        plugins: [pluginReactLynx()],
+      }, { enableJsBytecode: false }))
+
+      const decoded = await decodeTemplate(
+        path.join(distRoot, 'background-view.lynx.bundle'),
+      )
+      const snapshots: string[] = []
+      const internal = {
+        snapshotCreatorMap: {} as Record<string, (id: string) => void>,
+        createSnapshot: (id: string) => snapshots.push(id),
+      }
+      const result = runInNewContext(
+        decoded['custom-sections']['component__main-thread']!,
+        {
+          lynx: {
+            [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: {
+              ReactLynx: { ReactInternal: internal },
+            },
+          },
+        },
+      ) as { marker: number }
+      expect(result.marker).toBe(42)
+      for (const [id, create] of Object.entries(internal.snapshotCreatorMap)) {
+        create(id)
+      }
+      expect(snapshots.length).toBeGreaterThan(0)
+    },
+  )
+
   it('does not let external libraries mark the consumer entry', async () => {
     const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
     const distRoot = path.join(fixtureDir, 'dist', 're-eval-entry-support')
