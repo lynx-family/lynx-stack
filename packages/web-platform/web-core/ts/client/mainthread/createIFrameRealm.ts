@@ -60,11 +60,16 @@ export async function createIFrameRealm(parent: Node): Promise<JSRealm> {
     if (xhr.status === 200) {
       const script = iframe.contentDocument!.createElement('script');
       script.textContent = xhr.responseText;
-      iframeWindow.module = { exports: undefined };
-      iframe.contentDocument!.head.appendChild(script);
-      const ret = iframeWindow?.module?.exports;
-      iframeWindow.module = { exports: undefined };
-      return ret;
+      const previousModule = iframeWindow.module;
+      const module = { exports: undefined as unknown };
+      iframeWindow.module = module;
+      try {
+        iframe.contentDocument!.head.appendChild(script);
+        return module.exports;
+      } finally {
+        // A nested load must return control to its caller's CommonJS module.
+        iframeWindow.module = previousModule;
+      }
     } else {
       throw new Error(`Failed to load script: ${url}`, { cause: xhr });
     }
