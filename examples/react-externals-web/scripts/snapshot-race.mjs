@@ -19,9 +19,7 @@ const { chromium } = playwright;
 const port = Number(process.env.PORT ?? 3307);
 const timeout = Number(process.env.SNAPSHOT_RACE_TIMEOUT_MS ?? 15000);
 assert(Number.isFinite(timeout) && timeout > 0, 'Expected a positive timeout');
-const output = process.env.REACTLYNX_ASYNC === 'true'
-  ? 'dist-react-async'
-  : 'dist';
+const output = 'dist';
 const messages = [];
 const errors = [];
 const server = createServer(async (request, response) => {
@@ -45,7 +43,12 @@ view.setAttribute('url', '/main.web.bundle');
   }
   const file = pathname.startsWith('/repo/')
     ? path.join(root, pathname.slice(6))
-    : path.join(root, 'examples/react-externals', output, pathname.slice(1));
+    : path.join(
+      root,
+      'examples/react-externals-web',
+      output,
+      pathname.slice(1),
+    );
   const contentTypes = {
     '.js': 'text/javascript',
     '.css': 'text/css',

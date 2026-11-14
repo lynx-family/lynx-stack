@@ -34,4 +34,4 @@ export default defineExternalBundleRslibConfig({
     }),
     globalObject: 'globalThis',
   },
-}, process.env['EXTERNAL_BUNDLE_TARGET'] === 'web' ? { target: 'web' } : {});
+});

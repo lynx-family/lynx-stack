@@ -1,5 +1,5 @@
 ---
-applyTo: "packages/webpack/cache-events-webpack-plugin/**,packages/react/runtime/src/snapshot/lynx/**,examples/react-externals/**"
+applyTo: "packages/webpack/cache-events-webpack-plugin/**,packages/react/runtime/src/snapshot/lynx/**,examples/react-externals/**,examples/react-externals-web/**"
 ---
 
 An async component external does not by itself prevent first-screen hydration.
@@ -15,3 +15,5 @@ replaying calls. Diagnostic wrappers must preserve this accessor's setter and
 getter rather than bypass its registration semantics.
 Delay component evaluation without blocking the main thread
 or merely slowing the shared resource fetch, and record the isHydration flag.
+
+Keep browser timing experiments in react-externals-web using its existing web target. Native react-externals must not switch external bundle encoding through a target environment variable. Share timing instrumentation between the examples, but use their own build and host paths.
