@@ -806,24 +806,6 @@ const externalBundleRsbuildPlugin = ({
             }
           }
         })
-        // ReactLynx skips application entry splitting for rslib. Pass the
-        // pairs created here back to its definition collector so snapshots
-        // and worklets reachable only from background code are still emitted.
-        if (chain.plugins.has('lynx:react')) {
-          const mainThreadEntries = new Set(mainThreadEntryName)
-          const entryPairs = backgroundEntryName.flatMap(background => {
-            const mainThread = `${background}__main-thread`
-            return mainThreadEntries.has(mainThread)
-              ? [{ mainThread, background }]
-              : []
-          })
-          chain.plugin('lynx:react').tap((
-            [options]: unknown[],
-          ) => [{
-            ...(options as Record<string, unknown>),
-            entryPairs,
-          }])
-        }
         chain
           .plugin(MarkMainThreadWebpackPlugin.name)
           .use(MarkMainThreadWebpackPlugin, [{

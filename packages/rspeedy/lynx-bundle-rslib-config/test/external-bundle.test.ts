@@ -106,14 +106,30 @@ function resolveExternal(
 }
 
 describe('re-evaluation entry support', () => {
-  it.each(['index', 'eager'])(
-    'registers background-only %s view snapshots before returning main-thread exports',
-    async (entry) => {
+  it.each([
+    { entry: 'index', layered: false },
+    { entry: 'eager', layered: false },
+    { entry: 'index', layered: true },
+    { entry: 'eager', layered: true },
+  ])(
+    'registers background-only $entry view snapshots (layered=$layered) before returning exports',
+    async ({ entry, layered }) => {
       const fixtureDir = path.join(__dirname, './fixtures/background-view')
-      const distRoot = path.join(fixtureDir, 'dist', entry)
+      const distRoot = path.join(fixtureDir, 'dist', `${entry}-${layered}`)
+      const source = path.join(fixtureDir, `${entry}.ts`)
       await build(defineExternalBundleRslibConfig({
         id: 'background-view',
-        source: { entry: { component: path.join(fixtureDir, `${entry}.ts`) } },
+        source: {
+          entry: layered
+            ? {
+              component: { import: source, layer: LAYERS.BACKGROUND },
+              'component__main-thread': {
+                import: source,
+                layer: LAYERS.MAIN_THREAD,
+              },
+            }
+            : { component: source },
+        },
         output: {
           distPath: { root: distRoot },
           minify: false,

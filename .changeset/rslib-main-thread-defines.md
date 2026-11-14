@@ -1,6 +1,6 @@
 ---
-"@lynx-js/lynx-bundle-rslib-config": patch
+"@lynx-js/react-rsbuild-plugin": patch
 "@lynx-js/react-webpack-plugin": patch
 ---
 
-Register paired main-thread and background entries for external bundles so background-only snapshot and worklet definitions are included in the main-thread output. Collect eager imports in their owning definition scope instead of treating them as separate lazy chunks.
+Collect paired main-thread and background entries in pluginReactLynx after entry transforms for both applications and external bundles, so background-only snapshot and worklet definitions are emitted in the corresponding main-thread scope. Preserve lazy boundaries and legacy worklet runtime requirements.
