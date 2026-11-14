@@ -26,9 +26,13 @@ export function validate(input: unknown, configPath?: string): Config {
       return [`Unknown property: \`${color.red(path)}\` in configuration`, '']
     }
 
+    const readableExpected = expected
+      .replace(/\b__type\b/g, 'object')
+      .replace(/\.o\d+(?=[\s|)]|$)/g, '')
+
     return [
       `Invalid config on \`${color.red(path)}\`.`,
-      `  - Expect to be ${color.green(expected)}`,
+      `  - Expect to be ${color.green(readableExpected)}`,
       `  - Got: ${color.red(whatIs(value))}`,
       '',
     ]
