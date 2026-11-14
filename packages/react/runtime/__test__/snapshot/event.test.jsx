@@ -7,6 +7,7 @@ import { render } from 'preact';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
+import { nestedListBridge } from '../../src/worklet-runtime/listEvent';
 import { takeGlobalSnapshotPatch } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
@@ -1178,6 +1179,107 @@ describe('event when firstScreenSyncTiming is jsReady', () => {
       `);
     }
   });
+
+  it('replays rendered nested-list events across updates before first-screen sync', () => {
+    injectTt();
+    vi.stubGlobal('__InvokeUIMethod', vi.fn());
+    const handleListTouch = vi.fn();
+    const handleCellTap = vi.fn();
+    const queued = [];
+
+    function App() {
+      return (
+        <list id='first-screen-outer'>
+          <list-item item-key='row'>
+            <list id='first-screen-inner' scroll-orientation='horizontal' bindtouchend={handleListTouch}>
+              <list-item item-key='cell'>
+                <text id='first-screen-cell' bindtap={handleCellTap}>Cell</text>
+              </list-item>
+            </list>
+          </list-item>
+        </list>
+      );
+    }
+
+    function findListOwner(element, snapshot = __root) {
+      if (
+        snapshot.__snapshot_def.isListHolder
+        && snapshot.__elements?.[snapshot.__snapshot_def.slot[0][1]] === element
+      ) return snapshot;
+      for (const child of snapshot.childNodes) {
+        const owner = findListOwner(element, child);
+        if (owner) return owner;
+      }
+    }
+
+    try {
+      const jsxApp = <App />;
+      __root.__jsx = jsxApp;
+      renderPage();
+      const outer = elementTree.getElementById('first-screen-outer');
+      elementTree.triggerComponentAtIndex(outer, 0);
+      const inner = elementTree.getElementById('first-screen-inner');
+      elementTree.triggerComponentAtIndex(inner, 0);
+
+      const scroll = __GetEvent(inner, 'bindEvent', 'scroll').jsFunction.value;
+      nestedListBridge().dispatch(
+        scroll,
+        [{
+          detail: {
+            eventSource: 2,
+            scrollLeft: 48,
+            scrollTop: 0,
+            attachedCells: [{ index: 0, itemKey: 'cell', left: -12, top: 0 }],
+          },
+        }],
+        undefined,
+        vi.fn(),
+      );
+
+      for (let update = 0; update < 3; update++) {
+        const currentInner = elementTree.getElementById('first-screen-inner');
+        const owner = findListOwner(currentInner);
+        if (!owner.childNodes[0].__element_root) elementTree.triggerComponentAtIndex(currentInner, 0);
+        expect(owner.__listScrollOffset).toEqual({ x: 48, y: 0 });
+        expect(owner.__listScrollAnchor).toMatchObject({ itemKey: 'cell', viewportOffset: -12 });
+        queued.push([
+          __GetEvent(currentInner, 'bindEvent', 'touchend').jsFunction,
+          __GetEvent(elementTree.getElementById('first-screen-cell'), 'bindEvent', 'tap').jsFunction,
+        ]);
+        if (update < 2) updatePage({ update });
+      }
+
+      queued.forEach(([listHandler, cellHandler], index) => {
+        lynx.getApp().publishEvent(listHandler, `list ${index}`);
+        lynx.getApp().publishEvent(cellHandler, `cell ${index}`);
+      });
+      expect(handleListTouch).not.toHaveBeenCalled();
+      expect(handleCellTap).not.toHaveBeenCalled();
+      expect(__InvokeUIMethod).not.toHaveBeenCalled();
+
+      globalEnvManager.switchToBackground();
+      root.render(jsxApp, __root);
+      const ready = lynx.getNativeApp().callLepusMethod.mock.calls.find(([name]) =>
+        name === 'rLynxFirstScreenSyncReady'
+      );
+      expect(ready).toBeDefined();
+      globalEnvManager.switchToMainThread();
+      globalThis[ready[0]](ready[1]);
+      globalEnvManager.switchToBackground();
+      const firstScreen = __OnLifecycleEvent.mock.calls.find(([event]) => event[0] === 'rLynxFirstScreen');
+      expect(firstScreen).toBeDefined();
+      const swaps = firstScreen[0][1].firstScreenEventIdSwap;
+      for (const handlers of queued.slice(0, -1)) {
+        for (const handler of handlers) expect(swaps[handler.split(':')[0]]).toBeDefined();
+      }
+      lynx.getApp().OnLifecycleEvent(...firstScreen);
+
+      expect(handleListTouch.mock.calls).toEqual([['list 0'], ['list 1'], ['list 2']]);
+      expect(handleCellTap.mock.calls).toEqual([['cell 0'], ['cell 1'], ['cell 2']]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe('call `root.render()` async', () => {
@@ -1265,7 +1367,7 @@ describe('call `root.render()` async', () => {
             "rLynxFirstScreen",
             {
               "firstScreenEventIdSwap": {},
-              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_14","children":[{"id":-3,"type":"__snapshot_a94a8_test_13","values":["-3:0:"]}]}]}",
+              "root": "{"id":-1,"type":"root","children":[{"id":-2,"type":"__snapshot_a94a8_test_18","children":[{"id":-3,"type":"__snapshot_a94a8_test_17","values":["-3:0:"]}]}]}",
             },
           ],
         ]
