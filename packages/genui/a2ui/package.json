@@ -164,12 +164,12 @@
     "@lynx-js/react-signals": "workspace:*"
   },
   "devDependencies": {
-    "@cfworker/json-schema": "4.1.4",
+    "@cfworker/json-schema": "4.1.6",
     "@lynx-js/genui-cli": "workspace:*",
-    "@lynx-js/lynx-ui": "^3.135.4",
+    "@lynx-js/lynx-ui": "^3.142.0",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
-    "@lynx-js/types": "4.1.0",
+    "@lynx-js/types": "4.4.2",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/react": "^19.2.18",

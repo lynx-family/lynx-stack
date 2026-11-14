@@ -16,6 +16,6 @@
   "devDependencies": {
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rspeedy": "workspace:*",
-    "@testing-library/jest-dom": "^7.0.0"
+    "@testing-library/jest-dom": "^7.0.1"
   }
 }
