@@ -720,7 +720,7 @@ export function PreviewPanel(props: PreviewPanelProps) {
     ?? (liveMode === 'full' || isFullscreen
       ? 'previewPanelBody previewPanelBodyFull'
       : 'previewPanelBody');
-  const panelStyle = isFullscreen
+  const panelStyle: CSSProperties | undefined = isFullscreen
     ? {
       position: 'fixed',
       inset: 0,

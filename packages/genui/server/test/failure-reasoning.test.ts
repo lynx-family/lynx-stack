@@ -14,6 +14,7 @@ import {
   extractGenerationResult,
   toAsyncIterable,
 } from '../service/common/result.js';
+import type { ModelOutputEvent } from '../service/common/types.js';
 
 test('bounds request-local reasoning and redacts credentials split across chunks', () => {
   const reasoning = createFailureReasoning(['test-secret']);
@@ -40,7 +41,7 @@ test.each(
     }))
   ),
 )(
-  'forwards real SDK reasoning only when generation fails (%s)',
+  'streams real SDK reasoning on both successful and failed generation (%s)',
   async ({ format, outcome }) => {
     const failure = outcome !== 'success';
     const reasoningText = 'Provider returned reasoning';
@@ -166,7 +167,24 @@ test.each(
         expect(body).toContain(
           JSON.stringify({ text: reasoningText, truncated: false }),
         );
-      } else expect(body).not.toContain(reasoningText);
+      }
+      const output = body.split('\n\n').filter(frame =>
+        frame.startsWith('event: model-output\n')
+      )
+        .map(frame =>
+          JSON.parse(frame.split('\ndata: ')[1]!) as ModelOutputEvent
+        );
+      expect(output.map(event => event.payload.text).join('')).toBe(
+        reasoningText,
+      );
+      expect(
+        output.every(event =>
+          event.type === 'reasoning-delta' && event.step === 1
+        ),
+      ).toBe(true);
+      expect(body.indexOf('event: model-output')).toBeLessThan(
+        body.indexOf(`event: ${failure ? 'error' : 'done'}`),
+      );
       if (outcome === 'failed') {
         expect(body).toContain('Upstream input invalid');
         expect(body).toContain('"finishReason":"error"');

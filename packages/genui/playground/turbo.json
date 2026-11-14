@@ -27,6 +27,9 @@
         "src/**",
         "public/**",
         "rsbuild.config.ts",
+        "rstest.config.ts",
+        "lynx-lazy.config.ts",
+        "genui-server-url.ts",
         "tsconfig.json",
         "package.json"
       ],

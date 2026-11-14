@@ -53,7 +53,7 @@ test('ReactLynx survives report restoration and shared plan round trips', () => 
   );
   const groups = createBenchGroupsFromReport({
     groups: [group],
-    env: { model: 'test-model' },
+    env: { apiKeyConfigured: false, model: 'test-model' },
   });
   expect(groups).toEqual([group]);
   const plan = {

@@ -423,7 +423,7 @@ export function App() {
       {error
         ? (
           <view className='openui-feedback'>
-            <text className='openui-error' text-maxline={6}>{error}</text>
+            <text className='openui-error' text-maxline='6'>{error}</text>
           </view>
         )
         : null}

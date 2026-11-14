@@ -146,7 +146,7 @@ export function BenchReportImageAction(props: {
           {state.status === 'ready' && (
             <>
               {typeof window.ClipboardItem === 'function'
-                && window.navigator.clipboard?.write && (
+                && typeof window.navigator.clipboard?.write === 'function' && (
                 <Button
                   disabled={copying}
                   onClick={() => void copyImage(state.blob)}

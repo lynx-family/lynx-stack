@@ -136,7 +136,13 @@ async function postMcpAppsStream(req: Request) {
         try {
           const { text, usage, finishReason } = await service.generateRaw(
             modelMessages,
-            opts,
+            {
+              ...opts,
+              streamRawGeneration: true,
+              onModelOutput: event => {
+                enqueue('model-output', event);
+              },
+            },
             validatedConversation.conversation,
             generationController.signal,
           );

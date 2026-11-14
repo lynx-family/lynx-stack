@@ -35,6 +35,7 @@ test.each([
     library,
     store: null,
     ctx: {
+      resolveRef: () => undefined,
       getState: name => values[name] ?? parsed.stateDeclarations[name],
     },
     errors,

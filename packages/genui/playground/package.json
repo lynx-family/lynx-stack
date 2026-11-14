@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rsbuild build",
+    "build": "pnpm run test:type && rsbuild build",
     "build:lynx": "rspeedy build && pnpm run build:lynx:lazy && node scripts/build-bench-zips.mjs",
     "build:lynx:lazy": "rspeedy build -c lynx-lazy.config.ts",
     "dev": "pnpm run build:lynx && rsbuild dev",
     "dev:lynx": "pnpm run build:lynx:lazy && rspeedy dev",
     "preview": "rsbuild preview",
     "preview:lynx": "rspeedy preview",
-    "test": "rstest"
+    "test": "rstest",
+    "test:type": "tsc6 --noEmit -p tsconfig.json && tsc6 --noEmit -p lynx-src/tsconfig.json"
   },
   "dependencies": {
     "@codemirror/lang-html": "^6.4.12",

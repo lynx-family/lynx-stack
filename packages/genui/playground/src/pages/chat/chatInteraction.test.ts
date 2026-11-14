@@ -358,3 +358,47 @@ test('request diagnostics select metadata without retaining credentials or raw c
     designGuidance: false,
   });
 });
+
+test('retains complete model text and thinking across chunks, steps and timeline eviction', () => {
+  let log: ChatInteractionLog = { entries: [], omittedEntries: 0 };
+  const append = (type: string, text: string, step = 1) => {
+    log = appendChatInteraction(log, 'model-output', 1, {
+      invocationId: 'run-1',
+      step,
+      type,
+      payload: { id: type, text },
+    });
+  };
+  append('reasoning-delta', 'think '.repeat(20_000));
+  append('reasoning-delta', 'done thinking');
+  append('text-delta', 'first output');
+  log = appendChatInteraction(log, 'model-output', 2, {
+    invocationId: 'run-1',
+    step: 1,
+    type: 'tool-call',
+    payload: {
+      toolCallId: 'call-1',
+      toolName: 'search',
+      args: { query: 'query' },
+    },
+  });
+  append('text-delta', 'second output', 2);
+  for (let i = 0; i < 100; i++) {
+    log = appendChatInteraction(log, 'response', i, 'metadata');
+  }
+  log = appendChatInteraction(log, 'done', 101, { text: 'artifact' });
+  expect(log.modelOutput).toHaveLength(4);
+  expect(log.modelOutput?.[0]).toMatchObject({
+    detail: 'think '.repeat(20_000) + 'done thinking',
+    count: 2,
+    truncated: false,
+  });
+  expect(log.modelOutput?.[2]?.detail).toContain('query');
+  expect(log.modelOutput?.[3]?.step).toBe(2);
+  expect(
+    (JSON.parse(serializeChatInteraction(log)) as ChatInteractionLog)
+      .modelOutput,
+  ).toEqual(
+    log.modelOutput,
+  );
+});

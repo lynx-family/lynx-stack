@@ -24,6 +24,14 @@ export type OpenAIReasoningEffort =
   | 'high'
   | 'xhigh';
 
+/** Model-authored output, separate from artifact deltas and performance logs. */
+export interface ModelOutputEvent {
+  invocationId: string;
+  step: number;
+  type: string;
+  payload: Record<string, unknown>;
+}
+
 export interface ChatOptions
   extends SearchCapabilityOptions, ImageGenerationCapabilityOptions
 {
@@ -48,6 +56,8 @@ export interface ChatOptions
   inheritReasoningEffort?: boolean | undefined;
   /** Provider-returned reasoning text for request-scoped failure details, not logs. */
   onReasoning?: (text: string) => void;
+  /** Stream provider-returned text, reasoning, sources, files and tool activity. */
+  onModelOutput?: (event: ModelOutputEvent) => void;
   /** Sanitized diagnostics for actual composition-provider calls. */
   onModelInteraction?: (event: ModelInteraction) => void;
   onPerformanceEvent?: (
