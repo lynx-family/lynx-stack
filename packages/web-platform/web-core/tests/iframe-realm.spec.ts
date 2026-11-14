@@ -17,7 +17,6 @@ async function createRealm(scripts: Record<string, string>) {
   const dom = new JSDOM('<!doctype html><body></body>', {
     url: 'http://localhost/',
     runScripts: 'dangerously',
-    resources: 'usable',
   });
   windows.push(dom);
   rstest.stubGlobal('document', dom.window.document);
@@ -72,6 +71,33 @@ describe('iframe script exports', () => {
     const result = realm.loadScriptSync('root');
     expect(result).toEqual({ value: 42, child: { value: 42 } });
     expect(realm.globalWindow.module).toBe(sentinel);
+  });
+
+  test('returns an async entry export after it synchronously loads a dependency', async () => {
+    const realm = await createRealm({ shared: 'module.exports = 42;' });
+    const pending = realm.loadScript('https://example.test/root.js');
+    realm.globalWindow.eval(`(function(module) {
+      module.exports = { value: loadDependency('shared') };
+    })(module);`);
+    realm.globalWindow.document.querySelector('script[src]')!.dispatchEvent(
+      new realm.globalWindow.Event('load'),
+    );
+    expect(await pending).toEqual({ value: 42 });
+  });
+
+  test('keeps concurrent async entries separate when one loads a dependency', async () => {
+    const realm = await createRealm({ shared: 'module.exports = 42;' });
+    const first = realm.loadScript('https://example.test/first.js');
+    const second = realm.loadScript('https://example.test/second.js');
+    const scripts = realm.globalWindow.document.querySelectorAll('script[src]');
+    realm.globalWindow.eval(`(function(module) {
+      module.exports = { value: loadDependency('shared') };
+    })(module);`);
+    scripts[0]!.dispatchEvent(new realm.globalWindow.Event('load'));
+    realm.globalWindow.eval('module.exports = "second";');
+    scripts[1]!.dispatchEvent(new realm.globalWindow.Event('load'));
+    expect(await first).toEqual({ value: 42 });
+    expect(await second).toBe('second');
   });
 
   test('preserves outer exports when a dependency fails, and allows a later load', async () => {

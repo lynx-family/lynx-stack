@@ -42,17 +42,14 @@ export async function createIFrameRealm(parent: Node): Promise<JSRealm> {
     script.nonce = nonce || '';
     iframe.contentDocument!.head.appendChild(script);
     return new Promise(async (resolve, reject) => {
-      const previousModule = iframeWindow.module;
-      const module = { exports: undefined as unknown };
       script.onload = () => {
-        iframeWindow.module = previousModule;
-        resolve(module.exports);
+        const ret = iframeWindow?.module?.exports;
+        iframeWindow.module = { exports: undefined };
+        resolve(ret);
       };
-      script.onerror = (err) => {
-        iframeWindow.module = previousModule;
+      script.onerror = (err) =>
         reject(new Error(`Failed to load script: ${url}`, { cause: err }));
-      };
-      iframeWindow.module = module;
+      iframeWindow.module = { exports: undefined };
       script.src = url;
     });
   };
