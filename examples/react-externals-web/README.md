@@ -40,3 +40,43 @@ pnpm preview   # serve an existing build without opening a browser
   registers `<lynx-view>`) and mounts a `<lynx-view>` pointing at `main.web.bundle`.
 - `rsbuild.config.ts` serves the built `dist/*.web.bundle` files (via `publicDir`)
   next to the host page.
+
+## Verify asynchronous snapshot registration
+
+The opt-in `COMP_LIB_MAIN_THREAD_DELAY_MS` diagnostic delays the component
+library's main-thread evaluation after fetching succeeds. It shares the timing
+instrumentation with the native example, but uses this demo's web-encoded bundles.
+Without the variable, the default demo is unchanged.
+
+Complete the normal install and full `pnpm turbo build` first. The runner uses
+Chromium from the existing web-core-e2e Playwright dependency:
+
+```bash
+pnpm --filter @lynx-js/web-core-e2e exec playwright install chromium
+export PORT=3307 COMP_LIB_MAIN_THREAD_DELAY_MS=2000
+```
+
+Control: the host calls the cached `renderPage` before ReactLynx initializes:
+
+```bash
+HOST_RENDER_PAGE_DELAY_MS=0 pnpm turbo build --filter @lynx-js/example-react-externals-web --only --force --env-mode=loose
+node examples/react-externals-web/scripts/snapshot-race.mjs
+```
+
+Regression: delay the host call until after ReactLynx registers `renderPage`,
+while the component library is still pending:
+
+```bash
+HOST_RENDER_PAGE_DELAY_MS=100 pnpm turbo build --filter @lynx-js/example-react-externals-web --only --force --env-mode=loose
+node examples/react-externals-web/scripts/snapshot-race.mjs
+```
+
+Both cases must render after component evaluation, hand over a nonempty first
+screen, and produce no snapshot errors. The runner does not create patches or
+invoke hydration itself. Against the unfixed runtime, set
+`EXPECT_SNAPSHOT_ERROR=true` when running the script: it expects an empty first
+screen, an `isHydration: true` patch, and `Snapshot not found`.
+
+`SERVE_ONLY=true` starts only the diagnostic static server. This is a browser
+simulation of the host ordering; native Explorer verification lives in
+[`react-externals`](../react-externals/README.md#verify-asynchronous-snapshot-registration-on-lynx).

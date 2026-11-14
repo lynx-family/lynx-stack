@@ -36,36 +36,43 @@ export function createLynxCacheEventsSetupListRuntimeModule(
     override generate(): string {
       const { Template } = this.compilation!.compiler.webpack;
 
-      // Main thread: native calls `renderPage` before ReactLynx loads; cache
-      // it and replay against the real one from `onLoaded`.
+      // Keep caching until the whole entry settles, including when ReactLynx
+      // registers renderPage before other async externals finish loading.
       const setupList = this.isMainThread
         ? [
           `{
       name: 'renderPage',
       setup: () => {
-        const oldRenderPage = globalThis.renderPage;
+        let renderPage = globalThis.renderPage;
         const mockRenderPage = (...args) => {
           if (${LynxRuntimeGlobals.lynxCacheEvents}.loaded) {
-            return oldRenderPage && oldRenderPage(...args);
+            return renderPage && renderPage(...args);
           }
           ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.push({
             type: 'renderPage',
             data: { args },
           });
         };
-        globalThis.renderPage = mockRenderPage;
+        Object.defineProperty(globalThis, 'renderPage', {
+          configurable: true,
+          enumerable: true,
+          get: () => mockRenderPage,
+          set: value => { renderPage = value; },
+        });
 
         return () => {
+          // Restore before replay: renderPage can synchronously call host code.
+          Object.defineProperty(globalThis, 'renderPage', {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: renderPage,
+          });
           ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.forEach(action => {
-            if (action.type === 'renderPage') {
-              // now the real renderPage installed by ReactLynx
+            if (action.type === 'renderPage' && globalThis.renderPage) {
               globalThis.renderPage(...action.data.args);
             }
           });
-          // don't clobber ReactLynx's real renderPage
-          if (globalThis.renderPage === mockRenderPage) {
-            globalThis.renderPage = oldRenderPage;
-          }
         }
       },
     }`,

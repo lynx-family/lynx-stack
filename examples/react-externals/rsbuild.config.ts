@@ -33,6 +33,15 @@ const assetPrefix = `http://${detectLanHost()}:${port}/`;
 
 export default defineConfig({
   source: {
+    ...(process.env['COMP_LIB_MAIN_THREAD_DELAY_MS'] && {
+      preEntry: ['./src/main-thread-delay.ts'],
+      define: {
+        __COMP_LIB_MAIN_THREAD_DELAY_MS__: JSON.stringify(
+          Number(process.env['COMP_LIB_MAIN_THREAD_DELAY_MS']),
+        ),
+        __HOST_RENDER_PAGE_DELAY_MS__: '0',
+      },
+    }),
     entry: {
       main: './src/index.tsx',
     },
