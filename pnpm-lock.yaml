@@ -1756,8 +1756,8 @@ importers:
   packages/genui/server:
     dependencies:
       '@ai-sdk/openai':
-        specifier: ^4.0.53
-        version: 4.0.53(zod@4.6.7)
+        specifier: ^4.0.115
+        version: 4.0.115(zod@4.6.7)
       '@ai-sdk/typesafe-ai':
         specifier: 3.0.6
         version: 3.0.6(zod@4.6.7)
@@ -3749,8 +3749,8 @@ packages:
   '@adobe/css-tools@4.4.2':
     resolution: {integrity: sha512-baYZExFpsdkBNuvGKTKWCwKH57HRZLVtycZS05WTQNVOiXVSeAki3nU35zlRbToeMW8aHlJfyS+1C4BOv27q0A==}
 
-  '@ai-sdk/openai@4.0.53':
-    resolution: {integrity: sha512-2hoR6/HVmNZenRGgRcEJqJcT4kq69uqjzMqZMjWj4yT79kbzlcgoGiaX0KaK3mgiEeSOaG7gQ2cVJ/Gtl8KCUA==}
+  '@ai-sdk/openai@4.0.115':
+    resolution: {integrity: sha512-q0tHPKxPLPwaTVY318Z/FvGWV98bnYrr2mqKz9qTtw4xwshykzkMZcxiSSv5K8y2152GSrB1ts9Up9l5J2w0qA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3767,14 +3767,14 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.34':
-    resolution: {integrity: sha512-tRBdgRcys/4d8wyQdOdyYScq1AxfMdMd0hIlwolxJKVIbBwXUgClZuQT0VIsz4e7pylY8FE6utYCCZ494UAMJQ==}
+  '@ai-sdk/provider-utils@5.0.47':
+    resolution: {integrity: sha512-NZQ1hMxY6Hd4ZiinjpU5HUOsyCHiTFkHw7AiM1EVN+Cd3kNTi47flZWNvFwGqnBojntB1+2eBRTeHRuVLtPhEg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.47':
-    resolution: {integrity: sha512-NZQ1hMxY6Hd4ZiinjpU5HUOsyCHiTFkHw7AiM1EVN+Cd3kNTi47flZWNvFwGqnBojntB1+2eBRTeHRuVLtPhEg==}
+  '@ai-sdk/provider-utils@5.0.79':
+    resolution: {integrity: sha512-IYu6MT0NDE3JFWBWEJWAXjhskHTSj6NfRp9FuEAOcyS2Jrj3qBePu7OEoXVmoCWT3pYPgrF4DBKzjjjOMRyw9Q==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3795,12 +3795,12 @@ packages:
     resolution: {integrity: sha512-+GZJIgz1jk86pwEbb3f1BD2bdoSKyWE4Jg4YUc7NMnMozbWemSKYZcw2F4nMaO5qwsL5A8RmioAKW81YktRpIQ==}
     engines: {node: '>=22'}
 
-  '@ai-sdk/provider@4.0.4':
-    resolution: {integrity: sha512-tbHKNLirllUNF3ZlkCsXnwab2ZV1Sl4b1H/Cp9ruCce15IBmskE8Gwkk0yo9xDWY+jho2of7lVXtwSsyrq7cwQ==}
+  '@ai-sdk/provider@4.0.37':
+    resolution: {integrity: sha512-4uPgZ3qiX/JaQFr0dQoibUzHImZit9u05ro2BxGUnJwU4fV28BOAbKUa2OjQvqtM1tMac3bTKkaXdyzGovQXqg==}
     engines: {node: '>=22'}
 
-  '@ai-sdk/provider@4.0.9':
-    resolution: {integrity: sha512-XnGXPWiBIfqjsVEud5pOaVneRByJQOu2sYNwlSVJTPCvakdCDkVuYKKfNuStkIpMUYl7JIkBZGBx+B5YfNeVjA==}
+  '@ai-sdk/provider@4.0.4':
+    resolution: {integrity: sha512-tbHKNLirllUNF3ZlkCsXnwab2ZV1Sl4b1H/Cp9ruCce15IBmskE8Gwkk0yo9xDWY+jho2of7lVXtwSsyrq7cwQ==}
     engines: {node: '>=22'}
 
   '@ai-sdk/typesafe-ai@3.0.6':
@@ -12837,8 +12837,8 @@ packages:
   undici-types@7.28.0:
     resolution: {integrity: sha512-LJAfY+2w6HGeT8d8J1wNQsUGUEGio6NWWpwdwurQe4f6oojzCFuGLizl1KSve4irsTxyLly1QhEeE6iapdaIvQ==}
 
-  undici@7.29.0:
-    resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
+  undici@7.30.2:
+    resolution: {integrity: sha512-mLyPQnHwUxaM/rideoK/+KL8DaAJLRl4aBCfmX444aCSLnIaomqPLtNRe2jdCYcsk5wZzXrDIQC8ZeYNRAYyIA==}
     engines: {node: '>=20.18.1'}
 
   undici@8.10.2:
@@ -13343,10 +13343,10 @@ snapshots:
 
   '@adobe/css-tools@4.4.2': {}
 
-  '@ai-sdk/openai@4.0.53(zod@4.6.7)':
+  '@ai-sdk/openai@4.0.115(zod@4.6.7)':
     dependencies:
-      '@ai-sdk/provider': 4.0.9
-      '@ai-sdk/provider-utils': 5.0.34(zod@4.6.7)
+      '@ai-sdk/provider': 4.0.37
+      '@ai-sdk/provider-utils': 5.0.79(zod@4.6.7)
       zod: 4.6.7
 
   '@ai-sdk/provider-utils@4.0.40(zod@4.6.7)':
@@ -13364,22 +13364,22 @@ snapshots:
       eventsource-parser: 3.1.0
       zod: 4.6.7
 
-  '@ai-sdk/provider-utils@5.0.34(zod@4.6.7)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.9
-      '@standard-schema/spec': 1.1.0
-      '@workflow/serde': 4.1.0
-      eventsource-parser: 3.1.0
-      undici: 7.29.0
-      zod: 4.6.7
-
   '@ai-sdk/provider-utils@5.0.47(zod@4.6.7)':
     dependencies:
       '@ai-sdk/provider': 4.0.18
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.0
-      undici: 7.29.0
+      undici: 7.30.2
+      zod: 4.6.7
+
+  '@ai-sdk/provider-utils@5.0.79(zod@4.6.7)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.37
+      '@standard-schema/spec': 1.1.0
+      '@workflow/serde': 4.1.0
+      eventsource-parser: 3.1.0
+      undici: 7.30.2
       zod: 4.6.7
 
   '@ai-sdk/provider@2.0.3':
@@ -13398,11 +13398,11 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/provider@4.0.4':
+  '@ai-sdk/provider@4.0.37':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/provider@4.0.9':
+  '@ai-sdk/provider@4.0.4':
     dependencies:
       json-schema: 0.4.0
 
@@ -23547,7 +23547,7 @@ snapshots:
 
   undici-types@7.28.0: {}
 
-  undici@7.29.0: {}
+  undici@7.30.2: {}
 
   undici@8.10.2: {}
 
