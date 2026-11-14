@@ -77,10 +77,10 @@
     "@types/react": "npm:@types/react@^19.2.18",
     "@types/react-dom": "^19.2.4",
     "create-lynx-library": "workspace:*",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "typedoc": "^0.28.20",
-    "typedoc-plugin-markdown": "4.13.1",
+    "typedoc-plugin-markdown": "4.14.1",
     "typescript": "catalog:"
   },
   "engines": {
