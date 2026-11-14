@@ -42,6 +42,7 @@ export default defineConfig({
         // These modules are covered by Rstest; an unexecuted V8 report would
         // add uncovered lines when Codecov merges the two collectors.
         'packages/rspeedy/plugin-react-alias/src/index.ts',
+        'packages/rspeedy/lynx-bundle-rslib-config/src/externalBundleRslibConfig.ts',
         'packages/webpack/externals-loading-webpack-plugin/src/index.ts',
         'packages/webpack/cache-events-webpack-plugin/src/LynxCacheEventsSetupListRuntimeModule.ts',
         // These Rstest-owned templates are stringified into generated code and
