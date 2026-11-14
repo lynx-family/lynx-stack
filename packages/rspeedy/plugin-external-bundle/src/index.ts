@@ -752,12 +752,15 @@ function resolvePluginExternals(
 
   for (const [request, external] of Object.entries(externals)) {
     const normalizedExternal = normalizePluginExternal(request, external)
-    if (normalizedExternal.url || normalizedExternal.bundlePath) {
+    if (
+      normalizedExternal.url || normalizedExternal.bundlePath
+      || normalizedExternal.runtime
+    ) {
       continue
     }
 
     throw new Error(
-      `external-bundle-rsbuild-plugin requires \`url\` or \`bundlePath\` for external "${request}".`,
+      `external-bundle-rsbuild-plugin requires \`url\`, \`bundlePath\`, or \`runtime\` for external "${request}".`,
     )
   }
 

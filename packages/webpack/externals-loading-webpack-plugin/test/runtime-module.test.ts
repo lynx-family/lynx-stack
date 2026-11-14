@@ -72,7 +72,7 @@ describe('runtime loader modules', () => {
           backgroundLayer: 'background',
           externals: {
             component: external,
-            other: { ...external, libraryName: 'Other' },
+            other: { ...external, libraryName: ['Other', 'nested'] },
           },
         }),
       ],
@@ -100,7 +100,7 @@ describe('runtime loader modules', () => {
     );
     await fs.writeFile(
       path.join(directory, 'index.js'),
-      'export { value, instance, thread } from "component"; export { instance as otherInstance } from "other";',
+      'export { value, instance, thread, request } from "component"; export { instance as otherInstance, request as otherRequest } from "other";',
     );
     await fs.writeFile(
       path.join(directory, 'fetch.ts'),
@@ -117,12 +117,13 @@ import { fetchBundle } from './fetch.ts';
 export default function createRuntime({ lynx: host, thread }) {
   const instance = ++host.instances;
   return {
-    async load({ url, sectionPath }) {
+    async load({ url, sectionPath, request }) {
       url ??= await host.resolveUrl();
       let response = await fetchBundle(host, url);
       if (response.code !== 0) response = await fetchBundle(host, url + '?cdn=1');
       const exports = await host.loadScript(sectionPath, { bundleName: response.url });
-      return { ...exports, instance, thread };
+      const result = { ...exports, instance, thread, request };
+      return { ...result, nested: result };
     }
   };
 }
@@ -188,6 +189,8 @@ export default function createRuntime({ lynx: host, thread }) {
       expect(exports).toMatchObject({
         instance: 1,
         otherInstance: 1,
+        request: 'component',
+        otherRequest: 'other',
         thread: layer === 'background' ? 'background' : 'mainThread',
         value: `https://dynamic.example/component.bundle:Component${
           layer === 'background' ? '' : '__main-thread'

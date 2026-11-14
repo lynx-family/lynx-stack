@@ -557,7 +557,7 @@ module.exports = function getRuntime(context) {
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
           string | string[],
-          ExternalsLoadingPluginOptions['externals'][string]
+          [string, ExternalsLoadingPluginOptions['externals'][string]]
         >();
         let layer: 'background' | 'mainThread';
         if (chunkLayer === externalsLoadingPluginOptions.backgroundLayer) {
@@ -575,9 +575,12 @@ module.exports = function getRuntime(context) {
             externals,
           )
         ) {
-          externalsMap.set(external.libraryName ?? pkgName, external);
+          externalsMap.set(external.libraryName ?? pkgName, [
+            pkgName,
+            external,
+          ]);
         }
-        const finalExternals = Array.from(externalsMap.entries());
+        const finalExternals = Array.from(externalsMap.values());
 
         if (finalExternals.length === 0) {
           return '';
