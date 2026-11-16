@@ -1,0 +1,271 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.XmlCard {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #eff4ff;
+}
+.XmlEyebrow {
+  color: #5973a2;
+  font-size: 13px;
+  font-weight: 700;
+}
+.XmlTitle {
+  margin-top: 16px;
+  color: #2348cc;
+  font-size: 28px;
+  font-weight: 800;
+}
+.XmlDescription {
+  width: 100%;
+  margin-top: 20px;
+  color: #46577f;
+  font-size: 17px;
+  text-align: center;
+}
+</style>
+<script thread="main">
+const engine = lynx.getEngine();
+const isEmbedded = typeof __lynxParcel !== 'undefined' ||
+  typeof globalThis.renderPage === 'function';
+const background = lynx.getJSContext();
+let instanceId = null;
+let revision = 0;
+let backgroundReady = false;
+let latestData = null;
+
+// One module instance owns one card. Native handles stay on the main thread.
+let container = null;
+let card = null;
+let titleText = null;
+let descriptionText = null;
+
+function validateData(data) {
+  if (!data || typeof data.title !== 'string' || typeof data.description !== 'string') {
+    throw new Error('XML data requires string title and description');
+  }
+  if (data.values !== undefined && (!Array.isArray(data.values) || data.values.length > 1000)) {
+    throw new Error('XML values must be an array of at most 1000 numbers');
+  }
+}
+
+function makeText(pageId, className, content) {
+  const element = __CreateText(pageId);
+  const rawText = __CreateRawText(content);
+  __SetClasses(element, className);
+  __AppendElement(element, rawText);
+  return { element, rawText };
+}
+
+// Mount owns only the container's children. It never replaces the host container.
+// Repeated mount on the same container applies the latest full data snapshot.
+function mount(containerSelector, initialData) {
+  validateData(initialData);
+  if (isEmbedded && !containerSelector) {
+    throw new Error('An XML container selector is required');
+  }
+  const page = __GetPageElement() || __CreatePage('0', 0);
+  const target = containerSelector ? __QuerySelector(page, containerSelector, {}) : page;
+  if (!target) throw new Error(`XML container not found: ${containerSelector}`);
+  if (card) {
+    if (__GetElementUniqueID(target) !== __GetElementUniqueID(container)) {
+      throw new Error('Unmount the XML card before changing containers');
+    }
+    update(initialData);
+    return;
+  }
+  if (__QuerySelector(target, '.XmlCard', {})) {
+    throw new Error('XML container already contains another card instance');
+  }
+  const pageId = __GetElementUniqueID(page);
+  const nextCard = __CreateView(pageId);
+  __SetClasses(nextCard, 'XmlCard');
+  const eyebrow = makeText(pageId, 'XmlEyebrow', 'LOADED FROM LYNX XML');
+  const title = makeText(pageId, 'XmlTitle', initialData.title);
+  const description = makeText(pageId, 'XmlDescription', initialData.description);
+  __AppendElement(nextCard, eyebrow.element);
+  __AppendElement(nextCard, title.element);
+  __AppendElement(nextCard, description.element);
+  __AppendElement(target, nextCard);
+  container = target;
+  card = nextCard;
+  titleText = title.rawText;
+  descriptionText = description.rawText;
+  instanceId = __GetElementUniqueID(card);
+  revision = 0;
+  background.addEventListener('XmlCard:result', onBackgroundResult);
+  engine.addEventListener('__DestroyLifetime', destroy);
+  sendData('mount', initialData);
+  __FlushElementTree();
+  // Standalone containers may execute the two scripts in either order.
+  if (!isEmbedded && !backgroundReady) {
+    background.addEventListener('XmlCard:ready', setBackgroundReady);
+    background.dispatchEvent({ type: 'XmlCard:probe', data: {} });
+  }
+}
+
+// Update changes existing text nodes; React updates do not call this automatically.
+function update(nextData) {
+  if (!card) throw new Error('Mount the XML card before updating');
+  validateData(nextData);
+  __SetAttribute(titleText, 'text', nextData.title);
+  __SetAttribute(descriptionText, 'text', nextData.description);
+  sendData('update', nextData);
+  __FlushElementTree();
+}
+
+// Only JSON data crosses threads. The request revision rejects stale replies
+// after a later update, and the native card id separates successive mounts.
+function sendData(kind, data) {
+  latestData = {
+    title: data.title,
+    description: data.description,
+    ...(data.values === undefined ? {} : { values: data.values.slice() }),
+  };
+  revision++;
+  if (!backgroundReady) return;
+  background.dispatchEvent({
+    type: 'XmlCard:command',
+    data: { kind, instanceId, revision, data: latestData },
+  });
+}
+
+// Readiness synchronizes the latest complete snapshot, never recreates nodes.
+function setBackgroundReady() {
+  if (backgroundReady) return;
+  backgroundReady = true;
+  background.removeEventListener('XmlCard:ready', setBackgroundReady);
+  if (!card) return;
+  background.dispatchEvent({
+    type: 'XmlCard:command',
+    data: { kind: 'mount', instanceId, revision, data: latestData },
+  });
+}
+
+function onBackgroundResult(event) {
+  const result = event.data;
+  if (!card || !result || result.instanceId !== instanceId || result.revision !== revision) return;
+  // Applying a response must not call update(), which would send another request.
+  __SetAttribute(titleText, 'text', result.title);
+  __SetAttribute(descriptionText, 'text', result.description);
+  __FlushElementTree();
+}
+
+// Idempotent and remountable. Future timers/subscriptions belong in this cleanup too.
+// The stylesheet is a page-level resource and remains adopted for later mounts.
+function unmount() {
+  if (!card) return;
+  if (backgroundReady) {
+    background.dispatchEvent({ type: 'XmlCard:command', data: { kind: 'unmount', instanceId } });
+  }
+  background.removeEventListener('XmlCard:ready', setBackgroundReady);
+  background.removeEventListener('XmlCard:result', onBackgroundResult);
+  instanceId = null;
+  latestData = null;
+  revision++;
+  __RemoveElement(container, card);
+  container = null;
+  card = null;
+  titleText = null;
+  descriptionText = null;
+  engine.removeEventListener('__DestroyLifetime', destroy);
+  __FlushElementTree();
+}
+
+function mountStandalone() {
+  mount(undefined, {
+    title: 'XML card ready',
+    description: 'This card also supports standalone rendering.',
+  });
+}
+
+function destroy() {
+  unmount();
+  engine.removeEventListener('__RenderPage', mountStandalone);
+}
+
+// A standalone listener would intercept the host's own page rendering.
+if (!isEmbedded) engine.addEventListener('__RenderPage', mountStandalone);
+if (typeof module !== 'undefined') module.exports = { mount, update, unmount, setBackgroundReady };
+</script>
+<script thread="background">
+// This script can finish loading after the main thread has already mounted.
+// It owns business state and asynchronous work; it never touches native nodes.
+const mainThread = lynx.getCoreContext();
+const sessions = new Map();
+
+function cancelWork(session) {
+  if (session.timer !== null) clearTimeout(session.timer);
+  session.timer = null;
+}
+
+function reply(instanceId, session, title, description) {
+  mainThread.dispatchEvent({
+    type: 'XmlCard:result',
+    data: { instanceId, revision: session.revision, title, description },
+  });
+}
+
+function analyze(instanceId, session, values) {
+  // Debounce rapid interactions. A later update/unmount cancels pending work.
+  session.timer = setTimeout(() => {
+    session.timer = null;
+    if (sessions.get(instanceId) !== session) return;
+    try {
+      if (!Array.isArray(values) || values.length === 0 || values.length > 1000
+        || values.some(value => typeof value !== 'number' || !Number.isFinite(value))) {
+        throw new Error('Provide 1–1000 finite numbers.');
+      }
+      const sorted = values.slice().sort((a, b) => a - b);
+      const sum = sorted.reduce((total, value) => total + value, 0);
+      const middle = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+      session.completed++;
+      reply(instanceId, session, `Analyzed ${sorted.length} values`,
+        `Sum ${sum}; mean ${(sum / sorted.length).toFixed(2)}; median ${median}. Run ${session.completed}.`);
+    } catch (error) {
+      reply(instanceId, session, 'Analysis failed', String(error));
+    }
+  }, 150);
+}
+
+function onCommand(event) {
+  const command = event.data;
+  if (!command || typeof command.instanceId !== 'number') return;
+  const { kind, instanceId, revision, data } = command;
+  if (!['mount', 'update', 'unmount'].includes(kind)) return;
+  let session = sessions.get(instanceId);
+  if (kind === 'unmount') {
+    if (session) cancelWork(session);
+    sessions.delete(instanceId);
+    return;
+  }
+  if (!data || typeof revision !== 'number') return;
+  if (kind === 'mount') {
+    if (session) cancelWork(session);
+    session = { revision: 0, timer: null, completed: 0 };
+    sessions.set(instanceId, session);
+  }
+  if (!session || revision <= session.revision) return;
+  cancelWork(session);
+  session.revision = revision;
+  if (data.values !== undefined) analyze(instanceId, session, data.values);
+}
+
+// One dispatcher belongs to the cached background module for the page lifetime.
+// Each unmount removes its session and timer; a later mount needs no new download.
+mainThread.addEventListener('XmlCard:command', onCommand);
+// Standalone readiness handshake works regardless of script execution order.
+function announceReady() {
+  mainThread.dispatchEvent({ type: 'XmlCard:ready', data: {} });
+}
+mainThread.addEventListener('XmlCard:probe', announceReady);
+announceReady();
+</script>
+</lynx>

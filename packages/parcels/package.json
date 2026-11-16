@@ -1,0 +1,75 @@
+{
+  "name": "@lynx-js/parcels",
+  "version": "0.0.1",
+  "description": "Build and render DSL artifacts inside Lynx hosts.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/parcels"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Lynx Authors"
+  },
+  "type": "module",
+  "exports": {
+    "./common": {
+      "types": "./lib/common/index.d.ts",
+      "default": "./lib/common/index.js"
+    },
+    "./compiler": {
+      "types": "./lib/compiler/index.d.ts",
+      "default": "./lib/compiler/index.js"
+    },
+    "./compiler/lynx-xml": {
+      "types": "./lib/compiler/lynx-xml.d.ts",
+      "default": "./lib/compiler/lynx-xml.js"
+    },
+    "./runtime/react": {
+      "types": "./lib/runtime/react/index.d.ts",
+      "default": "./lib/runtime/react/index.js"
+    },
+    "./runtime/core": {
+      "types": "./lib/runtime/core/index.d.ts",
+      "default": "./lib/runtime/core/index.js"
+    }
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc6 --project tsconfig.json",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@lynx-js/tasm": "0.0.49",
+    "@lynx-js/template-webpack-plugin": "workspace:*",
+    "@lynx-js/web-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/types": "4.1.0",
+    "@rsbuild/core": "catalog:rsbuild"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": ">=0.127.0 <1",
+    "@rsbuild/core": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/react": {
+      "optional": true
+    },
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

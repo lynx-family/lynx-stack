@@ -1,0 +1,8 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["XML_BUNDLE_MODE", "LYNX_HOST", "PORT"]
+    }
+  }
+}

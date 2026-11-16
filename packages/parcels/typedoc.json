@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "tsconfig": "./tsconfig.json",
+  "entryPoints": [
+    "./src/common/index.ts",
+    "./src/compiler/index.ts",
+    "./src/compiler/lynx-xml.ts",
+    "./src/runtime/core/index.ts",
+    "./src/runtime/react/index.ts"
+  ]
+}
