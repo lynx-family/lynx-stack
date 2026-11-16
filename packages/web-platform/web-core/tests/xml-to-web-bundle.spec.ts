@@ -398,14 +398,34 @@ describe('XML markup document to web bundle', () => {
       expect(css).toContain('opacity:1');
       expect(fontFace).toContain('CardFont');
     });
+
+    test('carries @media, which a ReactLynx card can use too', () => {
+      const { buffer, discarded } = build(
+        xml({
+          style: '.i{color:red}@media (max-width:600px){.i{color:navy}}',
+        }),
+      );
+      expect(discarded).toStrictEqual([]);
+      const { sections } = readBundle(buffer);
+      const config = readJSONSection(
+        sections.get(TemplateSectionLabel.Configurations)!,
+      );
+      const { css } = decodeStyle(
+        sections.get(TemplateSectionLabel.StyleInfo)!,
+        config,
+      );
+      expect(css).toMatch(
+        /^.*color:red.*@media \(max-width:600px\)\{.*\.i.*color:navy.*\}$/,
+      );
+    });
   });
 
   /**
    * Specified behaviour, not a defect.
    *
-   * Lynx's style format has three rule kinds and no conditional group, so
-   * `@media` / `@supports` / `@layer` are not Lynx features on any platform, and
-   * the CSS parser has no case for the rest. Carrying them on web would give a
+   * Lynx's style format has no rule kind for `@supports` / `@layer`, so they
+   * are not Lynx features on any platform, and the CSS parser has no case for
+   * the rest. Carrying them on web would give a
    * markup card a capability a ReactLynx card does not have, so they are dropped
    * - and reported, so the author is not left guessing.
    */
@@ -414,11 +434,6 @@ describe('XML markup document to web bundle', () => {
       string,
       { css: string; reason: 'unrepresentable' | 'unsupported'; gone: string }
     > = {
-      '@media': {
-        css: '@media (max-width:600px){.i{color:navy}}',
-        reason: 'unrepresentable',
-        gone: 'navy',
-      },
       '@supports': {
         css: '@supports (display:grid){.i{color:teal}}',
         reason: 'unrepresentable',
@@ -540,7 +555,8 @@ describe('XML markup document to web bundle', () => {
     test('reports a hollow group, which looks preserved but is not', () => {
       // The nastiest shape: `css-serializer` produces a `MediaRule` with zero
       // children and an empty `errors` array, so the group appears to have been
-      // understood while its contents are already gone.
+      // understood while its contents are already gone. The group itself is
+      // carried, so what has to be named is the at-rule lost inside it.
       const style = '@media screen{@font-face{font-family:CardFont}}';
       const parsed = CSS.parse(style);
       expect(parsed.errors).toStrictEqual([]);
@@ -551,9 +567,8 @@ describe('XML markup document to web bundle', () => {
       }]);
 
       const { discarded } = build(xml({ style }));
-      // Both losses are named, so the report matches what actually happened.
       expect(discarded).toStrictEqual([
-        { name: '@media', reason: 'unrepresentable' },
+        { name: '@font-face', reason: 'unsupported' },
       ]);
     });
 
@@ -565,7 +580,6 @@ describe('XML markup document to web bundle', () => {
           + '@keyframes k{from{opacity:0}}',
       );
       expect(found).toStrictEqual([
-        { name: '@media', reason: 'unrepresentable' },
         { name: '@supports', reason: 'unrepresentable' },
         // Nested inside the group, and still reported.
         { name: '@container', reason: 'unsupported' },
@@ -579,7 +593,7 @@ describe('XML markup document to web bundle', () => {
       // so the console message is the actual delivery mechanism and has to be
       // asserted rather than assumed.
       const source = xml({
-        style: '@media screen{.a{color:red}}'
+        style: '@supports (display:grid){.a{color:red}}'
           + '@property --x{syntax:"<length>";inherits:false}'
           + '@import url("theme.css");',
       });
@@ -599,7 +613,7 @@ describe('XML markup document to web bundle', () => {
       // One line per distinct at-rule, and each names its own reason - a single
       // generic "some CSS was dropped" would not tell an author what to change.
       expect(discarded).toStrictEqual([
-        { name: '@media', reason: 'unrepresentable' },
+        { name: '@supports', reason: 'unrepresentable' },
         { name: '@property', reason: 'unsupported' },
         { name: '@import', reason: 'unresolvable' },
       ]);
@@ -607,7 +621,7 @@ describe('XML markup document to web bundle', () => {
       expect(warnings.every((line) => line.startsWith('[lynx-web] '))).toBe(
         true,
       );
-      expect(warnings.find((line) => line.includes('@media'))).toContain(
+      expect(warnings.find((line) => line.includes('@supports'))).toContain(
         'no representation in the Lynx style format',
       );
       expect(warnings.find((line) => line.includes('@property'))).toContain(

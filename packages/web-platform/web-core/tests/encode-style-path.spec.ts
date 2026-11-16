@@ -47,8 +47,9 @@ const sources: Record<string, string> = {
     '@font-face{font-family:X;src:url(a.woff2);font-weight:{{--fw}}}',
   keyframesVar: '@keyframes k{from{color:{{--c}}}to{color:blue}}',
   lynxProps: '.a{display:linear;linear-direction:column;flex:1}',
-  // Group at-rules: `RuleType` has no variant for them, so the encode path has
-  // always dropped them. Pinned so that the drop stays intentional.
+  // Group at-rules: `@media` is carried as `RuleType::Media`; `RuleType` has no
+  // variant for the other two, so the encode path drops them. Pinned so that
+  // both stay intentional.
   groupAtRules:
     '.a{color:red}@media (max-width:600px){.b{color:blue}}@supports (display:grid){.c{display:grid}}@layer base{.d{color:pink}}.e{color:black}',
 };
@@ -82,8 +83,10 @@ describe('encode style path', () => {
         '5fb65a1a9a913d2d9b78df8c297207b3c7385e7eeb4d3266171c4272fa72c00c',
       lynxProps:
         'a4a5369454a5272dd176930dafbdd559822b274f984bca1e99db59b6afe86a57',
+      // Moved deliberately when `@media` became `RuleType::Media`; every other
+      // fixture kept its hash through that change.
       groupAtRules:
-        '1b606238bbbc95cc4b0658e06aa90ff51a48cbd0f57b518894a636d22cddc089',
+        'd359b2c69a0da7b92f22eb128d3d888a6d7c9df3ad30ebb9d34c7b92ee422085',
     };
     const actual = Object.fromEntries(
       Object.entries(sources).map(([name, css]) => [name, fingerprint(css)]),
@@ -98,17 +101,19 @@ describe('encode style path', () => {
     ).toThrowError(/Invalid importCssId/);
   });
 
-  test('still drops a group at-rule rather than mangling it', () => {
+  test('carries @media and still drops the other group at-rules', () => {
     // The hashes above would also hold if the encoder emitted nothing at all,
-    // so assert that the surrounding rules survive and the group does not.
+    // so assert that the surrounding rules and `@media` survive and the other
+    // groups do not.
     const buffer = encodeCSS({ '0': CSS.parse(sources.groupAtRules!).root });
     const text = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
     // The two top-level rules, by their (unique) declaration values.
     expect(text).toContain('red');
     expect(text).toContain('black');
-    // Everything the three groups carried, prelude and body alike.
-    expect(text).not.toContain('max-width');
-    expect(text).not.toContain('blue');
+    // `@media`, prelude and body alike.
+    expect(text).toContain('max-width');
+    expect(text).toContain('blue');
+    // Everything the two other groups carried, prelude and body alike.
     expect(text).not.toContain('grid');
     expect(text).not.toContain('pink');
   });
