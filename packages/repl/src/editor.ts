@@ -64,7 +64,7 @@ export function createEditor(
 ): EditorInstance {
   // Inject Lynx Element PAPI types from @lynx-js/type-element-api
   // so users get autocomplete + hover docs in the editor
-  monaco.languages.typescript.javascriptDefaults.addExtraLib(
+  monaco.typescript.javascriptDefaults.addExtraLib(
     lynxElementApi,
     'file:///lynx-globals.d.ts',
   );
@@ -73,7 +73,7 @@ export function createEditor(
   // Each file is registered with a virtual path matching the package structure
   // so that TypeScript can resolve internal imports between them.
   for (const [filePath, content] of Object.entries(lynxTypesMap)) {
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+    monaco.typescript.javascriptDefaults.addExtraLib(
       content,
       `file:///${filePath}`,
     );
