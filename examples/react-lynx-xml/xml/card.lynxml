@@ -1,0 +1,317 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.XmlCard {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #eff4ff;
+}
+.XmlEyebrow {
+  color: #5973a2;
+  font-size: 13px;
+  font-weight: 700;
+}
+.XmlTitle {
+  margin-top: 16px;
+  color: #2348cc;
+  font-size: 28px;
+  font-weight: 800;
+}
+.XmlDescription {
+  width: 100%;
+  margin-top: 20px;
+  color: #46577f;
+  font-size: 17px;
+  text-align: center;
+}
+</style>
+<script thread="main">
+const isHosted = typeof __lynxIsland !== 'undefined';
+function create() {
+  const engine = lynx.getEngine();
+  const background = lynx.getJSContext();
+  let instanceId = null;
+  let revision = 0;
+  let backgroundReady = false;
+  let latestData = null;
+
+  // Each factory call owns one card. Native handles stay on the main thread.
+  let container = null;
+  let card = null;
+  let titleText = null;
+  let descriptionText = null;
+  let displayedTitle = null;
+  let displayedDescription = null;
+
+  function validateData(data) {
+    if (!data || typeof data.title !== 'string' || typeof data.description !== 'string') {
+      throw new Error('XML data requires string title and description');
+    }
+    if (data.values !== undefined && (!Array.isArray(data.values) || data.values.length > 1000)) {
+      throw new Error('XML values must be an array of at most 1000 numbers');
+    }
+  }
+
+  function makeText(pageId, className, content) {
+    const element = __CreateText(pageId);
+    const rawText = __CreateRawText(content);
+    __SetClasses(element, className);
+    __AppendElement(element, rawText);
+    return { element, rawText };
+  }
+
+  // Render owns only the container's children. It never replaces the host container.
+  // Repeated render on the same container applies the latest full data snapshot.
+  function render(containerSelector, initialData, { flush = true } = {}) {
+    validateData(initialData);
+    if (isHosted && !containerSelector) {
+      throw new Error('An XML container selector is required');
+    }
+    let page = __GetPageElement();
+    if (!page) {
+      if (isHosted) throw new Error('The host Page must exist before rendering XML');
+      page = __CreatePage('0', 0);
+    }
+    const target = containerSelector ? __QuerySelector(page, containerSelector, {}) : page;
+    if (!target) throw new Error(`XML container not found: ${containerSelector}`);
+    if (card) {
+      if (__GetElementUniqueID(target) !== __GetElementUniqueID(container)) {
+        throw new Error('Dispose the XML card before changing containers');
+      }
+      const changed = applyText(initialData);
+      sendData('update', initialData);
+      if (changed && flush) __FlushElementTree();
+      return;
+    }
+    if (__QuerySelector(target, '.XmlCard', {})) {
+      throw new Error('XML container already contains another card instance');
+    }
+    const pageId = __GetElementUniqueID(page);
+    const nextCard = __CreateView(pageId);
+    __SetClasses(nextCard, 'XmlCard');
+    const eyebrow = makeText(pageId, 'XmlEyebrow', 'LOADED FROM LYNX XML');
+    const title = makeText(pageId, 'XmlTitle', initialData.title);
+    const description = makeText(pageId, 'XmlDescription', initialData.description);
+    __AppendElement(nextCard, eyebrow.element);
+    __AppendElement(nextCard, title.element);
+    __AppendElement(nextCard, description.element);
+    __AppendElement(target, nextCard);
+    container = target;
+    card = nextCard;
+    titleText = title.rawText;
+    descriptionText = description.rawText;
+    displayedTitle = initialData.title;
+    displayedDescription = initialData.description;
+    instanceId = __GetElementUniqueID(card);
+    revision = 0;
+    background.addEventListener('XmlCard:result', onBackgroundResult);
+    engine.addEventListener('__DestroyLifetime', destroy);
+    sendData('render', initialData);
+    if (flush) __FlushElementTree();
+    // Standalone containers may execute the two scripts in either order.
+    if (!isHosted && !backgroundReady) {
+      background.addEventListener('XmlCard:ready', setBackgroundReady);
+      background.dispatchEvent({ type: 'XmlCard:probe', data: {} });
+    }
+  }
+
+  // The host adapter calls update when its props change, preserving native nodes.
+  function update(nextData) {
+    if (!card) throw new Error('Render the XML card before updating');
+    validateData(nextData);
+    const changed = applyText(nextData);
+    sendData('update', nextData);
+    if (changed) __FlushElementTree();
+  }
+
+  function applyText(data) {
+    let changed = false;
+    if (displayedTitle !== data.title) {
+      __SetAttribute(titleText, 'text', data.title);
+      displayedTitle = data.title;
+      changed = true;
+    }
+    if (displayedDescription !== data.description) {
+      __SetAttribute(descriptionText, 'text', data.description);
+      displayedDescription = data.description;
+      changed = true;
+    }
+    return changed;
+  }
+
+  // Only JSON data crosses threads. The request revision rejects stale replies
+  // after a later update, and the native card id separates successive renders.
+  function sendData(kind, data) {
+    latestData = {
+      title: data.title,
+      description: data.description,
+      ...(data.values === undefined ? {} : { values: data.values.slice() }),
+    };
+    revision++;
+    if (!backgroundReady) return;
+    background.dispatchEvent({
+      type: 'XmlCard:command',
+      data: { kind, instanceId, revision, data: latestData },
+    });
+  }
+
+  // Readiness synchronizes the latest complete snapshot, never recreates nodes.
+  function setBackgroundReady() {
+    if (backgroundReady) return;
+    backgroundReady = true;
+    background.removeEventListener('XmlCard:ready', setBackgroundReady);
+    if (!card) return;
+    background.dispatchEvent({
+      type: 'XmlCard:command',
+      data: { kind: 'render', instanceId, revision, data: latestData },
+    });
+  }
+
+  function onBackgroundResult(event) {
+    const result = event.data;
+    if (!card || !result || result.instanceId !== instanceId || result.revision !== revision) return;
+    // Applying a response must not call update(), which would send another request.
+    if (applyText(result)) __FlushElementTree();
+  }
+
+  // Idempotent and reusable. Future timers/subscriptions belong in this cleanup too.
+  // The stylesheet is a page-level resource and remains adopted for later renders.
+  function dispose() {
+    if (!card) return;
+    if (backgroundReady) {
+      background.dispatchEvent({ type: 'XmlCard:command', data: { kind: 'dispose', instanceId } });
+    }
+    background.removeEventListener('XmlCard:ready', setBackgroundReady);
+    background.removeEventListener('XmlCard:result', onBackgroundResult);
+    instanceId = null;
+    latestData = null;
+    revision++;
+    __RemoveElement(container, card);
+    container = null;
+    card = null;
+    titleText = null;
+    descriptionText = null;
+    displayedTitle = null;
+    displayedDescription = null;
+    engine.removeEventListener('__DestroyLifetime', destroy);
+    __FlushElementTree();
+  }
+
+  function destroy() {
+    dispose();
+    if (!isHosted) {
+      engine.removeEventListener('__RenderPage', renderStandalone);
+      engine.removeEventListener('__UpdatePage', updateStandalone);
+    }
+  }
+
+  return { render, update, dispose, setBackgroundReady };
+}
+
+let standalone = null;
+const standaloneDefaults = {
+    title: 'XML card ready',
+    description: 'This card also supports standalone rendering.',
+};
+function renderStandalone(event) {
+  if (!standalone) standalone = create();
+  standalone.render(
+    undefined,
+    event && event.data && event.data[0] || standaloneDefaults,
+    { flush: false },
+  );
+}
+
+function updateStandalone(event) {
+  const data = event && event.data && event.data[0];
+  if (standalone && data) standalone.update(data);
+}
+
+// A standalone listener would intercept the host's own page rendering.
+if (!isHosted) {
+  Object.assign(globalThis, { processData: data => data });
+  lynx.getEngine().addEventListener('__RenderPage', renderStandalone);
+  lynx.getEngine().addEventListener('__UpdatePage', updateStandalone);
+}
+if (typeof module !== 'undefined') module.exports = { create };
+</script>
+<script thread="background">
+// This script can finish loading after the main thread has already rendered.
+// It owns business state and asynchronous work; it never touches native nodes.
+const mainThread = lynx.getCoreContext();
+const sessions = new Map();
+
+function cancelWork(session) {
+  if (session.timer !== null) clearTimeout(session.timer);
+  session.timer = null;
+}
+
+function reply(instanceId, session, title, description) {
+  mainThread.dispatchEvent({
+    type: 'XmlCard:result',
+    data: { instanceId, revision: session.revision, title, description },
+  });
+}
+
+function analyze(instanceId, session, values) {
+  // Debounce rapid interactions. A later update/dispose cancels pending work.
+  session.timer = setTimeout(() => {
+    session.timer = null;
+    if (sessions.get(instanceId) !== session) return;
+    try {
+      if (!Array.isArray(values) || values.length === 0 || values.length > 1000
+        || values.some(value => typeof value !== 'number' || !Number.isFinite(value))) {
+        throw new Error('Provide 1–1000 finite numbers.');
+      }
+      const sorted = values.slice().sort((a, b) => a - b);
+      const sum = sorted.reduce((total, value) => total + value, 0);
+      const middle = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+      session.completed++;
+      reply(instanceId, session, `Analyzed ${sorted.length} values`,
+        `Sum ${sum}; mean ${(sum / sorted.length).toFixed(2)}; median ${median}. Run ${session.completed}.`);
+    } catch (error) {
+      reply(instanceId, session, 'Analysis failed', String(error));
+    }
+  }, 150);
+}
+
+function onCommand(event) {
+  const command = event.data;
+  if (!command || typeof command.instanceId !== 'number') return;
+  const { kind, instanceId, revision, data } = command;
+  if (!['render', 'update', 'dispose'].includes(kind)) return;
+  let session = sessions.get(instanceId);
+  if (kind === 'dispose') {
+    if (session) cancelWork(session);
+    sessions.delete(instanceId);
+    return;
+  }
+  if (!data || typeof revision !== 'number') return;
+  if (kind === 'render') {
+    if (session) cancelWork(session);
+    session = { revision: 0, timer: null, completed: 0 };
+    sessions.set(instanceId, session);
+  }
+  if (!session || revision <= session.revision) return;
+  cancelWork(session);
+  session.revision = revision;
+  if (data.values !== undefined) analyze(instanceId, session, data.values);
+}
+
+// One dispatcher belongs to the cached background module for the page lifetime.
+// Each dispose removes its session and timer; a later render needs no new download.
+mainThread.addEventListener('XmlCard:command', onCommand);
+// Standalone readiness handshake works regardless of script execution order.
+function announceReady() {
+  mainThread.dispatchEvent({ type: 'XmlCard:ready', data: {} });
+}
+mainThread.addEventListener('XmlCard:probe', announceReady);
+announceReady();
+</script>
+</lynx>

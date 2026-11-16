@@ -1,0 +1,76 @@
+.App {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background-color: #101827;
+}
+
+.Title {
+  color: #ffffff;
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.Description {
+  margin-top: 12px;
+  color: #b7c5dc;
+  font-size: 15px;
+  text-align: center;
+}
+
+.LoadButton {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 32px;
+  border-radius: 14px;
+  background-color: #567bff;
+}
+
+.LoadButtonText {
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.Status {
+  margin-top: 18px;
+  color: #b7c5dc;
+  font-size: 13px;
+  text-align: center;
+}
+
+.XmlContainer {
+  width: 100%;
+  height: 240px;
+  flex-shrink: 0;
+  margin-top: 24px;
+  border: 1px solid #5973a2;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: #1b2940;
+}
+
+.Actions {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ActionButton {
+  flex: 1;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background-color: #33486b;
+}
