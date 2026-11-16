@@ -32,6 +32,7 @@ import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdate
 import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
 import { createGetFields } from './crossThreadHandlers/createGetFields.js';
 import { createChunkLoading } from './createChunkLoading.js';
+import { createQueryComponent } from './createQueryComponent.js';
 import type { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
 let nativeAppCount = 0;
@@ -73,13 +74,22 @@ export async function createNativeApp(
     queryComponentEndpoint,
   );
   const reportError = mainThreadRpc.createCall(reportErrorEndpoint);
-  const { templateCache, loadScript, loadScriptAsync, readScript } =
-    createChunkLoading(entryTemplateUrl, cardType);
+  const {
+    templateCache,
+    loadScript,
+    loadScriptAsync,
+    markExternalBundle,
+    readScript,
+  } = createChunkLoading(entryTemplateUrl, cardType);
+  const loadQueryComponent = createQueryComponent(queryComponent);
 
   mainThreadRpc.registerHandler(
     updateBTSChunkEndpoint,
-    (url, btsChunkUrls) => {
+    (url, btsChunkUrls, isExternalBundle) => {
       templateCache.set(url, btsChunkUrls);
+      if (isExternalBundle) {
+        markExternalBundle(url);
+      }
     },
   );
   const i18nResource = new I18nResource();
@@ -152,11 +162,7 @@ export async function createNativeApp(
     reportException: (err: Error, _: unknown) => reportError(err, _, release),
     __SetSourceMapRelease: (err: Error) => release = err.message,
     __GetSourceMapRelease: (_url: string) => release,
-    queryComponent: (source, callback) => {
-      queryComponent(source).then(res => {
-        callback?.(res);
-      });
-    },
+    queryComponent: loadQueryComponent,
   };
   mainThreadRpc.registerHandler(
     dispatchIntersectionObserverEventEndpoint,

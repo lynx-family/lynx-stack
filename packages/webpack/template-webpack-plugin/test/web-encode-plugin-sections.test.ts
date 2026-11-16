@@ -32,4 +32,22 @@ describe('WebEncodePlugin: routes the sections of a bundle without a root', () =
       'utils:CSS': { encoding: 'CSS', content: { ruleList: [] } },
     });
   });
+
+  test('preserves structured metadata alongside legacy main-thread and CSS sections', () => {
+    const sections = {
+      'main-thread': { content: 'legacy mts source' },
+      background: { content: 'bts source' },
+      'remote:CSS': { encoding: 'CSS' as const, content: { ruleList: [] } },
+      metadata: { content: { dependencies: ['remote'] } },
+    };
+    expect(routeSections(sections)).toStrictEqual({
+      styleInfo: { 0: [] },
+      lepusCode: { 'main-thread': 'legacy mts source' },
+      manifest: { '/background': 'bts source' },
+      customSections: {
+        'remote:CSS': sections['remote:CSS'],
+        metadata: sections.metadata,
+      },
+    });
+  });
 });

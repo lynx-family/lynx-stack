@@ -16,13 +16,19 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, test } from '@rstest/core';
 import webpack from 'webpack';
 
-import { LynxEncodePlugin, LynxTemplatePlugin } from '../src/index.js';
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+  WebEncodePlugin,
+} from '../src/index.js';
 
 const FIXTURE_ENTRY = './fixtures/lazy-bundle-fetcher/entry.js';
 const CONTEXT = dirname(fileURLToPath(import.meta.url));
 
 interface CapturedEncode {
   outputName: string;
+  lazyBundleFetcher: unknown;
+  pageConfig: Record<string, unknown> | undefined;
   customSections: Record<string, { content: unknown; encoding?: string }>;
 }
 
@@ -34,6 +40,10 @@ function captureBeforeEmit() {
       hooks.beforeEmit.tapPromise('cap', (args) => {
         captured.push({
           outputName: args.outputName,
+          lazyBundleFetcher: args.finalEncodeOptions['lazyBundleFetcher'],
+          pageConfig: args.finalEncodeOptions['pageConfig'] as
+            | Record<string, unknown>
+            | undefined,
           customSections: args.finalEncodeOptions.customSections as Record<
             string,
             { content: unknown; encoding?: string }
@@ -49,6 +59,8 @@ function captureBeforeEmit() {
 function buildConfig(
   capturePlugin: (compiler: webpack.Compiler) => void,
   mode: 'development' | 'production',
+  normalizeWebManifest = false,
+  lazyBundleFetcher: 'FetchBundle' | 'QueryComponent' = 'FetchBundle',
 ): webpack.Configuration {
   // Each build gets its own temp output dir so parallel/serial test runs
   // don't clobber each other (or the package's `dist/`).
@@ -63,10 +75,12 @@ function buildConfig(
       capturePlugin,
       new LynxTemplatePlugin({
         ...LynxTemplatePlugin.defaultOptions,
-        lazyBundleFetcher: 'FetchBundle',
+        lazyBundleFetcher,
         intermediate: '.rspeedy/main',
       }),
-      new LynxEncodePlugin(),
+      normalizeWebManifest
+        ? new WebEncodePlugin()
+        : new LynxEncodePlugin(),
       (compiler) => {
         compiler.hooks.thisCompilation.tap('strip', (compilation) => {
           const hooks = LynxTemplatePlugin.getLynxTemplatePluginHooks(
@@ -154,5 +168,47 @@ describe('LynxTemplatePlugin: FetchBundle main-thread bytecode encoding', () => 
   test('DEBUG=other → JsBytecode encoding still on', async () => {
     process.env['DEBUG'] = 'unrelated';
     expect(await runAndGetMtEncoding('production')).toBe('JsBytecode');
+  });
+
+  test.each(['FetchBundle', 'QueryComponent'] as const)(
+    'web encodes the selected %s CSS mode',
+    async lazyBundleFetcher => {
+      const { captured, plugin } = captureBeforeEmit();
+      await runWebpack(
+        buildConfig(plugin, 'production', true, lazyBundleFetcher),
+      );
+      const lazy = captured.find(entry =>
+        entry.outputName.startsWith('lazy-bundle/')
+      );
+      expect(lazy?.pageConfig?.lazyBundleFetcher).toBe(lazyBundleFetcher);
+      expect(lazy?.lazyBundleFetcher).toBeUndefined();
+    },
+  );
+
+  test('web-normalized lazy entry remains the background section', async () => {
+    const { captured, plugin } = captureBeforeEmit();
+    await runWebpack(buildConfig(plugin, 'production', true));
+    const lazy = captured.find((entry) =>
+      entry.outputName.startsWith('lazy-bundle/')
+    );
+
+    expect(lazy?.customSections['background']?.content).toEqual(
+      expect.any(String),
+    );
+  });
+
+  test('native lazy background contains the executable chunk, not app-service', async () => {
+    const { captured, plugin } = captureBeforeEmit();
+    await runWebpack(buildConfig(plugin, 'production'));
+    const lazy = captured.find((entry) =>
+      entry.outputName.startsWith('lazy-bundle/')
+    );
+    const background = lazy?.customSections['background']?.content;
+
+    expect(lazy?.lazyBundleFetcher).toBeUndefined();
+    expect(lazy?.pageConfig).toBeUndefined();
+    expect(background).toEqual(expect.any(String));
+    expect(background).toContain('"background"');
+    expect(background).not.toContain('tt.define(\'/app-service.js\'');
   });
 });

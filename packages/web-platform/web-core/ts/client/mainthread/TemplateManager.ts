@@ -26,14 +26,18 @@ const wasm = import(
 export class TemplateManager {
   readonly #bundles: Map<string, DecodedTemplate> = new Map();
   readonly #loadingBundles: Map<string, DecodedTemplate> = new Map();
-  readonly #loadingPromises: Map<string, Promise<void>> = new Map();
+  readonly #loadingPromises: Map<string, Promise<DecodedTemplate>> = new Map();
+  readonly #sectionQueues: Map<string, Promise<void>> = new Map();
   readonly #lynxViewInstancesMap: Map<
     string,
     Promise<LynxViewInstance>
   > = new Map();
   readonly #pendingResolves: Map<
     string,
-    { resolve: () => void; reject: (reason?: any) => void }
+    {
+      resolve: (bundle: DecodedTemplate) => void;
+      reject: (reason?: any) => void;
+    }
   > = new Map();
 
   #worker: Worker | null = null;
@@ -51,31 +55,66 @@ export class TemplateManager {
     transformVH: boolean,
     transformREM: boolean,
     overrideConfig?: Record<string, string>,
-  ): Promise<void> {
-    if (this.#bundles.has(url)) {
+  ): Promise<DecodedTemplate> {
+    const key = !transformVW && !transformVH && !transformREM
+        && !Object.keys(overrideConfig ?? {}).length
+      ? url
+      : JSON.stringify([
+        url,
+        transformVW,
+        transformVH,
+        transformREM,
+        Object.entries(overrideConfig ?? {}).sort(([a], [b]) =>
+          a.localeCompare(b)
+        ),
+      ]);
+    if (this.#bundles.has(key)) {
       return (async () => {
-        const bundle = this.#bundles.get(url);
+        const bundle = this.#bundles.get(key)!;
         const config = (bundle?.config || {}) as PageConfig;
         const lynxViewInstance = await lynxViewInstancePromise;
+        if (lynxViewInstance.templateUrl === url) {
+          lynxViewInstance.template = bundle;
+        }
         lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
-        lynxViewInstance.onStyleInfoReady(url);
-        lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
-        lynxViewInstance.onBTSScriptsLoaded(url);
+        lynxViewInstance.onStyleInfoReady(url, bundle);
+        await lynxViewInstance.onMTSScriptsLoaded(
+          url,
+          config.isLazy === 'true',
+          bundle,
+        );
+        await lynxViewInstance.onBTSScriptsLoaded(
+          url,
+          config.isExternalBundle === 'true',
+          bundle,
+        );
+        return bundle;
       })();
-    } else if (this.#loadingPromises.has(url)) {
-      return this.#loadingPromises.get(url)!.then(async () => {
-        const bundle = this.#bundles.get(url);
+    } else if (this.#loadingPromises.has(key)) {
+      return this.#loadingPromises.get(key)!.then(async bundle => {
         const config = (bundle?.config || {}) as PageConfig;
         const lynxViewInstance = await lynxViewInstancePromise;
+        if (lynxViewInstance.templateUrl === url) {
+          lynxViewInstance.template = bundle;
+        }
         lynxViewInstance.backgroundThread.markTiming('decode_start');
         lynxViewInstance.onPageConfigReady(config);
-        lynxViewInstance.onStyleInfoReady(url);
-        lynxViewInstance.onMTSScriptsLoaded(url, config.isLazy === 'true');
-        lynxViewInstance.onBTSScriptsLoaded(url);
+        lynxViewInstance.onStyleInfoReady(url, bundle);
+        await lynxViewInstance.onMTSScriptsLoaded(
+          url,
+          config.isLazy === 'true',
+          bundle,
+        );
+        await lynxViewInstance.onBTSScriptsLoaded(
+          url,
+          config.isExternalBundle === 'true',
+          bundle,
+        );
+        return bundle;
       });
     } else {
-      this.createBundle(url);
+      this.createBundle(key);
       const promise = this.#load(
         url,
         lynxViewInstancePromise,
@@ -83,8 +122,9 @@ export class TemplateManager {
         transformVH,
         transformREM,
         overrideConfig,
+        key,
       );
-      this.#loadingPromises.set(url, promise);
+      this.#loadingPromises.set(key, promise);
       return promise;
     }
   }
@@ -96,7 +136,8 @@ export class TemplateManager {
     transformVH: boolean,
     transformREM: boolean,
     overrideConfig?: Partial<PageConfig>,
-  ): Promise<void> {
+    key = url,
+  ): Promise<DecodedTemplate> {
     const currentTime = performance.now() + performance.timeOrigin;
     lynxViewInstancePromise.then((instance) => {
       instance.backgroundThread.markTiming(
@@ -105,7 +146,7 @@ export class TemplateManager {
         currentTime,
       );
     });
-    this.#lynxViewInstancesMap.set(url, lynxViewInstancePromise);
+    this.#lynxViewInstancesMap.set(key, lynxViewInstancePromise);
 
     await this.#ensureWorker();
 
@@ -117,17 +158,18 @@ export class TemplateManager {
       transformVH,
       transformREM,
       overrideConfig,
+      decodeKey: key,
     };
     this.#worker!.postMessage(msg);
-    return new Promise<void>((resolve, reject) => {
-      this.#pendingResolves.set(url, { resolve, reject });
+    return new Promise<DecodedTemplate>((resolve, reject) => {
+      this.#pendingResolves.set(key, { resolve, reject });
     });
   }
 
   #resolvePromise(url: string) {
     const promise = this.#pendingResolves.get(url);
     if (promise) {
-      promise.resolve();
+      promise.resolve(this.#bundles.get(url)!);
       this.#pendingResolves.delete(url);
     }
   }
@@ -186,7 +228,8 @@ export class TemplateManager {
       return;
     }
     const { url } = msg;
-    const lynxViewInstancePromise = this.#lynxViewInstancesMap.get(url);
+    const key = msg.decodeKey ?? url;
+    const lynxViewInstancePromise = this.#lynxViewInstancesMap.get(key);
     if (!lynxViewInstancePromise) return;
 
     switch (msg.type) {
@@ -194,38 +237,81 @@ export class TemplateManager {
         /**
          * The lynxViewInstance is already awaited the wasm is ready
          */
-        this.#handleSection(msg, lynxViewInstancePromise);
+        this.#queueSection(msg, lynxViewInstancePromise, key);
         break;
       case 'error':
         console.error(`Error decoding bundle ${url}:`, msg.error);
-        this.#cleanup(url);
-        this.#removeBundle(url);
-        this.#rejectPromise(url, new Error(msg.error));
-        this.#loadingPromises.delete(url);
+        this.#cleanup(key);
+        this.#removeBundle(key);
+        this.#rejectPromise(key, new Error(msg.error));
+        this.#loadingPromises.delete(key);
+        this.#sectionQueues.delete(key);
         break;
       case 'done':
-        this.#cleanup(url);
-        const bundle = this.#loadingBundles.get(url);
-        if (bundle) {
-          this.#bundles.set(url, bundle);
-          this.#loadingBundles.delete(url);
-        }
-        this.#resolvePromise(url);
-        this.#loadingPromises.delete(url);
-        /* TODO: The promise resolution is deferred inside .then() without error handling.
-         *
-         */
-        lynxViewInstancePromise.then((instance) => {
-          instance.backgroundThread.markTiming('decode_end');
-          instance.backgroundThread.markTiming('load_template_start');
-        });
+        void this.#completeBundle(url, lynxViewInstancePromise, key);
         break;
+    }
+  }
+
+  #queueSection(
+    msg: SectionMessage,
+    instancePromise: Promise<LynxViewInstance>,
+    key: string,
+  ) {
+    const previous = this.#sectionQueues.get(key) ?? Promise.resolve();
+    const queued = previous.then(() =>
+      this.#handleSection(msg, instancePromise, key)
+    );
+    this.#sectionQueues.set(key, queued);
+    void queued.catch(() => {});
+  }
+
+  async #completeBundle(
+    url: string,
+    lynxViewInstancePromise: Promise<LynxViewInstance>,
+    key: string,
+  ) {
+    try {
+      await this.#sectionQueues.get(key);
+      const bundle = this.#loadingBundles.get(key);
+      const instance = await lynxViewInstancePromise;
+      instance.backgroundThread.markTiming('decode_end');
+      instance.backgroundThread.markTiming('load_template_start');
+      if (bundle) {
+        // LepusCode may precede StyleInfo in the stream. Register all sections
+        // before executing scripts so the first render can query its styles.
+        if (bundle.lepusCode) {
+          await instance.onMTSScriptsLoaded(
+            url,
+            bundle.config?.isLazy === 'true',
+            bundle,
+          );
+        }
+        if (bundle.backgroundCode) {
+          await instance.onBTSScriptsLoaded(
+            url,
+            bundle.config?.isExternalBundle === 'true',
+            bundle,
+          );
+        }
+        this.#bundles.set(key, bundle);
+        this.#loadingBundles.delete(key);
+      }
+      this.#resolvePromise(key);
+    } catch (error) {
+      this.#removeBundle(key);
+      this.#rejectPromise(key, error);
+    } finally {
+      this.#cleanup(key);
+      this.#loadingPromises.delete(key);
+      this.#sectionQueues.delete(key);
     }
   }
 
   async #handleSection(
     msg: SectionMessage,
     instancePromise: Promise<LynxViewInstance>,
+    key: string,
   ) {
     const [
       instance,
@@ -234,11 +320,14 @@ export class TemplateManager {
       instancePromise,
       wasm.then((wasm) => (wasm.wasmInstance.StyleSheetResource)),
     ]);
-    const { label, data, url, config } = msg;
+    const { label, data, url } = msg;
     switch (label) {
       case TemplateSectionLabel.Configurations: {
         instance.backgroundThread.markTiming('decode_start');
-        this.#setConfig(url, data);
+        this.#setConfig(key, data);
+        if (instance.templateUrl === url) {
+          instance.template = this.#loadingBundles.get(key);
+        }
         instance.onPageConfigReady(data);
         break;
       }
@@ -247,28 +336,26 @@ export class TemplateManager {
           new Uint8Array(data as ArrayBuffer),
           document,
         );
-        const bundle = this.#loadingBundles.get(url);
+        const bundle = this.#loadingBundles.get(key);
         if (bundle) {
           bundle.styleSheet = resource;
         }
-        instance.onStyleInfoReady(url);
+        instance.onStyleInfoReady(url, bundle!);
         break;
       }
       case TemplateSectionLabel.LepusCode: {
         const blobMap = data as Record<string, string>;
-        this.#setLepusCode(url, blobMap);
-        instance.onMTSScriptsLoaded(url, config!['isLazy'] === 'true');
+        this.#setLepusCode(key, blobMap);
         break;
       }
 
       case TemplateSectionLabel.CustomSections: {
-        this.#setCustomSection(url, data);
+        this.#setCustomSection(key, data);
         break;
       }
       case TemplateSectionLabel.Manifest: {
         const blobMap = data as Record<string, string>;
-        this.#setBackgroundCode(url, blobMap);
-        instance.onBTSScriptsLoaded(url);
+        this.#setBackgroundCode(key, blobMap);
         break;
       }
       default:

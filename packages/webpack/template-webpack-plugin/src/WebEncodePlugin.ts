@@ -79,7 +79,8 @@ export class WebEncodePlugin {
           name: WebEncodePlugin.name,
           stage: WebEncodePlugin.BEFORE_ENCODE_HOOK_STAGE,
         }, (encodeOptions) => {
-          const { encodeData, intermediateAssets } = encodeOptions;
+          const { encodeData, intermediateAssets, lazyBundleFetcher } =
+            encodeOptions;
 
           // A bundle assembled from sections packs every background chunk, so
           // none of them stays on disk. A card keeps its split chunks.
@@ -108,6 +109,9 @@ export class WebEncodePlugin {
             pageConfig: {
               ...encodeData.compilerOptions,
               ...encodeData.sourceContent.config,
+              ...(lazyBundleFetcher === undefined ? {} : {
+                lazyBundleFetcher,
+              }),
             },
           });
           return encodeOptions;
@@ -203,22 +207,21 @@ export class WebEncodePlugin {
 /**
  * Routes the custom sections of a bundle into the slots a web bundle carries.
  * The `JsBytecode` tag says which section is the main thread one; on web it
- * only selects the slot, the section stays raw source. A `CSS` section rides
- * the `StyleInfo` section and also stays a custom section, the others are
- * moved.
+ * only selects the slot, the section stays raw source. A `CSS` section is stored
+ * in `StyleInfo` and retained as a named custom section. Structured
+ * metadata remains in custom sections; background source moves to the manifest.
  *
  * @public
  */
 export function routeSections(
   customSections: NonNullable<EncodeOptions['customSections']>,
-): Pick<
-  TasmJSONInfo,
-  'styleInfo' | 'lepusCode' | 'manifest' | 'customSections'
-> {
+): Pick<TasmJSONInfo, 'styleInfo' | 'lepusCode' | 'manifest'> & {
+  customSections: NonNullable<EncodeOptions['customSections']>;
+} {
   const styleInfo: TasmJSONInfo['styleInfo'] = {};
   const lepusCode: TasmJSONInfo['lepusCode'] = {};
   const manifest: TasmJSONInfo['manifest'] = {};
-  const cssSections: TasmJSONInfo['customSections'] = {};
+  const remainingSections: NonNullable<EncodeOptions['customSections']> = {};
   let cssId = 0;
 
   for (const [name, section] of Object.entries(customSections)) {
@@ -226,22 +229,22 @@ export function routeSections(
       const { ruleList } = section.content as { ruleList?: LynxStyleNode[] };
       // `encodeCSS` requires numeric css-id keys.
       styleInfo[String(cssId++)] = ruleList ?? [];
-      // The section is also kept under its name: the web encoder writes it to
-      // the `CustomSectionsStyleInfo` section. The styles are carried twice.
-      cssSections[name] = {
-        encoding: 'CSS',
-        content: section.content as Record<string, unknown>,
-      };
-    } else if (section.encoding === 'JsBytecode') {
+      remainingSections[name] = section;
+    } else if (
+      section.encoding === 'JsBytecode'
+      || (name === 'main-thread' && typeof section.content === 'string')
+    ) {
       lepusCode[name] = section.content as string;
-    } else {
+    } else if (typeof section.content === 'string') {
       // Keyed `/<name>` so `readScript` finds it, the way a card carries its
       // own `/app-service.js`.
-      manifest[`/${name}`] = section.content as string;
+      manifest[`/${name}`] = section.content;
+    } else {
+      remainingSections[name] = section;
     }
   }
 
-  return { styleInfo, lepusCode, manifest, customSections: cssSections };
+  return { styleInfo, lepusCode, manifest, customSections: remainingSections };
 }
 
 function last<T>(array: T[]): T | undefined {
