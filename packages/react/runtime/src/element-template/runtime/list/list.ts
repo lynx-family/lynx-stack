@@ -9,14 +9,12 @@ import type {
 } from '../../protocol/types.js';
 
 const COMPONENT_AT_INDEX_ATTR = 'component-at-index';
-const COMPONENT_AT_INDEXES_ATTR = 'component-at-indexes';
 const ENQUEUE_COMPONENT_ATTR = 'enqueue-component';
 
 export type ETListItemPlatformInfo = Record<string, SerializableValue>;
 
 interface ETListCallbacks {
   componentAtIndex: ComponentAtIndexCallback;
-  componentAtIndexes: ComponentAtIndexesCallback;
   enqueueComponent: EnqueueComponentCallback;
 }
 
@@ -48,12 +46,6 @@ export function createElementTemplateListState(): ETListState {
         }
         // TODO: Notify item refs after native materialization.
         return -1;
-      },
-      componentAtIndexes() {
-        if (state.destroyed) {
-          return;
-        }
-        // TODO: Notify item refs after native batch materialization.
       },
       enqueueComponent() {
         if (state.destroyed) {
@@ -113,7 +105,6 @@ export function composeElementTemplateListAttributes(
   return {
     ...attributes,
     [COMPONENT_AT_INDEX_ATTR]: callbacks.componentAtIndex as unknown as RuntimeAttributeSlotValue,
-    [COMPONENT_AT_INDEXES_ATTR]: callbacks.componentAtIndexes as unknown as RuntimeAttributeSlotValue,
     [ENQUEUE_COMPONENT_ATTR]: callbacks.enqueueComponent as unknown as RuntimeAttributeSlotValue,
   };
 }

@@ -144,9 +144,9 @@ describe('direct renderer native contracts', () => {
       class: 'feed',
       id: 'typed-list',
       'component-at-index': expect.any(Function),
-      'component-at-indexes': expect.any(Function),
       'enqueue-component': expect.any(Function),
     });
+    expect(typedCreateCall[1]).not.toHaveProperty('component-at-indexes');
     expect(typedCreateCall[2]).toEqual([[itemRef]]);
     expect(typedCreateCall[3]).toBe(-2);
     expect(typedCreateCall[4]).toEqual({});
@@ -195,7 +195,6 @@ describe('direct renderer native contracts', () => {
         id: 'feed',
         bindtap: '-2:0:bindtap',
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       [[itemRef]],
@@ -235,7 +234,6 @@ describe('direct renderer native contracts', () => {
       'list',
       {
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       null,
@@ -248,7 +246,6 @@ describe('direct renderer native contracts', () => {
       {
         id: 'typed',
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       null,
@@ -276,7 +273,6 @@ describe('direct renderer native contracts', () => {
       'list',
       {
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       null,
@@ -309,8 +305,8 @@ describe('direct renderer native contracts', () => {
 
     const attrs = createTypedElementTemplate.mock.calls[0]![1] as Record<string, (...args: unknown[]) => unknown>;
     const componentAtIndex = attrs['component-at-index']!;
-    const componentAtIndexes = attrs['component-at-indexes']!;
     const enqueueComponent = attrs['enqueue-component']!;
+    expect(attrs).not.toHaveProperty('component-at-indexes');
     expect(createTypedElementTemplate.mock.calls[0]![2]).toEqual([[itemARef, itemBRef]]);
     expect(elementTemplateRegistry.get(-1)).toBe(itemARef);
     expect(elementTemplateRegistry.get(-2)).toBe(itemBRef);
@@ -320,9 +316,6 @@ describe('direct renderer native contracts', () => {
     expect(componentAtIndex(materializedListRef, 9, 1, 72, true)).toBe(-1);
     expect(componentAtIndex(materializedListRef, 9, 0, 71, true)).toBe(-1);
     expect(componentAtIndex(materializedListRef, 9, 99, 73, true)).toBe(-1);
-    componentAtIndexes(materializedListRef, 9, [0, 1], [81, 82], true, false);
-    componentAtIndexes(materializedListRef, 9, [1], [83], true, true);
-    componentAtIndexes(materializedListRef, 9, [99], [84], false, true);
     enqueueComponent(materializedListRef, 9, 102);
     expect(insertNodeToElementTemplate).not.toHaveBeenCalled();
     expect(removeNodeFromElementTemplate).not.toHaveBeenCalled();

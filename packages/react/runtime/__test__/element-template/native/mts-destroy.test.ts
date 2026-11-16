@@ -258,15 +258,14 @@ describe('mts-destroy', () => {
     registerElementTemplateListState(100, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
 
     onMtsDestruction();
 
     expect(state.destroyed).toBe(true);
     expect(state.holderRef).toBeNull();
+    expect(state.callbacks).not.toHaveProperty('componentAtIndexes');
     expect(componentAtIndex(listElement, 7, 0, 91, false)).toBe(-1);
-    componentAtIndexes(listElement, 7, [0], [91], false, false);
     enqueueComponent(listElement, 7, 101);
     expect(insertNode).not.toHaveBeenCalled();
     expect(removeNode).not.toHaveBeenCalled();

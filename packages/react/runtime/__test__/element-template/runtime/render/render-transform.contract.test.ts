@@ -373,7 +373,6 @@ describe('render transform contract', () => {
       attributes: {
         id: 'feed',
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       __handleId: -2,
@@ -387,9 +386,10 @@ describe('render transform contract', () => {
     expect(typedCreateLog[2]).toEqual(expect.objectContaining({
       id: 'feed',
       'component-at-index': expect.any(Function),
-      'component-at-indexes': expect.any(Function),
       'enqueue-component': expect.any(Function),
     }));
+    expect(rootRef).not.toHaveProperty('attributes.component-at-indexes');
+    expect(typedCreateLog[2]).not.toHaveProperty('component-at-indexes');
     expect(typedCreateLog[3]).toEqual([[expect.objectContaining({ tag: 'list-item' })]]);
     expect(typedCreateLog[5]).toEqual({});
 

@@ -2173,7 +2173,6 @@ describe('ElementTemplate patch stream (apply)', () => {
       {
         id: 'typed-list',
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       [[itemRef]],
@@ -2185,6 +2184,7 @@ describe('ElementTemplate patch stream (apply)', () => {
 
     const listRef = elementTemplateRegistry.get(28);
     const createdAttributes = mockCreateTypedElementTemplate.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(createdAttributes).not.toHaveProperty('component-at-indexes');
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.setAttribute,
       28,
@@ -2198,7 +2198,6 @@ describe('ElementTemplate patch stream (apply)', () => {
       {
         id: 'updated-list',
         'component-at-index': createdAttributes['component-at-index'],
-        'component-at-indexes': createdAttributes['component-at-indexes'],
         'enqueue-component': createdAttributes['enqueue-component'],
       },
     ]]);
@@ -2227,7 +2226,6 @@ describe('ElementTemplate patch stream (apply)', () => {
         'list',
         {
           'component-at-index': expect.any(Function),
-          'component-at-indexes': expect.any(Function),
           'enqueue-component': expect.any(Function),
         },
         [[itemRef]],
@@ -2266,7 +2264,6 @@ describe('ElementTemplate patch stream (apply)', () => {
       'list',
       {
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       null,
@@ -2294,7 +2291,6 @@ describe('ElementTemplate patch stream (apply)', () => {
       'list',
       {
         'component-at-index': expect.any(Function),
-        'component-at-indexes': expect.any(Function),
         'enqueue-component': expect.any(Function),
       },
       [],
@@ -2510,6 +2506,8 @@ describe('ElementTemplate patch stream (apply)', () => {
     const state = createElementTemplateListState();
     registerElementTemplateListState(29, state, listRef);
     const initialAttributes = composeElementTemplateListAttributes({ id: 'old', class: 'initial' }, state);
+    expect(initialAttributes).not.toHaveProperty('component-at-indexes');
+    expect(state.callbacks).not.toHaveProperty('componentAtIndexes');
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.setAttribute,
@@ -2524,7 +2522,6 @@ describe('ElementTemplate patch stream (apply)', () => {
       {
         id: 'next',
         'component-at-index': initialAttributes['component-at-index'],
-        'component-at-indexes': initialAttributes['component-at-indexes'],
         'enqueue-component': initialAttributes['enqueue-component'],
       },
     ]);
@@ -2541,7 +2538,6 @@ describe('ElementTemplate patch stream (apply)', () => {
       0,
       {
         'component-at-index': initialAttributes['component-at-index'],
-        'component-at-indexes': initialAttributes['component-at-indexes'],
         'enqueue-component': initialAttributes['enqueue-component'],
       },
     ]);
@@ -2663,21 +2659,20 @@ describe('ElementTemplate patch stream (apply)', () => {
     registerElementTemplateListState(140, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
 
+    expect(attrs).not.toHaveProperty('component-at-indexes');
+    expect(state.callbacks).not.toHaveProperty('componentAtIndexes');
     expect(state).toEqual({
       listHandleId: 140,
       holderRef: listRef,
       destroyed: false,
       callbacks: {
         componentAtIndex,
-        componentAtIndexes,
         enqueueComponent,
       },
     });
     expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(-1);
-    componentAtIndexes(materializedList, 7, [0, 1], [88, 89], false, true);
     enqueueComponent(materializedList, 7, 141);
     enqueueComponent(materializedList, 7, 141);
     enqueueComponent(materializedList, 7, 999);
@@ -2747,7 +2742,6 @@ describe('ElementTemplate patch stream (apply)', () => {
     registerElementTemplateListState(120, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
     const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
 
@@ -2756,7 +2750,6 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(state.destroyed).toBe(true);
     expect(state.holderRef).toBeNull();
     expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
-    componentAtIndexes(materializedList, 7, [0], [99], false, true);
     enqueueComponent(materializedList, 7, 121);
 
     expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
@@ -2933,7 +2926,6 @@ describe('ElementTemplate patch stream (apply)', () => {
     registerElementTemplateListState(72, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
     const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const componentAtIndexes = attrs['component-at-indexes'] as ComponentAtIndexesCallback;
     const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
     const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
 
@@ -2954,7 +2946,6 @@ describe('ElementTemplate patch stream (apply)', () => {
     mockRemoveElementTemplateNodeFromSlot.mockClear();
 
     expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
-    componentAtIndexes(materializedList, 7, [0], [99], false, true);
     enqueueComponent(materializedList, 7, 131);
 
     expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
