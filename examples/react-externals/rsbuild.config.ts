@@ -33,6 +33,9 @@ const assetPrefix = `http://${detectLanHost()}:${port}/`;
 
 export default defineConfig({
   source: {
+    preEntry: process.env['REPRODUCE_STARTUP_RACE'] === 'true'
+      ? ['./src/reproduce-startup-race.ts']
+      : [],
     entry: {
       main: './src/index.tsx',
     },
