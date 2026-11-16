@@ -43,29 +43,36 @@ export function createLynxCacheEventsSetupListRuntimeModule(
           `{
       name: 'renderPage',
       setup: () => {
-        const oldRenderPage = globalThis.renderPage;
+        let renderPage = globalThis.renderPage;
         const mockRenderPage = (...args) => {
           if (${LynxRuntimeGlobals.lynxCacheEvents}.loaded) {
-            return oldRenderPage && oldRenderPage(...args);
+            return renderPage && renderPage(...args);
           }
           ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.push({
             type: 'renderPage',
             data: { args },
           });
         };
-        globalThis.renderPage = mockRenderPage;
+        Object.defineProperty(globalThis, 'renderPage', {
+          configurable: true,
+          get: () => mockRenderPage,
+          set: value => { renderPage = value; },
+        });
 
         return () => {
+          Object.defineProperty(globalThis, 'renderPage', {
+            configurable: true,
+            writable: true,
+            value: renderPage,
+          });
           ${LynxRuntimeGlobals.lynxCacheEvents}.cachedActions.forEach(action => {
             if (action.type === 'renderPage') {
               // now the real renderPage installed by ReactLynx
               globalThis.renderPage(...action.data.args);
+              // Async replay is outside native's implicit first-screen flush.
+              if (typeof __FlushElementTree === 'function') __FlushElementTree();
             }
           });
-          // don't clobber ReactLynx's real renderPage
-          if (globalThis.renderPage === mockRenderPage) {
-            globalThis.renderPage = oldRenderPage;
-          }
         }
       },
     }`,

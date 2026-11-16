@@ -289,11 +289,17 @@ describe('LynxCacheEventsSetupListRuntimeModule', () => {
     // replayed against it once startup settles.
     const realRenderPage = rstest.fn();
     sandbox.renderPage = realRenderPage;
+    // Registration must not let a later native call bypass the startup cache.
+    sandbox.renderPage?.({ initData: 2 });
+    expect(realRenderPage).not.toHaveBeenCalled();
+    expect(runtimeCache.cachedActions).toHaveLength(2);
     runtimeCache.loaded = true;
     cleanup();
 
-    expect(realRenderPage).toHaveBeenCalledTimes(1);
-    expect(realRenderPage).toHaveBeenCalledWith({ initData: 1 });
+    expect(realRenderPage).toHaveBeenCalledTimes(2);
+    expect(realRenderPage).toHaveBeenNthCalledWith(1, { initData: 1 });
+    expect(realRenderPage).toHaveBeenNthCalledWith(2, { initData: 2 });
+    expect(sandbox.renderPage).toBe(realRenderPage);
   });
 
   it('passes processData through synchronously on the main thread', () => {
