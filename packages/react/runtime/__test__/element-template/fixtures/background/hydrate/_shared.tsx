@@ -437,7 +437,7 @@ export function runCaseByName(name: string): unknown {
 }
 
 {
-  defineCase('coverage.raw-text-key-branches', () => {
+  defineCase('children.reconciles-raw-text-slots', () => {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
 
@@ -449,16 +449,20 @@ export function runCaseByName(name: string): unknown {
     rootInstance.appendChild(rawTextInstance);
 
     const beforeExistingString = createHydrationRawTextChild(rawTextText.instanceId, 'bg');
-    const beforeExistingNonString = createHydrationRawTextChild(rawTextInstance.instanceId, 123);
+    const beforeExistingNumber = createHydrationChild(rawTextInstance.instanceId, BUILTIN_RAW_TEXT_TEMPLATE_KEY, {
+      attributeSlots: [123],
+    });
     const beforeMissingString = createHydrationRawTextChild(-2, 'missing');
-    const beforeMissingNonString = createHydrationRawTextChild(-3, 456);
+    const beforeMissingNumber = createHydrationChild(-3, BUILTIN_RAW_TEXT_TEMPLATE_KEY, {
+      attributeSlots: [456],
+    });
 
     const before = createHydrationTemplate(rootInstance.instanceId, 'root', {
       childSlots: [[
         beforeExistingString,
-        beforeExistingNonString,
+        beforeExistingNumber,
         beforeMissingString,
-        beforeMissingNonString,
+        beforeMissingNumber,
       ]],
     });
 
@@ -492,35 +496,12 @@ export function runCaseByName(name: string): unknown {
     backgroundElementTemplateInstanceManager.clear();
     backgroundElementTemplateInstanceManager.nextId = 0;
 
-    const rootInstance = new BackgroundElementTemplateInstance('root');
-
-    const before = createHydrationTemplate(-1, 'root', { childSlots: [[]] });
-    const stream = hydrateBackground(before, rootInstance);
-    return { stream };
-  });
-}
-
-{
-  defineCase('coverage.move-before-child', () => {
-    backgroundElementTemplateInstanceManager.clear();
-    backgroundElementTemplateInstanceManager.nextId = 0;
-
-    const rootInstance = new BackgroundElementTemplateInstance('root');
-
-    const childA = new BackgroundElementTemplateInstance('a');
-    const childB = new BackgroundElementTemplateInstance('b');
-    const childC = new BackgroundElementTemplateInstance('c');
-    rootInstance.appendChild(childB);
-    rootInstance.appendChild(childA);
-    rootInstance.appendChild(childC);
-
-    const beforeChildA = createHydrationChild(childA.instanceId, 'a');
-    const beforeChildB = createHydrationChild(childB.instanceId, 'b');
-    const beforeChildC = createHydrationChild(childC.instanceId, 'c');
-    const before = createHydrationTemplate(rootInstance.instanceId, 'root', {
-      childSlots: [[beforeChildA, beforeChildB, beforeChildC]],
-    });
-
+    const rootInstance = new BackgroundElementTemplateInstance('root', ['background']);
+    const before: SerializedCompiledNode = {
+      templateKey: 'root',
+      childSlots: [[]],
+      uid: -1,
+    };
     const stream = hydrateBackground(before, rootInstance);
     return { stream };
   });

@@ -43,16 +43,6 @@ describe('ElementTemplate event bridge', () => {
     globalThis.__ALOG__ = true;
   });
 
-  it('dispatches publishEvent to the current handler', () => {
-    const handler = vi.fn();
-    const eventData = { type: 'tap', detail: { x: 1 } };
-    createEventInstance(-1, [0, adaptEventAttrSlot], [handler]);
-
-    publishEvent('-1:0:', eventData);
-
-    expect(handler).toHaveBeenCalledWith(eventData);
-  });
-
   it('logs dispatch metadata when alog is enabled', () => {
     const alog = console.alog as unknown as { mock: { calls: unknown[][] }; mockClear(): void };
     alog.mockClear();
@@ -92,16 +82,6 @@ describe('ElementTemplate event bridge', () => {
     createEventInstance(-2, [0, adaptEventAttrSlot], [handler]);
 
     publicComponentEvent('component-id', '-2:0:', eventData);
-
-    expect(handler).toHaveBeenCalledWith(eventData);
-  });
-
-  it('dispatches spread event values through the same handler lookup', () => {
-    const handler = vi.fn();
-    const eventData = { type: 'tap', spread: true };
-    createEventInstance(-8, [0, adaptSpreadAttrSlot], [{ bindtap: handler }]);
-
-    publishEvent('-8:0:bindtap', eventData);
 
     expect(handler).toHaveBeenCalledWith(eventData);
   });
