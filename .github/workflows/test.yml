@@ -264,6 +264,9 @@ jobs:
         node packages/tools/canary-release/snapshot.js
         pnpm --recursive publish --batch --force --no-git-checks --access public --registry=http://localhost:4873
 
+        # Generated projects must use the workspace's pnpm version outside it.
+        publish_package_manager=$(node -p "require('./package.json').packageManager")
+
         # `npm run <script> <args>` swallows the args unless they follow `--`,
         # while Yarn 4 would forward the `--` itself to the script.
         run_script() {
@@ -312,6 +315,9 @@ jobs:
           cd `mktemp -d`
           npx --registry http://localhost:4873 @lynx-js/create-lynx-canary@latest --template "$template" --dir "$dir" --tools "$tools" "$@"
           cd "$dir"
+          if [ "$pm" = pnpm ]; then
+            npm pkg set "packageManager=$publish_package_manager"
+          fi
           # `upgrade-rspeedy` bumps the Rspeedy dependencies of a project, so it
           # has nothing to do in an Rsbuild one.
           case "$template" in
