@@ -50,6 +50,7 @@
     "@lynx-js/genui-reactlynx": "workspace:*",
     "@lynx-js/gesture-runtime": "workspace:*",
     "@lynx-js/i18next-translation-dedupe": "workspace:*",
+    "@lynx-js/islands": "workspace:*",
     "@lynx-js/kitten-lynx-test-infra": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/lynx-xml": "workspace:*",

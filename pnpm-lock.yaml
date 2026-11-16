@@ -479,6 +479,9 @@ importers:
       '@lynx-js/motion':
         specifier: workspace:*
         version: link:../packages/motion
+      '@lynx-js/islands':
+        specifier: workspace:*
+        version: link:../packages/islands
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../packages/rspeedy/plugin-qrcode
@@ -1075,6 +1078,34 @@ importers:
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
+
+  examples/react-lynx-xml:
+    dependencies:
+      '@lynx-js/islands':
+        specifier: workspace:*
+        version: link:../../packages/islands
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/lynx-xml':
+        specifier: workspace:*
+        version: link:../../packages/lynx-xml
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
 
   examples/react-main-thread-function:
     dependencies:
@@ -1952,6 +1983,34 @@ importers:
       rsbuild-plugin-publint:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.3.3(core-js@3.50.0))
+
+  packages/islands:
+    dependencies:
+      '@lynx-js/lynx-xml':
+        specifier: workspace:*
+        version: link:../lynx-xml
+      '@lynx-js/tasm':
+        specifier: 0.0.49
+        version: 0.0.49
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/template-webpack-plugin
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../react
+      '@lynx-js/react-transform':
+        specifier: workspace:*
+        version: link:../react/transform
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.59.4(@types/node@24.13.3)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
 
   packages/react:
     dependencies:

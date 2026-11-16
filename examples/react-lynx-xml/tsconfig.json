@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@lynx-js/react",
+    "noEmit": true,
+    "isolatedDeclarations": false,
+  },
+  "include": ["src", "web", "rsbuild.config.ts", "rsbuild.host.config.ts"],
+}

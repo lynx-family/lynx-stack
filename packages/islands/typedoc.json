@@ -1,0 +1,10 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "tsconfig": "./tsconfig.json",
+  "entryPoints": [
+    "./src/shared/index.ts",
+    "./src/build/index.ts",
+    "./src/runtime/index.ts",
+    "./src/react/index.ts"
+  ]
+}
