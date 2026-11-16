@@ -12,6 +12,7 @@ import {
   registerElementTemplateListState,
 } from '../list/list.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
+import { filterListItemPlatformInfoFromSpread } from '../list/platform-info.js';
 import { __etAttrPlanMap, hasMainThreadRefAttrSlot } from '../template/attr-slot-plan.js';
 import type { EtAttrAdapter } from '../template/attr-slot-plan.js';
 import {
@@ -102,7 +103,7 @@ export function createRenderedHost(
     // rendering.
     listItemPlatformInfo === undefined
       ? undefined
-      : { __listItemPlatformInfo: listItemPlatformInfo },
+      : { __listItemPlatformInfo: filterListItemPlatformInfoFromSpread(listItemPlatformInfo) },
   );
   if (hasMainThreadRef) {
     materializationHandles.push({

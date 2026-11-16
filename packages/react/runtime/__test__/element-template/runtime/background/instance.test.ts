@@ -421,6 +421,180 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
+  it('filters list item metadata in background create commands without changing ordinary attributes', () => {
+    const platformInfo = {
+      'reuse-identifier': '',
+      'full-span': false,
+      'item-key': 'a',
+      'sticky-top': false,
+      'sticky-bottom': true,
+      'estimated-height': 0,
+      'estimated-height-px': null,
+      'estimated-main-axis-size-px': undefined,
+      recyclable: false,
+    };
+    const attributes = {
+      id: 'row',
+      className: 'row-before',
+      style: { height: 64 },
+    };
+    const handleTap = vi.fn();
+    const metadata = {
+      ...platformInfo,
+      ...attributes,
+      bindtap: handleTap,
+      __spread: true,
+      itemKey: 'camel-case',
+    };
+    const originalMetadata = { ...metadata };
+    const item = new BackgroundElementTemplateInstance('_et_item_a', [attributes]);
+
+    item.setAttribute('__listItemPlatformInfo', metadata);
+
+    expect(item.getListItemPlatformInfo()).toStrictEqual(platformInfo);
+    expect(item.getListItemPlatformInfo()).not.toBe(metadata);
+    expect(metadata).toStrictEqual(originalMetadata);
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    item.emitCreate();
+
+    expect(globalCommitContext.ops).toStrictEqual([
+      ElementTemplateUpdateOps.createTemplate,
+      item.instanceId,
+      '_et_item_a',
+      null,
+      [attributes],
+      [],
+      { __listItemPlatformInfo: platformInfo },
+    ]);
+    expect(item.attributeSlots[0]).toBe(attributes);
+    expect(handleTap).not.toHaveBeenCalled();
+  });
+
+  it('ignores inherited platform info and does not rename ordinary metadata keys', () => {
+    const metadata = Object.assign(
+      Object.create({ 'item-key': 'inherited', 'reuse-identifier': 'inherited' }) as Record<string, unknown>,
+      { 'estimated-height': 42, itemKey: 'camel-case', className: 'row' },
+    );
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+
+    item.setAttribute('__listItemPlatformInfo', metadata);
+
+    expect(item.getListItemPlatformInfo()).toEqual({ 'estimated-height': 42 });
+    expect(Object.hasOwn(metadata, 'item-key')).toBe(false);
+    expect(metadata['item-key']).toBe('inherited');
+  });
+
+  it('ignores ordinary prop changes but emits filtered list item platform info updates', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const metadata = {
+      'item-key': 'a',
+      'estimated-height': 42,
+      className: 'row-before',
+      style: { height: 64 },
+      bindtap: vi.fn(),
+    };
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    item.setAttribute('__listItemPlatformInfo', metadata);
+    list.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+    const changedProps = {
+      ...metadata,
+      id: 'next-row',
+      className: 'row-after',
+      style: { height: 80 },
+      bindtap: vi.fn(),
+      __spread: true,
+    };
+
+    item.setAttribute('__listItemPlatformInfo', changedProps);
+
+    expect(item.getListItemPlatformInfo()).toEqual({ 'item-key': 'a', 'estimated-height': 42 });
+    expect(globalCommitContext.ops).toEqual([]);
+
+    item.setAttribute('__listItemPlatformInfo', { ...changedProps, 'estimated-height': 84 });
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      {
+        __etHandleRef: -11,
+        type: '_et_item_a',
+        platformInfo: { 'item-key': 'a', 'estimated-height': 84 },
+        subtreeHandleIds: null,
+      },
+    ]);
+  });
+
+  it('copies list item metadata before comparing a reused input object', () => {
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const metadata = { 'item-key': 'a', className: 'row' };
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    item.setAttribute('__listItemPlatformInfo', metadata);
+    list.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    metadata['item-key'] = 'b';
+
+    expect(item.getListItemPlatformInfo()).toEqual({ 'item-key': 'a' });
+
+    item.setAttribute('__listItemPlatformInfo', metadata);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      {
+        __etHandleRef: -11,
+        type: '_et_item_a',
+        platformInfo: { 'item-key': 'b' },
+        subtreeHandleIds: null,
+      },
+    ]);
+  });
+
+  it.each([null, undefined, {}, { className: 'row' }])('clears list item platform info once when set to %s', value => {
+    const list = new BackgroundListElementTemplateInstance();
+    backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);
+    list.markMaterializedByHydration();
+    const item = new BackgroundElementTemplateInstance('_et_item_a');
+    item.setAttribute('__listItemPlatformInfo', { 'item-key': 'a' });
+    list.appendChild(item);
+    backgroundElementTemplateInstanceManager.updateId(item.instanceId, -11);
+    item.markMaterializedByHydration();
+    markElementTemplateHydrated();
+    globalCommitContext.ops = [];
+
+    item.setAttribute('__listItemPlatformInfo', value);
+
+    expect(globalCommitContext.ops).toEqual([
+      ElementTemplateUpdateOps.updateTypedListItem,
+      -10,
+      {
+        __etHandleRef: -11,
+        type: '_et_item_a',
+        platformInfo: {},
+        subtreeHandleIds: null,
+      },
+    ]);
+
+    globalCommitContext.ops = [];
+
+    item.setAttribute('__listItemPlatformInfo', value);
+
+    expect(globalCommitContext.ops).toEqual([]);
+  });
+
   it('does not refresh list membership when adding a subtree without MTRefs', () => {
     const list = new BackgroundListElementTemplateInstance();
     backgroundElementTemplateInstanceManager.updateId(list.instanceId, -10);

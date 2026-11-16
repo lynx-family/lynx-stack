@@ -22,6 +22,7 @@ import type {
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
+import { filterListItemPlatformInfoFromSpread } from '../runtime/list/platform-info.js';
 import type { AuthoredPageAttributes } from '../runtime/page/authored-page.js';
 import { hasMainThreadRefAttrSlot } from '../runtime/template/attr-slot-plan.js';
 import type { EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
@@ -480,8 +481,12 @@ export class BackgroundElementTemplateInstance {
       this.text = String(value);
     } else if (key === '__listItemPlatformInfo') {
       const previous = this.getListItemPlatformInfo();
-      const next = value as Record<string, SerializableValue>;
-      this.listItemPlatformInfo = next;
+      this.listItemPlatformInfo = value == null
+        ? undefined
+        : filterListItemPlatformInfoFromSpread(
+          value as Record<string, SerializableValue>,
+        );
+      const next = this.getListItemPlatformInfo();
       if (!isDirectOrDeepEqual(previous, next)) {
         notifyListItemSubtreeUpdated(this, true);
       }
