@@ -102,6 +102,7 @@ function request(
 function artifact(protocol: BenchProtocol): ProtocolBenchRunArtifact {
   const judgePayloads = {
     a2ui: { kind: 'a2ui-messages', messages: [] },
+    'a2ui-express': { kind: 'a2ui-messages', messages: [] },
     openui: { kind: 'openui-text', rawText: 'root = Text("Ready")' },
     'lynx-xml': {
       kind: 'lynx-xml-source',

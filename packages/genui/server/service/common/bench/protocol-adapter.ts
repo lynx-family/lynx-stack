@@ -10,6 +10,7 @@ import type {
   ProtocolBenchRenderResult,
   ProtocolBenchScenario,
 } from './protocol-types.js';
+import type { BenchCatalogLabel } from './types.js';
 import type { ChatOptions } from '../types.js';
 
 export type { ProtocolBenchProviderConfig } from './protocol-types.js';
@@ -34,6 +35,7 @@ export type ProtocolBenchJudgePayload =
   };
 
 export interface ProtocolBenchAdapterInput {
+  catalog?: BenchCatalogLabel;
   reasoningEffort?: ChatOptions['reasoningEffort'];
   onPerformanceEvent?: ChatOptions['onPerformanceEvent'];
   enableDesignGuidance?: boolean;

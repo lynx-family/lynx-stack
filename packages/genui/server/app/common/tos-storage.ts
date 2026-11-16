@@ -16,6 +16,7 @@ type StorageEnvironment = Readonly<Record<string, string | undefined>>;
 
 export const TOS_STORAGE_METHODS = [
   'a2ui',
+  'a2ui-express',
   'openui',
   'mcp-apps',
   'reactlynx',
@@ -153,6 +154,8 @@ export function tosStoragePrefix(
   switch (method) {
     case 'a2ui':
       return config.a2uiPrefix;
+    case 'a2ui-express':
+      return 'a2ui-express';
     case 'html':
       return config.htmlPrefix;
     case 'lynx-xml':

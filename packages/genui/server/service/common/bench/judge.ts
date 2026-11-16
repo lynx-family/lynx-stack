@@ -43,7 +43,7 @@ export type GenuiBenchProtocol = BenchProtocol;
 
 export type GenuiBenchJudgeArtifact =
   | { protocol: 'reactlynx'; rawText: string; zipUrl: string }
-  | { messages: A2UIMessage[]; protocol: 'a2ui' }
+  | { messages: A2UIMessage[]; protocol: 'a2ui' | 'a2ui-express' }
   | { protocol: 'openui' | 'lynx-xml' | 'html' | 'reactweb'; rawText: string };
 
 export interface RunGenuiBenchUiJudgeOptions {
@@ -174,7 +174,7 @@ export async function resolveGenuiBenchUiJudge(
     };
   }
   const env = options.env ?? process.env;
-  const zipUrl = protocol === 'a2ui'
+  const zipUrl = protocol === 'a2ui' || protocol === 'a2ui-express'
     ? env.UI_JUDGE_A2UI_ZIP_URL?.trim()
       ?? env.UI_JUDGE_ZIP_URL?.trim()
     : env.UI_JUDGE_OPENUI_ZIP_URL?.trim()
@@ -190,7 +190,7 @@ export async function runGenuiBenchUiJudge(
   options: RunGenuiBenchUiJudgeOptions,
   captureScreenshot: BenchScreenshotCapture,
 ): Promise<BenchUiJudgeResult> {
-  if (options.artifact.protocol === 'a2ui') {
+  if ('messages' in options.artifact) {
     const messages = options.artifact.messages;
     return await runWithBoundedRetry(
       options,

@@ -10,6 +10,7 @@ import {
 } from '@lynx-js/genui-reactlynx';
 
 import { createTextStreamRoute } from '../app/common/text-stream-route.js';
+import type { TextStreamRouteOptions } from '../app/common/text-stream-route.js';
 import { publishReactLynxBuild } from '../app/reactlynx/artifacts.js';
 
 const { putObject } = rstest.hoisted(() => ({
@@ -41,7 +42,7 @@ test('uses the shared ReactLynx source contract', () => {
 });
 
 function route(
-  postprocess: Parameters<typeof createTextStreamRoute>[0]['postprocess'],
+  postprocess: TextStreamRouteOptions['postprocess'],
   emitPerformanceEvents?: (
     observer:
       | ((event: string, details?: Record<string, unknown>) => void)

@@ -226,6 +226,14 @@ export class A2UIProtocolMessageStreamParser {
     return messages;
   }
 
+  public pushMessages(batch: readonly unknown[]): A2UIMessage[] {
+    const messages: A2UIMessage[] = [];
+    for (const message of batch) this.completeMessage(message, messages);
+    this.flushComponents(messages, true);
+    this.flushPlaceholders(messages);
+    return messages;
+  }
+
   private openFrame(
     start: number,
     role: JsonFrame['role'],

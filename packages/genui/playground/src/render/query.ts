@@ -6,7 +6,7 @@ import { decodeBase64Url } from '../utils/base64url.js';
 import { RENDER_INIT_DATA_QUERY_PARAM } from '../utils/renderUrl.js';
 
 export interface InitData {
-  protocol?: '0.9' | 'a2ui' | 'openui' | 'mcp-apps';
+  protocol?: '0.9' | 'a2ui' | 'a2ui-express' | 'openui' | 'mcp-apps';
   messagesUrl?: string;
   messages?: unknown;
   actionMocksUrl?: string;
@@ -51,6 +51,7 @@ function readBoolean(value: unknown): boolean | undefined {
 function readProtocol(value: unknown): InitData['protocol'] {
   return value === '0.9'
       || value === 'a2ui'
+      || value === 'a2ui-express'
       || value === 'openui'
       || value === 'mcp-apps'
     ? value

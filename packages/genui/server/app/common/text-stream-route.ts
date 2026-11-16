@@ -55,6 +55,13 @@ interface TextStreamingService {
 }
 
 export interface TextStreamRouteOptions {
+  createMessageStream?: (
+    messages: ChatMessage[],
+    conversation?: ConversationContext,
+  ) => {
+    feed: (chunk: string) => unknown[];
+    close: () => unknown[];
+  };
   /** Emit complete text lines, preserving the final unterminated line. */
   deltaFraming?: 'line';
   parseOptions?: (body: Record<string, unknown>) =>
@@ -70,6 +77,8 @@ export interface TextStreamRouteOptions {
     context: {
       signal: AbortSignal;
       requestUrl: string;
+      messages: ChatMessage[];
+      conversation?: ConversationContext;
       emit: (event: string, data: unknown) => boolean;
       recordArtifactBuild: (durationMs: number) => void;
       recordArtifactUpload: (durationMs: number) => void;
@@ -235,6 +244,13 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
             durationMs: performance.now() - connectStartedAt,
           });
 
+          const messageStream = config.createMessageStream?.(
+            validated.messages,
+            validatedConversation.conversation,
+          );
+          const emitMessages = (messages: unknown[] = []) => {
+            if (messages.length > 0) enqueue('message', { messages });
+          };
           let streamedText = '';
           let chunkCount = 0;
           let firstChunkLogged = false;
@@ -262,8 +278,10 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
               }
               if (closed) break;
             } else if (!enqueue('delta', { text: chunk })) break;
+            emitMessages(messageStream?.feed(chunk));
           }
 
+          emitMessages(messageStream?.close());
           if (pendingDelta) enqueue('delta', { text: pendingDelta });
 
           generationController.signal.throwIfAborted();
@@ -322,6 +340,8 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
           const postprocessMetadata = await config.postprocess?.(finalText, {
             signal: generationController.signal,
             requestUrl: req.url,
+            messages: validated.messages,
+            conversation: validatedConversation.conversation,
             emit: enqueue,
             recordArtifactBuild: durationMs => {
               timing.recordArtifactBuild(durationMs);
@@ -396,9 +416,16 @@ async function postTextStream(req: Request, config: TextStreamRouteOptions) {
 }
 
 export function createTextStreamRoute(
-  config: TextStreamRouteOptions,
+  config: TextStreamRouteOptions | (() => TextStreamRouteOptions),
 ): Hono {
   const route = new Hono();
-  route.post('/', (context) => postTextStream(context.req.raw, config));
+  route.post(
+    '/',
+    (context) =>
+      postTextStream(
+        context.req.raw,
+        typeof config === 'function' ? config() : config,
+      ),
+  );
   return route;
 }
