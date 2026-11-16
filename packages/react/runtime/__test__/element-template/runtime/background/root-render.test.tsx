@@ -45,13 +45,15 @@ describe('ElementTemplate root render timing', () => {
 
   it('does not eagerly render on main thread and only caches jsx on root', () => {
     envManager.switchToMainThread();
-    const oldJsx = (__root as { __jsx?: unknown }).__jsx;
+    const App = vi.fn(() => null);
+    const jsx = <App />;
 
-    root.render(<view id='main-thread' />);
+    root.render(jsx);
 
+    expect(App).not.toHaveBeenCalled();
+    expect(__root.__jsx).toBe(jsx);
     expect(lynx.performance.profileStart).not.toHaveBeenCalledWith('ReactLynx::renderBackground');
     expect(lynx.performance.profileEnd).not.toHaveBeenCalled();
-    expect((__root as { __jsx?: unknown }).__jsx ?? oldJsx).toBeDefined();
   });
 
   it('wraps background render with profile timing', () => {

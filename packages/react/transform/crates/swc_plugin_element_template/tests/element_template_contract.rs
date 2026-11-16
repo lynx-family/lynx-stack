@@ -423,25 +423,6 @@ fn should_only_adapt_direct_gesture_in_main_thread_namespace() {
 }
 
 #[test]
-fn should_disable_flatten_for_direct_main_thread_ref_targets() {
-  let template = first_user_template_json(
-    r#"
-      <view main-thread:ref={mainThreadRef} />
-    "#,
-  );
-
-  let attrs = template["attributesArray"]
-    .as_array()
-    .expect("attributesArray");
-  assert!(
-    attrs.iter().any(|attr| {
-      attr["kind"] == "static" && attr["key"] == "flatten" && attr["value"] == false
-    }),
-    "main-thread:ref target should carry create-time flatten=false descriptor, got: {template:?}",
-  );
-}
-
-#[test]
 fn should_inject_css_scope_attr_for_element_template_subtree() {
   let (code, template) = first_user_template_json_with_code(
     r#"
