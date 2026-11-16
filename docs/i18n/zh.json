@@ -1676,6 +1676,7 @@
   "The link to upgrade Rspeedy.": "升级 Rspeedy 的链接。",
   "The literal string name of the CDP method (e.g., `'DOM.getDocument'`, `'Page.navigate'`).": "CDP 方法名的字符串字面量（例如 `'DOM.getDocument'`、`'Page.navigate'`）。",
   "The loader for react refresh.": "react refresh 所用的 loader。",
+  "The loader receives the configured URL, or `publicPath + bundlePath`,\nwhen supplied. Otherwise it determines the URL itself. It owns fetching,\nsection evaluation, stylesheet adoption, and failure recovery.\nCannot be combined with URL resolver or load callbacks.\nRequires `async: true` (the default). The module must not import an\nexternal handled by a runtime loader, which would create a loading cycle.": "加载器接收已配置的 URL，或由 `publicPath + bundlePath` 组成的地址；未配置时自行决定地址。它负责获取资源、执行 section、应用样式和处理失败恢复。不能与 URL 解析或 load 回调同时配置。要求 `async: true`（默认值）。该模块不能导入由 runtime 加载器管理的 external，否则会形成加载循环。",
   "The loader receives the configured URL, or `publicPath + bundlePath`,\nwhen supplied. Otherwise it determines the URL itself. It owns fetching,\nsection evaluation, stylesheet adoption, and failure recovery.\nRequires `async: true` (the default). The module must not import an\nexternal handled by a runtime loader, which would create a loading cycle.": "如果配置了地址，加载器接收该 URL 或 `publicPath + bundlePath`；否则由加载器自行确定 URL。\n加载器负责获取资源、执行 section、采用样式及失败恢复。\n要求 `async: true`（默认值）。模块不得导入由运行时加载器处理的 external，以免形成加载循环。",
   "The loader to extract CSS.": "用于提取 CSS 的 loader。",
   "The loaders for ReactLynx.": "ReactLynx 所用的 loader。",

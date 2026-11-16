@@ -300,5 +300,13 @@ provide a cross-thread readiness protocol. Reject failures normally.
 Runtime modules require `async: true` (the default). They cannot import other
 runtime-managed externals, which would create a loading cycle. Their dependencies
 must be compilable by the project's existing loaders. The standalone `async`
-predicate for fixed URLs remains supported; URL and loader functions in the Node
-configuration are not supported.
+predicate for fixed URLs remains supported.
+
+Function-valued `url` resolvers and `load(response, sectionPath)` callbacks also
+remain supported for standalone loaders. They require `async: true`, are
+serialized into each realm, and cannot capture build-time imports or variables.
+URL resolvers and their fetches run only on first import; fixed URL strings and
+`bundlePath` retain startup prefetching. Custom loaders receive failed responses
+as well as successful ones and own stylesheet adoption. These callbacks cannot
+be combined with `runtime`; use a runtime module when the loader needs normal
+imports or per-container state.

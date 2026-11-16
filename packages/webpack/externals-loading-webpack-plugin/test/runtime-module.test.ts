@@ -151,9 +151,10 @@ export default function createRuntime({ lynx: host, thread }) {
       bundlePath: 'ignored.bundle',
     });
     await compile('relative', { ...external, bundlePath: '/component.bundle' });
+    const predicateExternal = { ...external };
+    delete predicateExternal.runtime;
     await compile('predicate', {
-      ...external,
-      runtime: undefined,
+      ...predicateExternal,
       url: 'https://fixed.example/component.bundle',
       async: ({ systemInfo }) => systemInfo['platform'] === 'web',
     });
@@ -348,17 +349,21 @@ export default function createRuntime({ lynx: host, thread }) {
     },
   );
 
-  it('rejects configuration callbacks instead of serializing their closure', () => {
-    const external = {
-      url: () => 'https://example.com/component.bundle',
-    } as unknown as ExternalValue;
-    expect(() =>
-      new ExternalsLoadingPlugin({
-        mainThreadLayer: 'main-thread',
-        backgroundLayer: 'background',
-        externals: { component: external },
-      })
-    ).toThrow('runtime module');
+  it('rejects combining runtime modules with callback configuration', () => {
+    for (
+      const callbacks of [
+        { url: () => 'https://example.com/component.bundle' },
+        { load: () => ({}) },
+      ]
+    ) {
+      expect(() =>
+        new ExternalsLoadingPlugin({
+          mainThreadLayer: 'main-thread',
+          backgroundLayer: 'background',
+          externals: { component: { runtime: './runtime.ts', ...callbacks } },
+        })
+      ).toThrow('cannot combine');
+    }
   });
 
   it('rejects synchronous runtime-module loading', () => {
