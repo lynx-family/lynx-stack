@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 
 import { BackgroundView } from '../external-bundle/BackgroundView.js';
 import './App.css';
@@ -6,7 +7,7 @@ import arrow from './assets/arrow.png';
 import lynxLogo from './assets/lynx-logo.png';
 import reactLynxLogo from './assets/react-logo.png';
 
-export function App() {
+export function App({ children }: { children?: ReactNode }) {
   const [alterLogo, setAlterLogo] = useState(false);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export function App() {
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }}></view>
+        {children}
       </view>
     </view>
   );

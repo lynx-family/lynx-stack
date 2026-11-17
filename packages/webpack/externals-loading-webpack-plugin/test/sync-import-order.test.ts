@@ -27,6 +27,15 @@ const external = (name: string, async: boolean, url = 'component.bundle') => ({
   background: { sectionPath: 'component' },
 });
 
+const resolveUrl = () => {
+  const state = (globalThis as unknown as {
+    __externalOrder: { resolutions: number; url?: string; asyncUrl?: boolean };
+  }).__externalOrder;
+  state.resolutions++;
+  if (!state.url) throw new Error('URL has not arrived');
+  return state.asyncUrl ? Promise.resolve(state.url) : state.url;
+};
+
 const cases = [false, true].flatMap(async =>
   ['main-thread', 'background'].map(layer => ({ async, layer }))
 );
@@ -39,8 +48,17 @@ describe('external import order', () => {
     directory = await fs.mkdtemp(
       path.join(os.tmpdir(), 'lynx-external-order-'),
     );
-    for (const mode of [false, true, 'mixed', 'predicate'] as const) {
-      const async = mode !== false;
+    for (
+      const mode of [
+        false,
+        true,
+        'mixed',
+        'predicate',
+        'resolver',
+        'sync-resolver',
+      ] as const
+    ) {
+      const async = mode !== false && mode !== 'sync-resolver';
       const entry = Object.fromEntries(
         ['main-thread', 'background'].map(
           layer => [layer, { import: './index.js', layer }],
@@ -70,8 +88,19 @@ describe('external import order', () => {
               mainThreadLayer: 'main-thread',
               backgroundLayer: 'background',
               externals: {
-                component: { ...external('Component', async), retries: 2 },
-                'component-alias': external('Alias', async),
+                component: {
+                  ...external('Component', async),
+                  retries: 2,
+                  ...(mode === 'resolver' || mode === 'sync-resolver'
+                    ? { url: resolveUrl }
+                    : {}),
+                },
+                'component-alias': {
+                  ...external('Alias', async),
+                  ...(mode === 'resolver' || mode === 'sync-resolver'
+                    ? { url: resolveUrl }
+                    : {}),
+                },
                 unused: external('Unused', async, 'unused.bundle'),
                 ...((mode === 'mixed' || mode === 'predicate')
                   ? {
@@ -128,6 +157,82 @@ describe('external import order', () => {
   afterAll(async () => {
     if (directory) await fs.rm(directory, { recursive: true, force: true });
   });
+
+  it.each(
+    [false, true].flatMap(asyncUrl =>
+      ['main-thread', 'background'].map(layer => ({ asyncUrl, layer }))
+    ),
+  )(
+    'resolves the runtime URL only after it is delivered ($layer, async URL: $asyncUrl)',
+    async ({ layer, asyncUrl }) => {
+      const state = {
+        events: [],
+        resolutions: 0,
+        asyncUrl,
+        url: '',
+        load: () => Promise.resolve(),
+        loadAlias: () => Promise.resolve(),
+      };
+      const component = { run: rstest.fn() };
+      const fetchBundle = rstest.fn((url: string) =>
+        Promise.resolve({ code: 0, url })
+      );
+      const loadScript = rstest.fn(() => component);
+      runInNewContext(sources.get(`lazy-resolver-${layer}`)!, {
+        __externalOrder: state,
+        lynx: { fetchBundle, loadScript },
+        __LoadStyleSheet: () => null,
+      });
+      expect(state.resolutions).toBe(0);
+      expect(fetchBundle).not.toHaveBeenCalled();
+      state.url = 'delivered.bundle';
+      const modules = await Promise.all([state.load(), state.loadAlias()]);
+      for (const module of modules) expect(module).toMatchObject(component);
+      expect(await state.load()).toMatchObject(component);
+      expect(state.resolutions).toBe(1);
+      expect(fetchBundle).toHaveBeenCalledExactlyOnceWith(
+        'delivered.bundle',
+        {},
+      );
+      expect(loadScript).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['main-thread', 'background'])(
+    'preserves synchronous exports and the native wait handler for a URL resolver on %s',
+    layer => {
+      const state = {
+        events: [] as string[],
+        resolutions: 0,
+        url: 'sync.bundle',
+        ready: false,
+      };
+      const component = { run: () => state.events.push('run') };
+      const wait = rstest.fn(() => ({ code: 0, url: state.url }));
+      const then = rstest.fn();
+      const fetchBundle = rstest.fn(() => ({ wait, then }));
+      const globals: Record<string, unknown> = {};
+      runInNewContext(sources.get(`sync-resolver-${layer}`)!, {
+        __externalOrder: state,
+        lynx: {
+          fetchBundle,
+          loadScript: () => {
+            state.events.push('load');
+            return component;
+          },
+          [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
+        },
+        __LoadStyleSheet: () => null,
+      });
+      expect(state.events).toEqual(['init', 'load', 'run', 'run']);
+      expect(globals['Component']).toBe(component);
+      expect(globals['Alias']).toBe(component);
+      expect(state.resolutions).toBe(1);
+      expect(fetchBundle).toHaveBeenCalledExactlyOnceWith('sync.bundle', {});
+      expect(wait).toHaveBeenCalledTimes(1);
+      expect(then).not.toHaveBeenCalled();
+    },
+  );
 
   it.each(cases)(
     'defers section evaluation until import ($layer, async: $async)',

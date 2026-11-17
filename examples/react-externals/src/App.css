@@ -5,6 +5,7 @@
 
 .Background {
   position: fixed;
+  z-index: 0;
   background: radial-gradient(
     71.43% 62.3% at 46.43% 36.43%,
     rgba(18, 229, 229, 0) 15%,
@@ -22,7 +23,10 @@
 
 .App {
   position: relative;
+  z-index: 1;
   min-height: 100vh;
+  box-sizing: border-box;
+  padding: 48px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -34,7 +38,7 @@ text {
 }
 
 .Banner {
-  flex: 5;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;

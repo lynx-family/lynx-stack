@@ -70,3 +70,12 @@ It runs in the generated runtime with `SystemInfo` (falling back to
 cannot capture build-time imports or variables. Use an arrow or function
 expression. Callback externals always use promise module semantics, including
 when synchronous loading is selected. Boolean options retain their behavior.
+
+## Runtime URLs
+
+The `url` option also accepts a standalone function returning a
+string or `Promise<string>`. It runs on first import in the consuming thread, so
+the host can provide the address after startup. The function is serialized and
+must not capture build-time variables. A synchronous resolver preserves the native
+`fetchBundle` handler, including `wait()` for synchronous external loading. A
+resolver returning a Promise requires asynchronous loading.

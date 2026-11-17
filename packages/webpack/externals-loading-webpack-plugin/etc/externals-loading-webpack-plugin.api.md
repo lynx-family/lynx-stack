@@ -35,7 +35,7 @@ export interface ExternalValue {
     mainThread?: LayerOptions;
     retries?: number;
     timeout?: number;
-    url?: string;
+    url?: string | (() => string | Promise<string>);
 }
 
 // @public

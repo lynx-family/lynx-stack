@@ -117,13 +117,16 @@ export interface ExternalsLoadingPluginOptions {
  */
 export interface ExternalValue {
   /**
-   * The final bundle URL to fetch directly at runtime.
+   * A bundle URL or a standalone resolver evaluated on first import.
+   *
+   * Resolvers must not capture build-time variables. A string result preserves
+   * synchronous loading; a Promise result requires asynchronous loading.
    *
    * Use this when the external bundle is hosted outside the current build
    * output, such as on a CDN. If both `url` and `bundlePath` are provided,
    * `url` takes precedence because it is already the fully resolved address.
    */
-  url?: string;
+  url?: string | (() => string | Promise<string>);
 
   /**
    * The bundle path resolved against the runtime public path.
@@ -451,6 +454,9 @@ function createRetryingHandler(fetchBundle, retries) {
     wait(timeout) {
       if (cachedResponse !== null) return cachedResponse
       if (currentHandler === null) currentHandler = fetchBundle()
+      if (typeof currentHandler.wait !== 'function') {
+        throw new Error('Synchronous external loading requires a synchronous URL resolver and a fetchBundle handler with wait(). Use async: true for asynchronous loading.')
+      }
       let response = currentHandler.wait(timeout)
       while (response.code === -2 && attemptsUsed < retries) {
         attemptsUsed++
@@ -565,7 +571,9 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               bundlePath: bundlePath.replace(/^\/+/, ''),
             }
             : external;
-          const urlKey = url ?? `bundlePath:${normalizedExternal.bundlePath}`;
+          const urlKey = typeof url === 'function'
+            ? `resolver:${url.toString()}`
+            : url ?? `bundlePath:${normalizedExternal.bundlePath}`;
           const hash = `${urlKey}-${libraryNameStr}`;
           if (hasUrlLibraryNamePairInjected.has(hash)) {
             continue;
@@ -577,10 +585,10 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             : `${compiler.webpack.RuntimeGlobals.publicPath} + ${
               JSON.stringify(normalizedExternal.bundlePath)
             }`;
-          url2fetchCode.set(
-            urlKey,
-            `() => lynx.fetchBundle(${fetchExpr}, {})`,
-          );
+          const fetchCode = typeof url === 'function'
+            ? `() => { const url = (${url.toString()})(); return typeof url === "string" ? lynx.fetchBundle(url, {}) : url.then(url => lynx.fetchBundle(url, {})); }`
+            : `() => lynx.fetchBundle(${fetchExpr}, {})`;
+          url2fetchCode.set(urlKey, fetchCode);
           url2retries.set(
             urlKey,
             Math.max(url2retries.get(urlKey) ?? 0, retries),
