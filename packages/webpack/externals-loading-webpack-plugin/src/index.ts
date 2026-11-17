@@ -11,6 +11,8 @@
  * Requires Lynx version 3.5 or later.
  */
 
+import { compileFunction } from 'node:vm';
+
 import type {
   Compiler,
   ExternalItemFunctionData,
@@ -286,6 +288,20 @@ export interface LayerOptions {
   sectionPath: string;
 }
 
+function serializeUrlResolver(
+  resolver: () => string | Promise<string>,
+): string {
+  const source = resolver.toString();
+  try {
+    compileFunction(`return (${source});`);
+    return source;
+  } catch {
+    const expression = `Object.values({${source}})[0]`;
+    compileFunction(`return (${expression});`);
+    return expression;
+  }
+}
+
 function getLynxExternalGlobal(globalObject?: string) {
   return `${globalObject ?? 'lynx'}[Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]`;
 }
@@ -438,8 +454,12 @@ function createRetryingHandler(fetchBundle, retries) {
             }
             if (response.code === -2 && attemptsUsed < retries) {
               attemptsUsed++
-              currentHandler = fetchBundle()
-              currentHandler.then(tryNext, reject)
+              try {
+                currentHandler = fetchBundle()
+                currentHandler.then(tryNext, reject)
+              } catch (error) {
+                reject(error)
+              }
             } else {
               if (response.code !== -2) cachedResponse = response
               resolve(response)
@@ -571,8 +591,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
               bundlePath: bundlePath.replace(/^\/+/, ''),
             }
             : external;
+          const resolver = typeof url === 'function'
+            ? serializeUrlResolver(url)
+            : undefined;
           const urlKey = typeof url === 'function'
-            ? `resolver:${url.toString()}`
+            ? `resolver:${resolver}`
             : url ?? `bundlePath:${normalizedExternal.bundlePath}`;
           const hash = `${urlKey}-${libraryNameStr}`;
           if (hasUrlLibraryNamePairInjected.has(hash)) {
@@ -585,8 +608,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             : `${compiler.webpack.RuntimeGlobals.publicPath} + ${
               JSON.stringify(normalizedExternal.bundlePath)
             }`;
-          const fetchCode = typeof url === 'function'
-            ? `() => { const url = (${url.toString()})(); return typeof url === "string" ? lynx.fetchBundle(url, {}) : url.then(url => lynx.fetchBundle(url, {})); }`
+          const fetchCode = resolver
+            ? `() => { const url = (${resolver})(); return typeof url === "string" ? lynx.fetchBundle(url, {}) : url.then(url => lynx.fetchBundle(url, {})); }`
             : `() => lynx.fetchBundle(${fetchExpr}, {})`;
           url2fetchCode.set(urlKey, fetchCode);
           url2retries.set(

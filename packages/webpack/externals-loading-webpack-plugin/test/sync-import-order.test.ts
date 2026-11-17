@@ -29,12 +29,62 @@ const external = (name: string, async: boolean, url = 'component.bundle') => ({
 
 const resolveUrl = () => {
   const state = (globalThis as unknown as {
-    __externalOrder: { resolutions: number; url?: string; asyncUrl?: boolean };
+    __externalOrder: {
+      resolutions: number;
+      url?: string;
+      asyncUrl?: boolean;
+      throwOnSecond?: boolean;
+    };
   }).__externalOrder;
   state.resolutions++;
+  if (state.throwOnSecond && state.resolutions > 1) {
+    throw new Error('URL resolver failed during retry');
+  }
   if (!state.url) throw new Error('URL has not arrived');
   return state.asyncUrl ? Promise.resolve(state.url) : state.url;
 };
+
+const methodResolver = {
+  url(this: void) {
+    const state = (globalThis as unknown as {
+      __externalOrder: {
+        resolutions: number;
+        url?: string;
+        asyncUrl?: boolean;
+        throwOnSecond?: boolean;
+      };
+    }).__externalOrder;
+    state.resolutions++;
+    if (state.throwOnSecond && state.resolutions > 1) {
+      throw new Error(
+        'URL resolver failed during retry',
+      );
+    }
+    if (!state.url) throw new Error('URL has not arrived');
+    return state.asyncUrl ? Promise.resolve(state.url) : state.url;
+  },
+}.url;
+
+const asyncMethodResolver = {
+  async url(this: void) {
+    const state = (globalThis as unknown as {
+      __externalOrder: {
+        resolutions: number;
+        url?: string;
+        asyncUrl?: boolean;
+        throwOnSecond?: boolean;
+      };
+    }).__externalOrder;
+    state.resolutions++;
+    if (state.throwOnSecond && state.resolutions > 1) {
+      throw new Error(
+        'URL resolver failed during retry',
+      );
+    }
+    if (!state.url) throw new Error('URL has not arrived');
+    return await Promise.resolve(state.url);
+  },
+}.url;
 
 const cases = [false, true].flatMap(async =>
   ['main-thread', 'background'].map(layer => ({ async, layer }))
@@ -56,9 +106,21 @@ describe('external import order', () => {
         'predicate',
         'resolver',
         'sync-resolver',
+        'method-resolver',
+        'sync-method-resolver',
+        'async-method-resolver',
       ] as const
     ) {
-      const async = mode !== false && mode !== 'sync-resolver';
+      const async = mode !== false && mode !== 'sync-resolver'
+        && mode !== 'sync-method-resolver';
+      let resolver = resolveUrl;
+      if (mode === 'method-resolver' || mode === 'sync-method-resolver') {
+        resolver = methodResolver;
+      }
+      if (mode === 'async-method-resolver') resolver = asyncMethodResolver;
+      const urlOptions = typeof mode === 'string' && mode.endsWith('resolver')
+        ? { url: resolver }
+        : {};
       const entry = Object.fromEntries(
         ['main-thread', 'background'].map(
           layer => [layer, { import: './index.js', layer }],
@@ -91,15 +153,11 @@ describe('external import order', () => {
                 component: {
                   ...external('Component', async),
                   retries: 2,
-                  ...(mode === 'resolver' || mode === 'sync-resolver'
-                    ? { url: resolveUrl }
-                    : {}),
+                  ...urlOptions,
                 },
                 'component-alias': {
                   ...external('Alias', async),
-                  ...(mode === 'resolver' || mode === 'sync-resolver'
-                    ? { url: resolveUrl }
-                    : {}),
+                  ...urlOptions,
                 },
                 unused: external('Unused', async, 'unused.bundle'),
                 ...((mode === 'mixed' || mode === 'predicate')
@@ -159,12 +217,14 @@ describe('external import order', () => {
   });
 
   it.each(
-    [false, true].flatMap(asyncUrl =>
-      ['main-thread', 'background'].map(layer => ({ asyncUrl, layer }))
+    ['resolver', 'method-resolver', 'async-method-resolver'].flatMap(mode =>
+      [false, true].flatMap(asyncUrl =>
+        ['main-thread', 'background'].map(layer => ({ mode, asyncUrl, layer }))
+      )
     ),
   )(
-    'resolves the runtime URL only after it is delivered ($layer, async URL: $asyncUrl)',
-    async ({ layer, asyncUrl }) => {
+    'resolves the runtime URL only after it is delivered ($layer, mode: $mode, async URL: $asyncUrl)',
+    async ({ mode, layer, asyncUrl }) => {
       const state = {
         events: [],
         resolutions: 0,
@@ -178,7 +238,7 @@ describe('external import order', () => {
         Promise.resolve({ code: 0, url })
       );
       const loadScript = rstest.fn(() => component);
-      runInNewContext(sources.get(`lazy-resolver-${layer}`)!, {
+      runInNewContext(sources.get(`lazy-${mode}-${layer}`)!, {
         __externalOrder: state,
         lynx: { fetchBundle, loadScript },
         __LoadStyleSheet: () => null,
@@ -198,9 +258,13 @@ describe('external import order', () => {
     },
   );
 
-  it.each(['main-thread', 'background'])(
-    'preserves synchronous exports and the native wait handler for a URL resolver on %s',
-    layer => {
+  it.each(
+    ['sync-resolver', 'sync-method-resolver'].flatMap(mode =>
+      ['main-thread', 'background'].map(layer => ({ mode, layer }))
+    ),
+  )(
+    'preserves synchronous exports and the native wait handler ($layer, $mode)',
+    ({ mode, layer }) => {
       const state = {
         events: [] as string[],
         resolutions: 0,
@@ -212,7 +276,7 @@ describe('external import order', () => {
       const then = rstest.fn();
       const fetchBundle = rstest.fn(() => ({ wait, then }));
       const globals: Record<string, unknown> = {};
-      runInNewContext(sources.get(`sync-resolver-${layer}`)!, {
+      runInNewContext(sources.get(`${mode}-${layer}`)!, {
         __externalOrder: state,
         lynx: {
           fetchBundle,
@@ -231,6 +295,36 @@ describe('external import order', () => {
       expect(fetchBundle).toHaveBeenCalledExactlyOnceWith('sync.bundle', {});
       expect(wait).toHaveBeenCalledTimes(1);
       expect(then).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['main-thread', 'background'])(
+    'rejects a resolver throw during a timeout retry on %s',
+    async layer => {
+      const state = {
+        events: [],
+        resolutions: 0,
+        url: 'retry.bundle',
+        asyncUrl: true,
+        throwOnSecond: true,
+        load: () => Promise.resolve(),
+      };
+      const fetchBundle = rstest.fn().mockResolvedValue({
+        code: -2,
+        url: 'retry.bundle',
+      });
+      const loadScript = rstest.fn();
+      runInNewContext(sources.get(`lazy-resolver-${layer}`)!, {
+        __externalOrder: state,
+        lynx: { fetchBundle, loadScript },
+        __LoadStyleSheet: () => null,
+      });
+      await expect(state.load()).rejects.toThrow(
+        'URL resolver failed during retry',
+      );
+      expect(state.resolutions).toBe(2);
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
+      expect(loadScript).not.toHaveBeenCalled();
     },
   );
 

@@ -63,6 +63,9 @@ export default defineConfig({
       externals: {
         './App.js': {
           bundlePath: 'comp-lib.lynx.bundle',
+          libraryName: './App.js',
+          background: { sectionPath: './App.js' },
+          mainThread: { sectionPath: './App.js__main-thread' },
           async: false,
         },
         './utils.js': 'utils.lynx.bundle',
