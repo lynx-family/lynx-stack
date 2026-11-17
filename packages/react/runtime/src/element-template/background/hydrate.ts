@@ -9,6 +9,7 @@ import {
   BackgroundListElementTemplateInstance,
   collectMainThreadRefSubtreeHandleIds,
   getContainingListItem,
+  toUpdateTypedListItemCommand,
 } from './instance.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
@@ -48,8 +49,11 @@ export function hydrateRootChildrenIntoContext(
   } finally {
     // Template identities only need caching for this synchronous hydration pass.
     backgroundHydrateKeys.clear();
+    hydratedListItemsNeedingSubtreeSync.clear();
   }
 }
+
+const hydratedListItemsNeedingSubtreeSync = new Set<BackgroundElementTemplateInstance>();
 
 function isSerializedCompiledNode(serialized: SerializedEtNode): serialized is SerializedCompiledNode {
   return typeof (serialized as { templateKey?: unknown }).templateKey === 'string';
@@ -307,7 +311,21 @@ function hydrateListInstance(
 
   // Reuse child-slot structural commands so native records List changes in slot
   // 0.
-  return emitHydrateChildrenDiff(handleId, 0, serializedChildren, listDiff);
+  if (!emitHydrateChildrenDiff(handleId, 0, serializedChildren, listDiff)) {
+    return false;
+  }
+  for (let index = 0; index < backgroundChildren.length; index += 1) {
+    const child = backgroundChildren[index]!;
+    if (!hydratedListItemsNeedingSubtreeSync.delete(child)) {
+      continue;
+    }
+    globalCommitContext.ops.push(
+      ElementTemplateUpdateOps.updateTypedListItem,
+      handleId,
+      toUpdateTypedListItemCommand(child, false),
+    );
+  }
+  return true;
 }
 
 function hydrateMatchingListChildrenAndDiff(
@@ -529,6 +547,8 @@ function emitHydrateChildrenDiff(
         insertOrMovePatchesWaitingForInsertionPoint -= 1;
       } else if (insertions[newIndex] !== undefined) {
         const insertedChild = insertions[newIndex]!;
+        const containingListItem = getContainingListItem(insertedChild);
+        const subtreeHandleIds = collectMainThreadRefSubtreeHandleIds(insertedChild);
         keepCurrentSerializedChild = true;
         emitCreateSubtree(insertedChild);
         globalCommitContext.ops.push(
@@ -537,8 +557,11 @@ function emitHydrateChildrenDiff(
           slotId,
           insertedChild.instanceId,
           beforeChildId,
-          getContainingListItem(insertedChild) ? null : collectMainThreadRefSubtreeHandleIds(insertedChild),
+          containingListItem ? null : subtreeHandleIds,
         );
+        if (containingListItem && subtreeHandleIds !== null) {
+          hydratedListItemsNeedingSubtreeSync.add(containingListItem);
+        }
         insertOrMovePatchesWaitingForInsertionPoint -= 1;
       }
 

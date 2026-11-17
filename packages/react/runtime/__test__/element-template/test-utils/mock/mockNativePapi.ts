@@ -361,7 +361,19 @@ export function installMockNativePapi(
   });
 
   const rootTargets = new WeakMap<object, object>();
+  const getOrCreateRootTarget = (targetHandle: CompiledTemplateNode): object => {
+    let target = rootTargets.get(targetHandle);
+    if (!target) {
+      target = Object.create(targetHandle) as object;
+      attachMockNativeId(target);
+      rootTargets.set(targetHandle, target);
+    }
+    return target;
+  };
   const mockGetElementByAttrSlot = vi.fn((handle: CompiledTemplateNode, slot: number) => {
+    if (typeof handle.__typedElementType === 'string') {
+      return slot === 0 ? getOrCreateRootTarget(handle) : null;
+    }
     function findTarget(definition: unknown, element: unknown): object | null {
       if (!isRecord(definition) || !isRecord(element)) return null;
       const descriptors = definition['attributesArray'] as Array<{ kind: string; attrSlotIndex?: number }> | undefined;
@@ -371,13 +383,7 @@ export function installMockNativePapi(
           return element;
         }
         // Even a root target is an ElementRef distinct from the ET handle.
-        let target = rootTargets.get(handle);
-        if (!target) {
-          target = Object.create(handle) as object;
-          attachMockNativeId(target);
-          rootTargets.set(handle, target);
-        }
-        return target;
+        return getOrCreateRootTarget(handle);
       }
       const definitions = definition['children'] as unknown[] | undefined;
       const elements = element['children'] as unknown[] | undefined;

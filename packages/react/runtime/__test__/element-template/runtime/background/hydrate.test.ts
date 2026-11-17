@@ -458,7 +458,7 @@ describe('hydrate', () => {
       0,
       holder.instanceId,
       0,
-      null,
+      [list.instanceId],
       ElementTemplateUpdateOps.createTemplate,
       ordinary.instanceId,
       'ordinary',
@@ -1557,7 +1557,7 @@ describe('hydrate', () => {
       0,
       list.instanceId,
       0,
-      null,
+      [list.instanceId],
     ]);
   });
 

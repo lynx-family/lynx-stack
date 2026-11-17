@@ -480,7 +480,8 @@ describe('Compiled ET spread MTEvent, MTRef, and Gesture lifecycle', () => {
     expect(onRefReport.mock.calls).toEqual([['mount:hydrate-unmask', 'present']]);
   });
 
-  it('keeps typed <page {...props} /> and <list {...props} /> spreads isolated from main-thread capabilities', async () => {
+  it('keeps typed <page {...props} /> spreads isolated while enabling main-thread capabilities on <list {...props} />', async () => {
+    const onRefReport = vi.fn();
     const { backgroundModule, mainModule } = await loadCompiledFixturePair<FixtureModule>(fixturePath, {
       enableWorkletTransform: true,
       envManager: env,
@@ -490,11 +491,13 @@ describe('Compiled ET spread MTEvent, MTRef, and Gesture lifecycle', () => {
       mode: 'typed-page',
       cardId: 'page-id',
       refKind: 'callback',
+      onRefReport,
     });
     renderCompiledFixtureOnMainThread(mainModule, env, {
       mode: 'typed-page',
       cardId: 'page-id',
       refKind: 'callback',
+      onRefReport,
     });
     env.switchToMainThread();
 
@@ -506,12 +509,14 @@ describe('Compiled ET spread MTEvent, MTRef, and Gesture lifecycle', () => {
       && entry[2] === TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX
     ) as unknown[] | undefined;
     expect(pageAttrEntry?.[3]).toEqual({ id: 'page-id' });
+    expect(onRefReport).not.toHaveBeenCalled();
 
     lastMock!.nativeLog.length = 0;
     renderCompiledFixtureOnBackground(backgroundModule, env, {
       mode: 'typed-list',
       cardId: 'list-id',
       refKind: 'callback',
+      onRefReport,
     });
     env.switchToMainThread();
     const listCreateEntry = lastMock!.nativeLog.find(entry =>
@@ -519,9 +524,12 @@ describe('Compiled ET spread MTEvent, MTRef, and Gesture lifecycle', () => {
     ) as unknown[] | undefined;
     const listAttrs = (listCreateEntry?.[2] ?? {}) as Record<string, unknown>;
     expect(listAttrs['id']).toBe('list-id');
-    expect(listAttrs).not.toHaveProperty('main-thread:bindtap');
+    expect(listAttrs['main-thread:bindtap']).toMatchObject({ type: 'worklet' });
+    expect(listAttrs['main-thread:gesture']).toMatchObject({ type: 'gesture' });
     expect(listAttrs).not.toHaveProperty('main-thread:ref');
-    expect(listAttrs).not.toHaveProperty('main-thread:gesture');
-    expect(listAttrs).not.toHaveProperty('has-react-ref');
+    expect(listAttrs['has-react-ref']).toBe(true);
+    expect(listAttrs['flatten']).toBe(false);
+    env.switchToBackground();
+    expect(onRefReport).toHaveBeenCalledWith('mount:first', 'present');
   });
 });

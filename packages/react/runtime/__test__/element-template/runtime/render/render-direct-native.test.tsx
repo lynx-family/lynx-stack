@@ -125,7 +125,7 @@ describe('direct renderer native contracts', () => {
     );
 
     expect(result.rootRefs).toEqual([listRef]);
-    expect(result.rootSubtreeHandles).toEqual([[]]);
+    expect(result.rootSubtreeHandles).toEqual([[{ uid: -2, ref: listRef }]]);
     expect(createElementTemplate).toHaveBeenCalledWith(
       '_et_item',
       null,
@@ -267,7 +267,7 @@ describe('direct renderer native contracts', () => {
     const result = renderToElementTemplate(h('list', {}));
 
     expect(result.rootRefs).toEqual([listRef]);
-    expect(result.rootSubtreeHandles).toEqual([[]]);
+    expect(result.rootSubtreeHandles).toEqual([[{ uid: -2, ref: listRef }]]);
     expect(createTypedElementTemplate).toHaveBeenNthCalledWith(
       2,
       'list',
@@ -287,7 +287,6 @@ describe('direct renderer native contracts', () => {
     const itemARef = { kind: 'item-a-ref', __mockNativeId: 101 } as unknown as ElementTemplateHandle;
     const itemBRef = { kind: 'item-b-ref', __mockNativeId: 102 } as unknown as ElementTemplateHandle;
     const listRef = { kind: 'list-ref' } as unknown as ElementTemplateHandle;
-    const materializedListRef = { kind: 'materialized-list-ref', __mockNativeId: 300 } as unknown as FiberElement;
     createElementTemplate
       .mockReturnValueOnce(itemARef)
       .mockReturnValueOnce(itemBRef);
@@ -311,12 +310,10 @@ describe('direct renderer native contracts', () => {
     expect(elementTemplateRegistry.get(-1)).toBe(itemARef);
     expect(elementTemplateRegistry.get(-2)).toBe(itemBRef);
     expect(elementTemplateRegistry.get(-3)).toBe(listRef);
-    // List-item main-thread:ref attachment after native materialization is pending.
-    // See the subtreeHandleIds TODO in the updateTypedListItem consumer.
-    expect(componentAtIndex(materializedListRef, 9, 1, 72, true)).toBe(-1);
-    expect(componentAtIndex(materializedListRef, 9, 0, 71, true)).toBe(-1);
-    expect(componentAtIndex(materializedListRef, 9, 99, 73, true)).toBe(-1);
-    enqueueComponent(materializedListRef, 9, 102);
+    expect(componentAtIndex(-3, -2)).toBeUndefined();
+    expect(componentAtIndex(-3, -1)).toBeUndefined();
+    expect(componentAtIndex(-3, -99)).toBeUndefined();
+    enqueueComponent(-3, -2);
     expect(insertNodeToElementTemplate).not.toHaveBeenCalled();
     expect(removeNodeFromElementTemplate).not.toHaveBeenCalled();
     expect(flushElementTree).not.toHaveBeenCalled();

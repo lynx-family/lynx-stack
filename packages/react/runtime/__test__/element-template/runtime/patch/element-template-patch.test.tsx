@@ -10,7 +10,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
-import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
+import {
+  markElementTemplateHydrated,
+  resetElementTemplateCommitState,
+} from '../../../../src/element-template/background/commit-hook.js';
+import {
+  BackgroundElementTemplateInstance,
+  BackgroundListElementTemplateInstance,
+} from '../../../../src/element-template/background/instance.js';
 import { root } from '../../../../src/element-template/index.js';
 import {
   installElementTemplatePatchListener,
@@ -37,13 +45,15 @@ import {
   createElementTemplateListState,
   markElementTemplateListDestroyed,
   registerElementTemplateListState,
+  removeElementTemplateListItem,
   updateElementTemplateListAttributes,
+  updateElementTemplateListItemSubtreeHandles,
 } from '../../../../src/element-template/runtime/list/list.js';
 import {
   attachMainThreadDynamicAttrRefsForSubtree,
   applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
-  detachMainThreadDynamicAttrRefsForSubtree,
+  detachMainThreadDynamicAttrRefsForHandleIds,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
@@ -165,6 +175,9 @@ function installWorkletRefRuntime(): {
   const updateWorkletRef = vi.fn();
   globalThis.lynxWorkletImpl = {
     ...previousWorkletImpl,
+    _eomImpl: {
+      setShouldFlush: vi.fn(),
+    },
     _refImpl: {
       updateWorkletRef,
     },
@@ -874,7 +887,7 @@ describe('ElementTemplate patch stream (apply)', () => {
     elementTemplateRegistry.set(targetId, nativeRef);
     globalThis.runWorklet = vi.fn(() => oldCleanup);
     seedMTRefState(targetId, 0, oldCallback, nativeRef);
-    detachMainThreadDynamicAttrRefsForSubtree([{ uid: targetId, ref: nativeRef }]);
+    detachMainThreadDynamicAttrRefsForHandleIds([targetId]);
     globalThis.runWorklet = vi.fn();
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
@@ -2615,16 +2628,15 @@ describe('ElementTemplate patch stream (apply)', () => {
     envManager.switchToMainThread();
     const listRef = createMockElementTemplateHandle('typed-list', 110);
     const itemRef = createMockElementTemplateHandle('item', 111);
-    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
     elementTemplateRegistry.set(41, listRef);
     elementTemplateRegistry.set(42, itemRef);
     const state = createElementTemplateListState();
     registerElementTemplateListState(41, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
+    const componentAtIndex = attrs['component-at-index'] as (listUid: number, itemUid: number) => void;
+    const enqueueComponent = attrs['enqueue-component'] as (listUid: number, itemUid: number) => void;
 
-    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(-1);
+    expect(componentAtIndex(41, 42)).toBeUndefined();
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.removeNode,
@@ -2638,12 +2650,13 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.get(42)).toBeUndefined();
     expect(state.destroyed).toBe(false);
     expect(state.holderRef).toBe(listRef);
+    expect(state.mountedItemUids.has(42)).toBe(false);
     expect(state.callbacks.componentAtIndex).toBe(componentAtIndex);
     expect(state.callbacks.enqueueComponent).toBe(enqueueComponent);
     mockRemoveElementTemplateNodeFromSlot.mockClear();
 
-    enqueueComponent(materializedList, 7, 111);
-    enqueueComponent(materializedList, 7, 111);
+    enqueueComponent(41, 42);
+    enqueueComponent(41, 42);
 
     expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
     expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
@@ -2654,12 +2667,11 @@ describe('ElementTemplate patch stream (apply)', () => {
   it('keeps typed list callbacks free of JS mounting and recycling', () => {
     envManager.switchToMainThread();
     const listRef = createMockElementTemplateHandle('typed-list', 140);
-    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
     const state = createElementTemplateListState();
     registerElementTemplateListState(140, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
+    const componentAtIndex = attrs['component-at-index'] as (listUid: number, itemUid: number) => void;
+    const enqueueComponent = attrs['enqueue-component'] as (listUid: number, itemUid: number) => void;
 
     expect(attrs).not.toHaveProperty('component-at-indexes');
     expect(state.callbacks).not.toHaveProperty('componentAtIndexes');
@@ -2667,19 +2679,239 @@ describe('ElementTemplate patch stream (apply)', () => {
       listHandleId: 140,
       holderRef: listRef,
       destroyed: false,
+      mountedItemUids: new Set(),
+      itemSubtreeHandleIds: new Map(),
       callbacks: {
         componentAtIndex,
         enqueueComponent,
       },
     });
-    expect(componentAtIndex(materializedList, 7, 0, 88, false)).toBe(-1);
-    enqueueComponent(materializedList, 7, 141);
-    enqueueComponent(materializedList, 7, 141);
-    enqueueComponent(materializedList, 7, 999);
+    expect(componentAtIndex(140, 141)).toBeUndefined();
+    expect(state.mountedItemUids).toEqual(new Set([141]));
+    enqueueComponent(140, 141);
+    expect(state.mountedItemUids).toEqual(new Set());
+    enqueueComponent(140, 141);
+    enqueueComponent(140, 999);
 
     expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
     expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
     expect(mockFlushElementTree.mock.calls).toHaveLength(0);
+  });
+
+  it('preserves attached MTRef identity across descendant reparenting and detaches only when entering an unmounted item or cross-list remove', () => {
+    const { updateWorkletRef, restore } = installWorkletRefRuntime();
+    const previousRunWorklet = globalThis.runWorklet;
+    const callbackCleanup = vi.fn();
+    const callbackRef = { _wkltId: 'reparent-cb', _execId: 701 };
+    globalThis.runWorklet = vi.fn(() => callbackCleanup);
+    __etAttrPlanMap['__Card__:_et_item_ref'] = [0, adaptMTRefAttrSlot];
+    const objectRef = { _wvid: 901 };
+
+    try {
+      envManager.switchToMainThread();
+      registerTemplates([
+        {
+          templateId: '_et_shell',
+          compiledTemplate: {
+            kind: 'element',
+            type: 'view',
+            children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
+          },
+        },
+        {
+          templateId: '_et_item',
+          compiledTemplate: {
+            kind: 'element',
+            type: 'list-item',
+            children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
+          },
+        },
+        {
+          templateId: '_et_item_ref',
+          compiledTemplate: {
+            kind: 'element',
+            type: 'view',
+            attributesArray: [{ kind: 'slot', key: 'main-thread:ref', attrSlotIndex: 0 }],
+            children: [],
+          },
+        },
+      ]);
+
+      // Build background tree: outsideShell + list (itemA mounted, itemB mounted, itemC unmounted).
+      envManager.switchToBackground();
+      const outsideShell = new BackgroundElementTemplateInstance('__Card__:_et_shell');
+      const list = new BackgroundListElementTemplateInstance();
+      const itemA = new BackgroundElementTemplateInstance('__Card__:_et_item');
+      const itemB = new BackgroundElementTemplateInstance('__Card__:_et_item');
+      const itemC = new BackgroundElementTemplateInstance('__Card__:_et_item');
+      const childCb = new BackgroundElementTemplateInstance('__Card__:_et_item_ref');
+      const childObj = new BackgroundElementTemplateInstance('__Card__:_et_item_ref');
+      list.appendChild(itemA);
+      list.appendChild(itemB);
+      list.appendChild(itemC);
+      itemA.appendChild(childCb);
+      itemC.appendChild(childObj);
+
+      markElementTemplateHydrated();
+      outsideShell.markMaterializedByHydration();
+      list.markMaterializedByHydration();
+      itemA.markMaterializedByHydration();
+      itemB.markMaterializedByHydration();
+      itemC.markMaterializedByHydration();
+      childCb.markMaterializedByHydration();
+      childObj.markMaterializedByHydration();
+      globalCommitContext.ops = [];
+
+      // Materialize matching MTS handles and list state.
+      envManager.switchToMainThread();
+      const outsideShellRef = __CreateElementTemplate('_et_shell', null, null, [[]], outsideShell.instanceId, null)!;
+      const itemARef = __CreateElementTemplate('_et_item', null, null, [[]], itemA.instanceId, null)!;
+      const itemBRef = __CreateElementTemplate('_et_item', null, null, [[]], itemB.instanceId, null)!;
+      const itemCRef = __CreateElementTemplate('_et_item', null, null, [[]], itemC.instanceId, null)!;
+      const childCbRef = __CreateElementTemplate('_et_item_ref', null, [null], [], childCb.instanceId, null)!;
+      const childObjRef = __CreateElementTemplate('_et_item_ref', null, [null], [], childObj.instanceId, null)!;
+      const listRef = __CreateTypedElementTemplate(
+        'list',
+        null,
+        [[itemARef, itemBRef, itemCRef]],
+        list.instanceId,
+        {},
+      )!;
+      elementTemplateRegistry.set(outsideShell.instanceId, outsideShellRef);
+      elementTemplateRegistry.set(list.instanceId, listRef);
+      elementTemplateRegistry.set(itemA.instanceId, itemARef);
+      elementTemplateRegistry.set(itemB.instanceId, itemBRef);
+      elementTemplateRegistry.set(itemC.instanceId, itemCRef);
+      elementTemplateRegistry.set(childCb.instanceId, childCbRef);
+      elementTemplateRegistry.set(childObj.instanceId, childObjRef);
+
+      initializeMainThreadDynamicAttrSlots(childCb.instanceId, '__Card__:_et_item_ref', [
+        { type: 'main-thread-ref', value: callbackRef },
+      ]);
+      initializeMainThreadDynamicAttrSlots(childObj.instanceId, '__Card__:_et_item_ref', [
+        { type: 'main-thread-ref', value: objectRef },
+      ]);
+
+      const state = createElementTemplateListState(
+        new Map([
+          [itemA.instanceId, [childCb.instanceId]],
+          [itemC.instanceId, [childObj.instanceId]],
+        ]),
+      );
+      registerElementTemplateListState(list.instanceId, state, listRef);
+      const { componentAtIndex, enqueueComponent } = state.callbacks;
+
+      // Unknown listUid helpers are no-ops; missing subtreeHandleIds target reports an error and skips mutation.
+      updateElementTemplateListItemSubtreeHandles(999, itemA.instanceId, [{
+        uid: childCb.instanceId,
+        ref: childCbRef,
+      }]);
+      removeElementTemplateListItem(999, itemA.instanceId, true);
+      vi.mocked(__SetListItemInfoOfTemplate).mockClear();
+      applyElementTemplateUpdateCommands([
+        ElementTemplateUpdateOps.updateTypedListItem,
+        list.instanceId,
+        {
+          __etHandleRef: itemA.instanceId,
+          type: '__Card__:_et_item',
+          platformInfo: { 'item-key': 'should-skip' },
+          subtreeHandleIds: [childCb.instanceId, 404],
+        },
+      ]);
+      expect(__SetListItemInfoOfTemplate).not.toHaveBeenCalled();
+      const reportError = (globalThis.lynx as unknown as LynxWithReportErrorMock).reportError;
+      expect(String(reportError.mock.calls[0]?.[0]?.message ?? '')).toContain(
+        'typed list item subtree handle 404 not found',
+      );
+      resetReportedErrors();
+
+      // Mount itemA and itemB (itemC remains unmounted).
+      componentAtIndex(list.instanceId, itemA.instanceId);
+      componentAtIndex(list.instanceId, itemB.instanceId);
+      const expectedCbElement = __GetElementByAttrSlot(childCbRef, 0);
+      expect(globalThis.runWorklet).toHaveBeenCalledExactlyOnceWith(callbackRef, [
+        { elementRefptr: expectedCbElement },
+      ]);
+      vi.mocked(globalThis.runWorklet).mockClear();
+
+      // 1. Reparent childCb from mounted itemA -> outsideShell: ZERO spurious cleanup/remount, and itemA enqueue no longer detaches it.
+      envManager.switchToBackground();
+      globalCommitContext.ops = [];
+      outsideShell.appendChild(childCb);
+      const moveOutOps = globalCommitContext.ops.slice();
+      globalCommitContext.ops = [];
+
+      envManager.switchToMainThread();
+      applyElementTemplateUpdateCommands(moveOutOps);
+      applyPendingMainThreadRefAttachments();
+      expect(callbackCleanup).not.toHaveBeenCalled();
+      expect(globalThis.runWorklet).not.toHaveBeenCalled();
+      enqueueComponent(list.instanceId, itemA.instanceId);
+      expect(callbackCleanup).not.toHaveBeenCalled();
+      componentAtIndex(list.instanceId, itemA.instanceId);
+
+      // 2. Reparent childCb from outsideShell -> mounted itemA -> mounted itemB: still ZERO spurious cleanup/remount; itemB now owns detach.
+      envManager.switchToBackground();
+      itemA.appendChild(childCb);
+      itemB.appendChild(childCb);
+      const moveBetweenMountedOps = globalCommitContext.ops.slice();
+      globalCommitContext.ops = [];
+
+      envManager.switchToMainThread();
+      applyElementTemplateUpdateCommands(moveBetweenMountedOps);
+      applyPendingMainThreadRefAttachments();
+      expect(callbackCleanup).not.toHaveBeenCalled();
+      expect(globalThis.runWorklet).not.toHaveBeenCalled();
+
+      // 3. Reparent childCb from mounted itemB -> unmounted itemC: immediately detaches until itemC mounts!
+      envManager.switchToBackground();
+      itemC.appendChild(childCb);
+      const moveToUnmountedOps = globalCommitContext.ops.slice();
+      globalCommitContext.ops = [];
+
+      envManager.switchToMainThread();
+      applyElementTemplateUpdateCommands(moveToUnmountedOps);
+      applyPendingMainThreadRefAttachments();
+      expect(callbackCleanup).toHaveBeenCalledTimes(1);
+      callbackCleanup.mockClear();
+
+      // Removing childObj from unmounted itemC via removeNode (hydration-style subtree removal without updateTypedListItem)
+      // leaves stale UID in itemC's recorded list; mounting itemC attaches only live childCb, and removing childCb too makes componentAtIndex a clean no-op.
+      applyElementTemplateUpdateCommands([
+        ElementTemplateUpdateOps.removeNode,
+        itemC.instanceId,
+        0,
+        childObj.instanceId,
+        [childObj.instanceId],
+      ]);
+      componentAtIndex(list.instanceId, itemC.instanceId);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      expect(globalThis.runWorklet).toHaveBeenCalledExactlyOnceWith(callbackRef, [
+        { elementRefptr: expectedCbElement },
+      ]);
+      vi.mocked(globalThis.runWorklet).mockClear();
+
+      // Cross-list removeNode (empty removedSubtreeHandleIds) detaches mounted itemC without releasing handles;
+      // if an unmounted item's only recorded handle was removed, componentAtIndex skips attach cleanly.
+      applyElementTemplateUpdateCommands([
+        ElementTemplateUpdateOps.removeNode,
+        list.instanceId,
+        0,
+        itemC.instanceId,
+        [],
+      ]);
+      expect(callbackCleanup).toHaveBeenCalledTimes(1);
+      expect(elementTemplateRegistry.has(itemC.instanceId)).toBe(true);
+
+      state.itemSubtreeHandleIds.set(itemB.instanceId, [childObj.instanceId]);
+      enqueueComponent(list.instanceId, itemB.instanceId);
+      componentAtIndex(list.instanceId, itemB.instanceId);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+    } finally {
+      globalThis.runWorklet = previousRunWorklet;
+      resetElementTemplateCommitState();
+      restore();
+    }
   });
 
   it('releases removed List item subtrees after the native child-slot remove succeeds', () => {
@@ -2741,16 +2973,15 @@ describe('ElementTemplate patch stream (apply)', () => {
     const state = createElementTemplateListState();
     registerElementTemplateListState(120, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
+    const componentAtIndex = attrs['component-at-index'] as (listUid: number, itemUid: number) => void;
+    const enqueueComponent = attrs['enqueue-component'] as (listUid: number, itemUid: number) => void;
 
     markElementTemplateListDestroyed(120);
 
     expect(state.destroyed).toBe(true);
     expect(state.holderRef).toBeNull();
-    expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
-    enqueueComponent(materializedList, 7, 121);
+    expect(componentAtIndex(120, 121)).toBeUndefined();
+    enqueueComponent(120, 121);
 
     expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
     expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);
@@ -2910,6 +3141,55 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(elementTemplateRegistry.has(12)).toBe(false);
   });
 
+  it('cleans all mounted list-item refs and releases the subtree when a callback cleanup throws', () => {
+    envManager.switchToMainThread();
+    const listRef = createMockElementTemplateHandle('list');
+    const subtree = [72, 73, 74];
+    elementTemplateRegistry.set(70, createMockElementTemplateHandle('parent'));
+    elementTemplateRegistry.set(71, listRef);
+    const state = createElementTemplateListState(new Map([[72, subtree]]));
+    registerElementTemplateListState(71, state, listRef);
+    const cleanupError = new Error('item cleanup failed');
+    const descendantCleanup = vi.fn();
+    const previousRunWorklet = globalThis.runWorklet;
+    globalThis.runWorklet = vi.fn()
+      .mockReturnValueOnce(() => {
+        throw cleanupError;
+      })
+      .mockReturnValueOnce(() => {
+        throw new Error('another cleanup failed');
+      })
+      .mockReturnValueOnce(descendantCleanup);
+
+    try {
+      registerMTRefSlots(0);
+      for (const uid of subtree) {
+        elementTemplateRegistry.set(uid, createMockElementTemplateHandle(`item-${uid}`));
+        initializeMainThreadDynamicAttrSlots(uid, MT_REF_TEMPLATE, [
+          { type: 'main-thread-ref', value: { _wkltId: `ref-${uid}` } },
+        ]);
+      }
+      vi.mocked(__GetElementByAttrSlot).mockReturnValue(REF_TARGET);
+      state.callbacks.componentAtIndex(71, 72);
+
+      expect(() =>
+        applyElementTemplateUpdateCommands([
+          ElementTemplateUpdateOps.removeNode,
+          70,
+          0,
+          71,
+          [71, ...subtree],
+        ])
+      ).toThrow(cleanupError);
+
+      expect(descendantCleanup).toHaveBeenCalledOnce();
+      expect(elementTemplateRegistry.has(74)).toBe(false);
+      expect(getMainThreadDynamicAttrState(74, 0)).toBeUndefined();
+    } finally {
+      globalThis.runWorklet = previousRunWorklet;
+    }
+  });
+
   it('marks nested typed list state destroyed when removing a holder subtree', () => {
     envManager.switchToMainThread();
     elementTemplateRegistry.clear();
@@ -2925,9 +3205,8 @@ describe('ElementTemplate patch stream (apply)', () => {
     const state = createElementTemplateListState();
     registerElementTemplateListState(72, state, listRef);
     const attrs = composeElementTemplateListAttributes(null, state);
-    const componentAtIndex = attrs['component-at-index'] as ComponentAtIndexCallback;
-    const enqueueComponent = attrs['enqueue-component'] as EnqueueComponentCallback;
-    const materializedList = { id: 'materialized-list' } as unknown as FiberElement;
+    const componentAtIndex = attrs['component-at-index'] as (listUid: number, itemUid: number) => void;
+    const enqueueComponent = attrs['enqueue-component'] as (listUid: number, itemUid: number) => void;
 
     applyElementTemplateUpdateCommands([
       ElementTemplateUpdateOps.removeNode,
@@ -2945,8 +3224,8 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(state.holderRef).toBeNull();
     mockRemoveElementTemplateNodeFromSlot.mockClear();
 
-    expect(componentAtIndex(materializedList, 7, 0, 99, false)).toBe(-1);
-    enqueueComponent(materializedList, 7, 131);
+    expect(componentAtIndex(72, 73)).toBeUndefined();
+    enqueueComponent(72, 73);
 
     expect(mockInsertElementTemplateNodeIntoSlot.mock.calls).toHaveLength(0);
     expect(mockRemoveElementTemplateNodeFromSlot.mock.calls).toHaveLength(0);

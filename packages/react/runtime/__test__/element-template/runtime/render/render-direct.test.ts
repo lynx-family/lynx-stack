@@ -419,7 +419,7 @@ describe('direct first-screen materialization', () => {
       {},
     );
     expect(result.rootRefs).toEqual([elementTemplateRegistry.get(-3)]);
-    expect(result.rootSubtreeHandles).toEqual([[]]);
+    expect(result.rootSubtreeHandles).toEqual([[{ uid: -3, ref: elementTemplateRegistry.get(-3)! }]]);
   });
 
   it.each([undefined, true, false])('creates an empty typed list for a non-rendering slot (%s)', (children) => {

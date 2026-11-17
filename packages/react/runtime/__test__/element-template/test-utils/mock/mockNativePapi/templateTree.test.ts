@@ -182,4 +182,15 @@ describe('mock native template tree spread slots', () => {
     expect(root.__childSlots).toEqual([[], [child]]);
     expect(root.children).toEqual([]);
   });
+
+  it('materializes a stable distinct ElementRef only for slot 0 on typed templates', () => {
+    const createTyped = __CreateTypedElementTemplate as (...args: unknown[]) => ElementTemplateHandle;
+    const listHandle = createTyped('list', null, [[]], 9, {});
+    const el0 = __GetElementByAttrSlot(listHandle, 0);
+
+    expect(el0).not.toBeNull();
+    expect(el0).not.toBe(listHandle);
+    expect(__GetElementByAttrSlot(listHandle, 0)).toBe(el0);
+    expect(__GetElementByAttrSlot(listHandle, 1)).toBeNull();
+  });
 });
