@@ -7,6 +7,11 @@
     "build": {
       "dependsOn": [
         "@lynx-js/react-umd#build"
+      ],
+      "env": [
+        "SYNC_THEN_MVP",
+        "LYNX_HOST",
+        "PORT"
       ]
     }
   }

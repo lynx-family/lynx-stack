@@ -1,6 +1,8 @@
 import { defineExternalBundleRslibConfig } from '@lynx-js/lynx-bundle-rslib-config';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
+import { syncThenMvp } from './sync-then-mvp.plugin.js';
+
 // REACTLYNX_ASYNC=true builds comp-lib against async (Promise) ReactLynx
 // externals to match an async host; output isolated in
 // `dist-external-bundle-react-async` so the sync build is untouched.
@@ -15,6 +17,9 @@ export default defineExternalBundleRslibConfig({
   },
   plugins: [
     pluginReactLynx(),
+    ...(process.env['SYNC_THEN_MVP']
+      ? [syncThenMvp(process.env['SYNC_THEN_MVP'])]
+      : []),
   ],
   // Sync and async share this config file, so rspack's persistent cache (keyed
   // on the config) would otherwise reuse one variant's compiled modules for the
@@ -22,7 +27,10 @@ export default defineExternalBundleRslibConfig({
   // hash. Split the cache per variant.
   performance: {
     buildCache: {
-      cacheDigest: [isAsync ? 'react-async' : 'react-sync'],
+      cacheDigest: [
+        isAsync ? 'react-async' : 'react-sync',
+        process.env['SYNC_THEN_MVP'] ?? 'off',
+      ],
     },
   },
   output: {
