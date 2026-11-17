@@ -422,7 +422,7 @@ function deferExternal(name, load) {
 function createRetryingHandler(fetchBundle, retries) {
   let cachedResponse = null
   let asyncPromise = null
-  let currentHandler = fetchBundle()
+  let currentHandler = null
   let attemptsUsed = 0
   return {
     then(onFulfilled, onRejected) {
@@ -442,6 +442,7 @@ function createRetryingHandler(fetchBundle, retries) {
               resolve(response)
             }
           }
+          if (currentHandler === null) currentHandler = fetchBundle()
           currentHandler.then(tryNext, reject)
         })
       }
@@ -449,6 +450,7 @@ function createRetryingHandler(fetchBundle, retries) {
     },
     wait(timeout) {
       if (cachedResponse !== null) return cachedResponse
+      if (currentHandler === null) currentHandler = fetchBundle()
       let response = currentHandler.wait(timeout)
       while (response.code === -2 && attemptsUsed < retries) {
         attemptsUsed++
@@ -491,7 +493,7 @@ function createLoadExternalAsync(handler, sectionPath) {
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
       }
-    })
+    }, reject)
   })
 }
 
