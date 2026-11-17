@@ -366,6 +366,7 @@ export class ExternalsLoadingPlugin {
       ): string {
         const url2fetchCode: Map<string, string> = new Map();
         const url2retries: Map<string, number> = new Map();
+        const prefetchedUrls = new Set<string>();
         const loadCode: Set<string> = new Set();
         // filter duplicate externals by libraryName or package name to avoid loading the same external multiple times. We keep the last one.
         const externalsMap = new Map<
@@ -419,10 +420,10 @@ function deferExternal(name, load) {
   });
 }
 
-function createRetryingHandler(fetchBundle, retries) {
+function createRetryingHandler(fetchBundle, retries, prefetch) {
   let cachedResponse = null
   let asyncPromise = null
-  let currentHandler = fetchBundle()
+  let currentHandler = prefetch ? fetchBundle() : null
   let attemptsUsed = 0
   return {
     then(onFulfilled, onRejected) {
@@ -442,6 +443,7 @@ function createRetryingHandler(fetchBundle, retries) {
               resolve(response)
             }
           }
+          if (currentHandler === null) currentHandler = fetchBundle()
           currentHandler.then(tryNext, reject)
         })
       }
@@ -491,7 +493,7 @@ function createLoadExternalAsync(handler, sectionPath) {
       } else {
         reject(new Error('Failed to fetch external source ' + response.url + ' . The response is ' + JSON.stringify(response), { cause: response }));
       }
-    })
+    }, reject)
   })
 }
 
@@ -584,6 +586,8 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             Math.max(url2retries.get(urlKey) ?? 0, retries),
           );
 
+          if (async !== true) prefetchedUrls.add(urlKey);
+
           const mountVar = `${
             getLynxExternalGlobal(
               externalsLoadingPluginOptions.globalObject,
@@ -638,7 +642,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
           ...[...url2fetchCode.entries()].map(([urlKey, fetchCode], index) =>
             `const handler${index} = createRetryingHandler(${fetchCode}, ${
               url2retries.get(urlKey) ?? 0
-            });`
+            }, ${prefetchedUrls.has(urlKey)});`
           ),
           ...loadCode,
         ].join('\n');
