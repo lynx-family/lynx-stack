@@ -11,7 +11,7 @@ import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
 import type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from './core/lynx-data-processors.js';
-import { __root } from './root.js';
+import { __root, transferMode } from './root.js';
 import { profileEnd, profileStart } from './shared/profile.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { onFirstScreenSyncReady } from './snapshot/lifecycle/event/firstScreenSync.js';
@@ -91,6 +91,8 @@ export interface Root {
  */
 export const root: Root = {
   render: (jsx: ReactNode): void => {
+    // Transfer pages render only registered components; the page root stays empty.
+    if (transferMode) return;
     /* v8 ignore next 2 */
     if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
       __root.__jsx = jsx;

@@ -35,4 +35,11 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   setRoot(new BackgroundSnapshotInstance('root'));
 }
 
-export { __root, setRoot };
+/** Set once a page renders transfer components; `root.render` is then ignored. */
+let transferMode = false;
+
+function enableTransferMode(): void {
+  transferMode = true;
+}
+
+export { __root, enableTransferMode, setRoot, transferMode };
