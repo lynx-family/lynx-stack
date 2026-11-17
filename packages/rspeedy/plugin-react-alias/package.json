@@ -50,7 +50,7 @@
   },
   "peerDependencies": {
     "@lynx-js/react": "^0.128.0 || ^0.129.0",
-    "@lynx-js/rspeedy": "^0.16.0 || ^0.17.0 || ^0.18.0",
+    "@lynx-js/rspeedy": "^0.16.0 || ^0.17.0 || ^0.18.0 || ^0.19.0",
     "@rsbuild/core": "^2.0.0"
   },
   "peerDependenciesMeta": {
