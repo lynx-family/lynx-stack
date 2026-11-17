@@ -47,6 +47,7 @@
     "@rspack/lite-tapable": "1.1.5",
     "@rstest/core": "catalog:rstest",
     "@types/node": "^24.13.3",
+    "preact": "catalog:lynxjs",
     "swc-loader": "^0.2.7"
   },
   "peerDependencies": {

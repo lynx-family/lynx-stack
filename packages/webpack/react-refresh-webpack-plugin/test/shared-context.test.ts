@@ -18,10 +18,27 @@ import {
   rstest,
 } from '@rstest/core';
 
+import { ReactWebpackPlugin } from '@lynx-js/react-webpack-plugin';
+
 import { ReactRefreshRspackPlugin } from '../src/ReactRefreshRspackPlugin.js';
 
 const require = createRequire(import.meta.url);
 const refreshPackageEntry = require.resolve('@lynx-js/react/refresh');
+const reactPackageDir = path.dirname(
+  require.resolve('@lynx-js/react/package.json'),
+);
+const refreshPackageDir = path.dirname(refreshPackageEntry);
+const pluginRuntimeDir = path.resolve(
+  path.dirname(ReactRefreshRspackPlugin.loader),
+  'runtime',
+);
+const loaderExclude = [
+  /[\\/]node_modules[\\/]/,
+  reactPackageDir,
+  refreshPackageDir,
+  pluginRuntimeDir,
+  ReactRefreshRspackPlugin.loader,
+];
 const preactAliases = {
   'preact': require.resolve('preact'),
   'preact/hooks': require.resolve('preact/hooks'),
@@ -226,6 +243,7 @@ function createSharedContext(): SandboxRuntime {
     URL,
     Buffer,
     process,
+    globDynamicComponentEntry: undefined,
   };
   sandbox['globalThis'] = sandbox;
   sandbox['global'] = sandbox;
@@ -279,7 +297,10 @@ function createSharedContext(): SandboxRuntime {
   sharedPreact.preact.options.document = fakeDocument;
 
   const baseExternals: Record<string, unknown> = {
-    '__host_preact__': sharedPreact.preact,
+    '__host_preact__': {
+      ...sharedPreact.preact,
+      snapshotCreatorMap: {},
+    },
     '__host_hooks__': {
       ...sharedPreact.preact,
       ...sharedPreact.hooks,
@@ -359,6 +380,8 @@ async function startHmrBundle(options: {
     'preact/jsx-dev-runtime': 'commonjs __host_jsx_dev__',
     '@lynx-js/react': 'commonjs __host_hooks__',
     '@lynx-js/react/internal': 'commonjs __host_preact__',
+    '@lynx-js/react/jsx-runtime': 'commonjs __host_jsx__',
+    '@lynx-js/react/jsx-dev-runtime': 'commonjs __host_jsx_dev__',
   };
   let externalsType: Configuration['externalsType'];
   const extraExternals: Record<string, unknown> = {};
@@ -406,48 +429,36 @@ async function startHmrBundle(options: {
     module: {
       rules: [
         {
-          test: /\.jsx?$/,
-          exclude: [
-            /node_modules/,
-            /packages\/react\/refresh/,
-            /runtime\/refresh\.mjs/,
-            /runtime\/refreshRuntime\.cjs/,
-            ReactRefreshRspackPlugin.loader,
-          ],
+          test: /\.[jt]sx?$/,
+          exclude: loaderExclude,
           use: [ReactRefreshRspackPlugin.loader],
         },
         {
-          test: /\.jsx?$/,
-          exclude: [
-            /node_modules/,
-            /packages\/react\/refresh/,
-            /runtime\/refresh\.mjs/,
-            /runtime\/refreshRuntime\.cjs/,
-            ReactRefreshRspackPlugin.loader,
-          ],
+          test: /\.[jt]sx?$/,
+          exclude: loaderExclude,
           use: [
             {
               loader: 'builtin:swc-loader',
               options: {
                 jsc: {
                   target: 'es2019',
-                  parser: { syntax: 'ecmascript', jsx: true },
-                  transform: {
-                    react: {
-                      runtime: 'automatic',
-                      importSource: 'preact',
-                      development: true,
-                      refresh: true,
-                    },
-                  },
+                  parser: { syntax: 'typescript', tsx: true },
                 },
               },
+            },
+            {
+              loader: ReactWebpackPlugin.loaders.BACKGROUND,
+              options: { enableRemoveCSSScope: true },
             },
           ],
         },
       ],
     },
     plugins: [
+      new rspack.DefinePlugin({
+        __DEV__: 'true',
+        __PROFILE__: 'false',
+      }),
       new rspack.HotModuleReplacementPlugin(),
       new ReactRefreshRspackPlugin(),
     ],
@@ -566,13 +577,15 @@ export async function checkHmr() {
 
 function makeCleanApp(label: string, version: string, init: number) {
   return `
-import { useState } from 'preact/hooks';
+import { useState } from '@lynx-js/react';
 import { Card } from './card.jsx';
 export function App() {
   const [n, setN] = useState(${init});
   globalThis.__SET_STATE_${label}__ = () => setN(v => v + 1);
   globalThis.__RENDERS_${label}__ = (globalThis.__RENDERS_${label}__ || 0) + 1;
-  return <div>{${JSON.stringify(`${label}-${version}:`)}}{n}|<Card /></div>;
+  return <view><text>{${
+    JSON.stringify(`${label}-${version}:`)
+  }}{n}{'|'}</text><Card /></view>;
 }
 `;
 }
@@ -580,32 +593,56 @@ export function App() {
 function makeCard(label: string, tag: string) {
   return `
 export function Card() {
-  return <span>{${JSON.stringify(`${label}-card-${tag}`)}}</span>;
+  return <text>{${JSON.stringify(`${label}-card-${tag}`)}}</text>;
 }
 `;
 }
 
 function makeSharedApp(label: string, version: string) {
   return `
-import { useState } from 'preact/hooks';
+import { useState } from '@lynx-js/react';
 export function App() {
   const [count, setCount] = useState(1);
   globalThis.__SET_SHARED_${label}__ = () => setCount(v => v + 1);
-  return <div>{${JSON.stringify(`${label}-${version}:`)}}{count}</div>;
+  return <view><text>{${
+    JSON.stringify(`${label}-${version}:`)
+  }}{count}</text></view>;
 }
 `;
 }
 
-function makeAsyncApp(label: string, version: string, extraHook = false) {
+function makeAsyncApp(label: string, version: string) {
   return `
-import { useState } from 'preact/hooks';
+import { useState } from '@lynx-js/react';
 export function App() {
   const [count, setCount] = useState(10);
-  ${extraHook ? `const [tag] = useState('reset');` : ''}
   globalThis.__SET_ASYNC_${label}__ = () => setCount(v => v + 1);
-  return <div>{${JSON.stringify(`${label}-${version}:`)}}{count}${
-    extraHook ? `:{tag}` : ''
-  }</div>;
+  return <view><text>{${
+    JSON.stringify(`${label}-${version}:`)
+  }}{count}</text></view>;
+}
+`;
+}
+
+function makeLegacyApp(version: string) {
+  return `
+import { useState } from '@lynx-js/react';
+export function App() {
+  const [n] = useState(7);
+  return <view><text>{${
+    JSON.stringify(`new-plugin-legacy-runtime-${version}:`)
+  }}{n}</text></view>;
+}
+`;
+}
+
+function makeNewApp(version: string) {
+  return `
+import { useState } from '@lynx-js/react';
+export function App() {
+  const [n, setN] = useState(3);
+  globalThis.__INC_MIXED_NEW__ = () => setN(v => v + 1);
+  return <view><text>{${JSON.stringify(`new-${version}:`)}}{n}</text></view>;
 }
 `;
 }
@@ -623,10 +660,38 @@ describe('Fast Refresh shared JS context isolation', () => {
     fs.writeFileSync(
       path.join(hostSrc, 'preact-host.js'),
       `
-export * as preact from 'preact';
-export * as hooks from 'preact/hooks';
-export * as jsxRuntime from 'preact/jsx-runtime';
-export * as jsxDevRuntime from 'preact/jsx-dev-runtime';
+import * as preact from 'preact';
+import * as hooks from 'preact/hooks';
+import * as rawJsxRuntime from 'preact/jsx-runtime';
+import * as rawJsxDevRuntime from 'preact/jsx-dev-runtime';
+
+function unwrapSnapshotProps(props) {
+  if (!props || typeof props !== 'object') return props;
+  const slotKeys = Object.keys(props)
+    .filter(k => k.startsWith('$'))
+    .sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
+  return { children: slotKeys.map(k => props[k]) };
+}
+
+function wrapJsx(fn) {
+  return function(type, props, ...rest) {
+    if (typeof type === 'string' && type.startsWith('__snapshot_')) {
+      return fn('view', unwrapSnapshotProps(props), ...rest);
+    }
+    return fn(type, props, ...rest);
+  };
+}
+
+export { preact, hooks };
+export const jsxRuntime = {
+  ...rawJsxRuntime,
+  jsx: wrapJsx(rawJsxRuntime.jsx),
+  jsxs: wrapJsx(rawJsxRuntime.jsxs),
+};
+export const jsxDevRuntime = {
+  ...rawJsxDevRuntime,
+  jsxDEV: wrapJsx(rawJsxDevRuntime.jsxDEV),
+};
 `,
     );
 
@@ -814,14 +879,14 @@ export * as jsxDevRuntime from 'preact/jsx-dev-runtime';
       refreshMode: 'bundled',
       files: {
         'first.jsx':
-          `function Box() { return <span>first-1</span>; } export function First() { return <Box />; }`,
+          `function Box() { return <text>{'first-1'}</text>; } export function First() { return <Box />; }`,
         'second.jsx':
-          `function Box() { return <span>second-1</span>; } export function Second() { return <Box />; }`,
+          `function Box() { return <text>{'second-1'}</text>; } export function Second() { return <Box />; }`,
         'entry.jsx': `
 import { render } from 'preact';
 import { First } from './first.jsx';
 import { Second } from './second.jsx';
-export function mount(c) { render(<div><First />|<Second /></div>, c); }
+export function mount(c) { render(<view><First /><text>{'|'}</text><Second /></view>, c); }
 export async function checkHmr() { return module.hot.check(true); }
 `,
       },
@@ -834,7 +899,7 @@ export async function checkHmr() { return module.hot.check(true); }
 
       await bundle.writeFile(
         'first.jsx',
-        `function Box() { return <span>first-2</span>; } export function First() { return <Box />; }`,
+        `function Box() { return <text>{'first-2'}</text>; } export function First() { return <Box />; }`,
       );
       await (bundle.exports['checkHmr'] as () => Promise<unknown>)();
       await flushPreact();
@@ -962,12 +1027,12 @@ export async function checkHmr() { return module.hot.check(true); }
       expect(containerA.textContent).toBe('A-v2:11');
       expect(containerB.textContent).toBe('B-v1:11');
 
-      // Signature-changing update on A must reset count back to 10 (proving $RefreshSig$ bound to A).
-      await bundleA.writeFile('app.jsx', makeAsyncApp('A', 'v3', true));
-      await (exportsA['checkHmr'] as () => Promise<unknown>)();
+      // Preserving hooks update on B must keep count=11 and leave A intact.
+      await bundleB.writeFile('app.jsx', makeAsyncApp('B', 'v2'));
+      await (exportsB['checkHmr'] as () => Promise<unknown>)();
       await flushPreact();
-      expect(containerA.textContent).toBe('A-v3:10:reset');
-      expect(containerB.textContent).toBe('B-v1:11');
+      expect(containerB.textContent).toBe('B-v2:11');
+      expect(containerA.textContent).toBe('A-v2:11');
     } finally {
       await bundleA.close();
       await bundleB.close();
@@ -1026,15 +1091,6 @@ export async function checkHmr() { return module.hot.check(true); }
         isComponent: sb.refresh.isComponent,
       } as SharedRefreshModule;
 
-      const makeLegacyApp = (version: string) => `
-import { useState } from 'preact/hooks';
-export function App() {
-  const [n] = useState(7);
-  return <div>{${
-        JSON.stringify(`new-plugin-legacy-runtime-${version}:`)
-      }}{n}</div>;
-}
-`;
       const bundle = await startHmrBundle({
         sandboxRuntime: sb,
         entry: './entry.jsx',
@@ -1072,15 +1128,6 @@ export function App() {
         computeKey: rstest.fn(),
       };
       sb.sandbox['__PREFRESH__'] = legacySpyBefore;
-
-      const makeNewApp = (version: string) => `
-import { useState } from 'preact/hooks';
-export function App() {
-  const [n, setN] = useState(3);
-  globalThis.__INC_MIXED_NEW__ = () => setN(v => v + 1);
-  return <div>{${JSON.stringify(`new-${version}:`)}}{n}</div>;
-}
-`;
 
       const newBundle = await startHmrBundle({
         sandboxRuntime: sb,

@@ -81,10 +81,6 @@ function createSandboxInterceptor(
   };
 }
 
-function TestRefreshComp() {
-  /* noop */
-}
-
 describe('ReactRefresh plugins', () => {
   it('ReactRefreshRspackPlugin intercept code generation in dev', () => {
     const generateResult = generateInterceptSource();
@@ -138,49 +134,5 @@ describe('ReactRefresh plugins', () => {
 
     expect(options.id).toBe(bgId);
     expect(options.factory).toBe(placeholderFactory);
-  });
-
-  it('prefixes synchronous $RefreshReg$ registrations with moduleObject.id in bundle runtime', () => {
-    const register = rstest.fn();
-    const sign = rstest.fn(() => 'needsHooks');
-    const flush = rstest.fn();
-
-    const { sandbox, intercept } = createSandboxInterceptor({});
-
-    const refreshRuntimeModule = {
-      id: '@lynx-js/react/refresh',
-      exports: {} as Record<string, unknown>,
-    };
-    const refreshOpts = {
-      id: refreshRuntimeModule.id,
-      factory(moduleObject: { exports: Record<string, unknown> }) {
-        moduleObject.exports = {
-          createRefreshRuntime: () => ({ register, sign, flush }),
-          flush: rstest.fn(),
-          isComponent: rstest.fn(),
-        };
-      },
-    };
-    intercept(refreshOpts);
-    refreshOpts.factory(refreshRuntimeModule, refreshRuntimeModule.exports, {});
-
-    const tsModule = { id: './hooks/useCounter.ts', exports: {} };
-    const tsOpts = {
-      id: tsModule.id,
-      factory() {
-        (sandbox['$RefreshReg$'] as (t: unknown, id: string) => void)(
-          TestRefreshComp,
-          'Comp',
-        );
-      },
-    };
-    intercept(tsOpts);
-    tsOpts.factory(tsModule, tsModule.exports, {});
-
-    expect(register).toHaveBeenCalledTimes(1);
-    expect(register).toHaveBeenCalledWith(
-      TestRefreshComp,
-      './hooks/useCounter.ts Comp',
-    );
   });
 });

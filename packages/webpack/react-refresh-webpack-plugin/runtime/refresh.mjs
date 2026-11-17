@@ -3,65 +3,24 @@
 // harmony import edge is awaited, so the injected footer sees resolved
 // `isComponent`/`flush`/`createRefreshRuntime`.
 import * as ReactRefresh from '@lynx-js/react/refresh';
-import defaultRefreshHolder from './refreshRuntime.cjs';
 
 const { flush: legacyFlush, isComponent } = ReactRefresh;
 
-function initHolder(holder) {
-  if (!holder) {
-    return null;
-  }
-  if (typeof ReactRefresh.createRefreshRuntime === 'function') {
-    if (!holder.runtime) {
-      holder.runtime = ReactRefresh.createRefreshRuntime();
-    }
-    holder.legacy = false;
-  } else {
-    holder.legacy = true;
-  }
-  return holder;
-}
-
-initHolder(defaultRefreshHolder);
+// `refresh.mjs` is bundled into each template bundle (never externalized), so
+// owning the runtime at module scope gives each bundle an isolated registry
+// even when `@lynx-js/react/refresh` itself is a shared sync or async external.
+const runtime = typeof ReactRefresh.createRefreshRuntime === 'function'
+  ? ReactRefresh.createRefreshRuntime()
+  : null;
 
 function resolveRegistry() {
-  const target = initHolder(defaultRefreshHolder);
-  if (target && target.runtime) {
-    return target.runtime;
+  if (runtime) {
+    return runtime;
   }
-  if (target && target.legacy && typeof globalThis !== 'undefined') {
+  if (typeof globalThis !== 'undefined') {
     return globalThis.__PREFRESH__ || null;
   }
   return null;
-}
-
-function createSignatureFunctionForTransform() {
-  let status = 'begin';
-  let savedType;
-
-  return function(type, key, forceReset, getCustomHooks) {
-    const registry = resolveRegistry();
-    if (!registry) {
-      return type;
-    }
-    if (!savedType) savedType = type;
-
-    status = registry.sign(
-      type || savedType,
-      key,
-      forceReset,
-      getCustomHooks,
-      status,
-    );
-    return type;
-  };
-}
-
-function register(type, moduleId, id) {
-  const registry = resolveRegistry();
-  if (registry) {
-    registry.register(type, moduleId + ' ' + id);
-  }
 }
 
 // eslint-disable-next-line
@@ -112,14 +71,11 @@ function registerExports(moduleExports, moduleId) {
 }
 
 function flush() {
-  const target = initHolder(defaultRefreshHolder);
-  if (target && target.runtime) {
-    target.runtime.flush();
+  if (runtime) {
+    runtime.flush();
     return;
   }
-  if (target && target.legacy) {
-    legacyFlush();
-  }
+  legacyFlush();
 }
 
 const shouldBind = m => {
@@ -150,11 +106,4 @@ const shouldBind = m => {
   return isCitizen;
 };
 
-export {
-  createSignatureFunctionForTransform,
-  flush,
-  getExports,
-  register,
-  registerExports,
-  shouldBind,
-};
+export { flush, getExports, registerExports, shouldBind };
