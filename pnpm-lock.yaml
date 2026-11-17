@@ -221,7 +221,7 @@ patchedDependencies:
   '@cfworker/json-schema@4.1.4': 4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2
   '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a': 8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398
   '@napi-rs/cli@2.18.4': ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
-  '@prefresh/core@1.5.11': eeac4d0670a28005f4dedd7fde294366f370452ca24737a60d04443767f826f9
+  '@prefresh/core@1.5.11': 924a80570925d22e03df817e7ae99f2a01c0c177cb828decd9782948ac4178e1
   '@rollup/plugin-typescript': 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
 
 importers:
@@ -1987,7 +1987,7 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.11
-        version: 1.5.11(patch_hash=eeac4d0670a28005f4dedd7fde294366f370452ca24737a60d04443767f826f9)(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))
+        version: 1.5.11(patch_hash=924a80570925d22e03df817e7ae99f2a01c0c177cb828decd9782948ac4178e1)(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
@@ -15904,7 +15904,7 @@ snapshots:
       '@preact/signals-core': 1.14.4
       preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
 
-  '@prefresh/core@1.5.11(patch_hash=eeac4d0670a28005f4dedd7fde294366f370452ca24737a60d04443767f826f9)(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))':
+  '@prefresh/core@1.5.11(patch_hash=924a80570925d22e03df817e7ae99f2a01c0c177cb828decd9782948ac4178e1)(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))':
     dependencies:
       preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
 

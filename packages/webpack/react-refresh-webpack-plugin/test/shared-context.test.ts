@@ -41,6 +41,7 @@ const loaderExclude = [
 ];
 const preactAliases = {
   'preact': require.resolve('preact'),
+  'preact/compat': require.resolve('preact/compat'),
   'preact/hooks': require.resolve('preact/hooks'),
   'preact/jsx-runtime': require.resolve('preact/jsx-runtime'),
   'preact/jsx-dev-runtime': require.resolve('preact/jsx-dev-runtime'),
@@ -661,6 +662,7 @@ describe('Fast Refresh shared JS context isolation', () => {
       path.join(hostSrc, 'preact-host.js'),
       `
 import * as preact from 'preact';
+import 'preact/compat';
 import * as hooks from 'preact/hooks';
 import * as rawJsxRuntime from 'preact/jsx-runtime';
 import * as rawJsxDevRuntime from 'preact/jsx-dev-runtime';
@@ -793,6 +795,55 @@ export const jsxDevRuntime = {
     expect(replaceSpy.mock.calls[0]).toEqual([A0, A1, false]);
     expect(replaceSpy.mock.calls[1]).toEqual([A1, A2, false]);
     expect(container.textContent).toBe('A2:42');
+  });
+
+  it('resolves function updates before default props and defers chains with a class', async () => {
+    const sb = createSharedContext();
+    const { h, render } = sb.p.preact;
+    const runtime = sb.refresh.createRefreshRuntime();
+
+    function Counter({ label }: { label: string }) {
+      return h('span', null, `old:${label}`);
+    }
+    Counter.defaultProps = { label: 'old default' };
+
+    function RefreshedCounter({ label }: { label: string }) {
+      return h('span', null, `new:${label}`);
+    }
+    RefreshedCounter.defaultProps = { label: 'new default' };
+
+    const container = sb.createContainer();
+    runtime.register(Counter, 'counter');
+    render(h(Counter, null), container);
+    expect(container.textContent).toBe('old:old default');
+
+    runtime.register(RefreshedCounter, 'counter');
+    runtime.flush();
+    await flushPreact();
+
+    const fresh = sb.createContainer();
+    render(h(Counter, null), fresh);
+    expect(fresh.textContent).toBe('new:new default');
+
+    const Component = sb.p.preact
+      .Component as typeof import('preact').Component;
+    class IntermediateCounter extends Component {
+      render() {
+        return h('span', null, 'intermediate');
+      }
+    }
+    function LatestCounter() {
+      return h('span', null, 'latest');
+    }
+    runtime.register(IntermediateCounter, 'counter');
+    runtime.register(LatestCounter, 'counter');
+    runtime.flush();
+
+    // Reconciliation must see the old type so it can defer class replacements
+    // while the tree is parked by Suspense.
+    expect((h(Counter, null) as import('preact').VNode).type).toBe(Counter);
+    await flushPreact();
+    expect(fresh.textContent).toBe('latest');
   });
 
   it.each(['scoped', 'legacy'])(

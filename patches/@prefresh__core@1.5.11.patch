@@ -98,7 +98,7 @@ index 644b5682e2fba45a47ed021cab99568733afc5a0..a58b57610635b987ecbe3c8feb6d3eac
        if (resetHookState) {
          if (
 diff --git a/src/runtime/vnode.js b/src/runtime/vnode.js
-index 7d1106111fd6bf2773713f394284ed9c193056ae..18e37cbd91fde5e9535916f1310def284d5554c4 100644
+index 7d1106111fd6bf2773713f394284ed9c193056ae..eaaadeed55e6e9b5d796033e2adc22ce7f97e5fe 100644
 --- a/src/runtime/vnode.js
 +++ b/src/runtime/vnode.js
 @@ -4,7 +4,6 @@ import {
@@ -109,12 +109,10 @@ index 7d1106111fd6bf2773713f394284ed9c193056ae..18e37cbd91fde5e9535916f1310def28
  
  const getMappedVnode = type => {
    if (mappedVNodes.has(type)) {
-@@ -20,23 +19,14 @@ const isBuiltIn = type => {
-   return BUILT_IN_COMPONENTS.includes(type.name);
- };
+@@ -22,23 +21,32 @@ const isBuiltIn = type => {
  
--const oldVnode = options.vnode;
--options.vnode = vnode => {
+ const oldVnode = options.vnode;
+ options.vnode = vnode => {
 -  if (vnode && typeof vnode.type === 'function' && !isBuiltIn(vnode.type)) {
 -    const foundType = getMappedVnode(vnode.type);
 -    if (foundType !== vnode.type) {
@@ -125,11 +123,23 @@ index 7d1106111fd6bf2773713f394284ed9c193056ae..18e37cbd91fde5e9535916f1310def28
 -        vnode.type.prototype.render
 -      ) {
 -        vnode[VNODE_COMPONENT].constructor = vnode.type;
--      }
--    }
--  }
++  let type = vnode.type;
++  if (mappedVNodes.has(type) && !isBuiltIn(type)) {
++    // Resolve function-only chains before Compat applies defaultProps.
++    // A class anywhere in the chain leaves the replacement to reconciliation.
++    while (!type.prototype?.render) {
++      const next = mappedVNodes.get(type);
++      if (!next) {
++        vnode.type = type;
++        break;
+       }
++      type = next;
+     }
+   }
 -
--  if (oldVnode) oldVnode(vnode);
+   if (oldVnode) oldVnode(vnode);
+ };
+ 
 +// The Lynx renderer resolves refreshed types before matching children, also
 +// when it reuses an already-created VNode. Preserve other runtime resolvers.
 +const previousResolver = options.__refreshType;
@@ -138,6 +148,8 @@ index 7d1106111fd6bf2773713f394284ed9c193056ae..18e37cbd91fde5e9535916f1310def28
 +    ? getMappedVnode(type)
 +    : type;
 +  return previousResolver ? previousResolver(resolved) : resolved;
- };
- 
++};
++
  const oldDiff = options.__b;
+ options.__b = vnode => {
+   if (vnode && typeof vnode.type === 'function' && !isBuiltIn(vnode.type)) {
