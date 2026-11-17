@@ -3405,6 +3405,9 @@ importers:
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.47(@swc/helpers@0.5.23))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
