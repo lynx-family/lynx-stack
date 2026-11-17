@@ -15,14 +15,15 @@
 - Bundle: main4.js
 - Bundle: main4/template.js
 - Manifest: index.LAST_HASH.css.hot-update.json, size: 2450
-- Manifest: index.LAST_HASH.hot-update.json, size: 29
+- Manifest: index.LAST_HASH.hot-update.json, size: 42
 - Manifest: main2.LAST_HASH.css.hot-update.json, size: 2450
-- Manifest: main2.LAST_HASH.hot-update.json, size: 29
+- Manifest: main2.LAST_HASH.hot-update.json, size: 42
 - Manifest: main3.LAST_HASH.css.hot-update.json, size: 2450
-- Manifest: main3.LAST_HASH.hot-update.json, size: 29
+- Manifest: main3.LAST_HASH.hot-update.json, size: 42
 - Manifest: main4.LAST_HASH.css.hot-update.json, size: 2450
-- Manifest: main4.LAST_HASH.hot-update.json, size: 29
+- Manifest: main4.LAST_HASH.hot-update.json, size: 42
 - Update: index.LAST_HASH.hot-update.js, size: 358
+- Update: lib-common.LAST_HASH.hot-update.js, size: 67
 - Update: main2.LAST_HASH.hot-update.js, size: 358
 - Update: main3.LAST_HASH.hot-update.js, size: 358
 - Update: main4.LAST_HASH.hot-update.js, size: 358
@@ -196,7 +197,8 @@
 ```json
 {
   "c": [
-    "index"
+    "index",
+    "lib-common"
   ],
   "r": [],
   "m": []
@@ -372,6 +374,7 @@
 ```json
 {
   "c": [
+    "lib-common",
     "main2"
   ],
   "r": [],
@@ -548,6 +551,7 @@
 ```json
 {
   "c": [
+    "lib-common",
     "main3"
   ],
   "r": [],
@@ -724,6 +728,7 @@
 ```json
 {
   "c": [
+    "lib-common",
     "main4"
   ],
   "r": [],
@@ -762,6 +767,24 @@ __webpack_require__.cssHotUpdateList = [["index","index.LAST_HASH.css.hot-update
 
 }
 ;
+;
+```
+
+
+
+### lib-common.LAST_HASH.hot-update.js
+
+#### Changed Modules
+
+
+#### Changed Runtime Modules
+
+
+#### Changed Content
+```js
+"use strict";
+exports.ids = ["lib-common"];
+exports.modules = {};
 ;
 ```
 

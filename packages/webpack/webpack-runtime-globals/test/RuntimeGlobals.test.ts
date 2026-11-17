@@ -15,8 +15,9 @@ describe('RuntimeGlobals', () => {
 
   test('not overlap with Rspack', async () => {
     const rspack = await import('@rspack/core');
+    const rspackRuntimeGlobals = Object.values(rspack.RuntimeGlobals);
     Object.keys(RuntimeGlobals).forEach(lynxRuntimeRequirement => {
-      expect(rspack.RuntimeGlobals).not.toContain(lynxRuntimeRequirement);
+      expect(rspackRuntimeGlobals).not.toContain(lynxRuntimeRequirement);
     });
   });
 });
