@@ -12,7 +12,7 @@ export default {
       LynxTemplatePlugin,
       config: {
         enableA11y: false,
-        enableNewIntersectionObserver: false,
+        enableCSSInheritance: true,
       },
       compilerOptionsKeys,
       configKeys,
