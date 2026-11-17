@@ -3,12 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 // Background side of the transfer protocol. The first `registerComponent` fixes
 // the thread, so the main thread side lives in `transfer.mts.test.jsx`.
+import { render } from 'preact';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { root, useState } from '../../../src/index';
 import { TransferRegistry } from '../../../src/internal';
 import { __root } from '../../../src/root';
-import { backgroundSnapshotInstanceManager } from '../../../src/snapshot/snapshot/backgroundSnapshot';
+import {
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+} from '../../../src/snapshot/snapshot/backgroundSnapshot';
 import { globalEnvManager } from '../utils/envManager';
 import { waitSchedule } from '../utils/nativeMethod';
 
@@ -151,6 +155,34 @@ describe('transfer (background thread)', () => {
 
     link.fire('__CreateTransfer', { transferId: '3', componentName: 'Missing', initialProps: {} });
     expect(reportError).toHaveBeenCalledWith(new Error('Unknown transfer component: Missing'));
+  });
+
+  it('ignores early, duplicate and stale messages', async () => {
+    // An empty first frame hydrates by inserting the rendered children.
+    const emptyFrame = id => JSON.stringify({ id, type: 'root' });
+    link.fire('__TransferFirstFrame', { transferId: '4', snapshot: emptyFrame(-100) });
+    expect(commits('4')).toHaveLength(0);
+    link.fire('__CreateTransfer', { transferId: '4', componentName: 'Bubble', initialProps: { text: 'e' } });
+    expect(commits('4')).toMatchObject([{ seq: 1, kind: 'hydrate' }]);
+
+    link.fire('__TransferFirstFrame', { transferId: '4', snapshot: emptyFrame(-100) });
+    link.fire('__CreateTransfer', { transferId: '4', componentName: 'Bubble', initialProps: {} });
+    ack('4', 7);
+    ack('404', 1);
+    setCount(1);
+    await waitSchedule();
+    expect(commits('4')).toHaveLength(1);
+
+    // Disposal releases the in-flight and queued commits; later messages are ignored.
+    link.fire('__DestroyTransfer', { transferId: '4' });
+    link.fire('__DestroyTransfer', { transferId: '4' });
+    ack('4', 1);
+    link.fire('__TransferFirstFrame', { transferId: '4', snapshot: emptyFrame(-101) });
+    link.fire('__CreateTransfer', { transferId: '4', componentName: 'Bubble', initialProps: {} });
+    expect(commits('4')).toHaveLength(1);
+
+    render(<Page />, new BackgroundSnapshotInstance('root'));
+    expect(reportError).toHaveBeenCalledWith(new Error('Commit rendered outside a transfer instance'));
   });
 
   it('removes its listeners when the lifetime is destroyed', () => {

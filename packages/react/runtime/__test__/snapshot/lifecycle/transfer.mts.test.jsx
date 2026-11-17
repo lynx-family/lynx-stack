@@ -90,6 +90,7 @@ describe('transfer (main thread)', () => {
     expect(__root.__jsx).toBeUndefined();
 
     create('1');
+    native.fire('__CreateTransfer', { transferId: 'missing', componentName: 'Missing', initialProps: {} });
     // Props sent before the page renders replace the queued initial props.
     native.fire('__SetTransferProps', { transferId: '1', props: { text: 'queued' } });
     expect(link.of('__TransferFirstFrame')).toHaveLength(0);
@@ -97,6 +98,7 @@ describe('transfer (main thread)', () => {
 
     engine.fire('__RenderPage', [{ text: 'init' }]);
     expect(lynx.__initData).toEqual({ text: 'init' });
+    expect(reportError).toHaveBeenCalledWith(new Error('Unknown transfer component: Missing'));
     expect(elementTree.root.type).toBe('page');
     expect(elementTree.root.children).toHaveLength(1);
     const element = elementTree.root.children[0];
@@ -149,5 +151,9 @@ describe('transfer (main thread)', () => {
     expect(reportError).toHaveBeenCalledWith(new Error('broken'));
     expect(elementTree.root.children).toHaveLength(0);
     expect(link.of('__DestroyTransfer')).toEqual([{ transferId: '2' }, { transferId: '3' }]);
+
+    // A page rendered without data gets empty init data.
+    engine.fire('__RenderPage', []);
+    expect(lynx.__initData).toEqual({});
   });
 });
