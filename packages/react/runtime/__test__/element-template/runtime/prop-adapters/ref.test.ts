@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { hydrationMap } from '../../../../src/element-template/hydration-map.js';
 import {
+  ElementTemplateRefProxy,
   clearRefState,
   flushDelayedRefUiOps,
   flushPendingRefs,
@@ -149,6 +150,70 @@ describe('ElementTemplate ref prop adapter', () => {
       expect(setNativeProps).toHaveBeenCalledWith({ opacity: 1 });
       expect(exec).toHaveBeenCalledTimes(1);
     } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('enriches ET ref selector failures with operation and template type', () => {
+    const invokeQueue: Array<{ selector: string; options: { fail: (res: { code: number; data: string }) => void } }> =
+      [];
+    const originalDev = globalThis.__DEV__;
+    const reportError = vi.fn();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    vi.stubGlobal('lynx', {
+      reportError,
+      createSelectorQuery: () => ({
+        select(selector: string) {
+          return {
+            invoke(options: { fail: (res: { code: number; data: string }) => void }) {
+              return {
+                exec() {
+                  invokeQueue.push({ selector, options });
+                },
+              };
+            },
+          };
+        },
+      }),
+    });
+
+    try {
+      globalThis.__DEV__ = false;
+      flushDelayedRefUiOps();
+
+      const leafRef = { current: null as ElementTemplateRefProxy | null };
+      queueRefAttrUpdate(null, leafRef, { instanceId: 7, type: '_et_leaf_a' }, 1);
+      flushPendingRefs();
+
+      const fail1 = vi.fn();
+      leafRef.current!.invoke({ method: 'boundingClientRect', fail: fail1 }).exec();
+      const req1 = invokeQueue.shift()!;
+      req1.options.fail({ code: 2, data: `no node found for selector '${req1.selector}'` });
+      expect(fail1).toHaveBeenCalledWith({
+        code: 2,
+        data: `no node found for selector '${req1.selector}' [ReactLynx ref: invoke(boundingClientRect), _et_leaf_a]`,
+      });
+
+      const fail2 = vi.fn();
+      new ElementTemplateRefProxy(99, 2).invoke({ method: 'focus', fail: fail2 }).exec();
+      const req2 = invokeQueue.shift()!;
+      req2.options.fail({ code: 6, data: `node '${req2.selector}' does not have a LynxUI` });
+      expect(fail2).toHaveBeenCalledWith({
+        code: 6,
+        data: `node '${req2.selector}' does not have a LynxUI [ReactLynx ref: invoke(focus)]`,
+      });
+
+      globalThis.__DEV__ = true;
+      leafRef.current!.invoke({ method: 'boundingClientRect' }).exec();
+      const req3 = invokeQueue.shift()!;
+      req3.options.fail({ code: 2, data: `no node found for selector '${req3.selector}'` });
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0]![0]).toContain('[ReactLynx ref: invoke(boundingClientRect), _et_leaf_a]');
+      expect(reportError).toHaveBeenCalledTimes(1);
+    } finally {
+      warnSpy.mockRestore();
+      globalThis.__DEV__ = originalDev;
       vi.unstubAllGlobals();
     }
   });

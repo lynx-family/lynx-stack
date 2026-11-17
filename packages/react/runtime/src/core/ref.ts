@@ -2,7 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { NodesRef, SelectorQuery } from '@lynx-js/types';
+import type { NodesRef, SelectorQuery, uiMethodOptions } from '@lynx-js/types';
+
+const NODE_NOT_FOUND_CODE = 2;
+const NO_UI_FOR_NODE_CODE = 6;
 
 export type RefCleanup = (() => void) | void;
 export type RefCallback<T> = (ref: T | null) => RefCleanup;
@@ -23,7 +26,29 @@ export type RefProxyForwardedMethods<TProxy> = {
   [K in ForwardableNodesRefMethod]: (...args: Parameters<NodesRef[K]>) => TProxy;
 };
 
-type RefTask = (nodesRef: NodesRef) => SelectorQuery;
+type RefTask = (nodesRef: NodesRef, execStack?: string, selector?: string) => SelectorQuery;
+
+function enrichRefError<T>(
+  res: T,
+  method: string,
+  template: string | undefined,
+  execStack: string | undefined,
+): T {
+  const record = res as { code?: unknown; data?: unknown } | null | undefined;
+  if (
+    !record
+    || (record.code !== NODE_NOT_FOUND_CODE && record.code !== NO_UI_FOR_NODE_CODE)
+    || typeof record.data !== 'string'
+  ) {
+    return res;
+  }
+
+  return Object.assign({}, res, {
+    data: `${record.data} [ReactLynx ref: invoke(${method})${template ? `, ${template}` : ''}]${
+      __DEV__ && execStack ? `\n${execStack}` : ''
+    }`,
+  });
+}
 
 export function assertValidRef<T>(value: unknown): OrdinaryRef<T> {
   if (
@@ -134,10 +159,59 @@ export class OrdinaryRefEffectQueue<TProxy, TToken> {
   }
 }
 
+function createRefTask(
+  method: ForwardableNodesRefMethod,
+  args: unknown[],
+  template: string | undefined,
+): RefTask {
+  return (nodesRef, execStack, selector) => {
+    let callArgs = args;
+    if (method === 'invoke') {
+      const options = args[0] as uiMethodOptions | undefined;
+      if (options && typeof options.fail === 'function') {
+        callArgs = [
+          Object.assign({}, options, {
+            fail: (res: Parameters<NonNullable<uiMethodOptions['fail']>>[0]) =>
+              options.fail!.call(
+                options,
+                enrichRefError(res, options.method, template, execStack),
+              ),
+          }),
+        ];
+      } else if (__DEV__ && options) {
+        callArgs = [
+          Object.assign({}, options, {
+            fail: (res: Parameters<NonNullable<uiMethodOptions['fail']>>[0]) => {
+              if (
+                res
+                && (res as { code?: unknown }).code !== 0
+                && !(lynx as { _switches?: { disableSelectorQueryWarningWhenFailed?: boolean } })._switches
+                  ?.disableSelectorQueryWarningWhenFailed
+              ) {
+                const enriched = enrichRefError(res, options.method, template, undefined);
+                const message =
+                  `Failed to exec NodesRef.invoke() on ${selector}. Add a fail callback to suppress this warning. Msg: ${
+                    JSON.stringify(enriched)
+                  }\n${execStack}`;
+                console.warn(message);
+                const error = new Error(message);
+                error.name = 'INVOKE_ERROR';
+                lynx.reportError(error);
+              }
+            },
+          }),
+        ];
+      }
+    }
+
+    return (nodesRef[method] as (...params: unknown[]) => SelectorQuery).apply(nodesRef, callArgs);
+  };
+}
+
 export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> {
   private task: RefTask | undefined;
 
-  protected createProxy(): TProxy {
+  protected createProxy(template?: string): TProxy {
     return new Proxy(this, {
       get: (target, prop, receiver) => {
         if (
@@ -150,7 +224,13 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
         }
 
         return <K extends ForwardableNodesRefMethod>(...args: Parameters<NodesRef[K]>) => {
-          return target.createProxyTarget().setTask(prop as ForwardableNodesRefMethod, args);
+          const next = target.createProxyTarget();
+          (next as SelectorRefProxy<TProxy>).task = createRefTask(
+            prop as ForwardableNodesRefMethod,
+            args,
+            template,
+          );
+          return next;
         };
       },
     }) as unknown as TProxy;
@@ -162,18 +242,15 @@ export abstract class SelectorRefProxy<TProxy extends SelectorRefProxy<TProxy>> 
 
   abstract get selector(): string;
 
-  private setTask<K extends ForwardableNodesRefMethod>(
-    method: K,
-    args: Parameters<NodesRef[K]>,
-  ): TProxy {
-    this.task = (nodesRef) => {
-      const nodesRefMethod = nodesRef[method] as (...params: Parameters<NodesRef[K]>) => SelectorQuery;
-      return nodesRefMethod.apply(nodesRef, args);
-    };
-    return this as unknown as TProxy;
-  }
-
   exec(): void {
+    if (__DEV__) {
+      const execStack = new Error('ReactLynx ref exec() call stack').stack;
+      this.runOrDelay(() => {
+        const selector = this.selector;
+        this.task!(lynx.createSelectorQuery().select(selector), execStack, selector).exec();
+      });
+      return;
+    }
     this.runOrDelay(() => {
       this.task!(lynx.createSelectorQuery().select(this.selector)).exec();
     });

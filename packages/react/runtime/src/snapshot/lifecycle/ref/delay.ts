@@ -53,11 +53,14 @@ function runDelayedUiOps(): void {
 class RefProxy extends SelectorRefProxy<RefProxy> {
   private readonly refAttr: [snapshotInstanceId: number, expIndex: number];
 
-  constructor(refAttr: [snapshotInstanceId: number, expIndex: number]) {
+  constructor(
+    refAttr: [snapshotInstanceId: number, expIndex: number],
+    snapshotType?: string,
+  ) {
     super();
     this.refAttr = refAttr;
 
-    return this.createProxy();
+    return this.createProxy(snapshotType);
   }
 
   protected createProxyTarget(): RefProxy {
