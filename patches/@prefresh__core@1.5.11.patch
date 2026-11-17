@@ -1,0 +1,143 @@
+diff --git a/src/index.js b/src/index.js
+index 644b5682e2fba45a47ed021cab99568733afc5a0..a58b57610635b987ecbe3c8feb6d3eacc66d5eee 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -52,16 +52,27 @@ function sign(type, key, forceReset, getCustomHooks, status) {
+ }
+ 
+ function replaceComponent(OldType, NewType, resetHookState) {
++  if (OldType === NewType) return;
++
++  const remount = OldType.prototype?.render || NewType.prototype?.render;
++  // Record type changes even when a previous refresh still needs to render.
++  for (let type = NewType; mappedVNodes.has(type); ) {
++    type = mappedVNodes.get(type);
++    if (type === OldType) {
++      mappedVNodes.delete(NewType);
++      break;
++    }
++  }
++  mappedVNodes.set(OldType, NewType);
++  pendingUpdates = pendingUpdates.filter(p => p[0] !== OldType);
++
+   const vnodes = vnodesForComponent.get(OldType);
+   if (!vnodes) return;
+ 
+-  // migrate the list to our new constructor reference
+-  vnodesForComponent.delete(OldType);
+-  vnodesForComponent.set(NewType, vnodes);
+-
+-  mappedVNodes.set(OldType, NewType);
+-
+-  pendingUpdates = pendingUpdates.filter(p => p[0] !== OldType);
++  if (!remount) {
++    vnodesForComponent.delete(OldType);
++    vnodesForComponent.set(NewType, vnodes);
++  }
+ 
+   vnodes.forEach(node => {
+     let vnode = node;
+@@ -70,50 +81,18 @@ function replaceComponent(OldType, NewType, resetHookState) {
+       lastSeen.delete(vnode.__v);
+     }
+ 
+-    // if the vnode
+     if (!vnode || !vnode.__c || !vnode.__c.__P) return;
+-    // update the type in-place to reference the new component
+-    vnode.type = NewType;
+-
+-    if (vnode[VNODE_COMPONENT]) {
+-      vnode[VNODE_COMPONENT].constructor = vnode.type;
+ 
+-      try {
+-        if (vnode[VNODE_COMPONENT] instanceof OldType) {
+-          const oldInst = vnode[VNODE_COMPONENT];
+-
+-          const newInst = new NewType(
+-            vnode[VNODE_COMPONENT].props,
+-            vnode[VNODE_COMPONENT].context
+-          );
++    if (remount) {
++      // Resolve the type on the new VNode only. The renderer still needs the
++      // old type and instance to run their normal unmount path.
++      Component.prototype.forceUpdate.call(vnode[VNODE_COMPONENT]);
++      return;
++    }
+ 
+-          vnode[VNODE_COMPONENT] = newInst;
+-          // copy old properties onto the new instance.
+-          //   - Objects (including refs) in the new instance are updated with their old values
+-          //   - Missing or null properties are restored to their old values
+-          //   - Updated Functions are not reverted
+-          //   - Scalars are copied
+-          for (let i in oldInst) {
+-            const type = typeof oldInst[i];
+-            if (!(i in newInst)) {
+-              newInst[i] = oldInst[i];
+-            } else if (type !== 'function' && typeof newInst[i] === type) {
+-              if (
+-                type === 'object' &&
+-                newInst[i] != null &&
+-                newInst[i].constructor === oldInst[i].constructor
+-              ) {
+-                Object.assign(newInst[i], oldInst[i]);
+-              } else {
+-                newInst[i] = oldInst[i];
+-              }
+-            }
+-          }
+-        }
+-      } catch (e) {
+-        /* Functional component */
+-        vnode[VNODE_COMPONENT].constructor = NewType;
+-      }
++    vnode.type = NewType;
++    if (vnode[VNODE_COMPONENT]) {
++      vnode[VNODE_COMPONENT].constructor = NewType;
+ 
+       if (resetHookState) {
+         if (
+diff --git a/src/runtime/vnode.js b/src/runtime/vnode.js
+index 7d1106111fd6bf2773713f394284ed9c193056ae..18e37cbd91fde5e9535916f1310def284d5554c4 100644
+--- a/src/runtime/vnode.js
++++ b/src/runtime/vnode.js
+@@ -4,7 +4,6 @@ import {
+   mappedVNodes,
+   setLastSeen,
+ } from './vnodesForComponent';
+-import { VNODE_COMPONENT } from '../constants';
+ 
+ const getMappedVnode = type => {
+   if (mappedVNodes.has(type)) {
+@@ -20,23 +19,14 @@ const isBuiltIn = type => {
+   return BUILT_IN_COMPONENTS.includes(type.name);
+ };
+ 
+-const oldVnode = options.vnode;
+-options.vnode = vnode => {
+-  if (vnode && typeof vnode.type === 'function' && !isBuiltIn(vnode.type)) {
+-    const foundType = getMappedVnode(vnode.type);
+-    if (foundType !== vnode.type) {
+-      vnode.type = foundType;
+-      if (
+-        vnode[VNODE_COMPONENT] &&
+-        'prototype' in vnode.type &&
+-        vnode.type.prototype.render
+-      ) {
+-        vnode[VNODE_COMPONENT].constructor = vnode.type;
+-      }
+-    }
+-  }
+-
+-  if (oldVnode) oldVnode(vnode);
++// The Lynx renderer resolves refreshed types before matching children, also
++// when it reuses an already-created VNode. Preserve other runtime resolvers.
++const previousResolver = options.__refreshType;
++options.__refreshType = type => {
++  const resolved = typeof type === 'function' && !isBuiltIn(type)
++    ? getMappedVnode(type)
++    : type;
++  return previousResolver ? previousResolver(resolved) : resolved;
+ };
+ 
+ const oldDiff = options.__b;

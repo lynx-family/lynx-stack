@@ -188,7 +188,9 @@ packageExtensions:
 
 patchedDependencies:
   "@cfworker/json-schema@4.1.4": patches/@cfworker__json-schema@4.1.4.patch
+  "@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a": patches/@lynx-js__internal-preact@11.0.0-rc.1-20260903085447-f95471a.patch
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
+  "@prefresh/core@1.5.11": patches/@prefresh__core@1.5.11.patch
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 
 strictDepBuilds: true

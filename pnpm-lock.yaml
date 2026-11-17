@@ -219,7 +219,9 @@ packageExtensionsChecksum: sha256-Y9ZLHWMP51V1VaeUicx/UxFRX96fq7QFLXtege8aEOA=
 
 patchedDependencies:
   '@cfworker/json-schema@4.1.4': 4a24b57540c8e580c07bcb358b0997f2fa4d39dd4cd83110763e8a60719b23a2
+  '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a': 8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398
   '@napi-rs/cli@2.18.4': ba947eb1c48b2a85834e99f92cbbae896722ce61fd5ae67507a3be9041959ebd
+  '@prefresh/core@1.5.11': eeac4d0670a28005f4dedd7fde294366f370452ca24737a60d04443767f826f9
   '@rollup/plugin-typescript': 926ba262ec682d27369f1a8648a0dfb657fb5f1b28539ca3628d292276c91c3d
 
 importers:
@@ -1929,7 +1931,7 @@ importers:
     dependencies:
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
     devDependencies:
       '@lynx-js/types':
         specifier: 4.1.0
@@ -1945,7 +1947,7 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^2.11.2
-        version: 2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
+        version: 2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))
       '@preact/signals-core':
         specifier: ^1.14.4
         version: 1.14.4
@@ -1958,7 +1960,7 @@ importers:
         version: 1.0.2(@microsoft/api-extractor@7.59.4(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
 
   packages/react-umd:
     devDependencies:
@@ -1985,13 +1987,13 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.11
-        version: 1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
+        version: 1.5.11(patch_hash=eeac4d0670a28005f4dedd7fde294366f370452ca24737a60d04443767f826f9)(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
 
   packages/react/runtime:
     devDependencies:
@@ -2051,7 +2053,7 @@ importers:
         version: 7.0.0(@testing-library/dom@10.4.1)
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
       pretty-format:
         specifier: ^30.4.1
         version: 30.4.1
@@ -3407,7 +3409,7 @@ importers:
         version: 24.13.3
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.47(@swc/helpers@0.5.23))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -14963,7 +14965,7 @@ snapshots:
       '@lynx-js/react': link:packages/react
       '@lynx-js/types': 4.1.0
 
-  '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a': {}
+  '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)': {}
 
   '@lynx-js/luna-styles@0.2.2': {}
 
@@ -15897,14 +15899,14 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
+  '@preact/signals@2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))':
     dependencies:
       '@preact/signals-core': 1.14.4
-      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
 
-  '@prefresh/core@1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
+  '@prefresh/core@1.5.11(patch_hash=eeac4d0670a28005f4dedd7fde294366f370452ca24737a60d04443767f826f9)(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398))':
     dependencies:
-      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a(patch_hash=8d70c642fc4a74e123d8b0bc63fac4fab31f6f73eb14a1eab0bf7bcdd4b52398)'
 
   '@prefresh/utils@1.2.1': {}
 

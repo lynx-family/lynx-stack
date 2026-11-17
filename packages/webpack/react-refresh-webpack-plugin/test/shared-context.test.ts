@@ -795,6 +795,95 @@ export const jsxDevRuntime = {
     expect(container.textContent).toBe('A2:42');
   });
 
+  it.each(['scoped', 'legacy'])(
+    'remounts a subscribed class in %s refresh mode',
+    async (mode) => {
+      const sb = createSharedContext();
+      const { h, render } = sb.p.preact;
+      const Component = sb.p.preact
+        .Component as typeof import('preact').Component;
+      const runtime = mode === 'scoped'
+        ? sb.refresh.createRefreshRuntime()
+        : {
+          register: (sb.sandbox['__PREFRESH__'] as {
+            register: (type: unknown, id: string) => void;
+          }).register,
+          flush: sb.refresh.flush,
+        };
+      const listeners = new Set<() => void>();
+      const lifecycle: string[] = [];
+
+      function defineCounter(label: string) {
+        return class Counter extends Component {
+          state = { count: 0 };
+
+          onStoreChange = () => this.setState({ count: 1 });
+
+          componentDidMount() {
+            lifecycle.push(`mount ${label}`);
+          }
+
+          constructor(props: Record<string, never>) {
+            super(props);
+            listeners.add(this.onStoreChange);
+          }
+
+          componentWillUnmount() {
+            listeners.delete(this.onStoreChange);
+            lifecycle.push(`unmount ${label}`);
+          }
+
+          render() {
+            return h('span', null, `${label}:${this.state.count}`);
+          }
+        };
+      }
+
+      const container = sb.createContainer();
+      const initial = defineCounter('initial');
+      runtime.register(initial, 'counter');
+      runtime.register(initial, 'counter alias');
+      render(h('div', null, h(initial, null), h('i', null, '!')), container);
+      const [notifyOld] = listeners;
+
+      const first = defineCounter('A');
+      runtime.register(first, 'counter');
+      runtime.register(first, 'counter alias');
+      runtime.flush();
+      await flushPreact();
+      expect(lifecycle).toEqual([
+        'mount initial',
+        'unmount initial',
+        'mount A',
+      ]);
+      expect(listeners.size).toBe(1);
+      expect(container.textContent).toBe('A:0!');
+
+      notifyOld!();
+      for (const listener of listeners) listener();
+      await flushPreact();
+      expect(container.textContent).toBe('A:1!');
+
+      const second = defineCounter('B');
+      runtime.register(second, 'counter');
+      runtime.register(defineCounter('C'), 'counter');
+      runtime.register(second, 'counter alias');
+      runtime.flush();
+      await flushPreact();
+      expect(lifecycle).toEqual([
+        'mount initial',
+        'unmount initial',
+        'mount A',
+        'unmount A',
+        'mount C',
+      ]);
+      expect(container.textContent).toBe('C:0!');
+
+      render(null, container);
+      expect(listeners.size).toBe(0);
+    },
+  );
+
   it('isolates colliding ./app.jsx#App across two bundled runtimes in both load orders and across local files', async () => {
     for (const order of ['A-first', 'B-first'] as const) {
       const sb = createSharedContext();
