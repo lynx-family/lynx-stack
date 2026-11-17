@@ -4,12 +4,21 @@
 
 ```ts
 
+import { ExternalRuntime } from '@lynx-js/externals-loading-webpack-plugin';
+import { ExternalRuntimeContext } from '@lynx-js/externals-loading-webpack-plugin';
+import { ExternalRuntimeRequest } from '@lynx-js/externals-loading-webpack-plugin';
 import type { ExternalsLoadingPluginOptions } from '@lynx-js/externals-loading-webpack-plugin';
 import type { ExternalValue } from '@lynx-js/externals-loading-webpack-plugin';
 import type { RsbuildPlugin } from '@rsbuild/core';
 
 // @public
 export const builtInExternalsPresetDefinitions: ExternalsPresetDefinitions;
+
+export { ExternalRuntime }
+
+export { ExternalRuntimeContext }
+
+export { ExternalRuntimeRequest }
 
 // @public
 export interface ExternalsPresetContext {

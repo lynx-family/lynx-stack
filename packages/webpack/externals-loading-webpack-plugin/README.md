@@ -11,7 +11,7 @@ development serving and build-time asset emission.
 Use `@lynx-js/externals-loading-webpack-plugin` directly only when you need the
 low-level webpack/Rspack runtime integration.
 
-External bundles are prefetched during startup, but their sections
+Fixed-URL and `bundlePath` bundles are prefetched during startup, but their sections
 are evaluated on the first import. This preserves module initialization order,
 including initializing a page's worklet runtime before importing a legacy
 component external. Synchronous exports and asynchronous loading Promises are
@@ -19,6 +19,18 @@ cached on first access; host-provided exports are preserved. Repeated access doe
 not execute the section again, including while an asynchronous load is pending.
 This does not serialize asynchronous sibling modules: if an initializer awaits
 another module, consumers must explicitly depend on its completion.
+
+Function-valued `url` resolvers are deferred until the first import, including
+the fetch itself. Concurrent imports share the pending request. A resolver may
+return a string or a Promise of a string. Optional `load(response, sectionPath)`
+callbacks control section evaluation and receive unsuccessful responses too.
+Both callbacks require `async: true` (the default), are serialized into each
+realm, and cannot capture build-time variables. Native request rejections are
+propagated to the importing module; rejected imports remain cached.
+
+For loaders that need normal imports or per-container state, use a `runtime`
+module instead. Do not combine a runtime module with URL resolver or load
+callbacks; fixed `url` strings and `bundlePath` remain valid runtime inputs.
 
 ## Usage
 

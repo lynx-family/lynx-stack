@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+/* eslint-disable import/no-commonjs -- Execute an emitted CommonJS bundle in a VM realm. */
 
 import {
   existsSync,
@@ -14,6 +15,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { Writable } from 'node:stream'
+import { runInNewContext } from 'node:vm'
 
 import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
@@ -94,6 +96,70 @@ function collectServerMiddlewares(setup: ServerSetup): Middleware[] {
 }
 
 describe('pluginExternalBundle', () => {
+  test('builds and executes a runtime-only external through Rsbuild', async () => {
+    const { pluginExternalBundle } = await import('../src/index.js')
+    const directory = mkdtempSync(path.join(tmpdir(), 'rsbuild-runtime-'))
+    const entry = path.join(directory, 'index.js')
+    const runtime = path.join(directory, 'runtime.js')
+    writeFileSync(entry, 'export { value } from "component";')
+    writeFileSync(
+      runtime,
+      'export default () => ({ load: async ({ request }) => ({ value: request }) });',
+    )
+    try {
+      const rsbuild = await createRsbuild({
+        cwd: directory,
+        rsbuildConfig: {
+          source: { entry: { main: entry } },
+          output: {
+            distPath: { root: path.join(directory, 'dist') },
+            minify: false,
+          },
+          environments: { lynx: {} },
+          tools: {
+            rspack(config) {
+              config.target = 'node'
+              config.entry = {
+                main: { import: [entry], layer: 'BACKGROUND_LAYER' },
+              }
+              config.output ??= {}
+              config.output.library = { type: 'commonjs2' }
+              config.output.filename = 'main.js'
+              return config
+            },
+          },
+          plugins: [
+            pluginStubLayers(),
+            pluginExternalBundle({
+              externals: {
+                component: {
+                  runtime,
+                  libraryName: 'Component',
+                  background: { sectionPath: 'Component' },
+                },
+              },
+            }),
+          ],
+        },
+      })
+      await rsbuild.build()
+      const module = { exports: {} }
+      runInNewContext(
+        readFileSync(path.join(directory, 'dist/main.js'), 'utf8'),
+        {
+          module,
+          exports: module.exports,
+          lynx: {},
+        },
+      )
+      expect(await Promise.resolve(module.exports)).toMatchObject({
+        value: 'component',
+      })
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
   test('should register ExternalsLoadingPlugin with correct options', async () => {
     const { pluginExternalBundle } = await import('../src/index.js')
 
@@ -286,7 +352,7 @@ describe('pluginExternalBundle', () => {
     })
   })
 
-  test('should throw when an external is missing both url and bundlePath', async () => {
+  test('should throw when an external has no url, bundlePath, or runtime', async () => {
     const { pluginExternalBundle } = await import('../src/index.js')
 
     const rsbuild = await createRsbuild({
@@ -312,7 +378,7 @@ describe('pluginExternalBundle', () => {
     })
 
     await expect(rsbuild.inspectConfig()).rejects.toThrow(
-      'external-bundle-rsbuild-plugin requires `url` or `bundlePath` for external "lodash".',
+      'external-bundle-rsbuild-plugin requires `url`, `bundlePath`, or `runtime` for external "lodash".',
     )
   })
 

@@ -13,3 +13,5 @@ The plugin's source is covered by Rstest, not Vitest. Keep its exact source path
 When external loading mode is selected at runtime, compile consuming externals with promise semantics in both branches and resolve subpath exports only after the namespace is available. Keep boolean configurations unchanged. Runtime predicates must be standalone functions without build-time closures, and ReactLynx external-bundle producers must await the mounted namespace as well.
 
 For runtime-selected synchronous loading, invoke the loader inside a Promise executor so loading stays synchronous while thrown errors become cached rejected Promises. Runtime predicate examples shared with web must select asynchronous loading for `platform: "web"`.
+
+Preserve function-valued URL resolvers and custom section callbacks alongside runtime loader modules. Resolver callbacks and their fetches must remain lazy until import, while fixed URLs retain startup prefetching. Require asynchronous loading for callbacks, reject ambiguous combinations with runtime modules, and verify emitted-bundle behavior against published temporary packages when synchronizing upstream changes.
