@@ -14,4 +14,4 @@ When external loading mode is selected at runtime, compile consuming externals w
 
 For runtime-selected synchronous loading, invoke the loader inside a Promise executor so loading stays synchronous while thrown errors become cached rejected Promises. Runtime predicate examples shared with web must select asynchronous loading for `platform: "web"`.
 
-Fetch async-only external bundles on first import and share the pending fetch across imports and sections. Retain startup prefetching for URLs also used by synchronous or runtime-selected externals; deduplication must not let an async declaration suppress a synchronous consumer's prefetch. Validate fetch timing by executing compiled entry and dynamic imports in both layers.
+Fetch all external bundles on first import and share the fetch across imports and sections. Initialize the fetch handler on first then() or wait(), preserving synchronous values and asynchronous Promises, including runtime-selected loading modes. Validate fetch timing by executing compiled entry and dynamic imports in both layers.

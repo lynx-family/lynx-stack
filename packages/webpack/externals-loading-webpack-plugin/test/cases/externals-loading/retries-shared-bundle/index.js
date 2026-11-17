@@ -21,10 +21,10 @@ it('should use max retries across externals sharing the same bundle URL', async 
 
   for (const code of [background, mainThread]) {
     const createCalls = code.match(
-      /createRetryingHandler\(\(\) => lynx\.fetchBundle\("shared\.bundle", \{\}\), (\d+), false\)/g,
+      /createRetryingHandler\(\(\) => lynx\.fetchBundle\("shared\.bundle", \{\}\), (\d+)\)/g,
     );
     expect(createCalls).not.toBeNull();
     expect(createCalls.length).toBe(1);
-    expect(createCalls[0]).toMatch(/, 7, false\)$/);
+    expect(createCalls[0]).toMatch(/, 7\)$/);
   }
 });

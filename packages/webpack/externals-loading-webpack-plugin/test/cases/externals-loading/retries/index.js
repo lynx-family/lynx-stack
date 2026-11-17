@@ -18,16 +18,16 @@ it('should pass retries to createRetryingHandler per fetchBundle', async () => {
   );
 
   expect(background).toMatch(
-    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("foo", \{\}\), 5, false\)/,
+    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("foo", \{\}\), 5\)/,
   );
   expect(background).toMatch(
-    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("bar", \{\}\), 3, true\)/,
+    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("bar", \{\}\), 3\)/,
   );
   expect(mainThread).toMatch(
-    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("foo", \{\}\), 5, false\)/,
+    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("foo", \{\}\), 5\)/,
   );
   expect(mainThread).toMatch(
-    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("bar", \{\}\), 3, true\)/,
+    /createRetryingHandler\(\(\) => lynx\.fetchBundle\("bar", \{\}\), 3\)/,
   );
 
   // The load helpers no longer carry retries/fetchBundle parameters.

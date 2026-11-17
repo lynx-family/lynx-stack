@@ -156,7 +156,7 @@ describe('external import order', () => {
       });
       await setImmediate();
       expect(state.events).toEqual(['init', 'load', 'run', 'run']);
-      expect(fetchBundle).toHaveBeenCalledTimes(async ? 1 : 2);
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
       expect(loadScript).toHaveBeenCalledTimes(1);
       const cached = globals['Component'];
       expect(globals['Component']).toBe(cached);
@@ -173,10 +173,8 @@ describe('external import order', () => {
       ['main-thread', 'background'].map(layer => ({ mode, layer }))
     ),
   )(
-    'fetches on first import only for async-only bundles ($layer, mode: $mode)',
+    'fetches on first import in every loading mode ($layer, mode: $mode)',
     async ({ layer, mode }) => {
-      const startupFetches = mode === true ? 0 : (mode === false ? 2 : 1);
-      const totalFetches = Math.max(1, startupFetches);
       const state = {
         events: [] as string[],
         load: () => Promise.resolve(),
@@ -197,7 +195,7 @@ describe('external import order', () => {
         lynx: { fetchBundle, loadScript },
         __LoadStyleSheet: () => null,
       });
-      expect(fetchBundle).toHaveBeenCalledTimes(startupFetches);
+      expect(fetchBundle).not.toHaveBeenCalled();
       expect(loadScript).not.toHaveBeenCalled();
       const imports = Promise.all([
         state.load(),
@@ -205,13 +203,13 @@ describe('external import order', () => {
         state.load(),
       ]);
       await setImmediate();
-      expect(fetchBundle).toHaveBeenCalledTimes(totalFetches);
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
       expect(fetchBundle).toHaveBeenCalledWith('component.bundle', {});
       resolveFetch({ code: 0, url: 'component.bundle' });
       const modules = await imports;
       for (const module of modules) expect(module).toMatchObject(component);
       expect(await state.load()).toMatchObject(component);
-      expect(fetchBundle).toHaveBeenCalledTimes(totalFetches);
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
       expect(loadScript).toHaveBeenCalledTimes(1);
     },
   );
