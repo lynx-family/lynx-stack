@@ -8,3 +8,24 @@
 .dummy {
   --dummy-color: red;
 }
+
+.LoadMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 280px;
+  max-width: 100%;
+  margin-top: 24px;
+  padding: 14px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.LoadMessageLabel {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}

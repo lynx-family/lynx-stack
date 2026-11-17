@@ -33,6 +33,11 @@ const assetPrefix = `http://${detectLanHost()}:${port}/`;
 
 export default defineConfig({
   source: {
+    define: {
+      __MESSAGE_BUNDLE_URL__: JSON.stringify(
+        `${assetPrefix}message.lynx.bundle`,
+      ),
+    },
     preEntry: process.env['REPRODUCE_STARTUP_RACE'] === 'true'
       ? ['./src/reproduce-startup-race.ts']
       : [],
@@ -56,11 +61,24 @@ export default defineConfig({
         ? { reactlynx: { async: true } }
         : { reactlynx: true },
       externals: {
-        './App.js': 'comp-lib.lynx.bundle',
-        './utils.js': {
-          bundlePath: 'utils.lynx.bundle',
-          libraryName: './utils.js',
-          background: { sectionPath: './utils.js' },
+        './App.js': {
+          bundlePath: 'comp-lib.lynx.bundle',
+          libraryName: './App.js',
+          background: { sectionPath: './App.js' },
+          mainThread: { sectionPath: './App.js__main-thread' },
+          async: false,
+        },
+        './utils.js': 'utils.lynx.bundle',
+        './message.js': {
+          url: () => {
+            const url = (globalThis as { selectedMessageUrl?: string })
+              .selectedMessageUrl;
+            console.info('[dynamic-message] resolve URL:', url);
+            if (!url) throw new Error('Message URL has not arrived yet');
+            return url;
+          },
+          libraryName: './message.js',
+          background: { sectionPath: './message.js' },
           async: true,
         },
       },
@@ -83,5 +101,10 @@ export default defineConfig({
   server: {
     port,
     strictPort: true,
+    publicDir: {
+      name: isAsync
+        ? 'dist-external-bundle-react-async'
+        : 'dist-external-bundle',
+    },
   },
 });

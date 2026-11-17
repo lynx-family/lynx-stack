@@ -14,6 +14,20 @@ pnpm dev
 
 The dev server will automatically serve the built-in ReactLynx runtime bundle and the component library bundle.
 
+## Runtime URL
+
+Run `pnpm dev`. The original `utils.js` keeps its `bundlePath` loading path
+and logs the tap hint at startup. Click **Deliver URL and load message** to
+provide the message URL and import the separate `message.lynx.bundle`.
+Before the click, its resolver and fetch do not run. Repeated clicks reuse the
+module. Both bundles are produced by the existing Rslib configuration.
+
+The URL resolver runs in the consuming thread on first import. It must be a
+standalone function without build-time closures. A string result supports either
+loading mode; a Promise result requires asynchronous loading.
+This demo uses the workspace plugin; no `runtime`, custom `load` or `lazy` option
+is involved.
+
 ## Reproduce the snapshot startup race
 
 Related fix: [PR #4350](https://github.com/lynx-family/lynx-stack/pull/4350).
