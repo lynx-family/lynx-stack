@@ -14,6 +14,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { Writable } from 'node:stream'
+import { runInNewContext } from 'node:vm'
 
 import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, test } from 'vitest'
@@ -363,14 +364,12 @@ describe('pluginExternalBundle', () => {
       bundlePath: 'react.lynx.bundle',
       background: { sectionPath: 'ReactLynx' },
       mainThread: { sectionPath: 'ReactLynx__main-thread' },
-      async: false,
     })
     expect(externals?.['@lynx-js/react']).toMatchObject({
       libraryName: ['ReactLynx', 'React'],
       bundlePath: 'react.lynx.bundle',
       background: { sectionPath: 'ReactLynx' },
       mainThread: { sectionPath: 'ReactLynx__main-thread' },
-      async: false,
     })
     expect(rsbuild.getNormalizedConfig().server?.setup).toBeDefined()
   })
@@ -419,100 +418,180 @@ describe('pluginExternalBundle', () => {
     expect(reactExternal?.bundlePath).toBe('react.lynx.bundle')
   })
 
-  test('should pick bundle encoding per environment for the async reactlynx preset', async () => {
-    const { pluginExternalBundle } = await import('../src/index.js')
-
-    const capturedByEnv: Record<string, unknown[]> = {}
-
-    const rsbuild = await createRsbuild({
-      cwd: __dirname,
-      rsbuildConfig: {
-        environments: {
-          lynx: {},
-          web: {},
-        },
-        source: {
-          entry: {
-            main: './fixtures/basic.tsx',
-          },
-        },
-        tools: {
-          rspack(config, { environment }) {
-            capturedByEnv[environment.name] = config.plugins ?? []
-            return config
-          },
-        },
-        plugins: [
-          pluginStubLayers(),
-          pluginExternalBundle({
-            externalsPresets: {
-              reactlynx: { async: true },
-            },
-          }),
-        ],
-      },
-    })
-
-    await rsbuild.inspectConfig()
-
-    // `async` controls the mount form only; the bundle encoding follows the
-    // environment (lynx -> tasm, web -> web-encoded).
-    expect(getExternalsLoadingPlugin(capturedByEnv['lynx'] ?? []))
-      .toMatchObject({
-        options: {
-          externals: {
-            '@lynx-js/react': {
-              async: true,
-              bundlePath: 'react.lynx.bundle',
+  test.each([true, {}])(
+    'should default all reactlynx aliases to platform loading for preset %j',
+    async (preset) => {
+      const { pluginExternalBundle } = await import('../src/index.js')
+      const capturedByEnv: Record<string, unknown[]> = {}
+      const rsbuild = await createRsbuild({
+        cwd: __dirname,
+        rsbuildConfig: {
+          environments: { lynx: {}, web: {} },
+          source: { entry: { main: './fixtures/basic.tsx' } },
+          tools: {
+            rspack(config, { environment }) {
+              capturedByEnv[environment.name] = config.plugins ?? []
+              return config
             },
           },
+          plugins: [
+            pluginStubLayers(),
+            pluginExternalBundle({ externalsPresets: { reactlynx: preset } }),
+          ],
         },
       })
-    expect(getExternalsLoadingPlugin(capturedByEnv['web'] ?? []))
-      .toMatchObject({
-        options: {
-          externals: {
-            '@lynx-js/react': {
-              async: true,
-              bundlePath: 'react.web.bundle',
+      await rsbuild.inspectConfig()
+      for (const [environment, plugins] of Object.entries(capturedByEnv)) {
+        const { externals } = getExternalsLoadingPluginOptions(
+          getExternalsLoadingPlugin(plugins),
+        )
+        expect(Object.keys(externals)).toContain('@lynx-js/react')
+        for (const external of Object.values(externals)) {
+          if (environment === 'web') {
+            expect(external.async).toBe(true)
+            continue
+          }
+          expect(external.async).toBeTypeOf('function')
+          // Evaluate the serialized function in a fresh VM, as the runtime does.
+          const selectAsync = runInNewContext(
+            `(${String(external.async)})`,
+          ) as typeof runtimeAsyncPredicate
+          for (
+            const platform of [
+              'Harmony',
+              'web',
+              'Android',
+              'iOS',
+              'other',
+              undefined,
+            ]
+          ) {
+            for (
+              const predicate of [
+                external.async as typeof runtimeAsyncPredicate,
+                selectAsync,
+              ]
+            ) {
+              expect(predicate({ systemInfo: { platform } })).toBe(
+                platform === 'Harmony' || platform === 'web',
+              )
+            }
+          }
+        }
+      }
+    },
+  )
+
+  test.each([true, false])(
+    'should preserve async=%s and pick bundle encoding per environment',
+    async (async) => {
+      const { pluginExternalBundle } = await import('../src/index.js')
+
+      const capturedByEnv: Record<string, unknown[]> = {}
+
+      const rsbuild = await createRsbuild({
+        cwd: __dirname,
+        rsbuildConfig: {
+          environments: {
+            lynx: {},
+            web: {},
+          },
+          source: {
+            entry: {
+              main: './fixtures/basic.tsx',
             },
           },
+          tools: {
+            rspack(config, { environment }) {
+              capturedByEnv[environment.name] = config.plugins ?? []
+              return config
+            },
+          },
+          plugins: [
+            pluginStubLayers(),
+            pluginExternalBundle({
+              externalsPresets: {
+                reactlynx: { async },
+              },
+            }),
+          ],
         },
       })
-  })
 
-  test('should forward a runtime async predicate to all reactlynx aliases', async () => {
-    const { pluginExternalBundle } = await import('../src/index.js')
-    let capturedPlugins: unknown[] = []
-    const rsbuild = await createRsbuild({
-      cwd: __dirname,
-      rsbuildConfig: {
-        source: { entry: { main: './fixtures/basic.tsx' } },
-        tools: {
-          rspack(config) {
-            capturedPlugins = config.plugins ?? []
-            return config
+      await rsbuild.inspectConfig()
+
+      for (const plugins of Object.values(capturedByEnv)) {
+        const { externals } = getExternalsLoadingPluginOptions(
+          getExternalsLoadingPlugin(plugins),
+        )
+        for (const external of Object.values(externals)) {
+          expect(external.async).toBe(async)
+        }
+      }
+
+      // `async` controls the mount form only; the bundle encoding follows the
+      // environment (lynx -> tasm, web -> web-encoded).
+      expect(getExternalsLoadingPlugin(capturedByEnv['lynx'] ?? []))
+        .toMatchObject({
+          options: {
+            externals: {
+              '@lynx-js/react': {
+                async,
+                bundlePath: 'react.lynx.bundle',
+              },
+            },
           },
+        })
+      expect(getExternalsLoadingPlugin(capturedByEnv['web'] ?? []))
+        .toMatchObject({
+          options: {
+            externals: {
+              '@lynx-js/react': {
+                async,
+                bundlePath: 'react.web.bundle',
+              },
+            },
+          },
+        })
+    },
+  )
+
+  test.each(['lynx', 'web'])(
+    'should forward a runtime async predicate to all reactlynx aliases in %s',
+    async (environment) => {
+      const { pluginExternalBundle } = await import('../src/index.js')
+      let capturedPlugins: unknown[] = []
+      const rsbuild = await createRsbuild({
+        cwd: __dirname,
+        rsbuildConfig: {
+          environments: { [environment]: {} },
+          source: { entry: { main: './fixtures/basic.tsx' } },
+          tools: {
+            rspack(config) {
+              capturedPlugins = config.plugins ?? []
+              return config
+            },
+          },
+          plugins: [
+            pluginStubLayers(),
+            pluginExternalBundle({
+              externalsPresets: { reactlynx: { async: runtimeAsyncPredicate } },
+            }),
+          ],
         },
-        plugins: [
-          pluginStubLayers(),
-          pluginExternalBundle({
-            externalsPresets: { reactlynx: { async: runtimeAsyncPredicate } },
-          }),
-        ],
-      },
-    })
-    await rsbuild.inspectConfig()
-    const plugin = getExternalsLoadingPlugin(capturedPlugins)
-    expect(plugin).toBeDefined()
-    for (
-      const external of Object.values(
-        getExternalsLoadingPluginOptions(plugin).externals,
-      )
-    ) {
-      expect(external.async).toBe(runtimeAsyncPredicate)
-    }
-  })
+      })
+      await rsbuild.inspectConfig()
+      const plugin = getExternalsLoadingPlugin(capturedPlugins)
+      expect(plugin).toBeDefined()
+      for (
+        const external of Object.values(
+          getExternalsLoadingPluginOptions(plugin).externals,
+        )
+      ) {
+        expect(external.async).toBe(runtimeAsyncPredicate)
+      }
+    },
+  )
 
   test('should emit the reactlynx bundle into build output by default', async () => {
     const { pluginExternalBundle } = await import('../src/index.js')

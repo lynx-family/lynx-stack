@@ -32,6 +32,8 @@ The responsibilities are equally simple:
 When you enable `externalsPresets.reactlynx`, the plugin resolves `@lynx-js/react-umd/dev` or `@lynx-js/react-umd/prod` based on `NODE_ENV`, emits `react.lynx.bundle`, and loads it through the current runtime public path.
 
 For most projects, installing `@lynx-js/react-umd` and enabling the `reactlynx` preset is enough.
+
+The preset defaults to asynchronous ReactLynx loading on Harmony and web, and synchronous loading on other platforms, including Android and iOS. This runtime selection gives consuming modules promise semantics on every platform. Explicit `reactlynx: { async: true }`, `reactlynx: { async: false }`, or a standalone `async` callback overrides the default. Web builds default to asynchronous loading regardless of the host's `SystemInfo.platform`. Synchronous native loading mounts the namespace directly, preserving synchronous subpath access for existing external bundles.
 :::
 
 ## Build An External Bundle
