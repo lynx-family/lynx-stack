@@ -14,6 +14,7 @@ Array [
     null,
     null,
     -1,
+    undefined,
   ],
   Array [
     "__InsertNodeToElementTemplate",

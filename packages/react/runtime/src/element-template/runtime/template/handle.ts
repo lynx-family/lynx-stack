@@ -15,7 +15,6 @@ import type {
   RuntimeChildSlots,
   RuntimeOptions,
   RuntimeTypedElementAttributes,
-  RuntimeTypedListOptions,
   SerializableValue,
 } from '../../protocol/types.js';
 
@@ -38,6 +37,7 @@ export function createElementTemplateWithReservedHandle(
   attributeSlots: SerializableValue[] | null | undefined,
   childSlots: RuntimeChildSlots | null | undefined,
   hasDynamicAttributes = true,
+  options?: RuntimeOptions | null,
 ): ElementTemplateHandle {
   // Adapter-free compiled hosts need neither dynamic state nor native slot preparation.
   const templateType = hasDynamicAttributes ? elementTemplateTypeTag(templateKey, bundleUrl) : undefined;
@@ -50,6 +50,7 @@ export function createElementTemplateWithReservedHandle(
     nativeAttributeSlots,
     childSlots,
     handleId,
+    options,
   );
   if (nativeRef) {
     setElementTemplateNativeRef(handleId, nativeRef);
@@ -69,7 +70,7 @@ export function createTypedElementTemplateWithReservedHandle(
   type: string,
   attributes: RuntimeTypedElementAttributes | null | undefined,
   childSlots: RuntimeChildSlots | null | undefined,
-  options: RuntimeOptions | RuntimeTypedListOptions | null | undefined,
+  options: RuntimeOptions | null | undefined,
 ): ElementTemplateHandle {
   const nativeRef = __CreateTypedElementTemplate(
     type,

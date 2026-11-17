@@ -5,6 +5,7 @@ Array [
   null,
   Array [],
   Array [],
+  null,
   3,
   -3,
   0,

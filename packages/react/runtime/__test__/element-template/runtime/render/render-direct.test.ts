@@ -414,9 +414,9 @@ describe('direct first-screen materialization', () => {
     expect(create).toHaveBeenCalledWith(
       'list',
       expect.objectContaining({ id: 'feed', 'component-at-index': expect.any(Function) }),
-      null,
+      [[elementTemplateRegistry.get(-1), elementTemplateRegistry.get(-2)]],
       -3,
-      { listChildren: [elementTemplateRegistry.get(-1), elementTemplateRegistry.get(-2)] },
+      {},
     );
     expect(result.rootRefs).toEqual([elementTemplateRegistry.get(-3)]);
     expect(result.rootSubtreeHandles).toEqual([[]]);
@@ -425,7 +425,8 @@ describe('direct first-screen materialization', () => {
   it.each([undefined, true, false])('creates an empty typed list for a non-rendering slot (%s)', (children) => {
     const create = vi.spyOn(globalThis, '__CreateTypedElementTemplate');
     const result = renderToElementTemplate(h('list', { $0: children }));
-    expect(create.mock.calls[0]?.[4]).toEqual({ listChildren: [] });
+    expect(create.mock.calls[0]?.[2]).toBeNull();
+    expect(create.mock.calls[0]?.[4]).toEqual({});
     expect(result.rootRefs).toHaveLength(1);
   });
 
