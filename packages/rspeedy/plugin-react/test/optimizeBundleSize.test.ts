@@ -7,11 +7,19 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { mergeRsbuildConfig } from '@rsbuild/core'
+import type {
+  MergedEnvironmentConfig,
+  ModifyEnvironmentConfigFn,
+  RsbuildConfig,
+  RsbuildPluginAPI,
+} from '@rsbuild/core'
 import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
 import type { RspeedyInstance } from '@lynx-js/rspeedy'
 
 import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
+import type { PluginReactLynxOptions } from '../src/pluginReactLynx.js'
 
 const tempDirs: string[] = []
 
@@ -78,6 +86,72 @@ async function getCode(rsbuild: RspeedyInstance, entryName: string) {
   return { mainThreadCode, backgroundCode }
 }
 describe('optimizeBundleSize', () => {
+  test('register environment fallback before overrides', async () => {
+    const { applyOptimizeBundleSize } = await import(
+      '../src/optimizeBundleSize.js'
+    )
+    let currentConfig: RsbuildConfig = {}
+    let handler: ModifyEnvironmentConfigFn | undefined
+    let order: string | undefined
+    const api = {
+      getRsbuildConfig() {
+        return currentConfig
+      },
+      modifyEnvironmentConfig(
+        input: Parameters<RsbuildPluginAPI['modifyEnvironmentConfig']>[0],
+      ) {
+        if (typeof input === 'function') {
+          expect.fail('expected an ordered environment hook')
+        }
+        handler = input.handler
+        order = input.order
+      },
+    } as unknown as RsbuildPluginAPI
+
+    applyOptimizeBundleSize(api, {
+      optimizeBundleSize: true,
+    } as Required<PluginReactLynxOptions>)
+
+    expect(order).toBe('pre')
+    if (!handler) {
+      expect.fail('expected an environment hook')
+    }
+
+    const mergeEnvironmentConfig = (
+      ...configs: Parameters<
+        Parameters<ModifyEnvironmentConfigFn>[1]['mergeEnvironmentConfig']
+      >
+    ) => mergeRsbuildConfig(...configs) as MergedEnvironmentConfig
+    const utils = { name: 'lynx', mergeEnvironmentConfig }
+
+    const disabled = {
+      output: { minify: false },
+    } as MergedEnvironmentConfig
+    expect(await handler(disabled, utils)).toBe(disabled)
+
+    const environmentEnabled = {
+      output: { minify: { js: true } },
+    } as MergedEnvironmentConfig
+    currentConfig = {
+      environments: { lynx: { output: { minify: true } } },
+    }
+    expect(await handler(environmentEnabled, utils)).toBe(environmentEnabled)
+
+    const hookEnabled = {
+      output: { minify: true },
+    } as MergedEnvironmentConfig
+    currentConfig = { output: { minify: false } }
+    expect(await handler(hookEnabled, utils)).toBe(hookEnabled)
+
+    currentConfig = {}
+    expect(await handler(hookEnabled, utils)).toBe(hookEnabled)
+
+    const minified = {
+      output: { minify: { js: true } },
+    } as MergedEnvironmentConfig
+    expect(await handler(minified, utils)).not.toBe(minified)
+  })
+
   test('basic usage', async () => {
     const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
     rstest.stubEnv('NODE_ENV', 'production')
@@ -273,5 +347,187 @@ describe('optimizeBundleSize', () => {
     expect(backgroundCode).not.toContain('main-thread-only')
     expect(backgroundCode).toContain('default console.info')
     expect(backgroundCode).not.toContain('default console.warn')
+  })
+
+  test('optimize an environment that overrides output.minify: false', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const entryName = 'optimizeBundleSize-4'
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            [entryName]: pureFuncsBasicEntry,
+          },
+        },
+        output: {
+          filenameHash: false,
+          minify: false,
+          cleanDistPath: false,
+        },
+        environments: {
+          lynx: {
+            output: {
+              minify: {
+                js: true,
+              },
+            },
+          },
+        },
+        plugins: [pluginReactLynx({
+          optimizeBundleSize: true,
+        })],
+      },
+    })
+
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
+    expect(mainThreadCode).not.toContain('background-only')
+    expect(backgroundCode).not.toContain('main-thread-only')
+  })
+
+  test('respect an environment output.minify: true override', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const entryName = 'optimizeBundleSize-5'
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            [entryName]: pureFuncsBasicEntry,
+          },
+        },
+        output: {
+          filenameHash: false,
+          cleanDistPath: false,
+        },
+        environments: {
+          lynx: {
+            output: {
+              minify: true,
+            },
+          },
+        },
+        plugins: [pluginReactLynx({
+          optimizeBundleSize: true,
+        })],
+      },
+    })
+
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
+    expect(mainThreadCode).toContain('background-only')
+    expect(backgroundCode).toContain('main-thread-only')
+  })
+
+  test('respect an environment override set by another plugin', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const entryName = 'optimizeBundleSize-6'
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            [entryName]: pureFuncsBasicEntry,
+          },
+        },
+        output: {
+          filenameHash: false,
+          cleanDistPath: false,
+        },
+        plugins: [
+          {
+            name: 'test:environment-minify',
+            setup(api: RsbuildPluginAPI) {
+              api.modifyRsbuildConfig((config, { mergeRsbuildConfig }) =>
+                mergeRsbuildConfig(config, {
+                  environments: {
+                    lynx: {
+                      output: {
+                        minify: true,
+                      },
+                    },
+                  },
+                })
+              )
+            },
+          },
+          pluginReactLynx({
+            optimizeBundleSize: true,
+          }),
+        ],
+      },
+    })
+
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
+    expect(mainThreadCode).toContain('background-only')
+    expect(backgroundCode).toContain('main-thread-only')
+  })
+
+  test('respect an override set by an earlier pre environment hook', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const entryName = 'optimizeBundleSize-7'
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        source: {
+          entry: {
+            [entryName]: pureFuncsBasicEntry,
+          },
+        },
+        output: {
+          filenameHash: false,
+          cleanDistPath: false,
+        },
+        plugins: [
+          {
+            name: 'test:environment-minify',
+            setup(api: RsbuildPluginAPI) {
+              api.modifyEnvironmentConfig({
+                order: 'pre',
+                handler(config, { mergeEnvironmentConfig }) {
+                  return mergeEnvironmentConfig(config, {
+                    output: {
+                      minify: true,
+                    },
+                  })
+                },
+              })
+            },
+          },
+          pluginReactLynx({
+            optimizeBundleSize: true,
+          }),
+        ],
+      },
+    })
+
+    const { mainThreadCode, backgroundCode } = await getCode(rsbuild, entryName)
+    expect(mainThreadCode).toContain('background-only')
+    expect(backgroundCode).toContain('main-thread-only')
+  })
+
+  test('respect output.minify: false', async () => {
+    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+    rstest.stubEnv('NODE_ENV', 'production')
+
+    const rsbuild = await createIsolatedRspeedy({
+      rspeedyConfig: {
+        output: {
+          minify: false,
+        },
+        environments: {
+          lynx: {},
+        },
+        plugins: [pluginReactLynx({
+          optimizeBundleSize: true,
+        })],
+      },
+    })
+
+    const [config] = await rsbuild.initConfigs()
+    expect(config?.optimization?.minimize).toBe(false)
   })
 })
