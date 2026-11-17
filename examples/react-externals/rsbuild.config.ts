@@ -7,6 +7,7 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 import { pluginLynxBundleAnalysisStats } from '../bundle-analysis-stats.plugin.js';
+import { syncThenMvp } from './sync-then-mvp.plugin.js';
 
 // REACTLYNX_ASYNC=true loads the ReactLynx external bundle asynchronously
 // (mounted as a Promise) instead of as a synchronous global. Async outputs are
@@ -47,6 +48,9 @@ export default defineConfig({
   },
   plugins: [
     pluginReactLynx(),
+    ...(process.env['SYNC_THEN_MVP']
+      ? [syncThenMvp(process.env['SYNC_THEN_MVP'])]
+      : []),
     pluginQRCode({
       schema(url) {
         // We use `?fullscreen=true` to open the page in LynxExplorer in full screen mode
@@ -66,7 +70,7 @@ export default defineConfig({
           libraryName: './App.js',
           background: { sectionPath: './App.js' },
           mainThread: { sectionPath: './App.js__main-thread' },
-          async: false,
+          async: process.env['SYNC_THEN_MVP'] ? true : false,
         },
         './utils.js': 'utils.lynx.bundle',
         './message.js': {

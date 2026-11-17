@@ -43,6 +43,14 @@ export function LoadMessage() {
   );
 }
 
+const syncProbe = (globalThis as {
+  __syncExternalProbe?: {
+    mark(event: string): void;
+    entryRegistered: boolean;
+  };
+}).__syncExternalProbe;
+syncProbe?.mark('entry:body');
+
 root.render(
   // biome-ignore lint/style/useFragmentSyntax: Just to demonstrate import react is external
   <Fragment>
@@ -51,6 +59,11 @@ root.render(
     </App>
   </Fragment>,
 );
+
+if (syncProbe) {
+  syncProbe.entryRegistered = true;
+  syncProbe.mark('entry:render-registered');
+}
 
 if (import.meta.webpackHot) {
   import.meta.webpackHot.accept();

@@ -46,3 +46,25 @@ main-thread first screen keeps the existing App content. Without the fix, the
 background patch reports `Snapshot not found` because the component's snapshot
 definition is missing from the main-thread library. Keep the component in a
 separate file: defining it in `App.tsx` preserves its snapshot registration.
+
+## Synchronous cache-hit MVP
+
+Use the existing async demo with `SYNC_THEN_MVP=baseline pnpm dev:react-async`
+for the control, or `SYNC_THEN_MVP=patched pnpm dev:react-async` for the prototype.
+Restart the server between modes. `LYNX_HOST` and `PORT` select the device URL.
+
+Both modes mock an inline `fetchBundle.then` callback using native `wait`.
+That wait is test instrumentation, not the proposed asynchronous loader.
+`SYNC_THEN_MVP=async` delegates to the native asynchronous handler instead.
+
+The private plugin fixes Rspack's thenable initialization order and preserves
+inline completion through the generated external and async-module runtimes.
+It leaves the global Promise implementation unchanged. It patches the current
+Webpack-style runtime source and is an experiment, not a public plugin API.
+
+On Android, inspect `globalThis.__syncExternalProbe.events` in each thread.
+The control records `startup:return` before `entry:render-registered`; the
+prototype records them in the opposite order. Both cases rendered 16 native
+nodes on the first `renderPage` in the tested Explorer build. This proves the
+JavaScript startup ordering; it does not measure the native `loadTemplate`
+return boundary.
