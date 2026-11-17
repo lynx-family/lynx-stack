@@ -8,8 +8,9 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { RefProxy, runDelayedUiOps, shouldDelayUiOps } from '../../src/snapshot/lifecycle/ref/delay';
 import { destroyBackground } from '../../src/snapshot/lifecycle/destroy';
+import { reloadBackground } from '../../src/snapshot/lifecycle/reload';
 
-import { Component, createRef, useState } from '../../src/index';
+import { Component, createPortal, createRef, useState } from '../../src/index';
 import { clearCommitTaskId, replaceCommitHook } from '../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../src/snapshot/lifecycle/patch/updateMainThread';
 import { __pendingListUpdates } from '../../src/snapshot/list/pendingListUpdates';
@@ -1661,6 +1662,7 @@ describe('ui operations', () => {
             "invoke",
             [
               {
+                "fail": [Function],
                 "method": "boundingClientRect",
               },
             ],
@@ -1904,6 +1906,7 @@ describe('ui operations', () => {
             "invoke",
             [
               {
+                "fail": [Function],
                 "method": "boundingClientRect",
               },
             ],
@@ -1970,6 +1973,7 @@ describe('ui operations', () => {
             "invoke",
             [
               {
+                "fail": [Function],
                 "method": "boundingClientRect",
               },
             ],
@@ -2394,5 +2398,124 @@ describe('runDelayedUiOps helper', () => {
     runDelayedUiOps();
 
     expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe('Snapshot ref selector error diagnostics', () => {
+  it('enriches lookup failures on invoke while passing fields/path through and warning when fail is omitted in __DEV__', () => {
+    const invokeQueue = [];
+    const fieldsQueue = [];
+    const pathQueue = [];
+    const originalDev = globalThis.__DEV__;
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const reportErrorSpy = vi.spyOn(lynx, 'reportError').mockImplementation(() => {});
+
+    vi.spyOn(lynx, 'createSelectorQuery').mockImplementation(() => ({
+      select(selector) {
+        return {
+          invoke(options) {
+            return {
+              exec() {
+                invokeQueue.push({ selector, options });
+              },
+            };
+          },
+          fields(fields, cb) {
+            return {
+              exec() {
+                fieldsQueue.push({ selector, fields, cb });
+              },
+            };
+          },
+          path(cb) {
+            return {
+              exec() {
+                pathQueue.push({ selector, cb });
+              },
+            };
+          },
+        };
+      },
+    }));
+
+    const dispatchInvoke = (proxy, method, res) => {
+      const fail = vi.fn();
+      proxy.invoke({ method, fail }).exec();
+      const req = invokeQueue.shift();
+      req.options.fail(
+        res === undefined
+          ? { code: 2, data: `no node found for selector '${req.selector}'` }
+          : res,
+      );
+      return fail.mock.calls[0][0];
+    };
+
+    try {
+      globalThis.__DEV__ = false;
+
+      const boxRef = createRef();
+      function App() {
+        return (
+          <view>
+            <view ref={boxRef} />
+          </view>
+        );
+      }
+
+      __root.__jsx = <App />;
+      renderPage();
+      globalEnvManager.switchToBackground();
+      render(<App />, __root);
+      lynx.getApp().OnLifecycleEvent(...globalThis.__OnLifecycleEvent.mock.calls[0]);
+      globalThis.__OnLifecycleEvent.mockClear();
+
+      const activeBoxNode = boxRef.current;
+
+      expect(dispatchInvoke(activeBoxNode, 'boundingClientRect').data).toMatch(
+        /^no node found for selector '\[react-ref--?\d+-0\]' \[ReactLynx ref: invoke\(boundingClientRect\), __snapshot_[^\]]+\]$/,
+      );
+      const methodNotFound = { code: 3, data: 'method not found' };
+      expect(dispatchInvoke(activeBoxNode, 'boundingClientRect', methodNotFound)).toBe(methodNotFound);
+      expect(dispatchInvoke(activeBoxNode, 'boundingClientRect', null)).toBeNull();
+
+      // Omitted fail in production passes options through untouched; fields & path callbacks pass through untouched
+      const rawOptions = { method: 'boundingClientRect' };
+      activeBoxNode.invoke(rawOptions).exec();
+      expect(invokeQueue.shift().options).toBe(rawOptions);
+
+      const fieldsCb = vi.fn();
+      activeBoxNode.fields({ id: true }, fieldsCb).exec();
+      expect(fieldsQueue.shift().cb).toBe(fieldsCb);
+
+      const pathCb = vi.fn();
+      activeBoxNode.path(pathCb).exec();
+      expect(pathQueue.shift().cb).toBe(pathCb);
+
+      globalThis.__DEV__ = true;
+      expect(dispatchInvoke(activeBoxNode, 'focus').data).toContain('ReactLynx ref exec() call stack');
+
+      activeBoxNode.invoke({ method: 'boundingClientRect' }).exec();
+      const omittedReq = invokeQueue.shift();
+      omittedReq.options.fail({
+        code: 2,
+        data: `no node found for selector '${omittedReq.selector}'`,
+      });
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toMatch(
+        /\[ReactLynx ref: invoke\(boundingClientRect\), __snapshot_[^\]]+\]/,
+      );
+      expect(warnSpy.mock.calls[0][0]).toContain('ReactLynx ref exec() call stack');
+      expect(reportErrorSpy).toHaveBeenCalledTimes(1);
+      expect(reportErrorSpy.mock.calls[0][0].name).toBe('INVOKE_ERROR');
+      globalThis.__DEV__ = false;
+
+      expect(dispatchInvoke(new RefProxy([999999, 1]), 'focus').data).toBe(
+        `no node found for selector '[react-ref-999999-1]' [ReactLynx ref: invoke(focus)]`,
+      );
+    } finally {
+      warnSpy.mockRestore();
+      reportErrorSpy.mockRestore();
+      globalThis.__DEV__ = originalDev;
+    }
   });
 });
