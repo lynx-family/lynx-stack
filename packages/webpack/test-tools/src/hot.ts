@@ -255,6 +255,8 @@ export interface IHotProcessorHooks {
     stats: Stats,
     runtime: Record<string, unknown> | undefined,
   ) => void;
+  /** Called by the runner after a hot rebuild reports errors. */
+  onStepError?: (stats: Stats) => void;
   /** Called on the initial build (step 0 snapshot). */
   onInitial?: (
     env: ITestEnv,
@@ -330,8 +332,8 @@ export function createBaseHotProcessor(
       );
       context.setValue(
         'hotUpdateStepErrorChecker',
-        (_updateIndex: number, _stats: Stats) => {
-          // No snapshotting on error steps; the build error surfaces via `NEXT`.
+        (_updateIndex: number, stats: Stats) => {
+          hooks.onStepError?.(stats);
         },
       );
 

@@ -409,6 +409,10 @@ function createHotSnapshotProcessor(
       );
       state.hashes.push(stats.hash!);
     },
+    onStepError: (stats) => {
+      // The next hot-update filenames use this compilation's hash even on error.
+      if (stats.hash) state.hashes.push(stats.hash);
+    },
     onInitial: (env, context, stats) => {
       if (!stats || !stats.hash) return;
       collectRuntimeEntries(state, stats, false);

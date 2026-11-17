@@ -860,6 +860,9 @@ export const jsxDevRuntime = {
       expect(container.textContent).toBe('A:0!');
 
       notifyOld!();
+      await flushPreact();
+      expect(container.textContent).toBe('A:0!');
+
       for (const listener of listeners) listener();
       await flushPreact();
       expect(container.textContent).toBe('A:1!');

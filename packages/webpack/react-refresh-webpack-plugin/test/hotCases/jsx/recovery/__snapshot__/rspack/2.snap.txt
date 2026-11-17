@@ -5,12 +5,12 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.de309ece6fcfd1da.hot-update.json, size: 28
-- Update: main.de309ece6fcfd1da.hot-update.js, size: 3708
+- Manifest: main.LAST_HASH.hot-update.json, size: 28
+- Update: main.LAST_HASH.hot-update.js, size: 3708
 
 ## Manifest
 
-### main.de309ece6fcfd1da.hot-update.json
+### main.LAST_HASH.hot-update.json
 
 ```json
 {"c":["main"],"r":[],"m":[]}
@@ -20,7 +20,7 @@
 ## Update
 
 
-### main.de309ece6fcfd1da.hot-update.js
+### main.LAST_HASH.hot-update.js
 
 #### Changed Modules
 - ./app.jsx
