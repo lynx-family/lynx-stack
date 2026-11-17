@@ -84,7 +84,10 @@ export function applyDefinesInjection(
             if (!next) {
               continue;
             }
-            if (connection.dependency?.type?.startsWith('import()')) {
+            if (
+              connection.dependency?.type?.startsWith('import()')
+              && connection.dependency.type !== 'import() eager'
+            ) {
               const resource = (next as ModuleWithMeta).resource;
               if (resource) {
                 asyncBoundaries.set(resource, next);

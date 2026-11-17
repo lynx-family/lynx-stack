@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { BackgroundView } from '../external-bundle/BackgroundView.js';
 import './App.css';
 import arrow from './assets/arrow.png';
 import lynxLogo from './assets/lynx-logo.png';
@@ -31,6 +32,9 @@ export function App() {
           <text className='Subtitle'>on Lynx</text>
         </view>
         <view className='Content'>
+          <background-only>
+            <BackgroundView />
+          </background-only>
           <image src={arrow} className='Arrow' />
           <text className='Description'>Tap the logo and have fun!</text>
           <text className='Hint'>
