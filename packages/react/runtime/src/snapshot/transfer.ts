@@ -5,12 +5,14 @@ import { createElement, render } from 'preact';
 import type { ComponentType, ContainerNode, VNode } from 'preact';
 
 import { getReloadVersion } from '../core/reload-version.js';
-import { __root, enableTransferMode } from '../root.js';
+import { __root, enableTransferMode, warnRootRenderOnTransferPage } from '../root.js';
 import { CHILDREN, PARENT } from '../shared/render-constants.js';
 import { genCommitTaskId, replaceCommitHook } from './lifecycle/patch/commit.js';
 import type { PatchList, PatchOptions } from './lifecycle/patch/commit.js';
 import { updateMainThread } from './lifecycle/patch/updateMainThread.js';
+import { __pendingListUpdates } from './list/pendingListUpdates.js';
 import { enablePublishEvent } from './lynx/tt.js';
+import { hydrate as hydrateMainThread } from './renderToOpcodes/hydrate.js';
 import { render as renderFirstFrame } from './renderToOpcodes/index.js';
 import { BackgroundSnapshotInstance, hydrate } from './snapshot/backgroundSnapshot.js';
 import { __page, __pageId, setupPage } from './snapshot/definition.js';
@@ -26,12 +28,13 @@ type CreateTransferEvent = Scope & { componentName: string; initialProps: Transf
 type SetTransferPropsEvent = Scope & { props: TransferProps };
 type TransferFirstFrame = Scope & { snapshot: string };
 type TransferCommit = Scope & {
+  version: number;
   seq: number;
   kind: 'hydrate' | 'update';
   patchList: PatchList;
   patchOptions: PatchOptions;
 };
-type TransferCommitResult = Scope & { seq: number; status: 'applied' | 'disposed' | 'failed' };
+type TransferCommitResult = Scope & { version: number; seq: number; status: 'applied' | 'disposed' | 'failed' };
 type ComponentProvider = (scope: Scope) => ComponentType<TransferProps>;
 
 interface Pending {
@@ -43,6 +46,8 @@ interface Instance {
   Component: ComponentType<TransferProps>;
   props: TransferProps;
   phase: 'waiting' | 'hydrating' | 'live' | 'disposed';
+  /** Counts props updates; each one re-syncs the first frame and restarts `seq`. */
+  version: number;
   seq: number;
   main?: SnapshotInstance;
   element?: FiberElement;
@@ -53,6 +58,11 @@ interface Instance {
 interface EventTarget {
   addEventListener(type: string, listener: (event: { data: unknown }) => void): void;
   removeEventListener(type: string, listener: (event: { data: unknown }) => void): void;
+}
+
+function forgetIds(node: SnapshotInstance): void {
+  snapshotInstanceManager.values.delete(node.__id);
+  node.childNodes.forEach(child => forgetIds(child));
 }
 
 const providers = new Map<string, ComponentProvider>();
@@ -108,6 +118,40 @@ function initialize(): void {
     const vnode = (container as unknown as Record<string, object | undefined>)[CHILDREN];
     if (vnode) owners.set(vnode, instance);
   }
+  /** Renders the first frame; later frames take over the elements of the previous one, like a template reload. */
+  function renderMain(instance: Instance) {
+    const previous = instance.main;
+    const root = new SnapshotInstance('root');
+    if (!previous) {
+      root.__elements = [instance.element!];
+      root.__element_root = instance.element;
+      instance.main = root;
+    }
+    try {
+      withInstance(instance, () => {
+        renderFirstFrame(createElement(instance.Component, instance.props), undefined, root);
+      });
+    } catch (error) {
+      if (previous) forgetIds(root);
+      dispose(instance.init);
+      throw error;
+    }
+    if (previous) {
+      hydrateMainThread(previous, root, { skipUnRef: true });
+      forgetIds(previous);
+      instance.main = root;
+    }
+    __pendingListUpdates.flush();
+    __FlushElementTree(__page, {});
+    send('__TransferFirstFrame', { transferId: instance.init.transferId, snapshot: JSON.stringify(root) });
+  }
+  /** Releases the commits of an instance that will never be applied. */
+  function release(instance: Instance) {
+    instance.inFlight?.finish();
+    instance.inFlight = undefined;
+    instance.queue.forEach(item => item.finish());
+    instance.queue.length = 0;
+  }
   function pump(instance: Instance) {
     if (instance.inFlight || instance.phase === 'disposed') return;
     instance.inFlight = instance.queue.shift();
@@ -120,7 +164,14 @@ function initialize(): void {
     patchOptions: PatchOptions,
     finish: () => void,
   ) {
-    const packet = { transferId: instance.init.transferId, seq: ++instance.seq, kind, patchList, patchOptions };
+    const packet = {
+      transferId: instance.init.transferId,
+      version: instance.version,
+      seq: ++instance.seq,
+      kind,
+      patchList,
+      patchOptions,
+    };
     instance.queue.push({ packet, finish });
     pump(instance);
   }
@@ -159,6 +210,7 @@ function initialize(): void {
       Component: provider({ transferId: init.transferId }),
       props: init.initialProps,
       phase: 'waiting',
+      version: 0,
       seq: 0,
       queue: [],
     };
@@ -167,20 +219,8 @@ function initialize(): void {
       const element = instance.element = __CreateElement('transfer-view', __pageId);
       __SetAttribute(element, 'transfer-id', init.transferId);
       __AppendElement(__page, element);
-      const root = instance.main = new SnapshotInstance('root');
-      root.__elements = [element];
-      root.__element_root = element;
       send('__CreateTransfer', init);
-      try {
-        withInstance(instance, () => {
-          renderFirstFrame(createElement(instance.Component, instance.props), undefined, root);
-        });
-      } catch (error) {
-        dispose(init);
-        throw error;
-      }
-      __FlushElementTree(__page, {});
-      send('__TransferFirstFrame', { transferId: init.transferId, snapshot: JSON.stringify(root) });
+      renderMain(instance);
     } else {
       instance.background = new BackgroundSnapshotInstance('root');
       renderBackground(instance);
@@ -191,16 +231,27 @@ function initialize(): void {
       }
     }
   }
+  /** Re-renders both threads with the new props and re-syncs the first frame, like a template reload. */
   function setProps(update: SetTransferPropsEvent) {
-    if (mts) {
-      const pending = pendingCreates.find(init => init.transferId === update.transferId);
-      if (pending) pending.initialProps = update.props;
-      else send('__SetTransferProps', update);
+    const pending = pendingCreates.find(init => init.transferId === update.transferId);
+    if (pending) {
+      pending.initialProps = update.props;
       return;
     }
     const instance = instances.get(update.transferId);
-    if (!instance || instance.phase === 'disposed') return;
+    if (!instance) return;
     instance.props = update.props;
+    instance.version++;
+    instance.seq = 0;
+    if (mts) {
+      send('__SetTransferProps', update);
+      renderMain(instance);
+      return;
+    }
+    // Remount like a template reload: state resets and commits wait for the new first frame.
+    instance.phase = 'waiting';
+    release(instance);
+    withInstance(instance, () => render(null, instance.background as unknown as ContainerNode));
     renderBackground(instance);
   }
   function dispose(scope: Scope, notify = true) {
@@ -210,18 +261,10 @@ function initialize(): void {
     const instance = instances.get(scope.transferId);
     if (instance) {
       instance.phase = 'disposed';
-      instance.inFlight?.finish();
-      instance.queue.forEach(item => item.finish());
-      instance.queue.length = 0;
+      release(instance);
       if (instance.main) {
-        const ids: number[] = [];
-        const visit = (node: SnapshotInstance) => {
-          ids.push(node.__id);
-          node.childNodes.forEach(child => visit(child));
-        };
-        visit(instance.main);
+        forgetIds(instance.main);
         instance.main.removeChildren();
-        ids.forEach(id => snapshotInstanceManager.values.delete(id));
         __RemoveElement(__page, instance.element!);
         __FlushElementTree(__page, {});
       } else if (instance.background) {
@@ -235,6 +278,7 @@ function initialize(): void {
 
   // Business code may call `root.render` before registering; the page root never renders on transfer pages.
   if (__root.__jsx !== undefined) {
+    warnRootRenderOnTransferPage();
     __root.__jsx = undefined;
     if (!mts) render(null, __root as unknown as ContainerNode);
   }
@@ -261,6 +305,8 @@ function initialize(): void {
     listen<Scope>(native, '__DestroyTransfer', scope => dispose(scope));
     listen<TransferCommit>(lynx.getJSContext(), '__TransferCommit', packet => {
       const instance = instances.get(packet.transferId);
+      // Commits rendered before a props update belong to a replaced first frame.
+      if (instance && packet.version !== instance.version) return;
       let status: TransferCommitResult['status'] = 'disposed';
       if (instance && instance.phase !== 'disposed') {
         try {
@@ -273,7 +319,8 @@ function initialize(): void {
           lynx.reportError(error as Error);
         }
       }
-      send('__TransferCommitResult', { transferId: packet.transferId, seq: packet.seq, status });
+      const { transferId, version, seq } = packet;
+      send('__TransferCommitResult', { transferId, version, seq, status });
     });
     listen<Scope>(lynx.getJSContext(), '__TransferDisposed', scope => dispose(scope, false));
   } else {
@@ -301,7 +348,7 @@ function initialize(): void {
     listen<TransferCommitResult>(core, '__TransferCommitResult', result => {
       const instance = instances.get(result.transferId);
       const item = instance?.inFlight;
-      if (!instance || item?.packet.seq !== result.seq) return;
+      if (!instance || !item || item.packet.version !== result.version || item.packet.seq !== result.seq) return;
       instance.inFlight = undefined;
       item.finish();
       if (result.status === 'applied') pump(instance);

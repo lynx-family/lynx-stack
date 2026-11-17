@@ -42,4 +42,13 @@ function enableTransferMode(): void {
   transferMode = true;
 }
 
-export { __root, enableTransferMode, setRoot, transferMode };
+function warnRootRenderOnTransferPage(): void {
+  if (__DEV__) {
+    console.warn(
+      '[ReactLynx] `root.render` is ignored on transfer pages. '
+        + 'Render components through `TransferRegistry.registerComponent` instead of mixing both.',
+    );
+  }
+}
+
+export { __root, enableTransferMode, setRoot, transferMode, warnRootRenderOnTransferPage };

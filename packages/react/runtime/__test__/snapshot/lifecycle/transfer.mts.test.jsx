@@ -52,9 +52,10 @@ function Page() {
 function create(transferId) {
   native.fire('__CreateTransfer', { transferId, componentName: 'Bubble', initialProps: { text: `t${transferId}` } });
 }
-function commit(transferId, seq, isHydration = false) {
+function commit(transferId, seq, isHydration = false, version = 0) {
   link.fire('__TransferCommit', {
     transferId,
+    version,
     seq,
     kind: isHydration ? 'hydrate' : 'update',
     patchList: { patchList: [{ id: seq, snapshotPatch: [] }] },
@@ -86,8 +87,11 @@ afterAll(() => {
 describe('transfer (main thread)', () => {
   it('creates components after the page renders and sends their first frames', () => {
     TransferRegistry.registerComponent('Bubble', () => Bubble);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     root.render(<Page />);
     expect(__root.__jsx).toBeUndefined();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('`root.render` is ignored on transfer pages'));
+    warn.mockRestore();
 
     create('1');
     native.fire('__CreateTransfer', { transferId: 'missing', componentName: 'Missing', initialProps: {} });
@@ -114,17 +118,35 @@ describe('transfer (main thread)', () => {
   });
 
   it('applies commits in sequence and reports the result', () => {
-    expect(commit('1', 1, true)).toEqual({ transferId: '1', seq: 1, status: 'applied' });
-    expect(commit('1', 2)).toEqual({ transferId: '1', seq: 2, status: 'applied' });
-    expect(commit('1', 4)).toEqual({ transferId: '1', seq: 4, status: 'failed' });
+    expect(commit('1', 1, true)).toEqual({ transferId: '1', version: 0, seq: 1, status: 'applied' });
+    expect(commit('1', 2)).toEqual({ transferId: '1', version: 0, seq: 2, status: 'applied' });
+    expect(commit('1', 4)).toEqual({ transferId: '1', version: 0, seq: 4, status: 'failed' });
     expect(reportError).toHaveBeenCalledWith(new Error('Transfer commit sequence mismatch'));
-    expect(commit('404', 1)).toEqual({ transferId: '404', seq: 1, status: 'disposed' });
+    expect(commit('404', 1)).toEqual({ transferId: '404', version: 0, seq: 1, status: 'disposed' });
   });
 
-  it('forwards props and disposes in both directions', () => {
+  it('re-renders and re-syncs the first frame when props change', () => {
+    const view = elementTree.root.children[0].children[0];
+    const size = snapshotInstanceManager.values.size;
     native.fire('__SetTransferProps', { transferId: '1', props: { text: 'x' } });
     expect(link.of('__SetTransferProps')).toEqual([{ transferId: '1', props: { text: 'x' } }]);
 
+    // Like a template reload, the new frame reuses the elements of the previous one.
+    expect(elementTree.root.children[0].children[0]).toBe(view);
+    expect(view.children[0].children[0].props.text).toBe('x');
+    expect(snapshotInstanceManager.values.size).toBe(size);
+    const frames = link.of('__TransferFirstFrame');
+    expect(frames).toHaveLength(2);
+    expect(frames[1].snapshot).toContain('"x"');
+
+    // Commits rendered against the replaced frame are dropped; the new version restarts at seq 1.
+    const results = link.of('__TransferCommitResult').length;
+    commit('1', 3);
+    expect(link.of('__TransferCommitResult')).toHaveLength(results);
+    expect(commit('1', 1, true, 1)).toEqual({ transferId: '1', version: 1, seq: 1, status: 'applied' });
+  });
+
+  it('disposes in both directions', () => {
     const before = snapshotInstanceManager.values.size;
     create('2');
     expect(elementTree.root.children).toHaveLength(2);
@@ -151,6 +173,19 @@ describe('transfer (main thread)', () => {
     expect(reportError).toHaveBeenCalledWith(new Error('broken'));
     expect(elementTree.root.children).toHaveLength(0);
     expect(link.of('__DestroyTransfer')).toEqual([{ transferId: '2' }, { transferId: '3' }]);
+
+    // A props update whose frame throws rolls back the same way.
+    TransferRegistry.registerComponent('Flaky', () => props => {
+      if (props.fail) throw new Error('flaky');
+      return <view />;
+    });
+    const size = snapshotInstanceManager.values.size;
+    native.fire('__CreateTransfer', { transferId: '4', componentName: 'Flaky', initialProps: {} });
+    native.fire('__SetTransferProps', { transferId: '4', props: { fail: true } });
+    expect(reportError).toHaveBeenCalledWith(new Error('flaky'));
+    expect(elementTree.root.children).toHaveLength(0);
+    expect(snapshotInstanceManager.values.size).toBe(size);
+    expect(link.of('__DestroyTransfer').at(-1)).toEqual({ transferId: '4' });
 
     // A page rendered without data gets empty init data.
     engine.fire('__RenderPage', []);

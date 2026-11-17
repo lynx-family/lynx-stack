@@ -71,8 +71,8 @@ function firstFrame() {
 function commits(transferId) {
   return link.of('__TransferCommit').filter(packet => packet.transferId === transferId);
 }
-function ack(transferId, seq, status = 'applied') {
-  link.fire('__TransferCommitResult', { transferId, seq, status });
+function ack(transferId, seq, status = 'applied', version = 0) {
+  link.fire('__TransferCommitResult', { transferId, version, seq, status });
 }
 
 beforeAll(() => {
@@ -94,6 +94,7 @@ afterAll(() => {
 
 describe('transfer (background thread)', () => {
   it('keeps the page root empty once a component is registered', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     root.render(<Page />);
     expect(__root.childNodes).toHaveLength(1);
 
@@ -104,6 +105,10 @@ describe('transfer (background thread)', () => {
     root.render(<Page />);
     expect(__root.__jsx).toBeUndefined();
     expect(__root.childNodes).toHaveLength(0);
+    // Both the earlier and the later `root.render` are reported in development.
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('`root.render` is ignored on transfer pages'));
+    warn.mockRestore();
   });
 
   it('hydrates a created component and sends one commit at a time', async () => {
@@ -121,12 +126,15 @@ describe('transfer (background thread)', () => {
     expect(commits('1')[1]).toMatchObject({ seq: 2, kind: 'update' });
     expect(JSON.stringify(commits('1')[1].patchList)).toContain('a:1');
 
+    // Like a template reload, a props update remounts the component and waits for a new first frame.
     link.fire('__SetTransferProps', { transferId: '1', props: { text: 'b' } });
-    expect(commits('1')).toHaveLength(2);
     ack('1', 2);
-    expect(commits('1')[2]).toMatchObject({ seq: 3, kind: 'update' });
-    expect(JSON.stringify(commits('1')[2].patchList)).toContain('b:1');
-    ack('1', 3);
+    expect(commits('1')).toHaveLength(2);
+    const frame = firstFrame();
+    expect(frame).toContain('b:0');
+    link.fire('__TransferFirstFrame', { transferId: '1', snapshot: frame });
+    expect(commits('1')[2]).toMatchObject({ version: 1, seq: 1, kind: 'hydrate' });
+    ack('1', 1, 'applied', 1);
 
     // Events dispatch directly to the hydrated handlers.
     const view = [...backgroundSnapshotInstanceManager.values.values()].find(si =>
@@ -173,13 +181,22 @@ describe('transfer (background thread)', () => {
     await waitSchedule();
     expect(commits('4')).toHaveLength(1);
 
+    // A props update releases the in-flight and queued commits; their results no longer match.
+    link.fire('__SetTransferProps', { transferId: '4', props: { text: 'f' } });
+    ack('4', 1);
+    link.fire('__TransferFirstFrame', { transferId: '4', snapshot: emptyFrame(-102) });
+    expect(commits('4')).toMatchObject([{ version: 0, seq: 1 }, { version: 1, seq: 1, kind: 'hydrate' }]);
+    setCount(2);
+    await waitSchedule();
+    expect(commits('4')).toHaveLength(2);
+
     // Disposal releases the in-flight and queued commits; later messages are ignored.
     link.fire('__DestroyTransfer', { transferId: '4' });
     link.fire('__DestroyTransfer', { transferId: '4' });
     ack('4', 1);
     link.fire('__TransferFirstFrame', { transferId: '4', snapshot: emptyFrame(-101) });
     link.fire('__CreateTransfer', { transferId: '4', componentName: 'Bubble', initialProps: {} });
-    expect(commits('4')).toHaveLength(1);
+    expect(commits('4')).toHaveLength(2);
 
     render(<Page />, new BackgroundSnapshotInstance('root'));
     expect(reportError).toHaveBeenCalledWith(new Error('Commit rendered outside a transfer instance'));
