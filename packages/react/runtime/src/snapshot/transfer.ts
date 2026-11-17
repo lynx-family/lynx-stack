@@ -171,9 +171,14 @@ function initialize(): void {
       root.__elements = [element];
       root.__element_root = element;
       send('__CreateTransfer', init);
-      withInstance(instance, () => {
-        renderFirstFrame(createElement(instance.Component, instance.props), undefined, root);
-      });
+      try {
+        withInstance(instance, () => {
+          renderFirstFrame(createElement(instance.Component, instance.props), undefined, root);
+        });
+      } catch (error) {
+        dispose(init);
+        throw error;
+      }
       __FlushElementTree(__page, {});
       send('__TransferFirstFrame', { transferId: init.transferId, snapshot: JSON.stringify(root) });
     } else {
@@ -188,7 +193,9 @@ function initialize(): void {
   }
   function setProps(update: SetTransferPropsEvent) {
     if (mts) {
-      send('__SetTransferProps', update);
+      const pending = pendingCreates.find(init => init.transferId === update.transferId);
+      if (pending) pending.initialProps = update.props;
+      else send('__SetTransferProps', update);
       return;
     }
     const instance = instances.get(update.transferId);

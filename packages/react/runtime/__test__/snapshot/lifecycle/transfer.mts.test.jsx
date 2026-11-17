@@ -90,7 +90,10 @@ describe('transfer (main thread)', () => {
     expect(__root.__jsx).toBeUndefined();
 
     create('1');
+    // Props sent before the page renders replace the queued initial props.
+    native.fire('__SetTransferProps', { transferId: '1', props: { text: 'queued' } });
     expect(link.of('__TransferFirstFrame')).toHaveLength(0);
+    expect(link.of('__SetTransferProps')).toHaveLength(0);
 
     engine.fire('__RenderPage', [{ text: 'init' }]);
     expect(lynx.__initData).toEqual({ text: 'init' });
@@ -105,7 +108,7 @@ describe('transfer (main thread)', () => {
     const [frame] = link.of('__TransferFirstFrame');
     expect(frame.transferId).toBe('1');
     expect(JSON.parse(frame.snapshot).type).toBe('root');
-    expect(frame.snapshot).toContain('t1');
+    expect(frame.snapshot).toContain('queued');
   });
 
   it('applies commits in sequence and reports the result', () => {
@@ -136,5 +139,15 @@ describe('transfer (main thread)', () => {
     expect(elementTree.root.children).toHaveLength(0);
     expect(link.of('__DestroyTransfer')).toHaveLength(1);
     expect(commit('1', 3).status).toBe('disposed');
+  });
+
+  it('rolls back a creation whose first frame throws', () => {
+    TransferRegistry.registerComponent('Broken', () => () => {
+      throw new Error('broken');
+    });
+    native.fire('__CreateTransfer', { transferId: '3', componentName: 'Broken', initialProps: {} });
+    expect(reportError).toHaveBeenCalledWith(new Error('broken'));
+    expect(elementTree.root.children).toHaveLength(0);
+    expect(link.of('__DestroyTransfer')).toEqual([{ transferId: '2' }, { transferId: '3' }]);
   });
 });
