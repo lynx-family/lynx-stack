@@ -160,6 +160,60 @@ describe('rpc tests', () => {
     }
   });
 
+  test.each(['defineProperty', 'delete and assign'] as const)(
+    'discovers a handler installed by %s before the lazy setter runs',
+    async (install) => {
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      const { port1, port2 } = new MessageChannel();
+      try {
+        const caller = new Rpc(port1, 'caller');
+        const callee = new Rpc(port2, 'callee');
+        type Slot = { handler?: (a: number, b: number) => Promise<number> };
+        const target: Slot = {};
+        callee.registerHandlerLazy(
+          testLazy,
+          target as Required<Slot>,
+          'handler',
+        );
+        const call = caller.createCall(testLazy);
+
+        // The first request arrives while the lazy slot is still empty.
+        const received = new Promise<void>((resolve) => {
+          port2.addEventListener('message', () => resolve(), { once: true });
+        });
+        const queued = call(2, 3);
+        await received;
+        const calls: [number, number][] = [];
+        const handler = async (a: number, b: number) => {
+          calls.push([a, b]);
+          return a + b;
+        };
+        if (install === 'defineProperty') {
+          Object.defineProperty(target, 'handler', { value: handler });
+        } else {
+          delete target.handler;
+          target.handler = handler;
+        }
+
+        const replies = await Promise.race([
+          Promise.all([queued, call(10, 20)]),
+          new Promise<never>((_, reject) => {
+            timeout = setTimeout(
+              () => reject(new Error('Timed out waiting for lazy RPC replies')),
+              1_000,
+            );
+          }),
+        ]);
+        expect(replies).toEqual([5, 30]);
+        expect(calls).toEqual([[2, 3], [10, 20]]);
+      } finally {
+        clearTimeout(timeout);
+        port1.close();
+        port2.close();
+      }
+    },
+  );
+
   test('async return with transfer', async () => {
     const ret = await addAsyncWithTransferFn() as unknown as ArrayBuffer;
     // The implementation returns { data: buffer, transfer: [buffer] }

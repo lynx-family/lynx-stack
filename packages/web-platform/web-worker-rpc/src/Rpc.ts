@@ -69,6 +69,12 @@ export class Rpc {
       }>)
   >();
 
+  #lazyHandlerMap = new Map<string, {
+    endpoint: RpcEndpoint<any[], any>;
+    target: Record<string, ((...args: any[]) => unknown) | undefined>;
+    propertyName: string;
+  }>();
+
   /**
    * @param port one size of a message channel
    * @param name instance name
@@ -126,7 +132,15 @@ export class Rpc {
     message,
   ) => {
     // console.warn(`[rpc] on ${this.name} received ${message.name}`, message);
-    const handler = this.#handlerMap.get(message.name);
+    let handler = this.#handlerMap.get(message.name);
+    if (!handler) {
+      const lazy = this.#lazyHandlerMap.get(message.name);
+      if (lazy && lazy.target[lazy.propertyName]) {
+        // Registration replays the cache before this message is dispatched.
+        this.registerHandlerRef(lazy.endpoint, lazy.target, lazy.propertyName);
+        handler = this.#handlerMap.get(message.name);
+      }
+    }
     if (handler) {
       const lockViewer = message.sync
         ? new Int32Array(message.lock)
@@ -251,6 +265,7 @@ export class Rpc {
       transfer?: Transferable[];
     } | Promise<{ data: T['_TypeReturn']; transfer?: Transferable[] }>,
   ): void {
+    this.#lazyHandlerMap.delete(endpoint.name);
     this.#handlerMap.set(endpoint.name, handler);
     const currentCache = this.#messageCache[endpoint.name];
     if (currentCache?.length) {
@@ -307,9 +322,10 @@ export class Rpc {
   }
 
   /**
-   * register a handler "lazy" for an endpoint
-   * It will add a setter for the target property name
-   * once the value is set, we will add it as a handler.
+   * Install a lazy handler for an endpoint. Assignment through the setter
+   * activates the endpoint immediately and replays queued messages.
+   * Replacing the descriptor or deleting and reassigning the slot before
+   * activation is detected on the next incoming message for the endpoint.
    * @param endpoint
    * @param target
    * @param propertyName
@@ -369,6 +385,11 @@ export class Rpc {
           },
         },
       );
+      this.#lazyHandlerMap.set(endpoint.name, {
+        endpoint,
+        target,
+        propertyName,
+      });
     }
   }
 
@@ -377,6 +398,7 @@ export class Rpc {
    * @param rpc
    */
   removeHandler(rpc: RpcEndpoint<unknown[], unknown>): void {
+    this.#lazyHandlerMap.delete(rpc.name);
     this.#handlerMap.delete(rpc.name);
   }
 
