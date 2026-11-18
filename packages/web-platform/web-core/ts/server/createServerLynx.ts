@@ -7,6 +7,16 @@
 import type { MainThreadLynx } from '../types/MainThreadLynx.js';
 import type { Cloneable } from '../types/index.js';
 
+// SSR renders the first frame through the direct renderPage path.
+function createInertContext() {
+  return {
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => 0,
+    hasEventListener: () => false,
+  };
+}
+
 export function createServerLynx(
   globalProps: Cloneable,
   customSections: Record<string, Cloneable>,
@@ -33,18 +43,8 @@ export function createServerLynx(
       // Return a basic mock for SSR
       return {} as any;
     },
-    getEngine() {
-      // SSR renders the first frame only; there is no engine lifetime to
-      // observe, so hand back an inert proxy. `hasEventListener` reporting
-      // `false` keeps the engine on the direct `globalThis.renderPage` path,
-      // matching how SSR drives rendering today.
-      return {
-        addEventListener() {},
-        removeEventListener() {},
-        dispatchEvent: () => 0,
-        hasEventListener: () => false,
-      };
-    },
+    getEngine: createInertContext,
+    getNative: createInertContext,
     requestAnimationFrame(cb: () => void) {
       // Invoke immediately or ignore in SSR
       // Since it's often used for animations, we might just ignore or run once.

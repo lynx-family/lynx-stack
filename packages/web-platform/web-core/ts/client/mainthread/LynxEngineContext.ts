@@ -10,7 +10,7 @@ import type {
 } from '../../types/index.js';
 import { DispatchEventResult } from '../LynxCrossThreadContext.js';
 
-type EngineEventListener = (event: EngineMessageEvent) => void;
+type EngineEventListener<TData> = (event: EngineMessageEvent<TData>) => void;
 
 function captureOf(
   options?: boolean | AddEventListenerOptions | EventListenerOptions,
@@ -29,7 +29,7 @@ function ledgerKey(type: string, capture: boolean): string {
 
 /** An `Event` carrying the engine's `data` payload. See {@link engineEvent}. */
 interface EngineEventCtor {
-  new(type: string, data: Cloneable[] | undefined): Event;
+  new(type: string, data: unknown): Event;
 }
 let EngineEvent: EngineEventCtor | undefined;
 
@@ -40,18 +40,18 @@ let EngineEvent: EngineEventCtor | undefined;
  * has to travel as one. It is deliberately an `Event` subclass rather than a
  * `MessageEvent`: `new MessageEvent(type, { data: undefined })` coerces `data`
  * to `null`, whereas the engine uses `undefined` to mark an event that carries
- * no packed arguments (`__DestroyLifetime`), and the public
- * `EngineMessageEvent.data` type admits no `null`. Subclassing also keeps the
+ * no packed arguments (`__DestroyLifetime`), and Native
+ * teardown carries the instance ID. Subclassing also keeps the
  * event in the same realm as the `Event` this class was defined against, which
  * `dispatchEvent` brand-checks.
  *
  * The class is built on first use because `Event` is not guaranteed to exist
  * when this module is evaluated.
  */
-function engineEvent(type: string, data: Cloneable[] | undefined): Event {
+function engineEvent(type: string, data: unknown): Event {
   EngineEvent ??= class extends Event {
-    readonly data: Cloneable[] | undefined;
-    constructor(eventType: string, eventData: Cloneable[] | undefined) {
+    readonly data: unknown;
+    constructor(eventType: string, eventData: unknown) {
       super(eventType);
       this.data = eventData;
     }
@@ -88,8 +88,9 @@ function engineEvent(type: string, data: Cloneable[] | undefined): Event {
  * Unlike the JS context there is no RPC hop: the engine and the main-thread
  * script share a thread, so `dispatchEvent` delivers synchronously.
  */
-export class LynxEngineContextImpl extends EventTarget
-  implements LynxEngineContext
+export class LynxEngineContextImpl<TData = Cloneable[] | undefined>
+  extends EventTarget
+  implements LynxEngineContext<TData>
 {
   /**
    * Mirror of what has been handed to `EventTarget`, keyed by
@@ -102,7 +103,8 @@ export class LynxEngineContextImpl extends EventTarget
    * the wrappers needed to unregister; it never decides ordering or delivery.
    * Empty buckets are dropped, so a bucket's presence is itself the answer.
    */
-  #ledger: Map<string, Map<EngineEventListener, EventListener>> = new Map();
+  #ledger: Map<string, Map<EngineEventListener<TData>, EventListener>> =
+    new Map();
 
   #disposed = false;
 
@@ -110,7 +112,7 @@ export class LynxEngineContextImpl extends EventTarget
   // dispatched `MessageEvent`, which is narrower than DOM `EventListener`.
   override addEventListener(
     type: string,
-    listener: EngineEventListener,
+    listener: EngineEventListener<TData>,
     options?: boolean | AddEventListenerOptions,
   ): void {
     if (typeof listener !== 'function' || this.#disposed) return;
@@ -139,7 +141,7 @@ export class LynxEngineContextImpl extends EventTarget
       // this removal and is correctly kept.
       if (once) this.#forget(key, listener);
       try {
-        listener(event as unknown as EngineMessageEvent);
+        listener(event as unknown as EngineMessageEvent<TData>);
       } catch (e) {
         // Report and carry on, so one broken card callback cannot stop the
         // remaining listeners — or, on the `__DestroyLifetime` path, abort
@@ -156,7 +158,7 @@ export class LynxEngineContextImpl extends EventTarget
   // @ts-expect-error see `addEventListener`.
   override removeEventListener(
     type: string,
-    listener: EngineEventListener,
+    listener: EngineEventListener<TData>,
     options?: boolean | EventListenerOptions,
   ): void {
     if (typeof listener !== 'function') return;
@@ -168,7 +170,7 @@ export class LynxEngineContextImpl extends EventTarget
   /** Drop `listener` from the ledger, returning the wrapper to unregister. */
   #forget(
     key: string,
-    listener: EngineEventListener,
+    listener: EngineEventListener<TData>,
   ): EventListener | undefined {
     const bucket = this.#ledger.get(key);
     if (!bucket) return undefined;
@@ -199,7 +201,7 @@ export class LynxEngineContextImpl extends EventTarget
    */
   // @ts-expect-error the engine dispatches the `{ type, data }` shape and reads
   // back a `DispatchEventResult`, not the DOM `boolean`.
-  override dispatchEvent(event: EngineMessageEvent): number {
+  override dispatchEvent(event: EngineMessageEvent<TData>): number {
     if (this.#disposed) return DispatchEventResult.NotCanceled;
     // `once` bookkeeping is settled by the wrapper itself, as `EventTarget`
     // invokes it, so nothing has to be reconciled around this call.

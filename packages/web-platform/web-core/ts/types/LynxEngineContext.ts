@@ -15,14 +15,13 @@ import type { Cloneable } from './Cloneable.js';
  * arguments as an array, matching the `lepus::CArray` packing in
  * `DispatchEventFromEngineToCoreContext`.
  */
-export interface EngineMessageEvent {
+export interface EngineMessageEvent<TData = Cloneable[] | undefined> {
   type: string;
   /**
-   * The engine call's positional arguments, or `undefined` for an event that
-   * carries none - `__DestroyLifetime` is a bare teardown signal, so it does
-   * not go through the argument-packing path at all.
+   * Engine events carry positional arguments or `undefined` for teardown.
+   * Native teardown carries the numeric view instance ID.
    */
-  data: Cloneable[] | undefined;
+  data: TData;
 }
 
 /**
@@ -35,18 +34,18 @@ export interface EngineMessageEvent {
  * the event *origin* and the main-thread script is the *target*, so events are
  * delivered synchronously without crossing a thread boundary.
  */
-export interface LynxEngineContext {
+export interface LynxEngineContext<TData = Cloneable[] | undefined> {
   addEventListener(
     type: string,
-    listener: (event: EngineMessageEvent) => void,
+    listener: (event: EngineMessageEvent<TData>) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
   removeEventListener(
     type: string,
-    listener: (event: EngineMessageEvent) => void,
+    listener: (event: EngineMessageEvent<TData>) => void,
     options?: boolean | EventListenerOptions,
   ): void;
-  dispatchEvent(event: EngineMessageEvent): number;
+  dispatchEvent(event: EngineMessageEvent<TData>): number;
   /**
    * Whether at least one listener is currently registered for `type`.
    *

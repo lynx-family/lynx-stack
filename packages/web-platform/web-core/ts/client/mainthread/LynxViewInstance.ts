@@ -67,6 +67,8 @@ export function createSystemInfo(
   });
 }
 
+let nextInstanceId = 0;
+
 export class LynxViewInstance implements AsyncDisposable {
   readonly mainThreadGlobalThis: MainThreadGlobalThis;
   readonly mtsWasmBinding: WASMJSBinding;
@@ -83,6 +85,8 @@ export class LynxViewInstance implements AsyncDisposable {
    * keep `globalThis.renderPage`-style bundles working.
    */
   readonly engineContext: LynxEngineContextImpl = new LynxEngineContextImpl();
+  readonly nativeContext = new LynxEngineContextImpl<Cloneable | Cloneable[]>();
+  readonly #instanceId = nextInstanceId++;
 
   // A `.web.bundle` url is only ever loaded one way — as a lazy component
   // (`queryComponent`) or as an external bundle (`loadExternalBundle`), never
@@ -429,19 +433,28 @@ export class LynxViewInstance implements AsyncDisposable {
     // engine is torn down. `dispatchEvent` runs listeners synchronously, so
     // the card's cleanup has completed by the time this returns.
     try {
-      // `data` is `undefined` rather than an empty array on purpose: unlike
-      // `__RenderPage` / `__UpdatePage`, this event does not travel through the
-      // engine's argument-packing path, so it carries no positional arguments.
-      // Cards subscribe to it purely as a teardown signal.
+      this.nativeContext.dispatchEvent({
+        type: EngineMessageEventType.DestroyLifetime,
+        data: this.#instanceId,
+      });
+    } catch (error) {
+      console.error(
+        '[lynx-web] error while dispatching native __DestroyLifetime',
+        error,
+      );
+    }
+    try {
       this.engineContext.dispatchEvent({
         type: EngineMessageEventType.DestroyLifetime,
         data: undefined,
       });
-    } catch (e) {
-      // A throwing card cleanup must not abort teardown of the rest of the
-      // instance, otherwise we leak workers and DOM listeners.
-      console.error('[lynx-web] error while dispatching __DestroyLifetime', e);
+    } catch (error) {
+      console.error(
+        '[lynx-web] error while dispatching engine __DestroyLifetime',
+        error,
+      );
     }
+    this.nativeContext.dispose();
     this.engineContext.dispose();
     this.boundingClientRectService.dispose();
     this.intersectionObserverService.dispose();

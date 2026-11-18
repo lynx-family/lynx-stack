@@ -37,6 +37,9 @@ function createMainThreadLynx(
     getEngine() {
       return lynxViewInstance.engineContext;
     },
+    getNative() {
+      return lynxViewInstance.nativeContext;
+    },
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrameBrowserImpl(cb);
     },

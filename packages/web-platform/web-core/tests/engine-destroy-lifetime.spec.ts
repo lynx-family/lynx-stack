@@ -2,9 +2,18 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import './jsdom.js';
-import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
+import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
-import { LynxEngineContextImpl } from '../ts/client/mainthread/LynxEngineContext.js';
+import type { LynxViewElement } from '../ts/client/mainthread/LynxView.js';
+import type { JSRealm } from '../ts/types/index.js';
 import { EngineMessageEventType } from '../ts/constants.js';
 
 /**
@@ -13,6 +22,20 @@ import { EngineMessageEventType } from '../ts/constants.js';
  * `[Symbol.asyncDispose]` reaches are stubbed; the engine dispatch logic under
  * test is the real implementation.
  */
+function createInstance() {
+  const host = document.createElement('div') as unknown as LynxViewElement;
+  return new LynxViewInstance(
+    host,
+    {},
+    {},
+    'http://localhost/card.web.bundle',
+    host.attachShadow({ mode: 'open' }),
+    { globalWindow: globalThis } as JSRealm,
+    false,
+    undefined,
+  );
+}
+
 describe('__DestroyLifetime on teardown', () => {
   let instance: LynxViewInstance;
   let disposeCalls: string[];
@@ -21,14 +44,13 @@ describe('__DestroyLifetime on teardown', () => {
     rstest.resetAllMocks();
     disposeCalls = [];
 
-    instance = Object.create(LynxViewInstance.prototype) as LynxViewInstance;
-    // `engineContext` is a readonly class field, so install it the way the
-    // real constructor would.
-    Object.defineProperty(instance, 'engineContext', {
-      value: new LynxEngineContextImpl(),
-      writable: false,
-      configurable: true,
-    });
+    instance = createInstance();
+    const disposeBackground = instance.backgroundThread[Symbol.asyncDispose]
+      .bind(instance.backgroundThread);
+    instance.backgroundThread[Symbol.asyncDispose] = async () => {
+      disposeCalls.push('backgroundThread');
+      await disposeBackground();
+    };
     Object.assign(instance, {
       boundingClientRectService: {
         dispose: () => disposeCalls.push('boundingClientRect'),
@@ -36,17 +58,42 @@ describe('__DestroyLifetime on teardown', () => {
       intersectionObserverService: {
         dispose: () => disposeCalls.push('intersectionObserver'),
       },
-      backgroundThread: {
-        [Symbol.asyncDispose]: async () => {
-          disposeCalls.push('backgroundThread');
-        },
-      },
       exposureServices: { dispose: () => disposeCalls.push('exposure') },
       mtsWasmBinding: {
         disposeEventListeners: () => disposeCalls.push('mtsEventListeners'),
         dispose: () => disposeCalls.push('mtsBinding'),
       },
     });
+  });
+
+  afterEach(() => {
+    rstest.restoreAllMocks();
+    rstest.unstubAllGlobals();
+  });
+
+  test('delivers distinct Native view IDs and preserves the Engine payload', async () => {
+    rstest.stubGlobal('cancelAnimationFrame', rstest.fn());
+    const second = createInstance();
+    const nativePayloads: unknown[] = [];
+    const enginePayloads: unknown[] = [];
+    const type = EngineMessageEventType.DestroyLifetime;
+    for (const view of [instance, second]) {
+      const { lynx } = createMainThreadGlobalAPIs(view);
+      lynx.getNative().addEventListener(
+        type,
+        ({ data }) => nativePayloads.push(data),
+      );
+      lynx.getEngine().addEventListener(
+        type,
+        ({ data }) => enginePayloads.push(data),
+      );
+      await view[Symbol.asyncDispose]();
+      expect(lynx.getNative().hasEventListener(type)).toBe(false);
+    }
+
+    expect(nativePayloads).toEqual([expect.any(Number), expect.any(Number)]);
+    expect(nativePayloads[1]).toBeGreaterThan(nativePayloads[0] as number);
+    expect(enginePayloads).toEqual([undefined, undefined]);
   });
 
   test('dispatches __DestroyLifetime when the instance is disposed', async () => {
@@ -110,12 +157,17 @@ describe('__DestroyLifetime on teardown', () => {
     expect(disposeCalls).toContain('mtsEventListeners');
   });
 
-  test('a throwing card cleanup does not abort teardown', async () => {
+  test('a throwing Native listener does not skip the Engine notification or teardown', async () => {
     // Otherwise a buggy card would leak the worker and DOM listeners.
     const consoleError = rstest.spyOn(console, 'error').mockImplementation(
       () => {},
     );
+    const engineCleanup = rstest.fn();
     instance.engineContext.addEventListener(
+      EngineMessageEventType.DestroyLifetime,
+      engineCleanup,
+    );
+    instance.nativeContext.addEventListener(
       EngineMessageEventType.DestroyLifetime,
       () => {
         throw new Error('card cleanup blew up');
@@ -127,6 +179,7 @@ describe('__DestroyLifetime on teardown', () => {
     expect(disposeCalls).toContain('backgroundThread');
     expect(disposeCalls).toContain('exposure');
     expect(disposeCalls).toContain('mtsEventListeners');
+    expect(engineCleanup).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });

@@ -100,3 +100,13 @@ describe('main-thread lynx.module', () => {
     expect(createServerLynx({}, {}).module('Storage')).toBeUndefined();
   });
 });
+
+test('server-side cards can subscribe to an inert native context', () => {
+  const lynx = createServerLynx({}, {});
+  const native = lynx.getNative();
+  const listener = rstest.fn();
+  native.addEventListener('__DestroyLifetime', listener);
+  expect(native.dispatchEvent({ type: '__DestroyLifetime', data: undefined }))
+    .toBe(0);
+  expect(listener).not.toHaveBeenCalled();
+});

@@ -20,6 +20,8 @@ export interface MainThreadLynx extends ExternalBundleLynxAPIs {
    * `__UpdateGlobalProps`) instead of exporting `globalThis.renderPage`.
    */
   getEngine: () => LynxEngineContext;
+  /** Returns the native context proxy for main-thread lifecycle events. */
+  getNative: () => LynxEngineContext<Cloneable | Cloneable[]>;
   requestAnimationFrame: (cb: () => void) => number;
   cancelAnimationFrame: (handler: number) => void;
   __globalProps: unknown;

@@ -11,6 +11,8 @@ rstest.mock('../css/in_shadow.css?inline', () => ({
 }));
 
 import { createElementAPI, type SSRBinding } from '../ts/server/index.js';
+import { encode } from '../ts/encode/index.js';
+import { executeTemplate } from '../ts/server/deploy.js';
 import { MainThreadServerContext } from '../ts/server/wasm.js';
 
 const X_ELEMENT_TEST_CONFIG = {
@@ -55,6 +57,39 @@ const X_ELEMENT_COMPATIBLE_TAGS = [
 ] as const;
 
 describe('Server SSR', () => {
+  it('executes a card using the Native context', () => {
+    const template = encode({
+      styleInfo: {},
+      manifest: {},
+      cardType: 'react',
+      appType: 'card',
+      pageConfig: {},
+      customSections: {},
+      elementTemplates: {},
+      lepusCode: {
+        root: `
+          lynx.getNative().addEventListener('__DestroyLifetime', () => {});
+          globalThis.renderPage = () => {
+            const page = __CreatePage('SSR', 0);
+            const view = __CreateElement('view', 0);
+            __SetAttribute(view, 'id', 'host-compat');
+            __AppendElement(page, view);
+          };
+        `,
+      },
+    });
+
+    const html = executeTemplate(
+      Buffer.from(template),
+      {},
+      {},
+      () => {},
+      false,
+      false,
+    );
+    expect(html).toContain('id="host-compat"');
+  });
+
   it.each([true, false, undefined])(
     'serializes CSS inheritance config %s',
     (enableCSSInheritance) => {
