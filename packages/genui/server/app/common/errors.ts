@@ -15,6 +15,7 @@ export function errorMessage(
 ): {
   message: string;
   name?: string;
+  code?: 'UPSTREAM_TIMEOUT';
   statusCode?: number;
   upstreamRequestId?: string;
 } {
@@ -26,6 +27,7 @@ export function errorMessage(
       name: redact(err.name),
       ...(err instanceof GenerationUpstreamError
         ? {
+          ...(err.code === undefined ? {} : { code: err.code }),
           ...(err.statusCode === undefined
             ? {}
             : { statusCode: err.statusCode }),

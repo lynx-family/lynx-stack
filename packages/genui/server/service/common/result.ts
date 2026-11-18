@@ -7,6 +7,7 @@ import type { MastraResult, MastraStreamResult } from './types.js';
 
 /** Stop protocol postprocessing while retaining the failed model's usage. */
 export class GenerationUpstreamError extends Error {
+  readonly code?: 'UPSTREAM_TIMEOUT';
   readonly statusCode?: number;
   readonly upstreamRequestId?: string;
 
@@ -18,11 +19,13 @@ export class GenerationUpstreamError extends Error {
       finishReason: unknown;
     },
   ) {
+    const timeoutMessage = upstreamTimeoutMessage(cause);
     super(
-      upstreamErrorMessage(cause),
+      timeoutMessage ?? upstreamErrorMessage(cause),
       { cause },
     );
     this.name = 'GenerationUpstreamError';
+    if (timeoutMessage !== undefined) this.code = 'UPSTREAM_TIMEOUT';
     // Select only public diagnostics; never forward provider bodies or headers.
     let current = cause;
     for (let depth = 0; depth < 5 && isRecord(current); depth++) {
@@ -82,6 +85,44 @@ function upstreamErrorMessage(cause: unknown): string {
   }
   if (typeof cause === 'string' && cause.trim()) return cause;
   return 'Upstream model generation failed without error details';
+}
+
+function upstreamTimeoutMessage(cause: unknown): string | undefined {
+  let current = cause;
+  let message: string | undefined;
+  // SDK wrappers can hide transport errors behind a generic connection failure.
+  for (let depth = 0; depth < 5; depth++) {
+    const error = isRecord(current) ? current : {};
+    const reason = typeof current === 'string' ? current : error.message;
+    const detail = typeof reason === 'string' ? reason.trim() : '';
+    let phase: string | undefined;
+    if (
+      error.code === 'UND_ERR_CONNECT_TIMEOUT'
+      || /\bconnect(?:ion)?\s+(?:timeout|timed out)\b/iu.test(detail)
+    ) {
+      phase = 'connection';
+    } else if (error.code === 'UND_ERR_HEADERS_TIMEOUT') {
+      phase = 'response headers';
+    } else if (error.code === 'UND_ERR_BODY_TIMEOUT') {
+      phase = 'response body';
+    } else if (
+      error.code === 'ETIMEDOUT' || error.name === 'TimeoutError'
+      || error.name === 'APIConnectionTimeoutError'
+      || error.statusCode === 408 || error.statusCode === 504
+      || /\b(?:request|gateway|upstream)\s+(?:timeout|timed out)\b/iu
+        .test(detail)
+    ) {
+      phase = 'request';
+    }
+    if (phase !== undefined) {
+      message = `Upstream model ${phase} timed out${
+        detail ? `: ${detail}` : ''
+      }`;
+    }
+    current = error.lastError ?? error.cause;
+    if (current == null) break;
+  }
+  return message;
 }
 
 function textFromContent(content: unknown): string {
