@@ -7,6 +7,7 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 import { pluginLynxBundleAnalysisStats } from '../bundle-analysis-stats.plugin.js';
+import { pluginProfileAsyncTrace } from './profile-async-trace.plugin.js';
 
 // REACTLYNX_ASYNC=true loads the ReactLynx external bundle asynchronously
 // (mounted as a Promise) instead of as a synchronous global. Async outputs are
@@ -38,9 +39,14 @@ export default defineConfig({
         `${assetPrefix}message.lynx.bundle`,
       ),
     },
-    preEntry: process.env['REPRODUCE_STARTUP_RACE'] === 'true'
-      ? ['./src/reproduce-startup-race.ts']
-      : [],
+    preEntry: [
+      ...(process.env['REPRODUCE_STARTUP_RACE'] === 'true'
+        ? ['./src/reproduce-startup-race.ts']
+        : []),
+      ...(process.env['MOCK_COMP_LIB'] === 'true'
+        ? ['./src/mock-comp-lib.tsx']
+        : []),
+    ],
     entry: {
       main: './src/index.tsx',
     },
@@ -66,7 +72,7 @@ export default defineConfig({
           libraryName: './App.js',
           background: { sectionPath: './App.js' },
           mainThread: { sectionPath: './App.js__main-thread' },
-          async: false,
+          async: process.env['MOCK_COMP_LIB'] === 'true',
         },
         './utils.js': 'utils.lynx.bundle',
         './message.js': {
@@ -85,6 +91,7 @@ export default defineConfig({
       globalObject: 'globalThis',
     }),
     pluginLynxBundleAnalysisStats(),
+    pluginProfileAsyncTrace(),
   ],
   environments: {
     ...(isAsync ? {} : { web: {} }),
