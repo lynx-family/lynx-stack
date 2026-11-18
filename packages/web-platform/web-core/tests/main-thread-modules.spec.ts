@@ -24,6 +24,7 @@ function createLynx(view: LynxViewElement) {
     parentDom: view,
     globalprops: {},
     systemInfo: {},
+    mtsRealm: { globalWindow: globalThis },
     backgroundThread: { markTiming: rstest.fn() },
     i18nManager: { _I18nResourceTranslation: rstest.fn() },
   } as unknown as LynxViewInstance).lynx;

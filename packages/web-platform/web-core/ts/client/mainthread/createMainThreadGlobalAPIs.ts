@@ -5,15 +5,18 @@
  */
 
 import type {
+  Cloneable,
   MainThreadGlobalAPIs,
   MainThreadLynx,
 } from '../../types/index.js';
+import { cloneIntoRealm } from './createIFrameRealm.js';
 import { templateManager } from './TemplateManager.js';
 import type { LynxViewInstance } from './LynxViewInstance.js';
 import { createMainThreadLynxPerformance } from './createMainThreadLynxPerformance.js';
 
 function createMainThreadLynx(
   lynxViewInstance: LynxViewInstance,
+  systemInfo: Cloneable,
 ): MainThreadLynx {
   const requestAnimationFrameBrowserImpl = requestAnimationFrame;
   const cancelAnimationFrameBrowserImpl = cancelAnimationFrame;
@@ -45,15 +48,17 @@ function createMainThreadLynx(
     },
     __globalProps: lynxViewInstance.globalprops,
     getCustomSectionSync(key: string) {
-      return (templateManager.getBundle(
-        lynxViewInstance.templateUrl,
-      )?.customSections as any)?.[key]
-        ?.content;
+      const section = templateManager.getBundle(lynxViewInstance.templateUrl)
+        ?.customSections?.[key];
+      return cloneIntoRealm(
+        section?.content as Cloneable,
+        lynxViewInstance.mtsRealm.globalWindow,
+      );
     },
     markPipelineTiming: lynxViewInstance.backgroundThread.markTiming.bind(
       lynxViewInstance.backgroundThread,
     ),
-    SystemInfo: lynxViewInstance.systemInfo,
+    SystemInfo: systemInfo,
     setTimeout: setTimeoutBrowserImpl,
     clearTimeout: clearTimeoutBrowserImpl,
     setInterval: setIntervalBrowserImpl,
@@ -82,12 +87,14 @@ export function createMainThreadGlobalAPIs(
   lynxViewInstance: LynxViewInstance,
 ): MainThreadGlobalAPIs {
   let releaseSetting = '';
+  const systemInfo = Object.freeze(cloneIntoRealm(
+    lynxViewInstance.systemInfo,
+    lynxViewInstance.mtsRealm.globalWindow,
+  ));
   return {
     __globalProps: lynxViewInstance.globalprops,
-    SystemInfo: lynxViewInstance.systemInfo,
-    lynx: createMainThreadLynx(
-      lynxViewInstance,
-    ),
+    SystemInfo: systemInfo,
+    lynx: createMainThreadLynx(lynxViewInstance, systemInfo),
     __OnLifecycleEvent: (data) => {
       lynxViewInstance.backgroundThread.jsContext.dispatchEvent({
         type: '__OnLifecycleEvent',

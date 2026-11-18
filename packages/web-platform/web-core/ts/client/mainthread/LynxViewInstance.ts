@@ -27,6 +27,7 @@ import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
 import { createInvokeUIMethod } from './elementAPIs/createInvokeUIMethod.js';
 import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
+import { cloneIntoRealm } from './createIFrameRealm.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import {
   dispatchEngineEventWithFallback,
@@ -106,10 +107,13 @@ export class LynxViewInstance implements AsyncDisposable {
   lepusCodeUrls = new Map<string, Record<string, string>>();
   systemInfo: Record<string, any>;
 
+  readonly initData: Cloneable;
+  globalprops: Cloneable;
+
   constructor(
     public readonly parentDom: LynxViewElement,
-    public readonly initData: Cloneable,
-    public globalprops: Cloneable,
+    initData: Cloneable,
+    globalprops: Cloneable,
     public readonly templateUrl: string,
     public readonly rootDom: ShadowRoot,
     public readonly mtsRealm: JSRealm,
@@ -133,6 +137,8 @@ export class LynxViewInstance implements AsyncDisposable {
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
+    this.initData = cloneIntoRealm(initData, mtsRealm.globalWindow);
+    this.globalprops = cloneIntoRealm(globalprops, mtsRealm.globalWindow);
 
     this.boundingClientRectService = new BoundingClientRectService(parentDom);
     this.invokeUIMethod = createInvokeUIMethod(this.boundingClientRectService);
@@ -257,7 +263,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.#dispatchEngineEvent(
       EngineMessageEventType.RenderPage,
       () => this.mainThreadGlobalThis.renderPage?.(processedData),
-      [processedData],
+      this.mtsRealm.globalWindow.Array.of(processedData),
     );
     this.mainThreadGlobalThis.__FlushElementTree();
   }
@@ -371,26 +377,37 @@ export class LynxViewInstance implements AsyncDisposable {
     data: Cloneable,
     processorName?: string,
   ): Promise<void> {
+    const targetGlobal = this.mtsRealm.globalWindow;
+    const mtsData = cloneIntoRealm(data, targetGlobal);
     const processedData = this.#pageConfig!['enableJSDataProcessor'] !== 'true'
         && this.mainThreadGlobalThis.processData
-      ? this.mainThreadGlobalThis.processData(data, processorName)
-      : data;
+      ? this.mainThreadGlobalThis.processData(mtsData, processorName)
+      : mtsData;
+    const options = Object.defineProperty(
+      new targetGlobal.Object(),
+      'processorName',
+      {
+        value: processorName,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      },
+    );
     this.#dispatchEngineEvent(
       EngineMessageEventType.UpdatePage,
-      () =>
-        this.mainThreadGlobalThis.updatePage?.(processedData, {
-          processorName,
-        }),
-      [processedData, { processorName }],
+      () => this.mainThreadGlobalThis.updatePage?.(processedData, options),
+      targetGlobal.Array.of(processedData, options),
     );
     await this.backgroundThread.updateData(processedData, { processorName });
   }
 
   async updateGlobalProps(data: Cloneable) {
-    this.globalprops = data;
-    this.mainThreadGlobalThis.__globalProps = data;
+    const targetGlobal = this.mtsRealm.globalWindow;
+    const mtsData = cloneIntoRealm(data, targetGlobal);
+    this.globalprops = mtsData;
+    this.mainThreadGlobalThis.__globalProps = mtsData;
     if (this.mainThreadGlobalThis.lynx) {
-      this.mainThreadGlobalThis.lynx.__globalProps = data;
+      this.mainThreadGlobalThis.lynx.__globalProps = mtsData;
     }
 
     try {
@@ -405,7 +422,7 @@ export class LynxViewInstance implements AsyncDisposable {
         EngineMessageEventType.UpdateGlobalProps,
         () => {
           try {
-            this.mainThreadGlobalThis.updateGlobalProps?.(data);
+            this.mainThreadGlobalThis.updateGlobalProps?.(mtsData);
           } catch (error) {
             console.error(
               '[lynx-web] error in globalThis.updateGlobalProps',
@@ -413,7 +430,7 @@ export class LynxViewInstance implements AsyncDisposable {
             );
           }
         },
-        [data],
+        targetGlobal.Array.of(mtsData),
       );
     }
   }

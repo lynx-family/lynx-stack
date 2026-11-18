@@ -42,6 +42,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       engineContext,
       globalprops: {},
       systemInfo: {},
+      mtsRealm: { globalWindow: globalThis },
       templateUrl: 'http://localhost/a.bundle',
       backgroundThread: {
         markTiming: rstest.fn(),

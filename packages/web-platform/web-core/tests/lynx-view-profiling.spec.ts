@@ -64,7 +64,7 @@ describe('lynx-view profiling', () => {
           {},
           'http://localhost/main.web.bundle',
           view.shadowRoot ?? view.attachShadow({ mode: 'open' }),
-          { globalWindow: {} } as JSRealm,
+          { globalWindow: { Object, Array } } as JSRealm,
           false,
           undefined,
         );
