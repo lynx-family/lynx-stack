@@ -42,6 +42,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       engineContext,
       globalprops: {},
       systemInfo: {},
+      mtsRealm: { globalWindow: globalThis },
       templateUrl: 'http://localhost/a.bundle',
       backgroundThread: {
         markTiming: rstest.fn(),
@@ -55,7 +56,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
   });
 
   describe('addEventListener / removeEventListener / dispatchEvent', () => {
-    test('dispatches a MessageEvent carrying type and data', () => {
+    test('dispatches an event carrying type and data', () => {
       const received: EngineMessageEvent[] = [];
       engine.addEventListener('__RenderPage', (e) => received.push(e));
 

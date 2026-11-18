@@ -356,6 +356,8 @@ export class Rpc {
         target,
         propertyName,
         {
+          configurable: true,
+          enumerable: true,
           get() {
             return property;
           },

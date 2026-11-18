@@ -124,6 +124,19 @@ describe('rpc tests', () => {
     expect(ret2).toBe(100);
   });
 
+  test('a lazy handler property can be enumerated, redefined, and deleted', () => {
+    const rpc = new Rpc(undefined, 'test');
+    const target = {} as { handler: (() => Promise<number>) | undefined };
+    rpc.registerHandlerLazy(testLazy, target, 'handler');
+
+    const replacement = async () => 42;
+    Object.defineProperty(target, 'handler', { value: replacement });
+    expect(target.handler).toBe(replacement);
+    expect(Object.keys(target)).toEqual(['handler']);
+    expect(delete (target as Partial<typeof target>).handler).toBe(true);
+    expect(Object.hasOwn(target, 'handler')).toBe(false);
+  });
+
   test('async return with transfer', async () => {
     const ret = await addAsyncWithTransferFn() as unknown as ArrayBuffer;
     // The implementation returns { data: buffer, transfer: [buffer] }

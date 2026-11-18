@@ -2484,7 +2484,7 @@ describe('Element APIs', () => {
         ['app.js', { 'chunk.js': 'app-chunk.js' }],
         ['dynamic.js', { 'chunk.js': 'dynamic-chunk.js' }],
       ]),
-      mtsRealm: { loadScriptSync: rstest.fn() },
+      mtsRealm: { globalWindow: globalThis, loadScriptSync: rstest.fn() },
       i18nManager: { _I18nResourceTranslation: rstest.fn() },
     } as unknown as LynxViewInstance;
 

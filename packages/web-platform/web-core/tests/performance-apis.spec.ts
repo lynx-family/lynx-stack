@@ -14,6 +14,8 @@ import { createPerformanceApis } from '../ts/client/background/background-apis/c
 import { createMainThreadLynxPerformance } from '../ts/client/mainthread/createMainThreadLynxPerformance.js';
 import type { TimingSystem } from '../ts/client/background/background-apis/createTimingSystem.js';
 
+import { createServerLynx } from '../ts/server/createServerLynx.js';
+
 const originalPerformanceDescriptor = Object.getOwnPropertyDescriptor(
   globalThis,
   'performance',
@@ -183,4 +185,19 @@ describe('main-thread lynx.performance', () => {
       'pipeline-1',
     );
   });
+});
+
+test.each([
+  {
+    name: 'main thread',
+    create: () => createMainThreadLynxPerformance(rstest.fn()),
+  },
+  { name: 'server', create: () => createServerLynx({}, {}).performance },
+])('$name supports both pipeline timing flag spellings', ({ create }) => {
+  const performance = create();
+  expect(performance._bindPipelineIDWithTimingFlag).toBe(
+    performance._bindPipelineIdWithTimingFlag,
+  );
+  expect(() => performance._bindPipelineIDWithTimingFlag('pipeline', 'flag'))
+    .not.toThrow();
 });

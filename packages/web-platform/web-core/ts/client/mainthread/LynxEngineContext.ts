@@ -8,7 +8,10 @@ import type {
   EngineMessageEvent,
   LynxEngineContext,
 } from '../../types/index.js';
-import { DispatchEventResult } from '../LynxCrossThreadContext.js';
+import {
+  createContextEvent,
+  DispatchEventResult,
+} from '../LynxCrossThreadContext.js';
 
 type EngineEventListener = (event: EngineMessageEvent) => void;
 
@@ -25,38 +28,6 @@ function captureOf(
  */
 function ledgerKey(type: string, capture: boolean): string {
   return `${capture ? 'C' : 'B'}\u0000${type}`;
-}
-
-/** An `Event` carrying the engine's `data` payload. See {@link engineEvent}. */
-interface EngineEventCtor {
-  new(type: string, data: Cloneable[] | undefined): Event;
-}
-let EngineEvent: EngineEventCtor | undefined;
-
-/**
- * Build the object handed to `super.dispatchEvent`.
- *
- * `EventTarget` only accepts a real `Event`, so the engine's `{ type, data }`
- * has to travel as one. It is deliberately an `Event` subclass rather than a
- * `MessageEvent`: `new MessageEvent(type, { data: undefined })` coerces `data`
- * to `null`, whereas the engine uses `undefined` to mark an event that carries
- * no packed arguments (`__DestroyLifetime`), and the public
- * `EngineMessageEvent.data` type admits no `null`. Subclassing also keeps the
- * event in the same realm as the `Event` this class was defined against, which
- * `dispatchEvent` brand-checks.
- *
- * The class is built on first use because `Event` is not guaranteed to exist
- * when this module is evaluated.
- */
-function engineEvent(type: string, data: Cloneable[] | undefined): Event {
-  EngineEvent ??= class extends Event {
-    readonly data: Cloneable[] | undefined;
-    constructor(eventType: string, eventData: Cloneable[] | undefined) {
-      super(eventType);
-      this.data = eventData;
-    }
-  };
-  return new EngineEvent(type, data);
 }
 
 /**
@@ -203,7 +174,7 @@ export class LynxEngineContextImpl extends EventTarget
     if (this.#disposed) return DispatchEventResult.NotCanceled;
     // `once` bookkeeping is settled by the wrapper itself, as `EventTarget`
     // invokes it, so nothing has to be reconciled around this call.
-    super.dispatchEvent(engineEvent(event.type, event.data));
+    super.dispatchEvent(createContextEvent(event.type, event.data));
     return DispatchEventResult.NotCanceled;
   }
 

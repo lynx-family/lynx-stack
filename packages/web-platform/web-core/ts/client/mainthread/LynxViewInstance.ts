@@ -27,6 +27,7 @@ import { WASMJSBinding } from './elementAPIs/WASMJSBinding.js';
 import { createInvokeUIMethod } from './elementAPIs/createInvokeUIMethod.js';
 import { ExposureServices } from './ExposureServices.js';
 import { createElementAPI } from './elementAPIs/createElementAPI.js';
+import { cloneIntoRealm } from './createIFrameRealm.js';
 import { createMainThreadGlobalAPIs } from './createMainThreadGlobalAPIs.js';
 import {
   dispatchEngineEventWithFallback,
@@ -82,7 +83,8 @@ export class LynxViewInstance implements AsyncDisposable {
    * events; see {@link dispatchEngineEvent} for the fallback semantics that
    * keep `globalThis.renderPage`-style bundles working.
    */
-  readonly engineContext: LynxEngineContextImpl = new LynxEngineContextImpl();
+  readonly engineContext = new LynxEngineContextImpl();
+  readonly nativeContext = new LynxEngineContextImpl();
 
   // A `.web.bundle` url is only ever loaded one way — as a lazy component
   // (`queryComponent`) or as an external bundle (`loadExternalBundle`), never
@@ -106,10 +108,13 @@ export class LynxViewInstance implements AsyncDisposable {
   lepusCodeUrls = new Map<string, Record<string, string>>();
   systemInfo: Record<string, any>;
 
+  readonly initData: Cloneable;
+  globalprops: Cloneable;
+
   constructor(
     public readonly parentDom: LynxViewElement,
-    public readonly initData: Cloneable,
-    public readonly globalprops: Cloneable,
+    initData: Cloneable,
+    globalprops: Cloneable,
     public readonly templateUrl: string,
     public readonly rootDom: ShadowRoot,
     public readonly mtsRealm: JSRealm,
@@ -133,6 +138,8 @@ export class LynxViewInstance implements AsyncDisposable {
     this.mainThreadGlobalThis = mtsRealm.globalWindow as
       & typeof globalThis
       & MainThreadGlobalThis;
+    this.initData = cloneIntoRealm(initData, mtsRealm.globalWindow);
+    this.globalprops = cloneIntoRealm(globalprops, mtsRealm.globalWindow);
 
     this.boundingClientRectService = new BoundingClientRectService(parentDom);
     this.invokeUIMethod = createInvokeUIMethod(this.boundingClientRectService);
@@ -257,7 +264,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.#dispatchEngineEvent(
       EngineMessageEventType.RenderPage,
       () => this.mainThreadGlobalThis.renderPage?.(processedData),
-      [processedData],
+      this.mtsRealm.globalWindow.Array.of(processedData),
     );
     this.mainThreadGlobalThis.__FlushElementTree();
   }
@@ -371,31 +378,34 @@ export class LynxViewInstance implements AsyncDisposable {
     data: Cloneable,
     processorName?: string,
   ): Promise<void> {
+    const targetGlobal = this.mtsRealm.globalWindow;
+    const mtsData = cloneIntoRealm(data, targetGlobal);
     const processedData = this.#pageConfig!['enableJSDataProcessor'] !== 'true'
         && this.mainThreadGlobalThis.processData
-      ? this.mainThreadGlobalThis.processData(data, processorName)
-      : data;
+      ? this.mainThreadGlobalThis.processData(mtsData, processorName)
+      : mtsData;
+    const options = cloneIntoRealm({ processorName }, targetGlobal);
     this.#dispatchEngineEvent(
       EngineMessageEventType.UpdatePage,
-      () =>
-        this.mainThreadGlobalThis.updatePage?.(processedData, {
-          processorName,
-        }),
-      [processedData, { processorName }],
+      () => this.mainThreadGlobalThis.updatePage?.(processedData, options),
+      targetGlobal.Array.of(processedData, options),
     );
     await this.backgroundThread.updateData(processedData, { processorName });
   }
 
   async updateGlobalProps(data: Cloneable) {
-    // `__UpdateGlobalProps` has no legacy global-function counterpart on web
-    // (the engine calls `kUpdateGlobalProps`, which web-platform never
-    // exposed), so the fallback branch is a no-op: cards that subscribe get
-    // the event, and everything else keeps relying solely on the
-    // background-thread notification below.
+    const targetGlobal = this.mtsRealm.globalWindow;
+    const mtsData = cloneIntoRealm(data, targetGlobal);
+    this.globalprops = mtsData;
+    this.mainThreadGlobalThis.__globalProps = mtsData;
+    // The latest props also seed the lynx object when configuration arrives.
+    if (this.mainThreadGlobalThis.lynx) {
+      this.mainThreadGlobalThis.lynx.__globalProps = mtsData;
+    }
     this.#dispatchEngineEvent(
       EngineMessageEventType.UpdateGlobalProps,
-      () => {},
-      [data],
+      () => this.mainThreadGlobalThis.updateGlobalProps?.(mtsData),
+      targetGlobal.Array.of(mtsData),
     );
     await this.backgroundThread.updateGlobalProps(data);
   }
@@ -428,20 +438,22 @@ export class LynxViewInstance implements AsyncDisposable {
     // `LynxShell::Destroy` / `BTSRuntime`, which likewise fires before the
     // engine is torn down. `dispatchEvent` runs listeners synchronously, so
     // the card's cleanup has completed by the time this returns.
-    try {
-      // `data` is `undefined` rather than an empty array on purpose: unlike
-      // `__RenderPage` / `__UpdatePage`, this event does not travel through the
-      // engine's argument-packing path, so it carries no positional arguments.
-      // Cards subscribe to it purely as a teardown signal.
-      this.engineContext.dispatchEvent({
-        type: EngineMessageEventType.DestroyLifetime,
-        data: undefined,
-      });
-    } catch (e) {
-      // A throwing card cleanup must not abort teardown of the rest of the
-      // instance, otherwise we leak workers and DOM listeners.
-      console.error('[lynx-web] error while dispatching __DestroyLifetime', e);
+    // Native delivers this signal on getNative(). Existing Web cards can
+    // also subscribe through getEngine().
+    for (const context of [this.nativeContext, this.engineContext]) {
+      try {
+        context.dispatchEvent({
+          type: EngineMessageEventType.DestroyLifetime,
+          data: undefined,
+        });
+      } catch (error) {
+        console.error(
+          '[lynx-web] error while dispatching __DestroyLifetime',
+          error,
+        );
+      }
     }
+    this.nativeContext.dispose();
     this.engineContext.dispose();
     this.boundingClientRectService.dispose();
     this.intersectionObserverService.dispose();

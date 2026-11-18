@@ -22,14 +22,9 @@ describe('__DestroyLifetime on teardown', () => {
     disposeCalls = [];
 
     instance = Object.create(LynxViewInstance.prototype) as LynxViewInstance;
-    // `engineContext` is a readonly class field, so install it the way the
-    // real constructor would.
-    Object.defineProperty(instance, 'engineContext', {
-      value: new LynxEngineContextImpl(),
-      writable: false,
-      configurable: true,
-    });
     Object.assign(instance, {
+      engineContext: new LynxEngineContextImpl(),
+      nativeContext: new LynxEngineContextImpl(),
       boundingClientRectService: {
         dispose: () => disposeCalls.push('boundingClientRect'),
       },

@@ -27,6 +27,21 @@ export const DispatchEventResult = {
   CanceledBeforeDispatch: 3,
 } as const;
 
+let ContextEvent: (new(type: string, data: unknown) => Event) | undefined;
+
+/** Keep undefined payloads intact and use the EventTarget's realm. */
+export function createContextEvent(type: string, data: unknown): Event {
+  // MessageEvent would coerce undefined to null.
+  ContextEvent ??= class extends Event {
+    readonly data: unknown;
+    constructor(type: string, data: unknown) {
+      super(type);
+      this.data = data;
+    }
+  };
+  return new ContextEvent(type, data);
+}
+
 type LynxCrossThreadContextConfig = {
   rpc: Rpc;
   receiveEventEndpoint: RpcEndpoint<[ContextCrossThreadEvent], void>;
@@ -54,7 +69,7 @@ export class LynxCrossThreadContext extends EventTarget
   __start() {
     const { rpc, receiveEventEndpoint } = this.#config;
     rpc.registerHandler(receiveEventEndpoint, ({ type, data }) => {
-      super.dispatchEvent(new MessageEvent(type, { data: data ?? {} }));
+      super.dispatchEvent(createContextEvent(type, data));
     });
   }
 }

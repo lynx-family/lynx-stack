@@ -95,6 +95,9 @@ export function createMainThreadLynxPerformance(
   let profileFlowIdInc = 0;
   let profileMarkInc = 0;
   const profileTimingStack: ProfileTimingContext[] = [];
+  const bindPipelineIdWithTimingFlag = () => {
+    // Timing flags are posted by the element flush path on the web main thread.
+  };
   return {
     _generatePipelineOptions: () => {
       return {
@@ -105,9 +108,8 @@ export function createMainThreadLynxPerformance(
     _onPipelineStart: () => {
       // Do nothing.
     },
-    _bindPipelineIdWithTimingFlag: () => {
-      // Timing flags are posted by the element flush path on the web main thread.
-    },
+    _bindPipelineIdWithTimingFlag: bindPipelineIdWithTimingFlag,
+    _bindPipelineIDWithTimingFlag: bindPipelineIdWithTimingFlag,
     _markTiming: (
       pipelineId: string,
       timingKey: string,

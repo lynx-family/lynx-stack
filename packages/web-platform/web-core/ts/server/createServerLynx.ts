@@ -5,13 +5,26 @@
  */
 
 import type { MainThreadLynx } from '../types/MainThreadLynx.js';
-import type { Cloneable } from '../types/index.js';
+import type { Cloneable, LynxEngineContext } from '../types/index.js';
+
+// SSR renders one frame through renderPage and has no host lifetime to observe.
+function createInertContext(): LynxEngineContext {
+  return {
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => 0,
+    hasEventListener: () => false,
+  };
+}
 
 export function createServerLynx(
   globalProps: Cloneable,
   customSections: Record<string, Cloneable>,
 ): MainThreadLynx {
   let pipelineIdInc = 0;
+  const engineContext = createInertContext();
+  const nativeContext = createInertContext();
+  const bindPipelineIdWithTimingFlag = () => {};
   return {
     // SSR has no host view from which to resolve main-thread modules.
     module: () => undefined,
@@ -21,7 +34,8 @@ export function createServerLynx(
         needTimestamps: false,
       }),
       _onPipelineStart: () => {},
-      _bindPipelineIdWithTimingFlag: () => {},
+      _bindPipelineIdWithTimingFlag: bindPipelineIdWithTimingFlag,
+      _bindPipelineIDWithTimingFlag: bindPipelineIdWithTimingFlag,
       _markTiming: () => {},
       profileStart: () => {},
       profileEnd: () => {},
@@ -33,18 +47,8 @@ export function createServerLynx(
       // Return a basic mock for SSR
       return {} as any;
     },
-    getEngine() {
-      // SSR renders the first frame only; there is no engine lifetime to
-      // observe, so hand back an inert proxy. `hasEventListener` reporting
-      // `false` keeps the engine on the direct `globalThis.renderPage` path,
-      // matching how SSR drives rendering today.
-      return {
-        addEventListener() {},
-        removeEventListener() {},
-        dispatchEvent: () => 0,
-        hasEventListener: () => false,
-      };
-    },
+    getEngine: () => engineContext,
+    getNative: () => nativeContext,
     requestAnimationFrame(cb: () => void) {
       // Invoke immediately or ignore in SSR
       // Since it's often used for animations, we might just ignore or run once.

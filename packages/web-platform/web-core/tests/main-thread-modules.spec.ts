@@ -24,6 +24,7 @@ function createLynx(view: LynxViewElement) {
     parentDom: view,
     globalprops: {},
     systemInfo: {},
+    mtsRealm: { globalWindow: globalThis },
     backgroundThread: { markTiming: rstest.fn() },
     i18nManager: { _I18nResourceTranslation: rstest.fn() },
   } as unknown as LynxViewInstance).lynx;
@@ -99,4 +100,14 @@ describe('main-thread lynx.module', () => {
   test('returns undefined during server rendering without a host view', () => {
     expect(createServerLynx({}, {}).module('Storage')).toBeUndefined();
   });
+});
+
+test('server-side cards can subscribe to an inert native context', () => {
+  const lynx = createServerLynx({}, {});
+  const native = lynx.getNative();
+  const listener = rstest.fn();
+  native.addEventListener('__DestroyLifetime', listener);
+  expect(native.dispatchEvent({ type: '__DestroyLifetime', data: undefined }))
+    .toBe(0);
+  expect(listener).not.toHaveBeenCalled();
 });
