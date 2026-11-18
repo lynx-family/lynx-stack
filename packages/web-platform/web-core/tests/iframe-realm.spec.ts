@@ -2,14 +2,34 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import './jsdom.js';
-import { afterEach, describe, expect, rstest, test } from '@rstest/core';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import { JSDOM } from 'jsdom';
+import { Rpc } from '@lynx-js/web-worker-rpc';
+import {
+  updateDataEndpoint,
+  updateGlobalPropsEndpoint,
+} from '../ts/client/endpoints.js';
 import { EngineMessageEventType } from '../ts/constants.js';
-import type { Cloneable, JSRealm, PageConfig } from '../ts/types/index.js';
+import type {
+  Cloneable,
+  JSRealm,
+  PageConfig,
+  WorkerStartMessage,
+} from '../ts/types/index.js';
 import type { LynxViewElement } from '../ts/client/mainthread/LynxView.js';
 import { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
 import { templateManager } from '../ts/client/mainthread/TemplateManager.js';
-import { createIFrameRealm } from '../ts/client/mainthread/createIFrameRealm.js';
+import {
+  cloneIntoRealm,
+  createIFrameRealm,
+} from '../ts/client/mainthread/createIFrameRealm.js';
 
 const windows: JSDOM[] = [];
 
@@ -145,22 +165,47 @@ function createCard(
     false,
     undefined,
   );
-  rstest.spyOn(card.backgroundThread, 'startWebWorker').mockImplementation(
-    () => {},
-  );
-  rstest.spyOn(card.backgroundThread, 'updateGlobalProps').mockResolvedValue(
-    undefined,
-  );
-  rstest.spyOn(card.backgroundThread, 'updateData').mockResolvedValue(
-    undefined,
-  );
   rstest.spyOn(templateManager, 'getBundle').mockReturnValue({
     config: pageConfig,
   });
   return card;
 }
 
+function observeBackground() {
+  let startup: WorkerStartMessage | undefined;
+  const updates: Cloneable[] = [];
+  // Stand in for the worker bootstrap. BackgroundThread and Rpc still create,
+  // queue and deliver messages through a real MessageChannel.
+  rstest.stubGlobal(
+    'Worker',
+    class {
+      postMessage(message: WorkerStartMessage) {
+        startup = message;
+        const rpc = new Rpc(message.mainThreadMessagePort, 'test-worker');
+        rpc.registerHandler(updateGlobalPropsEndpoint, (props) => {
+          updates.push(props);
+        });
+        rpc.registerHandler(updateDataEndpoint, () => {});
+      }
+      terminate() {
+        startup?.mainThreadMessagePort.close();
+      }
+    },
+  );
+  return {
+    updates,
+    get startup() {
+      return startup;
+    },
+  };
+}
+
 describe('main-thread card host APIs in the iframe realm', () => {
+  let background: ReturnType<typeof observeBackground>;
+
+  beforeEach(() => {
+    background = observeBackground();
+  });
   test('isolates initial data and props from the host', async () => {
     const realm = await createRealm({});
     const data = [{ list: [1, 2] }];
@@ -230,10 +275,36 @@ describe('main-thread card host APIs in the iframe realm', () => {
     expect(value.text).toBe('host');
   });
 
+  test('copies deeply nested objects and arrays without stack growth', async () => {
+    const realm = await createRealm({});
+    type Link = { next?: Link[] };
+    let data: Link = {};
+    const depth = 5_000;
+    for (let i = 0; i < depth; i++) data = { next: [data] };
+
+    let clone = cloneIntoRealm(data, realm.globalWindow);
+    let remaining = depth;
+    while (clone.next) {
+      if (
+        !(clone instanceof realm.globalWindow.Object)
+        || !(clone.next instanceof realm.globalWindow.Array)
+      ) {
+        throw new Error('Encountered host data in the iframe clone');
+      }
+      clone = clone.next[0]!;
+      remaining--;
+    }
+    expect(remaining).toBe(0);
+    expect(Object.getPrototypeOf(clone)).toBe(
+      realm.globalWindow.Object.prototype,
+    );
+  });
+
   test('clones update data and options for the processor and page callbacks', async () => {
     const realm = await createRealm({});
     await using card = createCard(realm, {}, {});
     card.onPageConfigReady(pageConfig);
+    card.onMTSScriptsExecuted();
     const result = realm.globalWindow.eval(`
       const result = [];
       globalThis.processData = (data, name) => {
@@ -270,20 +341,109 @@ describe('main-thread card host APIs in the iframe realm', () => {
     expect(data).toEqual({ value: 1 });
   });
 
-  test('installs the latest global props even before page configuration', async () => {
+  test('absorbs early props updates into the first MTS render and BTS startup', async () => {
     const realm = await createRealm({});
     await using card = createCard(realm, {}, { theme: 'initial' });
-    await card.updateGlobalProps({ theme: 'updated' });
+    const first = card.updateGlobalProps({ theme: 'A' });
     card.onPageConfigReady(pageConfig);
-    expect(realm.globalWindow.eval(`
-      lynx.__globalProps === __globalProps && __globalProps.theme === 'updated'
-    `)).toBe(true);
+    const result = realm.globalWindow.eval(`
+      const result = [];
+      globalThis.updateGlobalProps = props => result.push(['update', props.theme]);
+      globalThis.renderPage = () => result.push(['render', lynx.__globalProps.theme, __globalProps.theme]);
+      result;
+    `);
+    const second = card.updateGlobalProps({ theme: 'B' });
+    card.onMTSScriptsExecuted();
+    await Promise.all([first, second, card.updateGlobalProps({ theme: 'C' })]);
+    // The updateData acknowledgement drains earlier messages on the port.
+    await card.backgroundThread.updateData(undefined, undefined);
+
+    expect(background.startup?.globalProps).toEqual({ theme: 'B' });
+    expect(background.updates).toEqual([{ theme: 'C' }]);
+    expect(result).toEqual([['render', 'B', 'B'], ['update', 'C']]);
   });
+
+  test('keeps reentrant props updates in the same order in MTS and BTS', async () => {
+    const realm = await createRealm({});
+    await using card = createCard(realm, {}, {});
+    card.onPageConfigReady(pageConfig);
+    card.onMTSScriptsExecuted();
+    let nestedUpdate: Promise<void> | undefined;
+    const seen: unknown[] = [];
+    card.mainThreadGlobalThis.updateGlobalProps = (props) => {
+      seen.push(props);
+      if (props === 'A') nestedUpdate = card.updateGlobalProps('B');
+    };
+
+    await card.updateGlobalProps('A');
+    await nestedUpdate;
+    await card.backgroundThread.updateData(undefined, undefined);
+
+    expect(seen).toEqual(['A', 'B']);
+    expect(background.updates).toEqual(['A', 'B']);
+    expect(card.mainThreadGlobalThis.lynx.__globalProps).toBe('B');
+  });
+
+  test('logs a throwing props fallback and completes the BTS update', async () => {
+    const realm = await createRealm({});
+    await using card = createCard(realm, {}, {});
+    card.onPageConfigReady(pageConfig);
+    card.onMTSScriptsExecuted();
+    const error = new Error('props callback failed');
+    const logError = rstest.spyOn(console, 'error').mockImplementation(
+      () => {},
+    );
+    card.mainThreadGlobalThis.updateGlobalProps = () => {
+      throw error;
+    };
+
+    await expect(card.updateGlobalProps('next')).resolves.toBeUndefined();
+    await card.backgroundThread.updateData(undefined, undefined);
+
+    expect(logError).toHaveBeenCalledWith(
+      '[lynx-web] error in globalThis.updateGlobalProps',
+      error,
+    );
+    expect(background.updates).toEqual(['next']);
+  });
+
+  test.each([true, false])(
+    'falls back after an aborted listener (aborted before add: %s)',
+    async (abortBeforeAdd) => {
+      const realm = await createRealm({});
+      await using card = createCard(realm, {}, {});
+      card.onPageConfigReady(pageConfig);
+      card.onMTSScriptsExecuted();
+      const controller = new window.AbortController();
+      const engine = card.mainThreadGlobalThis.lynx.getEngine();
+      const listener = rstest.fn();
+      const fallback = rstest.fn();
+      card.mainThreadGlobalThis.updateGlobalProps = fallback;
+      const type = EngineMessageEventType.UpdateGlobalProps;
+
+      if (abortBeforeAdd) controller.abort();
+      engine.addEventListener(type, listener, { signal: controller.signal });
+      if (!abortBeforeAdd) {
+        expect(engine.hasEventListener(type)).toBe(true);
+        controller.abort();
+      }
+      expect(engine.hasEventListener(type)).toBe(false);
+      await card.updateGlobalProps('fallback');
+      engine.addEventListener(type, listener);
+      await card.updateGlobalProps('engine');
+
+      expect(fallback).toHaveBeenCalledExactlyOnceWith('fallback');
+      expect(listener).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ data: ['engine'] }),
+      );
+    },
+  );
 
   test('updates both global-props aliases before selecting the engine listener or global hook', async () => {
     const realm = await createRealm({});
     await using card = createCard(realm, {}, {});
     card.onPageConfigReady(pageConfig);
+    card.onMTSScriptsExecuted();
     const result = realm.globalWindow.eval(`
       const result = [];
       function record(source, data) {
@@ -306,6 +466,7 @@ describe('main-thread card host APIs in the iframe realm', () => {
 
     await card.updateGlobalProps(first);
     await card.updateGlobalProps(second);
+    await card.backgroundThread.updateData(undefined, undefined);
 
     expect(result).toEqual([
       ['engine', 'first', true, true],
@@ -314,10 +475,9 @@ describe('main-thread card host APIs in the iframe realm', () => {
     expect(card.globalprops).toBe(card.mainThreadGlobalThis.__globalProps);
     expect(first.theme).toBe('first');
     expect(second.theme).toBe('second');
-    expect(card.backgroundThread.updateGlobalProps).toHaveBeenNthCalledWith(
-      2,
-      { theme: 'second' },
-    );
+    expect(background.updates).toEqual([{ theme: 'first' }, {
+      theme: 'second',
+    }]);
   });
 
   test('notifies both lifecycle contexts and cleans up after a native listener throws', async () => {
@@ -350,7 +510,7 @@ describe('main-thread card host APIs in the iframe realm', () => {
     }
 
     expect(result).toEqual([
-      ['native', '__DestroyLifetime', undefined],
+      ['native', '__DestroyLifetime', expect.any(Number)],
       ['engine', '__DestroyLifetime', undefined],
     ]);
     expect(logError).toHaveBeenCalledTimes(1);
@@ -360,5 +520,25 @@ describe('main-thread card host APIs in the iframe realm', () => {
         EngineMessageEventType.DestroyLifetime,
       ),
     ).toBe(false);
+  });
+  test('delivers distinct numeric Native instance IDs across views', async () => {
+    async function destroyView() {
+      const realm = await createRealm({});
+      const events: unknown[] = [];
+      await using card = createCard(realm, {}, {});
+      card.onPageConfigReady(pageConfig);
+      const { lynx } = card.mainThreadGlobalThis;
+      const type = EngineMessageEventType.DestroyLifetime;
+      lynx.getNative().addEventListener(type, ({ data }) => events.push(data));
+      lynx.getEngine().addEventListener(type, ({ data }) => events.push(data));
+      return events;
+    }
+
+    const first = await destroyView();
+    const second = await destroyView();
+
+    expect(first).toEqual([expect.any(Number), undefined]);
+    expect(second).toEqual([expect.any(Number), undefined]);
+    expect(second[0]).toBeGreaterThan(first[0] as number);
   });
 });

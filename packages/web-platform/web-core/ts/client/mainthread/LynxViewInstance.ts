@@ -13,6 +13,7 @@ import type {
   NapiModulesMap,
   NativeModulesMap,
   PageConfig,
+  UpdateDataOptions,
 } from '../../types/index.js';
 import {
   EngineMessageEventType,
@@ -68,6 +69,8 @@ export function createSystemInfo(
   });
 }
 
+let nextInstanceId = 0;
+
 export class LynxViewInstance implements AsyncDisposable {
   readonly mainThreadGlobalThis: MainThreadGlobalThis;
   readonly mtsWasmBinding: WASMJSBinding;
@@ -84,7 +87,9 @@ export class LynxViewInstance implements AsyncDisposable {
    * keep `globalThis.renderPage`-style bundles working.
    */
   readonly engineContext = new LynxEngineContextImpl();
-  readonly nativeContext = new LynxEngineContextImpl();
+  readonly nativeContext = new LynxEngineContextImpl<Cloneable | Cloneable[]>();
+  readonly #instanceId = nextInstanceId++;
+  #mtsScriptsExecuted = false;
 
   // A `.web.bundle` url is only ever loaded one way — as a lazy component
   // (`queryComponent`) or as an external bundle (`loadExternalBundle`), never
@@ -228,13 +233,13 @@ export class LynxViewInstance implements AsyncDisposable {
   #dispatchEngineEvent(
     eventName: string,
     directCall: () => void,
-    args: unknown[],
+    createArgs: () => unknown[],
   ): void {
     dispatchEngineEventWithFallback(
       this.engineContext,
       eventName,
       directCall,
-      args,
+      createArgs,
     );
   }
 
@@ -258,13 +263,14 @@ export class LynxViewInstance implements AsyncDisposable {
       this.#nativeModulesMap,
       this.#napiModulesMap,
     );
+    this.#mtsScriptsExecuted = true;
     if (this.isSSR) {
       this.rootDom.querySelector('[part="page"]')?.remove();
     }
     this.#dispatchEngineEvent(
       EngineMessageEventType.RenderPage,
       () => this.mainThreadGlobalThis.renderPage?.(processedData),
-      this.mtsRealm.globalWindow.Array.of(processedData),
+      () => this.mtsRealm.globalWindow.Array.of(processedData),
     );
     this.mainThreadGlobalThis.__FlushElementTree();
   }
@@ -384,11 +390,12 @@ export class LynxViewInstance implements AsyncDisposable {
         && this.mainThreadGlobalThis.processData
       ? this.mainThreadGlobalThis.processData(mtsData, processorName)
       : mtsData;
-    const options = cloneIntoRealm({ processorName }, targetGlobal);
+    const options = new targetGlobal.Object() as UpdateDataOptions;
+    options.processorName = processorName;
     this.#dispatchEngineEvent(
       EngineMessageEventType.UpdatePage,
       () => this.mainThreadGlobalThis.updatePage?.(processedData, options),
-      targetGlobal.Array.of(processedData, options),
+      () => targetGlobal.Array.of(processedData, options),
     );
     await this.backgroundThread.updateData(processedData, { processorName });
   }
@@ -402,12 +409,26 @@ export class LynxViewInstance implements AsyncDisposable {
     if (this.mainThreadGlobalThis.lynx) {
       this.mainThreadGlobalThis.lynx.__globalProps = mtsData;
     }
+    // The worker will start with the latest props.
+    if (!this.#mtsScriptsExecuted) return;
+
+    // Send before calling the card so a reentrant update follows this one.
+    const backgroundUpdate = this.backgroundThread.updateGlobalProps(data);
     this.#dispatchEngineEvent(
       EngineMessageEventType.UpdateGlobalProps,
-      () => this.mainThreadGlobalThis.updateGlobalProps?.(mtsData),
-      targetGlobal.Array.of(mtsData),
+      () => {
+        try {
+          this.mainThreadGlobalThis.updateGlobalProps?.(mtsData);
+        } catch (error) {
+          console.error(
+            '[lynx-web] error in globalThis.updateGlobalProps',
+            error,
+          );
+        }
+      },
+      () => targetGlobal.Array.of(mtsData),
     );
-    await this.backgroundThread.updateGlobalProps(data);
+    await backgroundUpdate;
   }
 
   reportError(error: Error, release: string, fileName: string) {
@@ -438,20 +459,27 @@ export class LynxViewInstance implements AsyncDisposable {
     // `LynxShell::Destroy` / `BTSRuntime`, which likewise fires before the
     // engine is torn down. `dispatchEvent` runs listeners synchronously, so
     // the card's cleanup has completed by the time this returns.
-    // Native delivers this signal on getNative(). Existing Web cards can
-    // also subscribe through getEngine().
-    for (const context of [this.nativeContext, this.engineContext]) {
-      try {
-        context.dispatchEvent({
-          type: EngineMessageEventType.DestroyLifetime,
-          data: undefined,
-        });
-      } catch (error) {
-        console.error(
-          '[lynx-web] error while dispatching __DestroyLifetime',
-          error,
-        );
-      }
+    try {
+      this.nativeContext.dispatchEvent({
+        type: EngineMessageEventType.DestroyLifetime,
+        data: this.#instanceId,
+      });
+    } catch (error) {
+      console.error(
+        '[lynx-web] error while dispatching native __DestroyLifetime',
+        error,
+      );
+    }
+    try {
+      this.engineContext.dispatchEvent({
+        type: EngineMessageEventType.DestroyLifetime,
+        data: undefined,
+      });
+    } catch (error) {
+      console.error(
+        '[lynx-web] error while dispatching engine __DestroyLifetime',
+        error,
+      );
     }
     this.nativeContext.dispose();
     this.engineContext.dispose();

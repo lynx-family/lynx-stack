@@ -5,10 +5,16 @@
  */
 
 import type { MainThreadLynx } from '../types/MainThreadLynx.js';
-import type { Cloneable, LynxEngineContext } from '../types/index.js';
+import type {
+  Cloneable,
+  EngineMessageEvent,
+  LynxEngineContext,
+} from '../types/index.js';
 
 // SSR renders one frame through renderPage and has no host lifetime to observe.
-function createInertContext(): LynxEngineContext {
+function createInertContext<
+  TData = EngineMessageEvent['data'],
+>(): LynxEngineContext<TData> {
   return {
     addEventListener() {},
     removeEventListener() {},
@@ -23,7 +29,7 @@ export function createServerLynx(
 ): MainThreadLynx {
   let pipelineIdInc = 0;
   const engineContext = createInertContext();
-  const nativeContext = createInertContext();
+  const nativeContext = createInertContext<Cloneable | Cloneable[]>();
   const bindPipelineIdWithTimingFlag = () => {};
   return {
     // SSR has no host view from which to resolve main-thread modules.

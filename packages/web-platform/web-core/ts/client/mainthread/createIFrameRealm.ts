@@ -84,7 +84,8 @@ export function cloneIntoRealm<T>(
 ): T {
   if (value === null || typeof value !== 'object') return value;
   const copies = new Map<object, object>();
-  const copy = (source: unknown): unknown => {
+  const pending: [object, object][] = [];
+  const allocate = (source: unknown): unknown => {
     if (source === null || typeof source !== 'object') return source;
     const existing = copies.get(source);
     if (existing) return existing;
@@ -114,16 +115,22 @@ export function cloneIntoRealm<T>(
     }
 
     copies.set(source, clone);
+    pending.push([source, clone]);
+    return clone;
+  };
+
+  const result = allocate(value);
+  while (pending.length > 0) {
+    const [source, clone] = pending.pop()!;
     for (const [key, child] of Object.entries(source)) {
       // Treat "__proto__" as ordinary payload data.
       Object.defineProperty(clone, key, {
-        value: copy(child),
+        value: allocate(child),
         configurable: true,
         enumerable: true,
         writable: true,
       });
     }
-    return clone;
-  };
-  return copy(value) as T;
+  }
+  return result as T;
 }

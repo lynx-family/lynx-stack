@@ -4,7 +4,8 @@
 import './jsdom.js';
 import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
 import { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
-import { LynxEngineContextImpl } from '../ts/client/mainthread/LynxEngineContext.js';
+import type { LynxViewElement } from '../ts/client/mainthread/LynxView.js';
+import type { JSRealm } from '../ts/types/index.js';
 import { EngineMessageEventType } from '../ts/constants.js';
 
 /**
@@ -21,20 +22,29 @@ describe('__DestroyLifetime on teardown', () => {
     rstest.resetAllMocks();
     disposeCalls = [];
 
-    instance = Object.create(LynxViewInstance.prototype) as LynxViewInstance;
+    const host = document.createElement('div') as unknown as LynxViewElement;
+    instance = new LynxViewInstance(
+      host,
+      {},
+      {},
+      'http://localhost/card.web.bundle',
+      host.attachShadow({ mode: 'open' }),
+      { globalWindow: globalThis } as JSRealm,
+      false,
+      undefined,
+    );
+    const disposeBackground = instance.backgroundThread[Symbol.asyncDispose]
+      .bind(instance.backgroundThread);
+    instance.backgroundThread[Symbol.asyncDispose] = async () => {
+      disposeCalls.push('backgroundThread');
+      await disposeBackground();
+    };
     Object.assign(instance, {
-      engineContext: new LynxEngineContextImpl(),
-      nativeContext: new LynxEngineContextImpl(),
       boundingClientRectService: {
         dispose: () => disposeCalls.push('boundingClientRect'),
       },
       intersectionObserverService: {
         dispose: () => disposeCalls.push('intersectionObserver'),
-      },
-      backgroundThread: {
-        [Symbol.asyncDispose]: async () => {
-          disposeCalls.push('backgroundThread');
-        },
       },
       exposureServices: { dispose: () => disposeCalls.push('exposure') },
       mtsWasmBinding: {

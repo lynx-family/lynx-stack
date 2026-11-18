@@ -124,17 +124,40 @@ describe('rpc tests', () => {
     expect(ret2).toBe(100);
   });
 
-  test('a lazy handler property can be enumerated, redefined, and deleted', () => {
-    const rpc = new Rpc(undefined, 'test');
-    const target = {} as { handler: (() => Promise<number>) | undefined };
-    rpc.registerHandlerLazy(testLazy, target, 'handler');
+  test('RPC reads the current lazy handler after assignment, replacement and deletion', async () => {
+    const { port1, port2 } = new MessageChannel();
+    try {
+      const caller = new Rpc(port1, 'caller');
+      const callee = new Rpc(port2, 'callee');
+      type Slot = { handler?: (a: number, b: number) => Promise<number> };
+      const target: Slot = {};
+      const unset: Slot = {};
+      callee.registerHandlerLazy(testLazy, target as Required<Slot>, 'handler');
+      callee.registerHandlerLazy(testLazy, unset as Required<Slot>, 'handler');
+      expect(Object.keys(target)).toEqual(['handler']);
+      expect(delete unset.handler).toBe(true);
+      expect(Object.hasOwn(unset, 'handler')).toBe(false);
 
-    const replacement = async () => 42;
-    Object.defineProperty(target, 'handler', { value: replacement });
-    expect(target.handler).toBe(replacement);
-    expect(Object.keys(target)).toEqual(['handler']);
-    expect(delete (target as Partial<typeof target>).handler).toBe(true);
-    expect(Object.hasOwn(target, 'handler')).toBe(false);
+      // Wait until the first call reaches the callee before activating the setter.
+      const received = new Promise<void>((resolve) => {
+        port2.addEventListener('message', () => resolve(), { once: true });
+      });
+      const call = caller.createCall(testLazy);
+      const pending = call(2, 3);
+      await received;
+      target.handler = async (a, b) => a + b;
+      await expect(pending).resolves.toBe(5);
+
+      Object.defineProperty(target, 'handler', { value: async () => 42 });
+      await expect(call(2, 3)).resolves.toBe(42);
+
+      expect(delete target.handler).toBe(true);
+      expect(Object.hasOwn(target, 'handler')).toBe(false);
+      await expect(call(2, 3)).resolves.toBeUndefined();
+    } finally {
+      port1.close();
+      port2.close();
+    }
   });
 
   test('async return with transfer', async () => {

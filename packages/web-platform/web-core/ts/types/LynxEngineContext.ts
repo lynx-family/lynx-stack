@@ -5,48 +5,32 @@
  */
 import type { Cloneable } from './Cloneable.js';
 
-/**
- * The event object an Engine context listener receives.
- *
- * A plain `{ type, data }` object rather than a DOM event: the engine hands
- * lepus the same shape via
- * `LepusClosureEventListener::ConvertEventToLepusValue`, which copies `type`
- * and `data` off the `MessageEvent`. `data` holds the engine call's positional
- * arguments as an array, matching the `lepus::CArray` packing in
- * `DispatchEventFromEngineToCoreContext`.
- */
-export interface EngineMessageEvent {
+/** The type and payload delivered to a main-thread context listener. */
+export interface EngineMessageEvent<TData = Cloneable[] | undefined> {
   type: string;
   /**
-   * The engine call's positional arguments, or `undefined` for an event that
-   * carries none - `__DestroyLifetime` is a bare teardown signal, so it does
-   * not go through the argument-packing path at all.
+   * Engine calls pack positional arguments into arrays. Engine teardown
+   * carries `undefined` and Native teardown carries a numeric view ID.
    */
-  data: Cloneable[] | undefined;
+  data: TData;
 }
 
 /**
- * The object returned by `lynx.getEngine()` on the main thread.
- *
- * This is the web counterpart of `ContextProxy::Type::kEngine`
- * (`core/runtime/common/bindings/event/context_proxy.h`). Unlike
- * {@link LynxContextEventTarget}, which bridges two workers over RPC, the
- * Engine proxy is main-thread-internal: the engine (the `lynx-view` host) is
- * the event *origin* and the main-thread script is the *target*, so events are
- * delivered synchronously without crossing a thread boundary.
+ * Synchronous context proxy returned by `lynx.getEngine()` or
+ * `lynx.getNative()` on the main thread.
  */
-export interface LynxEngineContext {
+export interface LynxEngineContext<TData = Cloneable[] | undefined> {
   addEventListener(
     type: string,
-    listener: (event: EngineMessageEvent) => void,
+    listener: (event: EngineMessageEvent<TData>) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
   removeEventListener(
     type: string,
-    listener: (event: EngineMessageEvent) => void,
+    listener: (event: EngineMessageEvent<TData>) => void,
     options?: boolean | EventListenerOptions,
   ): void;
-  dispatchEvent(event: EngineMessageEvent): number;
+  dispatchEvent(event: EngineMessageEvent<TData>): number;
   /**
    * Whether at least one listener is currently registered for `type`.
    *

@@ -292,33 +292,51 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
     });
   });
 
-  test('preserves undefined and null across a MessagePort', async () => {
+  test('preserves MessageEvent and payloads across a MessagePort', async () => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const { port1, port2 } = new MessageChannel();
-    const sender = new LynxCrossThreadContext({
-      rpc: new Rpc(port1, 'sender'),
-      sendEventEndpoint: receiveEventEndpoint,
-      receiveEventEndpoint: sendEventEndpoint,
-    });
-    const receiver = new LynxCrossThreadContext({
-      rpc: new Rpc(port2, 'receiver'),
-      sendEventEndpoint,
-      receiveEventEndpoint,
-    });
-    receiver.__start();
     try {
-      const delivered = ['undefined', 'null'].map((type) =>
-        new Promise<unknown>((resolve) => {
+      const sender = new LynxCrossThreadContext({
+        rpc: new Rpc(port1, 'sender'),
+        sendEventEndpoint: receiveEventEndpoint,
+        receiveEventEndpoint: sendEventEndpoint,
+      });
+      const receiver = new LynxCrossThreadContext({
+        rpc: new Rpc(port2, 'receiver'),
+        sendEventEndpoint,
+        receiveEventEndpoint,
+      });
+      receiver.__start();
+      const payloads = [undefined, null, { value: 42 }];
+      const delivered = payloads.map((data, index) => {
+        const type = `payload-${index}`;
+        return new Promise<MessageEvent>((resolve) => {
           receiver.addEventListener(
             type,
-            (event) => resolve((event as Event & { data: unknown }).data),
-            { once: true },
+            (event) => resolve(event as MessageEvent),
+            {
+              once: true,
+            },
           );
-        })
-      );
-      sender.dispatchEvent({ type: 'undefined', data: undefined });
-      sender.dispatchEvent({ type: 'null', data: null });
-      expect(await Promise.all(delivered)).toStrictEqual([undefined, null]);
+          sender.dispatchEvent({ type, data });
+        });
+      });
+      const events = await Promise.race([
+        Promise.all(delivered),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error('Timed out waiting for RPC events')),
+            1_000,
+          );
+        }),
+      ]);
+      for (const [index, event] of events.entries()) {
+        expect(event).toBeInstanceOf(MessageEvent);
+        expect(event.origin).toBe('');
+        expect(event.data).toStrictEqual(payloads[index]);
+      }
     } finally {
+      clearTimeout(timeout);
       port1.close();
       port2.close();
     }

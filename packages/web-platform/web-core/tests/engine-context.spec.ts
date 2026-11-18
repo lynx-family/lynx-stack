@@ -449,7 +449,12 @@ describe('Engine context proxy (lynx.getEngine)', () => {
 
       const directCall = rstest.fn();
       expect(
-        dispatchEngineEventWithFallback(engine, '__RenderPage', directCall, []),
+        dispatchEngineEventWithFallback(
+          engine,
+          '__RenderPage',
+          directCall,
+          () => [],
+        ),
       ).toBe(false);
       expect(directCall).toHaveBeenCalledTimes(1);
     });
@@ -469,6 +474,33 @@ describe('Engine context proxy (lynx.getEngine)', () => {
   // `globalThis.renderPage` and never touch `lynx.getEngine()`, so the engine
   // must keep calling them directly. Mirrors
   // `TemplateAssembler::DispatchEventFromEngineToCoreContext`.
+  test.each(['remove', 'once', 'dispose'] as const)(
+    'detaches the abort callback on %s',
+    (cleanup) => {
+      const { signal } = new window.AbortController();
+      const detach = rstest.spyOn(signal, 'removeEventListener');
+      const listener = rstest.fn();
+      engine.addEventListener('event', listener, {
+        signal,
+        once: cleanup === 'once',
+      });
+
+      if (cleanup === 'remove') engine.removeEventListener('event', listener);
+      else if (cleanup === 'once') {
+        engine.dispatchEvent({
+          type: 'event',
+          data: undefined,
+        });
+      } else engine.dispose();
+
+      expect(detach).toHaveBeenCalledExactlyOnceWith(
+        'abort',
+        expect.any(Function),
+      );
+      expect(engine.hasEventListener('event')).toBe(false);
+    },
+  );
+
   describe('fallback semantics', () => {
     test('with a listener: dispatches the event and skips the direct call', () => {
       const directCall = rstest.fn();
@@ -479,7 +511,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
         engine,
         '__RenderPage',
         directCall,
-        [{ a: 1 }],
+        () => [{ a: 1 }],
       );
 
       expect(usedEventChannel).toBe(true);
@@ -492,16 +524,18 @@ describe('Engine context proxy (lynx.getEngine)', () => {
 
     test('without a listener: calls globalThis.renderPage directly', () => {
       const directCall = rstest.fn();
+      const createArgs = rstest.fn(() => []);
 
       const usedEventChannel = dispatchEngineEventWithFallback(
         engine,
         '__RenderPage',
         directCall,
-        [{ a: 1 }],
+        createArgs,
       );
 
       expect(usedEventChannel).toBe(false);
       expect(directCall).toHaveBeenCalledTimes(1);
+      expect(createArgs).not.toHaveBeenCalled();
     });
 
     test('a listener on a different type does not divert the direct call', () => {
@@ -513,7 +547,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
           engine,
           '__RenderPage',
           directCall,
-          [],
+          () => [],
         ),
       ).toBe(false);
       expect(directCall).toHaveBeenCalledTimes(1);
@@ -524,11 +558,21 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       const listener = rstest.fn();
       engine.addEventListener('__UpdatePage', listener);
 
-      dispatchEngineEventWithFallback(engine, '__UpdatePage', directCall, []);
+      dispatchEngineEventWithFallback(
+        engine,
+        '__UpdatePage',
+        directCall,
+        () => [],
+      );
       expect(directCall).not.toHaveBeenCalled();
 
       engine.removeEventListener('__UpdatePage', listener);
-      dispatchEngineEventWithFallback(engine, '__UpdatePage', directCall, []);
+      dispatchEngineEventWithFallback(
+        engine,
+        '__UpdatePage',
+        directCall,
+        () => [],
+      );
       expect(directCall).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledTimes(1);
     });
@@ -537,10 +581,15 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       const listener = rstest.fn();
       engine.addEventListener('__UpdatePage', listener);
 
-      dispatchEngineEventWithFallback(engine, '__UpdatePage', rstest.fn(), [
-        { data: 1 },
-        { processorName: 'p' },
-      ]);
+      dispatchEngineEventWithFallback(
+        engine,
+        '__UpdatePage',
+        rstest.fn(),
+        () => [
+          { data: 1 },
+          { processorName: 'p' },
+        ],
+      );
 
       expect(listener.mock.calls[0]![0].data).toStrictEqual([
         { data: 1 },

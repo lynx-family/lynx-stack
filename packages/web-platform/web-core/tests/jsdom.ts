@@ -116,6 +116,7 @@ Object.assign(globalThis, {
   // jsdom's `dispatchEvent` accepts them.
   DOMRect: window.DOMRect,
   Event: window.Event,
+  MessageEvent: window.MessageEvent,
   MouseEvent: window.MouseEvent,
   // `Event` above comes from jsdom, so `EventTarget` must too: Node's own
   // `EventTarget.prototype.dispatchEvent` brand-checks its argument against
