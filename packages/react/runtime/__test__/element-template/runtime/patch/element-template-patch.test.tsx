@@ -10,15 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
-import { globalCommitContext } from '../../../../src/element-template/background/commit-context.js';
-import {
-  markElementTemplateHydrated,
-  resetElementTemplateCommitState,
-} from '../../../../src/element-template/background/commit-hook.js';
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundListElementTemplateInstance,
-} from '../../../../src/element-template/background/instance.js';
+import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { root } from '../../../../src/element-template/index.js';
 import {
   installElementTemplatePatchListener,
@@ -2698,26 +2690,18 @@ describe('ElementTemplate patch stream (apply)', () => {
     expect(mockFlushElementTree.mock.calls).toHaveLength(0);
   });
 
-  it('preserves attached MTRef identity across descendant reparenting and detaches only when entering an unmounted item or cross-list remove', () => {
+  it('defers unmounted list-item subtree MTRef updates until mount and skips stale removed handles', () => {
     const { updateWorkletRef, restore } = installWorkletRefRuntime();
     const previousRunWorklet = globalThis.runWorklet;
     const callbackCleanup = vi.fn();
-    const callbackRef = { _wkltId: 'reparent-cb', _execId: 701 };
+    const callbackRef = { _wkltId: 'item-cb', _execId: 701 };
+    const objectRef = { _wvid: 901 };
     globalThis.runWorklet = vi.fn(() => callbackCleanup);
     __etAttrPlanMap['__Card__:_et_item_ref'] = [0, adaptMTRefAttrSlot];
-    const objectRef = { _wvid: 901 };
 
     try {
       envManager.switchToMainThread();
       registerTemplates([
-        {
-          templateId: '_et_shell',
-          compiledTemplate: {
-            kind: 'element',
-            type: 'view',
-            children: [{ kind: 'childSlot', type: 'slot', elementSlotIndex: 0 }],
-          },
-        },
         {
           templateId: '_et_item',
           compiledTemplate: {
@@ -2737,85 +2721,40 @@ describe('ElementTemplate patch stream (apply)', () => {
         },
       ]);
 
-      // Build background tree: outsideShell + list (itemA mounted, itemB mounted, itemC unmounted).
-      envManager.switchToBackground();
-      const outsideShell = new BackgroundElementTemplateInstance('__Card__:_et_shell');
-      const list = new BackgroundListElementTemplateInstance();
-      const itemA = new BackgroundElementTemplateInstance('__Card__:_et_item');
-      const itemB = new BackgroundElementTemplateInstance('__Card__:_et_item');
-      const itemC = new BackgroundElementTemplateInstance('__Card__:_et_item');
-      const childCb = new BackgroundElementTemplateInstance('__Card__:_et_item_ref');
-      const childObj = new BackgroundElementTemplateInstance('__Card__:_et_item_ref');
-      list.appendChild(itemA);
-      list.appendChild(itemB);
-      list.appendChild(itemC);
-      itemA.appendChild(childCb);
-      itemC.appendChild(childObj);
+      const itemARef = __CreateElementTemplate('_et_item', null, null, [[]], 710, null)!;
+      const itemBRef = __CreateElementTemplate('_et_item', null, null, [[]], 711, null)!;
+      const childCbRef = __CreateElementTemplate('_et_item_ref', null, [null], [], 712, null)!;
+      const childObjRef = __CreateElementTemplate('_et_item_ref', null, [null], [], 713, null)!;
+      const listRef = __CreateTypedElementTemplate('list', null, [[itemARef, itemBRef]], 700, {})!;
+      elementTemplateRegistry.set(700, listRef);
+      elementTemplateRegistry.set(710, itemARef);
+      elementTemplateRegistry.set(711, itemBRef);
+      elementTemplateRegistry.set(712, childCbRef);
+      elementTemplateRegistry.set(713, childObjRef);
 
-      markElementTemplateHydrated();
-      outsideShell.markMaterializedByHydration();
-      list.markMaterializedByHydration();
-      itemA.markMaterializedByHydration();
-      itemB.markMaterializedByHydration();
-      itemC.markMaterializedByHydration();
-      childCb.markMaterializedByHydration();
-      childObj.markMaterializedByHydration();
-      globalCommitContext.ops = [];
-
-      // Materialize matching MTS handles and list state.
-      envManager.switchToMainThread();
-      const outsideShellRef = __CreateElementTemplate('_et_shell', null, null, [[]], outsideShell.instanceId, null)!;
-      const itemARef = __CreateElementTemplate('_et_item', null, null, [[]], itemA.instanceId, null)!;
-      const itemBRef = __CreateElementTemplate('_et_item', null, null, [[]], itemB.instanceId, null)!;
-      const itemCRef = __CreateElementTemplate('_et_item', null, null, [[]], itemC.instanceId, null)!;
-      const childCbRef = __CreateElementTemplate('_et_item_ref', null, [null], [], childCb.instanceId, null)!;
-      const childObjRef = __CreateElementTemplate('_et_item_ref', null, [null], [], childObj.instanceId, null)!;
-      const listRef = __CreateTypedElementTemplate(
-        'list',
-        null,
-        [[itemARef, itemBRef, itemCRef]],
-        list.instanceId,
-        {},
-      )!;
-      elementTemplateRegistry.set(outsideShell.instanceId, outsideShellRef);
-      elementTemplateRegistry.set(list.instanceId, listRef);
-      elementTemplateRegistry.set(itemA.instanceId, itemARef);
-      elementTemplateRegistry.set(itemB.instanceId, itemBRef);
-      elementTemplateRegistry.set(itemC.instanceId, itemCRef);
-      elementTemplateRegistry.set(childCb.instanceId, childCbRef);
-      elementTemplateRegistry.set(childObj.instanceId, childObjRef);
-
-      initializeMainThreadDynamicAttrSlots(childCb.instanceId, '__Card__:_et_item_ref', [
+      initializeMainThreadDynamicAttrSlots(712, '__Card__:_et_item_ref', [
         { type: 'main-thread-ref', value: callbackRef },
       ]);
-      initializeMainThreadDynamicAttrSlots(childObj.instanceId, '__Card__:_et_item_ref', [
+      initializeMainThreadDynamicAttrSlots(713, '__Card__:_et_item_ref', [
         { type: 'main-thread-ref', value: objectRef },
       ]);
 
-      const state = createElementTemplateListState(
-        new Map([
-          [itemA.instanceId, [childCb.instanceId]],
-          [itemC.instanceId, [childObj.instanceId]],
-        ]),
-      );
-      registerElementTemplateListState(list.instanceId, state, listRef);
-      const { componentAtIndex, enqueueComponent } = state.callbacks;
+      const state = createElementTemplateListState();
+      registerElementTemplateListState(700, state, listRef);
+      const { componentAtIndex } = state.callbacks;
 
       // Unknown listUid helpers are no-ops; missing subtreeHandleIds target reports an error and skips mutation.
-      updateElementTemplateListItemSubtreeHandles(999, itemA.instanceId, [{
-        uid: childCb.instanceId,
-        ref: childCbRef,
-      }]);
-      removeElementTemplateListItem(999, itemA.instanceId, true);
+      updateElementTemplateListItemSubtreeHandles(999, 710, [{ uid: 712, ref: childCbRef }]);
+      removeElementTemplateListItem(999, 710);
       vi.mocked(__SetListItemInfoOfTemplate).mockClear();
       applyElementTemplateUpdateCommands([
         ElementTemplateUpdateOps.updateTypedListItem,
-        list.instanceId,
+        700,
         {
-          __etHandleRef: itemA.instanceId,
+          __etHandleRef: 710,
           type: '__Card__:_et_item',
           platformInfo: { 'item-key': 'should-skip' },
-          subtreeHandleIds: [childCb.instanceId, 404],
+          subtreeHandleIds: [712, 404],
         },
       ]);
       expect(__SetListItemInfoOfTemplate).not.toHaveBeenCalled();
@@ -2825,91 +2764,60 @@ describe('ElementTemplate patch stream (apply)', () => {
       );
       resetReportedErrors();
 
-      // Mount itemA and itemB (itemC remains unmounted).
-      componentAtIndex(list.instanceId, itemA.instanceId);
-      componentAtIndex(list.instanceId, itemB.instanceId);
-      const expectedCbElement = __GetElementByAttrSlot(childCbRef, 0);
-      expect(globalThis.runWorklet).toHaveBeenCalledExactlyOnceWith(callbackRef, [
-        { elementRefptr: expectedCbElement },
+      // Updating an unmounted item records candidate subtree handle IDs without attaching yet, and empty clears them.
+      applyElementTemplateUpdateCommands([
+        ElementTemplateUpdateOps.updateTypedListItem,
+        700,
+        {
+          __etHandleRef: 710,
+          type: '__Card__:_et_item',
+          platformInfo: null,
+          subtreeHandleIds: [712, 713],
+        },
+        ElementTemplateUpdateOps.updateTypedListItem,
+        700,
+        {
+          __etHandleRef: 711,
+          type: '__Card__:_et_item',
+          platformInfo: null,
+          subtreeHandleIds: [713],
+        },
+        ElementTemplateUpdateOps.updateTypedListItem,
+        700,
+        {
+          __etHandleRef: 711,
+          type: '__Card__:_et_item',
+          platformInfo: null,
+          subtreeHandleIds: [],
+        },
       ]);
-      vi.mocked(globalThis.runWorklet).mockClear();
-
-      // 1. Reparent childCb from mounted itemA -> outsideShell: ZERO spurious cleanup/remount, and itemA enqueue no longer detaches it.
-      envManager.switchToBackground();
-      globalCommitContext.ops = [];
-      outsideShell.appendChild(childCb);
-      const moveOutOps = globalCommitContext.ops.slice();
-      globalCommitContext.ops = [];
-
-      envManager.switchToMainThread();
-      applyElementTemplateUpdateCommands(moveOutOps);
-      applyPendingMainThreadRefAttachments();
-      expect(callbackCleanup).not.toHaveBeenCalled();
       expect(globalThis.runWorklet).not.toHaveBeenCalled();
-      enqueueComponent(list.instanceId, itemA.instanceId);
-      expect(callbackCleanup).not.toHaveBeenCalled();
-      componentAtIndex(list.instanceId, itemA.instanceId);
+      expect(updateWorkletRef).not.toHaveBeenCalled();
+      expect(state.itemSubtreeHandleIds.has(711)).toBe(false);
 
-      // 2. Reparent childCb from outsideShell -> mounted itemA -> mounted itemB: still ZERO spurious cleanup/remount; itemB now owns detach.
-      envManager.switchToBackground();
-      itemA.appendChild(childCb);
-      itemB.appendChild(childCb);
-      const moveBetweenMountedOps = globalCommitContext.ops.slice();
-      globalCommitContext.ops = [];
-
-      envManager.switchToMainThread();
-      applyElementTemplateUpdateCommands(moveBetweenMountedOps);
-      applyPendingMainThreadRefAttachments();
-      expect(callbackCleanup).not.toHaveBeenCalled();
-      expect(globalThis.runWorklet).not.toHaveBeenCalled();
-
-      // 3. Reparent childCb from mounted itemB -> unmounted itemC: immediately detaches until itemC mounts!
-      envManager.switchToBackground();
-      itemC.appendChild(childCb);
-      const moveToUnmountedOps = globalCommitContext.ops.slice();
-      globalCommitContext.ops = [];
-
-      envManager.switchToMainThread();
-      applyElementTemplateUpdateCommands(moveToUnmountedOps);
-      applyPendingMainThreadRefAttachments();
-      expect(callbackCleanup).toHaveBeenCalledTimes(1);
-      callbackCleanup.mockClear();
-
-      // Removing childObj from unmounted itemC via removeNode (hydration-style subtree removal without updateTypedListItem)
-      // leaves stale UID in itemC's recorded list; mounting itemC attaches only live childCb, and removing childCb too makes componentAtIndex a clean no-op.
+      // Hydration-style removeNode of childObj (without updateTypedListItem) leaves stale UID 713 recorded;
+      // componentAtIndex attaches only live handle 712, and if all recorded handles are gone it skips cleanly.
+      state.itemSubtreeHandleIds.set(711, [713]);
       applyElementTemplateUpdateCommands([
         ElementTemplateUpdateOps.removeNode,
-        itemC.instanceId,
+        710,
         0,
-        childObj.instanceId,
-        [childObj.instanceId],
+        713,
+        [713],
       ]);
-      componentAtIndex(list.instanceId, itemC.instanceId);
+      const expectedCbElement = __GetElementByAttrSlot(childCbRef, 0);
+      componentAtIndex(700, 710);
       expect(updateWorkletRef).not.toHaveBeenCalled();
       expect(globalThis.runWorklet).toHaveBeenCalledExactlyOnceWith(callbackRef, [
         { elementRefptr: expectedCbElement },
       ]);
+
       vi.mocked(globalThis.runWorklet).mockClear();
-
-      // Cross-list removeNode (empty removedSubtreeHandleIds) detaches mounted itemC without releasing handles;
-      // if an unmounted item's only recorded handle was removed, componentAtIndex skips attach cleanly.
-      applyElementTemplateUpdateCommands([
-        ElementTemplateUpdateOps.removeNode,
-        list.instanceId,
-        0,
-        itemC.instanceId,
-        [],
-      ]);
-      expect(callbackCleanup).toHaveBeenCalledTimes(1);
-      expect(elementTemplateRegistry.has(itemC.instanceId)).toBe(true);
-
-      state.itemSubtreeHandleIds.set(itemB.instanceId, [childObj.instanceId]);
-      enqueueComponent(list.instanceId, itemB.instanceId);
-      componentAtIndex(list.instanceId, itemB.instanceId);
+      componentAtIndex(700, 711);
+      expect(globalThis.runWorklet).not.toHaveBeenCalled();
       expect(updateWorkletRef).not.toHaveBeenCalled();
     } finally {
       globalThis.runWorklet = previousRunWorklet;
-      resetElementTemplateCommitState();
       restore();
     }
   });

@@ -326,11 +326,7 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
         __RemoveNodeFromElementTemplate(nativeRef, childSlotIndex, childRef);
-        removeElementTemplateListItem(
-          targetId,
-          childId,
-          removedSubtreeHandleIds.length === 0,
-        );
+        removeElementTemplateListItem(targetId, childId);
         releaseRemovedSubtreeHandles(removedSubtreeHandleIds);
         break;
       }

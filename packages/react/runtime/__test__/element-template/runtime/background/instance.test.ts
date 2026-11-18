@@ -790,64 +790,6 @@ describe('BackgroundElementTemplateInstance', () => {
     ]);
   });
 
-  it('refreshes previous list item subtree membership before reparenting an MTRef descendant out of a list item', () => {
-    __etAttrPlanMap._et_child = [0, adaptMTRefAttrSlot];
-    const list = new BackgroundListElementTemplateInstance();
-    const item = new BackgroundElementTemplateInstance('_et_item');
-    const innerWrapper = new BackgroundElementTemplateInstance('_et_wrapper');
-    const outsideParent = new BackgroundElementTemplateInstance('_et_outside');
-    const child = new BackgroundElementTemplateInstance('_et_child');
-    list.appendChild(item);
-    item.appendChild(innerWrapper);
-    item.appendChild(child);
-    markElementTemplateHydrated();
-    list.markMaterializedByHydration();
-    item.markMaterializedByHydration();
-    innerWrapper.markMaterializedByHydration();
-    outsideParent.markMaterializedByHydration();
-    child.markMaterializedByHydration();
-    globalCommitContext.ops = [];
-
-    // Moving within the same list item keeps the item's MTRef membership unchanged (only notifies destination if needed, not source).
-    innerWrapper.appendChild(child);
-    expect(globalCommitContext.ops).toEqual([
-      ElementTemplateUpdateOps.insertNode,
-      innerWrapper.instanceId,
-      0,
-      child.instanceId,
-      0,
-      null,
-      ElementTemplateUpdateOps.updateTypedListItem,
-      list.instanceId,
-      {
-        __etHandleRef: item.instanceId,
-        type: '_et_item',
-        platformInfo: null,
-        subtreeHandleIds: [child.instanceId],
-      },
-    ]);
-
-    globalCommitContext.ops = [];
-    // Moving out of the list item into an outside container updates the old list item BEFORE inserting into outsideParent.
-    outsideParent.appendChild(child);
-    expect(globalCommitContext.ops).toEqual([
-      ElementTemplateUpdateOps.updateTypedListItem,
-      list.instanceId,
-      {
-        __etHandleRef: item.instanceId,
-        type: '_et_item',
-        platformInfo: null,
-        subtreeHandleIds: [],
-      },
-      ElementTemplateUpdateOps.insertNode,
-      outsideParent.instanceId,
-      0,
-      child.instanceId,
-      0,
-      [child.instanceId],
-    ]);
-  });
-
   it('refreshes list item subtree membership when a descendant is removed', () => {
     __etAttrPlanMap._et_child = [0, adaptMTRefAttrSlot];
     const list = new BackgroundListElementTemplateInstance();

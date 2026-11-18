@@ -142,26 +142,19 @@ export function updateElementTemplateListItemSubtreeHandles(
   state.itemSubtreeHandleIds.set(itemUid, nextSubtreeHandleIds);
   if (state.mountedItemUids.has(itemUid)) {
     attachMainThreadDynamicAttrRefsForSubtree(nextSubtreeHandles);
-  } else {
-    detachMainThreadDynamicAttrRefsForHandleIds(nextSubtreeHandleIds);
   }
 }
 
 export function removeElementTemplateListItem(
   listUid: number,
   itemUid: number,
-  detachIfMounted: boolean,
 ): void {
   const state = listStateByUid.get(listUid);
   if (!state) {
     return;
   }
-  const wasMounted = state.mountedItemUids.delete(itemUid);
-  const prevSubtreeHandleIds = state.itemSubtreeHandleIds.get(itemUid);
+  state.mountedItemUids.delete(itemUid);
   state.itemSubtreeHandleIds.delete(itemUid);
-  if (detachIfMounted && wasMounted && prevSubtreeHandleIds) {
-    detachMainThreadDynamicAttrRefsForHandleIds(prevSubtreeHandleIds);
-  }
 }
 
 export function markElementTemplateListDestroyed(uid: number): void {

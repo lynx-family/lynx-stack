@@ -280,9 +280,6 @@ export class BackgroundElementTemplateInstance {
     }
 
     const previousParent = child.parent;
-    const previousContainingListItem = previousParent && previousParent !== this
-      ? getContainingListItem(child)
-      : undefined;
     if (previousParent) {
       const shouldRecordOldListRemove = previousParent !== this
         && previousParent instanceof BackgroundListElementTemplateInstance
@@ -329,14 +326,6 @@ export class BackgroundElementTemplateInstance {
     const beforeId = (beforeChild && beforeChild.__slotIndex === child.__slotIndex) ? beforeChild.instanceId : 0;
     const containingListItem = getContainingListItem(child);
     const movedMainThreadRefHandleIds = collectMainThreadRefSubtreeHandleIds(child);
-    if (
-      movedMainThreadRefHandleIds !== null
-      && previousContainingListItem
-      && previousContainingListItem !== child
-      && previousContainingListItem !== containingListItem
-    ) {
-      notifyListItemSubtreeUpdated(previousContainingListItem, false);
-    }
     child.emitMainThreadCreateIfNeeded();
     pushOp(
       ElementTemplateUpdateOps.insertNode,
