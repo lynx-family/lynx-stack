@@ -17,12 +17,13 @@ import {
   applyPendingMainThreadRefAttachments,
   clearMainThreadDynamicAttrState,
   deleteMainThreadDynamicAttrStateForSubtree,
-  detachMainThreadDynamicAttrRefsForSubtree,
+  detachMainThreadDynamicAttrRefsForHandleIds,
   getMainThreadDynamicAttrState,
   initializeMainThreadDynamicAttrSlots,
   isSpreadDynamicAttrSlot,
   prepareMainThreadDynamicAttrSlotsForNative,
   prepareSpreadAttrSlotForNative,
+  runWithEomFlushSuppressed,
   updateMainThreadEventAttrSlot as setMTEventSlot,
   updateMainThreadRefAttrSlot as setMTRefSlotImpl,
   updateSpreadAttrSlot,
@@ -249,7 +250,7 @@ describe('main-thread dynamic attr state', () => {
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
       updateWorkletRef.mockClear();
-      detachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      detachMainThreadDynamicAttrRefsForHandleIds([17]);
 
       expect(updateWorkletRef).toHaveBeenCalledWith(firstRef, null);
       expect(getMainThreadDynamicAttrState(17, 0)).toEqual({
@@ -258,7 +259,7 @@ describe('main-thread dynamic attr state', () => {
       });
 
       updateWorkletRef.mockClear();
-      detachMainThreadDynamicAttrRefsForSubtree([{ uid: 17, ref: nativeRef }]);
+      detachMainThreadDynamicAttrRefsForHandleIds([17]);
       expect(updateWorkletRef).not.toHaveBeenCalled();
 
       updateWorkletRef.mockClear();
@@ -320,9 +321,9 @@ describe('main-thread dynamic attr state', () => {
 
       updateWorkletRef.mockClear();
       updateWorkletRef.mockImplementationOnce(() => {
-        detachMainThreadDynamicAttrRefsForSubtree(subtree);
+        detachMainThreadDynamicAttrRefsForHandleIds([17]);
       });
-      detachMainThreadDynamicAttrRefsForSubtree(subtree);
+      detachMainThreadDynamicAttrRefsForHandleIds([17]);
       expect(updateWorkletRef).toHaveBeenCalledTimes(1);
       expect(updateWorkletRef).toHaveBeenCalledWith(ref, null);
     } finally {
@@ -339,7 +340,7 @@ describe('main-thread dynamic attr state', () => {
       registerMTRefSlots(17, 0);
       setMTRefSlot(17, 0, { type: 'main-thread-ref', value: ref });
       attachAndComplete(subtree);
-      detachMainThreadDynamicAttrRefsForSubtree(subtree);
+      detachMainThreadDynamicAttrRefsForHandleIds([17]);
 
       updateWorkletRef.mockClear();
       setMTRefSlot(17, 0, null);
@@ -845,6 +846,33 @@ describe('main-thread dynamic attr state', () => {
     } finally {
       globalThis.runWorklet = previousRunWorklet;
       restore();
+    }
+  });
+
+  it('maintains nested EOM flush suppression depth and restores on completion or throw', () => {
+    const setShouldFlush = vi.fn();
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _eomImpl: { setShouldFlush },
+    };
+
+    try {
+      expect(() => {
+        runWithEomFlushSuppressed(() => {
+          expect(setShouldFlush.mock.calls).toEqual([[false]]);
+          runWithEomFlushSuppressed(() => {
+            expect(setShouldFlush.mock.calls).toEqual([[false]]);
+          });
+          // Still inside outer suppression scope.
+          expect(setShouldFlush.mock.calls).toEqual([[false]]);
+          throw new Error('boom');
+        });
+      }).toThrow('boom');
+
+      expect(setShouldFlush.mock.calls).toEqual([[false], [true]]);
+    } finally {
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
     }
   });
 });

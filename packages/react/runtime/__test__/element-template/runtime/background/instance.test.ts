@@ -1317,7 +1317,7 @@ describe('BackgroundElementTemplateInstance', () => {
         0,
         list.instanceId,
         0,
-        null,
+        [list.instanceId],
       ]);
     });
 

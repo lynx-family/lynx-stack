@@ -26,7 +26,11 @@ import { filterListItemPlatformInfoFromSpread } from '../runtime/list/platform-i
 import type { AuthoredPageAttributes } from '../runtime/page/authored-page.js';
 import { hasMainThreadRefAttrSlot } from '../runtime/template/attr-slot-plan.js';
 import type { EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
-import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, TYPED_ELEMENT_ATTR_PLAN } from '../runtime/template/typed-attributes.js';
+import {
+  TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
+  TYPED_ELEMENT_ATTR_PLAN,
+  TYPED_LIST_ATTR_PLAN,
+} from '../runtime/template/typed-attributes.js';
 
 function pushOp(...items: ElementTemplateUpdateCommandStream): void {
   globalCommitContext.ops.push(...items);
@@ -719,6 +723,10 @@ export class BackgroundListElementTemplateInstance extends BackgroundTypedElemen
       );
       item = item.nextSibling;
     }
+  }
+
+  protected override getAttributeSlotPlan(): EtAttrPlan {
+    return TYPED_LIST_ATTR_PLAN;
   }
 
   protected override getChildSlotsForCreate(): ElementTemplateHandleSlotsCommand {

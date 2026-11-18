@@ -34,6 +34,7 @@ export interface MainThreadCreateResult {
 
 interface DirectRenderState extends Omit<MainThreadCreateResult, 'pageAttributes'> {
   pageAttributes: TypedElementAttributesCommand | null | undefined;
+  currentListItemSubtreeHandleIds?: Map<number, readonly number[]> | undefined;
   isInsideAuthoredPage?: boolean;
 }
 
@@ -105,7 +106,9 @@ function renderHost(
   // child arrays and the root/list-item ref collector survive this call.
   const subtreeHandles = parentType === undefined || parentType === 'list' ? [] : parentSubtreeHandles!;
   let childSlots: ElementTemplateHandle[][] | undefined;
+  let listItemSubtreeHandleIds: Map<number, readonly number[]> | undefined;
   if (isList) {
+    const previousListItemSubtreeHandleIds = result.currentListItemSubtreeHandleIds;
     try {
       if (__DEV__) {
         for (const name in props) {
@@ -118,9 +121,12 @@ function renderHost(
       if (children != null && children !== true && children !== false) {
         const refs: ElementTemplateHandle[] = [];
         childSlots = [refs];
+        listItemSubtreeHandleIds = new Map();
+        result.currentListItemSubtreeHandleIds = listItemSubtreeHandleIds;
         renderDirect(children, context, vnode, refs, result, type, subtreeHandles);
       }
     } finally {
+      result.currentListItemSubtreeHandleIds = previousListItemSubtreeHandleIds;
       cleanupVNode(vnode);
     }
   } else {
@@ -165,10 +171,18 @@ function renderHost(
     subtreeHandles,
     listItemPlatformInfo,
     vnode.templateKey === undefined ? undefined : vnode as unknown as ElementTemplateHost,
+    listItemSubtreeHandleIds,
   );
   output.push(ref);
+  if (!isList && parentType === 'list' && subtreeHandles.length > 0) {
+    const itemHandleIds: number[] = [];
+    for (let index = 0; index < subtreeHandles.length; index += 1) {
+      itemHandleIds.push(subtreeHandles[index]!.uid);
+    }
+    result.currentListItemSubtreeHandleIds!.set(uid, itemHandleIds);
+  }
   if (parentType === undefined) {
-    result.rootSubtreeHandles.push(isList ? [] : subtreeHandles);
+    result.rootSubtreeHandles.push(subtreeHandles);
   }
 }
 

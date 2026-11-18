@@ -7,7 +7,9 @@ import {
   createElementTemplateListState,
   markElementTemplateListDestroyed,
   registerElementTemplateListState,
+  removeElementTemplateListItem,
   updateElementTemplateListAttributes,
+  updateElementTemplateListItemSubtreeHandles,
 } from './list/list.js';
 import { insertElementTemplateSubtree } from './template/handle.js';
 import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
@@ -124,6 +126,7 @@ export function applyElementTemplateUpdateCommands(
           );
           if (listAttributes) {
             __SetAttributeOfElementTemplate(nativeRef, attrSlotIndex, listAttributes);
+            updateSpreadAttrSlot(targetId, attrSlotIndex, value, nativeRef, isHydration);
             break;
           }
         }
@@ -236,6 +239,12 @@ export function applyElementTemplateUpdateCommands(
         if (nativeRef) {
           elementTemplateRegistry.set(handleId, nativeRef);
           if (listState !== null) {
+            initializeMainThreadDynamicAttrSlots(
+              handleId,
+              type,
+              [attributes ?? null],
+              true,
+            );
             registerElementTemplateListState(handleId, listState, nativeRef);
           }
         }
@@ -243,20 +252,33 @@ export function applyElementTemplateUpdateCommands(
       }
 
       case ElementTemplateUpdateOps.updateTypedListItem: {
-        // Consume the List handle to keep the command stream aligned.
-        void stream[i++];
+        const listHandleId = stream[i++] as number;
         const item = stream[i++] as UpdateTypedListItemCommand;
         const itemRef = resolveTargetHandle(item.__etHandleRef, 'typed list update item');
         if (itemRef === null) {
           continue;
+        }
+        let subtreeHandles: MainThreadDynamicAttrSubtreeHandle[] | null = null;
+        if (item.subtreeHandleIds != null) {
+          subtreeHandles = resolveSubtreeHandles(
+            item.subtreeHandleIds,
+            'typed list item subtree',
+          );
+          if (subtreeHandles === null) {
+            continue;
+          }
         }
         if (item.platformInfo !== null) {
           // Update item ET options when platform info is provided. Native List
           // records the change.
           __SetListItemInfoOfTemplate(itemRef, item.platformInfo);
         }
-        if (item.subtreeHandleIds != null) {
-          // TODO: Handle subtreeHandleIds updates.
+        if (subtreeHandles !== null) {
+          updateElementTemplateListItemSubtreeHandles(
+            listHandleId,
+            item.__etHandleRef,
+            subtreeHandles,
+          );
         }
         break;
       }
@@ -304,6 +326,7 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
         __RemoveNodeFromElementTemplate(nativeRef, childSlotIndex, childRef);
+        removeElementTemplateListItem(targetId, childId);
         releaseRemovedSubtreeHandles(removedSubtreeHandleIds);
         break;
       }
@@ -326,8 +349,8 @@ function releaseRemovedSubtreeHandles(
   for (const handleId of removedSubtreeHandleIds) {
     markElementTemplateListDestroyed(handleId);
     elementTemplateRegistry.delete(handleId);
-    deleteMainThreadDynamicAttrStateForSubtree([handleId]);
   }
+  deleteMainThreadDynamicAttrStateForSubtree(removedSubtreeHandleIds);
 }
 
 function resolveChildSlots(

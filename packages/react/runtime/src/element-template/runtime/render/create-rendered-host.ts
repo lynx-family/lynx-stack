@@ -21,8 +21,9 @@ import {
   destroyElementTemplateId,
   getNextElementTemplateId,
 } from '../template/handle.js';
+import { initializeMainThreadDynamicAttrSlots } from '../template/main-thread-dynamic-attr-state.js';
 import type { MainThreadDynamicAttrSubtreeHandle } from '../template/main-thread-dynamic-attr-state.js';
-import { prepareTypedElementAttributes } from '../template/typed-attributes.js';
+import { prepareTypedListAttributes } from '../template/typed-attributes.js';
 
 const TYPED_LIST_HOST_TYPE = 'list';
 
@@ -46,18 +47,15 @@ export function createRenderedHost(
   materializationHandles: MainThreadDynamicAttrSubtreeHandle[],
   listItemPlatformInfo: ETListItemPlatformInfo | undefined,
   host?: ElementTemplateHost,
+  listItemSubtreeHandleIds?: Map<number, readonly number[]>,
 ): ElementTemplateHandle {
   if (type === TYPED_LIST_HOST_TYPE) {
-    // TODO: Support main-thread events on List.
-    const preparedTypedAttributes = prepareTypedElementAttributes(
+    const preparedTypedAttributes = prepareTypedListAttributes(
       handleId,
       attributes as RuntimeTypedElementAttributes | undefined,
     );
-    const listState = createElementTemplateListState();
-    const attrsWithCallbacks = composeElementTemplateListAttributes(
-      preparedTypedAttributes,
-      listState,
-    );
+    const listState = createElementTemplateListState(listItemSubtreeHandleIds);
+    const attrsWithCallbacks = composeElementTemplateListAttributes(preparedTypedAttributes, listState);
     const elementRef = createTypedElementTemplateWithReservedHandle(
       handleId,
       TYPED_LIST_HOST_TYPE,
@@ -66,7 +64,16 @@ export function createRenderedHost(
       {},
     );
     if (elementRef) {
+      initializeMainThreadDynamicAttrSlots(
+        handleId,
+        TYPED_LIST_HOST_TYPE,
+        [preparedTypedAttributes],
+      );
       registerElementTemplateListState(handleId, listState, elementRef);
+      materializationHandles.push({
+        uid: handleId,
+        ref: elementRef,
+      });
     }
     return elementRef;
   }
