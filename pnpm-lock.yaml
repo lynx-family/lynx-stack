@@ -518,9 +518,6 @@ importers:
       '@lynx-js/testing-environment':
         specifier: workspace:*
         version: link:../packages/testing-library/testing-environment
-      '@lynx-js/vanilla-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../packages/rspeedy/plugin-vanilla
       '@lynx-js/web-platform-rsbuild-plugin':
         specifier: workspace:*
         version: link:../packages/web-platform/web-rsbuild-plugin
@@ -1328,6 +1325,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/lynx/lynx-runtime
     devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-config
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-lynx
@@ -1337,9 +1337,6 @@ importers:
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0
-      '@lynx-js/vanilla-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/plugin-vanilla
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.3.3(core-js@3.50.0)
@@ -2668,31 +2665,6 @@ importers:
         specifier: ^7.8.5
         version: 7.8.5
 
-  packages/rspeedy/plugin-vanilla:
-    dependencies:
-      '@lynx-js/runtime-wrapper-webpack-plugin':
-        specifier: workspace:*
-        version: link:../../webpack/runtime-wrapper-webpack-plugin
-      '@lynx-js/template-webpack-plugin':
-        specifier: workspace:*
-        version: link:../../webpack/template-webpack-plugin
-    devDependencies:
-      '@lynx-js/rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../plugin-lynx
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../core
-      '@lynx-js/test-tools':
-        specifier: workspace:*
-        version: link:../../webpack/test-tools
-      '@rsbuild/core':
-        specifier: catalog:rsbuild
-        version: 2.3.3(core-js@3.50.0)
-      '@rstest/core':
-        specifier: catalog:rstest
-        version: 0.12.6(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@31.0.1)
-
   packages/rspeedy/upgrade-rspeedy:
     devDependencies:
       '@lynx-js/autolink-codegen':
@@ -2806,9 +2778,6 @@ importers:
       '@lynx-js/use-sync-external-store':
         specifier: workspace:*
         version: link:../../use-sync-external-store
-      '@lynx-js/vanilla-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../plugin-vanilla
       '@lynx-js/web-core':
         specifier: workspace:*
         version: link:../../web-platform/web-core

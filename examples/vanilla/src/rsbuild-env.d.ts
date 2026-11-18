@@ -4,6 +4,8 @@ import type { ElementRef } from '@lynx-js/type-element-api';
 import type { LynxSetTimeout } from '@lynx-js/types';
 
 declare global {
+  const __MAIN_THREAD__: boolean;
+  const __BACKGROUND__: boolean;
   const setTimeout: LynxSetTimeout;
 
   function __AddEventListener(

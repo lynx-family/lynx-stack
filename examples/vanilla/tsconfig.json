@@ -6,7 +6,7 @@
   },
   "include": ["src", "rsbuild.config.ts"],
   "references": [
+    { "path": "../../packages/rspeedy/plugin-config/tsconfig.build.json" },
     { "path": "../../packages/rspeedy/plugin-lynx/tsconfig.build.json" },
-    { "path": "../../packages/rspeedy/plugin-vanilla/tsconfig.build.json" },
   ],
 }

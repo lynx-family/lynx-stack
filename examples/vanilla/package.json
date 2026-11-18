@@ -12,10 +12,10 @@
     "@lynx-js/lynx-runtime": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/type-element-api": "0.0.9",
     "@lynx-js/types": "4.1.0",
-    "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild"
   }
 }

@@ -67,7 +67,6 @@
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
-    "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:*",

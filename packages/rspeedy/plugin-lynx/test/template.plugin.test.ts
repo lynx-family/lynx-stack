@@ -20,6 +20,26 @@ interface LynxTemplatePluginExposure {
 }
 
 describe('pluginTemplate', () => {
+  test('keeps the native Rslib fallback for web-prefixed environments', async () => {
+    const rsbuild = await createRsbuild({
+      callerName: 'rslib',
+      rsbuildConfig: {
+        environments: { 'web-preview': {} },
+        source: { entry: { main: './main.ts' } },
+        plugins: [pluginLynx()],
+      },
+    })
+    const [config] = await rsbuild.initConfigs()
+    const names = config?.plugins?.map(plugin => plugin?.constructor.name)
+    expect(names).toContain('LynxEncodePlugin')
+    expect(names).not.toContain('LynxTemplatePlugin')
+    expect(
+      config?.plugins?.find(plugin =>
+        plugin?.constructor.name === 'RuntimeWrapperWebpackPlugin'
+      ),
+    ).toHaveProperty('options', {})
+  })
+
   test('exposes LynxTemplatePlugin without a DSL plugin', async () => {
     let exposed: LynxTemplatePluginExposure | undefined
 

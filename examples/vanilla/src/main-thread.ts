@@ -14,81 +14,85 @@ import {
   incrementCounterEventName,
 } from './events.js';
 
-const page = __CreatePage('0', 0);
-const pageId = __GetElementUniqueID(page);
-__SetClasses(page, 'page');
-
-let button: ElementRef | undefined;
-let counterText: ElementRef | undefined;
-
-function replaceText(text: ElementRef, value: string): void {
-  __ReplaceElements(
-    text,
-    [__CreateRawText(value)],
-    __GetChildren(text),
-  );
-}
+import './style.css';
 
 function onTap(): void {
   sendMessage(incrementCounterEventName);
 }
 
-function renderPage(): void {
-  if (button || counterText) {
-    return;
+export function setUpMainThread(): void {
+  const page = __CreatePage('0', 0);
+  const pageId = __GetElementUniqueID(page);
+  __SetClasses(page, 'page');
+
+  let button: ElementRef | undefined;
+  let counterText: ElementRef | undefined;
+
+  function replaceText(text: ElementRef, value: string): void {
+    __ReplaceElements(
+      text,
+      [__CreateRawText(value)],
+      __GetChildren(text),
+    );
   }
 
-  const content = __CreateView(pageId);
-  __SetClasses(content, 'content');
-  __AppendElement(page, content);
+  function renderPage(): void {
+    if (button || counterText) {
+      return;
+    }
 
-  const text = __CreateText(pageId);
-  __SetClasses(text, 'title');
-  __AppendElement(text, __CreateRawText('Hello Vanilla Lynx'));
-  __AppendElement(content, text);
+    const content = __CreateView(pageId);
+    __SetClasses(content, 'content');
+    __AppendElement(page, content);
 
-  counterText = __CreateText(pageId);
-  __SetClasses(counterText, 'counter');
-  __AppendElement(counterText, __CreateRawText('Clicked 0 times'));
-  __AppendElement(content, counterText);
+    const text = __CreateText(pageId);
+    __SetClasses(text, 'title');
+    __AppendElement(text, __CreateRawText('Hello Vanilla Lynx'));
+    __AppendElement(content, text);
 
-  button = __CreateView(pageId);
-  __SetClasses(button, 'button');
+    counterText = __CreateText(pageId);
+    __SetClasses(counterText, 'counter');
+    __AppendElement(counterText, __CreateRawText('Clicked 0 times'));
+    __AppendElement(content, counterText);
 
-  const buttonLabel = __CreateText(pageId);
-  __SetClasses(buttonLabel, 'button-label');
-  __AppendElement(buttonLabel, __CreateRawText('Click me'));
-  __AppendElement(button, buttonLabel);
-  __AppendElement(content, button);
+    button = __CreateView(pageId);
+    __SetClasses(button, 'button');
 
-  __AddEventListener(button, 'tap', onTap, {});
+    const buttonLabel = __CreateText(pageId);
+    __SetClasses(buttonLabel, 'button-label');
+    __AppendElement(buttonLabel, __CreateRawText('Click me'));
+    __AppendElement(button, buttonLabel);
+    __AppendElement(content, button);
+
+    __AddEventListener(button, 'tap', onTap, {});
+  }
+
+  const stops: Unsubscribe[] = [
+    onMessage<Partial<CounterPatch> | undefined>(
+      counterUpdatedEventName,
+      (patch) => {
+        if (typeof patch?.count !== 'number' || !counterText) {
+          return;
+        }
+
+        replaceText(counterText, `Clicked ${patch.count} times`);
+        flushElementTree();
+      },
+    ),
+    onRenderPage(renderPage),
+  ];
+
+  const stopDestroy = onDestroy(() => {
+    for (const stop of stops) {
+      stop();
+    }
+    stopDestroy();
+
+    if (button) {
+      __RemoveEventListener(button, 'tap', onTap, {});
+    }
+
+    button = undefined;
+    counterText = undefined;
+  });
 }
-
-const stops: Unsubscribe[] = [
-  onMessage<Partial<CounterPatch> | undefined>(
-    counterUpdatedEventName,
-    (patch) => {
-      if (typeof patch?.count !== 'number' || !counterText) {
-        return;
-      }
-
-      replaceText(counterText, `Clicked ${patch.count} times`);
-      flushElementTree();
-    },
-  ),
-  onRenderPage(renderPage),
-];
-
-const stopDestroy = onDestroy(() => {
-  for (const stop of stops) {
-    stop();
-  }
-  stopDestroy();
-
-  if (button) {
-    __RemoveEventListener(button, 'tap', onTap, {});
-  }
-
-  button = undefined;
-  counterText = undefined;
-});
