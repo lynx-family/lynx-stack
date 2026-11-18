@@ -110,7 +110,9 @@ describe('element PAPI', () => {
   });
 
   it('__GetComputedStyleByKey should work', () => {
+    const page = __CreatePage('0', 0);
     const view = __CreateView(0);
+    __AppendElement(page, view);
     __SetInlineStyles(view, 'color: red; font-size: 16px;');
 
     expect(__GetComputedStyleByKey(view, 'color')).toBe('rgb(255, 0, 0)');
@@ -118,7 +120,9 @@ describe('element PAPI', () => {
   });
 
   it('__GetComputedStyleByKey should work with dash notation', () => {
+    const page = __CreatePage('0', 0);
     const view = __CreateView(0);
+    __AppendElement(page, view);
     __SetInlineStyles(view, 'background-color: blue; margin-top: 10px;');
 
     expect(__GetComputedStyleByKey(view, 'background-color')).toBe(
@@ -128,13 +132,17 @@ describe('element PAPI', () => {
   });
 
   it('__GetComputedStyleByKey should return empty string for unknown key', () => {
+    const page = __CreatePage('0', 0);
     const view = __CreateView(0);
+    __AppendElement(page, view);
 
     expect(__GetComputedStyleByKey(view, 'non-existent-property')).toBe('');
   });
 
   it('__GetComputedStyleByKey should only accept kebab-case', () => {
+    const page = __CreatePage('0', 0);
     const view = __CreateView(0);
+    __AppendElement(page, view);
     __SetInlineStyles(view, 'font-size: 16px;');
 
     expect(__GetComputedStyleByKey(view, 'font-size')).toBe('16px');
