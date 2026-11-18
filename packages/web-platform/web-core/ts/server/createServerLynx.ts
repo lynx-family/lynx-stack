@@ -12,6 +12,7 @@ export function createServerLynx(
   customSections: Record<string, Cloneable>,
 ): MainThreadLynx {
   let pipelineIdInc = 0;
+  const bindPipelineIdWithTimingFlag = () => {};
   return {
     // SSR has no host view from which to resolve main-thread modules.
     module: () => undefined,
@@ -21,7 +22,8 @@ export function createServerLynx(
         needTimestamps: false,
       }),
       _onPipelineStart: () => {},
-      _bindPipelineIdWithTimingFlag: () => {},
+      _bindPipelineIdWithTimingFlag: bindPipelineIdWithTimingFlag,
+      _bindPipelineIDWithTimingFlag: bindPipelineIdWithTimingFlag,
       _markTiming: () => {},
       profileStart: () => {},
       profileEnd: () => {},

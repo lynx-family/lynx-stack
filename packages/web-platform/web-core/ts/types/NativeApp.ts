@@ -55,6 +55,9 @@ export type LynxPerformance = {
     pipeline_id: string,
     timing_flag: string,
   ) => void;
+  /** Main-thread spelling of the pipeline timing flag binding. */
+  _bindPipelineIDWithTimingFlag:
+    LynxPerformance['_bindPipelineIdWithTimingFlag'];
   _markTiming: (pipeline_id: string, timing_key: string) => void;
   profileStart: (traceName: string, option?: unknown) => void;
   profileEnd: () => void;
