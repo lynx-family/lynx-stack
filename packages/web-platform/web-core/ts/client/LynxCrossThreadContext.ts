@@ -54,7 +54,15 @@ export class LynxCrossThreadContext extends EventTarget
   __start() {
     const { rpc, receiveEventEndpoint } = this.#config;
     rpc.registerHandler(receiveEventEndpoint, ({ type, data }) => {
-      super.dispatchEvent(new MessageEvent(type, { data: data ?? {} }));
+      const event = new MessageEvent(type, { data });
+      if (data === undefined) {
+        Object.defineProperty(event, 'data', {
+          value: undefined,
+          configurable: true,
+          enumerable: true,
+        });
+      }
+      super.dispatchEvent(event);
     });
   }
 }

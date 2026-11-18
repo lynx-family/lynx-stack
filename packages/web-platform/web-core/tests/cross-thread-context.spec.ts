@@ -2,7 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import './jsdom.js';
-import { beforeEach, describe, expect, rstest, test } from '@rstest/core';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  rstest,
+  test,
+} from '@rstest/core';
 import {
   DispatchEventResult,
   LynxCrossThreadContext,
@@ -11,7 +18,7 @@ import {
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
 } from '../ts/client/endpoints.js';
-import type { Rpc, RpcEndpoint } from '@lynx-js/web-worker-rpc';
+import { Rpc, type RpcEndpoint } from '@lynx-js/web-worker-rpc';
 import type { ContextCrossThreadEvent } from '../ts/types/index.js';
 
 type AnyEndpoint = RpcEndpoint<any[], any>;
@@ -69,6 +76,7 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
   let context: LynxCrossThreadContext;
 
   beforeEach(() => {
+    rstest.stubGlobal('MessageEvent', window.MessageEvent);
     rstest.resetAllMocks();
     rpc = new FakeRpc();
     context = new LynxCrossThreadContext({
@@ -76,6 +84,10 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
       receiveEventEndpoint,
       sendEventEndpoint,
     });
+  });
+
+  afterEach(() => {
+    rstest.unstubAllGlobals();
   });
 
   // Outbound: unlike a normal `EventTarget`, `dispatchEvent` is a *send*. It
@@ -136,7 +148,7 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
   });
 
   // Inbound: `__start()` registers the RPC handler that turns a `{ type, data }`
-  // payload from the peer thread into a local `MessageEvent`.
+  // payload from the peer thread into a local event.
   describe('__start registers the receive handler', () => {
     test('no handler is registered before __start()', () => {
       expect(rpc.handlers.has(receiveEventEndpoint.name)).toBe(false);
@@ -159,7 +171,7 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
       });
 
       expect(listener).toHaveBeenCalledTimes(1);
-      const event = listener.mock.calls[0]![0] as MessageEvent;
+      const event = listener.mock.calls[0]![0] as Event & { data: unknown };
       expect(event.type).toBe('my-event');
       expect(event.data).toStrictEqual({ hello: 'world' });
     });
@@ -223,7 +235,7 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
     test('successive deliveries each fire', () => {
       const seen: unknown[] = [];
       context.addEventListener('my-event', (e) => {
-        seen.push((e as MessageEvent).data);
+        seen.push((e as Event & { data: unknown }).data);
       });
       context.__start();
 
@@ -255,37 +267,24 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
     });
   });
 
-  // `data: data ?? {}` — an absent payload becomes an empty object. This is a
-  // different contract from `LynxEngineContextImpl`, which intentionally keeps
-  // `data: undefined`; the two must not be "unified".
-  describe('missing data defaults to an empty object', () => {
+  describe('inbound payloads', () => {
     const readData = (payload: { type: string; data?: unknown }) => {
       let seen: unknown = 'unset';
       context.addEventListener('my-event', (e) => {
-        seen = (e as MessageEvent).data;
+        seen = (e as Event & { data: unknown }).data;
       });
       context.__start();
       rpc.deliver(receiveEventEndpoint, payload);
       return seen;
     };
 
-    test('undefined data arrives as {}', () => {
-      const seen = readData({ type: 'my-event', data: undefined });
-      expect(seen).toStrictEqual({});
-      // Without the `?? {}`, `MessageEvent` coerces `undefined` to `null`.
-      expect(seen).not.toBeNull();
-      expect(seen).not.toBe(undefined);
+    test('undefined data stays undefined', () => {
+      expect(readData({ type: 'my-event', data: undefined })).toBeUndefined();
+      expect(readData({ type: 'my-event' })).toBeUndefined();
     });
 
-    test('an absent data property arrives as {}', () => {
-      expect(readData({ type: 'my-event' })).toStrictEqual({});
-    });
-
-    test('null data also arrives as {}', () => {
-      // `??` treats null like undefined.
-      const seen = readData({ type: 'my-event', data: null });
-      expect(seen).toStrictEqual({});
-      expect(seen).not.toBeNull();
+    test('null data stays null', () => {
+      expect(readData({ type: 'my-event', data: null })).toBeNull();
     });
 
     test('falsy-but-present data is preserved verbatim', () => {
@@ -303,6 +302,56 @@ describe('LynxCrossThreadContext (lynx.getJSContext / getCoreContext)', () => {
         2,
       ]);
     });
+  });
+
+  test('preserves MessageEvent and payloads across a MessagePort', async () => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const { port1, port2 } = new MessageChannel();
+    try {
+      const sender = new LynxCrossThreadContext({
+        rpc: new Rpc(port1, 'sender'),
+        sendEventEndpoint: receiveEventEndpoint,
+        receiveEventEndpoint: sendEventEndpoint,
+      });
+      const receiver = new LynxCrossThreadContext({
+        rpc: new Rpc(port2, 'receiver'),
+        sendEventEndpoint,
+        receiveEventEndpoint,
+      });
+      receiver.__start();
+      const payloads = [undefined, null, { value: 42 }];
+      const delivered = payloads.map((data, index) => {
+        const type = `payload-${index}`;
+        return new Promise<MessageEvent>((resolve) => {
+          receiver.addEventListener(
+            type,
+            (event) => resolve(event as MessageEvent),
+            {
+              once: true,
+            },
+          );
+          sender.dispatchEvent({ type, data });
+        });
+      });
+      const events = await Promise.race([
+        Promise.all(delivered),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error('Timed out waiting for RPC events')),
+            1_000,
+          );
+        }),
+      ]);
+      for (const [index, event] of events.entries()) {
+        expect(event).toBeInstanceOf(MessageEvent);
+        expect(event.origin).toBe('');
+        expect(event.data).toStrictEqual(payloads[index]);
+      }
+    } finally {
+      clearTimeout(timeout);
+      port1.close();
+      port2.close();
+    }
   });
 
   describe('postMessage', () => {
