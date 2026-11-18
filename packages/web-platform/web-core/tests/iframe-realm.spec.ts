@@ -206,31 +206,38 @@ describe('main-thread card host APIs in the iframe realm', () => {
   beforeEach(() => {
     background = observeBackground();
   });
-  test('isolates initial data and props from the host', async () => {
-    const realm = await createRealm({});
-    const data = [{ list: [1, 2] }];
-    const props = { theme: 'light' };
-    const customSection = { items: ['host'] };
-    await using card = createCard(realm, data, props);
-    rstest.mocked(templateManager.getBundle).mockReturnValue({
-      config: pageConfig,
-      customSections: { settings: { content: customSection } },
-    });
-    card.onPageConfigReady(pageConfig);
-    const result = realm.globalWindow.eval(`
+  test.each([false, true])(
+    'isolates startup data and props from the host (updated props: %s)',
+    async (updated) => {
+      const realm = await createRealm({});
+      const data = [{ list: [1, 2] }];
+      const props = { theme: 'light' };
+      const customSection = { items: ['host'] };
+      await using card = createCard(
+        realm,
+        data,
+        updated ? { theme: 'initial' } : props,
+      );
+      rstest.mocked(templateManager.getBundle).mockReturnValue({
+        config: pageConfig,
+        customSections: { settings: { content: customSection } },
+      });
+      card.onPageConfigReady(pageConfig);
+      if (updated) await card.updateGlobalProps(props);
+      const result = realm.globalWindow.eval(`
       const result = {};
       globalThis.processData = data => {
         result.data = data instanceof Array
           && Object.getPrototypeOf(data[0]) === Object.prototype
           && data[0].list instanceof Array;
         data[0].list.push(3);
+        __globalProps.theme = 'dark';
         return data;
       };
       globalThis.renderPage = data => {
         result.render = data instanceof Array && data[0].list.length === 3;
         result.props = lynx.__globalProps === __globalProps
           && __globalProps instanceof Object;
-        __globalProps.theme = 'dark';
         result.systemInfo = SystemInfo === lynx.SystemInfo
           && SystemInfo instanceof Object && Object.isFrozen(SystemInfo);
         const section = lynx.getCustomSectionSync('settings');
@@ -240,18 +247,42 @@ describe('main-thread card host APIs in the iframe realm', () => {
       result;
     `);
 
-    card.onMTSScriptsExecuted();
+      card.onMTSScriptsExecuted();
 
-    expect(result).toEqual({
-      data: true,
-      render: true,
-      props: true,
-      systemInfo: true,
-      customSection: true,
-    });
-    expect(data).toEqual([{ list: [1, 2] }]);
-    expect(props).toEqual({ theme: 'light' });
-    expect(customSection.items).toEqual(['host']);
+      expect(result).toEqual({
+        data: true,
+        render: true,
+        props: true,
+        systemInfo: true,
+        customSection: true,
+      });
+      expect(data).toEqual([{ list: [1, 2] }]);
+      expect(props).toEqual({ theme: 'light' });
+      expect(background.startup?.globalProps).toEqual({ theme: 'light' });
+      expect(customSection.items).toEqual(['host']);
+    },
+  );
+
+  test('direct calls do not read the iframe Array.of', async () => {
+    const realm = await createRealm({});
+    await using card = createCard(realm, {}, {});
+    card.onPageConfigReady(pageConfig);
+    const calls = realm.globalWindow.eval(`
+      const calls = [];
+      Object.defineProperty(Array, 'of', {
+        get() { throw new Error('Direct calls do not pack Engine arguments'); },
+      });
+      globalThis.renderPage = () => calls.push('render');
+      globalThis.updatePage = () => calls.push('page update');
+      globalThis.updateGlobalProps = () => calls.push('props update');
+      calls;
+    `);
+
+    card.onMTSScriptsExecuted();
+    await card.updateData({ value: 1 });
+    await card.updateGlobalProps({ theme: 'dark' });
+
+    expect(calls).toEqual(['render', 'page update', 'props update']);
   });
 
   test('preserves null prototypes, shared references and own __proto__ data', async () => {

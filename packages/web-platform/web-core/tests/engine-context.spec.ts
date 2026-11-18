@@ -449,7 +449,12 @@ describe('Engine context proxy (lynx.getEngine)', () => {
 
       const directCall = rstest.fn();
       expect(
-        dispatchEngineEventWithFallback(engine, '__RenderPage', directCall, []),
+        dispatchEngineEventWithFallback(
+          engine,
+          '__RenderPage',
+          directCall,
+          () => [],
+        ),
       ).toBe(false);
       expect(directCall).toHaveBeenCalledTimes(1);
     });
@@ -479,7 +484,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
         engine,
         '__RenderPage',
         directCall,
-        [{ a: 1 }],
+        () => [{ a: 1 }],
       );
 
       expect(usedEventChannel).toBe(true);
@@ -497,7 +502,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
         engine,
         '__RenderPage',
         directCall,
-        [{ a: 1 }],
+        () => [{ a: 1 }],
       );
 
       expect(usedEventChannel).toBe(false);
@@ -513,7 +518,7 @@ describe('Engine context proxy (lynx.getEngine)', () => {
           engine,
           '__RenderPage',
           directCall,
-          [],
+          () => [],
         ),
       ).toBe(false);
       expect(directCall).toHaveBeenCalledTimes(1);
@@ -524,11 +529,21 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       const listener = rstest.fn();
       engine.addEventListener('__UpdatePage', listener);
 
-      dispatchEngineEventWithFallback(engine, '__UpdatePage', directCall, []);
+      dispatchEngineEventWithFallback(
+        engine,
+        '__UpdatePage',
+        directCall,
+        () => [],
+      );
       expect(directCall).not.toHaveBeenCalled();
 
       engine.removeEventListener('__UpdatePage', listener);
-      dispatchEngineEventWithFallback(engine, '__UpdatePage', directCall, []);
+      dispatchEngineEventWithFallback(
+        engine,
+        '__UpdatePage',
+        directCall,
+        () => [],
+      );
       expect(directCall).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledTimes(1);
     });
@@ -537,10 +552,15 @@ describe('Engine context proxy (lynx.getEngine)', () => {
       const listener = rstest.fn();
       engine.addEventListener('__UpdatePage', listener);
 
-      dispatchEngineEventWithFallback(engine, '__UpdatePage', rstest.fn(), [
-        { data: 1 },
-        { processorName: 'p' },
-      ]);
+      dispatchEngineEventWithFallback(
+        engine,
+        '__UpdatePage',
+        rstest.fn(),
+        () => [
+          { data: 1 },
+          { processorName: 'p' },
+        ],
+      );
 
       expect(listener.mock.calls[0]![0].data).toStrictEqual([
         { data: 1 },

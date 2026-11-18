@@ -236,10 +236,8 @@ export class LynxEngineContextImpl extends EventTarget
  * `globalThis.renderPage` and never touch `lynx.getEngine()` — working
  * unchanged.
  *
- * `args` is passed as an array, matching the engine, which packs `args...`
- * into a `lepus::CArray`. Events dispatched outside this helper - such as
- * `__DestroyLifetime`, a bare teardown signal - carry no arguments and so do
- * not use the array shape.
+ * `createArgs` packs the positional arguments only when a listener can receive
+ * them, so direct calls skip constructing the event payload.
  *
  * @returns `true` when the event channel was used, `false` when `directCall`
  * ran. Returned for observability (tests, tracing); callers may ignore it.
@@ -248,12 +246,12 @@ export function dispatchEngineEventWithFallback(
   engineContext: LynxEngineContext,
   eventName: string,
   directCall: () => void,
-  args: unknown[],
+  createArgs: () => Cloneable[],
 ): boolean {
   if (engineContext.hasEventListener(eventName)) {
     engineContext.dispatchEvent({
       type: eventName,
-      data: args as Cloneable[],
+      data: createArgs(),
     });
     return true;
   }

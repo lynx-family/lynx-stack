@@ -109,6 +109,7 @@ export class LynxViewInstance implements AsyncDisposable {
 
   readonly initData: Cloneable;
   globalprops: Cloneable;
+  #rawGlobalProps: Cloneable;
 
   constructor(
     public readonly parentDom: LynxViewElement,
@@ -138,6 +139,7 @@ export class LynxViewInstance implements AsyncDisposable {
       & typeof globalThis
       & MainThreadGlobalThis;
     this.initData = cloneIntoRealm(initData, mtsRealm.globalWindow);
+    this.#rawGlobalProps = globalprops;
     this.globalprops = cloneIntoRealm(globalprops, mtsRealm.globalWindow);
 
     this.boundingClientRectService = new BoundingClientRectService(parentDom);
@@ -227,13 +229,13 @@ export class LynxViewInstance implements AsyncDisposable {
   #dispatchEngineEvent(
     eventName: string,
     directCall: () => void,
-    args: unknown[],
+    createArgs: () => Cloneable[],
   ): void {
     dispatchEngineEventWithFallback(
       this.engineContext,
       eventName,
       directCall,
-      args,
+      createArgs,
     );
   }
 
@@ -248,7 +250,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.backgroundThread.markTiming('data_processor_end');
     this.backgroundThread.startWebWorker(
       processedData,
-      this.globalprops,
+      this.#rawGlobalProps,
       templateManager.getBundle(this.templateUrl)!.config!.cardType,
       templateManager.getBundle(this.templateUrl)?.customSections as Record<
         string,
@@ -263,7 +265,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.#dispatchEngineEvent(
       EngineMessageEventType.RenderPage,
       () => this.mainThreadGlobalThis.renderPage?.(processedData),
-      this.mtsRealm.globalWindow.Array.of(processedData),
+      () => this.mtsRealm.globalWindow.Array.of(processedData),
     );
     this.mainThreadGlobalThis.__FlushElementTree();
   }
@@ -396,7 +398,7 @@ export class LynxViewInstance implements AsyncDisposable {
     this.#dispatchEngineEvent(
       EngineMessageEventType.UpdatePage,
       () => this.mainThreadGlobalThis.updatePage?.(processedData, options),
-      targetGlobal.Array.of(processedData, options),
+      () => targetGlobal.Array.of(processedData, options),
     );
     await this.backgroundThread.updateData(processedData, { processorName });
   }
@@ -404,6 +406,7 @@ export class LynxViewInstance implements AsyncDisposable {
   async updateGlobalProps(data: Cloneable) {
     const targetGlobal = this.mtsRealm.globalWindow;
     const mtsData = cloneIntoRealm(data, targetGlobal);
+    this.#rawGlobalProps = data;
     this.globalprops = mtsData;
     this.mainThreadGlobalThis.__globalProps = mtsData;
     if (this.mainThreadGlobalThis.lynx) {
@@ -430,7 +433,7 @@ export class LynxViewInstance implements AsyncDisposable {
             );
           }
         },
-        targetGlobal.Array.of(mtsData),
+        () => targetGlobal.Array.of(mtsData),
       );
     }
   }
