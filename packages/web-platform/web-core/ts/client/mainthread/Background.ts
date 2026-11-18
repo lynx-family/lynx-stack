@@ -143,6 +143,10 @@ export class BackgroundThread implements AsyncDisposable {
     );
   }
 
+  get isWorkerStarted(): boolean {
+    return this.#webWorker !== undefined;
+  }
+
   startWebWorker(
     initData: Cloneable,
     globalProps: Cloneable,

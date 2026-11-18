@@ -109,7 +109,7 @@ export class LynxViewInstance implements AsyncDisposable {
   constructor(
     public readonly parentDom: LynxViewElement,
     public readonly initData: Cloneable,
-    public readonly globalprops: Cloneable,
+    public globalprops: Cloneable,
     public readonly templateUrl: string,
     public readonly rootDom: ShadowRoot,
     public readonly mtsRealm: JSRealm,
@@ -387,17 +387,35 @@ export class LynxViewInstance implements AsyncDisposable {
   }
 
   async updateGlobalProps(data: Cloneable) {
-    // `__UpdateGlobalProps` has no legacy global-function counterpart on web
-    // (the engine calls `kUpdateGlobalProps`, which web-platform never
-    // exposed), so the fallback branch is a no-op: cards that subscribe get
-    // the event, and everything else keeps relying solely on the
-    // background-thread notification below.
-    this.#dispatchEngineEvent(
-      EngineMessageEventType.UpdateGlobalProps,
-      () => {},
-      [data],
-    );
-    await this.backgroundThread.updateGlobalProps(data);
+    this.globalprops = data;
+    this.mainThreadGlobalThis.__globalProps = data;
+    if (this.mainThreadGlobalThis.lynx) {
+      this.mainThreadGlobalThis.lynx.__globalProps = data;
+    }
+
+    try {
+      // Startup already sends the latest props. After startup, send before
+      // calling MTS so a reentrant update follows the current one.
+      if (this.backgroundThread.isWorkerStarted) {
+        this.backgroundThread.updateGlobalProps(data);
+      }
+    } finally {
+      // A failed send still leaves the MTS view with the latest props.
+      this.#dispatchEngineEvent(
+        EngineMessageEventType.UpdateGlobalProps,
+        () => {
+          try {
+            this.mainThreadGlobalThis.updateGlobalProps?.(data);
+          } catch (error) {
+            console.error(
+              '[lynx-web] error in globalThis.updateGlobalProps',
+              error,
+            );
+          }
+        },
+        [data],
+      );
+    }
   }
 
   reportError(error: Error, release: string, fileName: string) {

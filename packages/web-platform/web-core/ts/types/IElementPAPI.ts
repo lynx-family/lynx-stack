@@ -521,6 +521,7 @@ export type JSFrameworkInjectedHandlers = {
   // the following methods is assigned by the main thread user code
   renderPage: ((data: unknown) => void) | undefined;
   updatePage?: (data: Cloneable, options?: UpdateDataOptions) => void;
+  updateGlobalProps?: (data: Cloneable) => void;
   runWorklet?: (obj: unknown, event: unknown) => void;
   processData?: ProcessDataCallback;
   ssrEncode?: () => string;
