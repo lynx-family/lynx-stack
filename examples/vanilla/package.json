@@ -8,6 +8,9 @@
     "dev": "rsbuild dev",
     "test:type": "tsc6 --noEmit"
   },
+  "dependencies": {
+    "@lynx-js/lynx-runtime": "workspace:*"
+  },
   "devDependencies": {
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/type-element-api": "0.0.9",

@@ -1,22 +1,22 @@
+import type { Unsubscribe } from '@lynx-js/lynx-runtime';
+import {
+  flushElementTree,
+  onDestroy,
+  onMessage,
+  onRenderPage,
+  sendMessage,
+} from '@lynx-js/lynx-runtime/mts';
 import type { ElementRef } from '@lynx-js/type-element-api';
 
 import type { CounterPatch } from './events.js';
 import {
   counterUpdatedEventName,
-  destroyLifetimeEventName,
   incrementCounterEventName,
 } from './events.js';
 
 const page = __CreatePage('0', 0);
 const pageId = __GetElementUniqueID(page);
 __SetClasses(page, 'page');
-
-Object.assign(globalThis, {
-  processData: (data: unknown): unknown => data,
-});
-
-const engine = lynx.getEngine();
-const backgroundThread = lynx.getJSContext();
 
 let button: ElementRef | undefined;
 let counterText: ElementRef | undefined;
@@ -30,20 +30,7 @@ function replaceText(text: ElementRef, value: string): void {
 }
 
 function onTap(): void {
-  backgroundThread.dispatchEvent({
-    type: incrementCounterEventName,
-    data: undefined,
-  });
-}
-
-function onCounterUpdated(event: { data: unknown }): void {
-  const patch = event.data as Partial<CounterPatch> | undefined;
-  if (typeof patch?.count !== 'number' || !counterText) {
-    return;
-  }
-
-  replaceText(counterText, `Clicked ${patch.count} times`);
-  __FlushElementTree();
+  sendMessage(incrementCounterEventName);
 }
 
 function renderPage(): void {
@@ -77,17 +64,26 @@ function renderPage(): void {
   __AddEventListener(button, 'tap', onTap, {});
 }
 
-function cleanup(): void {
-  backgroundThread.dispatchEvent({
-    type: destroyLifetimeEventName,
-    data: undefined,
-  });
-  backgroundThread.removeEventListener(
+const stops: Unsubscribe[] = [
+  onMessage<Partial<CounterPatch> | undefined>(
     counterUpdatedEventName,
-    onCounterUpdated,
-  );
-  engine.removeEventListener('__RenderPage', renderPage);
-  engine.removeEventListener(destroyLifetimeEventName, cleanup);
+    (patch) => {
+      if (typeof patch?.count !== 'number' || !counterText) {
+        return;
+      }
+
+      replaceText(counterText, `Clicked ${patch.count} times`);
+      flushElementTree();
+    },
+  ),
+  onRenderPage(renderPage),
+];
+
+const stopDestroy = onDestroy(() => {
+  for (const stop of stops) {
+    stop();
+  }
+  stopDestroy();
 
   if (button) {
     __RemoveEventListener(button, 'tap', onTap);
@@ -95,8 +91,4 @@ function cleanup(): void {
 
   button = undefined;
   counterText = undefined;
-}
-
-backgroundThread.addEventListener(counterUpdatedEventName, onCounterUpdated);
-engine.addEventListener('__RenderPage', renderPage);
-engine.addEventListener(destroyLifetimeEventName, cleanup);
+});
