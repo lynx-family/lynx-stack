@@ -9,7 +9,7 @@ import { getReloadVersion } from '../../../src/core/reload-version.js';
 import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value.js';
 import { __root } from '../../../src/root.js';
 import { setupPage } from '../../../src/snapshot/index.js';
-import { initRunOnBackgroundDelay } from '../../../src/worklet-runtime/delayRunOnBackground.js';
+import { initRunOnBackgroundDelay } from '../../../src/worklet-runtime/run-on-background/index.js';
 import { globalEnvManager } from '../utils/envManager.js';
 import { elementTree } from '../utils/nativeMethod.js';
 

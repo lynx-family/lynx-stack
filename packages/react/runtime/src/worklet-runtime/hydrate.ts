@@ -10,6 +10,7 @@ import type {
   WorkletRefId,
   WorkletRefImpl,
 } from './bindings/index.js';
+import { hydrateJsFnHandles } from './run-on-background/index.js';
 import { profile } from './utils/profile.js';
 import { hydrateWorkletValue, isHydratedWorkletValue } from './workletRef.js';
 
@@ -59,7 +60,7 @@ function hydrateCtxImpl(
         firstScreenCtxObj as unknown as WorkletRefImpl<unknown>,
       );
     } else if (key === '_jsFn') {
-      hydrateDelayRunOnBackgroundTasks(
+      hydrateJsFnHandles(
         ctxObj[key] as Record<string, JsFnHandle>,
         firstScreenCtxObj[key] as Record<string, JsFnHandle>,
         execId,
@@ -109,51 +110,4 @@ function hydrateWorkletValueHandle(
     return;
   }
   hydrateWorkletValue(handle, value);
-}
-
-/**
- * Hydrates delayed `runOnBackground` tasks.
- * This function ensures that any `runOnBackground` calls that were delayed
- * during the first-screen rendering are correctly associated with their
- * respective JavaScript function handles in the hydrated Worklet context.
- */
-function hydrateDelayRunOnBackgroundTasks(
-  fnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_jsFnId":1}}
-  firstScreenFnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_isFirstScreen":true,"_delayIndices":[0]}}
-  execId: number,
-) {
-  const delayImpl = lynxWorkletImpl!._runOnBackgroundDelayImpl;
-  const currentEpoch = delayImpl.epoch;
-  for (const fnName in fnObjs) {
-    const fnObj = fnObjs[fnName]!;
-    fnObj._execId = execId;
-    const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];
-    if (!firstScreenFnObj) {
-      continue;
-    }
-    if (
-      firstScreenFnObj._isFirstScreen
-      || (firstScreenFnObj._hydratedEpoch !== undefined && firstScreenFnObj._hydratedEpoch !== currentEpoch)
-    ) {
-      Object.assign(firstScreenFnObj, fnObj);
-      firstScreenFnObj._isFirstScreen = false;
-      firstScreenFnObj._hydratedEpoch = currentEpoch;
-      lynxWorkletImpl!._jsFunctionLifecycleManager?.addRef(
-        execId,
-        firstScreenFnObj,
-      );
-    }
-    const delayIndices = firstScreenFnObj._delayIndices;
-    if (!delayIndices) {
-      continue;
-    }
-    delete firstScreenFnObj._delayIndices;
-    for (const index of delayIndices) {
-      const details = delayImpl.delayedBackgroundFunctionArray[index];
-      if (!details) {
-        continue;
-      }
-      details.jsFnHandle = firstScreenFnObj;
-    }
-  }
 }

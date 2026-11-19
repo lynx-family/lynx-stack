@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { JsFunctionLifecycleManager } from '../../../src/worklet-runtime/jsFunctionLifecycle.js';
+import { JsFunctionLifecycleManager } from '../../../src/worklet-runtime/run-on-background/lifecycle.js';
 import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
 import {
   composeElementTemplateListAttributes,

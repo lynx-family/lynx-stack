@@ -11,7 +11,7 @@ import {
   runOnBackground,
 } from '../../../core/background-function/run-on-background.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
-import { isRunOnBackgroundEnabled } from '../../../worklet-runtime/jsFunctionLifecycle.js';
+import { isRunOnBackgroundEnabled } from '../../../shared/version.js';
 
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
 type RetainableMainThreadCtx = Parameters<typeof retainWorkletCtx>[0];

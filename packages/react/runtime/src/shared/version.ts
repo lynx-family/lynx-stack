@@ -10,3 +10,7 @@ export function isSdkVersionGt(major: number, minor: number): boolean {
   const version = lynxSdkVersion.split('.');
   return Number(version[0]) > major || (Number(version[0]) == major && Number(version[1]) > minor);
 }
+
+export function isRunOnBackgroundEnabled(): boolean {
+  return isSdkVersionGt(2, 15);
+}
