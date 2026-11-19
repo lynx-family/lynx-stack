@@ -138,7 +138,7 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.3.2"
+    "@rsbuild/core": "2.3.3"
 
   # Rslib monorepo packages
   rslib:
@@ -146,10 +146,10 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.3.2"
-    "@rspack/core": "2.3.2"
+    "@rspack/cli": "2.3.3"
+    "@rspack/core": "2.3.3"
     "@rspack/dev-server": "2.2.2"
-    "@rspack/test-tools": "2.2.7"
+    "@rspack/test-tools": "2.3.3"
 
   # Rstest monorepo packages
   rstest:
