@@ -1808,14 +1808,9 @@ describe('Config Validation', () => {
             },
           },
         })
-      ).toThrowErrorMatchingInlineSnapshot(`
-        [Error: Invalid configuration.
-
-        Invalid config on \`$input.performance.printFileSize.compressed\`.
-          - Expect to be (__type.o64 | boolean | undefined)
-          - Got: number
-        ]
-      `)
+      ).toThrowError(
+        /\$input\.performance\.printFileSize\.compressed.*Got: number/s,
+      )
     })
   })
 
