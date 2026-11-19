@@ -62,8 +62,14 @@ describe('CLI - dev', () => {
     'fixtures',
   )
 
-  beforeEach(() => {
+  beforeEach(async () => {
     rstest.restoreAllMocks()
+    const core = await import('@rsbuild/core')
+    rstest.mocked(core.createRsbuild).mockClear()
+    const { gracefulExit } = await import('exit-hook')
+    if (rstest.isMockFunction(gracefulExit)) {
+      gracefulExit.mockClear()
+    }
   })
 
   test('config not found', async () => {

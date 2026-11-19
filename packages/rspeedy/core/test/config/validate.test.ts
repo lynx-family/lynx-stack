@@ -473,7 +473,7 @@ describe('Config Validation', () => {
       ).toThrowErrorMatchingInlineSnapshot(`
         [Error: Invalid configuration.
 
-        Unknown property: \`$input.environments.lynx.server\` in configuration
+        Unknown property: \`$input.environments.lynx.server.port\` in configuration
         ]
       `)
     })
@@ -1770,7 +1770,7 @@ describe('Config Validation', () => {
         validate({
           performance: {
             printFileSize: {
-              detail: 0,
+              detail: 'all',
             },
           },
         })
@@ -1778,8 +1778,8 @@ describe('Config Validation', () => {
         [Error: Invalid configuration.
 
         Invalid config on \`$input.performance.printFileSize.detail\`.
-          - Expect to be (boolean | undefined)
-          - Got: number
+          - Expect to be (boolean | number | undefined)
+          - Got: string
         ]
       `)
 
@@ -1808,14 +1808,9 @@ describe('Config Validation', () => {
             },
           },
         })
-      ).toThrowErrorMatchingInlineSnapshot(`
-        [Error: Invalid configuration.
-
-        Invalid config on \`$input.performance.printFileSize.compressed\`.
-          - Expect to be (__type.o64 | boolean | undefined)
-          - Got: number
-        ]
-      `)
+      ).toThrowError(
+        /\$input\.performance\.printFileSize\.compressed.*Got: number/s,
+      )
     })
   })
 

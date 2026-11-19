@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from '@rstest/core'
 
 import { createRspeedy } from '../../../src/create-rspeedy.js'
+import { rsbuildVersion } from '../../../src/version.js'
 import { createStubRspeedy } from '../../createStubRspeedy.js'
 
 describe('buildCache', () => {
@@ -28,7 +29,7 @@ describe('buildCache', () => {
     expect(config.cache).toStrictEqual(
       expect.objectContaining({
         type: 'persistent',
-        version: 'lynx-test',
+        version: `rsbuild-${rsbuildVersion}-lynx-test`,
       }),
     )
   })
