@@ -15,7 +15,7 @@ it('should override default config', async () => {
   const { sourceContent } = JSON.parse(content)
 
   expect(sourceContent.config).toHaveProperty(
-    'enableNewIntersectionObserver',
-    false,
+    'enableCSSInheritance',
+    true,
   )
 })
