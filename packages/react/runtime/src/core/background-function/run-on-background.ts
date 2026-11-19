@@ -8,9 +8,9 @@ import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import type { ClosureValueType, JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
+import { getPageLynx } from '../page-lynx.js';
 import { addReloadScopedEventListener, dispatchReloadScopedEvent } from '../reload-scoped-event.js';
 import { isRuntimeDestroyed, registerDestroyTask } from '../runtime-destroy.js';
-import { getPageLynx } from '../page-lynx.js';
 import { onFunctionCall } from '../thread-function-call/return-value.js';
 
 /**

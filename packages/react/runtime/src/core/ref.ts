@@ -4,10 +4,10 @@
 
 import type { NodesRef, SelectorQuery, uiMethodOptions } from '@lynx-js/types';
 
+import { getPageLynx } from './page-lynx.js';
+
 const NODE_NOT_FOUND_CODE = 2;
 const NO_UI_FOR_NODE_CODE = 6;
-
-import { getPageLynx } from './page-lynx.js';
 
 export type RefCleanup = (() => void) | void;
 export type RefCallback<T> = (ref: T | null) => RefCleanup;

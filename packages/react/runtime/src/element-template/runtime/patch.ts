@@ -16,6 +16,7 @@ import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-ba
 import type { MTEventNativeWrapper } from './template/main-thread-event-ctx.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
@@ -45,7 +46,6 @@ import {
 import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
 import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
 import type { GestureSlotValue } from '../prop-adapters/gesture.js';
-import { getPageLynx } from '../../core/page-lynx.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 

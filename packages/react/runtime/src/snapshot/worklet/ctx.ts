@@ -8,8 +8,8 @@ import {
   registerBackgroundFunctionCtx,
   resetBackgroundFunctionRuntime,
 } from '../../core/background-function/run-on-background.js';
-import { resetFunctionCallReturnListener } from '../../core/thread-function-call/return-value.js';
 import { getPageLynx } from '../../core/page-lynx.js';
+import { resetFunctionCallReturnListener } from '../../core/thread-function-call/return-value.js';
 
 /**
  * @internal

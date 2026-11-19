@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import { resetElementTemplatePatchListener } from './patch-listener.js';
-import { resetElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { getPageLynx } from '../../core/page-lynx.js';
+import { resetElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
 import { resetTemplateId } from '../runtime/template/handle.js';
 import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
