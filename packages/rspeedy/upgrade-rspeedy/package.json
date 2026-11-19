@@ -71,7 +71,6 @@
     "@lynx-js/testing-environment": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@lynx-js/use-sync-external-store": "workspace:*",
-    "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-explorer": "workspace:*",

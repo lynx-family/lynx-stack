@@ -8,6 +8,11 @@
  * The Lynx build engine as an Rsbuild plugin. It builds a Lynx app with the
  * Rsbuild CLI directly, without the Rspeedy CLI.
  *
+ * Without a DSL plugin, `source.entry` builds direct Element PAPI applications.
+ * Vanilla entries compile for both threads using the `__MAIN_THREAD__` and
+ * `__BACKGROUND__` macros. Import CSS from the main-thread source.
+ * No sibling sources are discovered automatically.
+ *
  * DSL plugins such as
  * {@link @lynx-js/react-rsbuild-plugin#pluginReactLynx | pluginReactLynx}
  * register the engine automatically when it is missing, so you only add
@@ -90,6 +95,7 @@ import { pluginSourcemap } from './plugins/sourcemap.plugin.js'
 import { pluginSwc } from './plugins/swc.plugin.js'
 import { pluginTarget } from './plugins/target.plugin.js'
 import { pluginTemplate } from './plugins/template.plugin.js'
+import { pluginVanilla } from './plugins/vanilla.plugin.js'
 
 /**
  * The name of the plugin that marks `pluginLynx` as applied. Use it with
@@ -162,6 +168,7 @@ export function pluginLynx(
     pluginMinify(),
     pluginCssMinimizer(),
     pluginSourcemap(),
+    pluginVanilla(),
     pluginTemplate(),
     pluginChunkLoading(),
     pluginDev(),
