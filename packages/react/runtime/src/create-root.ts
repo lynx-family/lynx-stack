@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { bindPageLynx } from './core/page-lynx.js';
-import { root } from './lynx-api.js';
+import { root } from './default-root.js';
 import type { Root } from './lynx-api.js';
 import { initBackgroundRuntime } from './lynx.js';
 
