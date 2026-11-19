@@ -7,7 +7,12 @@ import type {
   ExecuteFunctionCall,
   ResolveFunctionOptions,
 } from './resolveFunctionCall.js';
-import { isDataBinding, isFunctionCall, isObject } from './utils.js';
+import {
+  isDataBinding,
+  isFunctionCall,
+  isObject,
+  shallowEqual,
+} from './utils.js';
 
 /**
  * Resolve an A2UI data-binding path against an optional component data context.
@@ -49,31 +54,19 @@ export function resolveDeepValue(
     const previousItems = Array.isArray(previousResolved)
       ? previousResolved
       : [];
-    let changed = false;
-    const next = value.map((item, index) => {
-      const resolved = resolveDeepValue(
-        item,
-        previousItems[index],
-        resolveLeaf,
-      );
-      if (!Object.is(resolved, previousItems[index])) changed = true;
-      return resolved;
-    });
-    return !changed && Array.isArray(previousResolved)
-      ? previousResolved
-      : next;
+    const next = value.map((item, index) =>
+      resolveDeepValue(item, previousItems[index], resolveLeaf)
+    );
+    return shallowEqual(next, previousResolved) ? previousResolved : next;
   }
 
   if (isDataBinding(value) && Object.keys(value).some(key => key !== '@path')) {
     throw new Error('Invalid data binding shape');
   }
   if (isObject(value) && !isDataBinding(value) && !isFunctionCall(value)) {
-    const previousObject = (
-      previousResolved && typeof previousResolved === 'object'
-        ? previousResolved
-        : undefined
-    ) as Record<string, unknown> | undefined;
-    let changed = false;
+    const previousObject = isObject(previousResolved)
+      ? previousResolved
+      : undefined;
     const next: Record<string, unknown> = {};
     for (
       const [key, item] of Object.entries(value)
@@ -93,9 +86,8 @@ export function resolveDeepValue(
         configurable: true,
         writable: true,
       });
-      if (!Object.is(resolved, previousObject?.[literalKey])) changed = true;
     }
-    return !changed && previousObject ? previousObject : next;
+    return shallowEqual(next, previousObject) ? previousObject : next;
   }
 
   return resolveLeaf(value, previousResolved);

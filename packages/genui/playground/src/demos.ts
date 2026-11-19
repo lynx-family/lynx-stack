@@ -8,6 +8,7 @@ import fridgeSearch from './mock/basic/fridge-search.json';
 import hangzhouWeatherTrend from './mock/basic/hangzhou-weather-trend.json';
 import lazyComponent from './mock/basic/lazy-component.js';
 import mcpApp from './mock/basic/mcp-app.js';
+import objectArraySnapshot from './mock/basic/object-array-snapshot.json';
 import pieChartChinaEvShare from './mock/basic/pie-chart-china-ev-share.json';
 import recs from './mock/basic/recs.json';
 import tripPlanner from './mock/basic/trip-planner.json';
@@ -183,6 +184,14 @@ export const EXTENDED_STATIC_DEMOS: StaticDemo[] = [
       'A five-day workout plan is assembled day by day through data-model updates with a shared list template.',
     tags: tagsFromMessages(workoutPlan),
     messages: workoutPlan,
+  },
+  {
+    id: 'object-array-snapshot',
+    title: 'Object Array Snapshot',
+    description:
+      'Step through the messages. The picker should settle with two options, then update the morning label from 09:00 to 09:30.',
+    tags: tagsFromMessages(objectArraySnapshot),
+    messages: objectArraySnapshot,
   },
 ];
 
