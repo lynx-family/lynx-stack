@@ -1,6 +1,6 @@
 # Vanilla Element PAPI
 
-This example renders a counter directly with Element PAPI and TypeScript, without ReactLynx, JSX, or a virtual DOM. A `tap` event starts on the main thread, increments the counter on the background thread, and sends the new value back for the main thread to render.
+This example renders a counter directly with Element PAPI, `@lynx-js/lynx-runtime` (`/mts` and `/bts`), and TypeScript, without ReactLynx, JSX, or a virtual DOM. A `tap` event starts on the main thread, increments the counter on the background thread, and sends the new value back for the main thread to render.
 
 ## Run
 
