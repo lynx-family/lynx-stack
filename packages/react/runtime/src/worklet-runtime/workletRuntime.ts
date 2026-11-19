@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Element } from './api/element.js';
-import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type { ClosureValueType, JsFnHandle, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
 import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
 import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
@@ -215,11 +215,19 @@ const transformWorkletInner = (
     }
     const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
-      (subObj as Record<string, ClosureValueType>)['_execId'] = (ctx as Worklet)._execId;
-      lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
-        (ctx as Worklet)._execId!,
-        subObj,
-      );
+      const handle = subObj as JsFnHandle;
+      const isStaleEpoch = handle._hydratedEpoch !== undefined
+        && handle._hydratedEpoch !== lynxWorkletImpl._runOnBackgroundDelayImpl.epoch;
+      if (!isStaleEpoch) {
+        const targetExecId = handle._execId ?? (ctx as Worklet)._execId;
+        if (targetExecId !== undefined) {
+          handle._execId = targetExecId;
+          lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
+            targetExecId,
+            handle,
+          );
+        }
+      }
       continue;
     }
   }

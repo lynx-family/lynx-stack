@@ -122,25 +122,38 @@ function hydrateDelayRunOnBackgroundTasks(
   firstScreenFnObjs: Record<string, JsFnHandle>, // example: {"_jsFn1":{"_isFirstScreen":true,"_delayIndices":[0]}}
   execId: number,
 ) {
+  const delayImpl = lynxWorkletImpl!._runOnBackgroundDelayImpl;
+  const currentEpoch = delayImpl.epoch;
   for (const fnName in fnObjs) {
     const fnObj = fnObjs[fnName]!;
+    fnObj._execId = execId;
     const firstScreenFnObj: JsFnHandle | undefined = firstScreenFnObjs[fnName];
-    if (!firstScreenFnObj?._delayIndices) {
-      if (firstScreenFnObj) {
-        firstScreenFnObj._isFirstScreen = false;
-        firstScreenFnObj._execId = execId;
-        Object.assign(firstScreenFnObj, fnObj);
-      }
+    if (!firstScreenFnObj) {
       continue;
     }
-    for (const index of firstScreenFnObj._delayIndices) {
-      const details = lynxWorkletImpl!._runOnBackgroundDelayImpl
-        .delayedBackgroundFunctionArray[index];
+    if (
+      firstScreenFnObj._isFirstScreen
+      || (firstScreenFnObj._hydratedEpoch !== undefined && firstScreenFnObj._hydratedEpoch !== currentEpoch)
+    ) {
+      Object.assign(firstScreenFnObj, fnObj);
+      firstScreenFnObj._isFirstScreen = false;
+      firstScreenFnObj._hydratedEpoch = currentEpoch;
+      lynxWorkletImpl!._jsFunctionLifecycleManager?.addRef(
+        execId,
+        firstScreenFnObj,
+      );
+    }
+    const delayIndices = firstScreenFnObj._delayIndices;
+    if (!delayIndices) {
+      continue;
+    }
+    delete firstScreenFnObj._delayIndices;
+    for (const index of delayIndices) {
+      const details = delayImpl.delayedBackgroundFunctionArray[index];
       if (!details) {
         continue;
       }
-      fnObj._execId = execId;
-      details.jsFnHandle = fnObj;
+      details.jsFnHandle = firstScreenFnObj;
     }
   }
 }

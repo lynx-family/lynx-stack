@@ -100,6 +100,11 @@ export class EnvManager {
     // `renderPage` no longer resets the first-screen state (it is initialized once
     // at module load), so reset it here for test isolation across tests.
     resetFirstScreenSyncState();
+    const workletImpl = this.target.lynxWorkletImpl;
+    if (workletImpl?._jsFunctionLifecycleManager?.recreate) {
+      workletImpl._jsFunctionLifecycleManager = workletImpl._jsFunctionLifecycleManager.recreate();
+    }
+    workletImpl?._runOnBackgroundDelayImpl?.clearDelayedBackgroundFunctions?.();
     getJSModule('GlobalEventEmitter')?.clear();
     this.switchToBackground();
     this.switchToMainThread();

@@ -7,6 +7,7 @@ import { useEffect } from 'preact/hooks';
 import { act } from 'preact/test-utils';
 
 import { __root } from '@lynx-js/react/internal';
+import { clearDelayedRunOnBackgroundFunctions } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { flushDelayedLifecycleEvents } from '../../runtime/lib/snapshot/lynx/tt.js';
 import { clearPage } from '../../runtime/lib/snapshot/index.js';
@@ -117,12 +118,14 @@ export function cleanup() {
     preactRender(null, __root);
   });
 
+  globalThis.lynxTestingEnv.switchToMainThread();
   lynxTestingEnv.mainThread.elementTree.root = undefined;
   clearPage();
+  clearDelayedRunOnBackgroundFunctions();
   lynxTestingEnv.env.window.document.body.innerHTML = '';
 
-  if (isMainThread) {
-    globalThis.lynxTestingEnv.switchToMainThread();
+  if (!isMainThread) {
+    globalThis.lynxTestingEnv.switchToBackgroundThread();
   }
 }
 

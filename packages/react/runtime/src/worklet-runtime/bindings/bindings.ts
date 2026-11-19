@@ -66,6 +66,17 @@ function registerWorklet(type: string, id: string, worklet: (...args: unknown[])
   globalThis.registerWorklet(type, id, worklet);
 }
 
+function shouldDelayRunOnBackground(fnObj: JsFnHandle): boolean {
+  if (fnObj._isFirstScreen) {
+    return true;
+  }
+  if (fnObj._hydratedEpoch === undefined) {
+    return false;
+  }
+  const delayImpl = globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl;
+  return Boolean(delayImpl && !delayImpl.hasHydrated && fnObj._hydratedEpoch !== delayImpl.epoch);
+}
+
 /**
  * Delay a runOnBackground after hydration.
  *
@@ -100,6 +111,7 @@ export {
   clearFirstScreenMainThreadRefs,
   registerMainThreadObjectType,
   registerWorklet,
+  shouldDelayRunOnBackground,
   delayRunOnBackground,
   setEomShouldFlushElementTree,
   runRunOnMainThreadTask,
