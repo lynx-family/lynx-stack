@@ -7,7 +7,7 @@ import { render } from 'preact';
 import { cancelElementTemplateRemovedSubtreeCleanup, resetElementTemplateCommitState } from './commit-hook.js';
 import { resetElementTemplateHydrationListener } from './hydration-listener.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
-import { withSyncEffectFlush } from '../../utils.js';
+import { withSyncEffectFlush } from '../../core/sync-effect-flush.js';
 import { clearEventState } from '../prop-adapters/event.js';
 import { clearRefState, flushPendingRefs } from '../prop-adapters/ref.js';
 import { __root } from '../runtime/page/root-instance.js';

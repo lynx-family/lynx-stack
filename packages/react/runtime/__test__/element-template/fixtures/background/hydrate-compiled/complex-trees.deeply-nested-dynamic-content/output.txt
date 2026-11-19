@@ -12,6 +12,7 @@ Object {
       "childSlots": Array [],
       "handleId": 7,
       "op": "createTemplate",
+      "options": null,
       "templateKey": "_et_11dbef641d2c",
     },
     Object {

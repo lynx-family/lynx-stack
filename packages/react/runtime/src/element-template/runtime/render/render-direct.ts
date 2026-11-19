@@ -16,7 +16,6 @@ import {
 import { CHILDREN, PARENT } from '../../../shared/render-constants.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../../protocol/page.js';
 import type { RuntimeTypedElementAttributes, TypedElementAttributesCommand } from '../../protocol/types.js';
-import { clearPendingElementTemplateListItems } from '../list/list.js';
 import type { ETListItemPlatformInfo } from '../list/list.js';
 import { __ElementTemplatePage } from '../page/authored-page.js';
 import {
@@ -35,6 +34,7 @@ export interface MainThreadCreateResult {
 
 interface DirectRenderState extends Omit<MainThreadCreateResult, 'pageAttributes'> {
   pageAttributes: TypedElementAttributesCommand | null | undefined;
+  currentListItemSubtreeHandleIds?: Map<number, readonly number[]> | undefined;
   isInsideAuthoredPage?: boolean;
 }
 
@@ -65,10 +65,6 @@ export function renderToElementTemplate(vnode: unknown, context?: RenderContext 
   } catch (error) {
     discardRenderedHostsSince(checkpoint);
     throw error;
-  } finally {
-    // Completed lists consume their item records. Anything left belongs to
-    // abandoned content, including children discarded by Suspense.
-    clearPendingElementTemplateListItems();
   }
   result.pageAttributes ??= null;
   return result as MainThreadCreateResult;
@@ -90,7 +86,6 @@ function renderHost(
   result: DirectRenderState,
   parentType: string | undefined,
   parentSubtreeHandles: MainThreadDynamicAttrSubtreeHandle[] | undefined,
-  parentListItemUids: number[] | undefined,
 ): void {
   const type = vnode.type as string;
   const props = vnode.templateKey === undefined ? vnode.props : vnode as unknown as Record<string, unknown>;
@@ -111,8 +106,9 @@ function renderHost(
   // child arrays and the root/list-item ref collector survive this call.
   const subtreeHandles = parentType === undefined || parentType === 'list' ? [] : parentSubtreeHandles!;
   let childSlots: ElementTemplateHandle[][] | undefined;
-  let listItemUids: number[] | undefined;
+  let listItemSubtreeHandleIds: Map<number, readonly number[]> | undefined;
   if (isList) {
+    const previousListItemSubtreeHandleIds = result.currentListItemSubtreeHandleIds;
     try {
       if (__DEV__) {
         for (const name in props) {
@@ -125,10 +121,12 @@ function renderHost(
       if (children != null && children !== true && children !== false) {
         const refs: ElementTemplateHandle[] = [];
         childSlots = [refs];
-        listItemUids = [];
-        renderDirect(children, context, vnode, refs, result, type, subtreeHandles, listItemUids);
+        listItemSubtreeHandleIds = new Map();
+        result.currentListItemSubtreeHandleIds = listItemSubtreeHandleIds;
+        renderDirect(children, context, vnode, refs, result, type, subtreeHandles);
       }
     } finally {
+      result.currentListItemSubtreeHandleIds = previousListItemSubtreeHandleIds;
       cleanupVNode(vnode);
     }
   } else {
@@ -150,7 +148,7 @@ function renderHost(
         const children = childrenBySlot[slotId];
         if (children == null || children === true || children === false) continue;
         const refs = (childSlots ??= [])[slotId] = [];
-        renderDirect(children, context, vnode, refs, result, type, subtreeHandles, undefined);
+        renderDirect(children, context, vnode, refs, result, type, subtreeHandles);
       }
     }
     cleanupVNode(vnode);
@@ -170,16 +168,21 @@ function renderHost(
     type,
     attributes,
     childSlots,
-    listItemUids,
     subtreeHandles,
     listItemPlatformInfo,
     vnode.templateKey === undefined ? undefined : vnode as unknown as ElementTemplateHost,
+    listItemSubtreeHandleIds,
   );
   output.push(ref);
+  if (!isList && parentType === 'list' && subtreeHandles.length > 0) {
+    const itemHandleIds: number[] = [];
+    for (let index = 0; index < subtreeHandles.length; index += 1) {
+      itemHandleIds.push(subtreeHandles[index]!.uid);
+    }
+    result.currentListItemSubtreeHandleIds!.set(uid, itemHandleIds);
+  }
   if (parentType === undefined) {
-    result.rootSubtreeHandles.push(isList ? [] : subtreeHandles);
-  } else if (parentListItemUids !== undefined) {
-    parentListItemUids.push(uid);
+    result.rootSubtreeHandles.push(subtreeHandles);
   }
 }
 
@@ -191,7 +194,6 @@ function renderDirect(
   result: DirectRenderState,
   parentType?: string,
   subtreeHandles?: MainThreadDynamicAttrSubtreeHandle[],
-  listItemUids?: number[],
 ): void {
   if (value == null || value === true || value === false || value === '') return;
 
@@ -219,7 +221,7 @@ function renderDirect(
     for (let index = 0; index < value.length; index++) {
       const child: unknown = value[index];
       if (child == null || typeof child === 'boolean') continue;
-      renderDirect(child, context, parent, output, result, parentType, subtreeHandles, listItemUids);
+      renderDirect(child, context, parent, output, result, parentType, subtreeHandles);
     }
     return;
   }
@@ -259,13 +261,12 @@ function renderDirect(
       result,
       parentType,
       subtreeHandles,
-      listItemUids,
     );
     if (__DEV__ && type === __ElementTemplatePage) result.isInsideAuthoredPage = false;
     return;
   }
   if (typeof type === 'string') {
-    /* #__NOINLINE__ */ renderHost(vnode, context, output, result, parentType, subtreeHandles, listItemUids);
+    /* #__NOINLINE__ */ renderHost(vnode, context, output, result, parentType, subtreeHandles);
     return;
   }
   if (__DEV__) {

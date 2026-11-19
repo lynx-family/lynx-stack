@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import { BackgroundFunctionExecMap } from './exec-map.js';
-import { isSdkVersionGt } from '../../utils.js';
-import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js';
+import { isSdkVersionGt } from '../../shared/version.js';
+import { delayRunOnBackground, shouldDelayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import type { ClosureValueType, JsFnHandle, Worklet } from '../../worklet-runtime/bindings/types.js';
@@ -131,16 +131,15 @@ export function runOnBackground<R, Fn extends (...args: any[]) => R>(
   return async (...params: ClosureValueType[]): Promise<R> => {
     return new Promise((resolve) => {
       if (isRuntimeDestroyed()) return;
-      const resolveId = onFunctionCall(resolve);
 
-      if (obj._isFirstScreen) {
+      if (shouldDelayRunOnBackground(obj)) {
         delayRunOnBackground(obj, (fnId: number, execId: number) => {
-          dispatchRunBackgroundFunctionEvent(fnId, params, execId, resolveId);
+          dispatchRunBackgroundFunctionEvent(fnId, params, execId, resolve);
         });
         return;
       }
 
-      dispatchRunBackgroundFunctionEvent(obj._jsFnId!, params, obj._execId!, resolveId);
+      dispatchRunBackgroundFunctionEvent(obj._jsFnId!, params, obj._execId!, resolve);
     });
   };
 }
@@ -149,8 +148,9 @@ function dispatchRunBackgroundFunctionEvent(
   fnId: number,
   params: ClosureValueType[],
   execId: number,
-  resolveId: number,
+  resolve: (value: any) => void,
 ): void {
+  const resolveId = onFunctionCall(resolve);
   dispatchReloadScopedEvent(lynx.getJSContext(), {
     type: WorkletEvents.runOnBackground,
     data: {

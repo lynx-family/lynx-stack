@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 
+import { BackgroundView } from '../external-bundle/BackgroundView.js';
 import './App.css';
 import arrow from './assets/arrow.png';
 import lynxLogo from './assets/lynx-logo.png';
 import reactLynxLogo from './assets/react-logo.png';
 
-export function App() {
+export function App({ children }: { children?: ReactNode }) {
   const [alterLogo, setAlterLogo] = useState(false);
 
   useEffect(() => {
@@ -31,6 +33,9 @@ export function App() {
           <text className='Subtitle'>on Lynx</text>
         </view>
         <view className='Content'>
+          <background-only>
+            <BackgroundView />
+          </background-only>
           <image src={arrow} className='Arrow' />
           <text className='Description'>Tap the logo and have fun!</text>
           <text className='Hint'>
@@ -45,7 +50,7 @@ export function App() {
             to see updates!
           </text>
         </view>
-        <view style={{ flex: 1 }}></view>
+        {children}
       </view>
     </view>
   );

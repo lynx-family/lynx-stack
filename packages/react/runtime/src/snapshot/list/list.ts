@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { cardLifetime } from '../../core/card-lifetime.js';
-import { maybePromise } from '../../utils.js';
+import { maybePromise } from '../../shared/utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 import { applyRefQueue } from '../snapshot/workletRef.js';

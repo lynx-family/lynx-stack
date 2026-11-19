@@ -15,7 +15,8 @@
       "A"
     ],
     [],
-    -1
+    -1,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -25,7 +26,8 @@
       "B"
     ],
     [],
-    -2
+    -2,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -35,7 +37,8 @@
       "C"
     ],
     [],
-    -3
+    -3,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -45,7 +48,8 @@
       "A"
     ],
     [],
-    -4
+    -4,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -64,7 +68,8 @@
         }
       ]
     ],
-    -5
+    -5,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -74,7 +79,8 @@
       "B"
     ],
     [],
-    -6
+    -6,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -93,7 +99,8 @@
         }
       ]
     ],
-    -7
+    -7,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -103,7 +110,8 @@
       "C"
     ],
     [],
-    -8
+    -8,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -122,7 +130,8 @@
         }
       ]
     ],
-    -9
+    -9,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -132,7 +141,8 @@
       "A"
     ],
     [],
-    -10
+    -10,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -142,7 +152,8 @@
       "B"
     ],
     [],
-    -11
+    -11,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -152,7 +163,8 @@
       "C"
     ],
     [],
-    -12
+    -12,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -162,7 +174,8 @@
       "A"
     ],
     [],
-    -13
+    -13,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -181,7 +194,8 @@
         }
       ]
     ],
-    -14
+    -14,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -191,7 +205,8 @@
       "B"
     ],
     [],
-    -15
+    -15,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -210,7 +225,8 @@
         }
       ]
     ],
-    -16
+    -16,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -220,7 +236,8 @@
       "C"
     ],
     [],
-    -17
+    -17,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -239,7 +256,8 @@
         }
       ]
     ],
-    -18
+    -18,
+    null
   ],
   [
     "__CreateElementTemplate",
@@ -442,7 +460,8 @@
         }
       ]
     ],
-    -19
+    -19,
+    null
   ],
   [
     "__InsertNodeToElementTemplate",

@@ -54,7 +54,7 @@ export type PluginExternalConfig = PluginExternalValue | string;
 export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
     bundlePath?: string;
     // @deprecated
-    url?: string;
+    url?: NonNullable<ExternalValue['url']>;
 }
 
 // @public
@@ -63,7 +63,7 @@ export interface ReactLynxExternalsPresetOptions {
     bundlePath?: string;
     reactUmdPackageName?: string;
     // @deprecated
-    url?: string;
+    url?: NonNullable<ExternalValue['url']>;
 }
 
 // (No @packageDocumentation comment for this package)

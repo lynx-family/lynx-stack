@@ -31,6 +31,7 @@ export interface MockNativePapi {
   mockSetAttribute: any;
   mockSerializeElementTemplate: any;
   mockSetElementTemplateAttributeSlot: any;
+  mockSetListItemInfoOfTemplate: any;
   mockInsertElementTemplateNodeIntoSlot: any;
   mockRemoveElementTemplateNodeFromSlot: any;
   mockReportError: any;
@@ -82,18 +83,15 @@ export function installMockNativePapi(
     handleId: number,
     options?: unknown,
   ) => {
-    const createLog = [
+    nativeLog.push([
       '__CreateElementTemplate',
       templateKey,
       bundleUrl,
       attributeSlots,
       childSlots,
       handleId,
-    ];
-    if (options !== undefined) {
-      createLog.push(options);
-    }
-    nativeLog.push(createLog);
+      options,
+    ]);
 
     if (!templateRepo.has(templateKey)) {
       throw new Error(
@@ -334,6 +332,16 @@ export function installMockNativePapi(
     },
   );
 
+  const mockSetListItemInfoOfTemplate = vi.fn().mockImplementation(
+    (nativeRef: unknown, platformInfo: unknown) => {
+      nativeLog.push(['__SetListItemInfoOfTemplate', formatNode(nativeRef), platformInfo]);
+      if (isRecord(nativeRef)) {
+        const options = isRecord(nativeRef['__options']) ? nativeRef['__options'] : {};
+        nativeRef['__options'] = { ...options, __listItemPlatformInfo: platformInfo };
+      }
+    },
+  );
+
   const mockRemoveElementTemplateNodeFromSlot = vi.fn().mockImplementation(
     (nativeRef: unknown, childSlotIndex: number, node: unknown) => {
       nativeLog.push([
@@ -353,7 +361,19 @@ export function installMockNativePapi(
   });
 
   const rootTargets = new WeakMap<object, object>();
+  const getOrCreateRootTarget = (targetHandle: CompiledTemplateNode): object => {
+    let target = rootTargets.get(targetHandle);
+    if (!target) {
+      target = Object.create(targetHandle) as object;
+      attachMockNativeId(target);
+      rootTargets.set(targetHandle, target);
+    }
+    return target;
+  };
   const mockGetElementByAttrSlot = vi.fn((handle: CompiledTemplateNode, slot: number) => {
+    if (typeof handle.__typedElementType === 'string') {
+      return slot === 0 ? getOrCreateRootTarget(handle) : null;
+    }
     function findTarget(definition: unknown, element: unknown): object | null {
       if (!isRecord(definition) || !isRecord(element)) return null;
       const descriptors = definition['attributesArray'] as Array<{ kind: string; attrSlotIndex?: number }> | undefined;
@@ -363,13 +383,7 @@ export function installMockNativePapi(
           return element;
         }
         // Even a root target is an ElementRef distinct from the ET handle.
-        let target = rootTargets.get(handle);
-        if (!target) {
-          target = Object.create(handle) as object;
-          attachMockNativeId(target);
-          rootTargets.set(handle, target);
-        }
-        return target;
+        return getOrCreateRootTarget(handle);
       }
       const definitions = definition['children'] as unknown[] | undefined;
       const elements = element['children'] as unknown[] | undefined;
@@ -392,6 +406,7 @@ export function installMockNativePapi(
   vi.stubGlobal('__SetID', mockSetID);
   vi.stubGlobal('__GetElementUniqueID', vi.fn().mockImplementation(getElementUniqueID));
   vi.stubGlobal('__SetAttributeOfElementTemplate', mockSetElementTemplateAttributeSlot);
+  vi.stubGlobal('__SetListItemInfoOfTemplate', mockSetListItemInfoOfTemplate);
   vi.stubGlobal('__InsertNodeToElementTemplate', mockInsertElementTemplateNodeIntoSlot);
   vi.stubGlobal('__RemoveNodeFromElementTemplate', mockRemoveElementTemplateNodeFromSlot);
   vi.stubGlobal('__SerializeElementTemplate', mockSerializeElementTemplate);
@@ -423,6 +438,7 @@ export function installMockNativePapi(
     mockSetAttribute: mockSetAttribute,
     mockSerializeElementTemplate: mockSerializeElementTemplate,
     mockSetElementTemplateAttributeSlot: mockSetElementTemplateAttributeSlot,
+    mockSetListItemInfoOfTemplate,
     mockInsertElementTemplateNodeIntoSlot: mockInsertElementTemplateNodeIntoSlot,
     mockRemoveElementTemplateNodeFromSlot: mockRemoveElementTemplateNodeFromSlot,
     mockReportError: mockReportError,

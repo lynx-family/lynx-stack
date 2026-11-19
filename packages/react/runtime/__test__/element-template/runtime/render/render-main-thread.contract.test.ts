@@ -69,6 +69,7 @@ describe('renderMainThread contract', () => {
       ['hello'],
       [],
       -1,
+      undefined,
     ]);
     expect(nativeLog).toContainEqual([
       '__CreateElementTemplate',
@@ -77,6 +78,7 @@ describe('renderMainThread contract', () => {
       ['main', 'lazy-entry'],
       [[expect.any(Object)]],
       -2,
+      undefined,
     ]);
 
     const dispatched = dispatchEvent.mock.calls[0]?.[0] as

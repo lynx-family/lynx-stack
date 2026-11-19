@@ -27,6 +27,65 @@ const external = (name: string, async: boolean, url = 'component.bundle') => ({
   background: { sectionPath: 'component' },
 });
 
+const resolveUrl = () => {
+  const state = (globalThis as unknown as {
+    __externalOrder: {
+      resolutions: number;
+      url?: string;
+      asyncUrl?: boolean;
+      throwOnSecond?: boolean;
+    };
+  }).__externalOrder;
+  state.resolutions++;
+  if (state.throwOnSecond && state.resolutions > 1) {
+    throw new Error('URL resolver failed during retry');
+  }
+  if (!state.url) throw new Error('URL has not arrived');
+  return state.asyncUrl ? Promise.resolve(state.url) : state.url;
+};
+
+const methodResolver = {
+  url(this: void) {
+    const state = (globalThis as unknown as {
+      __externalOrder: {
+        resolutions: number;
+        url?: string;
+        asyncUrl?: boolean;
+        throwOnSecond?: boolean;
+      };
+    }).__externalOrder;
+    state.resolutions++;
+    if (state.throwOnSecond && state.resolutions > 1) {
+      throw new Error(
+        'URL resolver failed during retry',
+      );
+    }
+    if (!state.url) throw new Error('URL has not arrived');
+    return state.asyncUrl ? Promise.resolve(state.url) : state.url;
+  },
+}.url;
+
+const asyncMethodResolver = {
+  async url(this: void) {
+    const state = (globalThis as unknown as {
+      __externalOrder: {
+        resolutions: number;
+        url?: string;
+        asyncUrl?: boolean;
+        throwOnSecond?: boolean;
+      };
+    }).__externalOrder;
+    state.resolutions++;
+    if (state.throwOnSecond && state.resolutions > 1) {
+      throw new Error(
+        'URL resolver failed during retry',
+      );
+    }
+    if (!state.url) throw new Error('URL has not arrived');
+    return await Promise.resolve(state.url);
+  },
+}.url;
+
 const cases = [false, true].flatMap(async =>
   ['main-thread', 'background'].map(layer => ({ async, layer }))
 );
@@ -39,12 +98,37 @@ describe('external import order', () => {
     directory = await fs.mkdtemp(
       path.join(os.tmpdir(), 'lynx-external-order-'),
     );
-    for (const async of [false, true]) {
+    for (
+      const mode of [
+        false,
+        true,
+        'mixed',
+        'predicate',
+        'resolver',
+        'sync-resolver',
+        'method-resolver',
+        'sync-method-resolver',
+        'async-method-resolver',
+      ] as const
+    ) {
+      const async = mode !== false && mode !== 'sync-resolver'
+        && mode !== 'sync-method-resolver';
+      let resolver = resolveUrl;
+      if (mode === 'method-resolver' || mode === 'sync-method-resolver') {
+        resolver = methodResolver;
+      }
+      if (mode === 'async-method-resolver') resolver = asyncMethodResolver;
+      const urlOptions = typeof mode === 'string' && mode.endsWith('resolver')
+        ? { url: resolver }
+        : {};
       const entry = Object.fromEntries(
         ['main-thread', 'background'].map(
           layer => [layer, { import: './index.js', layer }],
         ),
       );
+      for (const layer of ['main-thread', 'background']) {
+        entry[`lazy-${layer}`] = { import: './lazy-index.js', layer };
+      }
       if (async) {
         for (const layer of ['main-thread', 'background']) {
           entry[`await-${layer}`] = { import: './async-index.js', layer };
@@ -57,7 +141,7 @@ describe('external import order', () => {
           entry,
           output: {
             path: directory,
-            filename: `${async}-[name].js`,
+            filename: `${mode}-[name].js`,
             publicPath: '',
           },
           optimization: { concatenateModules: false },
@@ -66,9 +150,26 @@ describe('external import order', () => {
               mainThreadLayer: 'main-thread',
               backgroundLayer: 'background',
               externals: {
-                component: external('Component', async),
-                'component-alias': external('Alias', async),
+                component: {
+                  ...external('Component', async),
+                  retries: 2,
+                  ...urlOptions,
+                },
+                'component-alias': {
+                  ...external('Alias', async),
+                  ...urlOptions,
+                },
                 unused: external('Unused', async, 'unused.bundle'),
+                ...((mode === 'mixed' || mode === 'predicate')
+                  ? {
+                    shared: {
+                      ...external('Shared', false),
+                      ...(mode === 'predicate'
+                        ? { async: () => false }
+                        : {}),
+                    },
+                  }
+                  : {}),
                 ...(async
                   ? { runtime: external('Runtime', true, 'runtime.bundle') }
                   : {}),
@@ -86,16 +187,23 @@ describe('external import order', () => {
         });
       });
       for (const layer of ['main-thread', 'background']) {
-        const key = `${async}-${layer}`;
+        const key = `${mode}-${layer}`;
         sources.set(
           key,
           await fs.readFile(path.join(directory, `${key}.js`), 'utf8'),
         );
+        sources.set(
+          `lazy-${key}`,
+          await fs.readFile(
+            path.join(directory, `${mode}-lazy-${layer}.js`),
+            'utf8',
+          ),
+        );
         if (async) {
           sources.set(
-            `await-${layer}`,
+            `await-${mode}-${layer}`,
             await fs.readFile(
-              path.join(directory, `true-await-${layer}.js`),
+              path.join(directory, `${mode}-await-${layer}.js`),
               'utf8',
             ),
           );
@@ -107,6 +215,118 @@ describe('external import order', () => {
   afterAll(async () => {
     if (directory) await fs.rm(directory, { recursive: true, force: true });
   });
+
+  it.each(
+    ['resolver', 'method-resolver', 'async-method-resolver'].flatMap(mode =>
+      [false, true].flatMap(asyncUrl =>
+        ['main-thread', 'background'].map(layer => ({ mode, asyncUrl, layer }))
+      )
+    ),
+  )(
+    'resolves the runtime URL only after it is delivered ($layer, mode: $mode, async URL: $asyncUrl)',
+    async ({ mode, layer, asyncUrl }) => {
+      const state = {
+        events: [],
+        resolutions: 0,
+        asyncUrl,
+        url: '',
+        load: () => Promise.resolve(),
+        loadAlias: () => Promise.resolve(),
+      };
+      const component = { run: rstest.fn() };
+      const fetchBundle = rstest.fn((url: string) =>
+        Promise.resolve({ code: 0, url })
+      );
+      const loadScript = rstest.fn(() => component);
+      runInNewContext(sources.get(`lazy-${mode}-${layer}`)!, {
+        __externalOrder: state,
+        lynx: { fetchBundle, loadScript },
+        __LoadStyleSheet: () => null,
+      });
+      expect(state.resolutions).toBe(0);
+      expect(fetchBundle).not.toHaveBeenCalled();
+      state.url = 'delivered.bundle';
+      const modules = await Promise.all([state.load(), state.loadAlias()]);
+      for (const module of modules) expect(module).toMatchObject(component);
+      expect(await state.load()).toMatchObject(component);
+      expect(state.resolutions).toBe(1);
+      expect(fetchBundle).toHaveBeenCalledExactlyOnceWith(
+        'delivered.bundle',
+        {},
+      );
+      expect(loadScript).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(
+    ['sync-resolver', 'sync-method-resolver'].flatMap(mode =>
+      ['main-thread', 'background'].map(layer => ({ mode, layer }))
+    ),
+  )(
+    'preserves synchronous exports and the native wait handler ($layer, $mode)',
+    ({ mode, layer }) => {
+      const state = {
+        events: [] as string[],
+        resolutions: 0,
+        url: 'sync.bundle',
+        ready: false,
+      };
+      const component = { run: () => state.events.push('run') };
+      const wait = rstest.fn(() => ({ code: 0, url: state.url }));
+      const then = rstest.fn();
+      const fetchBundle = rstest.fn(() => ({ wait, then }));
+      const globals: Record<string, unknown> = {};
+      runInNewContext(sources.get(`${mode}-${layer}`)!, {
+        __externalOrder: state,
+        lynx: {
+          fetchBundle,
+          loadScript: () => {
+            state.events.push('load');
+            return component;
+          },
+          [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
+        },
+        __LoadStyleSheet: () => null,
+      });
+      expect(state.events).toEqual(['init', 'load', 'run', 'run']);
+      expect(globals['Component']).toBe(component);
+      expect(globals['Alias']).toBe(component);
+      expect(state.resolutions).toBe(1);
+      expect(fetchBundle).toHaveBeenCalledExactlyOnceWith('sync.bundle', {});
+      expect(wait).toHaveBeenCalledTimes(1);
+      expect(then).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['main-thread', 'background'])(
+    'rejects a resolver throw during a timeout retry on %s',
+    async layer => {
+      const state = {
+        events: [],
+        resolutions: 0,
+        url: 'retry.bundle',
+        asyncUrl: true,
+        throwOnSecond: true,
+        load: () => Promise.resolve(),
+      };
+      const fetchBundle = rstest.fn().mockResolvedValue({
+        code: -2,
+        url: 'retry.bundle',
+      });
+      const loadScript = rstest.fn();
+      runInNewContext(sources.get(`lazy-resolver-${layer}`)!, {
+        __externalOrder: state,
+        lynx: { fetchBundle, loadScript },
+        __LoadStyleSheet: () => null,
+      });
+      await expect(state.load()).rejects.toThrow(
+        'URL resolver failed during retry',
+      );
+      expect(state.resolutions).toBe(2);
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
+      expect(loadScript).not.toHaveBeenCalled();
+    },
+  );
 
   it.each(cases)(
     'defers section evaluation until import ($layer, async: $async)',
@@ -135,7 +355,7 @@ describe('external import order', () => {
       });
       await setImmediate();
       expect(state.events).toEqual(['init', 'load', 'run', 'run']);
-      expect(fetchBundle).toHaveBeenCalledTimes(async ? 3 : 2);
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
       expect(loadScript).toHaveBeenCalledTimes(1);
       const cached = globals['Component'];
       expect(globals['Component']).toBe(cached);
@@ -144,6 +364,96 @@ describe('external import order', () => {
       expect(loadScript).toHaveBeenCalledTimes(1);
       expect(Object.getOwnPropertyDescriptor(globals, 'Component')?.writable)
         .toBe(true);
+    },
+  );
+
+  it.each(
+    [false, true, 'mixed', 'predicate'].flatMap(mode =>
+      ['main-thread', 'background'].map(layer => ({ mode, layer }))
+    ),
+  )(
+    'fetches on first import in every loading mode ($layer, mode: $mode)',
+    async ({ layer, mode }) => {
+      const state = {
+        events: [] as string[],
+        load: () => Promise.resolve(),
+        loadAlias: () => Promise.resolve(),
+      };
+      let resolveFetch!: (response: object) => void;
+      const response = new Promise<object>(resolve => {
+        resolveFetch = resolve;
+      });
+      const component = { run: rstest.fn() };
+      const fetchBundle = rstest.fn((url: string) => ({
+        then: response.then.bind(response),
+        wait: () => ({ code: 0, url }),
+      }));
+      const loadScript = rstest.fn(() => component);
+      runInNewContext(sources.get(`lazy-${mode}-${layer}`)!, {
+        __externalOrder: state,
+        lynx: { fetchBundle, loadScript },
+        __LoadStyleSheet: () => null,
+      });
+      expect(fetchBundle).not.toHaveBeenCalled();
+      expect(loadScript).not.toHaveBeenCalled();
+      const imports = Promise.all([
+        state.load(),
+        state.loadAlias(),
+        state.load(),
+      ]);
+      await setImmediate();
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
+      expect(fetchBundle).toHaveBeenCalledWith('component.bundle', {});
+      resolveFetch({ code: 0, url: 'component.bundle' });
+      const modules = await imports;
+      for (const module of modules) expect(module).toMatchObject(component);
+      expect(await state.load()).toMatchObject(component);
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
+      expect(loadScript).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['main-thread', 'background'])(
+    'starts timeout retries only after the first import on %s',
+    async layer => {
+      const state = { events: [], load: () => Promise.resolve() };
+      const component = { run: rstest.fn() };
+      const fetchBundle = rstest.fn()
+        .mockResolvedValueOnce({ code: -2, url: 'component.bundle' })
+        .mockResolvedValueOnce({ code: -2, url: 'component.bundle' })
+        .mockResolvedValue({ code: 0, url: 'component.bundle' });
+      const loadScript = rstest.fn(() => component);
+      runInNewContext(sources.get(`lazy-true-${layer}`)!, {
+        __externalOrder: state,
+        lynx: { fetchBundle, loadScript },
+        __LoadStyleSheet: () => null,
+      });
+      expect(fetchBundle).not.toHaveBeenCalled();
+      const modules = await Promise.all([state.load(), state.load()]);
+      for (const module of modules) expect(module).toMatchObject(component);
+      expect(fetchBundle).toHaveBeenCalledTimes(3);
+      expect(loadScript).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['main-thread', 'background'])(
+    'rejects and caches an async import when fetchBundle throws on %s',
+    async layer => {
+      const state = { events: [], load: () => Promise.resolve() };
+      const fetchBundle = rstest.fn(() => {
+        throw new Error('fetch unavailable');
+      });
+      const loadScript = rstest.fn();
+      runInNewContext(sources.get(`lazy-true-${layer}`)!, {
+        __externalOrder: state,
+        lynx: { fetchBundle, loadScript },
+        __LoadStyleSheet: () => null,
+      });
+      expect(fetchBundle).not.toHaveBeenCalled();
+      await expect(state.load()).rejects.toThrow('fetch unavailable');
+      await expect(state.load()).rejects.toThrow('fetch unavailable');
+      expect(fetchBundle).toHaveBeenCalledTimes(1);
+      expect(loadScript).not.toHaveBeenCalled();
     },
   );
 
@@ -195,7 +505,7 @@ describe('external import order', () => {
           return { run: () => state.events.push('run') };
         },
       );
-      runInNewContext(sources.get(`await-${layer}`)!, {
+      runInNewContext(sources.get(`await-true-${layer}`)!, {
         __externalOrder: state,
         lynx: {
           fetchBundle: (url: string) => Promise.resolve({ code: 0, url }),

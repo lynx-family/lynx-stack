@@ -7,7 +7,6 @@ import {
   clearFirstScreenMainThreadRefs,
   flushDelayedRunOnBackgroundFunctions,
   runRunOnMainThreadTask,
-  setEomShouldFlushElementTree,
 } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { markTiming, setPipeline } from '../../core/performance.js';
@@ -17,7 +16,10 @@ import { ElementTemplateLifecycleConstant } from '../protocol/lifecycle-constant
 import type { ElementTemplateUpdateCommitContext } from '../protocol/types.js';
 import type { ElementTemplateUpdateEvent } from '../protocol/update-event.js';
 import { applyElementTemplateUpdateCommands } from '../runtime/patch.js';
-import { applyPendingMainThreadRefAttachments } from '../runtime/template/main-thread-dynamic-attr-state.js';
+import {
+  applyPendingMainThreadRefAttachments,
+  runWithEomFlushSuppressed,
+} from '../runtime/template/main-thread-dynamic-attr-state.js';
 
 let listener:
   | ((event: Pick<ElementTemplateUpdateEvent, 'data'>) => void)
@@ -95,8 +97,7 @@ export function installElementTemplatePatchListener(): void {
         }
       }
       if (delayedRunOnMainThreadData?.length) {
-        setEomShouldFlushElementTree(false);
-        try {
+        runWithEomFlushSuppressed(() => {
           for (const data of delayedRunOnMainThreadData) {
             try {
               runRunOnMainThreadTask(data.worklet, data.params as ClosureValueType[], data.resolveId);
@@ -104,9 +105,7 @@ export function installElementTemplatePatchListener(): void {
               lynx.reportError(error as Error);
             }
           }
-        } finally {
-          setEomShouldFlushElementTree(true);
-        }
+        });
       }
 
       __FlushElementTree(undefined, flushOptions);

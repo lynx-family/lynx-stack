@@ -58,6 +58,7 @@ export interface JsFnHandle {
   _execId?: number;
   _error?: string;
   _isFirstScreen?: boolean;
+  _hydratedEpoch?: number;
   /**
    * Stores an array of indexes of runOnBackground tasks that should be processed with a delay.
    * This is used before hydration.

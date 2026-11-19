@@ -1,0 +1,41 @@
+[
+  {
+    "version": "1.0",
+    "createSurface": {
+      "surfaceId": "default",
+      "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+      "dataModel": {
+        "morningLabel": "09:00",
+        "selected": ["morning"]
+      }
+    }
+  },
+  {
+    "version": "1.0",
+    "updateComponents": {
+      "surfaceId": "default",
+      "components": [
+        {
+          "id": "root",
+          "component": "ChoicePicker",
+          "label": "Pickup time",
+          "variant": "mutuallyExclusive",
+          "displayStyle": "chips",
+          "options": [
+            { "label": { "@path": "/morningLabel" }, "value": "morning" },
+            { "label": "14:00", "value": "afternoon" }
+          ],
+          "value": { "@path": "/selected" }
+        }
+      ]
+    }
+  },
+  {
+    "version": "1.0",
+    "updateDataModel": {
+      "surfaceId": "default",
+      "path": "/morningLabel",
+      "value": "09:30"
+    }
+  }
+]

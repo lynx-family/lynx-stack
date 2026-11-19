@@ -72,6 +72,7 @@ describe('Element Template prop adapter hydration', () => {
       null,
       [eventValue],
       [],
+      null,
       ElementTemplateUpdateOps.insertNode,
       root.instanceId,
       0,

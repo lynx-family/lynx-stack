@@ -13,41 +13,55 @@ interface Details {
 interface RunOnBackgroundDelayImpl {
   // Elements should keep the order being called by the user.
   delayedBackgroundFunctionArray: Array<Details | undefined>;
+  epoch: number;
+  hasHydrated: boolean;
   clearDelayedBackgroundFunctions(): void;
   delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: number) => void): void;
   runDelayedBackgroundFunctions(): void;
 }
 
-let impl: RunOnBackgroundDelayImpl | undefined;
-
 function initRunOnBackgroundDelay(): RunOnBackgroundDelayImpl {
-  return (impl = {
-    delayedBackgroundFunctionArray: [],
-    clearDelayedBackgroundFunctions,
-    delayRunOnBackground,
-    runDelayedBackgroundFunctions,
-  });
-}
-
-function delayRunOnBackground(fnObj: JsFnHandle, task: (fnId: number, execId: number) => void) {
-  impl!.delayedBackgroundFunctionArray.push({ task });
-  const delayIndices = fnObj._delayIndices ??= [];
-  delayIndices.push(impl!.delayedBackgroundFunctionArray.length - 1);
-}
-
-function clearDelayedBackgroundFunctions(): void {
-  // PrimJS can keep truncated array storage alive; drop the consumed queue so
-  // its tasks and hydrated handles stop retaining their background executions.
-  impl!.delayedBackgroundFunctionArray = [];
-}
-
-function runDelayedBackgroundFunctions(): void {
-  for (const details of impl!.delayedBackgroundFunctionArray) {
-    if (details?.jsFnHandle) {
-      details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
+  const pendingHandles = new Set<JsFnHandle>();
+  function clearPendingDelayIndices(): void {
+    for (const handle of pendingHandles) {
+      delete handle._delayIndices;
     }
+    pendingHandles.clear();
   }
-  clearDelayedBackgroundFunctions();
+  const instance: RunOnBackgroundDelayImpl = {
+    delayedBackgroundFunctionArray: [],
+    epoch: 0,
+    hasHydrated: false,
+    clearDelayedBackgroundFunctions(): void {
+      instance.epoch++;
+      instance.hasHydrated = false;
+      clearPendingDelayIndices();
+      // PrimJS can keep truncated array storage alive; drop the consumed queue so
+      // its tasks and hydrated handles stop retaining their background executions.
+      instance.delayedBackgroundFunctionArray = [];
+    },
+    delayRunOnBackground(fnObj: JsFnHandle, task: (fnId: number, execId: number) => void): void {
+      if (instance.hasHydrated) {
+        return;
+      }
+      pendingHandles.add(fnObj);
+      instance.delayedBackgroundFunctionArray.push({ task });
+      const delayIndices = fnObj._delayIndices ??= [];
+      delayIndices.push(instance.delayedBackgroundFunctionArray.length - 1);
+    },
+    runDelayedBackgroundFunctions(): void {
+      const queue = instance.delayedBackgroundFunctionArray;
+      instance.delayedBackgroundFunctionArray = [];
+      instance.hasHydrated = true;
+      clearPendingDelayIndices();
+      for (const details of queue) {
+        if (details?.jsFnHandle) {
+          details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
+        }
+      }
+    },
+  };
+  return instance;
 }
 
 export { type RunOnBackgroundDelayImpl, initRunOnBackgroundDelay };

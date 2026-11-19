@@ -13,6 +13,38 @@ export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+/** Compare JSON containers by shape and the identity of their children. */
+export function shallowEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  return isObject(a) && isObject(b) && equalEntries(a, b, Object.is);
+}
+
+/** Compare resolved JSON data without interpreting directive-like keys. */
+export function equalJsonValues(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (!isObject(a) || !isObject(b)) return false;
+  const prototype: unknown = Object.getPrototypeOf(a);
+  if (prototype !== Object.getPrototypeOf(b)) return false;
+  if (
+    !Array.isArray(a) && prototype !== Object.prototype && prototype !== null
+  ) return false;
+  return equalEntries(a, b, equalJsonValues);
+}
+
+function equalEntries(
+  a: Record<string, unknown>,
+  b: Record<string, unknown>,
+  equalValue: (a: unknown, b: unknown) => boolean,
+): boolean {
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && a.length !== b['length']) return false;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length
+    && keys.every(key =>
+      Object.prototype.hasOwnProperty.call(b, key) && equalValue(a[key], b[key])
+    );
+}
+
 /**
  * Return whether a value matches the A2UI data-binding shape.
  */

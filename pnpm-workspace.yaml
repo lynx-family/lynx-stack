@@ -122,8 +122,8 @@ catalog:
 catalogs:
   # Packages vendored from the Lynx toolchain.
   lynxjs:
-    preact: "npm:@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a"
-    "@lynx-js/preact-devtools": "5.0.1-20260827072047-5f77e12"
+    preact: "npm:@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422"
+    "@lynx-js/preact-devtools": "5.0.1-20261117053910-9766f38"
 
   adb:
     "@yume-chan/adb": ^2.6.4

@@ -1,7 +1,7 @@
 // Copyright 2025 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { transformAttrName } from '../../shared/attribute-name.js';
+import { transformAttrName } from '../../core/attribute-name.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';

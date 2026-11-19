@@ -3,12 +3,12 @@
 // LICENSE file in the root directory of this source tree.
 import { Animation } from './animation/animation.js';
 import { KeyframeEffect } from './animation/effect.js';
+import { isSdkVersionGt } from '../../shared/version.js';
 import {
   mainThreadFlushLoopMark,
   mainThreadFlushLoopOnFlushMicrotask,
   mainThreadFlushLoopReport,
 } from '../utils/mainThreadFlushLoopGuard.js';
-import { isSdkVersionGt } from '../utils/version.js';
 
 let willFlush = false;
 let shouldFlush = true;

@@ -179,11 +179,11 @@ catalogs:
       version: 6.0.3
   lynxjs:
     '@lynx-js/preact-devtools':
-      specifier: 5.0.1-20260827072047-5f77e12
-      version: 5.0.1-20260827072047-5f77e12
+      specifier: 5.0.1-20261117053910-9766f38
+      version: 5.0.1-20261117053910-9766f38
     preact:
-      specifier: npm:@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a
-      version: 11.0.0-rc.1-20260903085447-f95471a
+      specifier: npm:@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422
+      version: 11.0.0-rc.1-20261117064723-40db422
   rsbuild:
     '@rsbuild/core':
       specifier: 2.3.3
@@ -575,7 +575,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -606,7 +606,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -634,7 +634,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -696,7 +696,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -733,7 +733,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -761,7 +761,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -814,7 +814,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -898,7 +898,7 @@ importers:
         version: link:../../packages/rspeedy/lynx-bundle-rslib-config
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -938,7 +938,7 @@ importers:
         version: 0.1.4
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/react-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-react
@@ -972,7 +972,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -1000,7 +1000,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -1053,7 +1053,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -1084,7 +1084,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -1212,7 +1212,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -1240,7 +1240,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-qrcode
@@ -1323,6 +1323,10 @@ importers:
         version: 3.4.19
 
   examples/vanilla:
+    dependencies:
+      '@lynx-js/lynx-runtime':
+        specifier: workspace:*
+        version: link:../../packages/lynx/lynx-runtime
     devDependencies:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
@@ -1901,6 +1905,18 @@ importers:
         specifier: 1.0.0
         version: 1.0.0(@rsbuild/core@2.3.3(core-js@3.50.0))
 
+  packages/lynx/lynx-runtime:
+    devDependencies:
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.7(@microsoft/api-extractor@7.59.4(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+      rsbuild-plugin-publint:
+        specifier: 1.0.0
+        version: 1.0.0(@rsbuild/core@2.3.3(core-js@3.50.0))
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   packages/motion:
     devDependencies:
       '@lynx-js/react':
@@ -1929,7 +1945,7 @@ importers:
     dependencies:
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
     devDependencies:
       '@lynx-js/types':
         specifier: 4.1.0
@@ -1945,7 +1961,7 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^2.11.2
-        version: 2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
+        version: 2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422)
       '@preact/signals-core':
         specifier: ^1.14.4
         version: 1.14.4
@@ -1958,7 +1974,7 @@ importers:
         version: 1.0.7(@microsoft/api-extractor@7.59.4(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
 
   packages/react-umd:
     devDependencies:
@@ -1985,13 +2001,13 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.11
-        version: 1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)
+        version: 1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
 
   packages/react/runtime:
     devDependencies:
@@ -2051,7 +2067,7 @@ importers:
         version: 7.0.0(@testing-library/dom@10.4.1)
       preact:
         specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
       pretty-format:
         specifier: ^30.4.1
         version: 30.4.1
@@ -2257,7 +2273,7 @@ importers:
         version: link:../lynx-bundle-rslib-config
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: workspace:*
         version: link:../plugin-qrcode
@@ -2727,6 +2743,9 @@ importers:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../lynx-bundle-rslib-config
+      '@lynx-js/lynx-runtime':
+        specifier: workspace:*
+        version: link:../../lynx/lynx-runtime
       '@lynx-js/lynx-stack-docs':
         specifier: workspace:*
         version: link:../../../docs
@@ -2965,7 +2984,7 @@ importers:
     devDependencies:
       '@lynx-js/preact-devtools':
         specifier: catalog:lynxjs
-        version: 5.0.1-20260827072047-5f77e12
+        version: 5.0.1-20261117053910-9766f38
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../../react
@@ -3174,11 +3193,11 @@ importers:
   packages/web-platform/web-elements:
     dependencies:
       dompurify:
-        specifier: ^3.4.17
-        version: 3.4.17
+        specifier: ^3.4.18
+        version: 3.4.18
       markdown-it:
-        specifier: ^15.0.2
-        version: 15.0.2
+        specifier: ^15.0.3
+        version: 15.0.3
     devDependencies:
       '@lynx-js/playwright-fixtures':
         specifier: workspace:*
@@ -3405,6 +3424,9 @@ importers:
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
+      preact:
+        specifier: catalog:lynxjs
+        version: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.47(@swc/helpers@0.5.24))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -5236,8 +5258,8 @@ packages:
       '@lynx-js/react': workspace:*
       '@lynx-js/types': '*'
 
-  '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a':
-    resolution: {integrity: sha512-RsU+km8Ulg+HVEJpx1/lq/38GUB+KtJKypB80gbumAtswd+og0RpVppy8bZTBVZY7jSjxx2GHYPTjT61+HDPaw==}
+  '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422':
+    resolution: {integrity: sha512-INm8Fnb+kNjeYxw3TwF/uG7G8HNCFfZaBQk1xHTpw0k9dPcY/04pxXP8b+VawzFxlWbPTa6Abc6c6YEnLLPqGg==}
     peerDependencies:
       preact-render-to-string: '>=6.7.0'
     peerDependenciesMeta:
@@ -5413,8 +5435,8 @@ packages:
       '@lynx-js/types':
         optional: true
 
-  '@lynx-js/preact-devtools@5.0.1-20260827072047-5f77e12':
-    resolution: {integrity: sha512-S4zV+qtL+M8MBT9G4I2jkeaDsbLVyX4kt5m+XyS9w7drBSrJlgOdxZ/lMtG3ngZVhpo7TuE6UODZGexB0QbZdA==}
+  '@lynx-js/preact-devtools@5.0.1-20261117053910-9766f38':
+    resolution: {integrity: sha512-OHcUC04utb75uf+7TeNsRPEefqY6Nlge1JkOvuQxccMmyKtNeUs4vxcyF6+d3hkGAYY9pWuB7yQ4YIo4u12Rqw==}
 
   '@lynx-js/react-use@0.2.2':
     resolution: {integrity: sha512-+cFNtHNraLojSWwZL0uHFLHqoh/bCQU1fT7L2gSOqkwnKYmyDbtZOj+CXtHyDPVHEaGTYqqRt93ZuYA2jztD2Q==}
@@ -7926,8 +7948,8 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
-  argparse@3.0.0:
-    resolution: {integrity: sha512-BOp5NMrHqKxmq/OLr+clzzrRxgOKSLkcjmkWuChp7Irqwn4s74WjOBPIgWfA/HMcBnVkZ5XEuf9uUqzlpfCQ6A==}
+  argparse@3.0.4:
+    resolution: {integrity: sha512-fwWK3Zq22l4XJJjx5mcBHGikIk+hJqO+32dPm0Jur7+rtG5x1scOjSfdT9ZKeWHPpsya/l0HHK4tDImBkTrtvA==}
 
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
@@ -8689,8 +8711,8 @@ packages:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
-  dompurify@3.4.17:
-    resolution: {integrity: sha512-B/pSlYVHQ58kqISD/yDjuJ1yfzI34m1gF4lAod2bwSRhiN4K5Cl3H8Af7hqB2PmTL911tdEudnnXn5FnhRoz0w==}
+  dompurify@3.4.18:
+    resolution: {integrity: sha512-ofe3wI/uNm68HInABYFJYqQxRw1EaKAjNdrFVKqjUY+UZurvNd2L/HuQe097s/4RivWiZyP6tT7aoT8atjfhwg==}
 
   dompurify@3.4.8:
     resolution: {integrity: sha512-yb1cEmaOum7wFvOCSQxyfgVlv5D47Rc30iZWoMpbDIWTnJ6grDDQyu2KFJzB2k7u0pMuJcQ1zphH//fFnw2tjQ==}
@@ -8760,8 +8782,8 @@ packages:
     resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
     engines: {node: '>=0.12'}
 
-  entities@8.0.0:
-    resolution: {integrity: sha512-zwfzJecQ/Uej6tusMqwAqU/6KL2XaB2VZ2Jg54Je6ahNBGNH6Ek6g3jjNCF0fG9EWQKGZNddNjU5F1ZQn/sBnA==}
+  entities@8.1.0:
+    resolution: {integrity: sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA==}
     engines: {node: '>=20.19.0'}
 
   entities@9.0.0:
@@ -10430,8 +10452,8 @@ packages:
     resolution: {integrity: sha512-RCEsPjR+sr0x+AuYp601tKTkgFG4YEPLCzHST3cQ/fhlJkqAkz1L2/Qbp1j9qw5SBwQHFBoW8+hoN5xssOF0Tw==}
     hasBin: true
 
-  markdown-it@15.0.2:
-    resolution: {integrity: sha512-q4IGxMv56jCqT4OCRCADBoDP3LO4MhmTXjFbphHPXs4g3j9Xg5RDnxqN8IF/3vIWEU+VCnUq+7JUg/cfy2E6Qw==}
+  markdown-it@15.0.3:
+    resolution: {integrity: sha512-+Az7Ojz3iRGu8KYMvJ6xVhvrxP3eE+vEtJX75Ow88XBpcQNV/0lGX5ZynIIBftREo4DC2jsveAMDaeltmm8QvQ==}
     hasBin: true
 
   markdown-table@3.0.4:
@@ -14937,7 +14959,7 @@ snapshots:
       '@lynx-js/react': link:packages/react
       '@lynx-js/types': 4.1.0
 
-  '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a': {}
+  '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422': {}
 
   '@lynx-js/luna-styles@0.2.2': {}
 
@@ -15514,7 +15536,7 @@ snapshots:
       - react
       - react-dom
 
-  '@lynx-js/preact-devtools@5.0.1-20260827072047-5f77e12':
+  '@lynx-js/preact-devtools@5.0.1-20261117053910-9766f38':
     dependencies:
       errorstacks: 2.4.1
       htm: 3.1.1
@@ -15871,14 +15893,14 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
+  '@preact/signals@2.11.2(@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422)':
     dependencies:
       '@preact/signals-core': 1.14.4
-      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
 
-  '@prefresh/core@1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a)':
+  '@prefresh/core@1.5.11(@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422)':
     dependencies:
-      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a'
+      preact: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
 
   '@prefresh/utils@1.2.1': {}
 
@@ -17992,7 +18014,7 @@ snapshots:
 
   argparse@2.0.1: {}
 
-  argparse@3.0.0: {}
+  argparse@3.0.4: {}
 
   aria-hidden@1.2.6:
     dependencies:
@@ -18760,7 +18782,7 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
 
-  dompurify@3.4.17:
+  dompurify@3.4.18:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -18833,7 +18855,7 @@ snapshots:
 
   entities@7.0.1: {}
 
-  entities@8.0.0: {}
+  entities@8.1.0: {}
 
   entities@9.0.0: {}
 
@@ -20792,10 +20814,10 @@ snapshots:
       punycode.js: 2.3.1
       uc.micro: 2.1.0
 
-  markdown-it@15.0.2:
+  markdown-it@15.0.3:
     dependencies:
-      argparse: 3.0.0
-      entities: 8.0.0
+      argparse: 3.0.4
+      entities: 8.1.0
       linkify-it: 6.1.0
       mdurl: 2.1.0
       punycode.js: 2.3.1

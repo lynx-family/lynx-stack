@@ -130,4 +130,41 @@ describe('background-function core primitives', () => {
     expect(coreContext.removeEventListener).toHaveBeenCalledTimes(2);
     expect(jsContext.removeEventListener).toHaveBeenCalledTimes(1);
   });
+
+  it('defers return-listener registration until a delayed first-screen call dispatches', async () => {
+    const { coreContext, jsContext } = createCrossThreadLynxMock();
+    const fn = vi.fn((value: string) => `${value}-hydrated`);
+    const ctx = {
+      _wkltId: 'ctx',
+      _jsFn: {
+        fn: {
+          _jsFnId: 1,
+          _fn: fn,
+        },
+      },
+    };
+    registerBackgroundFunctionCtx(ctx);
+    expect(jsContext.addEventListener).toHaveBeenCalledTimes(0);
+
+    let delayedTask: ((fnId: number, execId: number) => void) | undefined;
+    globalThis.lynxWorkletImpl = {
+      _runOnBackgroundDelayImpl: {
+        delayRunOnBackground: vi.fn((_obj, task: (fnId: number, execId: number) => void) => {
+          delayedTask = task;
+        }),
+      },
+    } as unknown as typeof globalThis.lynxWorkletImpl;
+
+    try {
+      const pending = runOnBackground({ _isFirstScreen: true } as unknown as (v: string) => string)('first');
+      // Unhydrated delayed tasks must not allocate entries in resolveMap or attach FunctionCallRet yet.
+      expect(jsContext.addEventListener).toHaveBeenCalledTimes(0);
+
+      delayedTask!(1, ctx._execId!);
+      expect(jsContext.addEventListener).toHaveBeenCalledTimes(1);
+      await expect(pending).resolves.toBe('first-hydrated');
+    } finally {
+      delete (globalThis as { lynxWorkletImpl?: unknown }).lynxWorkletImpl;
+    }
+  });
 });

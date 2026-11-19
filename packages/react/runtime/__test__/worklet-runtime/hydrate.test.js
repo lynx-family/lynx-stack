@@ -31,6 +31,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.dispose();
   delete globalThis.lynxWorkletImpl;
 });
 

@@ -7,6 +7,7 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 import { pluginLynxBundleAnalysisStats } from '../bundle-analysis-stats.plugin.js';
+import { pluginProfileAsyncTrace } from './profile-async-trace.plugin.js';
 
 // REACTLYNX_ASYNC=true loads the ReactLynx external bundle asynchronously
 // (mounted as a Promise) instead of as a synchronous global. Async outputs are
@@ -33,9 +34,19 @@ const assetPrefix = `http://${detectLanHost()}:${port}/`;
 
 export default defineConfig({
   source: {
-    preEntry: process.env['REPRODUCE_STARTUP_RACE'] === 'true'
-      ? ['./src/reproduce-startup-race.ts']
-      : [],
+    define: {
+      __MESSAGE_BUNDLE_URL__: JSON.stringify(
+        `${assetPrefix}message.lynx.bundle`,
+      ),
+    },
+    preEntry: [
+      ...(process.env['REPRODUCE_STARTUP_RACE'] === 'true'
+        ? ['./src/reproduce-startup-race.ts']
+        : []),
+      ...(process.env['MOCK_COMP_LIB'] === 'true'
+        ? ['./src/mock-comp-lib.tsx']
+        : []),
+    ],
     entry: {
       main: './src/index.tsx',
     },
@@ -56,17 +67,31 @@ export default defineConfig({
         ? { reactlynx: { async: true } }
         : { reactlynx: true },
       externals: {
-        './App.js': 'comp-lib.lynx.bundle',
-        './utils.js': {
-          bundlePath: 'utils.lynx.bundle',
-          libraryName: './utils.js',
-          background: { sectionPath: './utils.js' },
+        './App.js': {
+          bundlePath: 'comp-lib.lynx.bundle',
+          libraryName: './App.js',
+          background: { sectionPath: './App.js' },
+          mainThread: { sectionPath: './App.js__main-thread' },
+          async: process.env['MOCK_COMP_LIB'] === 'true',
+        },
+        './utils.js': 'utils.lynx.bundle',
+        './message.js': {
+          url: () => {
+            const url = (globalThis as { selectedMessageUrl?: string })
+              .selectedMessageUrl;
+            console.info('[dynamic-message] resolve URL:', url);
+            if (!url) throw new Error('Message URL has not arrived yet');
+            return url;
+          },
+          libraryName: './message.js',
+          background: { sectionPath: './message.js' },
           async: true,
         },
       },
       globalObject: 'globalThis',
     }),
     pluginLynxBundleAnalysisStats(),
+    pluginProfileAsyncTrace(),
   ],
   environments: {
     ...(isAsync ? {} : { web: {} }),
@@ -83,5 +108,10 @@ export default defineConfig({
   server: {
     port,
     strictPort: true,
+    publicDir: {
+      name: isAsync
+        ? 'dist-external-bundle-react-async'
+        : 'dist-external-bundle',
+    },
   },
 });

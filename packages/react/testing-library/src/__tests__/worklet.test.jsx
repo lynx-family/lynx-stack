@@ -7,6 +7,7 @@ import {
   runOnMainThread,
   useMainThreadObject,
   useMainThreadRef,
+  useState,
 } from '@lynx-js/react';
 
 expect.addSnapshotSerializer({
@@ -722,5 +723,85 @@ describe('worklet', () => {
     fireEvent.tap(container.firstChild);
     expect(globalThis.optionalCaptureCb).toHaveBeenCalledTimes(3);
     expect(globalThis.optionalCaptureCb).toHaveBeenLastCalledWith('nested-started');
+  });
+
+  it('keeps a retained first-screen main-thread:ref runOnBackground handle usable across hydration and rerenders', async () => {
+    const { transformToWorklet } = await import('@lynx-js/react/internal');
+    const { registerWorklet } = await import('@lynx-js/react/worklet-runtime/init');
+    registerWorklet('main-thread', 'first-screen-ref-4361', function(element) {
+      if (!element || this._c.started.current) return;
+      this._c.started.current = true;
+      const { onTick } = this._jsFn;
+      let n = 0;
+      globalThis.__triggerFirstScreenTick = () => {
+        n += 1;
+        return runOnBackground(onTick)(n);
+      };
+      void globalThis.__triggerFirstScreenTick();
+    });
+
+    const sharedMtsHandle = { _isFirstScreen: true };
+    const receivedValues = [];
+    const Comp = () => {
+      const [received, setReceived] = useState(0);
+      const started = useMainThreadRef(false);
+
+      const onTick = (n) => {
+        receivedValues.push(n);
+        setReceived(n);
+      };
+
+      const onRef = {
+        _wkltId: 'first-screen-ref-4361',
+        _c: { started },
+        _jsFn: {
+          onTick: __MAIN_THREAD__ ? sharedMtsHandle : transformToWorklet(onTick),
+        },
+      };
+
+      return (
+        <view main-thread:ref={onRef}>
+          <text>{`BTS received: ${received}`}</text>
+        </view>
+      );
+    };
+
+    let unmount;
+    try {
+      for (const round of [0, 1]) {
+        receivedValues.length = 0;
+        const rendered = render(<Comp />, {
+          enableMainThread: true,
+          enableBackgroundThread: true,
+        });
+        unmount = rendered.unmount;
+
+        await waitSchedule();
+        expect(receivedValues, `round ${round}`).toEqual([1]);
+        expect(rendered.getByText('BTS received: 1')).toBeTruthy();
+
+        for (const expected of [2, 3]) {
+          let pendingTick;
+          lynxTestingEnv.switchToMainThread();
+          try {
+            pendingTick = globalThis.__triggerFirstScreenTick();
+            expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.delayedBackgroundFunctionArray).toHaveLength(0);
+          } finally {
+            lynxTestingEnv.switchToBackgroundThread();
+          }
+          await pendingTick;
+          await waitSchedule();
+          expect(rendered.getByText(`BTS received: ${expected}`)).toBeTruthy();
+        }
+        expect(receivedValues, `round ${round}`).toEqual([1, 2, 3]);
+        unmount();
+        unmount = undefined;
+      }
+    } finally {
+      unmount?.();
+      delete lynxTestingEnv.mainThread.globalThis.__triggerFirstScreenTick;
+      delete globalThis.__triggerFirstScreenTick;
+      delete globalThis.lynxWorkletImpl._workletMap['first-screen-ref-4361'];
+    }
   });
 });

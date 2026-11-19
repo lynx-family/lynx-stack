@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { hydrateWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
+import { hydrateWorkletCtx, setEomShouldFlushElementTree } from '@lynx-js/react/worklet-runtime/bindings';
 import type { Worklet } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { getMainThreadDynamicAttrSlotKinds } from './attr-slot-plan.js';
@@ -51,6 +51,22 @@ const attachedMTRefHandles = new Map<number, ElementTemplateHandle>();
 const attachedMTRefsByElement = new Map<number, Map<ElementRef, AttachedMTRefEntry>>();
 
 let pendingMTRefReconciliations = new Map<number, ElementTemplateHandle>();
+let eomFlushSuppressionDepth = 0;
+
+export function runWithEomFlushSuppressed(fn: () => void): void {
+  if (eomFlushSuppressionDepth === 0) {
+    setEomShouldFlushElementTree(false);
+  }
+  eomFlushSuppressionDepth += 1;
+  try {
+    fn();
+  } finally {
+    eomFlushSuppressionDepth -= 1;
+    if (eomFlushSuppressionDepth === 0) {
+      setEomShouldFlushElementTree(true);
+    }
+  }
+}
 
 export interface MainThreadDynamicAttrSubtreeHandle {
   uid: number;
@@ -146,17 +162,6 @@ function isSameMTRefSpec(
     && isMainThreadFunction(next)
     && prev._execId !== undefined
     && prev._execId === next._execId;
-}
-
-function cleanupAttachedElementsForHandle(handleId: number): void {
-  const attachedElements = attachedMTRefsByElement.get(handleId);
-  if (!attachedElements) {
-    return;
-  }
-  attachedMTRefsByElement.delete(handleId);
-  for (const entry of attachedElements.values()) {
-    cleanupMTRefValue(entry.value);
-  }
 }
 
 function cleanupAttachedElementsForSlot(handleId: number, attrSlotIndex: number): void {
@@ -281,14 +286,12 @@ export function prepareMainThreadDynamicAttrSlotsForNative(
 
 export function clearMainThreadDynamicAttrState(): void {
   const attachedHandleIds = Array.from(attachedMTRefHandles.keys());
-  attachedMTRefHandles.clear();
-  unhydratedSpreadMTRefSlots.clear();
-  pendingMTRefReconciliations.clear();
   try {
-    for (const handleId of attachedHandleIds) {
-      cleanupAttachedElementsForHandle(handleId);
-    }
+    detachMainThreadDynamicAttrRefsForHandleIds(attachedHandleIds);
   } finally {
+    attachedMTRefHandles.clear();
+    unhydratedSpreadMTRefSlots.clear();
+    pendingMTRefReconciliations.clear();
     gestureAttrState.clear();
     mtEventAttrState.clear();
     mtRefAttrState.clear();
@@ -608,17 +611,32 @@ export function applyPendingMainThreadRefAttachments(isHydration = false): void 
   }
 }
 
-export function detachMainThreadDynamicAttrRefsForSubtree(
-  handles: readonly MainThreadDynamicAttrSubtreeHandle[],
+export function detachMainThreadDynamicAttrRefsForHandleIds(
+  handleIds: readonly number[],
 ): void {
-  for (let handleIndex = 0; handleIndex < handles.length; handleIndex += 1) {
-    const handleId = handles[handleIndex]!.uid;
-    if (!attachedMTRefHandles.has(handleId)) {
+  let failure: { error: unknown } | undefined;
+  for (const handleId of handleIds) {
+    if (!attachedMTRefHandles.delete(handleId)) {
       continue;
     }
-    attachedMTRefHandles.delete(handleId);
     pendingMTRefReconciliations.delete(handleId);
-    cleanupAttachedElementsForHandle(handleId);
+    const attachedElements = attachedMTRefsByElement.get(handleId);
+    if (!attachedElements) {
+      continue;
+    }
+    attachedMTRefsByElement.delete(handleId);
+    for (const { value } of attachedElements.values()) {
+      try {
+        cleanupMTRefValue(value);
+      } catch (error) {
+        // The subtree has already left its owner. Release every attached ref
+        // before propagating the first user error.
+        failure ??= { error };
+      }
+    }
+  }
+  if (failure) {
+    throw failure.error;
   }
 }
 
@@ -626,11 +644,7 @@ export function deleteMainThreadDynamicAttrStateForSubtree(
   handleIds: readonly number[],
 ): void {
   try {
-    for (const handleId of handleIds) {
-      if (attachedMTRefHandles.has(handleId)) {
-        cleanupAttachedElementsForHandle(handleId);
-      }
-    }
+    detachMainThreadDynamicAttrRefsForHandleIds(handleIds);
   } finally {
     for (const handleId of handleIds) {
       attachedMTRefHandles.delete(handleId);

@@ -4,6 +4,8 @@
 import { Validator } from '@cfworker/json-schema';
 import type { Schema } from '@cfworker/json-schema';
 
+import { isObject, shallowEqual } from './utils.js';
+
 /** The v1.0 DynamicBoolean coercion, independent of JavaScript truthiness. */
 export function coerceBoolean(value: unknown): boolean {
   if (typeof value === 'boolean') return value;
@@ -17,6 +19,7 @@ export function coerceBoolean(value: unknown): boolean {
 export function coerceDynamic(
   value: unknown,
   schema: Record<string, unknown>,
+  previous?: unknown,
 ): unknown {
   const ref = typeof schema['$ref'] === 'string' ? schema['$ref'] : '';
   if (ref.endsWith('/DynamicBoolean')) return coerceBoolean(value);
@@ -34,22 +37,29 @@ export function coerceDynamic(
     return Number.isFinite(number) ? number : 0;
   }
   if (Array.isArray(value) && schema['items']) {
-    return value.map(item =>
-      coerceDynamic(item, schema['items'] as Record<string, unknown>)
+    const items = schema['items'] as Record<string, unknown>;
+    const previousItems = Array.isArray(previous) ? previous : [];
+    const next = value.map((item, index) =>
+      coerceDynamic(item, items, previousItems[index])
     );
+    return shallowEqual(next, previous) ? previous : next;
   }
   if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
     const properties = schema['properties'] as
       | Record<string, Record<string, unknown>>
       | undefined;
-    return Object.fromEntries(
+    const previousObject = isObject(previous) ? previous : undefined;
+    const next = Object.fromEntries(
       Object.entries(value).map((
         [key, item],
       ) => [
         key,
-        properties?.[key] ? coerceDynamic(item, properties[key]) : item,
+        properties?.[key]
+          ? coerceDynamic(item, properties[key], previousObject?.[key])
+          : item,
       ]),
     );
+    return shallowEqual(next, previous) ? previous : next;
   }
   return value;
 }

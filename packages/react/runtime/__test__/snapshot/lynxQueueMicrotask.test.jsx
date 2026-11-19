@@ -13,7 +13,7 @@ describe('lynxQueueMicrotask', () => {
     const mockFn = vi.fn();
     vi.stubGlobal('lynx', { queueMicrotask: vi.fn(fn => Promise.resolve().then(fn)) });
 
-    const { lynxQueueMicrotask } = await import('../../src/utils');
+    const { lynxQueueMicrotask } = await import('../../src/shared/microtask');
     lynxQueueMicrotask(mockFn);
 
     expect(lynx.queueMicrotask).toHaveBeenCalled();
@@ -27,7 +27,7 @@ describe('lynxQueueMicrotask', () => {
     const mockFn = vi.fn();
     vi.stubGlobal('lynx', {});
 
-    const { lynxQueueMicrotask } = await import('../../src/utils');
+    const { lynxQueueMicrotask } = await import('../../src/shared/microtask');
     lynxQueueMicrotask(mockFn);
 
     expect(mockFn).not.toHaveBeenCalled();
