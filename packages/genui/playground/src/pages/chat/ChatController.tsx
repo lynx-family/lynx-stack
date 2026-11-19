@@ -185,6 +185,7 @@ async function consumeResponse<TState, TOutput>(
     const parsed = parseSseFrame(frame);
     if (!parsed) return;
     options.onEvent?.(parsed);
+    if (parsed.event === 'model-output') return;
     if (parsed.event === 'error') {
       throw new Error(stream.error(parsed.data));
     }
@@ -1662,6 +1663,15 @@ export function ChatController<
         performance.now() - startedAt,
         data,
       );
+      const next = interaction;
+      if (runIdRef.current !== runId || controller.signal.aborted) return;
+      setMessages(current =>
+        current.map(message =>
+          message.id === pendingId
+            ? { ...message, interaction: next }
+            : message
+        )
+      );
     };
     let streamedResponseOutput: TOutput | null = null;
     metricsPersistenceReadyRef.current = false;
@@ -1816,6 +1826,7 @@ export function ChatController<
                 generationUsage: turnUsage.current(),
                 payload: responseOutput,
                 payloadLayout: 'chunks' as const,
+                interaction,
               }]
               : [message]
           )

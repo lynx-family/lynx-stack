@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from '@rstest/core';
 
+import { PROTOCOLS } from './protocol.js';
 import { parseOpenUIScenario } from '../mock/openui-scenarios.js';
 import { OPENUI_COMPONENT_CATALOG_SOURCE } from '../pages/catalog/openui.js';
 import { OPENUI_CHAT_ADAPTER } from '../pages/chat/openui.js';
@@ -46,6 +47,8 @@ describe('OpenUI editor validation', () => {
       baseUrl: 'https://lynx-stack.dev/genui/',
       theme: 'light',
       value: INVALID_WRAP,
+      protocol: PROTOCOLS.openui,
+      component: OPENUI_COMPONENT_CATALOG_SOURCE.components[0]!,
     });
 
     expect(preview.url).toBe('');

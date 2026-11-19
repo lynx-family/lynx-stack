@@ -6,6 +6,7 @@ import { expect, test } from '@rstest/core';
 
 import { OPENUI_CHAT_ADAPTER } from './openui.js';
 import { readOpenUILiveResponse } from '../../../lynx-src/openui/liveResponse.js';
+import { PROTOCOLS } from '../../utils/protocol.js';
 
 test.each([OPENUI_CHAT_ADAPTER.stream, OPENUI_CHAT_ADAPTER.action.stream])(
   'renders cumulative partials and only completes after done for create and actions',
@@ -76,6 +77,8 @@ test('consumes DSL defaults without copying query data into transport, history o
   expect(persisted.assistantContent).toBe(rawText);
   const restored = OPENUI_CHAT_ADAPTER.hydrate({
     history: [{ role: 'assistant', content: persisted.assistantContent }],
+    previewMessages: [],
+    previewPayloadUrls: null,
   });
   expect(restored.output).toMatchObject({ rawText });
   const artifact = OPENUI_CHAT_ADAPTER.preview.artifact(restored.output!);
@@ -89,7 +92,7 @@ test('consumes DSL defaults without copying query data into transport, history o
   };
   expect(OPENUI_CHAT_ADAPTER.persist(withLocalSnapshot)).toEqual(persisted);
   expect(OPENUI_CHAT_ADAPTER.preview.source(withLocalSnapshot, {
-    protocol: 'openui',
+    protocol: PROTOCOLS.openui,
     theme: 'light',
     previewPayloadUrls: null,
   })).toEqual({

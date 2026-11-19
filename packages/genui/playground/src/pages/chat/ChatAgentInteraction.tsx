@@ -23,6 +23,9 @@ export function ChatAgentInteraction(props: {
   const messageClassName = tone === 'pending' || tone === 'error'
     ? 'chatMessageAI'
     : `chatMessageStatus chatMessageStatus-${tone ?? 'info'}`;
+  const invocations = [
+    ...new Set(log.modelOutput?.map(entry => entry.invocationId)),
+  ];
   const rawOutputSummary = log.rawOutput
     ? (
       <>
@@ -67,7 +70,8 @@ export function ChatAgentInteraction(props: {
               Copy details
             </button>
           </div>
-          {tone === 'error' && log.reasoning
+          {!log.modelOutput?.some(entry => entry.event === 'reasoning-delta')
+              && log.reasoning
             ? (
               <details className='chatAgentReasoning'>
                 <summary>Reasoning</summary>
@@ -79,6 +83,28 @@ export function ChatAgentInteraction(props: {
                     </p>
                   )
                   : null}
+              </details>
+            )
+            : null}
+          {log.modelOutput && log.modelOutput.length > 0
+            ? (
+              <details className='chatAgentReasoning' open>
+                <summary>Model output · text, thinking and tools</summary>
+                {log.modelOutput.map((entry, index) => (
+                  <section key={index}>
+                    <div className='chatAgentInteractionEventHeader'>
+                      <span>{chatInteractionLabel(entry.event)}</span>
+                      <span>
+                        Call {invocations.indexOf(entry.invocationId) + 1}{' '}
+                        · Step {entry.step}
+                      </span>
+                      <span className='chatAgentInteractionTime'>
+                        +{(entry.elapsedMs / 1000).toFixed(2)}s
+                      </span>
+                    </div>
+                    <pre>{entry.detail}</pre>
+                  </section>
+                ))}
               </details>
             )
             : null}

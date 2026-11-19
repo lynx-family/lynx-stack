@@ -76,7 +76,7 @@ describe('OpenUI demo previews', () => {
         scenario,
       });
       expect('value' in result).toBe(true);
-      if (!('value' in result)) return;
+      if (result.value === undefined) throw new Error(result.error);
       expect(result.value.previewInput.rawTextUrl).toBe(
         editorValue === scenario.raw ? scenario.sourcePath : undefined,
       );
@@ -192,7 +192,7 @@ describe('OpenUI demo previews', () => {
       scenario,
     });
     expect('value' in result).toBe(true);
-    if (!('value' in result)) return;
+    if (result.value === undefined) throw new Error(result.error);
     expect(result.value.previewInput.inlineMode).toBe(true);
     expect(result.value.playbackChunks.join('')).toBe(
       result.value.previewInput.rawText,

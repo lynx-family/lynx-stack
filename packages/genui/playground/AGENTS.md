@@ -167,6 +167,9 @@ pnpm --filter genui-playground dev:lynx
 pnpm --filter genui-playground preview
 pnpm --filter genui-playground preview:lynx
 
+# Type-check the Web shell and Lynx renderer independently
+pnpm --filter genui-playground test:type
+
 # Package tests
 pnpm --filter genui-playground test
 ```

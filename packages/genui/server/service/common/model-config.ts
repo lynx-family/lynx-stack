@@ -241,10 +241,10 @@ function addSensitiveVariants(values: Set<string>, value: string): void {
   }
 }
 
-export function redactModelConfigSecrets(
-  message: string,
+/** Snapshot configured provider secrets and their encoded forms for stream redaction. */
+export function modelConfigSensitiveValues(
   additionalSecrets: readonly (string | undefined)[] = [],
-): string {
+): string[] {
   const sensitiveValues = new Set<string>();
   const result = readModelConfig();
   if (result.ok) {
@@ -275,13 +275,19 @@ export function redactModelConfigSecrets(
     if (value) addSensitiveVariants(sensitiveValues, value);
   }
 
-  return [...sensitiveValues]
-    .filter(Boolean)
-    .sort((left, right) => right.length - left.length)
-    .reduce(
-      (redacted, sensitive) => redacted.replaceAll(sensitive, '[REDACTED]'),
-      message,
-    )
+  return [...sensitiveValues].filter(Boolean).sort((left, right) =>
+    right.length - left.length
+  );
+}
+
+export function redactModelConfigSecrets(
+  message: string,
+  additionalSecrets: readonly (string | undefined)[] = [],
+): string {
+  return modelConfigSensitiveValues(additionalSecrets).reduce(
+    (redacted, sensitive) => redacted.replaceAll(sensitive, '[REDACTED]'),
+    message,
+  )
     .replace(/\bBearer\s+[^\s,;"']+/giu, 'Bearer [REDACTED]')
     .replace(
       /([?&](?:access_token|api[_-]?key|key|token)=)[^&#\s"'<>]*/giu,

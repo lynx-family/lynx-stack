@@ -189,7 +189,7 @@ for (const api of ['chat', 'responses'] as const) {
     expect(result.text).toBe(content);
   });
 
-  test.each(services.filter(([name]) => name !== 'mcp-apps'))(
+  test.each(services)(
     `%s streams raw Bench generation with an explicit reasoning override over ${api}`,
     async (name, create) => {
       const output = name === 'lynx-xml' ? lynxXmlTestText(content) : content;

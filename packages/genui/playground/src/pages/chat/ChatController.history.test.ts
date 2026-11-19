@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 /** @rstest-environment jsdom */
+/* eslint-disable n/no-unsupported-features/node-builtins -- Tests use browser streaming APIs in jsdom. */
 import { afterEach, beforeEach, expect, rstest, test } from '@rstest/core';
 import 'fake-indexeddb/auto';
 import { countTokens } from 'gpt-tokenizer/encoding/o200k_base';
@@ -690,4 +691,75 @@ test('keeps each turn badge in the chat transcript with its original model price
   );
   const retained = await loadConversation(id!);
   expect(retained?.messages).toHaveLength(4);
+});
+
+test('shows live model thinking and text through completion without sending them to preview or history', async () => {
+  let stream!: ReadableStreamDefaultController<Uint8Array>;
+  rstest.stubGlobal('fetch', (url: string) =>
+    Promise.resolve(
+      url.endsWith('/models') ? jsonResponse(MODELS) : {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'Content-Type': 'text/event-stream' }),
+        body: new ReadableStream<Uint8Array>({
+          start(controller) {
+            stream = controller;
+          },
+        }),
+      },
+    ));
+  await mountPage();
+  await updateUI(() => {
+    const textarea = container.querySelector('textarea')!;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!
+      .set!.call(textarea, 'Build a counter');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await React.act(async () => button('Send').click());
+  await rstest.waitFor(async () => {
+    await React.act(async () => {
+      await Promise.resolve();
+    });
+    expect(stream).toBeDefined();
+  });
+  const emit = async (event: string, data: unknown, close = false) => {
+    await React.act(async () => {
+      stream.enqueue(
+        new TextEncoder().encode(
+          `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+        ),
+      );
+      if (close) stream.close();
+      await Promise.resolve();
+    });
+  };
+  await emit('model-output', {
+    invocationId: 'run',
+    step: 1,
+    type: 'reasoning-delta',
+    payload: { text: 'Visible thinking <script>hello</script>' },
+  });
+  await rstest.waitFor(() =>
+    expect(container.textContent).toContain('Visible thinking')
+  );
+  expect(container.querySelector('.chatAgentReasoning script')).toBeNull();
+  expect(JSON.stringify(latestPreviewSource()) ?? '').not.toContain(
+    'Visible thinking',
+  );
+  await emit('model-output', {
+    invocationId: 'run',
+    step: 1,
+    type: 'text-delta',
+    payload: { text: 'Complete model text' },
+  });
+  await emit('done', { text: DOCUMENT }, true);
+  await rstest.waitFor(() => expect(button('New Chat').disabled).toBe(false));
+  expect(container.textContent).toContain('Visible thinking');
+  expect(container.textContent).toContain('Complete model text');
+  expect(latestPreviewSource()).toMatchObject({ source: DOCUMENT });
+  const stored = await loadConversation(
+    (await getActiveConversationId('lynx-xml'))!,
+  );
+  expect(JSON.stringify(stored)).not.toContain('Visible thinking');
+  expect(JSON.stringify(stored)).not.toContain('Complete model text');
 });
