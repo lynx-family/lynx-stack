@@ -14,7 +14,7 @@ import { DEFAULT_CSS_ID, DEFAULT_ENTRY_NAME } from './constants.js';
 import { createCloneSnapshot, createRuntimeSnapshot, snapshotManager } from './definition.js';
 import type { Snapshot } from './definition.js';
 import { DynamicPartType, __DynamicPartChildren_0 } from './dynamicPartType.js';
-import { snapshotDestroyList } from './list.js';
+import { snapshotDestroyList, snapshotTransferListOwnership } from './list.js';
 import { getListItemPlatformInfoFromIndexedValue } from './platformInfo.js';
 import type { PlatformInfo } from './platformInfo.js';
 import { unref } from './ref.js';
@@ -30,8 +30,11 @@ import type { SerializedSnapshotInstance } from './types.js';
 import { isCloneSnapshot, isCompiledSnapshot, traverseSnapshotInstance } from './utils.js';
 import { isDirectOrDeepEqual } from '../../utils.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
+import { gRecycleMap, gSignMap } from '../list/list.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';
+import { captureNestedListMeasurements } from '../list/nativeState.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
+import { restoreReuseTransition } from '../list/reuseTransition.js';
 
 function isRemovedSnapshot(
   value: unknown,
@@ -132,6 +135,14 @@ if (__DEV__ && __JS__) {
  * interface for Preact's renderer to operate upon.
  */
 export class SnapshotInstance {
+  /** Logical list holders below this snapshot, excluding itself. */
+  __listDescendantCount?: number | undefined;
+  __restoreReuseTransition?: (() => void) | undefined;
+  __listScrollOffset?: { x: number; y: number } | undefined;
+  __listScrollAnchor?: { itemKey: string; viewportOffset: number } | undefined;
+  __listItemMeasuredExtent?: number | undefined;
+  __listItemMeasuredOrientation?: 'horizontal' | 'vertical' | undefined;
+  __listWorkletEvents?: Map<string, Worklet> | undefined;
   __id: number;
   __snapshot_def: Snapshot;
   __elements?: FiberElement[] | undefined;
@@ -143,10 +154,10 @@ export class SnapshotInstance {
   // cause there would be a wrapper to keep the slot index stable
   __current_slot_index = 0;
   __worklet_ref_set?: Set<WorkletRefImpl<any> | Worklet>;
-  __listItemPlatformInfo?: PlatformInfo;
+  __listItemPlatformInfo?: PlatformInfo | undefined;
   __extraProps?: Record<string, unknown> | undefined;
   __slotIndex: number = 0;
-  private __listItemPlatformInfoIndex?: number;
+  private __listItemPlatformInfoIndex?: number | undefined;
 
   constructor(public type: string, id?: number) {
     // Suspense uses 'div'
@@ -227,6 +238,12 @@ export class SnapshotInstance {
       // In nested list scenarios, there are some `list` that are lazily created.
       // We need to `flush` them during `ensureElements`.
       // Also, `flush` is a safe operation since it checks if the `list` is in `__pendingListUpdates`.
+      if (__pendingListUpdates.values?.[this.__id]?.isFromEmpty() === false) {
+        // The native list was just created and is empty. A record started
+        // while this list already had children (for example after a recycled
+        // row released it) only holds a delta, so describe the full source.
+        __pendingListUpdates.clear(this.__id);
+      }
       if (__pendingListUpdates.values && !__pendingListUpdates.values[this.__id] && this.__firstChild !== null) {
         let child: SnapshotInstance | null = this.__firstChild;
         while (child) {
@@ -278,11 +295,37 @@ export class SnapshotInstance {
 
   unRenderElements(): void {
     const { isListHolder } = this.__snapshot_def;
+    const elements = this.__elements;
     this.__elements = undefined;
     this.__element_root = undefined;
 
     if (isListHolder) {
-      // never recurse into list's children
+      if (!elements) {
+        return;
+      }
+      const listID = __GetElementUniqueID(elements[this.__snapshot_def.slot[0]![1]]!);
+      const signMap = gSignMap[listID];
+      const recycleMap = gRecycleMap[listID];
+      for (const child of this.childNodes) {
+        if (!child.__element_root) {
+          continue;
+        }
+        const sign = __GetElementUniqueID(child.__element_root);
+        if (signMap?.get(sign) === child) {
+          // Retain the native cache independently of logical state. The same
+          // logical item may next render in another physical nested list.
+          const retained = child.takeElements();
+          signMap.set(sign, retained);
+          const key = retained.type + (retained.__listItemPlatformInfo?.['reuse-identifier'] ?? '');
+          const pool = recycleMap!.get(key);
+          if (pool?.has(sign)) {
+            pool.set(sign, retained);
+          }
+        } else {
+          // Hydration transferred the cell, or list destruction cleared its cache.
+          child.unRenderElements();
+        }
+      }
     } else {
       let child = this.__firstChild;
       while (child) {
@@ -293,11 +336,22 @@ export class SnapshotInstance {
   }
 
   takeElements(): SnapshotInstance {
+    this.__restoreReuseTransition?.();
+    restoreReuseTransition(this);
+    captureNestedListMeasurements(this);
     const a = Object.create(SnapshotInstance.prototype) as SnapshotInstance;
 
+    a.type = this.type;
     a.__id = this.__id;
     a.__snapshot_def = this.__snapshot_def;
-    a.__values = this.__values;
+    a.__values = this.__values?.slice();
+    a.__listItemPlatformInfo = this.__listItemPlatformInfo;
+    a.__listScrollOffset = this.__listScrollOffset;
+    a.__listScrollAnchor = this.__listScrollAnchor;
+    a.__listItemMeasuredExtent = this.__listItemMeasuredExtent;
+    a.__listItemMeasuredOrientation = this.__listItemMeasuredOrientation;
+    if (this.__listWorkletEvents) a.__listWorkletEvents = new Map(this.__listWorkletEvents);
+    a.__listItemPlatformInfoIndex = this.__listItemPlatformInfoIndex;
     a.__slotIndex = this.__slotIndex;
 
     // all clear
@@ -312,9 +366,35 @@ export class SnapshotInstance {
     a.__elements = this.__elements;
     a.__element_root = this.__element_root;
 
+    if (a.__snapshot_def.isListHolder && a.__elements) {
+      snapshotTransferListOwnership(this, a);
+    }
+
     this.__elements = undefined;
     this.__element_root = undefined;
     return a;
+  }
+
+  /** Release a discarded rendered tree without unregistering its logical snapshots. */
+  releaseElements(): void {
+    let destroyedLists: Set<number> | undefined;
+    traverseSnapshotInstance(this, snapshot => {
+      snapshot.__restoreReuseTransition?.();
+      if (snapshot.__snapshot_def.isListHolder) {
+        snapshotDestroyList(snapshot, destroyedLists ??= new Set());
+      }
+      unref(snapshot, false);
+      snapshot.__elements = undefined;
+      snapshot.__element_root = undefined;
+    });
+  }
+
+  /** Destroy the native list bindings in a subtree whose elements were removed. */
+  destroyLists(): void {
+    let destroyedLists: Set<number> | undefined;
+    traverseSnapshotInstance(this, snapshot => {
+      if (snapshot.__snapshot_def.isListHolder) snapshotDestroyList(snapshot, destroyedLists ??= new Set());
+    });
   }
 
   tearDown(): void {
@@ -400,12 +480,23 @@ export class SnapshotInstance {
       node.__parent = this;
       node.__nextSibling = null;
     }
+    this.__updateListDescendantCount(node, 1);
+  }
+
+  private __updateListDescendantCount(node: SnapshotInstance, direction: 1 | -1): void {
+    const count = (node.__listDescendantCount ?? 0) + (node.__snapshot_def?.isListHolder ? 1 : 0);
+    // Ordinary flat subtree edits do not walk ancestors.
+    if (!count) return;
+    for (let ancestor: SnapshotInstance | null = this; ancestor; ancestor = ancestor.__parent) {
+      ancestor.__listDescendantCount = (ancestor.__listDescendantCount ?? 0) + direction * count;
+    }
   }
 
   __removeChild(node: SnapshotInstance): void {
     if (node.__parent !== this) {
       throw new Error('The node to be removed is not a child of this node.');
     }
+    this.__updateListDescendantCount(node, -1);
 
     if (node.__previousSibling) {
       node.__previousSibling.__nextSibling = node.__nextSibling;
@@ -526,9 +617,10 @@ export class SnapshotInstance {
     }
 
     this.__removeChild(child);
+    let destroyedLists: Set<number> | undefined;
     traverseSnapshotInstance(child, v => {
       if (v.__snapshot_def.isListHolder) {
-        snapshotDestroyList(v);
+        snapshotDestroyList(v, destroyedLists ??= new Set());
       }
 
       clearTransientChildPropRefs(v, removedSnapshots);
@@ -552,6 +644,7 @@ export class SnapshotInstance {
   }
 
   setAttribute(key: string | number, value: any): void {
+    if (key === 'values' || typeof key === 'number') restoreReuseTransition(this);
     if (key === 'values') {
       const oldValues = this.__values;
       const values = value as unknown[];

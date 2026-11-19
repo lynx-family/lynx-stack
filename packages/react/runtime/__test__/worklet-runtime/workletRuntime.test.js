@@ -13,6 +13,7 @@ import {
   updateWorkletRefInitValueChanges,
 } from '../../src/worklet-runtime/workletRef';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
+import { nestedListBridge, LIST_EVENT_ID, setListEventDispatch } from '../../src/worklet-runtime/listEvent';
 
 describe('Worklet', () => {
   const consoleMock = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
@@ -101,6 +102,26 @@ describe('Worklet', () => {
     };
     globalThis.runWorklet(worklet);
     expect(fn).toBeCalled();
+  });
+
+  it('dispatches nested-list parameters before conversion and forwards its consumer exactly once', () => {
+    initWorklet();
+    const consumer = vi.fn(() => 42);
+    registerWorklet('main-thread', 'nested-consumer', consumer);
+    const params = [{ detail: { scrollLeft: 21 } }];
+    const previous = nestedListBridge().dispatch;
+    const proxy = { _wkltId: LIST_EVENT_ID };
+    try {
+      setListEventDispatch((context, rawParams, options, run) => {
+        expect(context).toBe(proxy);
+        expect(rawParams).toBe(params);
+        return run({ _wkltId: 'nested-consumer' }, rawParams, options);
+      });
+      expect(runWorklet(proxy, params)).toBe(42);
+      expect(consumer).toHaveBeenCalledExactlyOnceWith(params[0]);
+    } finally {
+      setListEventDispatch(previous);
+    }
   });
 
   it.each([

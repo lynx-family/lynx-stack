@@ -35,6 +35,8 @@ const native = {
     return { canceled: false };
   }),
   _clear: () => {
+    // End the previous Native page before dropping its listeners and reusing test element IDs.
+    native.dispatchEvent({ type: '__DestroyLifetime', data: {} });
     native._listeners = {};
     native.onTriggerEvent = undefined;
     native.postMessage.mockClear();

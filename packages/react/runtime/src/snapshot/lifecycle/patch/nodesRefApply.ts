@@ -94,9 +94,10 @@ export function applyNodesRefRemoveChild(
   // destroy any `<list>` holders (otherwise native list callbacks +
   // `gSignMap`/`gRecycleMap` leak), unlink sibling/parent pointers, drop
   // element refs, and remove from the manager.
+  let destroyedLists: Set<number> | undefined;
   traverseSnapshotInstance(child, v => {
     if (v.__snapshot_def.isListHolder) {
-      snapshotDestroyList(v);
+      snapshotDestroyList(v, destroyedLists ??= new Set());
     }
     // `__parent` / `__previousSibling` / `__nextSibling` are `private` on
     // `SnapshotInstance`; the cast mirrors the existing pattern in

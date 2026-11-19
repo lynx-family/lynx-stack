@@ -10,6 +10,7 @@ import { initEomImpl } from './eomImpl.js';
 import { addEventMethodsIfNeeded } from './eventPropagation.js';
 import { hydrateCtx } from './hydrate.js';
 import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
+import { LIST_EVENT_ID, nestedListBridge } from './listEvent.js';
 import { isRealizedMainThreadObject } from './mainThreadObject.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
@@ -59,6 +60,11 @@ function registerWorklet(_type: string, id: string, worklet: (...args: unknown[]
 function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkletOptions): unknown {
   if (!validateWorklet(ctx)) {
     return;
+  }
+  // Keep native event parameters raw for legacy first-screen event replay.
+  const dispatchListEvent = ctx._wkltId === LIST_EVENT_ID ? nestedListBridge().dispatch : undefined;
+  if (dispatchListEvent) {
+    return dispatchListEvent(ctx, params, options, runWorklet);
   }
 
   if (__DEV__) {

@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { nestedListBridge } from '../listEvent.js';
 import { Animation } from './animation/animation.js';
 import { KeyframeEffect } from './animation/effect.js';
 import {
@@ -42,6 +43,7 @@ export class Element {
   }
 
   public setStyleProperty(name: string, value: string): void {
+    nestedListBridge().restoreStyle?.(this.element);
     /* v8 ignore next 3 */
     if (__DEV__) {
       mainThreadFlushLoopMark(`element:setStyleProperty ${name}`);
@@ -51,6 +53,7 @@ export class Element {
   }
 
   public setStyleProperties(styles: Record<string, string>): void {
+    nestedListBridge().restoreStyle?.(this.element);
     /* v8 ignore next 5 */
     if (__DEV__) {
       mainThreadFlushLoopMark(
