@@ -6,6 +6,8 @@ import { pluginQRCode } from '@lynx-js/qrcode-rsbuild-plugin';
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { defineConfig } from '@lynx-js/rspeedy';
 
+import { pluginMarkedUnicode } from './scripts/marked-compat/plugin.js';
+
 const LYNX_NODE_ENV = process.env.NODE_ENV === 'development'
   ? 'development'
   : 'production';
@@ -15,7 +17,9 @@ export default defineConfig({
     hmr: false,
   },
   plugins: [
+    pluginMarkedUnicode(),
     pluginQRCode({
+      /** Open the generated preview URL in fullscreen mode when scanned. */
       schema(url) {
         return {
           default: `${url}?fullscreen=true`,
