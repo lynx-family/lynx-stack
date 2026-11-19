@@ -97,5 +97,18 @@ describe('protocol helpers', () => {
     expect(Object.getPrototypeOf(copied)).toBeNull();
     expect(Object.getPrototypeOf(copied.items[0])).toBe(Object.prototype);
     expect(isPlainRecord({ [Symbol.toStringTag]: 'Custom' })).toBe(true);
+
+    const parsedProto = JSON.parse(
+      '{"__proto__":{"enabled":true},"count":1}',
+    ) as Record<string, unknown>;
+    const copiedProto = copyHostData(parsedProto);
+    expect(Object.getPrototypeOf(copiedProto)).toBe(Object.prototype);
+    expect(Object.prototype.hasOwnProperty.call(copiedProto, '__proto__')).toBe(
+      true,
+    );
+    expect(copiedProto['__proto__']).toEqual({ enabled: true });
+    expect(copiedProto['__proto__']).not.toBe(parsedProto['__proto__']);
+    expect(isPlainRecord(copiedProto)).toBe(true);
+    expect(copyHostData(copiedProto)).not.toBe(copiedProto);
   });
 });

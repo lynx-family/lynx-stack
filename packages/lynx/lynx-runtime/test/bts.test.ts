@@ -1367,6 +1367,45 @@ describe('BTS global events', () => {
     expect(order.at(-1)).toBe('before-fail');
   });
 
+  it('defers host listener removal during global-event dispatch so sibling host listeners are not skipped', async () => {
+    const setModule = vi.fn();
+    const emitter = createHostEventEmitter(setModule);
+    hostGlobal.tt = { GlobalEventEmitter: emitter };
+    const page = bindPage();
+
+    const order: string[] = [];
+    let stopLast: () => void = vi.fn();
+    stopLast = page.onGlobalEvent('once', () => {
+      order.push('runtime');
+      stopLast();
+      // Adding and removing again in the same dispatch shares one deferred removal.
+      page.onGlobalEvent('once', () => undefined)();
+    });
+    emitter.addListener('once', () => {
+      order.push('direct-sibling');
+    });
+
+    emitter.emit('once', []);
+    expect(order).toEqual(['runtime', 'direct-sibling']);
+    expect(emitter.count('once')).toBe(2);
+
+    await Promise.resolve();
+    expect(emitter.count('once')).toBe(1);
+
+    // Re-subscribing inside the same dispatch cancels deferred host removal so shared host detectors stay active.
+    let stopKeyboard: () => void = vi.fn();
+    const nextKeyboard = vi.fn();
+    stopKeyboard = page.onGlobalEvent('keyboardstatuschanged', () => {
+      stopKeyboard();
+      page.onGlobalEvent('keyboardstatuschanged', nextKeyboard);
+    });
+    emitter.emit('keyboardstatuschanged', ['on']);
+    await Promise.resolve();
+    expect(setModule.mock.calls).toEqual([['switchKeyBoardDetect', [true]]]);
+    emitter.emit('keyboardstatuschanged', ['off']);
+    expect(nextKeyboard).toHaveBeenCalledExactlyOnceWith('off');
+  });
+
   it('keeps LynxGroup pages isolated across async subscriptions and unsubscribes all global events before onDestroy and app.destroy()', async () => {
     const emitterA = createHostEventEmitter();
     const emitterB = createHostEventEmitter();

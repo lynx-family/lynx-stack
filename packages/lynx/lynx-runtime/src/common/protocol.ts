@@ -82,7 +82,17 @@ export function copyHostData<T>(value: T): T {
     Object.getPrototypeOf(value) === null ? Object.create(null) : {}
   ) as Record<string, unknown>;
   for (const key of Object.keys(value)) {
-    copy[key] = copyHostData(value[key]);
+    const copiedValue = copyHostData(value[key]);
+    if (key === '__proto__') {
+      Object.defineProperty(copy, key, {
+        value: copiedValue,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+    } else {
+      copy[key] = copiedValue;
+    }
   }
   return copy as T;
 }

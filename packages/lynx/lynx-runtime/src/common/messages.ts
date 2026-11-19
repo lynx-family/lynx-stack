@@ -10,6 +10,7 @@ import type { Unsubscribe } from './types.js';
 export interface MultiplexEntry<TCallback> {
   listeners: Map<TCallback, Unsubscribe>;
   unsubscribeHost: Unsubscribe;
+  releaseIfEmpty: () => void;
 }
 
 /** @internal */
@@ -21,6 +22,8 @@ export type MessageSubscriptions = MultiplexMap<(data: unknown) => void>;
 /**
  * Share one underlying host listener per event key, deduplicating identical
  * callbacks and unsubscribing from the host when the last listener leaves.
+ * Defer host unsubscription when the last listener leaves mid-dispatch so
+ * host emitters iterating live listener arrays do not skip sibling listeners.
  * @internal
  */
 export function subscribeMultiplexed<
@@ -36,11 +39,40 @@ export function subscribeMultiplexed<
   let entry = subscriptions.get(key);
   if (!entry) {
     const listeners = new Map<TCallback, Unsubscribe>();
+    let dispatching = 0;
+    let detachScheduled = false;
     const unsubscribeHost = attachHost((invoke) => {
-      dispatchListeners(listeners, invoke);
+      dispatching++;
+      try {
+        dispatchListeners(listeners, invoke);
+      } finally {
+        dispatching--;
+      }
     });
-    entry = { listeners, unsubscribeHost };
-    subscriptions.set(key, entry);
+    const detachIfEmpty = (): void => {
+      if (listeners.size === 0 && subscriptions.get(key) === created) {
+        subscriptions.delete(key);
+        unsubscribeHost();
+      }
+    };
+    const created: MultiplexEntry<TCallback> = {
+      listeners,
+      unsubscribeHost,
+      releaseIfEmpty: () => {
+        if (dispatching === 0) {
+          detachIfEmpty();
+          return;
+        }
+        if (detachScheduled) return;
+        detachScheduled = true;
+        void Promise.resolve().then(() => {
+          detachScheduled = false;
+          detachIfEmpty();
+        });
+      },
+    };
+    entry = created;
+    subscriptions.set(key, created);
   }
   const current = entry;
   const existing = current.listeners.get(callback);
@@ -49,9 +81,8 @@ export function subscribeMultiplexed<
   const dispose = (): void => {
     if (current.listeners.get(callback) !== dispose) return;
     current.listeners.delete(callback);
-    if (current.listeners.size === 0 && subscriptions.get(key) === current) {
-      subscriptions.delete(key);
-      current.unsubscribeHost();
+    if (current.listeners.size === 0) {
+      current.releaseIfEmpty();
     }
   };
   current.listeners.set(callback, dispose);
