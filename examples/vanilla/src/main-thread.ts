@@ -86,7 +86,7 @@ const stopDestroy = onDestroy(() => {
   stopDestroy();
 
   if (button) {
-    __RemoveEventListener(button, 'tap', onTap);
+    __RemoveEventListener(button, 'tap', onTap, {});
   }
 
   button = undefined;
