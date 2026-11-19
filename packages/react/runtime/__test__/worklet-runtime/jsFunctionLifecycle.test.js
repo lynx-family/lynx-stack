@@ -21,12 +21,7 @@ describe('jsFunctionLifecycle', () => {
     const manager = new JsFunctionLifecycleManager();
     manager.addRef(3, {});
     manager.fire();
-    expect(events[0]).toMatchInlineSnapshot(`
-      {
-        "data": [],
-        "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
-      }
-    `);
+    expect(events).toEqual([]);
   });
 
   it('should add and remove', () => {
@@ -50,14 +45,8 @@ describe('jsFunctionLifecycle', () => {
     manager.addRef(3, {});
     manager.removeRef(3);
     manager.fire();
-    expect(events[0]).toMatchInlineSnapshot(`
-      {
-        "data": [],
-        "type": "Lynx.Worklet.releaseBackgroundWorkletCtx",
-      }
-    `);
+    expect(events).toEqual([]);
 
-    events = [];
     manager.removeRef(3);
     manager.fire();
     expect(events[0]).toMatchInlineSnapshot(`
@@ -105,11 +94,30 @@ describe('jsFunctionLifecycle', () => {
     const previous = new JsFunctionLifecycleManager();
     previous.addRef(3, {});
     previous.removeRef(3);
-    previous.dispose();
-    const current = new JsFunctionLifecycleManager();
+    const current = previous.recreate();
     current.addRef(3, {});
     previous.fire();
     expect(events).toEqual([]);
     expect(current.execIdRefCount.get(3)).toBe(1);
+  });
+
+  it('cancels pending release when addRef re-retains an execId before fire()', async () => {
+    const manager = new JsFunctionLifecycleManager();
+    manager.addRef(3, {});
+    manager.removeRef(3);
+    manager.addRef(3, {});
+
+    await Promise.resolve();
+    expect(events).toEqual([]);
+    expect(manager.execIdRefCount.get(3)).toBe(1);
+
+    manager.removeRef(3);
+    await Promise.resolve();
+    expect(events).toEqual([
+      {
+        data: [3],
+        type: 'Lynx.Worklet.releaseBackgroundWorkletCtx',
+      },
+    ]);
   });
 });

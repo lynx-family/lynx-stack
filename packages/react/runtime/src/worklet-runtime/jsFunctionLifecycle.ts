@@ -30,6 +30,7 @@ class JsFunctionLifecycleManager {
     // A failed engine registration must leave the target eligible for a retry.
     this.registry.register(objToRef, execId);
     this.retainedObjects.add(objToRef);
+    this.execIdSetToFire.delete(execId);
     this.execIdRefCount.set(
       execId,
       (this.execIdRefCount.get(execId) ?? 0) + 1,
@@ -56,15 +57,21 @@ class JsFunctionLifecycleManager {
     this.active = false;
   }
 
+  recreate(): JsFunctionLifecycleManager {
+    this.dispose();
+    return new JsFunctionLifecycleManager();
+  }
+
   fire(): void {
     if (!this.active) return;
+    this.willFire = false;
+    if (this.execIdSetToFire.size === 0) return;
     profile('JsFunctionLifecycleManager.fire', () => {
       lynx.getJSContext().dispatchEvent({
         type: WorkletEvents.releaseBackgroundWorkletCtx,
         data: Array.from(this.execIdSetToFire),
       });
       this.execIdSetToFire.clear();
-      this.willFire = false;
     });
   }
 }

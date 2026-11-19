@@ -564,6 +564,10 @@ describe('Compiled direct event background updates', () => {
     expect(hydratedHandle?._fn).toBe('[BackgroundFunction]');
     expect(hydratedHandle?._jsFnId).toBe(backgroundHandle?._jsFnId);
     expect(hydratedHandle?._execId).toBe(backgroundCtx._execId);
+    expect(firstScreenHandle?._isFirstScreen).toBe(false);
+    expect(firstScreenHandle?._jsFnId).toBe(backgroundHandle?._jsFnId);
+    expect(firstScreenHandle?._execId).toBe(backgroundCtx._execId);
+    expect(firstScreenHandle).not.toHaveProperty('_delayIndices');
     expect(
       globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
         .delayedBackgroundFunctionArray.length,
@@ -575,6 +579,23 @@ describe('Compiled direct event background updates', () => {
 
     envManager.switchToMainThread();
     await expect(delayedResult).resolves.toBe('reported:first');
+
+    // Release the hydrated slot ctx; the surviving first-screen handle still owns its execId.
+    globalThis.lynxWorkletImpl._jsFunctionLifecycleManager?.removeRef(backgroundCtx._execId!);
+    await Promise.resolve();
+    envManager.switchToBackground();
+    envManager.switchToMainThread();
+
+    const postHydrationResult = globalThis.runWorklet(firstScreenCtx, []) as Promise<unknown>;
+    expect(
+      globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl
+        .delayedBackgroundFunctionArray.length,
+    ).toBe(0);
+    envManager.switchToBackground();
+    expect(onReport).toHaveBeenCalledTimes(2);
+
+    envManager.switchToMainThread();
+    await expect(postHydrationResult).resolves.toBe('reported:first');
   });
 
   it('records dynamic-entry compiled direct main-thread event state on first-screen create', async () => {
