@@ -10,7 +10,7 @@ import {
   SnapshotOperation,
   takeGlobalSnapshotPatch,
 } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
-import { runWithForce } from '../../src/snapshot/lynx/tt';
+import { runWithForce } from '../../src/snapshot/lynx/appCallbacks';
 import {
   SnapshotInstance,
   setupPage,

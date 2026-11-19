@@ -1,6 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { getPageLynx } from '../core/page-lynx.js';
 
 /* v8 ignore start */
 const noop: (...args: unknown[]) => unknown = () => {};
@@ -8,12 +9,12 @@ const noopFlowId = () => 0;
 /* v8 ignore end */
 
 export const isProfiling: boolean = /* @__PURE__ */ Boolean(
-  lynx.performance?.isProfileRecording?.(),
+  getPageLynx().performance?.isProfileRecording?.(),
 );
 
 export const profileStart = /* @__PURE__ */ ((() => {
   let p;
-  if (!(p = lynx.performance) || typeof p.profileStart !== 'function') {
+  if (!(p = getPageLynx().performance) || typeof p.profileStart !== 'function') {
     return noop;
   }
   return p.profileStart.bind(p);
@@ -21,7 +22,7 @@ export const profileStart = /* @__PURE__ */ ((() => {
 
 export const profileEnd = /* @__PURE__ */ ((() => {
   let p;
-  if (!(p = lynx.performance) || typeof p.profileEnd !== 'function') {
+  if (!(p = getPageLynx().performance) || typeof p.profileEnd !== 'function') {
     return noop;
   }
   return p.profileEnd.bind(p);
@@ -29,7 +30,7 @@ export const profileEnd = /* @__PURE__ */ ((() => {
 
 export const profileFlowId: typeof lynx.performance.profileFlowId = /* @__PURE__ */ (() => {
   let p;
-  if (!(p = lynx.performance) || typeof p.profileFlowId !== 'function') {
+  if (!(p = getPageLynx().performance) || typeof p.profileFlowId !== 'function') {
     return noopFlowId;
   }
   return p.profileFlowId.bind(p);

@@ -6,6 +6,7 @@ import { IndexMap } from '../../shared/index-map.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import { cardLifetime } from '../card-lifetime.js';
+import { getPageLynx } from '../page-lynx.js';
 import { addReloadScopedEventListener } from '../reload-scoped-event.js';
 import { registerDestroyTask } from '../runtime-destroy.js';
 
@@ -14,7 +15,7 @@ let cleanupReturnValueListener: (() => void) | undefined;
 let unregisterReturnValueCleanup: (() => void) | undefined;
 
 function initReturnValueListener(): void {
-  const context: RuntimeProxy = __JS__ ? lynx.getCoreContext() : lynx.getJSContext();
+  const context: RuntimeProxy = __JS__ ? getPageLynx().getCoreContext() : getPageLynx().getJSContext();
 
   resolveMap = new IndexMap(cardLifetime('functionCallId', () => ({ lastIndex: 0 })));
   const removeListener = addReloadScopedEventListener(context, WorkletEvents.FunctionCallRet, onFunctionCallRet);

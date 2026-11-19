@@ -5,6 +5,7 @@
 import type { ComponentClass } from 'preact';
 import { options } from 'preact';
 
+import { getPageLynx } from './core/page-lynx.js';
 import { getCurrentVNode, getOwnerStack } from './shared/component-stack.js';
 
 /* v8 ignore start */
@@ -111,8 +112,8 @@ export function withSyncEffectFlush<T>(fn: () => T): T {
 }
 
 export const lynxQueueMicrotask: typeof lynx.queueMicrotask = /* @__PURE__ */ (() => {
-  if (lynx.queueMicrotask) {
-    return (fn) => lynx.queueMicrotask(fn);
+  if (getPageLynx().queueMicrotask) {
+    return (fn) => getPageLynx().queueMicrotask(fn);
   } else if (typeof globalThis.Promise === 'function') {
     const resolved = globalThis.Promise.resolve();
     /* v8 ignore start */

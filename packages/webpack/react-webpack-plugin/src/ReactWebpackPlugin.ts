@@ -359,6 +359,13 @@ interface ReactWebpackPluginOptions {
   profile?: boolean | undefined;
 
   /**
+   * Whether to share module instances across the cards of a LynxGroup.
+   *
+   * @experimental
+   */
+  experimental_lynxGroupModuleSharing?: boolean;
+
+  /**
    * Whether to enable Element Template compilation.
    *
    * @experimental
@@ -475,6 +482,7 @@ class ReactWebpackPlugin {
       extractStr: false,
       experimental_isLazyBundle: false,
       profile: undefined,
+      experimental_lynxGroupModuleSharing: false,
       experimental_useElementTemplate: false,
       experimental_transformBuiltinAttributeNames: false,
       lazyBundleFetcher: 'QueryComponent',
@@ -574,6 +582,9 @@ class ReactWebpackPlugin {
         options.experimental_transformBuiltinAttributeNames,
       ),
       __LAZY_BUNDLE_FETCHER__: JSON.stringify(options.lazyBundleFetcher),
+      __LYNX_GROUP_MODULE_SHARING__: JSON.stringify(
+        options.experimental_lynxGroupModuleSharing,
+      ),
       __RUNTIME_VERSION__: JSON.stringify(options.runtimeVersion),
       __EXPERIMENTAL_RE_EVAL_JS_ON_RELOAD__: JSON.stringify(
         options.experimental_reEvalJSOnReload,
@@ -818,6 +829,18 @@ class ReactWebpackPlugin {
                 }
               });
             });
+          },
+        );
+      }
+
+      if (options.experimental_lynxGroupModuleSharing) {
+        hooks.beforeEncode.tap(
+          `${this.constructor.name}.LynxGroupModuleSharing`,
+          (args) => {
+            args.encodeData.sourceContent.config[
+              'enableLynxGroupModuleSharing'
+            ] = true;
+            return args;
           },
         );
       }

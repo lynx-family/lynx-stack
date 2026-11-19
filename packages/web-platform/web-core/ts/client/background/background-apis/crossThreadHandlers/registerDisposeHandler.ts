@@ -15,7 +15,7 @@ export function registerDisposeHandler(
   rpc.registerHandler(disposeEndpoint, () => {
     const id = nativeApp.id;
     // `callDestroyLifetimeFun` forwards to `tt.callDestroyLifetimeFun`, which is
-    // injected by the ReactLynx background runtime (`injectTt`). Buildless
+    // injected by the ReactLynx background runtime (`registerAppCallbacks`). Buildless
     // (vanilla / Lynx XML markup) cards run their own background script and
     // never install that hook, so lynx-core throws
     // "callDestroyLifetimeFun is not a function" for them. The framework

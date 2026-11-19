@@ -10,6 +10,7 @@ import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { registerBackgroundFunctionCtx } from '../background-function/run-on-background.js';
 import { isMainThreadFunction } from '../main-thread-function.js';
 import { isMtsEnabled } from '../mts-capability.js';
+import { getPageLynx } from '../page-lynx.js';
 import { dispatchReloadScopedEvent } from '../reload-scoped-event.js';
 import { isRuntimeDestroyed } from '../runtime-destroy.js';
 
@@ -77,5 +78,5 @@ function prepareMainThreadFunctionCtx(worklet: unknown): void {
 }
 
 function dispatchRunOnMainThreadEvent(data: RunWorkletCtxData): void {
-  dispatchReloadScopedEvent(lynx.getCoreContext(), { type: WorkletEvents.runWorkletCtx, data });
+  dispatchReloadScopedEvent(getPageLynx().getCoreContext(), { type: WorkletEvents.runWorkletCtx, data });
 }

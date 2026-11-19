@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { createProcessData } from '../../core/lynx-data-processors.js';
 import type { DataProcessorDefinition } from '../../core/lynx-data-processors.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 
 export function setupLynxEnv(): void {
   if (!__LEPUS__) {
@@ -10,25 +11,25 @@ export function setupLynxEnv(): void {
     let updateData: Record<string, unknown> = {};
 
     try {
-      const params = lynx.getApp()._params;
+      const params = getPageLynx().getApp()._params;
       if (params) {
         initData = params.initData ?? {};
         updateData = params.updateData ?? {};
       }
     } catch {}
 
-    lynx.__initData = { ...initData, ...updateData };
-    lynx.registerDataProcessors = function() {};
+    getPageLynx().__initData = { ...initData, ...updateData };
+    getPageLynx().registerDataProcessors = function() {};
   }
 
   if (__LEPUS__) {
-    lynx.__initData = {
+    getPageLynx().__initData = {
       /* available only in renderPage */
     };
     (globalThis as typeof globalThis & { SystemInfo?: unknown }).SystemInfo =
       (lynx as typeof lynx & { SystemInfo?: unknown }).SystemInfo ?? {};
 
-    lynx.triggerGlobalEventFromLepus = function(
+    getPageLynx().triggerGlobalEventFromLepus = function(
       eventName: string,
       params: any,
     ) {
@@ -48,12 +49,12 @@ export function setupLynxEnv(): void {
       }
     }
 
-    lynx.registerDataProcessors = function(
+    getPageLynx().registerDataProcessors = function(
       dataProcessorDefinition?: DataProcessorDefinition,
     ) {
       globalThis.processData = createProcessData(dataProcessorDefinition);
     };
 
-    lynx.registerDataProcessors();
+    getPageLynx().registerDataProcessors();
   }
 }

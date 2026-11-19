@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { loadLazyBundle } from './lazy-bundle.js';
+import { getPageLynx } from '../page-lynx.js';
 
 export function loadDynamicJS<T>(url: string): Promise<T> {
   if (__LEPUS__) {
@@ -13,7 +14,7 @@ export function loadDynamicJS<T>(url: string): Promise<T> {
     return Promise.reject();
   }
   return new Promise((resolve, reject) => {
-    lynx.requireModuleAsync<T>(url, (err, data) => {
+    getPageLynx().requireModuleAsync<T>(url, (err, data) => {
       if (err) {
         reject(err);
       } else {

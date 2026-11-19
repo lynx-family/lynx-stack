@@ -1372,6 +1372,7 @@
   "Setting `writeToDisk: true` won't change the behavior of the `webpack-dev-middleware`, and bundle files accessed through the browser will still be served from memory.": "设置 `writeToDisk: true` 不会改变 `webpack-dev-middleware` 的行为，通过浏览器访问的 bundle 文件仍然由内存提供。",
   "Setup rstest with `@lynx-js/react/testing-library/rstest-config`.": "用 `@lynx-js/react/testing-library/rstest-config` 配置 rstest。",
   "Setup vitest:": "配置 vitest：",
+  "Share module instances across the cards of a LynxGroup. Each page then\nrenders through `createRoot(lynx)` from `@lynx-js/react/internal` instead\nof `root`.": "同一个 LynxGroup 中的卡片共享模块实例。每个页面都通过 `@lynx-js/react/internal` 提供的 `createRoot(lynx)` 渲染。",
   "Shared TASM encode worker pool: multiple entries (and multiple\n`LynxEncodePlugin` instances in the same process) share its worker\nslots for parallel encode; watch-mode rebuilds keep the same workers\nwarm. `availableParallelism()` honors cgroup CPU limits (containers,\nCI runners), so we don't need to subtract a core ourselves.": "共享的 TASM 编码 worker 池：同一进程中的多个入口（以及多个\n`LynxEncodePlugin` 实例）会共享其 worker\n槽位以并行编码；watch 模式下的重新构建会保持这些 worker\n处于热启动状态。`availableParallelism()` 会考虑 cgroup 的 CPU 限制（容器、\nCI runner 等），因此我们无需自行减去一个核心。",
   "Shared action prop schema exposed to prompt signatures as `ActionExpression`.": "共享的 action prop schema，在 prompt 签名中以 `ActionExpression` 的形式暴露。",
   "Shared action schema shown as `ActionExpression` in prompt signatures.": "共享的 action schema，在 prompt 签名中显示为 `ActionExpression`。",

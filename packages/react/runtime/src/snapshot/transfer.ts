@@ -11,7 +11,7 @@ import { genCommitTaskId, replaceCommitHook } from './lifecycle/patch/commit.js'
 import type { PatchList, PatchOptions } from './lifecycle/patch/commit.js';
 import { updateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { __pendingListUpdates } from './list/pendingListUpdates.js';
-import { enablePublishEvent } from './lynx/tt.js';
+import { enablePublishEvent } from './lynx/appCallbacks.js';
 import { hydrate as hydrateMainThread } from './renderToOpcodes/hydrate.js';
 import { render as renderFirstFrame } from './renderToOpcodes/index.js';
 import { BackgroundSnapshotInstance, hydrate } from './snapshot/backgroundSnapshot.js';

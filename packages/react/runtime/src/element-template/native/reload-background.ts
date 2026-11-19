@@ -7,6 +7,7 @@ import { render } from 'preact';
 
 import { canReEvalBackgroundEntry, reEvalBackgroundEntry } from '../../core/entry-reload.js';
 import { applyUpdatePageData } from '../../core/lynx-page-data.js';
+import { getPageLynx } from '../../core/page-lynx.js';
 import { increaseReloadVersion } from '../../core/reload-version.js';
 import { resetElementTemplateCommitState } from '../background/commit-hook.js';
 import { destroyElementTemplateBackgroundRuntime } from '../background/destroy.js';
@@ -38,7 +39,7 @@ export function reloadBackground(updateData: unknown, options?: Record<string, u
     increaseReloadVersion();
     // Reload creates a new object so InitData Provider / Consumer observers do
     // not retain the pre-reload object identity.
-    lynx.__initData = Object.assign({}, lynx.__initData);
+    getPageLynx().__initData = Object.assign({}, getPageLynx().__initData);
     applyUpdatePageData(updateData, options);
 
     setRoot(new BackgroundPageRootInstance());

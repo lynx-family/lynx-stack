@@ -6,6 +6,7 @@ import type { ComponentClass, ComponentType, VNode } from 'preact';
 
 import type { TraceOption } from '@lynx-js/types';
 
+import { getPageLynx } from '../../core/page-lynx.js';
 import {
   BITS,
   COMMIT,
@@ -80,7 +81,7 @@ export function initProfileHook(): void {
   let p;
   /* v8 ignore start */
   if (
-    !(p = lynx.performance)
+    !(p = getPageLynx().performance)
     || typeof p.profileStart !== 'function'
     || typeof p.profileEnd !== 'function'
     || typeof p.profileMark !== 'function'

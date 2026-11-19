@@ -1,6 +1,6 @@
 import { describe, it, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { delayedLifecycleEvents } from '../../src/snapshot/lifecycle/event/delayLifecycleEvents';
-import { flushDelayedLifecycleEvents } from '../../src/snapshot/lynx/tt';
+import { flushDelayedLifecycleEvents } from '../../src/snapshot/lynx/appCallbacks';
 import { __root } from '../../src/root';
 import { globalEnvManager } from './utils/envManager';
 import { expect } from 'vitest';

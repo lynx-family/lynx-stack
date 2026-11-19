@@ -349,6 +349,17 @@ export interface PluginReactLynxOptions {
   experimental_isLazyBundle?: boolean
 
   /**
+   * Share module instances across the cards of a LynxGroup. Each page then
+   * renders through `createRoot(lynx)` from `@lynx-js/react/internal` instead
+   * of `root`.
+   *
+   * @defaultValue `false`
+   *
+   * @alpha
+   */
+  experimental_lynxGroupModuleSharing?: boolean
+
+  /**
    * Enable Element Template compile and runtime entries.
    *
    * @defaultValue `false`
@@ -431,6 +442,7 @@ export function pluginReactLynx(
 
     experimental_isLazyBundle: false,
     experimental_transformBuiltinAttributeNames: false,
+    experimental_lynxGroupModuleSharing: false,
     experimental_useElementTemplate: false,
     optimizeBundleSize: false,
     enableUiSourceMap: false,

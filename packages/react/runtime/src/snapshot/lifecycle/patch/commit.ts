@@ -31,6 +31,7 @@ import {
 import { takeGlobalSnapshotPatch } from './snapshotPatch.js';
 import type { SnapshotPatch } from './snapshotPatch.js';
 import { takeGlobalFlushOptions } from '../../../core/commit-context.js';
+import { getPageLynx } from '../../../core/page-lynx.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../../core/performance.js';
 import { getReloadVersion } from '../../../core/reload-version.js';
 import {
@@ -101,7 +102,7 @@ type CommitTransport = (
 
 const nativeTransport: CommitTransport = (_vnode, patchList, patchOptions, finish) => {
   // Send the update to the native layer
-  lynx.getNativeApp().callLepusMethod(
+  getPageLynx().getNativeApp().callLepusMethod(
     LifecycleConstant.patchUpdate,
     commitPatchUpdate(patchList, patchOptions),
     finish,

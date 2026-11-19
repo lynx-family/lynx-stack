@@ -5,6 +5,7 @@ import { options } from 'preact';
 
 import { RENDER_COMPONENT, ROOT } from '../shared/render-constants.js';
 import { hook, isSdkVersionGt } from '../utils.js';
+import { getPageLynx } from './page-lynx.js';
 
 const PerformanceTimingKeys = [
   'updateSetStateTrigger',
@@ -81,7 +82,7 @@ function markTimingLegacy(key: PerformanceTimingKey, timingFlag_?: string): void
       break;
     }
   }
-  lynx.getNativeApp().markTiming?.(timingFlag!, key);
+  getPageLynx().getNativeApp().markTiming?.(timingFlag!, key);
 }
 
 function beginPipeline(
@@ -89,7 +90,7 @@ function beginPipeline(
   pipelineOrigin: PipelineOrigin,
   timingFlag?: string,
 ): void {
-  globalPipelineOptions = lynx.performance?._generatePipelineOptions?.();
+  globalPipelineOptions = getPageLynx().performance?._generatePipelineOptions?.();
   if (globalPipelineOptions) {
     globalPipelineOptions.needTimestamps = needTimestamps;
     globalPipelineOptions.pipelineOrigin = pipelineOrigin;
@@ -104,12 +105,12 @@ function beginPipeline(
     }
 
     if (isSdkVersionGt(3, 0)) {
-      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, globalPipelineOptions);
+      getPageLynx().performance?._onPipelineStart?.(globalPipelineOptions.pipelineID, globalPipelineOptions);
     } else {
-      lynx.performance?._onPipelineStart?.(globalPipelineOptions.pipelineID);
+      getPageLynx().performance?._onPipelineStart?.(globalPipelineOptions.pipelineID);
     }
     if (timingFlag) {
-      lynx.performance?._bindPipelineIdWithTimingFlag?.(globalPipelineOptions.pipelineID, timingFlag);
+      getPageLynx().performance?._bindPipelineIdWithTimingFlag?.(globalPipelineOptions.pipelineID, timingFlag);
     }
   }
 }
@@ -127,7 +128,7 @@ function resetTimingState(): void {
 
 function markTiming(timestampKey: PerformanceTimingKey, force?: boolean): void {
   if (globalPipelineOptions && (force || globalPipelineOptions.needTimestamps)) {
-    lynx.performance?._markTiming?.(globalPipelineOptions.pipelineID, timestampKey);
+    getPageLynx().performance?._markTiming?.(globalPipelineOptions.pipelineID, timestampKey);
   }
 }
 

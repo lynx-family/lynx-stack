@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { render } from 'preact';
 import { createContext, createElement } from 'preact/compat';
 import { useState } from 'preact/hooks';
 import type { Consumer, FC, ReactNode } from 'react';
@@ -11,11 +10,9 @@ import type { GlobalProps } from './core/globalProps.js';
 import { useLynxGlobalEventListener } from './core/hooks/useLynxGlobalEventListener.js';
 import { factory, withInitDataInState } from './core/initData.js';
 import type { DataProcessorDefinition, DataProcessors, InitData, InitDataRaw } from './core/lynx-data-processors.js';
-import { __root, transferMode, warnRootRenderOnTransferPage } from './root.js';
-import { profileEnd, profileStart } from './shared/profile.js';
+import { getPageLynx } from './core/page-lynx.js';
 import { LifecycleConstant } from './snapshot/lifecycle/constant.js';
 import { onFirstScreenSyncReady } from './snapshot/lifecycle/event/firstScreenSync.js';
-import { flushDelayedLifecycleEvents } from './snapshot/lynx/tt.js';
 
 /**
  * The default root exported by `@lynx-js/react` for you to render a JSX
@@ -78,54 +75,7 @@ export interface Root {
   registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition) => void;
 }
 
-/**
- * The default and only root of ReactLynx for you to render JSX
- * @example
- * ```ts
- * import { root } from "@lynx-js/react"
- * ```
- *
- * @public
- *
- * @group Functions
- */
-export const root: Root = {
-  render: (jsx: ReactNode): void => {
-    // Transfer pages render only registered components; the page root stays empty.
-    if (transferMode) {
-      warnRootRenderOnTransferPage();
-      return;
-    }
-    /* v8 ignore next 2 */
-    if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
-      __root.__jsx = jsx;
-    } else {
-      __root.__jsx = jsx;
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-        profileStart('ReactLynx::renderBackground');
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      render(jsx, __root as any);
-      if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
-        profileEnd();
-      }
-      if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady') {
-        // `jsReady` is a special case of the `manual` first-screen sync: the
-        // framework marks ready automatically once the background is ready.
-        lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
-      } else {
-        // `immediately` or `manual`: the first screen is synced without waiting
-        // for the background, so the `firstScreen` message might have been
-        // reached when `root.render()` is called asynchronously.
-        flushDelayedLifecycleEvents();
-      }
-    }
-  },
-  /* v8 ignore next 3 */
-  registerDataProcessors: (dataProcessorDefinition: DataProcessorDefinition): void => {
-    lynx.registerDataProcessors(dataProcessorDefinition);
-  },
-};
+export { root } from './default-root.js';
 
 /**
  * Mark the first screen as ready to sync when `firstScreenSyncTiming` is `'manual'`.
@@ -153,7 +103,7 @@ export function markFirstScreenSyncReady(): void {
   }
   if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
     // The sync happens on the main thread, forward the mark to it.
-    lynx.getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
+    getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
     return;
   }
   onFirstScreenSyncReady();

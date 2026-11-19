@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import type { FC } from 'react';
+import { getPageLynx } from '../../core/page-lynx.js';
 
 // for better reuse if runtime is changed
 export function factory(
@@ -14,7 +15,7 @@ export function factory(
    */
   const __ComponentIsPolyfill: FC<{ is: string }> = ({ is, ...props }) => {
     if (typeof is !== 'string') {
-      lynx.reportError(
+      getPageLynx().reportError(
         new Error(
           'You must provide a string to props `is` when using syntax `<component is=? />`.',
         ),

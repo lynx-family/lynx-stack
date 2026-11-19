@@ -6,6 +6,7 @@
  * Implements the IFR (Instant First-Frame Rendering) on main thread.
  */
 
+import { getPageLynx } from '../../core/page-lynx.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { render as renderToString } from '../renderToOpcodes/index.js';
@@ -19,7 +20,7 @@ function renderMainThread(): void {
     }
     opcodes = renderToString(__root.__jsx, undefined, __root as SnapshotInstance);
   } catch (e) {
-    lynx.reportError(e as Error);
+    getPageLynx().reportError(e as Error);
     opcodes = [];
     (__root as SnapshotInstance).removeChildren();
   } finally {
