@@ -1646,8 +1646,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       xml-formatter:
-        specifier: ^3.7.0
-        version: 3.7.0
+        specifier: ^3.7.1
+        version: 3.7.1
     devDependencies:
       '@lynx-js/config-rsbuild-plugin':
         specifier: workspace:*
@@ -13240,9 +13240,9 @@ packages:
       utf-8-validate:
         optional: true
 
-  xml-formatter@3.7.0:
-    resolution: {integrity: sha512-+8qTc3zv2UcJ1v9IsSIce37Dl4MQG14Cp7tWrwmy202UaI1wqRukw5QMX1JHsV+DX64yw77EgGsj2s5wGvuMbQ==}
-    engines: {node: '>= 16'}
+  xml-formatter@3.7.1:
+    resolution: {integrity: sha512-km3zE1tfiz7NE+5+h9jK2VvYsumFa6yBlTUZwnJ62IIK/wmZv2nUgu61yFsodOrRCTpjacLb7DqEabGnWlVfng==}
+    engines: {node: '>= 20'}
 
   xml-name-validator@5.0.0:
     resolution: {integrity: sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==}
@@ -24003,7 +24003,7 @@ snapshots:
 
   ws@8.21.3: {}
 
-  xml-formatter@3.7.0:
+  xml-formatter@3.7.1:
     dependencies:
       xml-parser-xo: 4.1.6
 
