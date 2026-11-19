@@ -3,8 +3,16 @@
 // LICENSE file in the root directory of this source tree.
 
 import { cardLifetime } from './card-lifetime.js';
+import { onRootContextSwitch } from '../render-context.js';
 
-const state = /*#__PURE__*/ cardLifetime('reloadVersion', () => ({ value: 0 }));
+let state = /*#__PURE__*/ cardLifetime('reloadVersion', () => ({ value: 0 }));
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.reloadVersionState = state,
+    (ctx) => state = ctx.reloadVersionState ??= cardLifetime('reloadVersion', () => ({ value: 0 })),
+  );
+}
 
 export function getReloadVersion(): number {
   return state.value;

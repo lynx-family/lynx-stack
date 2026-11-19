@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { getReloadVersion } from './reload-version.js';
+import { bindRootContext } from '../render-context.js';
 
 interface ReloadScope {
   reloadVersion?: number | undefined;
@@ -22,12 +23,12 @@ export function addReloadScopedEventListener<T>(
   type: string,
   listener: (data: T) => void,
 ): () => void {
-  const handle = (event: RuntimeProxy.Event): void => {
+  const handle = bindRootContext((event: RuntimeProxy.Event): void => {
     const data = JSON.parse(event.data as string) as T & ReloadScope;
     // Unversioned events belong to the initial page only.
     if ((data.reloadVersion ?? 0) !== getReloadVersion()) return;
     listener(data);
-  };
+  });
   context.addEventListener(type, handle);
   return () => {
     context.removeEventListener(type, handle);

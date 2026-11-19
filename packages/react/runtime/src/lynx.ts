@@ -70,14 +70,18 @@ if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
   initElementPAPICallAlog();
 }
 
-export function initBackgroundRuntime(): void {
-  registerAppCallbacks(getPageLynx());
+let backgroundGlobalsInitialized = false;
+
+export function initBackgroundRuntimeGlobals(): void {
+  if (backgroundGlobalsInitialized) {
+    return;
+  }
+  backgroundGlobalsInitialized = true;
 
   // Trick Preact and TypeScript to accept our custom document adapter.
   options.document = document as unknown as Document;
   options.requestAnimationFrame = lynxQueueMicrotask;
   setupBackgroundDocument();
-  addCtxNotFoundEventListener();
 
   if (process.env['NODE_ENV'] === 'test') {}
   else {
@@ -90,13 +94,18 @@ export function initBackgroundRuntime(): void {
       initProfileHook();
     }
   }
+}
 
+export function initBackgroundRuntimeForRoot(): void {
+  addCtxNotFoundEventListener();
+  registerAppCallbacks(getPageLynx());
   setupLynxEnv();
 }
 
 if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
   if (typeof __LYNX_GROUP_MODULE_SHARING__ === 'undefined' || !__LYNX_GROUP_MODULE_SHARING__) {
-    initBackgroundRuntime();
+    initBackgroundRuntimeGlobals();
+    initBackgroundRuntimeForRoot();
   }
 } else {
   setupLynxEnv();

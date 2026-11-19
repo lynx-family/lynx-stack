@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { BackgroundFunctionExecMap } from './exec-map.js';
+import { bindRootContext, onRootContextSwitch } from '../../render-context.js';
 import { isSdkVersionGt } from '../../utils.js';
 import { delayRunOnBackground } from '../../worklet-runtime/bindings/bindings.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
@@ -26,6 +27,19 @@ let execIdMap: BackgroundFunctionExecMap | undefined;
 let cleanupBackgroundFunctionRuntime: (() => void) | undefined;
 let unregisterBackgroundFunctionCleanup: (() => void) | undefined;
 
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) =>
+      ctx.backgroundFunction = [execIdMap, cleanupBackgroundFunctionRuntime, unregisterBackgroundFunctionCleanup],
+    (ctx) =>
+      [execIdMap, cleanupBackgroundFunctionRuntime, unregisterBackgroundFunctionCleanup] = ctx.backgroundFunction ?? [
+        undefined,
+        undefined,
+        undefined,
+      ],
+  );
+}
+
 function initBackgroundFunctionRuntime(): void {
   'background only';
   if (cleanupBackgroundFunctionRuntime) {
@@ -34,12 +48,13 @@ function initBackgroundFunctionRuntime(): void {
 
   execIdMap ??= new BackgroundFunctionExecMap();
   const context = getPageLynx().getCoreContext();
+  const onRelease = bindRootContext(releaseBackgroundFunctionCtx);
   const removeListener = addReloadScopedEventListener(context, WorkletEvents.runOnBackground, runBackgroundFunction);
-  context.addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
+  context.addEventListener(WorkletEvents.releaseBackgroundWorkletCtx, onRelease);
 
   cleanupBackgroundFunctionRuntime = () => {
     removeListener();
-    context.removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, releaseBackgroundFunctionCtx);
+    context.removeEventListener(WorkletEvents.releaseBackgroundWorkletCtx, onRelease);
     execIdMap!.clear();
     cleanupBackgroundFunctionRuntime = undefined;
   };

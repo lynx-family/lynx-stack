@@ -4,6 +4,7 @@
 
 import { SelectorRefProxy } from '../../../core/ref.js';
 import type { RefProxyForwardedMethods } from '../../../core/ref.js';
+import { onRootContextSwitch } from '../../../render-context.js';
 import { hydrationMap } from '../../snapshot/snapshotInstanceHydrationMap.js';
 
 /**
@@ -19,7 +20,20 @@ const shouldDelayUiOps = { value: true };
  * An array of functions that will be executed later when `runDelayedUiOps` is called.
  * These functions contain UI operations that need to be delayed.
  */
-const delayedUiOps: (() => void)[] = [];
+let delayedUiOps: (() => void)[] = [];
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => {
+      ctx.shouldDelayUiOps = shouldDelayUiOps.value;
+      ctx.delayedUiOps = delayedUiOps;
+    },
+    (ctx) => {
+      shouldDelayUiOps.value = ctx.shouldDelayUiOps ?? true;
+      delayedUiOps = ctx.delayedUiOps ??= [];
+    },
+  );
+}
 
 /**
  * Runs a task either immediately or delays it based on the `shouldDelayUiOps` flag.

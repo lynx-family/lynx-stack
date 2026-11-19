@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { process, render } from 'preact';
+import type { ReactNode } from 'react';
 
 import { runWithForce } from './runWithForce.js';
 import { updateGlobalProps as updateGlobalPropsCore } from '../../core/globalProps.js';
@@ -12,6 +13,7 @@ import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
+import { bindRootContext, getCurrentRootContext, switchRootContext } from '../../render-context.js';
 import { __root } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { CHILDREN } from '../../shared/render-constants.js';
@@ -40,17 +42,17 @@ export { runWithForce };
 
 function registerAppCallbacks(pageLynx: typeof lynx): void {
   const app = pageLynx.getApp();
-  app.OnLifecycleEvent = onLifecycleEvent;
-  app.publishEvent = delayedPublishEvent;
-  app.publicComponentEvent = delayedPublicComponentEvent;
-  app.callDestroyLifetimeFun = () => {
+  app.OnLifecycleEvent = bindRootContext(onLifecycleEvent);
+  app.publishEvent = bindRootContext(delayedPublishEvent);
+  app.publicComponentEvent = bindRootContext(delayedPublicComponentEvent);
+  app.callDestroyLifetimeFun = bindRootContext(() => {
     removeCtxNotFoundEventListener();
     destroyWorklet();
     destroyBackground();
-  };
-  app.updateGlobalProps = updateGlobalProps;
-  app.updateCardData = updateCardData;
-  app.onAppReload = reloadBackground;
+  });
+  app.updateGlobalProps = bindRootContext(updateGlobalProps);
+  app.updateCardData = bindRootContext(updateCardData);
+  app.onAppReload = bindRootContext(reloadBackground);
   app.processCardConfig = () => {
     // used to updateTheme, no longer rely on this function
   };
@@ -84,10 +86,15 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
   switch (type) {
     case LifecycleConstant.firstScreen: {
       let processErr;
+      const ctxBeforeProcess = getCurrentRootContext();
       try {
         process();
       } catch (e) {
         processErr = e;
+      }
+      if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+        // process() may render other roots via Preact's shared queue; re-assert ours.
+        switchRootContext(ctxBeforeProcess);
       }
       const { root: lepusSide, firstScreenEventIdSwap } = data as FirstScreenData;
       if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
@@ -164,13 +171,14 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       const obj = commitPatchUpdate(patchList, { isHydration: true });
       sendMTRefInitValueToMainThread();
+      const commitTaskMap = globalCommitTaskMap;
       getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
-        globalCommitTaskMap.forEach((commitTask, id) => {
+        commitTaskMap.forEach((commitTask, id) => {
           if (id > commitTaskId) {
             return;
           }
           commitTask();
-          globalCommitTaskMap.delete(id);
+          commitTaskMap.delete(id);
         });
       });
       runDelayedUiOps();
@@ -190,6 +198,28 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       getPageLynx().getApp().publishEvent(handlerName, d);
       break;
     }
+  }
+}
+
+function renderBackground(jsx: ReactNode): void {
+  __root.__jsx = jsx;
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileStart('ReactLynx::renderBackground');
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  render(jsx, __root as any);
+  if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
+    profileEnd();
+  }
+  if (__FIRST_SCREEN_SYNC_TIMING__ === 'jsReady') {
+    // `jsReady` is a special case of the `manual` first-screen sync: the
+    // framework marks ready automatically once the background is ready.
+    getPageLynx().getNativeApp().callLepusMethod(LifecycleConstant.firstScreenSyncReady, {});
+  } else {
+    // `immediately` or `manual`: the first screen is synced without waiting
+    // for the background, so the `firstScreen` message might have been
+    // reached when `root.render()` is called asynchronously.
+    flushDelayedLifecycleEvents();
   }
 }
 
@@ -265,8 +295,9 @@ function publicComponentEvent(_componentId: string, handlerName: string, data: E
 
 /** Dispatches native events to their background handlers instead of delaying them. */
 function enablePublishEvent(): void {
-  getPageLynx().getApp().publishEvent = publishEvent;
-  getPageLynx().getApp().publicComponentEvent = publicComponentEvent;
+  const app = getPageLynx().getApp();
+  app.publishEvent = bindRootContext(publishEvent);
+  app.publicComponentEvent = bindRootContext(publicComponentEvent);
 }
 
 function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
@@ -277,11 +308,11 @@ function updateGlobalProps(newData: Record<string, any>): void {
   updateGlobalPropsCore(newData, {
     // Snapshot force render consumes any sync setState dirty flags produced by
     // onGlobalPropsChanged listeners, avoiding an extra diff pass.
-    forceRerender: () => {
+    forceRerender: bindRootContext(() => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       runWithForce(() => render(__root.__jsx, __root as any));
-    },
+    }),
   });
 }
 
-export { enablePublishEvent, registerAppCallbacks, flushDelayedLifecycleEvents };
+export { enablePublishEvent, registerAppCallbacks, flushDelayedLifecycleEvents, renderBackground };

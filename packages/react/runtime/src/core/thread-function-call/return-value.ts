@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { onRootContextSwitch } from '../../render-context.js';
 import { IndexMap } from '../../shared/index-map.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
@@ -13,6 +14,18 @@ import { registerDestroyTask } from '../runtime-destroy.js';
 let resolveMap: IndexMap<(value: any) => void> | undefined;
 let cleanupReturnValueListener: (() => void) | undefined;
 let unregisterReturnValueCleanup: (() => void) | undefined;
+
+if (typeof __LYNX_GROUP_MODULE_SHARING__ !== 'undefined' && __LYNX_GROUP_MODULE_SHARING__) {
+  onRootContextSwitch(
+    (ctx) => ctx.functionCallReturn = [resolveMap, cleanupReturnValueListener, unregisterReturnValueCleanup],
+    (ctx) =>
+      [resolveMap, cleanupReturnValueListener, unregisterReturnValueCleanup] = ctx.functionCallReturn ?? [
+        undefined,
+        undefined,
+        undefined,
+      ],
+  );
+}
 
 function initReturnValueListener(): void {
   const context: RuntimeProxy = __JS__ ? getPageLynx().getCoreContext() : getPageLynx().getJSContext();
