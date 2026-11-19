@@ -29,6 +29,8 @@
       "types": "./dist/bts.d.ts",
       "default": "./dist/bts.js"
     },
+    "./iife/mts": "./dist/iife/mts.js",
+    "./iife/bts": "./dist/iife/bts.js",
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

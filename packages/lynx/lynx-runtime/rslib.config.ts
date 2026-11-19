@@ -8,12 +8,43 @@ import { pluginPublint } from 'rsbuild-plugin-publint';
 export default defineConfig({
   lib: [
     {
+      id: 'esm',
       format: 'esm',
       syntax: 'es2022',
       dts: {
         tsgo: false,
       },
       bundle: false,
+    },
+    {
+      id: 'iife',
+      format: 'iife',
+      syntax: 'es2017',
+      bundle: true,
+      autoExtension: false,
+      source: {
+        entry: {
+          mts: './src/mts.ts',
+          bts: './src/bts.ts',
+        },
+      },
+      output: {
+        target: 'web',
+        minify: true,
+        distPath: {
+          root: './dist/iife',
+        },
+      },
+      tools: {
+        rspack: {
+          output: {
+            library: {
+              name: 'LynxRuntime',
+              type: 'var',
+            },
+          },
+        },
+      },
     },
   ],
   source: {
