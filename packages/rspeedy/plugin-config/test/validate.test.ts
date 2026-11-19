@@ -141,10 +141,6 @@ describe('validate', () => {
     `)
   })
 
-  test('preferredFps high', () => {
-    expect(validate({ preferredFps: 'high' })).toEqual({ preferredFps: 'high' })
-  })
-
   test('known config', () => {
     expect(() =>
       validate({

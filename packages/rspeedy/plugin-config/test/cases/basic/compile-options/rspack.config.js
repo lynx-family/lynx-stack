@@ -12,7 +12,6 @@ export default {
       LynxTemplatePlugin,
       config: {
         engineVersion: '2.16.0',
-        preferredFps: 'high',
         enableCSSSelector: false,
       },
       compilerOptionsKeys,

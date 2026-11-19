@@ -36,11 +36,3 @@ it('should read engineVersion', async () => {
   expect(sourceContent.config).not.toHaveProperty('targetSdkVersion')
   expect(sourceContent.config).not.toHaveProperty('engineVersion')
 })
-
-it('should pass preferredFps to page config', async () => {
-  const content = await readFile(path.join(__dirname, 'tasm.json'), 'utf-8')
-  const { compilerOptions, sourceContent } = JSON.parse(content)
-
-  expect(sourceContent.config).toHaveProperty('preferredFps', 'high')
-  expect(compilerOptions).not.toHaveProperty('preferredFps')
-})

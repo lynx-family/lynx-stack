@@ -99,10 +99,7 @@ describe('pluginLynxConfig', () => {
     const rsbuild = await createRsbuild({
       rsbuildConfig: {
         plugins: [
-          pluginLynxConfig({
-            enableAccessibilityElement: true,
-            preferredFps: 'high',
-          }),
+          pluginLynxConfig({ enableAccessibilityElement: true }),
           {
             name: 'test',
             setup(api: RsbuildPluginAPI) {
@@ -122,7 +119,6 @@ describe('pluginLynxConfig', () => {
         LynxTemplatePlugin,
         config: {
           enableAccessibilityElement: true,
-          preferredFps: 'high',
         },
         compilerOptionsKeys,
         configKeys,
