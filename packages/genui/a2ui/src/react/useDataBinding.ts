@@ -21,9 +21,11 @@ import { executeFunctionCall } from '../store/resolveFunctionCall.js';
 import { coerceBoolean, coerceDynamic } from '../store/schema.js';
 import type { Surface } from '../store/types.js';
 import {
+  equalJsonValues,
   isCallExpression,
   isFunctionCall,
   isPlainDataBinding,
+  shallowEqual,
 } from '../store/utils.js';
 
 const noop = () => {
@@ -165,12 +167,18 @@ export function resolveProperties(
   previousResolved?: Record<string, unknown>,
 ) {
   if (!properties) return properties;
-  const resolve = (value: unknown, previous: unknown) =>
-    resolveDeepValue(
+  const resolve = (
+    value: unknown,
+    previous: unknown,
+    schema: Record<string, unknown> | undefined,
+  ) => {
+    let hasFunctionCall = false;
+    const resolved = resolveDeepValue(
       value,
       previous,
       (leaf) => {
         if (isFunctionCall(leaf) && surface && processor) {
+          hasFunctionCall = true;
           return resolveDynamicValue(
             processor,
             leaf,
@@ -202,6 +210,16 @@ export function resolveProperties(
         return leaf;
       },
     );
+    const next = schema
+      ? (schema['type'] === 'boolean'
+          && (isPlainDataBinding(value) || isFunctionCall(value))
+        ? coerceBoolean(resolved)
+        : coerceDynamic(resolved, schema, previous))
+      : resolved;
+    // A call can return fresh JSON on every read, including through a union
+    // or a prop with no catalog schema. Compare its final, coerced value.
+    return hasFunctionCall && equalJsonValues(next, previous) ? previous : next;
+  };
   const result: Record<string, unknown> = {};
   const componentCatalog = processor?.getCatalog(
     typeof properties['@catalogId'] === 'string'
@@ -223,13 +241,7 @@ export function resolveProperties(
       continue;
     }
     try {
-      const resolved = resolve(value, previousResolved?.[key]);
-      result[key] = schemas?.[key]
-        ? (schemas[key]['type'] === 'boolean'
-            && (isPlainDataBinding(value) || isFunctionCall(value))
-          ? coerceBoolean(resolved)
-          : coerceDynamic(resolved, schemas[key]))
-        : resolved;
+      result[key] = resolve(value, previousResolved?.[key], schemas?.[key]);
     } catch (error) {
       result[key] = null;
       if (processor && surface) {
@@ -240,20 +252,6 @@ export function resolveProperties(
   return previousResolved && shallowEqual(result, previousResolved)
     ? previousResolved
     : result;
-}
-
-function shallowEqual(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>,
-): boolean {
-  if (a === b) return true;
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-  if (keysA.length !== keysB.length) return false;
-  for (const k of keysA) {
-    if (a[k] !== b[k]) return false;
-  }
-  return true;
 }
 
 /**
@@ -278,9 +276,6 @@ export function useResolvedProps(
       functions,
       cacheRef.current ?? undefined,
     );
-    if (cacheRef.current && shallowEqual(cacheRef.current, next)) {
-      return cacheRef.current;
-    }
     cacheRef.current = next;
     return next;
   }, [properties, surface, dataContextPath, processor, functions]);
