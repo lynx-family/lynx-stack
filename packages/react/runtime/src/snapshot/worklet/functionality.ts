@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { clearMtsConfigCacheForTesting, isMtsEnabled } from '../../core/mts-capability.js';
-import { isSdkVersionGt } from '../../utils.js';
+import { isSdkVersionGt } from '../../shared/version.js';
 
 let runOnBackgroundEnabled: boolean | undefined;
 

@@ -23,8 +23,9 @@ import {
 import { transformRef, updateRef } from './ref.js';
 import { updateWorkletEvent } from './workletEvent.js';
 import { updateWorkletRef } from './workletRef.js';
-import { transformAttrName } from '../../shared/attribute-name.js';
-import { isDirectOrDeepEqual, isEmptyObject } from '../../utils.js';
+import { transformAttrName } from '../../core/attribute-name.js';
+import { isDirectOrDeepEqual } from '../../core/deep-equal.js';
+import { isEmptyObject } from '../../shared/utils.js';
 import { retainGestureWorkletCtx } from '../gesture/processGesture.js';
 import type { GestureKind } from '../gesture/types.js';
 import { ListUpdateInfoRecording } from '../list/listUpdateInfo.js';

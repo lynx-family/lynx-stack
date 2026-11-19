@@ -4,7 +4,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { isEventPropKey, isNamespacedEventPropKey, transformAttrName } from '../../src/shared/attribute-name.js';
+import { isEventPropKey, isNamespacedEventPropKey, transformAttrName } from '../../src/core/attribute-name.js';
 
 afterEach(() => {
   lynx.__runtime_configs__ = { transformBuiltinAttributeNames: false };

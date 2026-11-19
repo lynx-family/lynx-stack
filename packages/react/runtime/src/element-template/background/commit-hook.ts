@@ -19,7 +19,7 @@ import {
 } from '../../core/thread-function-call/main-thread.js';
 import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
 import { COMMIT } from '../../shared/render-constants.js';
-import { hook, isEmptyObject } from '../../utils.js';
+import { hook, isEmptyObject } from '../../shared/utils.js';
 import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { sendMTRefInitValueToMainThread } from '../main-thread-ref-init-value.js';

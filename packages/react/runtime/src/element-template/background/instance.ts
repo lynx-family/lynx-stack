@@ -10,7 +10,7 @@ import {
 import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
-import { isDirectOrDeepEqual } from '../../utils.js';
+import { isDirectOrDeepEqual } from '../../core/deep-equal.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from '../protocol/page.js';
 import { parseElementTemplateType } from '../protocol/template-type.js';

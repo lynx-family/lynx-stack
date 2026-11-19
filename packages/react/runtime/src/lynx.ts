@@ -5,11 +5,12 @@ import { options } from 'preact';
 // to make sure preact's hooks to register earlier than ours
 import './core/hooks/react.js';
 
+import { setupComponentStack } from './core/component-stack.js';
 import { document, setupBackgroundDocument } from './document.js';
-import { setupComponentStack } from './shared/component-stack.js';
+import { lynxQueueMicrotask } from './shared/microtask.js';
 import { isProfiling } from './shared/profile.js';
 import { initElementPAPICallAlog } from './snapshot/alog/elementPAPICall.js';
-import { initAlog } from './snapshot/alog/index.js';
+import { initRenderAlog } from './snapshot/alog/render.js';
 import { initProfileHook } from './snapshot/debug/profileHooks.js';
 import { setupVNodeSourceHook } from './snapshot/debug/vnodeSource.js';
 import { replaceCommitHook } from './snapshot/lifecycle/patch/commit.js';
@@ -22,7 +23,6 @@ import { initTimingAPI } from './snapshot/lynx/performance.js';
 import { injectPrepareLazyBundleMTS } from './snapshot/lynx/prepareLazyBundleMTS.js';
 import { injectTt } from './snapshot/lynx/tt.js';
 import { injectUpdateMTRefInitValue } from './snapshot/worklet/ref/updateInitValue.js';
-import { lynxQueueMicrotask } from './utils.js';
 
 export { runWithForce } from './snapshot/lynx/runWithForce.js';
 
@@ -63,7 +63,7 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__ && typeof __PROFIL
 
 if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
   // We are logging both main-thread and background.
-  initAlog();
+  initRenderAlog();
 }
 if (typeof __ALOG_ELEMENT_API__ !== 'undefined' && __ALOG_ELEMENT_API__) {
   initElementPAPICallAlog();
