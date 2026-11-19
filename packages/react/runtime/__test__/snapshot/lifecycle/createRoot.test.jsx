@@ -4,7 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createRoot } from '../../../src/internal';
+import { root } from '../../../src/index';
+import { createRoot, useLynx } from '../../../src/internal';
 import { globalEnvManager } from '../utils/envManager';
 
 function stubPage() {
@@ -15,8 +16,8 @@ function stubPage() {
 async function importWithSharing() {
   globalThis.__LYNX_GROUP_MODULE_SHARING__ = true;
   vi.resetModules();
-  const { createRoot } = await import('../../../src/internal');
-  return { ...(await import('../../../src/index')), createRoot };
+  const { createRoot, useLynx } = await import('../../../src/internal');
+  return { ...(await import('../../../src/index')), createRoot, useLynx };
 }
 
 beforeEach(() => {
@@ -56,5 +57,29 @@ describe('createRoot', () => {
     const { root } = await importWithSharing();
 
     expect(() => root.render(null)).toThrow('createRoot(lynx)');
+  });
+});
+
+describe('useLynx', () => {
+  it('falls back to the module-scope lynx without createRoot', () => {
+    let seen;
+    function Probe() {
+      seen = useLynx();
+      return null;
+    }
+    root.render(<Probe />);
+    expect(seen).toBe(lynx);
+  });
+
+  it('resolves to the lynx given to createRoot', async () => {
+    const { createRoot, useLynx } = await importWithSharing();
+    const { pageLynx } = stubPage();
+    let seen;
+    function Probe() {
+      seen = useLynx();
+      return null;
+    }
+    createRoot(pageLynx).render(<Probe />);
+    expect(seen).toBe(pageLynx);
   });
 });

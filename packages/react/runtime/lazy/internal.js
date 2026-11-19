@@ -67,6 +67,7 @@ export const {
   updateGesture,
   updateListItemPlatformInfo,
   updateWorkletRef,
+  useLynx,
   withInitDataInState,
   wrapWithLynxComponent,
 } = ReactInternal;
