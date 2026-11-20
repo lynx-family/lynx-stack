@@ -57,7 +57,7 @@ node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.
 
 ## 4. Unit Testing `.lynxml` in `node:vm`
 
-When executing `.lynxml` scripts in `node:vm` against the inlined IIFEs:
+When executing `.lynxml` scripts in `node:vm` against the inlined IIFE scripts:
 
 - **MTS mock**:
   - Provide `lynx.getNative()` (for `__DestroyLifetime`) alongside `lynx.getEngine()` and `lynx.getJSContext()`.
