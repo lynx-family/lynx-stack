@@ -73,7 +73,7 @@ Build-free `.lynxml` documents have no bundler, ESM `import`, or `<script src>`.
 # Insert or update marked inline blocks matching the installed version:
 node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs path/to/page.lynxml
 
-# Verify inline byte-for-byte parity, no mixed raw host APIs, and no MTS global-hook collisions:
+# Verify inline IIFE parity, block placement, LynxRuntime conflicts, and MTS global hook collisions:
 node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs --check path/to/page.lynxml
 ```
 

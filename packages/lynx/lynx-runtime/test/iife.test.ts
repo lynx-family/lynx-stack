@@ -345,16 +345,15 @@ function emitInRealm(target, type, payload) {
         '<script thread = \'main\' >',
         '\'use strict\';',
         'const mts = LynxRuntime;',
-        'const label = "GlobalEventEmitter";',
-        'function outer() { function renderPage() {} return renderPage; }',
-        'const expr = function updatePage() {};',
+        'const renderPage = () => 1;',
+        'function outer() { const LynxRuntime = 1; function updatePage() {} return [LynxRuntime, updatePage]; }',
+        'const expr = function getPageData() {};',
         'function isStrict() { return this === undefined; }',
-        'function mountPage(data) { record(["mts", isStrict(), data.title, label, typeof outer(), typeof expr]); }',
+        'function mountPage(data) { record(["mts", isStrict(), data.title, renderPage(), outer().length, typeof expr]); }',
         'mts.onRenderPage(mountPage);',
-        '</script>',
+        '</script >',
         '<script thread="background">',
         'const bts = LynxRuntime.bindPage();',
-        '// Comment mentioning __FlushElementTree() should be ignored.',
         'record(["bts", bts.getId()]);',
         '</script>',
         '</lynx>',
@@ -380,7 +379,7 @@ function emitInRealm(target, type, payload) {
         synced.indexOf('// BEGIN @lynx-js/lynx-runtime iife/mts'),
       );
 
-      // Clean synced file passes --check (including strings/nested functions that look like reserved names).
+      // Clean synced file passes --check (non-colliding `const renderPage`, local `const LynxRuntime`, and Native `</script >`).
       const ok = spawnSync(
         process.execPath,
         [syncScriptPath, '--check', pagePath],
@@ -396,12 +395,11 @@ function emitInRealm(target, type, payload) {
       );
       expect(secondRun).toContain('UNCHANGED');
 
-      // Execute the real extracted MTS and BTS scripts from the synced .lynxml
-      // to verify strict mode and user startup code remain intact.
-      const mtsBodyMatch = /<script thread = 'main' >([\s\S]*?)<\/script>/.exec(
-        synced,
-      );
-      const btsBodyMatch = /<script thread="background">([\s\S]*?)<\/script>/
+      // Execute both extracted scripts from the synced .lynxml (honoring
+      // Native/Web closing-tag whitespace) to verify strict mode and startup code.
+      const mtsBodyMatch = /<script thread = 'main' >([\s\S]*?)<\/script\s*>/
+        .exec(synced);
+      const btsBodyMatch = /<script thread="background">([\s\S]*?)<\/script\s*>/
         .exec(synced);
       expect(mtsBodyMatch).not.toBeNull();
       expect(btsBodyMatch).not.toBeNull();
@@ -431,9 +429,55 @@ function emitInRealm(target, type, payload) {
       });
       vm.runInContext(btsBodyMatch![1]!, btsCtx);
       expect(recorded).toEqual([
-        ['mts', true, 'synced', 'GlobalEventEmitter', 'function', 'function'],
+        ['mts', true, 'synced', 1, 2, 'function'],
         ['bts', 'synced-card'],
       ]);
+
+      // Do not split multi-line string expressions or flip sloppy `"use strict"\n+ "foo"`.
+      const exprPath = path.join(tmpDir, 'expr.lynxml');
+      fs.writeFileSync(
+        exprPath,
+        [
+          '<!doctype lynx>',
+          '<lynx engine-version="4.2">',
+          '<script thread="main">',
+          '"hello"',
+          '.toUpperCase();',
+          'result = "use strict"\n+ "foo";',
+          'sloppy = (function() { return this !== undefined; })();',
+          '</script>',
+          '<script thread="background">',
+          '"use strict"',
+          '+ "foo";',
+          'sloppy = (function() { return this !== undefined; })();',
+          '</script>',
+          '</lynx>',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      execFileSync(process.execPath, [syncScriptPath, exprPath], {
+        encoding: 'utf8',
+      });
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', exprPath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(0);
+      const exprSynced = fs.readFileSync(exprPath, 'utf8');
+      const exprMts = /<script thread="main">([\s\S]*?)<\/script>/.exec(
+        exprSynced,
+      )![1]!;
+      const exprBts = /<script thread="background">([\s\S]*?)<\/script>/.exec(
+        exprSynced,
+      )![1]!;
+      const exprMtsCtx: Record<string, unknown> = {};
+      vm.runInNewContext(exprMts, exprMtsCtx);
+      expect(exprMtsCtx['result']).toBe('use strictfoo');
+      expect(exprMtsCtx['sloppy']).toBe(true);
+      const exprBtsCtx: Record<string, unknown> = {};
+      vm.runInNewContext(exprBts, exprBtsCtx);
+      expect(exprBtsCtx['sloppy']).toBe(true);
 
       // Detect drifted IIFE body (including leading whitespace).
       fs.writeFileSync(
@@ -464,51 +508,105 @@ function emitInRealm(target, type, payload) {
         { encoding: 'utf8' },
       );
       expect(earlyCode.status).toBe(1);
-      expect(earlyCode.stderr).toContain('executable code appears before');
+      expect(earlyCode.stderr).toContain('executable code');
 
-      // Detect raw host API hidden after a string containing `//`, bracket access, plus top-level `var renderPage` collision.
+      // Reject unpaired duplicate BEGIN marker without deleting business code in between.
+      const dupBeginDoc = synced.replace(
+        '// BEGIN @lynx-js/lynx-runtime iife/mts',
+        '// BEGIN @lynx-js/lynx-runtime iife/mts (0.0.0)\nconst preserveMe = 1;\n// BEGIN @lynx-js/lynx-runtime iife/mts',
+      );
+      fs.writeFileSync(pagePath, dupBeginDoc, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).not.toBe(0);
+      expect(fs.readFileSync(pagePath, 'utf8')).toBe(dupBeginDoc);
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
+
+      // Reject a managed block wrapped inside a block comment `/* ... */`.
+      const commentedDoc = synced
+        .replace(
+          '// BEGIN @lynx-js/lynx-runtime iife/mts',
+          '/*\n// BEGIN @lynx-js/lynx-runtime iife/mts',
+        )
+        .replace(
+          '// END @lynx-js/lynx-runtime iife/mts',
+          '// END @lynx-js/lynx-runtime iife/mts\n*/',
+        );
+      fs.writeFileSync(pagePath, commentedDoc, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
+
+      // Detect MTS `var`/`function` globalThis collisions (including after a statement and hoisted `var`).
       fs.writeFileSync(
         pagePath,
-        synced
-          .replace(
-            'function mountPage',
-            'var renderPage = function() {};\nfunction mountPage',
-          )
-          .replace(
-            'const bts = LynxRuntime.bindPage();',
-            'const bts = LynxRuntime.bindPage();\nconst url = "//cdn.example"; lynx[\'getCoreContext\']();',
-          ),
+        synced.replace(
+          'function mountPage',
+          'init()\nfunction updatePage() {}\nif (true) { var processData = function(d) { return d; }; }\nfunction mountPage',
+        ),
         'utf8',
       );
-      const violated = spawnSync(
+      const hookCollision = spawnSync(
         process.execPath,
         [syncScriptPath, '--check', pagePath],
         { encoding: 'utf8' },
       );
-      expect(violated.status).toBe(1);
-      expect(violated.stderr).toContain('collides with @lynx-js/lynx-runtime');
-      expect(violated.stderr).toContain('mixes raw host API');
+      expect(hookCollision.status).toBe(1);
+      expect(hookCollision.stderr).toContain('`updatePage`');
+      expect(hookCollision.stderr).toContain('`processData`');
 
-      // Refuse unmarked `var LynxRuntime` on a shared line without deleting business code.
-      const unmarkedPath = path.join(tmpDir, 'unmarked.lynxml');
-      const unmarkedDoc = [
-        '<!doctype lynx>',
-        '<lynx engine-version="4.2">',
-        '<script thread="main">',
-        'var LynxRuntime;(()=>{})();const keepBusinessCode = 1;',
-        '</script>',
-        '</lynx>',
-        '',
-      ].join('\n');
-      fs.writeFileSync(unmarkedPath, unmarkedDoc, 'utf8');
-      const refused = spawnSync(
-        process.execPath,
-        [syncScriptPath, unmarkedPath],
-        { encoding: 'utf8' },
+      // Detect an unmarked runtime copy appended after an already-marked block on both sync and --check.
+      const extraCopyDoc = synced.replace(
+        'mts.onRenderPage(mountPage);',
+        `mts.onRenderPage(mountPage);\n${readIife(btsIifePath).trim()}`,
       );
-      expect(refused.status).not.toBe(0);
-      expect(refused.stderr).toContain('unmarked');
-      expect(fs.readFileSync(unmarkedPath, 'utf8')).toBe(unmarkedDoc);
+      fs.writeFileSync(pagePath, extraCopyDoc, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).not.toBe(0);
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
+
+      // Refuse unmarked `var LynxRuntime` on a shared line or top-level `class LynxRuntime` without modifying files.
+      for (
+        const snippet of [
+          'var LynxRuntime;(()=>{})();const keepBusinessCode = 1;',
+          'class LynxRuntime {}',
+        ]
+      ) {
+        const conflictPath = path.join(tmpDir, 'conflict.lynxml');
+        const conflictDoc = [
+          '<!doctype lynx>',
+          '<lynx engine-version="4.2">',
+          '<script thread="main">',
+          snippet,
+          '</script>',
+          '</lynx>',
+          '',
+        ].join('\n');
+        fs.writeFileSync(conflictPath, conflictDoc, 'utf8');
+        const refused = spawnSync(
+          process.execPath,
+          [syncScriptPath, conflictPath],
+          { encoding: 'utf8' },
+        );
+        expect(refused.status).not.toBe(0);
+        expect(refused.stderr).toContain('LynxRuntime');
+        expect(fs.readFileSync(conflictPath, 'utf8')).toBe(conflictDoc);
+      }
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
