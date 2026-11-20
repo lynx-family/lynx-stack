@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  accessibilityAnnounceEndpoint,
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchDevtoolEventOnBackgroundEndpoint,
   dispatchDevtoolEventOnMainThreadEndpoint,
@@ -13,7 +14,7 @@ import {
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
 import { createElement } from './createElement.js';
-import type { Cloneable, NativeApp } from '../../../types/index.js';
+import type { Cloneable, InvokeCallbackRes, NativeApp } from '../../../types/index.js';
 import { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
 export function createBackgroundLynx(
@@ -34,6 +35,10 @@ export function createBackgroundLynx(
   });
   const fetchExternalBundle = mainThreadRpc.createCall(
     fetchExternalBundleEndpoint,
+  );
+  const accessibilityAnnounceCallbackify = mainThreadRpc.createCallbackify(
+    accessibilityAnnounceEndpoint,
+    1,
   );
   return {
     __globalProps: globalProps,
@@ -73,6 +78,15 @@ export function createBackgroundLynx(
     ) => nativeApp.queryComponent(source, callback),
     reload: () => {
       mainThreadRpc.invoke(reloadEndpoint, []);
+    },
+    accessibilityAnnounce(
+      params: { content: string },
+      callback?: (res: InvokeCallbackRes) => void,
+    ) {
+      accessibilityAnnounceCallbackify(
+        params.content,
+        callback ?? (() => {}),
+      );
     },
     fetchBundle(url: string) {
       return fetchExternalBundle(url);
