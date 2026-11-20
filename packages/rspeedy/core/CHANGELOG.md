@@ -1,5 +1,18 @@
 # @lynx-js/rspeedy
 
+## 0.19.0
+
+### Minor Changes
+
+- Upgrade Rspack, Rsbuild, Rslib, and Rstest as one compatible toolchain. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+
+### Patch Changes
+
+- Updated dependency `@rsbuild/core` to `2.3.3`. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+  Updated dependency `@rspack/lite-tapable` to `1.3.0`.
+- Updated dependencies [[`7af903b`](https://github.com/lynx-family/lynx-stack/commit/7af903b087335b5ff07e30ecee6368651827373b), [`a15eef3`](https://github.com/lynx-family/lynx-stack/commit/a15eef3aafec495999f65f95d27c55a545bd44c1)]:
+  - @lynx-js/rsbuild-plugin@0.2.0
+
 ## 0.18.6
 
 ### Patch Changes

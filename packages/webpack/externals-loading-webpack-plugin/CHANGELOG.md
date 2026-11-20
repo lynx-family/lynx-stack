@@ -1,5 +1,14 @@
 # @lynx-js/externals-loading-webpack-plugin
 
+## 0.4.0
+
+### Minor Changes
+
+- Fetch external bundles on first import instead of prefetching unused bundles during startup. Preserve synchronous exports and asynchronous Promise semantics, including runtime-selected loading modes. ([#4363](https://github.com/lynx-family/lynx-stack/pull/4363))
+
+  Propagate fetch failures to the importing module instead of leaving its loading Promise pending.
+- Support standalone runtime URL resolvers evaluated on first import. String results preserve native synchronous loading, while Promise results support asynchronous URL delivery. Keep fixed URLs and bundlePath loading unchanged. ([#4370](https://github.com/lynx-family/lynx-stack/pull/4370))
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @lynx-js/web-elements
 
+## 0.12.19
+
+### Patch Changes
+
+- Updated dependency `dompurify` to `^3.4.18`. ([#4373](https://github.com/lynx-family/lynx-stack/pull/4373))
+
+- Updated dependency `markdown-it` to `^15.0.3`. ([#4203](https://github.com/lynx-family/lynx-stack/pull/4203))
+
 ## 0.12.18
 
 ### Patch Changes
