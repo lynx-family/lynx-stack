@@ -50,7 +50,7 @@ node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.
 ## 3. Essential Usage Rules
 
 1. **Avoid reserved top-level names in classic `<script thread="main">`**: Lazy MTS activation binds `globalThis.renderPage`, `updatePage`, `updateGlobalProps`, `processData`, `getPageData`, and `removeComponents`. Top-level declarations with those names in a classic script share `globalThis` and will be overwritten (causing infinite recursion if passed to `mts.onRenderPage(renderPage)`). Name page callbacks distinctly (e.g. `mountPage`, `onPageUpdate`).
-2. **Keep Runtime as the sole host bridge**: Use `@lynx-js/lynx-runtime` consistently for lifecycle, messaging, `GlobalProps`, global events, and flushing rather than mixing raw `lynx.getEngine()`, `lynx.getJSContext()`, `lynx.getCoreContext()`, `GlobalEventEmitter`, or `__FlushElementTree()` calls on the same page (`sync-lynxml.mjs --check` enforces this for `.lynxml`).
+2. **Keep Runtime as the sole host bridge**: Use `@lynx-js/lynx-runtime` consistently for lifecycle, messaging, `GlobalProps`, global events, and flushing rather than mixing raw `lynx.getEngine()`, `lynx.getJSContext()`, `lynx.getCoreContext()`, `GlobalEventEmitter`, or `__FlushElementTree()` calls on the same page (`sync-lynxml.mjs --check` catches direct dot/bracket calls in `.lynxml`).
 3. **Read `onMessage` payloads directly**: `onMessage(type, (data) => ...)` delivers the message `data` directly (not wrapped in `{ type, data }`).
 4. **Use `isDestroyed()` in async callbacks, not inside `onDestroy`**: When `onDestroy` callbacks run, `isDestroyed()` is already `true`—run cleanup unconditionally inside `onDestroy`, and guard async callbacks (timers, network, JSB) with `if (isDestroyed()) return;` before calling Runtime APIs.
 5. **Check host SDK boundaries for MTS `onDestroy` and BTS `onUpdateData`**: Before relying on MTS teardown hooks or direct BTS `onUpdateData()` delivery on older hosts, verify your target SDK / bundle DSL against `README.md`.
@@ -64,5 +64,5 @@ When executing `.lynxml` scripts in `node:vm` against the inlined IIFE scripts:
   - Dispatch engine inputs as `{ data: [payload, options] }`. Construct `options` **inside the VM realm** (for example, `vm.runInContext('({ data: [{}, { timingFlag: "t" }] })', ctx)`) so cross-realm `Object.prototype` checks in `flushElementTree(options)` pass.
 - **BTS mock**:
   - Provide `lynx.getApp()` returning an app object with `callDestroyLifetimeFun()`, plus `removeEventListener` on `getCoreContext()` and `removeListener` on `getJSModule()`.
-  - Trigger teardown via `native.__DestroyLifetime()` (MTS) and `app.callDestroyLifetimeFun()` (BTS).
-  - `onMessage` and `onGlobalEvent` wrappers return `undefined` (they do not propagate async listener Promises), so flush microtasks/turns (`await new Promise(r => setImmediate(r))`) when asserting async handler completion.
+  - Trigger teardown by dispatching `'__DestroyLifetime'` on the `lynx.getNative()` proxy (MTS) and calling `app.callDestroyLifetimeFun()` (BTS).
+  - `onMessage` and `onGlobalEvent` return an `Unsubscribe` disposer, and their host-invoked listener wrappers return `undefined` (ignoring async listener Promises), so flush microtasks/turns (`await new Promise(r => setImmediate(r))`) when asserting async handler completion.
