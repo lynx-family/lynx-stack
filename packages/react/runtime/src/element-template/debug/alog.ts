@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { BackgroundElementTemplateInstance } from '../background/instance.js';
+import type { BackgroundElementTemplateInstance } from '../background/shadow-instance.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { destroyElementTemplateBackgroundRuntime } from '../../../../src/element-template/background/destroy.js';
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import {
   clearEventState,

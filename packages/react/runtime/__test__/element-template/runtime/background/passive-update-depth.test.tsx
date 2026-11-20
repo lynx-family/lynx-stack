@@ -11,8 +11,8 @@ import { resetElementTemplateCommitState } from '../../../../src/element-templat
 import {
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
   BackgroundElementTemplateInstance,
-  BackgroundPageRootInstance,
-} from '../../../../src/element-template/background/instance.js';
+} from '../../../../src/element-template/background/shadow-instance.js';
+import { BackgroundPageRootInstance } from '../../../../src/element-template/background/typed-instance.js';
 import { root, useEffect, useState } from '../../../../src/element-template/index.js';
 import { clearRefState } from '../../../../src/element-template/prop-adapters/ref.js';
 import { __root } from '../../../../src/element-template/runtime/page/root-instance.js';

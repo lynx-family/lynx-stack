@@ -10,29 +10,20 @@ import {
 import { globalCommitContext, markRemovedSubtreeForPostDispatchTeardown } from './commit-context.js';
 import { isElementTemplateHydrated } from './commit-hook.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
+import { collectElementTemplateSubtreeHandleIds, collectMainThreadRefSubtreeHandleIds } from './subtree-handles.js';
 import { isDirectOrDeepEqual } from '../../core/deep-equal.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
-import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID, ELEMENT_TEMPLATE_PAGE_TYPE } from '../protocol/page.js';
+import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
 import { parseElementTemplateType } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
-  RuntimeOptionsCommand,
   SerializableValue,
-  TypedElementAttributesCommand,
-  UpdateTypedListItemCommand,
 } from '../protocol/types.js';
 import { filterListItemPlatformInfoFromSpread } from '../runtime/list/platform-info.js';
-import type { AuthoredPageAttributes } from '../runtime/page/authored-page.js';
-import { hasMainThreadRefAttrSlot } from '../runtime/template/attr-slot-plan.js';
 import type { EtAttrPlan } from '../runtime/template/attr-slot-plan.js';
-import {
-  TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
-  TYPED_ELEMENT_ATTR_PLAN,
-  TYPED_LIST_ATTR_PLAN,
-} from '../runtime/template/typed-attributes.js';
 
-function pushOp(...items: ElementTemplateUpdateCommandStream): void {
+export function pushElementTemplateOp(...items: ElementTemplateUpdateCommandStream): void {
   globalCommitContext.ops.push(...items);
 }
 
@@ -55,7 +46,16 @@ function stringifyRawTextValue(value: SerializableValue | undefined): string {
 const EMPTY_LIST_ITEM_PLATFORM_INFO: Record<string, SerializableValue> = {};
 const EMPTY_REMOVED_SUBTREE_HANDLE_IDS: number[] = [];
 
+export interface LogicalListContainerInstance extends BackgroundElementTemplateInstance {
+  readonly isLogicalListContainer: true;
+  notifyLogicalChildUpdated(
+    child: BackgroundElementTemplateInstance,
+    isUpdatePlatformInfo: boolean,
+  ): void;
+}
+
 export class BackgroundElementTemplateInstance {
+  public readonly isLogicalListContainer: boolean = false;
   public instanceId: number = 0; // Assigned by manager
   public type: string;
 
@@ -70,7 +70,7 @@ export class BackgroundElementTemplateInstance {
   // Shadow State for Hydration
   public attributeSlots: SerializableValue[];
   private rawAttributeSlots: readonly unknown[] | undefined;
-  protected isMaterializedOnMainThread = false;
+  protected isMaterializedOnMainThread: boolean = false;
   private listItemPlatformInfo: Record<string, SerializableValue> | undefined;
 
   get parentNode(): BackgroundElementTemplateInstance | null {
@@ -131,7 +131,7 @@ export class BackgroundElementTemplateInstance {
       lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
       return;
     }
-    this.restoreManagerRegistration();
+    backgroundElementTemplateInstanceManager.restoreRegistration(this);
 
     // Walk the linked-list children once to build the slot-indexed handle list
     // for the createTemplate op. Going via `this.childSlots` would allocate
@@ -146,7 +146,7 @@ export class BackgroundElementTemplateInstance {
 
     // Pass List item platform info to native with the create command for
     // serialization and List diffing.
-    pushOp(
+    pushElementTemplateOp(
       ElementTemplateUpdateOps.createTemplate,
       this.instanceId,
       nativeTemplate.templateKey,
@@ -186,23 +186,8 @@ export class BackgroundElementTemplateInstance {
     this.releaseSubtreeFromManager();
   }
 
-  private restoreManagerRegistration(): void {
-    const instances = backgroundElementTemplateInstanceManager.values;
-    const existing = instances.get(this.instanceId);
-    if (existing === this) {
-      return;
-    }
-    if (existing) {
-      throw new Error(`ElementTemplate handleId ${this.instanceId} is already bound.`);
-    }
-    instances.set(this.instanceId, this);
-  }
-
   private releaseSubtreeFromManager(): void {
-    const instances = backgroundElementTemplateInstanceManager.values;
-    if (instances.get(this.instanceId) === this) {
-      instances.delete(this.instanceId);
-    }
+    backgroundElementTemplateInstanceManager.unregister(this);
     let child = this.firstChild;
     while (child) {
       child.releaseSubtreeFromManager();
@@ -282,11 +267,11 @@ export class BackgroundElementTemplateInstance {
     const previousParent = child.parent;
     if (previousParent) {
       const shouldRecordOldListRemove = previousParent !== this
-        && previousParent instanceof BackgroundListElementTemplateInstance
+        && previousParent.isLogicalListContainer
         && previousParent.canEmitUpdatePatch();
       previousParent.removeChild(child, true);
       if (shouldRecordOldListRemove) {
-        pushOp(
+        pushElementTemplateOp(
           ElementTemplateUpdateOps.removeNode,
           previousParent.instanceId,
           0,
@@ -327,7 +312,7 @@ export class BackgroundElementTemplateInstance {
     const containingListItem = getContainingListItem(child);
     const movedMainThreadRefHandleIds = collectMainThreadRefSubtreeHandleIds(child);
     child.emitMainThreadCreateIfNeeded();
-    pushOp(
+    pushElementTemplateOp(
       ElementTemplateUpdateOps.insertNode,
       this.instanceId,
       child.__slotIndex,
@@ -373,7 +358,7 @@ export class BackgroundElementTemplateInstance {
     }
     const canEmitUpdatePatch = this.canEmitUpdatePatch();
     if (canEmitUpdatePatch) {
-      pushOp(
+      pushElementTemplateOp(
         ElementTemplateUpdateOps.removeNode,
         this.instanceId,
         slotId,
@@ -410,10 +395,7 @@ export class BackgroundElementTemplateInstance {
     this.attributeSlots = [];
     this.rawAttributeSlots = undefined;
 
-    // Remove from manager
-    if (backgroundElementTemplateInstanceManager.values.get(this.instanceId) === this) {
-      backgroundElementTemplateInstanceManager.values.delete(this.instanceId);
-    }
+    backgroundElementTemplateInstanceManager.unregister(this);
   }
 
   queueRefCleanupForSubtree(): void {
@@ -533,7 +515,7 @@ export class BackgroundElementTemplateInstance {
         if (isDirectOrDeepEqual(previousValue, nextValue)) {
           continue;
         }
-        pushOp(
+        pushElementTemplateOp(
           getAttributeSlotUpdateOp(this.type, slotIndex),
           this.instanceId,
           slotIndex,
@@ -559,7 +541,7 @@ export class BackgroundElementTemplateInstance {
     if (!this.canEmitUpdatePatch()) {
       return;
     }
-    pushOp(ElementTemplateUpdateOps.setAttribute, this.instanceId, 0, text);
+    pushElementTemplateOp(ElementTemplateUpdateOps.setAttribute, this.instanceId, 0, text);
   }
 
   get data(): string {
@@ -580,7 +562,7 @@ export function getContainingListItem(
   let child: BackgroundElementTemplateInstance = instance;
   let parent = child.parent;
   while (parent) {
-    if (parent instanceof BackgroundListElementTemplateInstance) {
+    if (parent.isLogicalListContainer) {
       return child;
     }
     child = parent;
@@ -593,227 +575,10 @@ function notifyListItemSubtreeUpdated(
   listItem: BackgroundElementTemplateInstance,
   isUpdatePlatformInfo: boolean,
 ): void {
-  if (listItem.parent instanceof BackgroundListElementTemplateInstance) {
-    listItem.parent.emitTypedListItemUpdate(listItem, isUpdatePlatformInfo);
-  }
-}
-
-export class BackgroundTypedElementTemplateInstance extends BackgroundElementTemplateInstance {
-  constructor(type: string) {
-    super(type);
-    this.attributeSlots = [null];
-  }
-
-  override emitCreate(): void {
-    if (this.isMaterializedOnMainThread) {
-      return;
-    }
-    if (__DEV__ && this.instanceId === ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
-      lynx.reportError(new Error('ElementTemplate patch has illegal handleId 0.'));
-      return;
-    }
-
-    pushOp(
-      ElementTemplateUpdateOps.createTypedElement,
-      this.instanceId,
-      this.type,
-      this.getTypedAttributesForCreate(),
-      this.getChildSlotsForCreate(),
-      this.getRuntimeOptionsForCreate(),
+  if (listItem.parent?.isLogicalListContainer) {
+    (listItem.parent as LogicalListContainerInstance).notifyLogicalChildUpdated(
+      listItem,
+      isUpdatePlatformInfo,
     );
-    this.isMaterializedOnMainThread = true;
-  }
-
-  override setAttribute(key: string, value: unknown): void {
-    if (key !== 'attributes') {
-      super.setAttribute(key, value);
-      return;
-    }
-    super.setAttribute('attributeSlots', [value]);
-  }
-
-  protected getTypedAttributesForCreate(): TypedElementAttributesCommand | null {
-    return this.attributeSlots[TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX] as TypedElementAttributesCommand | null;
-  }
-
-  protected override getAttributeSlotPlan(): EtAttrPlan {
-    return TYPED_ELEMENT_ATTR_PLAN;
-  }
-
-  protected getChildSlotsForCreate(): ElementTemplateHandleSlotsCommand | null {
-    return null;
-  }
-
-  protected getRuntimeOptionsForCreate(): RuntimeOptionsCommand | null {
-    return null;
-  }
-}
-
-export class BackgroundPageRootInstance extends BackgroundTypedElementTemplateInstance {
-  // Preact may render a keyed replacement before running the old Page's cleanup.
-  // Only the current helper lifetime may clear the shared root attributes.
-  private authoredPageLifetime: object | undefined;
-
-  constructor() {
-    super(ELEMENT_TEMPLATE_PAGE_TYPE);
-    backgroundElementTemplateInstanceManager.registerPageRoot(this);
-    this.isMaterializedOnMainThread = true;
-  }
-
-  setAuthoredPageAttributes(
-    lifetime: object,
-    attributes: AuthoredPageAttributes,
-  ): void {
-    this.authoredPageLifetime = lifetime;
-    this.setAttribute('attributes', attributes);
-  }
-
-  clearAuthoredPageAttributes(lifetime: object): void {
-    if (this.authoredPageLifetime !== lifetime) {
-      return;
-    }
-    this.authoredPageLifetime = undefined;
-    this.setAttribute('attributes', null);
-  }
-
-  reconcileAuthoredPageAttributesOnHydration(
-    mainThreadAttributes: TypedElementAttributesCommand | null,
-  ): void {
-    const backgroundAttributes = this.attributeSlots[TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX] as
-      | TypedElementAttributesCommand
-      | null;
-    if (isDirectOrDeepEqual(mainThreadAttributes, backgroundAttributes)) {
-      return;
-    }
-    pushOp(
-      ElementTemplateUpdateOps.setAttribute,
-      this.instanceId,
-      TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX,
-      backgroundAttributes,
-    );
-  }
-}
-
-export class BackgroundListElementTemplateInstance extends BackgroundTypedElementTemplateInstance {
-  constructor() {
-    super('list');
-  }
-
-  override emitCreate(): void {
-    // Skip creation and candidate initialization for an existing List.
-    if (this.isMaterializedOnMainThread) {
-      return;
-    }
-    // The base class emits the List create command with the initial item UIDs
-    // in childSlots.
-    super.emitCreate();
-    // Queue initial ref candidates after the List create command has been
-    // emitted.
-    if (!this.isMaterializedOnMainThread) {
-      return;
-    }
-    let item = this.firstChild;
-    while (item) {
-      // Collect main-thread ref candidates separately for each direct item.
-      // Passing false sends only ref candidates and leaves platformInfo null.
-      pushOp(
-        ElementTemplateUpdateOps.updateTypedListItem,
-        this.instanceId,
-        toUpdateTypedListItemCommand(item, false),
-      );
-      item = item.nextSibling;
-    }
-  }
-
-  protected override getAttributeSlotPlan(): EtAttrPlan {
-    return TYPED_LIST_ATTR_PLAN;
-  }
-
-  protected override getChildSlotsForCreate(): ElementTemplateHandleSlotsCommand {
-    const childSlots: ElementTemplateHandleSlotsCommand = [];
-    let child = this.firstChild;
-    while (child) {
-      // Group child UIDs by their logical slot.
-      // Direct List children belong to slot 0, which MTS validates.
-      (childSlots[child.__slotIndex] ??= []).push(child.instanceId);
-      child = child.nextSibling;
-    }
-    return childSlots;
-  }
-
-  emitTypedListItemUpdate(child: BackgroundElementTemplateInstance, isUpdatePlatformInfo: boolean): void {
-    if (!isElementTemplateHydrated() || !this.isMaterializedOnMainThread) {
-      return;
-    }
-    pushOp(
-      ElementTemplateUpdateOps.updateTypedListItem,
-      this.instanceId,
-      toUpdateTypedListItemCommand(child, isUpdatePlatformInfo),
-    );
-  }
-}
-
-export function toUpdateTypedListItemCommand(
-  child: BackgroundElementTemplateInstance,
-  isUpdatePlatformInfo: boolean,
-): UpdateTypedListItemCommand {
-  return {
-    __etHandleRef: child.instanceId,
-    type: child.type,
-    platformInfo: isUpdatePlatformInfo ? child.getListItemPlatformInfo() : null,
-    subtreeHandleIds: isUpdatePlatformInfo
-      ? null
-      : collectMainThreadRefSubtreeHandleIds(child) ?? [],
-  };
-}
-
-export function collectElementTemplateSubtreeHandleIds(
-  root: BackgroundElementTemplateInstance,
-): number[] {
-  const handles: number[] = [];
-  collectElementTemplateSubtreeHandleIdsImpl(root, handles);
-  return handles;
-}
-
-export function collectMainThreadRefSubtreeHandleIds(
-  root: BackgroundElementTemplateInstance,
-): number[] | null {
-  return collectMainThreadRefSubtreeHandleIdsImpl(root, null);
-}
-
-function collectMainThreadRefSubtreeHandleIdsImpl(
-  instance: BackgroundElementTemplateInstance,
-  handles: number[] | null,
-): number[] | null {
-  if (hasMainThreadRefAttrSlot(instance.type)) {
-    handles ??= [];
-    handles.push(instance.instanceId);
-  }
-
-  // The List's own ref is collected above. Item refs follow their own
-  // materialization and binding lifecycle.
-  if (instance instanceof BackgroundListElementTemplateInstance) {
-    return handles;
-  }
-
-  let child = instance.firstChild;
-  while (child) {
-    handles = collectMainThreadRefSubtreeHandleIdsImpl(child, handles);
-    child = child.nextSibling;
-  }
-  return handles;
-}
-
-function collectElementTemplateSubtreeHandleIdsImpl(
-  instance: BackgroundElementTemplateInstance,
-  handles: number[],
-): void {
-  if (instance.instanceId !== ELEMENT_TEMPLATE_PAGE_HANDLE_ID) {
-    handles.push(instance.instanceId);
-  }
-  let child = instance.firstChild;
-  while (child) {
-    collectElementTemplateSubtreeHandleIdsImpl(child, handles);
-    child = child.nextSibling;
   }
 }

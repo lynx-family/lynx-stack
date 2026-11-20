@@ -12,7 +12,7 @@ import '../../../../../src/element-template/native/index.js';
 import {
   BackgroundElementTemplateInstance,
   BUILTIN_RAW_TEXT_TEMPLATE_KEY,
-} from '../../../../../src/element-template/background/instance.js';
+} from '../../../../../src/element-template/background/shadow-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../../src/element-template/background/manager.js';
 import { root } from '../../../../../src/element-template/index.js';
 import {
