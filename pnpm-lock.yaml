@@ -473,6 +473,9 @@ importers:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../packages/rspeedy/lynx-bundle-rslib-config
+      '@lynx-js/lynx-xml':
+        specifier: workspace:*
+        version: link:../packages/lynx-xml
       '@lynx-js/motion':
         specifier: workspace:*
         version: link:../packages/motion
@@ -1856,6 +1859,15 @@ importers:
         specifier: 0.2.1
         version: 0.2.1(@rsbuild/core@2.3.3(core-js@3.50.0))(i18next-cli@1.67.7(@swc/helpers@0.5.24)(@types/node@24.13.3)(react-dom@19.3.0(react@19.3.0))(typescript@6.0.3))(rollup@4.62.2)
 
+  packages/lynx-xml:
+    devDependencies:
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.59.4(@types/node@24.13.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.12.6(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@31.0.1)
+
   packages/lynx/autolink-codegen:
     devDependencies:
       typescript:
@@ -2724,6 +2736,9 @@ importers:
       '@lynx-js/lynx-stack-docs':
         specifier: workspace:*
         version: link:../../../docs
+      '@lynx-js/lynx-xml':
+        specifier: workspace:*
+        version: link:../../lynx-xml
       '@lynx-js/motion':
         specifier: workspace:*
         version: link:../../motion
@@ -3064,6 +3079,9 @@ importers:
       '@lynx-js/css-serializer':
         specifier: workspace:*
         version: link:../../tools/css-serializer
+      '@lynx-js/lynx-xml':
+        specifier: workspace:*
+        version: link:../../lynx-xml
       '@lynx-js/web-elements':
         specifier: workspace:*
         version: link:../web-elements
