@@ -30,8 +30,9 @@ import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
   hydrate,
+  hydrateCompact,
 } from '../snapshot/backgroundSnapshot.js';
-import type { SerializedSnapshotInstance } from '../snapshot/types.js';
+import { isCompactSnapshotSerialization, parseSnapshotSerialization } from '../snapshot/compactSnapshot.js';
 import { destroyWorklet } from '../worklet/destroy.js';
 import { sendMTRefInitValueToMainThread } from '../worklet/ref/updateInitValue.js';
 
@@ -94,7 +95,7 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       beginPipeline(true, PipelineOrigins.reactLynxHydrate, PerformanceTimingFlags.reactLynxHydrate);
       markTiming('hydrateParseSnapshotStart');
-      const before = JSON.parse(lepusSide) as SerializedSnapshotInstance;
+      const before = parseSnapshotSerialization(lepusSide);
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] MTS -> BTS OnLifecycleEvent:\n' + JSON.stringify(
@@ -118,10 +119,9 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
       }
       markTiming('hydrateParseSnapshotEnd');
       markTiming('diffVdomStart');
-      const snapshotPatch = hydrate(
-        before,
-        __root as BackgroundSnapshotInstance,
-      );
+      const snapshotPatch = isCompactSnapshotSerialization(before)
+        ? hydrateCompact(before, __root as BackgroundSnapshotInstance)
+        : hydrate(before, __root as BackgroundSnapshotInstance);
       if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
         console.alog?.(
           '[ReactLynxDebug] BackgroundSnapshotInstance after hydration:\n'
