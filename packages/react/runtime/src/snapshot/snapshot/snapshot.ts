@@ -295,10 +295,12 @@ export class SnapshotInstance {
   takeElements(): SnapshotInstance {
     const a = Object.create(SnapshotInstance.prototype) as SnapshotInstance;
 
+    a.type = this.type;
     a.__id = this.__id;
     a.__snapshot_def = this.__snapshot_def;
     a.__values = this.__values;
     a.__slotIndex = this.__slotIndex;
+    a.__listItemPlatformInfo = this.__listItemPlatformInfo;
 
     // all clear
     a.__parent = null;

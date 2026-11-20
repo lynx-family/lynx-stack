@@ -4922,7 +4922,7 @@ describe('nested list element ownership after outer row reuse', () => {
     const listSnapshot = __SNAPSHOT__(<list>{HOLE}</list>);
     const rowSnapshot = __SNAPSHOT__(<list-item item-key={HOLE} reuse-identifier='row'>{HOLE}</list-item>);
     const cellSnapshot = __SNAPSHOT__(
-      <list-item item-key={HOLE}>
+      <list-item item-key={HOLE} reuse-identifier='cell'>
         <raw-text text={HOLE} />
       </list-item>,
     );
@@ -4932,7 +4932,7 @@ describe('nested list element ownership after outer row reuse', () => {
       row.setAttribute(0, { 'item-key': `row-${index}` });
       const inner = new SnapshotInstance(listSnapshot);
       const cell = new SnapshotInstance(cellSnapshot);
-      cell.setAttribute(0, { 'item-key': `cell-${index}` });
+      cell.setAttribute(0, { 'item-key': `cell-${index}`, 'reuse-identifier': 'cell' });
       cell.setAttribute(1, `cell-${index}`);
       inner.insertBefore(cell);
       row.insertBefore(inner);
@@ -4960,7 +4960,7 @@ describe('nested list element ownership after outer row reuse', () => {
     expect(show(outerList, 1)).toBe(oldRowSign);
     expect(row1.inner.__element_root).toBe(oldInnerList);
     recycle(oldInnerList, oldCellSign);
-    const oldCellPool = gRecycleMap[__GetElementUniqueID(oldInnerList)].get(cell0Instance.type);
+    const oldCellPool = gRecycleMap[__GetElementUniqueID(oldInnerList)].get(`${cell0Instance.type}cell`);
     expect(oldCellPool.get(oldCellSign)).toBe(cell0Instance);
     expect(cell0Instance.__element_root).toBe(oldCellElement);
 
@@ -5016,11 +5016,9 @@ describe('nested list element ownership after outer row reuse', () => {
     expect(cell0Instance.__element_root).toBe(newCellElement);
 
     recycle(oldInnerList, oldCellSign);
-    const recycledInstances = [...gRecycleMap[__GetElementUniqueID(oldInnerList)].values()]
-      .flatMap(pool => [...pool.values()]);
-    expect(recycledInstances).toContain(transferredCellInstance);
-    expect(recycledInstances).not.toContain(cell0Instance);
-    expect(transferredCellInstance.__element_root).toBe(oldCellElement);
+    expect(show(oldInnerList, 0)).toBe(oldCellSign);
+    expect(row1.cell.__element_root).toBe(oldCellElement);
+    expect(text(oldCellElement)).toBe('cell-1');
     expect(cell0Instance.__element_root).toBe(newCellElement);
     expect(text(newCellElement)).toBe('cell-0');
   });
