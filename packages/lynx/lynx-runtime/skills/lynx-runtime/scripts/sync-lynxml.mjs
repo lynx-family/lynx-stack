@@ -82,7 +82,7 @@ const BTS_WRAPPER_PARAMS = [
   'global',
   'requestAnimationFrame',
   'cancelAnimationFrame',
-].join(', ');
+];
 
 function isASCIIWhitespace(ch) {
   return ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r'
@@ -311,15 +311,18 @@ function parseLynxScriptBlocks(source, filePath) {
   return [...seenScripts.values()];
 }
 
-function wrapForThread(code, attr) {
-  return attr === 'background'
-    ? `(function(${BTS_WRAPPER_PARAMS}) {\n${code}\n})`
-    : code;
-}
-
+/**
+ * Pure compile-only check in the thread's real V8 compilation scope:
+ * classic script for MTS, `vm.compileFunction` body for BTS (no string wrapping
+ * and no execution of page source).
+ */
 function parsesForThread(code, attr) {
   try {
-    new vm.Script(wrapForThread(code, attr));
+    if (attr === 'background') {
+      vm.compileFunction(code, BTS_WRAPPER_PARAMS);
+    } else {
+      new vm.Script(code);
+    }
     return true;
   } catch {
     return false;
@@ -333,19 +336,6 @@ function parsesForThread(code, attr) {
 function isStrictScript(code, attr) {
   return parsesForThread(code, attr)
     && !parsesForThread(`${code}\n;with ({}) {}`, attr);
-}
-
-/**
- * Zero-execution Annex B sloppy-mode hoisting probe: returns true when `code`
- * hoists a `var`-like binding for `name` (such as `if (true) { function X() {} }`)
- * into the script/wrapper scope. Line 0 exits unconditionally before `code` runs.
- */
-function hasSloppyHoistedBinding(code, name) {
-  const fn = vm.runInNewContext(
-    `(function(){ try { void ${name}; return true; } catch { return false; }\n${code}\n})`,
-    Object.create(null),
-  );
-  return fn();
 }
 
 /**
@@ -395,10 +385,12 @@ function scanStringLiteralEnd(source, start) {
   while (i < source.length) {
     const ch = source[i];
     if (ch === '\\') {
-      i += 2;
+      i += source[i + 1] === '\r' && source[i + 2] === '\n' ? 3 : 2;
       continue;
     }
-    if (ch === '\n' || ch === '\r') return -1;
+    if (ch === '\n' || ch === '\r' || ch === '\u2028' || ch === '\u2029') {
+      return -1;
+    }
     if (ch === quote) return i + 1;
     i += 1;
   }
@@ -473,7 +465,7 @@ function formatBlock(entry, code) {
 
 function findManagedBlock(body, attr, entry, filePath) {
   const anyMarkerRe =
-    /\/\/ (BEGIN|END) @lynx-js\/lynx-runtime iife\/(mts|bts)/g;
+    /^[ \t]*\/\/ (BEGIN|END) @lynx-js\/lynx-runtime iife\/(mts|bts)/gm;
   let totalBegins = 0;
   let totalEnds = 0;
   for (const m of body.matchAll(anyMarkerRe)) {
@@ -539,10 +531,10 @@ function findManagedBlock(body, attr, entry, filePath) {
 }
 
 /**
- * Uses V8's real parser (`vm.Script`) in the thread's actual compilation scope
- * (classic script for MTS, `app-service.js` wrapper body for BTS) to detect
- * script/wrapper-level `LynxRuntime` conflicts and MTS `globalThis` hook
- * collisions (including sloppy-mode Annex B block-function hoisting).
+ * Uses V8's pure compile-only parser (`vm.Script` / `vm.compileFunction`) in
+ * the thread's actual compilation scope to detect script/wrapper-level
+ * `LynxRuntime` conflicts and MTS `globalThis` `var`/`function` hook collisions
+ * without evaluating page source.
  */
 function checkScriptBindings(userCode, attr, filePath, { checkMtsHooks }) {
   const errors = [];
@@ -553,13 +545,9 @@ function checkScriptBindings(userCode, attr, filePath, { checkMtsHooks }) {
     return errors;
   }
 
-  const sloppy = !isStrictScript(userCode, attr);
-  if (
-    !parsesForThread(`${userCode}\n;let LynxRuntime;`, attr)
-    || (sloppy && hasSloppyHoistedBinding(userCode, 'LynxRuntime'))
-  ) {
+  if (!parsesForThread(`${userCode}\n;let LynxRuntime;`, attr)) {
     errors.push(
-      `${filePath} [${attr}]: user code declares script-level \`LynxRuntime\` (for example an unmarked runtime copy, top-level declaration, or sloppy block function), which conflicts with the managed block.`,
+      `${filePath} [${attr}]: user code declares script-level \`LynxRuntime\` (for example an unmarked runtime copy or top-level declaration), which conflicts with the managed block.`,
     );
   }
 
@@ -573,9 +561,7 @@ function checkScriptBindings(userCode, attr, filePath, { checkMtsHooks }) {
         `${userCode}\n;var ${name};`,
         attr,
       );
-      const hoistsInSloppyBlock = sloppy
-        && hasSloppyHoistedBinding(userCode, name);
-      if ((collidesWithLet && !collidesWithVar) || hoistsInSloppyBlock) {
+      if (collidesWithLet && !collidesWithVar) {
         errors.push(
           `${filePath} [main]: \`${name}\` binds \`globalThis.${name}\` and will be overwritten by @lynx-js/lynx-runtime MTS activation; rename the handler.`,
         );

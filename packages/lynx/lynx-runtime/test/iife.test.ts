@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import * as btsExports from '../src/bts.js';
 import type {
@@ -84,6 +84,15 @@ function createMockProxy(): HostContextProxy & {
 }
 
 describe('IIFE builds for build-free .lynxml scripts', () => {
+  beforeAll(() => {
+    if (!fs.existsSync(mtsIifePath) || !fs.existsSync(btsIifePath)) {
+      execFileSync(
+        process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
+        ['build'],
+        { cwd: fileURLToPath(pkgDir), stdio: 'inherit' },
+      );
+    }
+  });
   it('declares ./iife/mts and ./iife/bts exports and emits self-contained .lynxml-safe ES2017 scripts', () => {
     const pkg = JSON.parse(
       fs.readFileSync(new URL('package.json', pkgDir), 'utf8'),
@@ -345,6 +354,7 @@ function emitInRealm(target, type, payload) {
         '<script thread = \'main\' >',
         '\'use strict\';',
         'const mts = LynxRuntime;',
+        'const help = "// BEGIN @lynx-js/lynx-runtime iife/bts";',
         'const renderPage = () => 1;',
         'function outer() { const LynxRuntime = 1; function updatePage() {} return [LynxRuntime, updatePage]; }',
         'const expr = function getPageData() {};',
@@ -451,11 +461,12 @@ function emitInRealm(target, type, payload) {
         ['bts', 'synced-card'],
       ]);
 
-      // Native-specific LynxML syntax (`<lynx>` without engine-version and `</script >` whitespace).
+      // Native-specific LynxML syntax (`<!doctype lynx>` + `<lynx>` without engine-version and `</script >` whitespace).
       const nativeOnlyPath = path.join(tmpDir, 'native-only.lynxml');
       fs.writeFileSync(
         nativeOnlyPath,
         [
+          '<!doctype lynx>',
           '<lynx>',
           '<script thread=main>',
           'const mts = LynxRuntime;',
@@ -613,49 +624,33 @@ function emitInRealm(target, type, payload) {
         }).status,
       ).toBe(1);
 
-      // Reject sloppy-mode Annex B block-scoped function hoisting for `LynxRuntime` and MTS hooks.
-      const sloppyPath = path.join(tmpDir, 'sloppy-hoist.lynxml');
-      const sloppyRuntimeDoc = [
+      // Reject malformed BTS breakout attempts at compile time without evaluating page code.
+      const breakoutPath = path.join(tmpDir, 'breakout.lynxml');
+      const breakoutDoc = [
         '<!doctype lynx>',
         '<lynx engine-version="4.2">',
         '<script thread="main">',
-        'if (true) { function LynxRuntime() {} }',
+        'const mts = LynxRuntime;',
+        '</script>',
+        '<script thread="background">',
+        '}); process.exit(99); (function() {',
         '</script>',
         '</lynx>',
         '',
       ].join('\n');
-      fs.writeFileSync(sloppyPath, sloppyRuntimeDoc, 'utf8');
-      expect(
-        spawnSync(process.execPath, [syncScriptPath, sloppyPath], {
-          encoding: 'utf8',
-        }).status,
-      ).not.toBe(0);
-      expect(fs.readFileSync(sloppyPath, 'utf8')).toBe(sloppyRuntimeDoc);
-
-      const sloppyHookPath = path.join(tmpDir, 'sloppy-hook.lynxml');
-      fs.writeFileSync(
-        sloppyHookPath,
-        [
-          '<!doctype lynx>',
-          '<lynx engine-version="4.2">',
-          '<script thread="main">',
-          'if (true) { function renderPage() {} }',
-          '</script>',
-          '</lynx>',
-          '',
-        ].join('\n'),
-        'utf8',
-      );
-      execFileSync(process.execPath, [syncScriptPath, sloppyHookPath], {
-        encoding: 'utf8',
-      });
-      const sloppyHookCheck = spawnSync(
+      fs.writeFileSync(breakoutPath, breakoutDoc, 'utf8');
+      const breakoutSync = spawnSync(
         process.execPath,
-        [syncScriptPath, '--check', sloppyHookPath],
+        [syncScriptPath, breakoutPath],
         { encoding: 'utf8' },
       );
-      expect(sloppyHookCheck.status).toBe(1);
-      expect(sloppyHookCheck.stderr).toContain('`renderPage`');
+      expect(breakoutSync.status).toBe(1);
+      expect(fs.readFileSync(breakoutPath, 'utf8')).toBe(breakoutDoc);
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', breakoutPath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
 
       // Reject unpaired duplicate BEGIN marker without deleting business code in between.
       const dupBeginDoc = synced.replace(
