@@ -4,6 +4,7 @@
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -86,11 +87,13 @@ function createMockProxy(): HostContextProxy & {
 describe('IIFE builds for build-free .lynxml scripts', () => {
   beforeAll(() => {
     if (!fs.existsSync(mtsIifePath) || !fs.existsSync(btsIifePath)) {
-      execFileSync(
-        process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
-        ['build'],
-        { cwd: fileURLToPath(pkgDir), stdio: 'inherit' },
-      );
+      const require = createRequire(import.meta.url);
+      const rslibPkg = require.resolve('@rslib/core/package.json');
+      const rslibBin = path.join(path.dirname(rslibPkg), 'bin/rslib.js');
+      execFileSync(process.execPath, [rslibBin], {
+        cwd: fileURLToPath(pkgDir),
+        stdio: 'inherit',
+      });
     }
   });
   it('declares ./iife/mts and ./iife/bts exports and emits self-contained .lynxml-safe ES2017 scripts', () => {
@@ -570,6 +573,24 @@ function emitInRealm(target, type, payload) {
       expect(earlyCode.status).toBe(1);
       expect(earlyCode.stderr).toContain('executable code');
 
+      // Reject an inline END appended to the IIFE line followed by user code and another standalone END.
+      const inlineEndDoc = synced.replace(
+        /\n\/\/ END @lynx-js\/lynx-runtime iife\/mts/,
+        ' // END @lynx-js/lynx-runtime iife/mts\nconst keepAfterInlineEnd = 1;\n// END @lynx-js/lynx-runtime iife/mts',
+      );
+      fs.writeFileSync(pagePath, inlineEndDoc, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).not.toBe(0);
+      expect(fs.readFileSync(pagePath, 'utf8')).toBe(inlineEndDoc);
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
+
       // Reject malformed END with trailing text followed by another standalone END without deleting business code.
       const staleEndDoc = synced.replace(
         '// END @lynx-js/lynx-runtime iife/mts',
@@ -645,12 +666,22 @@ function emitInRealm(target, type, payload) {
         { encoding: 'utf8' },
       );
       expect(breakoutSync.status).toBe(1);
+      expect(breakoutSync.stderr).toContain('not valid JavaScript');
       expect(fs.readFileSync(breakoutPath, 'utf8')).toBe(breakoutDoc);
-      expect(
-        spawnSync(process.execPath, [syncScriptPath, '--check', breakoutPath], {
-          encoding: 'utf8',
-        }).status,
-      ).toBe(1);
+
+      // Also verify --check rejects the breakout payload inside an already-synced BTS block.
+      const syncedBreakout = synced.replace(
+        'const bts = LynxRuntime.bindPage();',
+        '}); process.exit(99); (function() {',
+      );
+      fs.writeFileSync(pagePath, syncedBreakout, 'utf8');
+      const breakoutCheck = spawnSync(
+        process.execPath,
+        [syncScriptPath, '--check', pagePath],
+        { encoding: 'utf8' },
+      );
+      expect(breakoutCheck.status).toBe(1);
+      expect(breakoutCheck.stderr).toContain('not valid JavaScript');
 
       // Reject unpaired duplicate BEGIN marker without deleting business code in between.
       const dupBeginDoc = synced.replace(

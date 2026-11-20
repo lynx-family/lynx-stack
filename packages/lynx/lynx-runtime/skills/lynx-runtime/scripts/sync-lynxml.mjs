@@ -512,6 +512,12 @@ function findManagedBlock(body, attr, entry, filePath) {
 
   const start = begins[0].index;
   const end = ends[0].index + ends[0][0].length;
+  const inner = body.slice(start + begins[0][0].length, ends[0].index);
+  if (/\/\/ (?:BEGIN|END) @lynx-js\/lynx-runtime/.test(inner)) {
+    throw new Error(
+      `${filePath} [${attr}]: found an extra BEGIN/END marker inside the managed iife/${entry} block; refusing to overwrite ambiguous range.`,
+    );
+  }
   const prefix = body.slice(0, start);
   const suffix = body.slice(end);
 
