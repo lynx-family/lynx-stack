@@ -3,6 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
+ * @packageDocumentation
+ *
  * A zero-dependency parser for the single file Lynx XML markup format.
  *
  * It is written without `DOMParser` or any third party XML library so that it
@@ -22,6 +24,8 @@
 
 /**
  * The structured error describing why a document could not be parsed.
+ *
+ * @public
  */
 export interface LynxXMLParseError {
   /**
@@ -44,8 +48,11 @@ export interface LynxXMLParseError {
 
 /**
  * The result of a successful parse.
+ *
+ * @public
  */
 export interface LynxXMLParseSuccess {
+  /** Indicates that parsing succeeded. */
   success: true;
   /**
    * The content of the `<style>` section. `undefined` when the document has no
@@ -66,15 +73,21 @@ export interface LynxXMLParseSuccess {
 
 /**
  * The result of a failed parse.
+ *
+ * @public
  */
 export interface LynxXMLParseFailure {
+  /** Indicates that parsing failed. */
   success: false;
+  /** The first syntax error in the document. */
   error: LynxXMLParseError;
 }
 
 /**
  * The discriminated union returned by {@link parseLynxXML}. Errors are returned
  * instead of thrown so that callers can forward them as `error` events.
+ *
+ * @public
  */
 export type LynxXMLParseResult = LynxXMLParseSuccess | LynxXMLParseFailure;
 
@@ -138,7 +151,7 @@ function isQuotedAttribute(
     return false;
   }
   let rest = trimASCIIWhitespace(attributes.slice(attributeName.length));
-  if (rest.length === 0 || rest[0] !== '=') {
+  if (rest.length === 0 || !rest.startsWith('=')) {
     return false;
   }
   rest = trimASCIIWhitespace(rest.slice(1));
@@ -337,7 +350,7 @@ class LynxXMLParser {
     const openingTag = trimASCIIWhitespace(
       source.slice(this.#position + 1, openingTagEnd),
     );
-    if (openingTag.length === 0 || openingTag[0] === '/') {
+    if (openingTag.length === 0 || openingTag.startsWith('/')) {
       return this.#fail(this.#position, 'unexpected closing tag');
     }
     const tagNameEnd = openingTag.search(/[\t\n\f\r ]/u);
@@ -351,7 +364,7 @@ class LynxXMLParser {
     let closingTag: string;
     let slot: SectionSlot;
     if (tagName === 'style') {
-      if (attributes.length !== 0) {
+      if (attributes.length > 0) {
         return this.#fail(
           sectionStart,
           '\'<style>\' does not accept attributes',
@@ -444,7 +457,19 @@ class LynxXMLParser {
  * This never throws for malformed input: inspect the `success` discriminant of
  * the returned {@link LynxXMLParseResult} instead.
  *
+ * @example
+ * ```ts
+ * import { parseLynxXML } from '@lynx-js/lynx-xml/parser';
+ *
+ * const result = parseLynxXML(
+ *   '<lynx engine-version="4.2"><script thread="main">render()</script></lynx>',
+ * );
+ * if (result.success) console.log(result.mainThreadScript);
+ * ```
+ *
  * @param source - The whole XML document. A leading UTF-8 BOM is tolerated.
+ *
+ * @public
  */
 export function parseLynxXML(source: string): LynxXMLParseResult {
   return new LynxXMLParser(source).parse();

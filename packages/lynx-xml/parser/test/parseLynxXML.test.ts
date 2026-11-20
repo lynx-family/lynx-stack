@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from '@rstest/core';
 
-import { parseLynxXML } from '../ts/common/xml/parseLynxXML.js';
+import { parseLynxXML } from '@lynx-js/lynx-xml/parser';
 import type {
   LynxXMLParseResult,
   LynxXMLParseSuccess,
-} from '../ts/common/xml/parseLynxXML.js';
+} from '@lynx-js/lynx-xml/parser';
 
 function expectSuccess(result: LynxXMLParseResult): LynxXMLParseSuccess {
   if (!result.success) {

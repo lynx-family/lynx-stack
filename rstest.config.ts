@@ -63,6 +63,7 @@ export default defineConfig({
     'packages/genui/reactlynx/rstest.config.ts',
     'packages/genui/server/rstest.config.ts',
     'packages/genui/reactweb/rstest.config.ts',
+    'packages/lynx-xml/rstest.config.ts',
     'packages/rspeedy/*/rstest.config.ts',
     'packages/web-platform/*/rstest.config.ts',
     'packages/webpack/*/rstest.config.ts',

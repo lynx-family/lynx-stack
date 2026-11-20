@@ -73,6 +73,7 @@
   },
   "dependencies": {
     "@lynx-js/css-serializer": "workspace:*",
+    "@lynx-js/lynx-xml": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "wasm-feature-detect": "^1.8.0"

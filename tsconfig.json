@@ -129,6 +129,9 @@
       "path": "./packages/lynx"
     },
     {
+      "path": "./packages/lynx-xml/tsconfig.build.json"
+    },
+    {
       "path": "./packages/i18n"
     },
     {

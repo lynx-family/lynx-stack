@@ -52,6 +52,7 @@
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
     "@lynx-js/lynx-runtime": "workspace:*",
     "@lynx-js/lynx-stack-docs": "workspace:*",
+    "@lynx-js/lynx-xml": "workspace:*",
     "@lynx-js/motion": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",

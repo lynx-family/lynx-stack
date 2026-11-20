@@ -694,8 +694,7 @@ describe('XML markup document to web bundle', () => {
     const source = readFileSync(
       join(
         dirname(fileURLToPath(import.meta.url)),
-        'fixtures',
-        'markup-card.xml',
+        '../../../lynx-xml/parser/test/fixtures/markup-card.xml',
       ),
       'utf-8',
     );

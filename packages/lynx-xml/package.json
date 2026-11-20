@@ -1,0 +1,34 @@
+{
+  "name": "@lynx-js/lynx-xml",
+  "version": "0.0.0",
+  "description": "Parse single-file Lynx XML documents into main-thread JavaScript, background JavaScript, and CSS.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/lynx-xml"
+  },
+  "license": "Apache-2.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    "./parser": {
+      "types": "./lib/parser/index.d.ts",
+      "default": "./lib/parser/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "api-extractor run --verbose",
+    "build": "tsc6 --build tsconfig.build.json",
+    "test": "rstest run"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "catalog:",
+    "@rstest/core": "catalog:rstest"
+  }
+}

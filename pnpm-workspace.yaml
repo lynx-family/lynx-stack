@@ -6,6 +6,7 @@ packages:
   - packages/genui/*
   - packages/i18n/*
   - packages/lynx/*
+  - packages/lynx-xml
   - packages/repl
   - packages/react
   - packages/react-signals
