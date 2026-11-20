@@ -8,13 +8,12 @@
  * opcodes instead of HTML strings for Lynx.
  */
 
-// @ts-nocheck
-
-import { Fragment, h, options, isValidElement } from 'preact';
-import { SnapshotInstance } from '../snapshot/snapshot.js';
+import { Fragment, h, isValidElement, options } from 'preact';
+import type { VNode } from 'preact';
 
 import {
   BITS,
+  CHILD_DID_SUSPEND,
   CHILDREN,
   COMMIT,
   COMPONENT,
@@ -23,49 +22,131 @@ import {
   DIFF2,
   DIFFED,
   GLOBAL_CONTEXT,
+  HOOK,
   NEXT_STATE,
   PARENT,
   RENDER,
   SKIP_EFFECTS,
   VNODE,
-  HOOK,
-  CHILD_DID_SUSPEND,
 } from '../../shared/render-constants.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
 
-/** @typedef {import('preact').VNode} VNode */
+type RenderContext = Record<string, unknown>;
 
-const EMPTY_ARR = [];
+interface PreactRenderOptions {
+  [SKIP_EFFECTS]?: boolean | undefined;
+  [DIFF]?: ((vnode: unknown) => void) | undefined;
+  [DIFF2]?: ((vnode: unknown, context: RenderContext) => void) | undefined;
+  [DIFFED]?: ((vnode: unknown) => void) | undefined;
+  [RENDER]?: ((vnode: unknown) => void) | undefined;
+  [COMMIT]?: ((vnode: unknown, commitQueue: unknown[]) => void) | undefined;
+  unmount?: ((vnode: unknown) => void) | undefined;
+}
+
+interface InternalContextObject {
+  __c: string;
+  __: unknown;
+}
+
+interface InternalContextProvider {
+  props: {
+    value: unknown;
+  };
+}
+
+interface InternalComponentConstructor {
+  (props: Record<string, unknown>, context: RenderContext): unknown;
+  new(props: Record<string, unknown>, context: RenderContext): InternalRenderComponent;
+  prototype?: { render?: unknown };
+  contextType?: InternalContextObject;
+  getDerivedStateFromProps?: (
+    props: Record<string, unknown>,
+    state: Record<string, unknown>,
+  ) => Record<string, unknown> | null;
+}
+
+interface InternalRenderComponent {
+  [VNODE]?: InternalRenderVNode;
+  props: Record<string, unknown>;
+  state?: Record<string, unknown> | undefined;
+  context: RenderContext;
+  [GLOBAL_CONTEXT]?: RenderContext | undefined;
+  [BITS]: number;
+  [NEXT_STATE]?: Record<string, unknown> | undefined;
+  [HOOK]?: unknown[];
+  [CHILD_DID_SUSPEND]?: unknown;
+  constructor: InternalComponentConstructor;
+  setState: (state: Record<string, unknown>) => void;
+  forceUpdate: () => void;
+  getChildContext?: () => Record<string, unknown>;
+  render: (
+    props: Record<string, unknown>,
+    state: Record<string, unknown> | undefined,
+    context: RenderContext,
+  ) => unknown;
+}
+
+interface InternalRenderVNode {
+  type: unknown;
+  props: Record<string, unknown>;
+  key?: unknown;
+  [COMPONENT]?: InternalRenderComponent;
+  [PARENT]?: unknown;
+  [CHILDREN]?: unknown[] | undefined;
+}
+
+interface InternalSnapshotInstance {
+  __parent: SnapshotInstance | null;
+  __firstChild: InternalSnapshotInstance | null;
+  __lastChild: InternalSnapshotInstance | null;
+  __nextSibling: SnapshotInstance | null;
+  __slotIndex: number | true;
+  insertBefore(newNode: SnapshotInstance, existingNode?: SnapshotInstance): void;
+  removeChildren(start?: SnapshotInstance | null): void;
+  setAttribute(key: string | number, value: unknown): void;
+  [PARENT]?: unknown;
+  [CHILDREN]?: unknown[] | undefined;
+}
+
+const preactOptions = options as unknown as PreactRenderOptions;
+const EMPTY_ARR: unknown[] = [];
 const isArray = /* @__PURE__ */ Array.isArray;
 const assign = /* @__PURE__ */ Object.assign;
 
 // Global state for the current render pass
-let beforeDiff, beforeDiff2, afterDiff, renderHook, unmountHook;
+let beforeDiff: ((vnode: unknown) => void) | undefined;
+let beforeDiff2: ((vnode: unknown, context: RenderContext) => void) | undefined;
+let afterDiff: ((vnode: unknown) => void) | undefined;
+let renderHook: ((vnode: unknown) => void) | undefined;
+let unmountHook: ((vnode: unknown) => void) | undefined;
 
 /**
- * Render Preact JSX + Components to an HTML string.
- * @param {VNode} vnode	JSX Element / VNode to render
- * @param {object} [context] Initial root context object
+ * Render Preact JSX + Components to an opcode list.
  */
-export function renderToString(vnode: any, context: any, into: SnapshotInstance): any[] {
+export function renderToString(
+  vnode: unknown,
+  context: RenderContext | null | undefined,
+  into: SnapshotInstance,
+): unknown[] {
   // Performance optimization: `renderToString` is synchronous and we
   // therefore don't execute any effects. To do that we pass an empty
   // array to `options._commit` (`__c`). But we can go one step further
   // and avoid a lot of dirty checks and allocations by setting
   // `options._skipEffects` (`__s`) too.
-  const previousSkipEffects = options[SKIP_EFFECTS];
-  options[SKIP_EFFECTS] = true;
+  const previousSkipEffects = preactOptions[SKIP_EFFECTS];
+  preactOptions[SKIP_EFFECTS] = true;
 
   // store options hooks once before each synchronous render call
-  beforeDiff = options[DIFF];
-  beforeDiff2 = options[DIFF2];
-  afterDiff = options[DIFFED];
-  renderHook = options[RENDER];
-  unmountHook = options.unmount;
+  beforeDiff = preactOptions[DIFF];
+  beforeDiff2 = preactOptions[DIFF2];
+  afterDiff = preactOptions[DIFFED];
+  renderHook = preactOptions[RENDER];
+  unmountHook = preactOptions.unmount;
 
-  const parent = h(Fragment, null);
-  parent[CHILDREN] = [vnode];
+  const parent = h(Fragment, null) as unknown as InternalRenderVNode;
+  parent[CHILDREN] = [vnode as VNode];
 
-  const opcodes = [];
+  const opcodes: unknown[] = [];
 
   try {
     _renderToString(
@@ -81,8 +162,8 @@ export function renderToString(vnode: any, context: any, into: SnapshotInstance)
   } finally {
     // options._commit, we don't schedule any effects in this library right now,
     // so we can pass an empty queue to this hook.
-    if (options[COMMIT]) options[COMMIT](vnode, EMPTY_ARR);
-    options[SKIP_EFFECTS] = previousSkipEffects;
+    if (preactOptions[COMMIT]) preactOptions[COMMIT](vnode, EMPTY_ARR);
+    preactOptions[SKIP_EFFECTS] = previousSkipEffects;
     EMPTY_ARR.length = 0;
   }
 
@@ -90,25 +171,25 @@ export function renderToString(vnode: any, context: any, into: SnapshotInstance)
 }
 
 // Installed as setState/forceUpdate for function components
-function markAsDirty() {
+function markAsDirty(this: InternalRenderComponent): void {
   this[BITS] |= COMPONENT_DIRTY;
 }
 
-const EMPTY_OBJ = {};
+const EMPTY_OBJ: RenderContext = {};
 
 export const __OpBegin = 0;
 export const __OpEnd = 1;
 export const __OpAttr = 2;
 export const __OpText = 3;
 
-/**
- * @param {VNode} vnode
- * @param {Record<string, unknown>} context
- */
-function renderClassComponent(vnode, context, globalContext) {
-  const type = /** @type {import("preact").ComponentClass<typeof vnode.props>} */ (vnode.type);
+function renderClassComponent(
+  vnode: InternalRenderVNode,
+  context: RenderContext,
+  globalContext?: RenderContext,
+): unknown {
+  const type = vnode.type as InternalComponentConstructor;
 
-  let c;
+  let c: InternalRenderComponent;
   if (vnode[COMPONENT]) {
     c = vnode[COMPONENT];
     c.state = c[NEXT_STATE];
@@ -144,45 +225,34 @@ function renderClassComponent(vnode, context, globalContext) {
   return c.render(c.props, c.state, context);
 }
 
-/**
- * Recursively render VNodes to HTML.
- * @param {VNode|any} vnode
- * @param {any} context
- * @param {number | true} slotIndex
- * @param {any} selectValue
- * @param {VNode} parent
- * @param {any[]} opcodes
- * @param {number} opcodesLength
- * @param {SnapshotInstance} into
- */
 function _renderToString(
-  vnode,
-  context,
-  slotIndex,
-  selectValue,
-  parent,
-  opcodes,
-  opcodesLength,
-  into,
-) {
+  vnode: unknown,
+  context: RenderContext,
+  slotIndex: number | true,
+  selectValue: unknown,
+  parent: unknown,
+  opcodes: unknown[],
+  opcodesLength: number,
+  into: SnapshotInstance,
+): void {
   // Ignore non-rendered VNodes/values
   if (vnode == null || vnode === true || vnode === false || vnode === '') {
     return;
   }
 
-  let vnodeType = typeof vnode;
+  const vnodeType = typeof vnode;
   // Text VNodes: escape as HTML
   if (vnodeType !== 'object') {
     if (vnodeType === 'function') return;
-    renderToTextNode(into, vnode, opcodes, slotIndex);
+    renderToTextNode(into, vnode as string | number, opcodes, slotIndex);
     return;
   }
 
   // Recurse into children / Arrays
   if (isArray(vnode)) {
-    parent[CHILDREN] = vnode;
+    (parent as InternalRenderVNode)[CHILDREN] = vnode;
     for (let i = 0; i < vnode.length; i++) {
-      const child = vnode[i];
+      const child: unknown = vnode[i];
       if (child == null || typeof child === 'boolean') continue;
 
       _renderToString(
@@ -201,39 +271,38 @@ function _renderToString(
     return;
   }
 
-  // VNodes have {constructor:undefined} to prevent JSON injection:
-  // if (vnode.constructor !== undefined) return;
+  const elementVNode = vnode as InternalRenderVNode;
+  elementVNode[PARENT] = parent;
+  if (beforeDiff) beforeDiff(elementVNode);
+  if (beforeDiff2) beforeDiff2(elementVNode, EMPTY_OBJ);
 
-  vnode[PARENT] = parent;
-  if (beforeDiff) beforeDiff(vnode);
-  if (beforeDiff2) beforeDiff2(vnode, EMPTY_OBJ);
-
-  let type = vnode.type,
-    props = vnode.props,
-    cctx = context,
-    contextType,
-    rendered,
-    component;
+  const type = elementVNode.type;
+  const props = elementVNode.props;
+  let cctx: unknown = context;
+  let contextType: InternalContextObject | undefined;
+  let rendered: unknown;
+  let component: InternalRenderComponent | undefined;
 
   // Invoke rendering on Components
   if (typeof type === 'function') {
-    if (type === Fragment) {
-      rendered = props.children;
+    const componentType = type as InternalComponentConstructor;
+    if ((type as unknown) === Fragment) {
+      rendered = props['children'];
     } else {
-      contextType = type.contextType;
+      contextType = componentType.contextType;
       if (contextType != null) {
-        const provider = context[contextType.__c];
+        const provider = context[contextType.__c] as InternalContextProvider | undefined;
         cctx = provider ? provider.props.value : contextType.__;
       }
 
-      if (type.prototype && typeof type.prototype.render === 'function') {
-        rendered = /**#__NOINLINE__**/ renderClassComponent(vnode, cctx, context);
-        component = vnode[COMPONENT];
+      if (componentType.prototype && typeof componentType.prototype.render === 'function') {
+        rendered = /**#__NOINLINE__**/ renderClassComponent(elementVNode, cctx as RenderContext, context);
+        component = elementVNode[COMPONENT];
       } else {
         component = {
-          [VNODE]: vnode,
+          [VNODE]: elementVNode,
           props,
-          context: cctx,
+          context: cctx as RenderContext,
           [GLOBAL_CONTEXT]: context,
           // silently drop state updates
           setState: markAsDirty,
@@ -241,10 +310,10 @@ function _renderToString(
           [BITS]: COMPONENT_DIRTY,
           // hooks
           [HOOK]: [],
+          constructor: componentType,
+          render: doRender,
         };
-        vnode[COMPONENT] = component;
-        component.constructor = type;
-        component.render = doRender;
+        elementVNode[COMPONENT] = component;
 
         // If a hook invokes setState() to invalidate the component during rendering,
         // re-render it up to 25 times to allow "settling" of memoized states.
@@ -252,25 +321,27 @@ function _renderToString(
         while (component[BITS] & COMPONENT_DIRTY && count++ < 25) {
           component[BITS] &= ~COMPONENT_DIRTY;
 
-          if (renderHook) renderHook(vnode);
+          if (renderHook) renderHook(elementVNode);
 
-          rendered = component.render(props, component.state, cctx);
+          rendered = component.render(props, component.state, cctx as RenderContext);
         }
         component[BITS] |= COMPONENT_DIRTY;
       }
 
-      if (component.getChildContext != null) {
-        context = assign({}, context, component.getChildContext());
+      if (component!.getChildContext != null) {
+        context = assign({}, context, component!.getChildContext());
       }
     }
 
     // When a component returns a Fragment node we flatten it in core, so we
     // need to mirror that logic here too
-    const isTopLevelFragment = rendered != null && rendered.type === Fragment
-      && rendered.key == null;
-    rendered = isTopLevelFragment ? rendered.props.children : rendered;
+    const renderedVNode = rendered as InternalRenderVNode | null | undefined;
+    const isTopLevelFragment = renderedVNode != null && (renderedVNode.type as unknown) === Fragment
+      && renderedVNode.key == null;
+    rendered = isTopLevelFragment ? renderedVNode.props['children'] : rendered;
 
-    let lastChild = into.__lastChild;
+    const internalInto = into as unknown as InternalSnapshotInstance;
+    const lastChild = internalInto.__lastChild;
     // Recurse into children before invoking the after-diff hook
     try {
       _renderToString(
@@ -278,7 +349,7 @@ function _renderToString(
         context,
         slotIndex,
         selectValue,
-        vnode,
+        elementVNode,
         opcodes,
         /* v8 ignore start */
         __ENABLE_SSR__ ? opcodes.length : 0,
@@ -287,18 +358,21 @@ function _renderToString(
       );
     } catch (e) {
       // clear existing children
-      into.removeChildren(
+      internalInto.removeChildren(
         lastChild
           ? lastChild.__nextSibling
-          : into.__firstChild,
+          : (internalInto.__firstChild as unknown as SnapshotInstance | null),
       );
-      if (e && typeof e === 'object' && e.then && component && /* _childDidSuspend */ component[CHILD_DID_SUSPEND]) {
+      if (
+        e && typeof e === 'object' && (e as { then?: unknown }).then && component
+        && /* _childDidSuspend */ component[CHILD_DID_SUSPEND]
+      ) {
         component[NEXT_STATE] = assign({}, component[NEXT_STATE], {
           /* _suspended */ __a: true,
         });
         if (component[BITS] & COMPONENT_DIRTY) {
-          rendered = renderClassComponent(vnode, context);
-          component = vnode[COMPONENT];
+          rendered = renderClassComponent(elementVNode, context);
+          component = elementVNode[COMPONENT];
 
           if (__ENABLE_SSR__) {
             opcodes.length = opcodesLength;
@@ -308,7 +382,7 @@ function _renderToString(
             context,
             slotIndex,
             selectValue,
-            vnode,
+            elementVNode,
             opcodes,
             /* v8 ignore start */
             __ENABLE_SSR__ ? opcodes.length : 0,
@@ -320,31 +394,34 @@ function _renderToString(
         throw e;
       }
     } finally {
-      if (afterDiff) afterDiff(vnode);
-      vnode[PARENT] = undefined;
+      if (afterDiff) afterDiff(elementVNode);
+      elementVNode[PARENT] = undefined;
 
-      if (unmountHook) unmountHook(vnode);
+      if (unmountHook) unmountHook(elementVNode);
     }
 
     return;
   }
 
-  let children;
+  let children: unknown;
   let hasNamedChildren = false;
+  let hostSnapshot = elementVNode as unknown as InternalSnapshotInstance;
 
   // hack for runtime test
-  if (process.env['NODE_ENV'] === 'test' && isValidElement(vnode) && typeof vnode.type === 'string') {
-    vnode = Object.assign(new SnapshotInstance(type), vnode, { $$typeof: undefined });
+  if (process.env['NODE_ENV'] === 'test' && isValidElement(elementVNode) && typeof elementVNode.type === 'string') {
+    hostSnapshot = Object.assign(new SnapshotInstance(type as string), elementVNode, {
+      $$typeof: undefined,
+    }) as unknown as InternalSnapshotInstance;
   }
   // already inserted
-  if (vnode.__parent) {
-    vnode = new SnapshotInstance(type);
+  if (hostSnapshot.__parent) {
+    hostSnapshot = new SnapshotInstance(type as string) as unknown as InternalSnapshotInstance;
   }
   if (__ENABLE_SSR__) {
-    opcodes.push(__OpBegin, vnode, slotIndex);
+    opcodes.push(__OpBegin, hostSnapshot, slotIndex);
   }
-  vnode.__slotIndex = slotIndex;
-  into.insertBefore(vnode);
+  hostSnapshot.__slotIndex = slotIndex;
+  into.insertBefore(hostSnapshot as unknown as SnapshotInstance);
 
   for (const name in props) {
     const v = props[name];
@@ -365,7 +442,7 @@ function _renderToString(
       default: {
         if (name.startsWith('$')) {
           children ??= [];
-          children[+name.slice(1)] = v;
+          (children as unknown[])[+name.slice(1)] = v;
           hasNamedChildren = true;
           continue;
         }
@@ -377,21 +454,21 @@ function _renderToString(
       if (__ENABLE_SSR__) {
         opcodes.push(__OpAttr, name, v);
       }
-      vnode.setAttribute(name, v);
+      hostSnapshot.setAttribute(name, v);
     }
   }
 
-  let childrenType = typeof children;
+  const childrenType = typeof children;
   if (childrenType === 'string' || childrenType === 'number') {
     // single text child
-    renderToTextNode(vnode, children, opcodes, slotIndex);
+    renderToTextNode(hostSnapshot as unknown as SnapshotInstance, children as string | number, opcodes, slotIndex);
   } else if (children != null && children !== false && children !== true) {
     // recurse into this element VNode's children
     let _slotIndex = slotIndex;
     if (hasNamedChildren) {
-      // @ts-expect-error children must be an array
-      if (children.length === 1) {
-        children = children[0];
+      const namedChildren = children as unknown[];
+      if (namedChildren.length === 1) {
+        children = namedChildren[0];
         _slotIndex = 0;
       } else {
         _slotIndex = true;
@@ -402,41 +479,51 @@ function _renderToString(
       context,
       _slotIndex,
       selectValue,
-      vnode,
+      hostSnapshot,
       opcodes,
       /* v8 ignore start */
       __ENABLE_SSR__ ? opcodes.length : 0,
       /* v8 ignore stop */
-      vnode,
+      hostSnapshot as unknown as SnapshotInstance,
     );
   }
 
-  if (afterDiff) afterDiff(vnode);
-  vnode[PARENT] = undefined;
-  if (unmountHook) unmountHook(vnode);
+  if (afterDiff) afterDiff(hostSnapshot);
+  hostSnapshot[PARENT] = undefined;
+  if (unmountHook) unmountHook(hostSnapshot);
 
   if (__ENABLE_SSR__) {
     opcodes.push(__OpEnd);
   }
-  vnode[CHILDREN] = undefined;
+  hostSnapshot[CHILDREN] = undefined;
 
   return;
 }
 
 /** The `.render()` method for a PFC backing instance. */
-function doRender(props, state, context) {
+function doRender(
+  this: InternalRenderComponent,
+  props: Record<string, unknown>,
+  _state: Record<string, unknown> | undefined,
+  context: RenderContext,
+): unknown {
   return this.constructor(props, context);
 }
 
-function renderToTextNode(into: SnapshotInstance, text: string | number, opcodes: Opcode[], slotIndex: number) {
-  const textNode = new SnapshotInstance(null);
+function renderToTextNode(
+  into: SnapshotInstance,
+  text: string | number,
+  opcodes: unknown[],
+  slotIndex: number | true,
+): void {
+  const textNode = new SnapshotInstance(null as unknown as string) as unknown as InternalSnapshotInstance;
   textNode.__slotIndex = slotIndex;
   textNode.setAttribute(0, text);
-  into.insertBefore(textNode);
+  into.insertBefore(textNode as unknown as SnapshotInstance);
   if (__ENABLE_SSR__) {
     // We need store the just created SnapshotInstance, or it will be lost when we leave the function
-    text = [textNode, text];
-    opcodes.push(__OpText, text, slotIndex);
+    const ssrText: [SnapshotInstance, string | number] = [textNode as unknown as SnapshotInstance, text];
+    opcodes.push(__OpText, ssrText, slotIndex);
   }
 }
 
