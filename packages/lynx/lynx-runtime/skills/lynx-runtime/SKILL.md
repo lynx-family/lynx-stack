@@ -7,7 +7,7 @@ description: Integrate, author, or migrate Lynx pages and build-free .lynxml doc
 
 Use this skill when integrating or migrating a Lynx page, DSL adapter, or build-free `.lynxml` document onto `@lynx-js/lynx-runtime`.
 
-> **Preview (`0.0.x`) rule**: Always treat the installed package's `README.md`, `dist/*.d.ts`, and `dist/iife/{mts,bts}.js` as the source of truth for the active version. Do not assume APIs from another version.
+> **Source of truth (`0.0.x`)**: Read the installed package's `dist/*.d.ts` for exact API signatures/contracts and `README.md` for host SDK compatibility boundaries. This skill covers workflow, migration mapping, and traps not obvious from the types alone.
 
 ## Choose the Entrypoint
 
@@ -20,17 +20,14 @@ Do **not** load `@lynx-js/lynx-runtime` via blocking `lynx.fetchBundle(...).wait
 
 ## Sync & Verify Build-Free `.lynxml` Files
 
-Never copy minified IIFE lines by hand or run blind search-and-replace across them. Use the package-bundled script so the inline blocks stay byte-for-byte identical to the installed version and guarded by `BEGIN`/`END` markers:
+Never copy minified IIFE lines by hand or run blind search-and-replace across them. Use the bundled script so inline blocks stay byte-for-byte identical to the installed version and guarded by `BEGIN`/`END` markers:
 
 ```bash
-# Insert or update marked inline IIFE blocks in one or more .lynxml files:
 node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs path/to/page.lynxml
-
-# Verify byte-for-byte parity, no mixed raw host APIs, and no MTS global-hook collisions:
 node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs --check path/to/page.lynxml
 ```
 
-In `<script thread="main">`, bind `const mts = LynxRuntime;` (or use `LynxRuntime.*` directly). In `<script thread="background">`, call `const bts = LynxRuntime.bindPage();` synchronously at top level.
+In `<script thread="main">`, bind `const mts = LynxRuntime;` (or call `LynxRuntime.*`). In `<script thread="background">`, call `const bts = LynxRuntime.bindPage();` synchronously at top level and retain `bts` for all async callbacks.
 
 ## Migration Checklist (Legacy Raw Host APIs -> `@lynx-js/lynx-runtime`)
 
@@ -38,28 +35,24 @@ Keep migrations **minimal**: swap host lifecycle, peer messaging, global events,
 
 ### 1. API Mapping
 
-| Legacy raw pattern                                                                                      | `@lynx-js/lynx-runtime` replacement                                                |
-| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| MTS `lynx.getEngine().addEventListener('__RenderPage' \| '__UpdatePage' \| '__UpdateGlobalProps', ...)` | `mts.onRenderPage`, `mts.onUpdateData`, `mts.onReload`, `mts.onGlobalPropsChanged` |
-| MTS `globalThis.processData` / `globalThis.getPageData`                                                 | `mts.setDataProcessor` / `mts.setPageDataGetter`                                   |
-| MTS `lynx.__globalProps` / `__FlushElementTree()`                                                       | `mts.getGlobalProps()` / `mts.flushElementTree(options?)`                          |
-| MTS `lynx.getJSContext()` (`dispatchEvent` / `addEventListener`)                                        | `mts.sendMessage(type, data)` / `mts.onMessage(type, (data) => ...)`               |
-| MTS `__DestroyLifetime` + manual `destroyed` flag + `BackgroundDestroy` forwarding                      | `mts.onDestroy(fn)` + `mts.isDestroyed()`                                          |
-| BTS `lynx.getCoreContext()` (`dispatchEvent` / `addEventListener`)                                      | `bts.sendMessage(type, data)` / `bts.onMessage(type, (data) => ...)`               |
-| BTS `lynx.getJSModule('GlobalEventEmitter')`                                                            | `bts.onGlobalEvent(name, listener)`                                                |
-| BTS `lynx.__globalProps` / manual `destroyed` / `BackgroundDestroy` listener                            | `bts.getGlobalProps()` / `bts.isDestroyed()` / `bts.onDestroy(fn)`                 |
+| Legacy raw pattern                                                                                      | `@lynx-js/lynx-runtime` replacement                                                    |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| MTS `lynx.getEngine().addEventListener('__RenderPage' \| '__UpdatePage' \| '__UpdateGlobalProps', ...)` | `mts.onRenderPage`, `mts.onUpdateData`, `mts.onReload`, `mts.onGlobalPropsChanged`     |
+| MTS `globalThis.processData` / `globalThis.getPageData`                                                 | `mts.setDataProcessor` / `mts.setPageDataGetter`                                       |
+| MTS `lynx.__globalProps` / `__FlushElementTree()`                                                       | `mts.getGlobalProps()` / `mts.flushElementTree(options?)` (forward callback `options`) |
+| MTS `lynx.getJSContext()` (`dispatchEvent` / `addEventListener`)                                        | `mts.sendMessage(type, data)` / `mts.onMessage(type, (data) => ...)`                   |
+| MTS `__DestroyLifetime` + manual `destroyed` flag + `BackgroundDestroy` forwarding                      | `mts.onDestroy(fn)` + `mts.isDestroyed()`                                              |
+| BTS `lynx.getCoreContext()` (`dispatchEvent` / `addEventListener`)                                      | `bts.sendMessage(type, data)` / `bts.onMessage(type, (data) => ...)`                   |
+| BTS `lynx.getJSModule('GlobalEventEmitter')`                                                            | `bts.onGlobalEvent(name, listener)`                                                    |
+| BTS `lynx.__globalProps` / manual `destroyed` / `BackgroundDestroy` listener                            | `bts.getGlobalProps()` / `bts.isDestroyed()` / `bts.onDestroy(fn)`                     |
 
-### 2. High-Frequency Pitfalls
+### 2. Migration-Specific Pitfalls
 
-1. **Classic-script MTS global-hook collision (`.lynxml`)**: When MTS host bindings activate lazily on the first capability call, Runtime writes `globalThis.renderPage`, `updatePage`, `updateGlobalProps`, `processData`, `getPageData`, and `removeComponents`. In a classic `<script thread="main">`, top-level `function renderPage()` or `function updatePage()` declarations share `globalThis` and will be **silently overwritten** (causing infinite recursion if later passed to `mts.onRenderPage(renderPage)`). Rename top-level page callbacks (for example, `mountPage`, `onPageUpdate`).
-2. **Synchronous BTS `bindPage()`**: Call `LynxRuntime.bindPage()` synchronously during BTS script evaluation before any async boundary, and retain the returned handle for all async callbacks.
-3. **Unwrapped `onMessage` payloads**: `onMessage(type, (data) => ...)` passes `data` directly rather than `{ type, data }`. Update legacy `event.data` reads to `data`.
-4. **`onDestroy` runs with `isDestroyed() === true`**: Do **not** guard the top of an `onDestroy` callback with `if (isDestroyed()) return;` (cleanup would never run). Conversely, do guard async callbacks with `if (isDestroyed()) return;` because registering, sending, or flushing after destruction throws.
-5. **Forward flush `options`**: Pass the `options` argument from `onUpdateData`, `onReload`, and `onGlobalPropsChanged` through to `mts.flushElementTree(options)` so timing flags and native update metadata are preserved.
-6. **Preserve host compatibility boundaries**:
-   - MTS `onDestroy` requires `lynx.getNative()` (Lynx SDK 3.4+ / `@lynx-js/web-core` 0.26.9+); earlier hosts degrade to a no-op disposer and `isDestroyed()` stays `false`.
-   - BTS `page.onUpdateData()` requires Native `REACT_NODIFF` bundle DSL. If a legacy page forwarded `GlobalProps` or update patches from MTS to BTS, verify target host delivery before removing that forwarding.
-7. **Do not mix raw host APIs**: After migrating a page, remove raw `lynx.getEngine()`, `lynx.getJSContext()`, `lynx.getCoreContext()`, `lynx.__globalProps`, `GlobalEventEmitter`, and `__FlushElementTree()` calls from user code.
+1. **Classic-script MTS global-hook collision (`.lynxml`)**: Lazy MTS activation writes `globalThis.renderPage`, `updatePage`, `updateGlobalProps`, `processData`, `getPageData`, and `removeComponents`. In classic `<script thread="main">`, top-level `function renderPage()` / `updatePage()` declarations share `globalThis` and are **silently overwritten** (causing infinite recursion if passed to `mts.onRenderPage(renderPage)`). Rename them (e.g. `mountPage`, `onPageUpdate`).
+2. **Unwrapped `onMessage` payload**: Unlike raw `addEventListener(type, (e) => e.data)`, `onMessage(type, (data) => ...)` passes `data` directly; update legacy `e.data` reads.
+3. **Teardown guard inversion**: `isDestroyed()` is already `true` when `onDestroy` callbacks run. Remove legacy `if (destroyed) return;` guards from the top of `onDestroy` handlers, while keeping `if (isDestroyed()) return;` in async callbacks before sending, registering, or flushing.
+4. **Verify host compatibility before deleting legacy bridges**: Check `README.md` (`Package and host versions` & `Native data processing & host updates`) before relying on MTS `onDestroy` on older SDKs or removing legacy MTS-to-BTS `updateData` / `GlobalProps` forwarding.
+5. **Run `--check` after migrating**: `sync-lynxml.mjs --check` catches drifted inline blocks, leftover raw host APIs, and top-level MTS hook collisions.
 
 ## Unit Testing in `node:vm`
 
