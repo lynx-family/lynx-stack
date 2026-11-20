@@ -18,6 +18,7 @@ owns rendering, mutable application state, entry replacement, and message protoc
 | Retire an entry without destroying the page          | [Registration lifetime](#registration-lifetime)                                                  |
 | Read initial data or GlobalProps                     | [Input baseline](#mts-input-ownership), [GlobalProps ownership](#globalprops-across-mts-and-bts) |
 | Install synchronous data hooks or raw event handling | [Data hooks](#native-data-processing--host-updates), [raw BTS events](#raw-bts-events)           |
+| Inline into a build-free `.lynxml` document          | [Build-free `.lynxml` usage (IIFE)](#build-free-lynxml-usage-iife)                               |
 
 For a runnable Element PAPI example built with `@lynx-js/lynx-runtime/mts` and
 `@lynx-js/lynx-runtime/bts`, see `examples/vanilla` in the `lynx-stack` repository.
@@ -62,6 +63,25 @@ matrix. Peer messaging still requires the corresponding host ContextProxy.
 - `@lynx-js/lynx-runtime/mts`: Main-thread (Lepus) host lifecycle, data flow, single-owner hooks, peer communication, page-level flush and host services (`isDestroyed`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onRenderPage`, `onUpdateData`, `onReload`, `onGlobalPropsChanged`, `setDataProcessor`, `setPageDataGetter`, `sendMessage`, `onMessage`, `flushElementTree`, `createPipeline`, `markTiming`, `onDestroy`).
 - `@lynx-js/lynx-runtime/bts`: Background-thread (JS) page binding entrypoint (`bindPage(): BTSPageRuntime`). All BTS page capabilities (`isDestroyed`, `getId`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onUpdateData`, `onGlobalPropsChanged`, `onReload`, `onConfigChanged`, `onEnterForeground`, `onEnterBackground`, `onGlobalEvent`, `setEventHandler`, `sendMessage`, `onMessage`, `createPipeline`, `markTiming`, `onDestroy`) are accessed on the bound `BTSPageRuntime` handle, ensuring deterministic page ownership across synchronous and asynchronous work.
 - `@lynx-js/lynx-runtime/iife/mts` & `@lynx-js/lynx-runtime/iife/bts`: Prebuilt, minified, self-contained ES2017 (matching Rspeedy's default syntax target) classic IIFE scripts for build-free `.lynxml` documents. Inline `/iife/mts` at the top of `<script thread="main">` and `/iife/bts` at the top of `<script thread="background">`; each declares a script-scoped `var LynxRuntime` binding with the corresponding thread's exports without triggering CommonJS module wrapper detection (`module`/`exports`) or leaking across cards in shared BTS contexts.
+- `@lynx-js/lynx-runtime/skill`: Version-matched agent skill (`skills/lynx-runtime/SKILL.md`) covering ESM/IIFE integration, `.lynxml` migration rules, `node:vm` testing notes, and the `skills/lynx-runtime/scripts/sync-lynxml.mjs` inline sync/check helper.
+
+## Build-free `.lynxml` usage (IIFE)
+
+Build-free `.lynxml` documents have no bundler, ESM `import`, or `<script src>`. Inline the prebuilt ES2017 IIFE scripts instead of loading `@lynx-js/lynx-runtime` via blocking `lynx.fetchBundle(...).wait(...)`:
+
+```bash
+# Insert or update marked inline blocks matching the installed version:
+node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs path/to/page.lynxml
+
+# Verify inline byte-for-byte parity, no mixed raw host APIs, and no MTS global-hook collisions:
+node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs --check path/to/page.lynxml
+```
+
+When authoring classic `<script thread="main">` code alongside `/iife/mts`:
+
+- Do **not** declare top-level functions named `renderPage`, `updatePage`, `updateGlobalProps`, `processData`, `getPageData`, or `removeComponents`. Lazy MTS host activation writes those properties onto `globalThis` and will overwrite same-named top-level declarations in a classic script. Name page callbacks distinctly (for example, `mountPage` / `onPageUpdate`).
+- Do **not** mix raw host lifecycle, messaging, global-event, or flush APIs (`lynx.getEngine()`, `lynx.getJSContext()`, `lynx.getCoreContext()`, `lynx.__globalProps`, `GlobalEventEmitter`, `__FlushElementTree()`) with `@lynx-js/lynx-runtime` on the same page.
+- Call `LynxRuntime.bindPage()` synchronously at the top of `<script thread="background">` and keep the returned handle for all asynchronous callbacks. See `skills/lynx-runtime/SKILL.md` (`@lynx-js/lynx-runtime/skill`) for the full migration and `node:vm` testing checklist.
 
 ## MTS input ownership
 
