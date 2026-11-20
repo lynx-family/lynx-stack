@@ -7,7 +7,7 @@ import { installElementTemplateHydrationListener } from '../../../src/element-te
 import { BackgroundPageRootInstance } from '../../../src/element-template/background/instance.js';
 import { profileEnd, profileStart } from '../../../src/element-template/debug/profile.js';
 import { reloadBackground } from '../../../src/element-template/native/reload-background.js';
-import { onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
+import { retireElementTemplateMainThreadForReload } from '../../../src/element-template/native/mts-destroy.js';
 import { completeMainThreadReload, reloadMainThread } from '../../../src/element-template/native/reload-main-thread.js';
 import { resetEventStateForRuntime } from '../../../src/element-template/prop-adapters/event.js';
 import { destroyAllElementTemplateListStates } from '../../../src/element-template/runtime/list/list.js';
@@ -112,7 +112,7 @@ vi.mock('../../../src/element-template/background/instance.js', () => {
 });
 
 vi.mock('../../../src/element-template/native/mts-destroy.js', () => ({
-  onMtsDestruction: vi.fn(),
+  retireElementTemplateMainThreadForReload: vi.fn(),
 }));
 
 vi.mock('../../../src/element-template/debug/profile.js', () => ({
@@ -328,7 +328,7 @@ describe('ElementTemplate reloadMainThread', () => {
       return { pageAttributes: null, rootRefs: [rootRef], rootSubtreeHandles: [[{ uid: -1, ref: rootRef }]] };
     });
     lynx.__initData = { kept: 'yes', count: 1 };
-    vi.mocked(onMtsDestruction).mockImplementation(() => events.push('retire'));
+    vi.mocked(retireElementTemplateMainThreadForReload).mockImplementation(() => events.push('retire'));
     vi.mocked(increaseReloadVersion).mockImplementationOnce(() => {
       events.push('advance-version');
       return 2;
@@ -398,8 +398,10 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(__SerializeElementTemplate).toHaveBeenCalledTimes(2);
   });
 
-  it('clears delayed runOnBackground tasks during main-thread reload', () => {
+  it('clears delayed runOnBackground tasks, aborted first-screen refs, and legacy delayed events during main-thread reload', () => {
     const delayedBackgroundFunctionArray = [{ task: vi.fn() }];
+    const clearFirstScreenWorkletRefMap = vi.fn();
+    const clearDelayedWorklets = vi.fn();
     globalThis.lynxWorkletImpl = {
       ...(globalThis.lynxWorkletImpl ?? {}),
       _runOnBackgroundDelayImpl: {
@@ -407,6 +409,12 @@ describe('ElementTemplate reloadMainThread', () => {
         clearDelayedBackgroundFunctions: vi.fn(() => {
           delayedBackgroundFunctionArray.length = 0;
         }),
+      },
+      _refImpl: {
+        clearFirstScreenWorkletRefMap,
+      },
+      _eventDelayImpl: {
+        clearDelayedWorklets,
       },
     } as typeof globalThis.lynxWorkletImpl;
     mockedState.root = { __jsx: null };
@@ -421,6 +429,8 @@ describe('ElementTemplate reloadMainThread', () => {
     expect(globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.clearDelayedBackgroundFunctions).toHaveBeenCalledTimes(
       1,
     );
+    expect(clearFirstScreenWorkletRefMap).toHaveBeenCalledTimes(1);
+    expect(clearDelayedWorklets).toHaveBeenCalledTimes(1);
     expect(delayedBackgroundFunctionArray).toHaveLength(0);
   });
 
@@ -636,7 +646,7 @@ describe('ElementTemplate reloadMainThread', () => {
     } as ReturnType<typeof __SerializeElementTemplate>);
     try {
       expect(() => reloadMainThread(undefined, { reloadTemplate: true })).toThrow(firstCleanupError);
-      expect(onMtsDestruction).toHaveBeenCalledTimes(1);
+      expect(retireElementTemplateMainThreadForReload).toHaveBeenCalledTimes(1);
       expect(reloader).not.toHaveBeenCalled();
     } finally {
       delete host[supportsReEvalKey];

@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { flushElementTemplate } from './flush.js';
-import { onMtsDestruction } from './mts-destroy.js';
+import { retireElementTemplateMainThreadForReload } from './mts-destroy.js';
 import {
   canReEvalMainThreadEntry,
   installMainThreadReloadCompleter,
@@ -59,7 +59,7 @@ export function reloadMainThread(data: unknown, options: UpdatePageOption): void
     }
     if (canReEvalMainThreadEntry()) {
       try {
-        onMtsDestruction();
+        retireElementTemplateMainThreadForReload();
       } finally {
         increaseReloadVersion();
       }

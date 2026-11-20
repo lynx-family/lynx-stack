@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { clearDelayedRunOnBackgroundFunctions, retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
+import { retainWorkletCtx } from '@lynx-js/react/worklet-runtime/bindings';
 
 import { createBackgroundFunctionHandle } from '../../../core/background-function/handle.js';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../../../core/background-function/run-on-background.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
 import { isRunOnBackgroundEnabled } from '../../../shared/version.js';
+import { disposeWorkletRuntime, resetWorkletRuntimeForReload } from '../../../worklet-runtime/bindings/lifecycle.js';
 
 type BackgroundFunctionCtx = Parameters<typeof registerBackgroundFunctionCtx>[0];
 type RetainableMainThreadCtx = Parameters<typeof retainWorkletCtx>[0];
@@ -45,6 +46,11 @@ export function resetElementTemplateBackgroundFunctionRuntime(): void {
 }
 
 export function resetElementTemplateMainThreadBackgroundFunctionRuntime(): void {
-  clearDelayedRunOnBackgroundFunctions();
+  resetWorkletRuntimeForReload();
+  resetFunctionCallReturnListener();
+}
+
+export function disposeElementTemplateMainThreadBackgroundFunctionRuntime(): void {
+  disposeWorkletRuntime();
   resetFunctionCallReturnListener();
 }

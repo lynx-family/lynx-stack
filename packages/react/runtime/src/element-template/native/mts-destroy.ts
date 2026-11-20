@@ -6,7 +6,10 @@ import { resetElementTemplatePatchListener } from './patch-listener.js';
 import { resetElementTemplateRefInitValueListener } from '../main-thread-ref-init-value.js';
 import { destroyAllElementTemplateListStates } from '../runtime/list/list.js';
 import { resetTemplateId } from '../runtime/template/handle.js';
-import { resetElementTemplateMainThreadBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
+import {
+  disposeElementTemplateMainThreadBackgroundFunctionRuntime,
+  resetElementTemplateMainThreadBackgroundFunctionRuntime,
+} from '../runtime/template/main-thread-background-function.js';
 import { clearMainThreadDynamicAttrState } from '../runtime/template/main-thread-dynamic-attr-state.js';
 import { elementTemplateRegistry } from '../runtime/template/registry.js';
 
@@ -15,17 +18,27 @@ export function installOnMtsDestruction(): void {
 }
 
 export function onMtsDestruction(): void {
+  teardownOnMtsDestruction('destroy');
+}
+
+export function retireElementTemplateMainThreadForReload(): void {
+  teardownOnMtsDestruction('reload');
+}
+
+function teardownOnMtsDestruction(mode: 'destroy' | 'reload'): void {
   const performance = lynx.performance;
   performance?.profileStart?.('ReactLynx::onMtsDestruction');
   try {
-    destroyElementTemplateMainThreadRuntime();
+    destroyElementTemplateMainThreadRuntime(mode);
   } finally {
     performance?.profileEnd?.();
     lynx.getNative?.().removeEventListener('__DestroyLifetime', onMtsDestruction);
   }
 }
 
-export function destroyElementTemplateMainThreadRuntime(): void {
+export function destroyElementTemplateMainThreadRuntime(
+  mode: 'destroy' | 'reload' = 'destroy',
+): void {
   let patchListenerResetError: unknown;
   let didPatchListenerResetThrow = false;
   try {
@@ -44,7 +57,11 @@ export function destroyElementTemplateMainThreadRuntime(): void {
   try {
     clearMainThreadDynamicAttrState();
   } finally {
-    resetElementTemplateMainThreadBackgroundFunctionRuntime();
+    if (mode === 'reload') {
+      resetElementTemplateMainThreadBackgroundFunctionRuntime();
+    } else {
+      disposeElementTemplateMainThreadBackgroundFunctionRuntime();
+    }
     resetTemplateId();
   }
 
