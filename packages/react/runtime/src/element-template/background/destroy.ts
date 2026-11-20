@@ -6,13 +6,13 @@ import { render } from 'preact';
 
 import { cancelElementTemplateRemovedSubtreeCleanup, resetElementTemplateCommitState } from './commit-hook.js';
 import { resetElementTemplateHydrationListener } from './hydration-listener.js';
+import { resetElementTemplateMainThreadFunctionRuntime } from './main-thread-function.js';
 import { backgroundElementTemplateInstanceManager } from './manager.js';
 import { withSyncEffectFlush } from '../../core/sync-effect-flush.js';
 import { clearEventState } from '../prop-adapters/event.js';
 import { clearRefState, flushPendingRefs } from '../prop-adapters/ref.js';
 import { __root } from '../runtime/page/root-instance.js';
 import { resetElementTemplateBackgroundFunctionRuntime } from '../runtime/template/main-thread-background-function.js';
-import { resetElementTemplateMainThreadFunctionRuntime } from '../runtime/template/main-thread-function.js';
 
 export function destroyElementTemplateBackgroundRuntime(): void {
   resetElementTemplateHydrationListener();

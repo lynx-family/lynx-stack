@@ -35,7 +35,7 @@ describe('element-template native index wiring', () => {
     vi.doUnmock('../../../src/element-template/background/instance.js');
     vi.doUnmock('../../../src/element-template/debug/elementPAPICall.js');
     vi.doUnmock('../../../src/element-template/debug/profile.js');
-    vi.doUnmock('../../../src/element-template/lynx/env.js');
+    vi.doUnmock('../../../src/core/lynx/env.js');
     vi.doUnmock('../../../src/element-template/lynx/performance.js');
     vi.doUnmock('../../../src/core/lynx-update-data.js');
     vi.doUnmock('../../../src/core/globalProps.js');
@@ -51,7 +51,7 @@ describe('element-template native index wiring', () => {
     const installOnMtsDestruction = vi.fn();
     const initElementTemplatePAPICallAlog = vi.fn();
     const initProfileHook = vi.fn();
-    const setupLynxEnv = vi.fn();
+    const setupSharedLynxEnv = vi.fn();
     const installElementTemplateCommitHook = vi.fn();
     const setupBackgroundElementTemplateDocument = vi.fn();
     const installElementTemplateHydrationListener = vi.fn();
@@ -74,8 +74,8 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/element-template/debug/profile.js', () => ({
       initProfileHook,
     }));
-    vi.doMock('../../../src/element-template/lynx/env.js', () => ({
-      setupLynxEnv,
+    vi.doMock('../../../src/core/lynx/env.js', () => ({
+      setupSharedLynxEnv,
     }));
     vi.doMock('../../../src/element-template/background/commit-hook.js', () => ({
       installElementTemplateCommitHook,
@@ -108,7 +108,7 @@ describe('element-template native index wiring', () => {
     expect(installElementTemplatePatchListener).toHaveBeenCalledTimes(1);
     expect(installOnMtsDestruction).toHaveBeenCalledTimes(1);
     expect(initProfileHook).toHaveBeenCalledTimes(1);
-    expect(setupLynxEnv).toHaveBeenCalledTimes(1);
+    expect(setupSharedLynxEnv).toHaveBeenCalledTimes(1);
 
     expect(installElementTemplateCommitHook).not.toHaveBeenCalled();
     expect(setupBackgroundElementTemplateDocument).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('element-template native index wiring', () => {
     const setupBackgroundElementTemplateDocument = vi.fn();
     const installElementTemplateHydrationListener = vi.fn();
     const initProfileHook = vi.fn();
-    const setupLynxEnv = vi.fn();
+    const setupSharedLynxEnv = vi.fn();
     const initTimingAPI = vi.fn();
     const setRoot = vi.fn();
     const callDestroyLifetimeFun = vi.fn();
@@ -169,8 +169,8 @@ describe('element-template native index wiring', () => {
     vi.doMock('../../../src/element-template/debug/profile.js', () => ({
       initProfileHook,
     }));
-    vi.doMock('../../../src/element-template/lynx/env.js', () => ({
-      setupLynxEnv,
+    vi.doMock('../../../src/core/lynx/env.js', () => ({
+      setupSharedLynxEnv,
     }));
     vi.doMock('../../../src/element-template/lynx/performance.js', () => ({
       initTimingAPI,
@@ -209,7 +209,7 @@ describe('element-template native index wiring', () => {
     expect(installElementTemplateCommitHook).toHaveBeenCalledTimes(1);
     expect(initTimingAPI).toHaveBeenCalledTimes(1);
     expect(initProfileHook).toHaveBeenCalledTimes(1);
-    expect(setupLynxEnv).toHaveBeenCalledTimes(1);
+    expect(setupSharedLynxEnv).toHaveBeenCalledTimes(1);
     expect(resetEventStateForRuntime).toHaveBeenCalledTimes(1);
     expect(globalThis.lynx.getApp().callDestroyLifetimeFun).toBe(callDestroyLifetimeFun);
     expect(globalThis.lynx.getApp().publishEvent).toBe(publishEvent);

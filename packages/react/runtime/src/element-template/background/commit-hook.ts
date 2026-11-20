@@ -9,22 +9,19 @@ import {
   resetGlobalCommitContext,
   takeRemovedSubtreesForPostDispatchTeardown,
 } from './commit-context.js';
+import { dropDelayedRunOnMainThreadReturnIds, packElementTemplateCommitUpdateEvent } from './commit-event.js';
 import type { BackgroundElementTemplateInstance } from './instance.js';
 import { clearElementTemplateRenderScope, resetElementTemplateRenderScope } from './render-scope.js';
 import { globalPipelineOptions, markTiming, markTimingLegacy, setPipeline } from '../../core/performance.js';
-import { getReloadVersion } from '../../core/reload-version.js';
 import {
   delayedRunOnMainThreadData,
   takeDelayedRunOnMainThreadData,
 } from '../../core/thread-function-call/main-thread.js';
-import { dropFunctionCallReturnIds } from '../../core/thread-function-call/return-value.js';
 import { COMMIT } from '../../shared/render-constants.js';
 import { hook, isEmptyObject } from '../../shared/utils.js';
-import { formatElementTemplateUpdateCommands } from '../debug/alog.js';
 import { profileEnd, profileStart } from '../debug/profile.js';
 import { sendMTRefInitValueToMainThread } from '../main-thread-ref-init-value.js';
 import { clearPendingRefs, flushPendingRefs, hasPendingRefs } from '../prop-adapters/ref.js';
-import { createElementTemplateUpdateEvent } from '../protocol/update-event.js';
 
 let installed = false;
 let previousCommit: typeof options[typeof COMMIT];
@@ -71,9 +68,7 @@ function cleanupFailedElementTemplateCommit(
   removedSubtreesAwaitingTeardown: BackgroundElementTemplateInstance[],
   delayedRunOnMainThreadPayload: readonly { resolveId: number }[] | undefined,
 ): void {
-  if (delayedRunOnMainThreadPayload) {
-    dropFunctionCallReturnIds(delayedRunOnMainThreadPayload.map(data => data.resolveId));
-  }
+  dropDelayedRunOnMainThreadReturnIds(delayedRunOnMainThreadPayload);
   clearPendingRefs();
   resetGlobalCommitContext();
   setPipeline(undefined);
@@ -114,29 +109,10 @@ function flushElementTemplateCommitChanges(): void {
       ? takeDelayedRunOnMainThreadData()
       : undefined;
 
-    let updateEvent: ReturnType<typeof createElementTemplateUpdateEvent>;
+    let updateEvent: ReturnType<typeof packElementTemplateCommitUpdateEvent>;
     try {
-      if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
-        console.alog?.(
-          '[ReactLynxDebug] ElementTemplate BTS -> MTS update:\n'
-            + JSON.stringify(
-              {
-                ops: formatElementTemplateUpdateCommands(globalCommitContext.ops),
-                flushOptions: globalCommitContext.flushOptions,
-                flowIds: globalCommitContext.flowIds,
-                delayedRunOnMainThreadDataCount: delayedRunOnMainThreadPayload?.length,
-              },
-              null,
-              2,
-            ),
-        );
-      }
-
-      updateEvent = createElementTemplateUpdateEvent({
-        ops: globalCommitContext.ops,
-        flushOptions: globalCommitContext.flushOptions,
-        reloadVersion: getReloadVersion(),
-        flowIds: globalCommitContext.flowIds,
+      updateEvent = packElementTemplateCommitUpdateEvent({
+        alogHeader: '[ReactLynxDebug] ElementTemplate BTS -> MTS update:',
         delayedRunOnMainThreadData: delayedRunOnMainThreadPayload,
       });
     } catch (error) {
