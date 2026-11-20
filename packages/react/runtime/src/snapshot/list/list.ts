@@ -148,17 +148,24 @@ export function componentAtIndexFactory(
         // in this case, no need to invoke __FlushElementTree because in the end of componentAtIndexes(), the list will invoke __FlushElementTree.
         return sign;
       } else {
-        const newCtx = childCtx.takeElements();
-        for (const id in gSignMap) {
-          if (gSignMap[id]!.get(sign) === childCtx) {
-            gSignMap[id]!.set(sign, newCtx);
+        childCtx.takeElements((original, copy) => {
+          const transferredRoot = copy.__element_root;
+          if (!transferredRoot || (original !== childCtx && !original.parentNode?.__snapshot_def.isListHolder)) {
+            return;
           }
-          gRecycleMap[id]?.forEach((pool) => {
-            if (pool.get(sign) === childCtx) {
-              pool.set(sign, newCtx);
+
+          const transferredSign = __GetElementUniqueID(transferredRoot);
+          for (const id in gSignMap) {
+            if (gSignMap[id]!.get(transferredSign) === original) {
+              gSignMap[id]!.set(transferredSign, copy);
             }
-          });
-        }
+            gRecycleMap[id]?.forEach((pool) => {
+              if (pool.get(transferredSign) === original) {
+                pool.set(transferredSign, copy);
+              }
+            });
+          }
+        });
       }
     }
 
