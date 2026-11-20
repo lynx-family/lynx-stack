@@ -2,10 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import type { ClosureValueType, Worklet } from './bindings/types.js';
-import type { RunOnBackgroundDelayImpl } from './delayRunOnBackground.js';
 import type { EventDelayImpl } from './delayWorkletEvent.js';
 import type { EomImpl } from './eomImpl.js';
-import type { JsFunctionLifecycleManager } from './jsFunctionLifecycle.js';
+import type { JsFunctionLifecycleManager, RunOnBackgroundDelayImpl } from './run-on-background/index.js';
 import type { RefImpl } from './workletRef.js';
 
 declare global {

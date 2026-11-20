@@ -845,4 +845,18 @@ it('preserves an already-bound handle execId and skips unbound handles without a
   globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.clearDelayedBackgroundFunctions();
   globalThis.runWorklet({ _wkltId: 'capture-handles', _jsFn: { staleEpochHandle } }, []);
   expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager.execIdRefCount.get(7)).toBeUndefined();
+
+  // Short-circuit checks: a prebound handle without `_hydratedEpoch` must neither read root `_execId`
+  // nor dereference `_runOnBackgroundDelayImpl.epoch`.
+  globalThis.registerWorklet('main-thread', 'capture-arg-handle', function(cb) {
+    return cb._execId;
+  });
+  const args = [{ _jsFnId: 4, _execId: 12 }];
+  Object.defineProperty(args, '_execId', {
+    get() {
+      throw new Error('root _execId should not be read for prebound handle');
+    },
+  });
+  delete globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl;
+  expect(globalThis.runWorklet({ _wkltId: 'capture-arg-handle' }, args)).toBe(12);
 });

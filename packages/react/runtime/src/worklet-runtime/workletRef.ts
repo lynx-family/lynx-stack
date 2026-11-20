@@ -37,10 +37,9 @@ interface RefImpl {
   clearFirstScreenWorkletRefMap(): void;
 }
 
-let impl: RefImpl | undefined;
 function initWorkletRef(): RefImpl {
   initMainThreadObjects();
-  return (impl = {
+  const instance: RefImpl = {
     _workletRefMap: {},
     /**
      * Map of worklet refs that are created during first screen rendering.
@@ -49,11 +48,55 @@ function initWorkletRef(): RefImpl {
      * to free up memory.
      */
     _firstScreenWorkletRefMap: {},
-    updateWorkletRef,
-    updateWorkletRefInitValueChanges,
+    updateWorkletRef(
+      handle: WorkletRefImpl<Element | null>,
+      element: ElementNode | null,
+    ): void {
+      (getFromWorkletRefMapOn(instance, handle) as WorkletRef<Element | null>).current = element
+        ? new Element(element)
+        : null;
+    },
+    updateWorkletRefInitValueChanges(
+      patch: MainThreadRefInitValuePatch,
+    ): void {
+      profile('updateWorkletRefInitValueChanges', () => {
+        let firstError: unknown;
+        let hasError = false;
+        patch.forEach(([id, value, type]) => {
+          try {
+            const handle = {
+              _wvid: id,
+              _initValue: value,
+              _type: type,
+            } as WorkletRefImpl<unknown>;
+            const existing = instance._workletRefMap[id];
+            if (existing) {
+              assertCompatibleWorkletValue(
+                handle,
+                existing,
+                'initialization patch',
+              );
+            } else {
+              instance._workletRefMap[id] = createWorkletValue(handle);
+            }
+          } catch (error) {
+            if (!hasError) {
+              firstError = error;
+              hasError = true;
+            }
+          }
+        });
+        if (hasError) {
+          throw firstError;
+        }
+      });
+    },
     registerMainThreadObjectType,
-    clearFirstScreenWorkletRefMap,
-  });
+    clearFirstScreenWorkletRefMap(): void {
+      instance._firstScreenWorkletRefMap = {};
+    },
+  };
+  return instance;
 }
 
 const createWorkletRef = <T>(
@@ -115,9 +158,10 @@ function assertCompatibleWorkletValue(
   }
 }
 
-const getFromWorkletRefMap = (
+function getFromWorkletRefMapOn(
+  refImplState: RefImpl,
   refImpl: WorkletRefImpl<unknown>,
-): object | undefined => {
+): object | undefined {
   const id = refImpl._wvid;
   /* v8 ignore next 3 */
   if (__DEV__) {
@@ -129,9 +173,9 @@ const getFromWorkletRefMap = (
     // Might be called in two scenarios:
     // 1. In MTS events
     // 2. In `main-thread:ref`
-    value = impl!._firstScreenWorkletRefMap[id] ??= createWorkletValue(refImpl);
+    value = refImplState._firstScreenWorkletRefMap[id] ??= createWorkletValue(refImpl);
   } else {
-    value = impl!._workletRefMap[id];
+    value = refImplState._workletRefMap[id];
   }
 
   /* v8 ignore next 3 */
@@ -139,10 +183,16 @@ const getFromWorkletRefMap = (
     throw new Error('MainThreadRef is not initialized: ' + id);
   }
   return value;
+}
+
+const getFromWorkletRefMap = (
+  refImpl: WorkletRefImpl<unknown>,
+): object | undefined => {
+  return getFromWorkletRefMapOn(lynxWorkletImpl._refImpl, refImpl);
 };
 
 function removeValueFromWorkletRefMap(id: WorkletRefId): void {
-  delete impl!._workletRefMap[id];
+  delete lynxWorkletImpl._refImpl._workletRefMap[id];
 }
 
 function hydrateWorkletValue(
@@ -150,62 +200,13 @@ function hydrateWorkletValue(
   value: object,
 ): void {
   assertCompatibleWorkletValue(handle, value, 'hydration');
-  impl!._workletRefMap[handle._wvid] = value;
-}
-
-/**
- * Create an element instance of the given element node, then set the worklet value to it.
- * This is called in `snapshotContextUpdateWorkletRef`.
- * @param handle handle of the worklet value.
- * @param element the element node.
- */
-function updateWorkletRef(
-  handle: WorkletRefImpl<Element | null>,
-  element: ElementNode | null,
-): void {
-  (getFromWorkletRefMap(handle) as WorkletRef<Element | null>).current = element
-    ? new Element(element)
-    : null;
+  lynxWorkletImpl._refImpl._workletRefMap[handle._wvid] = value;
 }
 
 function updateWorkletRefInitValueChanges(
   patch: MainThreadRefInitValuePatch,
 ): void {
-  profile('updateWorkletRefInitValueChanges', () => {
-    let firstError: unknown;
-    let hasError = false;
-    patch.forEach(([id, value, type]) => {
-      try {
-        const handle = {
-          _wvid: id,
-          _initValue: value,
-          _type: type,
-        } as WorkletRefImpl<unknown>;
-        const existing = impl!._workletRefMap[id];
-        if (existing) {
-          assertCompatibleWorkletValue(
-            handle,
-            existing,
-            'initialization patch',
-          );
-        } else {
-          impl!._workletRefMap[id] = createWorkletValue(handle);
-        }
-      } catch (error) {
-        if (!hasError) {
-          firstError = error;
-          hasError = true;
-        }
-      }
-    });
-    if (hasError) {
-      throw firstError;
-    }
-  });
-}
-
-function clearFirstScreenWorkletRefMap(): void {
-  impl!._firstScreenWorkletRefMap = {};
+  lynxWorkletImpl._refImpl.updateWorkletRefInitValueChanges(patch);
 }
 
 export {

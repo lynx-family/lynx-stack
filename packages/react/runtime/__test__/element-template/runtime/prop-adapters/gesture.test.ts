@@ -28,7 +28,7 @@ import { createElementTemplateWithReservedHandle } from '../../../../src/element
 import { elementTemplateRegistry } from '../../../../src/element-template/runtime/template/registry.js';
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';
-import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
+import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/run-on-background/lifecycle.js';
 
 function gesture(id: number, type: number, callbacks: Record<string, MTEventCtx> = { onBegin: { _wkltId: 'begin' } }) {
   return { __isGesture: true, id, type, config: { enabled: true }, callbacks };

@@ -23,7 +23,7 @@ import {
   clearMainThreadDynamicAttrState,
   getMainThreadDynamicAttrState,
 } from '../../../../src/element-template/runtime/template/main-thread-dynamic-attr-state.js';
-import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
+import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/run-on-background/lifecycle.js';
 import { resetTemplateId } from '../../../../src/element-template/runtime/template/handle.js';
 
 describe('ElementTemplateHandle', () => {

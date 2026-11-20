@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
@@ -68,6 +69,58 @@ function getResolvedRelativeImports(file: string): string[] {
 
 function stripModuleExtension(filePath: string): string {
   return filePath.replace(/\.(?:[cm]?[jt]sx?)$/, '');
+}
+
+function getModuleSpecifiers(file: string): string[] {
+  const source = fs.readFileSync(file, 'utf8');
+  const scriptKind = file.endsWith('.tsx')
+    ? ts.ScriptKind.TSX
+    : file.endsWith('.jsx')
+    ? ts.ScriptKind.JSX
+    : file.endsWith('.ts')
+    ? ts.ScriptKind.TS
+    : ts.ScriptKind.JS;
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, false, scriptKind);
+  const specifiers: string[] = [];
+
+  function visit(node: ts.Node): void {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node))
+      && node.moduleSpecifier
+      && ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      specifiers.push(node.moduleSpecifier.text);
+    } else if (
+      ts.isExternalModuleReference(node)
+      && ts.isStringLiteral(node.expression)
+    ) {
+      specifiers.push(node.expression.text);
+    } else if (
+      ts.isImportTypeNode(node)
+      && ts.isLiteralTypeNode(node.argument)
+      && ts.isStringLiteral(node.argument.literal)
+    ) {
+      specifiers.push(node.argument.literal.text);
+    } else if (
+      ts.isCallExpression(node)
+      && node.arguments.length >= 1
+      && ts.isStringLiteralLike(node.arguments[0]!)
+      && (
+        node.expression.kind === ts.SyntaxKind.ImportKeyword
+        || (ts.isIdentifier(node.expression) && node.expression.text === 'require')
+      )
+    ) {
+      specifiers.push(node.arguments[0]!.text);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return specifiers;
+}
+
+function isWithinDir(target: string, dir: string): boolean {
+  return target === dir || target.startsWith(`${dir}${path.sep}`);
 }
 
 describe('snapshot containment guardrails', () => {
@@ -151,6 +204,32 @@ describe('snapshot containment guardrails', () => {
           return !resolved.startsWith(sharedPrefix);
         });
       })
+      .map((file) => path.relative(runtimeRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
+
+  test('prevents non-worklet-runtime source modules from importing private worklet-runtime internals', () => {
+    const workletRuntimeDir = path.join(srcRoot, 'worklet-runtime');
+    const workletBindingsDir = path.join(workletRuntimeDir, 'bindings');
+    const isForbiddenWorkletRuntimeSpecifier = (file: string, specifier: string): boolean => {
+      if (specifier.startsWith('.')) {
+        const resolved = stripModuleExtension(path.resolve(path.dirname(file), specifier));
+        return isWithinDir(resolved, workletRuntimeDir) && !isWithinDir(resolved, workletBindingsDir);
+      }
+      if (specifier === '@lynx-js/react/worklet-runtime/bindings') {
+        return false;
+      }
+      return /^@lynx-js\/react(?:\/runtime\/(?:src|lib)|-runtime\/(?:src|lib))?\/worklet-runtime(?:\/|$)/.test(
+        specifier,
+      );
+    };
+
+    const offenders = walkFiles(srcRoot)
+      .filter((file) => !isWithinDir(file, workletRuntimeDir))
+      .filter((file) =>
+        getModuleSpecifiers(file).some((specifier) => isForbiddenWorkletRuntimeSpecifier(file, specifier))
+      )
       .map((file) => path.relative(runtimeRoot, file));
 
     expect(offenders).toEqual([]);

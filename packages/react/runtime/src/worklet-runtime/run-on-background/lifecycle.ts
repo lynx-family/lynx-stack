@@ -1,9 +1,8 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { WorkletEvents } from './bindings/events.js';
-import { profile } from './utils/profile.js';
-import { isSdkVersionGt } from '../shared/version.js';
+import { WorkletEvents } from '../bindings/events.js';
+import { profile } from '../utils/profile.js';
 
 /**
  * `JsFunctionLifecycleManager` monitors references to JS function handles to be called by `runOnBackground()`.
@@ -76,8 +75,4 @@ class JsFunctionLifecycleManager {
   }
 }
 
-function isRunOnBackgroundEnabled(): boolean {
-  return isSdkVersionGt(2, 15);
-}
-
-export { JsFunctionLifecycleManager, isRunOnBackgroundEnabled };
+export { JsFunctionLifecycleManager };

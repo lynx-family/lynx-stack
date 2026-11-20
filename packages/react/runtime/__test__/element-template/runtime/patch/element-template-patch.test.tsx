@@ -8,7 +8,7 @@ import {
 } from '../../../../src/element-template/main-thread-ref-init-value.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/jsFunctionLifecycle.js';
+import { JsFunctionLifecycleManager } from '../../../../src/worklet-runtime/run-on-background/lifecycle.js';
 import { getReloadVersion, increaseReloadVersion } from '../../../../src/core/reload-version.js';
 import type { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
 import { root } from '../../../../src/element-template/index.js';
