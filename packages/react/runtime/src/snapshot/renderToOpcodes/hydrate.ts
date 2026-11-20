@@ -321,8 +321,9 @@ export function hydrate(before: SnapshotInstance, after: SnapshotInstance, optio
               if (signMap.has(listItemID)) {
                 signMap.set(listItemID, b);
               }
-              if (recycleMap.has(a.type)) {
-                const recycleSignMap = recycleMap.get(a.type)!;
+              const uniqID = a.type + (a.__listItemPlatformInfo?.['reuse-identifier'] ?? '');
+              if (recycleMap.has(uniqID)) {
+                const recycleSignMap = recycleMap.get(uniqID)!;
                 // Should only update `list-item` in the recycling pool
                 // Because if an on-screen `list-item` is added to the recycling pool,
                 // it could cause a blank screen when reused next time, as it may still be visible.
