@@ -29,6 +29,9 @@
       "types": "./dist/bts.d.ts",
       "default": "./dist/bts.js"
     },
+    "./iife/mts": "./dist/iife/mts.js",
+    "./iife/bts": "./dist/iife/bts.js",
+    "./skill": "./skills/lynx-runtime/SKILL.md",
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -37,6 +40,7 @@
   "files": [
     "README.md",
     "dist",
+    "skills",
     "src"
   ],
   "scripts": {

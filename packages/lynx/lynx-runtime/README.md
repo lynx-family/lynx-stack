@@ -18,6 +18,7 @@ owns rendering, mutable application state, entry replacement, and message protoc
 | Retire an entry without destroying the page          | [Registration lifetime](#registration-lifetime)                                                  |
 | Read initial data or GlobalProps                     | [Input baseline](#mts-input-ownership), [GlobalProps ownership](#globalprops-across-mts-and-bts) |
 | Install synchronous data hooks or raw event handling | [Data hooks](#native-data-processing--host-updates), [raw BTS events](#raw-bts-events)           |
+| Inline into a build-free `.lynxml` document          | [Build-free `.lynxml` usage (IIFE)](#build-free-lynxml-usage-iife)                               |
 
 For a runnable Element PAPI example built with `@lynx-js/lynx-runtime/mts` and
 `@lynx-js/lynx-runtime/bts`, see `examples/vanilla` in the `lynx-stack` repository.
@@ -61,6 +62,14 @@ matrix. Peer messaging still requires the corresponding host ContextProxy.
 - `@lynx-js/lynx-runtime`: Shared TypeScript types only (`BTSPageRuntime`, `BTSEventHandler`, `CreatedPipelineOptions`, `CreatePipelineOptions`, `LynxSystemInfo`, `MTSFlushContext`, `MTSFlushOptions`, `MTSReloadOptions`, `MTSRenderOptions`, `MTSUpdateOptions`, `BTSUpdateOptions`, `BTSReloadOptions`, `PipelineOptions`, `Unsubscribe`). The package declares `"sideEffects": false`, and runtime entrypoints are imported from `/mts` or `/bts` with zero module-evaluation side effects so bundlers can tree-shake unused imports cleanly. In dual-thread shared files, import types from `@lynx-js/lynx-runtime` and guard runtime calls to `/mts` or `/bts` behind compile-time thread constants (such as `__LEPUS__` / `__JS__`) so dead-code elimination removes cross-thread references before module-graph resolution.
 - `@lynx-js/lynx-runtime/mts`: Main-thread (Lepus) host lifecycle, data flow, single-owner hooks, peer communication, page-level flush and host services (`isDestroyed`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onRenderPage`, `onUpdateData`, `onReload`, `onGlobalPropsChanged`, `setDataProcessor`, `setPageDataGetter`, `sendMessage`, `onMessage`, `flushElementTree`, `createPipeline`, `markTiming`, `onDestroy`).
 - `@lynx-js/lynx-runtime/bts`: Background-thread (JS) page binding entrypoint (`bindPage(): BTSPageRuntime`). All BTS page capabilities (`isDestroyed`, `getId`, `getInitData`, `getGlobalProps`, `getSystemInfo`, `onUpdateData`, `onGlobalPropsChanged`, `onReload`, `onConfigChanged`, `onEnterForeground`, `onEnterBackground`, `onGlobalEvent`, `setEventHandler`, `sendMessage`, `onMessage`, `createPipeline`, `markTiming`, `onDestroy`) are accessed on the bound `BTSPageRuntime` handle, ensuring deterministic page ownership across synchronous and asynchronous work.
+- `@lynx-js/lynx-runtime/iife/mts` & `@lynx-js/lynx-runtime/iife/bts`: Prebuilt, minified, self-contained ES2017 (matching Rspeedy's default syntax target) classic IIFE scripts for build-free `.lynxml` documents. Inline `/iife/mts` at the top of `<script thread="main">` and `/iife/bts` at the top of `<script thread="background">`; each declares a script-scoped `var LynxRuntime` binding with the corresponding thread's exports without triggering CommonJS module wrapper detection (`module`/`exports`) or leaking across cards in shared BTS contexts.
+- `@lynx-js/lynx-runtime/skill`: Version-matched agent skill (`skills/lynx-runtime/SKILL.md`) covering ESM and `.lynxml` usage patterns, classic-script pitfalls, and `node:vm` testing notes.
+
+## Build-free `.lynxml` usage (IIFE)
+
+Build-free `.lynxml` documents have no bundler, ESM `import`, or `<script src>`. Inline the verbatim contents of `@lynx-js/lynx-runtime/iife/mts` (`dist/iife/mts.js`) at the top of `<script thread="main">` and `@lynx-js/lynx-runtime/iife/bts` (`dist/iife/bts.js`) at the top of `<script thread="background">` (after any `"use strict";` directive prologue, before executable code) instead of loading `@lynx-js/lynx-runtime` via blocking `lynx.fetchBundle(...).wait(...)`.
+
+For quick-start `.lynxml` usage patterns, classic-script naming notes, and `node:vm` testing setup, see `skills/lynx-runtime/SKILL.md` (`@lynx-js/lynx-runtime/skill`).
 
 ## MTS input ownership
 
