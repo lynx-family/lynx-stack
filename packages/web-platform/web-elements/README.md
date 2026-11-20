@@ -37,6 +37,10 @@ document.body.innerHTML = `
 `;
 ```
 
+### Text whitespace
+
+Text content follows native Lynx semantics: ordinary spaces, repeated spaces, and line breaks are preserved rather than collapsed using HTML defaults. A space-only text line remains measurable, including when content is supplied through `raw-text`, direct text children, or the `text` attribute. Use layout properties for spacing between components; do not use whitespace text as a layout spacer.
+
 ### Mouse-drag scrolling
 
 To make `<scroll-view>` respond to mouse dragging like a touchscreen, load
