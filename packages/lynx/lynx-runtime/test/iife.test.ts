@@ -351,8 +351,9 @@ function emitInRealm(target, type, payload) {
         'function isStrict() { return this === undefined; }',
         'function mountPage(data) { record(["mts", isStrict(), data.title, renderPage(), outer().length, typeof expr]); }',
         'mts.onRenderPage(mountPage);',
-        '</script >',
+        '</script>',
         '<script thread="background">',
+        'if (!lynx.enabled) return;',
         'const bts = LynxRuntime.bindPage();',
         'record(["bts", bts.getId()]);',
         '</script>',
@@ -379,7 +380,7 @@ function emitInRealm(target, type, payload) {
         synced.indexOf('// BEGIN @lynx-js/lynx-runtime iife/mts'),
       );
 
-      // Clean synced file passes --check (non-colliding `const renderPage`, local `const LynxRuntime`, and Native `</script >`).
+      // Clean cross-host synced file passes --check (non-colliding `const renderPage`, local `const LynxRuntime`, and BTS top-level `return`).
       const ok = spawnSync(
         process.execPath,
         [syncScriptPath, '--check', pagePath],
@@ -395,11 +396,11 @@ function emitInRealm(target, type, payload) {
       );
       expect(secondRun).toContain('UNCHANGED');
 
-      // Execute both extracted scripts from the synced .lynxml (honoring
-      // Native/Web closing-tag whitespace) to verify strict mode and startup code.
-      const mtsBodyMatch = /<script thread = 'main' >([\s\S]*?)<\/script\s*>/
+      // Execute both extracted scripts from the synced cross-host .lynxml
+      // (using exact `</script>` matching Web + Native, and real BTS function wrapper).
+      const mtsBodyMatch = /<script thread = 'main' >([\s\S]*?)<\/script>/
         .exec(synced);
-      const btsBodyMatch = /<script thread="background">([\s\S]*?)<\/script\s*>/
+      const btsBodyMatch = /<script thread="background">([\s\S]*?)<\/script>/
         .exec(synced);
       expect(mtsBodyMatch).not.toBeNull();
       expect(btsBodyMatch).not.toBeNull();
@@ -420,18 +421,66 @@ function emitInRealm(target, type, payload) {
         vm.runInContext('[{ title: "synced" }, {}]', mtsCtx),
       );
 
-      const btsCtx = vm.createContext({
-        lynx: {
+      const btsWrapper = vm.runInNewContext(
+        `(function(require, module, exports, nativeAppId, lynx, record) {\n${btsBodyMatch![
+          1
+        ]!}\n})`,
+      ) as (
+        req: undefined,
+        mod: { exports: Record<string, unknown> },
+        exp: Record<string, unknown>,
+        appId: string,
+        lynxObj: unknown,
+        rec: (entry: unknown) => void,
+      ) => void;
+      const btsMod = { exports: {} };
+      btsWrapper(
+        undefined,
+        btsMod,
+        btsMod.exports,
+        'synced-card',
+        {
+          enabled: true,
           getApp: () => ({ nativeAppId: 'synced-card' }),
           getCoreContext: () => createMockProxy(),
         },
-        record: (entry: unknown) => recorded.push(entry),
-      });
-      vm.runInContext(btsBodyMatch![1]!, btsCtx);
+        (entry: unknown) => recorded.push(entry),
+      );
       expect(recorded).toEqual([
         ['mts', true, 'synced', 1, 2, 'function'],
         ['bts', 'synced-card'],
       ]);
+
+      // Native-specific LynxML syntax (`<lynx>` without engine-version and `</script >` whitespace).
+      const nativeOnlyPath = path.join(tmpDir, 'native-only.lynxml');
+      fs.writeFileSync(
+        nativeOnlyPath,
+        [
+          '<lynx>',
+          '<script thread=main>',
+          'const mts = LynxRuntime;',
+          '</script >',
+          '<script thread=background>',
+          'const bts = LynxRuntime.bindPage();',
+          '</script>',
+          '</lynx >',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      execFileSync(process.execPath, [syncScriptPath, nativeOnlyPath], {
+        encoding: 'utf8',
+      });
+      const nativeSynced = fs.readFileSync(nativeOnlyPath, 'utf8');
+      expect(nativeSynced).toContain('// BEGIN @lynx-js/lynx-runtime iife/mts');
+      expect(nativeSynced).toContain('// BEGIN @lynx-js/lynx-runtime iife/bts');
+      expect(
+        spawnSync(
+          process.execPath,
+          [syncScriptPath, '--check', nativeOnlyPath],
+          { encoding: 'utf8' },
+        ).status,
+      ).toBe(0);
 
       // Do not split multi-line string expressions or flip sloppy `"use strict"\n+ "foo"`.
       const exprPath = path.join(tmpDir, 'expr.lynxml');
@@ -509,6 +558,104 @@ function emitInRealm(target, type, payload) {
       );
       expect(earlyCode.status).toBe(1);
       expect(earlyCode.stderr).toContain('executable code');
+
+      // Reject malformed END with trailing text followed by another standalone END without deleting business code.
+      const staleEndDoc = synced.replace(
+        '// END @lynx-js/lynx-runtime iife/mts',
+        '// END @lynx-js/lynx-runtime iife/mts // stale\nconst keepBetweenEnds = 1;\n// END @lynx-js/lynx-runtime iife/mts',
+      );
+      fs.writeFileSync(pagePath, staleEndDoc, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).not.toBe(0);
+      expect(fs.readFileSync(pagePath, 'utf8')).toBe(staleEndDoc);
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
+
+      // Reject a managed block placed ahead of a `"use strict";` directive on both sync and --check.
+      const lateStrictDoc = synced
+        .replace('\'use strict\';\n', '')
+        .replace(
+          '// END @lynx-js/lynx-runtime iife/mts\n',
+          '// END @lynx-js/lynx-runtime iife/mts\n"use strict";\n',
+        );
+      fs.writeFileSync(pagePath, lateStrictDoc, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).not.toBe(0);
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
+
+      // Reject BTS user code colliding with app-service.js wrapper parameters (`nativeAppId`).
+      const btsParamConflict = synced.replace(
+        'const bts = LynxRuntime.bindPage();',
+        'const bts = LynxRuntime.bindPage();\nconst nativeAppId = bts.getId();',
+      );
+      fs.writeFileSync(pagePath, btsParamConflict, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).not.toBe(0);
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, '--check', pagePath], {
+          encoding: 'utf8',
+        }).status,
+      ).toBe(1);
+
+      // Reject sloppy-mode Annex B block-scoped function hoisting for `LynxRuntime` and MTS hooks.
+      const sloppyPath = path.join(tmpDir, 'sloppy-hoist.lynxml');
+      const sloppyRuntimeDoc = [
+        '<!doctype lynx>',
+        '<lynx engine-version="4.2">',
+        '<script thread="main">',
+        'if (true) { function LynxRuntime() {} }',
+        '</script>',
+        '</lynx>',
+        '',
+      ].join('\n');
+      fs.writeFileSync(sloppyPath, sloppyRuntimeDoc, 'utf8');
+      expect(
+        spawnSync(process.execPath, [syncScriptPath, sloppyPath], {
+          encoding: 'utf8',
+        }).status,
+      ).not.toBe(0);
+      expect(fs.readFileSync(sloppyPath, 'utf8')).toBe(sloppyRuntimeDoc);
+
+      const sloppyHookPath = path.join(tmpDir, 'sloppy-hook.lynxml');
+      fs.writeFileSync(
+        sloppyHookPath,
+        [
+          '<!doctype lynx>',
+          '<lynx engine-version="4.2">',
+          '<script thread="main">',
+          'if (true) { function renderPage() {} }',
+          '</script>',
+          '</lynx>',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      execFileSync(process.execPath, [syncScriptPath, sloppyHookPath], {
+        encoding: 'utf8',
+      });
+      const sloppyHookCheck = spawnSync(
+        process.execPath,
+        [syncScriptPath, '--check', sloppyHookPath],
+        { encoding: 'utf8' },
+      );
+      expect(sloppyHookCheck.status).toBe(1);
+      expect(sloppyHookCheck.stderr).toContain('`renderPage`');
 
       // Reject unpaired duplicate BEGIN marker without deleting business code in between.
       const dupBeginDoc = synced.replace(

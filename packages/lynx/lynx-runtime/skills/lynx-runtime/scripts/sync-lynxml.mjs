@@ -37,6 +37,53 @@ const MTS_RESERVED_GLOBALS = [
   'removeComponents',
 ];
 
+// Union of Native (`app-service.js`) and Web (`createChunkLoading`) BTS wrapper
+// parameters so BTS scripts are compiled in their real host function-body scope.
+const BTS_WRAPPER_PARAMS = [
+  'require',
+  'postMessage',
+  'module',
+  'exports',
+  'lynxCoreInject',
+  'Card',
+  'setTimeout',
+  'setInterval',
+  'clearInterval',
+  'clearTimeout',
+  'NativeModules',
+  'tt',
+  'console',
+  'Component',
+  'TaroLynx',
+  'ReactLynx',
+  'nativeAppId',
+  'Behavior',
+  'LynxJSBI',
+  'lynx',
+  'window',
+  'document',
+  'frames',
+  'self',
+  'location',
+  'navigator',
+  'localStorage',
+  'history',
+  'Caches',
+  'screen',
+  'alert',
+  'confirm',
+  'prompt',
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
+  'webkit',
+  'Reporter',
+  'print',
+  'global',
+  'requestAnimationFrame',
+  'cancelAnimationFrame',
+].join(', ');
+
 function isASCIIWhitespace(ch) {
   return ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r'
     || ch === '\f';
@@ -164,8 +211,13 @@ function parseLynxScriptBlocks(source, filePath) {
   const rootAttrs = rootNameEnd === -1
     ? ''
     : trimASCIIWhitespace(rootTag.slice(rootNameEnd));
-  if (!isSingleAttribute(rootAttrs, 'engine-version')) {
-    fail(pos, '\'<lynx>\' requires a non-empty \'engine-version\' attribute');
+  if (
+    rootAttrs.length > 0 && !isSingleAttribute(rootAttrs, 'engine-version')
+  ) {
+    fail(
+      pos,
+      '\'<lynx>\' only accepts a single non-empty \'engine-version\' attribute',
+    );
   }
   pos = rootTagEnd + 1;
 
@@ -259,9 +311,15 @@ function parseLynxScriptBlocks(source, filePath) {
   return [...seenScripts.values()];
 }
 
-function parsesAsClassicScript(code) {
+function wrapForThread(code, attr) {
+  return attr === 'background'
+    ? `(function(${BTS_WRAPPER_PARAMS}) {\n${code}\n})`
+    : code;
+}
+
+function parsesForThread(code, attr) {
   try {
-    new vm.Script(code);
+    new vm.Script(wrapForThread(code, attr));
     return true;
   } catch {
     return false;
@@ -272,9 +330,22 @@ function parsesAsClassicScript(code) {
  * Compile-only strict-mode probe: `with ({}) {}` is a compile-time SyntaxError
  * in strict mode and valid syntax in sloppy mode.
  */
-function isStrictScript(code) {
-  return parsesAsClassicScript(code)
-    && !parsesAsClassicScript(`${code}\n;with ({}) {}`);
+function isStrictScript(code, attr) {
+  return parsesForThread(code, attr)
+    && !parsesForThread(`${code}\n;with ({}) {}`, attr);
+}
+
+/**
+ * Zero-execution Annex B sloppy-mode hoisting probe: returns true when `code`
+ * hoists a `var`-like binding for `name` (such as `if (true) { function X() {} }`)
+ * into the script/wrapper scope. Line 0 exits unconditionally before `code` runs.
+ */
+function hasSloppyHoistedBinding(code, name) {
+  const fn = vm.runInNewContext(
+    `(function(){ try { void ${name}; return true; } catch { return false; }\n${code}\n})`,
+    Object.create(null),
+  );
+  return fn();
 }
 
 /**
@@ -370,8 +441,8 @@ function isValidLeadingPrologue(prefix) {
  * compiler so non-strict expressions like `"hello"\n.toUpperCase()` or
  * `"use strict"\n+ "foo"` are never split.
  */
-function findInsertionOffset(body) {
-  if (!isStrictScript(body)) return 0;
+function findInsertionOffset(body, attr) {
+  if (!isStrictScript(body, attr)) return 0;
 
   let pos = 0;
   for (;;) {
@@ -385,7 +456,7 @@ function findInsertionOffset(body) {
     if (afterStr !== -1 && afterStr < body.length && body[afterStr] === ';') {
       candidateEnd = afterStr + 1;
     }
-    if (isStrictScript(body.slice(0, candidateEnd))) {
+    if (isStrictScript(body.slice(0, candidateEnd), attr)) {
       return candidateEnd;
     }
     pos = candidateEnd;
@@ -402,15 +473,19 @@ function formatBlock(entry, code) {
 
 function findManagedBlock(body, attr, entry, filePath) {
   const anyMarkerRe =
-    /\/\/ (?:BEGIN|END) @lynx-js\/lynx-runtime iife\/(mts|bts)/g;
+    /\/\/ (BEGIN|END) @lynx-js\/lynx-runtime iife\/(mts|bts)/g;
+  let totalBegins = 0;
+  let totalEnds = 0;
   for (const m of body.matchAll(anyMarkerRe)) {
-    if (m[1] !== entry) {
+    if (m[2] !== entry) {
       throw new Error(
         `${filePath} [${attr}]: found iife/${
-          m[1]
+          m[2]
         } marker inside [${attr}] script (expected iife/${entry}).`,
       );
     }
+    if (m[1] === 'BEGIN') totalBegins += 1;
+    else totalEnds += 1;
   }
 
   const beginRe = new RegExp(
@@ -424,15 +499,13 @@ function findManagedBlock(body, attr, entry, filePath) {
   const begins = [...body.matchAll(beginRe)];
   const ends = [...body.matchAll(endRe)];
 
+  if (totalBegins !== begins.length || totalEnds !== ends.length) {
+    throw new Error(
+      `${filePath} [${attr}]: malformed inline iife/${entry} marker; every BEGIN/END marker must appear on its own standalone line without trailing text.`,
+    );
+  }
+
   if (begins.length === 0 && ends.length === 0) {
-    if (
-      body.includes(`// BEGIN @lynx-js/lynx-runtime iife/${entry}`)
-      || body.includes(`// END @lynx-js/lynx-runtime iife/${entry}`)
-    ) {
-      throw new Error(
-        `${filePath} [${attr}]: malformed inline iife/${entry} marker; markers must appear on standalone lines.`,
-      );
-    }
     return null;
   }
 
@@ -466,37 +539,45 @@ function findManagedBlock(body, attr, entry, filePath) {
 }
 
 /**
- * Uses V8's real classic-script parser (`vm.Script`) to detect script-level
- * `LynxRuntime` collisions (both threads) and `globalThis` `var`/`function`
- * hook collisions (MTS only) without false positives on nested scopes,
- * non-colliding `const`/`let`, strings, comments, or regex literals.
+ * Uses V8's real parser (`vm.Script`) in the thread's actual compilation scope
+ * (classic script for MTS, `app-service.js` wrapper body for BTS) to detect
+ * script/wrapper-level `LynxRuntime` conflicts and MTS `globalThis` hook
+ * collisions (including sloppy-mode Annex B block-function hoisting).
  */
 function checkScriptBindings(userCode, attr, filePath, { checkMtsHooks }) {
   const errors = [];
-  if (!parsesAsClassicScript(userCode)) {
+  if (!parsesForThread(userCode, attr)) {
     errors.push(
-      `${filePath} [${attr}]: user script is not valid classic JavaScript.`,
+      `${filePath} [${attr}]: user script is not valid JavaScript for [${attr}].`,
     );
     return errors;
   }
 
-  if (!parsesAsClassicScript(`${userCode}\n;let LynxRuntime;`)) {
+  const sloppy = !isStrictScript(userCode, attr);
+  if (
+    !parsesForThread(`${userCode}\n;let LynxRuntime;`, attr)
+    || (sloppy && hasSloppyHoistedBinding(userCode, 'LynxRuntime'))
+  ) {
     errors.push(
-      `${filePath} [${attr}]: user code declares script-level \`LynxRuntime\` (for example an unmarked runtime copy or top-level \`var\`/\`let\`/\`const\`/\`function\`/\`class LynxRuntime\`), which conflicts with the managed block.`,
+      `${filePath} [${attr}]: user code declares script-level \`LynxRuntime\` (for example an unmarked runtime copy, top-level declaration, or sloppy block function), which conflicts with the managed block.`,
     );
   }
 
   if (checkMtsHooks && attr === 'main') {
     for (const name of MTS_RESERVED_GLOBALS) {
-      const collidesWithLet = !parsesAsClassicScript(
+      const collidesWithLet = !parsesForThread(
         `${userCode}\n;let ${name};`,
+        attr,
       );
-      const collidesWithVar = !parsesAsClassicScript(
+      const collidesWithVar = !parsesForThread(
         `${userCode}\n;var ${name};`,
+        attr,
       );
-      if (collidesWithLet && !collidesWithVar) {
+      const hoistsInSloppyBlock = sloppy
+        && hasSloppyHoistedBinding(userCode, name);
+      if ((collidesWithLet && !collidesWithVar) || hoistsInSloppyBlock) {
         errors.push(
-          `${filePath} [main]: script-level \`var\`/\`function\` declaration \`${name}\` shares \`globalThis.${name}\` and will be overwritten by @lynx-js/lynx-runtime MTS activation; rename the handler.`,
+          `${filePath} [main]: \`${name}\` binds \`globalThis.${name}\` and will be overwritten by @lynx-js/lynx-runtime MTS activation; rename the handler.`,
         );
       }
     }
@@ -531,9 +612,12 @@ function syncBody(body, attr, entry, code, filePath) {
       throw new Error(bindingErrors.join('\n'));
     }
     const nextBody = managed.prefix + block + managed.suffix;
-    if (!parsesAsClassicScript(nextBody)) {
+    if (
+      !parsesForThread(nextBody, attr)
+      || isStrictScript(nextBody, attr) !== isStrictScript(userCode, attr)
+    ) {
       throw new Error(
-        `${filePath} [${attr}]: updated script is not valid classic JavaScript.`,
+        `${filePath} [${attr}]: managed iife/${entry} block breaks script syntax or disables a "use strict" directive placed after the block; move "use strict" before the block.`,
       );
     }
     return nextBody;
@@ -546,8 +630,8 @@ function syncBody(body, attr, entry, code, filePath) {
     throw new Error(bindingErrors.join('\n'));
   }
 
-  const wasStrict = isStrictScript(body);
-  const insertAt = findInsertionOffset(body);
+  const wasStrict = isStrictScript(body, attr);
+  const insertAt = findInsertionOffset(body, attr);
   const before = body.slice(0, insertAt);
   const after = body.slice(insertAt);
   const needsLeadingNewline = !before.endsWith('\n');
@@ -560,7 +644,8 @@ function syncBody(body, attr, entry, code, filePath) {
     + after;
 
   if (
-    !parsesAsClassicScript(nextBody) || isStrictScript(nextBody) !== wasStrict
+    !parsesForThread(nextBody, attr)
+    || isStrictScript(nextBody, attr) !== wasStrict
   ) {
     throw new Error(
       `${filePath} [${attr}]: refusing to write because inserting iife/${entry} would alter script syntax or strict mode.`,
@@ -603,16 +688,23 @@ function checkFile(filePath, artifacts) {
       );
     }
 
-    if (!parsesAsClassicScript(body)) {
+    const userCode = `${managed.prefix}\n${managed.suffix}`;
+    const bindingErrors = checkScriptBindings(userCode, attr, filePath, {
+      checkMtsHooks: true,
+    });
+    errors.push(...bindingErrors);
+    if (!parsesForThread(body, attr)) {
       errors.push(
-        `${filePath} [${attr}]: script is not valid classic JavaScript.`,
+        `${filePath} [${attr}]: script is not valid JavaScript for [${attr}].`,
+      );
+    } else if (
+      bindingErrors.length === 0
+      && isStrictScript(body, attr) !== isStrictScript(userCode, attr)
+    ) {
+      errors.push(
+        `${filePath} [${attr}]: managed iife/${entry} block disables a "use strict" directive placed after the block; move "use strict" before the block.`,
       );
     }
-
-    const userCode = `${managed.prefix}\n${managed.suffix}`;
-    errors.push(
-      ...checkScriptBindings(userCode, attr, filePath, { checkMtsHooks: true }),
-    );
   }
 
   return errors;
