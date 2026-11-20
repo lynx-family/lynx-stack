@@ -66,7 +66,7 @@ export function componentAtIndexFactory(
       // Kept as a safeguard in case the callback is somehow invoked after list removal.
       throw new Error('componentAtIndex called on removed list');
     }
-    /* v8 ignore end */
+    /* v8 ignore stop */
 
     const platformInfo = childCtx.__listItemPlatformInfo ?? {};
 
@@ -149,7 +149,16 @@ export function componentAtIndexFactory(
         return sign;
       } else {
         const newCtx = childCtx.takeElements();
-        signMap.set(sign, newCtx);
+        for (const id in gSignMap) {
+          if (gSignMap[id]!.get(sign) === childCtx) {
+            gSignMap[id]!.set(sign, newCtx);
+          }
+          gRecycleMap[id]?.forEach((pool) => {
+            if (pool.get(sign) === childCtx) {
+              pool.set(sign, newCtx);
+            }
+          });
+        }
       }
     }
 
