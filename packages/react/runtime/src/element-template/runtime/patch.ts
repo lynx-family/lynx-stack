@@ -11,15 +11,28 @@ import {
   updateElementTemplateListAttributes,
   updateElementTemplateListItemSubtreeHandles,
 } from './list/list.js';
-import { insertElementTemplateSubtree } from './template/handle.js';
+import { createElementTemplateWithReservedHandle, insertElementTemplateSubtree } from './template/handle.js';
 import { retainMainThreadBackgroundFunctionCtx } from './template/main-thread-background-function.js';
+import {
+  deleteMainThreadDynamicAttrStateForSubtree,
+  initializeMainThreadDynamicAttrSlots,
+  isSpreadDynamicAttrSlot,
+  prepareSpreadAttrSlotForNative,
+  reconcileUnhydratedSpreadMTRefSlots,
+  updateGestureAttrSlot,
+  updateMainThreadEventAttrSlot,
+  updateMainThreadRefAttrSlot,
+  updateSpreadAttrSlot,
+} from './template/main-thread-dynamic-attr-state.js';
+import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
 import type { MTEventNativeWrapper } from './template/main-thread-event-ctx.js';
 import { elementTemplateRegistry } from './template/registry.js';
 import { TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX } from './template/typed-attributes.js';
+import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
+import type { GestureSlotValue } from '../prop-adapters/gesture.js';
 import { ElementTemplateUpdateOps } from '../protocol/opcodes.js';
 import type { ElementTemplateUpdateOp } from '../protocol/opcodes.js';
 import { ELEMENT_TEMPLATE_PAGE_HANDLE_ID } from '../protocol/page.js';
-import { elementTemplateTypeTag } from '../protocol/template-type.js';
 import type {
   ElementTemplateHandleSlotsCommand,
   ElementTemplateUpdateCommandStream,
@@ -30,21 +43,6 @@ import type {
   TypedElementAttributesCommand,
   UpdateTypedListItemCommand,
 } from '../protocol/types.js';
-import {
-  deleteMainThreadDynamicAttrStateForSubtree,
-  initializeMainThreadDynamicAttrSlots,
-  isSpreadDynamicAttrSlot,
-  prepareMainThreadDynamicAttrSlotsForNative,
-  prepareSpreadAttrSlotForNative,
-  reconcileUnhydratedSpreadMTRefSlots,
-  updateGestureAttrSlot,
-  updateMainThreadEventAttrSlot,
-  updateMainThreadRefAttrSlot,
-  updateSpreadAttrSlot,
-} from './template/main-thread-dynamic-attr-state.js';
-import type { MainThreadDynamicAttrSubtreeHandle } from './template/main-thread-dynamic-attr-state.js';
-import { retainGestureCallbacks } from '../prop-adapters/gesture.js';
-import type { GestureSlotValue } from '../prop-adapters/gesture.js';
 
 export type { ElementTemplateUpdateCommandStream } from '../protocol/types.js';
 
@@ -85,29 +83,16 @@ export function applyElementTemplateUpdateCommands(
           continue;
         }
 
-        const templateType = elementTemplateTypeTag(templateKey, bundleUrl);
-        const nativeAttributeSlots = prepareMainThreadDynamicAttrSlotsForNative(
-          templateType,
-          attributeSlots,
-        );
-        const nativeRef = __CreateElementTemplate(
+        createElementTemplateWithReservedHandle(
+          handleId,
           templateKey,
           bundleUrl,
-          nativeAttributeSlots,
+          attributeSlots,
           resolvedChildSlots,
-          handleId,
+          true,
           options,
+          true,
         );
-
-        if (nativeRef) {
-          elementTemplateRegistry.set(handleId, nativeRef);
-          initializeMainThreadDynamicAttrSlots(
-            handleId,
-            templateType,
-            attributeSlots,
-            true,
-          );
-        }
         break;
       }
 
