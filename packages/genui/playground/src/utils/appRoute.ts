@@ -46,6 +46,7 @@ export function parseRouteHash(hash: string): Route {
 
   if (
     parts[0] === 'a2ui'
+    || parts[0] === 'a2ui-express'
     || parts[0] === 'openui'
     || parts[0] === 'mcp-apps'
     || parts[0] === 'reactlynx'

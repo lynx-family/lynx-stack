@@ -25,6 +25,7 @@ export interface SharedConversationMessage {
 }
 
 export interface SharedConversationSnapshot {
+  previewMessages?: unknown[];
   dataModel: Record<string, unknown>;
   surfaceIds: string[];
   previewPayloadUrls?: PreviewPayloadUrls;
@@ -33,10 +34,8 @@ export interface SharedConversationSnapshot {
 /**
  * Self-contained, versioned snapshot of an entire conversation. Uploaded to
  * durable storage so a share link can rehydrate the conversation (transcript +
- * data model) into the recipient's playground. Deliberately omits
- * `snapshot.previewMessages`: it is a client-side render cache that is rebuilt
- * from the assistant message history on import, and dropping it keeps the
- * uploaded document well under the server's body-size limit.
+ * data model) into the recipient's playground. Express snapshots carry the last
+ * compiled surface because the server owns the compiler.
  */
 export interface SharedConversationDoc {
   v: 1;
@@ -81,6 +80,9 @@ export function serializeConversation(
       dataModel: record.snapshot.dataModel ?? {},
       surfaceIds: record.snapshot.surfaceIds ?? [],
     };
+    if (protocol === 'a2ui-express') {
+      snapshot.previewMessages = record.snapshot.previewMessages;
+    }
     if (record.snapshot.previewPayloadUrls) {
       snapshot.previewPayloadUrls = record.snapshot.previewPayloadUrls;
     }
@@ -134,6 +136,7 @@ export function resolveSharedConversationProtocol(
   if (doc.protocol === undefined) return 'a2ui';
   if (
     doc.protocol === 'a2ui'
+    || doc.protocol === 'a2ui-express'
     || doc.protocol === 'openui'
     || doc.protocol === 'mcp-apps'
     || doc.protocol === 'reactlynx'
@@ -144,4 +147,11 @@ export function resolveSharedConversationProtocol(
     return doc.protocol;
   }
   return null;
+}
+
+export function sharedPreviewMessages(doc: SharedConversationDoc): unknown[] {
+  return doc.protocol === 'a2ui-express'
+      && Array.isArray(doc.snapshot?.previewMessages)
+    ? doc.snapshot.previewMessages
+    : [];
 }

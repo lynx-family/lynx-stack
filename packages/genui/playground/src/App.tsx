@@ -133,6 +133,8 @@ export function App() {
     || protocol.name === 'reactweb'
   ) {
     tabs = HTML_TABS;
+  } else if (protocol.name === 'a2ui-express') {
+    tabs = GENUI_TABS.filter(tab => tab.id !== 'examples');
   } else if (protocol.name === 'mcp-apps') {
     tabs = CREATE_EXAMPLES_TABS;
   } else if (protocol.name === 'lynx-xml') {
@@ -172,6 +174,10 @@ export function App() {
   }, []);
 
   const handleProtocolSelect = useCallback((name: ProtocolName) => {
+    if (name === 'a2ui-express' && route.tab === 'examples') {
+      window.location.hash = buildRouteHash(name, 'create');
+      return;
+    }
     if (name === 'html' || name === 'reactlynx' || name === 'reactweb') {
       window.location.hash = buildRouteHash(name, 'create');
       return;
@@ -216,6 +222,9 @@ export function App() {
       return createPage;
     }
 
+    if (protocol.name === 'a2ui-express' && route.tab === 'examples') {
+      return createPage;
+    }
     if (protocol.name === 'mcp-apps') {
       if (route.tab !== 'examples') return createPage;
       return route.demoId
@@ -355,6 +364,7 @@ export function App() {
         onChange={(e) => handleProtocolSelect(e.target.value as ProtocolName)}
       >
         <option value='a2ui'>A2UI v{PROTOCOLS.a2ui.version}</option>
+        <option value='a2ui-express'>A2UI Express</option>
         <option value='openui'>OpenUI v{PROTOCOLS.openui.version}</option>
         <option value='mcp-apps'>
           MCP Apps v{PROTOCOLS['mcp-apps'].version}

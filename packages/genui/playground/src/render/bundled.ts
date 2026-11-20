@@ -99,6 +99,7 @@ export function useBundledRender(
     scheduleFcpFallbackMetric();
     if (
       initDataRef.current?.protocol !== 'a2ui'
+      && initDataRef.current?.protocol !== 'a2ui-express'
       && !initDataRef.current?.liveStream
     ) {
       scheduleFmpMetric();

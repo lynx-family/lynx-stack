@@ -103,6 +103,7 @@ function readPlan(value: unknown): BenchSharedPlan {
           : option(group.reasoningEffort, BENCH_REASONING_EFFORTS),
         protocol: option(group.protocol, [
           'a2ui',
+          'a2ui-express',
           'openui',
           'lynx-xml',
           'html',

@@ -56,6 +56,7 @@ import type {
   BenchUiJudgeResult,
 } from '../../a2ui/a2ui-bench-judge.js';
 // import { runBenchPreview } from '../../a2ui/a2ui-bench-preview.js';
+import { createExpressBenchAdapter } from '../../a2ui-express/bench-adapter.js';
 import { createHtmlBenchAdapter } from '../../html/html-bench-adapter.js';
 import { createLynxXmlBenchAdapter } from '../../lynx-xml/lynx-xml-bench-adapter.js';
 import { createOpenUIBenchAdapter } from '../../openui/openui-bench-adapter.js';
@@ -496,6 +497,9 @@ async function runProtocolAdapterOne(
       );
     }
     const artifact = await adapter.generate({
+      ...(protocol === 'a2ui-express' && profile === 'native'
+        ? { catalog: pickRunCatalog(item.group) }
+        : {}),
       reasoningEffort: parseReasoningEffort(item.group.reasoningEffort),
       onPerformanceEvent: timing.observe,
       enableDesignGuidance: item.group.enableDesignGuidance !== false,
@@ -595,7 +599,9 @@ async function runProtocolAdapterOne(
         ? {
           judgeArtifact: judgePayload.kind === 'a2ui-messages'
             ? {
-              protocol: 'a2ui' as const,
+              protocol: protocol === 'a2ui-express'
+                ? protocol
+                : 'a2ui' as const,
               messages: judgePayload.messages as NonNullable<
                 BenchRunResult['messages']
               >,
@@ -1017,6 +1023,7 @@ function resolveProtocolAdapters(
   for (const protocol of protocols) {
     const factories = {
       a2ui: createA2UIBenchAdapter,
+      'a2ui-express': createExpressBenchAdapter,
       openui: createOpenUIBenchAdapter,
       'lynx-xml': createLynxXmlBenchAdapter,
       html: createHtmlBenchAdapter,

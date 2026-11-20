@@ -4,6 +4,7 @@
 
 export const BENCH_PROTOCOLS = [
   'a2ui',
+  'a2ui-express',
   'openui',
   'lynx-xml',
   'html',

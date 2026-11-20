@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { EXPRESS_CHAT_ADAPTER } from './a2ui-express.js';
 import { A2UI_CHAT_ADAPTER } from './a2ui.js';
 import { ChatController } from './ChatController.js';
 import { HTML_CHAT_ADAPTER } from './html.js';
@@ -17,6 +18,15 @@ export interface ChatPageProps {
 }
 
 export function ChatPage(props: ChatPageProps) {
+  if (props.protocol.name === 'a2ui-express') {
+    return (
+      <ChatController
+        key='a2ui-express'
+        {...props}
+        adapter={EXPRESS_CHAT_ADAPTER}
+      />
+    );
+  }
   if (props.protocol.name === 'reactweb') {
     return (
       <ChatController
