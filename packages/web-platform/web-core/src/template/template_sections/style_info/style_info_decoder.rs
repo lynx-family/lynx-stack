@@ -29,6 +29,7 @@ pub struct StyleInfoDecoder {
   transform_vw: bool,
   transform_vh: bool,
   transform_rem: bool,
+  transform_sp: bool,
   entry_name: Option<String>,
   css_og_current_processing_css_ids: Option<Vec<i32>>,
   css_og_current_processing_class_selector_names: Option<Vec<String>>,
@@ -42,6 +43,7 @@ impl StyleInfoDecoder {
     transform_vw: bool,
     transform_vh: bool,
     transform_rem: bool,
+    transform_sp: bool,
   ) -> Result<Self, wasm_bindgen::JsError> {
     let flattened_style_info: FlattenedStyleInfo = raw_style_info.into();
     let mut decoded_style_info = StyleInfoDecoder {
@@ -58,6 +60,7 @@ impl StyleInfoDecoder {
       transform_vw,
       transform_vh,
       transform_rem,
+      transform_sp,
       is_processing_font_face: false,
       css_og_current_processing_css_ids: None,
       css_og_current_processing_class_selector_names: None,
@@ -292,6 +295,7 @@ impl StyleInfoDecoder {
         transform_vw: self.transform_vw,
         transform_vh: self.transform_vh,
         transform_rem: self.transform_rem,
+        transform_sp: self.transform_sp,
       },
     );
 
@@ -385,6 +389,7 @@ mod test {
       raw_style_info,
       entry_name,
       config_enable_css_selector,
+      false,
       false,
       false,
       false,
@@ -992,7 +997,7 @@ mod tests_roundtrip {
       let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
         .expect("RawStyleInfo decode should succeed");
 
-      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false, false)
+      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false, false, false)
         .expect("StyleInfoDecoder should succeed");
       let decoded_string = decoder.style_content;
 
@@ -1043,7 +1048,7 @@ mod tests_roundtrip {
       let decoded_raw = unsafe { rkyv::from_bytes_unchecked::<RawStyleInfo>(&buf) }
         .expect("RawStyleInfo decode should succeed");
 
-      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false, false)
+      let decoder = StyleInfoDecoder::new(decoded_raw, None, true, false, false, false, false)
         .expect("StyleInfoDecoder should succeed");
       let decoded_string = decoder.style_content;
 

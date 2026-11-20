@@ -20,6 +20,7 @@ const X_ELEMENT_TEST_CONFIG = {
   transformVW: false,
   transformVH: false,
   transformREM: false,
+  transformSP: false,
 };
 
 const X_ELEMENT_COMPATIBLE_TAGS = [

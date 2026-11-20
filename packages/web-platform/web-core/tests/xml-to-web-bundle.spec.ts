@@ -127,6 +127,7 @@ function decodeStyle(
     transformVW = false,
     transformVH = false,
     transformREM = false,
+    transformSP = false,
   } = {},
 ) {
   const decoded = decode_style_info(
@@ -136,6 +137,7 @@ function decodeStyle(
     transformVW,
     transformVH,
     transformREM,
+    transformSP,
   );
   return {
     css: get_style_content(decoded),
@@ -314,9 +316,9 @@ describe('XML markup document to web bundle', () => {
       expect(css).toContain('--lynx-linear-orientation:horizontal');
     });
 
-    test('rewrites rem, vw and vh when the host asks for it', () => {
+    test('rewrites rem, sp, vw and vh when the host asks for it', () => {
       const { buffer } = build(
-        xml({ style: '.a{padding:1rem;width:50vw;height:2vh}' }),
+        xml({ style: '.a{padding:1rem;font-size:16sp;width:50vw;height:2vh}' }),
       );
       const { sections } = readBundle(buffer);
       const config = readJSONSection(
@@ -326,10 +328,12 @@ describe('XML markup document to web bundle', () => {
 
       const on = decodeStyle(section, config, {
         transformREM: true,
+        transformSP: true,
         transformVW: true,
         transformVH: true,
       });
       expect(on.css).toContain('padding:calc(1 * var(--rem-unit))');
+      expect(on.css).toContain('font-size:calc(16 * var(--sp-unit))');
       expect(on.css).toContain('width:calc(50 * var(--vw-unit))');
       expect(on.css).toContain('height:calc(2 * var(--vh-unit))');
 
@@ -337,6 +341,7 @@ describe('XML markup document to web bundle', () => {
       // decoder's doing and is driven by the host, not baked into the bundle.
       const off = decodeStyle(section, config);
       expect(off.css).toContain('padding:1rem');
+      expect(off.css).toContain('font-size:16sp');
       expect(off.css).toContain('width:50vw');
     });
 

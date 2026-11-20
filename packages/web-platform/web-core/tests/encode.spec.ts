@@ -102,6 +102,7 @@ describe('legacy JSON CSS', () => {
       false,
       false,
       false,
+      false,
     );
     const css = clientWasmInstance.get_style_content(decodedStyleInfo);
 

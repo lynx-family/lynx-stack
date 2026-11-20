@@ -15,6 +15,7 @@ lynx-view {
   --ppx-unit: 1cqw;
   --vw-unit: 1cqw;
   --vh-unit: 1cqh;
+  --sp-unit: 1px;
 }
 
 :host([transform-vh]),
@@ -51,6 +52,7 @@ lynx-view::part(page) {
   --ppx-unit: inherit;
   --vw-unit: inherit;
   --vh-unit: inherit;
+  --sp-unit: inherit;
 }
 
 @property --lynx-display {

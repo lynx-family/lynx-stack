@@ -124,6 +124,7 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      false,
     );
 
     // Verify data using getCustomSection
@@ -160,6 +161,7 @@ describe('Template Manager', () => {
       templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
         false,
         false,
         false,
@@ -205,6 +207,7 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       'http://example.com/template',
       Promise.resolve(mockLynxViewInstance),
+      false,
       false,
       false,
       false,
@@ -265,6 +268,7 @@ describe('Template Manager', () => {
         false,
         false,
         false,
+        false,
       ),
     ).rejects.toThrow('Stream failed');
 
@@ -296,6 +300,7 @@ describe('Template Manager', () => {
     await templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
       false,
       false,
       false,
@@ -341,6 +346,7 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      false,
       {
         cardType: 'first-card',
         enableCSSSelector: 'true',
@@ -358,6 +364,7 @@ describe('Template Manager', () => {
       await templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
         false,
         false,
         false,
@@ -403,6 +410,7 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      false,
       { cardType: 'first-card' },
     );
 
@@ -415,6 +423,7 @@ describe('Template Manager', () => {
       await templateManager.fetchBundle(
         templateUrl,
         Promise.resolve(mockLynxViewInstance),
+        false,
         false,
         false,
         false,
@@ -459,12 +468,14 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      false,
       { cardType: 'first-card' },
     );
 
     const secondLoad = templateManager.fetchBundle(
       templateUrl,
       Promise.resolve(mockLynxViewInstance),
+      false,
       false,
       false,
       false,
@@ -544,6 +555,7 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      false,
     );
 
     // Verify config
@@ -596,6 +608,7 @@ describe('Template Manager', () => {
       false,
       false,
       false,
+      false,
     );
 
     // Verify config has appType = lazy and isLazy = true
@@ -645,10 +658,12 @@ describe('Template Manager', () => {
         false,
         false,
         false,
+        false,
       ),
       templateManager.fetchBundle(
         'http://example.com/template_concurrent',
         Promise.resolve(instance2 as unknown as LynxViewInstance),
+        false,
         false,
         false,
         false,
@@ -688,11 +703,12 @@ describe('Template Manager', () => {
     const markupSource = [
       '<!doctype lynx>',
       '<lynx engine-version="4.2">',
-      // The viewport and root-relative units are load bearing, not decoration:
-      // they are what makes `transformVW` / `transformVH` / `transformREM`
-      // observable in the decoded bytes. Without them those flags are no-ops and
-      // any test comparing two loads would agree however they were propagated.
-      '<style>.a{color:red;display:linear;width:10vw;height:20vh;font-size:2rem}</style>',
+      // The viewport, root-relative and font-scale units are load bearing, not
+      // decoration: they are what makes `transformVW` / `transformVH` /
+      // `transformREM` / `transformSP` observable in the decoded bytes. Without
+      // them those flags are no-ops and any test comparing two loads would agree
+      // however they were propagated.
+      '<style>.a{color:red;display:linear;width:10vw;height:20vh;font-size:2rem;margin:3sp}</style>',
       '<script thread="main">globalThis.__mts = 1;</script>',
       '<script thread="background">globalThis.__bts = 1;</script>',
       '</lynx>',
@@ -728,6 +744,7 @@ describe('Template Manager', () => {
       return templateManager.fetchBundle(
         url,
         Promise.resolve(mockLynxViewInstance),
+        transforms,
         transforms,
         transforms,
         transforms,
@@ -832,9 +849,9 @@ describe('Template Manager', () => {
         return recorder.seen;
       }
 
-      // Run under both flag settings. The card carries `vw`, `vh` and `rem`, so
-      // the transforms genuinely move the decoded style bytes - which is what
-      // makes this sensitive to the flags being carried into the recursive
+      // Run under both flag settings. The card carries `vw`, `vh`, `rem` and
+      // `sp`, so the transforms genuinely move the decoded style bytes - which is
+      // what makes this sensitive to the flags being carried into the recursive
       // `handleStream` call rather than defaulted or dropped along the way.
       for (const transforms of [false, true]) {
         const suffix = transforms ? 'transformed' : 'plain';

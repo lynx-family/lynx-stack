@@ -362,6 +362,29 @@ mod tests {
   }
 
   #[test]
+  fn test_sp_transformation() {
+    let (transformer, _) = parse_css_with_config(
+      "font-size: 16sp;",
+      TransformerConfig {
+        transform_sp: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(transformer.declarations.len(), 1);
+    assert_eq!(
+      transformer.declarations[0],
+      "font-size:calc(16 * var(--sp-unit));"
+    );
+  }
+
+  #[test]
+  fn test_sp_transformation_disabled() {
+    let (transformer, _) = parse_css("font-size: 16sp;");
+    assert_eq!(transformer.declarations.len(), 1);
+    assert_eq!(transformer.declarations[0], "font-size:16sp;");
+  }
+
+  #[test]
   fn test_complex_values() {
     let (transformer, _) = parse_css("background: url(image.png) no-repeat center;");
 

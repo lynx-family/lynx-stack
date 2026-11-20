@@ -121,6 +121,7 @@ export class LynxViewInstance implements AsyncDisposable {
     private readonly transformVW: boolean = false,
     private readonly transformVH: boolean = false,
     private readonly transformREM: boolean = false,
+    private readonly transformSP: boolean = false,
     browserConfig?: Record<string, any>,
   ) {
     this.isProfiling = parentDom.isProfiling;
@@ -172,6 +173,7 @@ export class LynxViewInstance implements AsyncDisposable {
         this.transformVW,
         this.transformVH,
         this.transformREM,
+        this.transformSP,
         config['enableCSSInheritance'] === 'true',
       ),
       createMainThreadGlobalAPIs(
@@ -304,6 +306,7 @@ export class LynxViewInstance implements AsyncDisposable {
       this.transformVW,
       this.transformVH,
       this.transformREM,
+      this.transformSP,
       {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
       },
@@ -345,6 +348,7 @@ export class LynxViewInstance implements AsyncDisposable {
       this.transformVW,
       this.transformVH,
       this.transformREM,
+      this.transformSP,
       {
         enableCSSSelector: this.#pageConfig!['enableCSSSelector'],
         // An external bundle ships global styles (they apply to the consumer's
