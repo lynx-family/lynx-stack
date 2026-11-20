@@ -15,11 +15,14 @@ const nonce = existingScript?.nonce || existingScript?.getAttribute('nonce');
  */
 export async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   const iframe = document.createElement('iframe');
+  // Correlate the ready message with a per-realm token rather than comparing
+  // `event.source` with `iframe.contentWindow`: that WindowProxy comparison can
+  // be `false` while the page is still loading, which left the boot hanging.
+  const token = Math.random().toString(36).slice(2);
+  const readyMessage = `lynx:mtsready:${token}:${Date.now().toString(36)}`;
   const iframeReadyPromise = new Promise<void>((resolve) => {
     const listener = (event: MessageEvent) => {
-      if (
-        event.data === 'lynx:mtsready' && event.source === iframe.contentWindow
-      ) {
+      if (event.data === readyMessage) {
         resolve();
         globalThis.removeEventListener('message', listener);
       }
@@ -28,7 +31,8 @@ export async function createIFrameRealm(parent: Node): Promise<JSRealm> {
   });
   iframe.style.display = 'none';
   iframe.srcdoc = '<!DOCTYPE html><html><head><script nonce="' + nonce
-    + '">parent.postMessage("lynx:mtsready","*")</script></head><body style="display:none"></body></html>';
+    + '">parent.postMessage(' + JSON.stringify(readyMessage)
+    + ',"*")</script></head><body style="display:none"></body></html>';
   iframe.sandbox = 'allow-same-origin allow-scripts'; // Restrict capabilities for security
   iframe.loading = 'eager';
   parent.appendChild(iframe);
