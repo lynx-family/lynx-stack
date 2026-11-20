@@ -5022,6 +5022,32 @@ describe('nested list element ownership after outer row reuse', () => {
     expect(cell0Instance.__element_root).toBe(newCellElement);
     expect(text(newCellElement)).toBe('cell-0');
   });
+
+  it.each(['before', 'after'])('reuses a nested cell enqueued %s its outer row moves', (enqueueTiming) => {
+    const { outerList, row0 } = createRows();
+    const oldRowSign = show(outerList, 0);
+    const oldInnerList = row0.inner.__element_root;
+    const oldCellSign = show(oldInnerList, 0);
+    const oldCellElement = row0.cell.__element_root;
+
+    if (enqueueTiming === 'before') {
+      recycle(oldInnerList, oldCellSign);
+    }
+
+    // Native requests the same row again before enqueuing its previous sign.
+    expect(show(outerList, 0)).not.toBe(oldRowSign);
+    expect(row0.inner.__element_root).not.toBe(oldInnerList);
+    expect(row0.cell.__element_root).toBeUndefined();
+
+    if (enqueueTiming === 'after') {
+      recycle(oldInnerList, oldCellSign);
+    }
+
+    const oldCellPool = gRecycleMap[__GetElementUniqueID(oldInnerList)].get(`${row0.cell.type}cell`);
+    expect(oldCellPool.get(oldCellSign).__element_root).toBe(oldCellElement);
+    expect(show(oldInnerList, 0)).toBe(oldCellSign);
+    expect(row0.cell.__element_root).toBe(oldCellElement);
+  });
 });
 
 describe('list worklet ref lifecycle', () => {

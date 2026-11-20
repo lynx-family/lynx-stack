@@ -292,7 +292,7 @@ export class SnapshotInstance {
     }
   }
 
-  takeElements(): SnapshotInstance {
+  takeElements(onTransfer?: (original: SnapshotInstance, copy: SnapshotInstance) => void): SnapshotInstance {
     const a = Object.create(SnapshotInstance.prototype) as SnapshotInstance;
 
     a.type = this.type;
@@ -311,13 +311,14 @@ export class SnapshotInstance {
     a.__nextSibling = null;
     a.__previousSibling = null;
 
-    this.childNodes.map(c => c.takeElements()).forEach(node => a.__insertBefore(node));
+    this.childNodes.map(c => c.takeElements(onTransfer)).forEach(node => a.__insertBefore(node));
 
     a.__elements = this.__elements;
     a.__element_root = this.__element_root;
 
     this.__elements = undefined;
     this.__element_root = undefined;
+    onTransfer?.(this, a);
     return a;
   }
 
