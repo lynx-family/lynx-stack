@@ -1,6 +1,6 @@
 ---
 name: lynx-runtime
-description: Use @lynx-js/lynx-runtime in bundled Lynx projects (ESM /mts & /bts) and build-free .lynxml documents (inline ES2017 IIFE /iife/mts & /iife/bts), including syncing .lynxml inline blocks and testing in node:vm.
+description: Use @lynx-js/lynx-runtime in bundled Lynx projects (ESM /mts & /bts) and build-free .lynxml documents (inline ES2017 IIFE /iife/mts & /iife/bts), including inlining IIFE scripts and testing in node:vm.
 ---
 
 # Using `@lynx-js/lynx-runtime`
@@ -11,21 +11,24 @@ Use this skill when authoring Lynx pages, DSL adapters, or build-free `.lynxml` 
 
 ## 1. Choose an Entrypoint
 
-| Project type                  | Entrypoint                                                                                   | How to load                                                                                 |
-| ----------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Bundled Rspeedy / ESM project | `@lynx-js/lynx-runtime/mts`, `@lynx-js/lynx-runtime/bts`, types from `@lynx-js/lynx-runtime` | Standard `import` (`sideEffects: false`)                                                    |
-| Build-free `.lynxml` document | `@lynx-js/lynx-runtime/iife/mts`, `@lynx-js/lynx-runtime/iife/bts`                           | Inline via `scripts/sync-lynxml.mjs`; exposes script-scoped `var LynxRuntime` on each block |
+| Project type                  | Entrypoint                                                                                   | How to load                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Bundled Rspeedy / ESM project | `@lynx-js/lynx-runtime/mts`, `@lynx-js/lynx-runtime/bts`, types from `@lynx-js/lynx-runtime` | Standard `import` (`sideEffects: false`)                                               |
+| Build-free `.lynxml` document | `@lynx-js/lynx-runtime/iife/mts`, `@lynx-js/lynx-runtime/iife/bts`                           | Inline verbatim from `dist/iife/{mts,bts}.js`; exposes script-scoped `var LynxRuntime` |
 
 For `.lynxml`, always inline the prebuilt ES2017 IIFE instead of loading via blocking `lynx.fetchBundle(...).wait(...)` (which blocks the OS UI thread on cache misses under `ALL_ON_UI` / `PART_ON_LAYOUT`).
 
 ## 2. Quick Start for Build-Free `.lynxml`
 
-Write your page logic against `LynxRuntime` and let the bundled script insert/update the marked inline IIFE blocks (never copy or search-and-replace minified IIFE lines by hand):
+Read the exact contents of `node_modules/@lynx-js/lynx-runtime/dist/iife/mts.js` and `dist/iife/bts.js` (never retype or hand-edit the minified line) and inline them at the top of `<script thread="main">` and `<script thread="background">`—after any `"use strict";` directive prologue and before any executable code. Wrap each inlined line with `BEGIN`/`END` version comments so future upgrades are easy to spot and replace:
 
 ```xml
 <!doctype lynx>
 <lynx engine-version="4.2">
 <script thread="main">
+// BEGIN @lynx-js/lynx-runtime iife/mts (<version>)
+/* verbatim contents of @lynx-js/lynx-runtime/iife/mts */
+// END @lynx-js/lynx-runtime iife/mts
 const mts = LynxRuntime;
 function mountPage(data) { /* create elements */ }
 function onPageUpdate(data, options) { /* update elements */ mts.flushElementTree(options); }
@@ -33,18 +36,14 @@ mts.onRenderPage(mountPage);
 mts.onUpdateData(onPageUpdate);
 </script>
 <script thread="background">
+// BEGIN @lynx-js/lynx-runtime iife/bts (<version>)
+/* verbatim contents of @lynx-js/lynx-runtime/iife/bts */
+// END @lynx-js/lynx-runtime iife/bts
 const bts = LynxRuntime.bindPage();
 bts.onMessage('ready', (payload) => { /* handle MTS message */ });
 bts.onDestroy(() => { /* release timers / listeners */ });
 </script>
 </lynx>
-```
-
-Then sync and verify the inline blocks against the installed package version:
-
-```bash
-node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs path/to/page.lynxml
-node node_modules/@lynx-js/lynx-runtime/skills/lynx-runtime/scripts/sync-lynxml.mjs --check path/to/page.lynxml
 ```
 
 ## 3. Essential Usage Rules
