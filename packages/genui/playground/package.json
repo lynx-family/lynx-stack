@@ -35,7 +35,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "vaul": "^1.1.2",
-    "xml-formatter": "^3.7.0"
+    "xml-formatter": "^3.7.1"
   },
   "devDependencies": {
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
