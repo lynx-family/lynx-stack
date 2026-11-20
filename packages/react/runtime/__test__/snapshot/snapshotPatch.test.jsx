@@ -14,14 +14,9 @@ import {
   takeGlobalSnapshotPatch,
 } from '../../src/snapshot/lifecycle/patch/snapshotPatch';
 import { snapshotPatchApply } from '../../src/snapshot/lifecycle/patch/snapshotPatchApply';
-import {
-  BackgroundSnapshotInstance,
-  SnapshotInstance,
-  createSnapshot,
-  snapshotCreatorMap,
-  snapshotInstanceManager,
-  snapshotManager,
-} from '../../src/snapshot';
+import { BackgroundSnapshotInstance } from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { createSnapshot, snapshotManager } from '../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance, snapshotCreatorMap, snapshotInstanceManager } from '../../src/snapshot/snapshot/snapshot.js';
 import { DynamicPartType } from '../../src/snapshot/snapshot/dynamicPartType';
 
 const HOLE = null;
