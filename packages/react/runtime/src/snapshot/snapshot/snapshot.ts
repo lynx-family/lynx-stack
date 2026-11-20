@@ -300,7 +300,9 @@ export class SnapshotInstance {
     a.__snapshot_def = this.__snapshot_def;
     a.__values = this.__values;
     a.__slotIndex = this.__slotIndex;
-    a.__listItemPlatformInfo = this.__listItemPlatformInfo;
+    if (this.__listItemPlatformInfo !== undefined) {
+      a.__listItemPlatformInfo = this.__listItemPlatformInfo;
+    }
 
     // all clear
     a.__parent = null;
