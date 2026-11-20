@@ -3,16 +3,23 @@
 // LICENSE file in the root directory of this source tree.
 // Background side of the transfer protocol. The first `registerComponent` fixes
 // the thread, so the main thread side lives in `transfer.mts.test.jsx`.
-import { render } from 'preact';
+import { options, render } from 'preact';
+import { useEffect, useLayoutEffect } from 'preact/hooks';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { root, useState } from '../../../src/index';
+import {
+  resetBackgroundFunctionRuntime,
+  runBackgroundFunction,
+} from '../../../src/core/background-function/run-on-background';
+import { runOnMainThread, root, useState } from '../../../src/index';
+import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value';
 import { TransferRegistry } from '../../../src/internal';
 import { __root } from '../../../src/root';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
 } from '../../../src/snapshot/snapshot/backgroundSnapshot';
+import { WorkletEvents } from '../../../src/worklet-runtime/bindings/events';
 import { globalEnvManager } from '../utils/envManager';
 import { waitSchedule } from '../utils/nativeMethod';
 
@@ -58,7 +65,7 @@ function Page() {
 }
 
 /** Serializes the newest transfer root the way the main thread first frame would. */
-function firstFrame() {
+function firstFrame(rootId) {
   const roots = [...backgroundSnapshotInstanceManager.values.values()].filter(si => si.type === 'root');
   const toJSON = si => ({
     id: si.__id,
@@ -66,7 +73,10 @@ function firstFrame() {
     values: si.__values,
     children: si.childNodes.length ? si.childNodes.map(toJSON) : undefined,
   });
-  return JSON.stringify(toJSON(roots.reduce((a, b) => (a.__id > b.__id ? a : b))));
+  const transferRoot = rootId === undefined
+    ? roots.reduce((a, b) => (a.__id > b.__id ? a : b))
+    : roots.find(root => root.__id === rootId);
+  return JSON.stringify(toJSON(transferRoot));
 }
 function commits(transferId) {
   return link.of('__TransferCommit').filter(packet => packet.transferId === transferId);
@@ -200,6 +210,108 @@ describe('transfer (background thread)', () => {
 
     render(<Page />, new BackgroundSnapshotInstance('root'));
     expect(reportError).toHaveBeenCalledWith(new Error('Commit rendered outside a transfer instance'));
+  });
+
+  it('keeps pre-hydration renders and layout effects with their instance across reuse', async () => {
+    const sdkVersion = SystemInfo.lynxSdkVersion;
+    SystemInfo.lynxSdkVersion = '4.3';
+    const completed = [];
+    const callback = vi.fn();
+    const initialize = { _wkltId: 'initialize', _jsFn: { callback: { _fn: callback, _jsFnId: 1 } } };
+    const call = (label) => void runOnMainThread(initialize)(label).then(() => completed.push(label));
+    const runCallback = execId =>
+      runBackgroundFunction({ obj: { _execId: execId, _jsFnId: 1 }, params: [], resolveId: 0 });
+    let updateB;
+    let flushEffects;
+    const requestAnimationFrame = options.requestAnimationFrame;
+    function Card({ name }) {
+      const [count, setCount] = useState(0);
+      if (name === 'b') updateB = setCount;
+      call(`${name}:render:${count}`);
+      useEffect(() => {
+        if (name === 'a') call('a:effect');
+      }, []);
+      useLayoutEffect(() => {
+        call(`${name}:layout`);
+        if (name !== 'a') return;
+        setCount(1);
+        return () => call('a:cleanup');
+      }, []);
+      return <text>{`${name}:${count}`}</text>;
+    }
+    const calls = (id, index) => commits(id)[index].patchList.delayedRunOnMainThreadData;
+    const worklets = (id, index) => calls(id, index).map(({ params }) => params[0]);
+    const returnFrom = (id, index) => {
+      for (const { resolveId } of calls(id, index)) {
+        link.fire(WorkletEvents.FunctionCallRet, { resolveId });
+      }
+    };
+    TransferRegistry.registerComponent('Worklets', () => Card);
+    try {
+      options.requestAnimationFrame = flush => {
+        flushEffects = flush;
+      };
+      const listenersBeforeFirstFrame = link.count();
+      link.fire('__CreateTransfer', { transferId: 'work-a', componentName: 'Worklets', initialProps: { name: 'a' } });
+      await waitSchedule();
+      const frameA = firstFrame();
+      link.fire('__CreateTransfer', { transferId: 'work-b', componentName: 'Worklets', initialProps: { name: 'b' } });
+      await waitSchedule();
+      expect(commits('work-a')).toHaveLength(0);
+      expect(commits('work-b')).toHaveLength(0);
+      expect(link.count()).toBe(listenersBeforeFirstFrame);
+      link.fire('__TransferFirstFrame', { transferId: 'work-b', snapshot: firstFrame() });
+      expect(worklets('work-b', 0)).toEqual(['b:render:0', 'b:layout']);
+      ack('work-b', 1);
+      updateB(1);
+      await waitSchedule();
+      expect(worklets('work-b', 1)).toEqual(['b:render:1']);
+      returnFrom('work-b', 1);
+      ack('work-b', 2);
+      link.fire('__TransferFirstFrame', { transferId: 'work-a', snapshot: frameA });
+      expect(worklets('work-a', 0)).toEqual(['a:render:0', 'a:layout', 'a:effect', 'a:render:1']);
+      expect(new Set(calls('work-a', 0).map(({ worklet }) => worklet._execId)).size).toBe(4);
+      const lastExecId = calls('work-a', 0).at(-1).worklet._execId;
+      ack('work-a', 1);
+      link.fire('__SetTransferProps', { transferId: 'work-a', props: { name: 'reused' } });
+      runCallback(calls('work-a', 0)[0].worklet._execId);
+      expect(callback).toHaveBeenCalledOnce();
+      await waitSchedule();
+      const replacementFrame = firstFrame(JSON.parse(frameA).id);
+      expect(replacementFrame).toContain('reused:0');
+      link.fire('__TransferFirstFrame', { transferId: 'work-a', snapshot: replacementFrame });
+      expect(commits('work-a')[1]).toMatchObject({ version: 1, seq: 1, kind: 'hydrate' });
+      expect(worklets('work-a', 1)).toEqual(['reused:render:0', 'reused:layout']);
+      expect(calls('work-a', 1)[0].worklet._execId).toBe(lastExecId + 1);
+      returnFrom('work-a', 0);
+      returnFrom('work-b', 0);
+      await waitSchedule();
+      expect(completed).toEqual(['b:render:1', 'b:render:0', 'b:layout']);
+      link.fire(WorkletEvents.FunctionCallRet, { resolveId: calls('work-a', 1)[0].resolveId });
+      ack('work-a', 1, 'failed', 1);
+      returnFrom('work-a', 1);
+      await waitSchedule();
+      expect(completed).toEqual(['b:render:1', 'b:render:0', 'b:layout', 'reused:render:0']);
+
+      const lastSentExecId = calls('work-a', 1).at(-1).worklet._execId;
+      link.fire('__CreateTransfer', { transferId: 'work-c', componentName: 'Worklets', initialProps: { name: 'c' } });
+      link.fire('__DestroyTransfer', { transferId: 'work-c' });
+      expect(commits('work-c')).toHaveLength(0);
+
+      call('outside-render');
+      expect(link.of(WorkletEvents.runWorkletCtx).at(-1)).toMatchObject({
+        params: ['outside-render'],
+        worklet: { _execId: lastSentExecId + 1 },
+      });
+    } finally {
+      link.fire('__DestroyTransfer', { transferId: 'work-a' });
+      link.fire('__DestroyTransfer', { transferId: 'work-b' });
+      flushEffects?.();
+      options.requestAnimationFrame = requestAnimationFrame;
+      resetFunctionCallReturnListener();
+      resetBackgroundFunctionRuntime();
+      SystemInfo.lynxSdkVersion = sdkVersion;
+    }
   });
 
   it('removes its listeners when the lifetime is destroyed', () => {
