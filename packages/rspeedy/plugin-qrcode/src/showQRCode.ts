@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Buffer } from 'node:buffer'
+import fs from 'node:fs'
 import process from 'node:process'
 import { crc32, deflateSync } from 'node:zlib'
 
@@ -10,17 +11,20 @@ import color from 'picocolors'
 import { createSupportsTerminalGraphics } from 'supports-terminal-graphics'
 import { encode, renderUnicodeCompact } from 'uqr'
 
-export type TerminalImageProtocol = 'kitty' | 'iterm2' | null
+export type TerminalImageProtocol = 'kitty' | 'iterm2' | 'sixel' | null
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
 const DEFAULT_QR_ROWS = 14
 const MIN_QR_ROWS = 6
 const QR_BORDER = 4
 const QR_SCALE = 8
+const SIXEL_DEFAULT_SCALE = 6
+const TERMINAL_QUERY_TIMEOUT_MS = 100
+const TERMINAL_QUERY_POLL_MS = 5
 
 /**
  * Detect whether the current terminal supports inline graphics protocols
- * (Kitty Graphics Protocol or iTerm2 Inline Images Protocol) via
+ * (Kitty Graphics Protocol, iTerm2 Inline Images Protocol, or Sixel) via
  * `supports-terminal-graphics`.
  *
  * Returns `null` when running in non-TTY streams, inside terminal multiplexers
@@ -64,6 +68,10 @@ export function detectTerminalImageProtocol(
   // there by default.
   if (support.iterm2 && termProgram !== 'vscode') {
     return 'iterm2'
+  }
+
+  if (support.sixel && termProgram !== 'vscode') {
+    return 'sixel'
   }
 
   return null
@@ -123,6 +131,186 @@ export function encodeQRMatrixToPng(
     createPngChunk('IDAT', deflateSync(raw)),
     createPngChunk('IEND', Buffer.alloc(0)),
   ])
+}
+
+/**
+ * Synchronously query the terminal for its cell pixel dimensions using
+ * `CSI 16 t` (XTWINOPS, replies with `\x1b[6;<height>;<width>t`) followed by a
+ * Primary Device Attributes (`CSI c`, replies with `\x1b[?...c`) sentinel so
+ * terminals that ignore `CSI 16 t` return immediately without blocking.
+ *
+ * Retries on `EAGAIN` / `EWOULDBLOCK` (non-blocking TTY stdin) up to
+ * `timeoutMs`.
+ */
+export function queryTerminalCellPixelSize(
+  stdin: {
+    isTTY?: boolean
+    fd?: number
+    isRaw?: boolean
+    setRawMode?: (mode: boolean) => void
+  } = process.stdin,
+  stdout: {
+    isTTY?: boolean
+    write?: (data: string) => boolean
+  } = process.stdout,
+  timeoutMs: number = TERMINAL_QUERY_TIMEOUT_MS,
+): { cellWidthPx: number, cellHeightPx: number } | null {
+  if (
+    !stdin.isTTY
+    || !stdout.isTTY
+    || typeof stdin.fd !== 'number'
+    || typeof stdin.setRawMode !== 'function'
+    || typeof stdout.write !== 'function'
+  ) {
+    return null
+  }
+
+  const wasRaw = Boolean(stdin.isRaw)
+  const sleepArray = new Int32Array(new SharedArrayBuffer(4))
+  try {
+    stdin.setRawMode(true)
+    stdout.write('\u001b[16t\u001b[c')
+
+    let response = ''
+    const buf = Buffer.alloc(64)
+    const deadline = Date.now() + timeoutMs
+    while (response.length < 128 && Date.now() < deadline) {
+      let bytesRead = 0
+      try {
+        bytesRead = fs.readSync(stdin.fd, buf, 0, buf.length, null)
+      } catch (error) {
+        const code = (error as NodeJS.ErrnoException).code
+        if (code === 'EAGAIN' || code === 'EWOULDBLOCK') {
+          const remaining = deadline - Date.now()
+          if (remaining <= 0) {
+            break
+          }
+          Atomics.wait(
+            sleepArray,
+            0,
+            0,
+            Math.min(TERMINAL_QUERY_POLL_MS, remaining),
+          )
+          continue
+        }
+        return null
+      }
+      if (bytesRead <= 0) {
+        break
+      }
+      response += buf.toString('utf8', 0, bytesRead)
+      // Stop as soon as the DA1 sentinel response (`\x1b[?...c`) arrives
+      if (response.includes('\u001b[?') && response.endsWith('c')) {
+        break
+      }
+    }
+
+    const prefixIndex = response.indexOf('\u001b[6;')
+    if (prefixIndex === -1) {
+      return null
+    }
+    const endIndex = response.indexOf('t', prefixIndex + 4)
+    if (endIndex === -1) {
+      return null
+    }
+    const parts = response.slice(prefixIndex + 4, endIndex).split(';')
+    if (parts.length !== 2) {
+      return null
+    }
+    const cellHeightPx = Number.parseInt(parts[0]!, 10)
+    const cellWidthPx = Number.parseInt(parts[1]!, 10)
+    if (cellWidthPx > 0 && cellHeightPx > 0) {
+      return { cellWidthPx, cellHeightPx }
+    }
+    return null
+  } catch {
+    return null
+  } finally {
+    try {
+      stdin.setRawMode(wasRaw)
+    } catch {
+      // Ignore errors when restoring raw mode
+    }
+  }
+}
+
+/**
+ * Compute the pixel scale per QR module for Sixel rendering from the terminal's
+ * actual pixel dimensions (`cellWidthPx` and `cellHeightPx`) and target cell box.
+ *
+ * Returns `null` when either pixel dimension is unavailable or when even `1px`
+ * per module would exceed the available pixel area.
+ */
+export function calculateSixelScale(
+  moduleCount: number,
+  cellSize: { columns: number, rows: number },
+  cellWidthPx: number | undefined,
+  cellHeightPx: number | undefined,
+): number | null {
+  if (
+    moduleCount <= 0
+    || cellWidthPx === undefined
+    || !Number.isFinite(cellWidthPx)
+    || cellWidthPx <= 0
+    || cellHeightPx === undefined
+    || !Number.isFinite(cellHeightPx)
+    || cellHeightPx <= 0
+  ) {
+    return null
+  }
+  const maxWidthPx = cellSize.columns * cellWidthPx
+  const maxHeightPx = cellSize.rows * cellHeightPx
+  const maxPixels = Math.min(maxWidthPx, maxHeightPx)
+  const scale = Math.min(
+    SIXEL_DEFAULT_SCALE,
+    Math.floor(maxPixels / moduleCount),
+  )
+  return scale >= 1 ? scale : null
+}
+
+/**
+ * Encode a boolean QR matrix (`true` = dark module, `false` = light module)
+ * into a Sixel graphics sequence (`\x1bP0;0;0q...`) with an explicit pure white
+ * background (`#0;2;100;100;100`) and black modules (`#1;2;0;0;0`).
+ *
+ * Each QR module is scaled to `scale` x `scale` pixels.
+ */
+export function encodeQRMatrixToSixel(
+  matrix: readonly (readonly boolean[])[],
+  scale: number = SIXEL_DEFAULT_SCALE,
+): string {
+  const moduleCount = matrix.length
+  const pixelSize = moduleCount * scale
+  let out =
+    `\u001bP0;0;0q"1;1;${pixelSize};${pixelSize}#0;2;100;100;100#1;2;0;0;0`
+
+  for (let bandY = 0; bandY < pixelSize; bandY += 6) {
+    const bandHeight = Math.min(6, pixelSize - bandY)
+    const fullMask = (1 << bandHeight) - 1
+
+    let whitePass = '#0'
+    let blackPass = '#1'
+
+    for (let col = 0; col < moduleCount; col++) {
+      let blackBits = 0
+      for (let dy = 0; dy < bandHeight; dy++) {
+        const qrRow = matrix[Math.floor((bandY + dy) / scale)]!
+        if (qrRow[col]) {
+          blackBits |= 1 << dy
+        }
+      }
+      const whiteBits = fullMask ^ blackBits
+      const whiteChar = String.fromCodePoint(63 + whiteBits)
+      const blackChar = String.fromCodePoint(63 + blackBits)
+      whitePass += scale > 1 ? `!${scale}${whiteChar}` : whiteChar
+      blackPass += scale > 1 ? `!${scale}${blackChar}` : blackChar
+    }
+
+    // `$` returns to the start of the current Sixel band, `-` advances to the next band.
+    out += `${whitePass}$${blackPass}-`
+  }
+
+  return `${out}\u001b\\`
 }
 
 /**
@@ -208,8 +396,8 @@ export function calculateQRCellSize(
 
 /**
  * Render a QR code string for the given URL using terminal graphics protocols
- * (`kitty` or `iterm2`) when supported, or fall back to `uqr` compact Unicode
- * block characters.
+ * (`kitty`, `iterm2`, or `sixel`) when supported, or fall back to `uqr`
+ * compact Unicode block characters.
  */
 export function renderQRCode(
   url: string,
@@ -217,6 +405,8 @@ export function renderQRCode(
     isTTY?: boolean
     columns?: number
     rows?: number
+    cellWidthPx?: number
+    cellHeightPx?: number
   } = process.stdout,
 ): string {
   const protocol = detectTerminalImageProtocol(stream)
@@ -226,10 +416,28 @@ export function renderQRCode(
       try {
         const qr = encode(url, { border: QR_BORDER })
         if (Array.isArray(qr?.data) && qr.data.length > 0) {
-          const pngBuffer = encodeQRMatrixToPng(qr.data)
-          return protocol === 'kitty'
-            ? formatKittyImage(pngBuffer, cellSize.columns, cellSize.rows)
-            : formatITerm2Image(pngBuffer, cellSize.columns, cellSize.rows)
+          if (protocol === 'sixel') {
+            const queried = stream.cellWidthPx === undefined
+                || stream.cellHeightPx === undefined
+              ? queryTerminalCellPixelSize()
+              : null
+            const cellWidthPx = stream.cellWidthPx ?? queried?.cellWidthPx
+            const cellHeightPx = stream.cellHeightPx ?? queried?.cellHeightPx
+            const sixelScale = calculateSixelScale(
+              qr.data.length,
+              cellSize,
+              cellWidthPx,
+              cellHeightPx,
+            )
+            if (sixelScale) {
+              return encodeQRMatrixToSixel(qr.data, sixelScale)
+            }
+          } else {
+            const pngBuffer = encodeQRMatrixToPng(qr.data)
+            return protocol === 'kitty'
+              ? formatKittyImage(pngBuffer, cellSize.columns, cellSize.rows)
+              : formatITerm2Image(pngBuffer, cellSize.columns, cellSize.rows)
+          }
         }
       } catch {
         // Fall back to compact Unicode rendering if encoding fails or `uqr` is mocked in tests

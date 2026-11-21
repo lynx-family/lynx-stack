@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs'
 import process from 'node:process'
 import { inflateSync } from 'node:zlib'
 
@@ -9,10 +10,13 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import showQRCode, {
   calculateQRCellSize,
+  calculateSixelScale,
   detectTerminalImageProtocol,
   encodeQRMatrixToPng,
+  encodeQRMatrixToSixel,
   formatITerm2Image,
   formatKittyImage,
+  queryTerminalCellPixelSize,
   renderQRCode,
 } from '../src/showQRCode.js'
 
@@ -177,6 +181,12 @@ describe('showQRCode - Terminal Image Rendering', () => {
       })
     })
 
+    test('detects mlterm as sixel protocol', () => {
+      withEnv({ TERM: 'mlterm' }, () => {
+        expect(detectTerminalImageProtocol(tty)).toBe('sixel')
+      })
+    })
+
     test('returns null on unsupported terminals (Apple Terminal, Alacritty, VS Code, unknown)', () => {
       withEnv({ TERM_PROGRAM: 'Apple_Terminal' }, () => {
         expect(detectTerminalImageProtocol(tty)).toBeNull()
@@ -196,7 +206,7 @@ describe('showQRCode - Terminal Image Rendering', () => {
     })
   })
 
-  describe('encodeQRMatrixToPng', () => {
+  describe('encodeQRMatrixToPng & encodeQRMatrixToSixel', () => {
     test('produces a valid grayscale PNG with white (255) background and black (0) modules', () => {
       const matrix = [
         [false, false, false],
@@ -236,6 +246,38 @@ describe('showQRCode - Terminal Image Rendering', () => {
       expect(raw[2 * stride + 1 + 3]).toBe(0)
       expect(raw[3 * stride + 1 + 2]).toBe(0)
       expect(raw[3 * stride + 1 + 3]).toBe(0)
+    })
+
+    test('produces a valid Sixel sequence with explicit white (#0) and black (#1) registers', () => {
+      const matrix = [
+        [false, false],
+        [false, true],
+      ]
+      const sixel = encodeQRMatrixToSixel(matrix, 6)
+
+      expect(
+        sixel.startsWith('\u001bP0;0;0q"1;1;12;12#0;2;100;100;100#1;2;0;0;0'),
+      ).toBe(true)
+      expect(sixel.endsWith('\u001b\\')).toBe(true)
+      // Row 0 is all white: 2 modules of `!6~` in #0 and `!6?` in #1
+      expect(sixel).toContain('#0!6~!6~$#1!6?!6?-')
+      // Row 1 is white then black: `#0!6~!6?$#1!6?!6~-`
+      expect(sixel).toContain('#0!6~!6?$#1!6?!6~-')
+    })
+
+    test('calculateSixelScale computes module pixel scale from actual terminal pixel dimensions or returns null when unavailable/too dense', () => {
+      // 33 modules in 28x14 cells with 9x18px cells (252px budget) -> floor(252 / 33) = 6 (capped at 6)
+      expect(calculateSixelScale(33, { columns: 28, rows: 14 }, 9, 18)).toBe(6)
+      // 65 modules in 20x10 cells with 7x14px cells (140px budget) -> floor(140 / 65) = 2
+      expect(calculateSixelScale(65, { columns: 20, rows: 10 }, 7, 14)).toBe(2)
+      // 150 modules in 12x6 cells with 9x18px cells (108px budget) -> floor(108 / 150) = 0 -> null
+      expect(calculateSixelScale(150, { columns: 12, rows: 6 }, 9, 18))
+        .toBeNull()
+      // Missing pixel dimensions -> null (activates Unicode fallback)
+      expect(calculateSixelScale(33, { columns: 28, rows: 14 }, undefined, 18))
+        .toBeNull()
+      expect(calculateSixelScale(33, { columns: 28, rows: 14 }, 9, undefined))
+        .toBeNull()
     })
   })
 
@@ -355,6 +397,73 @@ describe('showQRCode - Terminal Image Rendering', () => {
           expect(output.split('\n')).toHaveLength(14)
         },
       )
+    })
+
+    test('queryTerminalCellPixelSize retries on EAGAIN, parses CSI 16 t response, and restores raw mode', () => {
+      let attempt = 0
+      const readSyncSpy = vi.spyOn(fs, 'readSync').mockImplementation(
+        (_fd, buffer) => {
+          attempt++
+          if (attempt === 1) {
+            const err = new Error(
+              'Resource temporarily unavailable',
+            ) as NodeJS.ErrnoException
+            err.code = 'EAGAIN'
+            throw err
+          }
+          const reply = Buffer.from('\u001b[6;16;8t\u001b[?62;4c', 'utf8')
+          reply.copy(buffer as Buffer)
+          return reply.length
+        },
+      )
+      const setRawMode = vi.fn()
+      const write = vi.fn().mockReturnValue(true)
+
+      const result = queryTerminalCellPixelSize(
+        { isTTY: true, fd: 0, isRaw: false, setRawMode },
+        { isTTY: true, write },
+      )
+
+      expect(result).toEqual({ cellWidthPx: 8, cellHeightPx: 16 })
+      expect(attempt).toBe(2)
+      expect(write).toHaveBeenCalledWith('\u001b[16t\u001b[c')
+      expect(setRawMode).toHaveBeenNthCalledWith(1, true)
+      expect(setRawMode).toHaveBeenLastCalledWith(false)
+
+      readSyncSpy.mockRestore()
+    })
+
+    test('renders via Sixel protocol when terminal supports Sixel and pixel dimensions are known, otherwise falls back', () => {
+      const url = 'http://example.com/main.lynx.bundle'
+      withEnv({ TERM: 'mlterm' }, () => {
+        const output = renderQRCode(url, {
+          isTTY: true,
+          columns: 80,
+          rows: 24,
+          cellWidthPx: 9,
+          cellHeightPx: 18,
+        })
+
+        expect(output.startsWith('\u001bP0;0;0q')).toBe(true)
+        expect(output.endsWith('\u001b\\')).toBe(true)
+
+        // When pixel dimensions are unavailable (mock readSync to return DA1 sentinel without CSI 16 t), falls back to Unicode QR
+        const readSyncSpy = vi.spyOn(fs, 'readSync').mockImplementation(
+          (_fd, buffer) => {
+            const reply = Buffer.from('\u001b[?1;2c', 'utf8')
+            reply.copy(buffer as Buffer)
+            return reply.length
+          },
+        )
+        const fallbackOutput = renderQRCode(url, {
+          isTTY: true,
+          columns: 80,
+          rows: 24,
+        })
+        readSyncSpy.mockRestore()
+        expect(fallbackOutput).not.toContain('\u001bP0;0;0q')
+        expect(fallbackOutput).toContain('█')
+      })
     })
 
     test('falls back to uqr renderUnicodeCompact when terminal does not support images or is too small', () => {
