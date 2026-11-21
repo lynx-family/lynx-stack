@@ -10,18 +10,24 @@ describe('profile', () => {
   const originalProfileEnd = console.profileEnd;
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     console.profile = originalProfile;
     console.profileEnd = originalProfileEnd;
   });
 
-  it('uses console.profile when available', () => {
-    globalThis.__DEV__ = true;
+  it.each([true, false])('respects __PROFILE__=%s independently of __DEV__', (enabled) => {
+    vi.stubGlobal('__PROFILE__', enabled);
+    vi.stubGlobal('__DEV__', !enabled);
     console.profile = vi.fn();
     console.profileEnd = vi.fn();
 
-    const ret = profile('x', () => 123);
-    expect(ret).toBe(123);
-    expect(console.profile).toHaveBeenCalledWith('x');
-    expect(console.profileEnd).toHaveBeenCalled();
+    expect(profile('x', () => 123)).toBe(123);
+    if (enabled) {
+      expect(console.profile).toHaveBeenCalledWith('x');
+      expect(console.profileEnd).toHaveBeenCalledTimes(1);
+    } else {
+      expect(console.profile).not.toHaveBeenCalled();
+      expect(console.profileEnd).not.toHaveBeenCalled();
+    }
   });
 });
