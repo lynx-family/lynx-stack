@@ -105,6 +105,8 @@ export class EnvManager {
       workletImpl._jsFunctionLifecycleManager = workletImpl._jsFunctionLifecycleManager.recreate();
     }
     workletImpl?._runOnBackgroundDelayImpl?.clearDelayedBackgroundFunctions?.();
+    workletImpl?._refImpl?.clearFirstScreenWorkletRefMap?.();
+    workletImpl?._eventDelayImpl?.clearDelayedWorklets?.(true);
     getJSModule('GlobalEventEmitter')?.clear();
     this.switchToBackground();
     this.switchToMainThread();

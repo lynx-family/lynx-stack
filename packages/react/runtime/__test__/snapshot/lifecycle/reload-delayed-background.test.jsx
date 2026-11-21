@@ -9,7 +9,13 @@ import { getReloadVersion } from '../../../src/core/reload-version.js';
 import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value.js';
 import { __root } from '../../../src/root.js';
 import { setupPage } from '../../../src/snapshot/index.js';
+import { initEventDelay } from '../../../src/worklet-runtime/delayWorkletEvent.js';
 import { initRunOnBackgroundDelay } from '../../../src/worklet-runtime/run-on-background/index.js';
+import {
+  getFromWorkletRefMap,
+  initWorkletRef,
+  updateWorkletRefInitValueChanges,
+} from '../../../src/worklet-runtime/workletRef.js';
 import { globalEnvManager } from '../utils/envManager.js';
 import { elementTree } from '../utils/nativeMethod.js';
 
@@ -54,6 +60,54 @@ it('clears old delayed background calls before rendering and preserves new calls
       reloadVersion: getReloadVersion(),
     });
     expect(delay.delayedBackgroundFunctionArray).toHaveLength(0);
+  } finally {
+    delay.clearDelayedBackgroundFunctions();
+    resetFunctionCallReturnListener();
+    globalThis.lynxWorkletImpl = previousImpl;
+    SystemInfo.lynxSdkVersion = previousSdkVersion;
+  }
+});
+
+it('clears aborted first-screen refs and delayed worklet events on pre-hydration reload while keeping positive refs', () => {
+  const previousImpl = globalThis.lynxWorkletImpl;
+  const previousSdkVersion = SystemInfo.lynxSdkVersion;
+  SystemInfo.lynxSdkVersion = '4.0';
+  const delay = initRunOnBackgroundDelay();
+  const refImpl = initWorkletRef();
+  const eventDelayImpl = initEventDelay();
+  const preservedWorklet = vi.fn();
+  globalThis.lynxWorkletImpl = {
+    ...previousImpl,
+    _workletMap: { preserved: preservedWorklet },
+    _runOnBackgroundDelayImpl: delay,
+    _refImpl: refImpl,
+    _eventDelayImpl: eventDelayImpl,
+  };
+  try {
+    updateWorkletRefInitValueChanges([[1, 'positive-ref']]);
+    const abortedFirstScreenRef = getFromWorkletRefMap({ _wvid: -1, _initValue: 'before-reload' });
+    abortedFirstScreenRef.current = 'mutated-before-reload';
+    eventDelayImpl.delayExecUntilJsReady('legacy-hash', [{ currentTarget: {} }]);
+
+    __root.__jsx = createElement(() => {
+      void runOnBackground(Object.assign(() => {}, { _isFirstScreen: true }))();
+      return null;
+    });
+    renderPage({});
+    expect(refImpl._firstScreenWorkletRefMap[-1]).toBe(abortedFirstScreenRef);
+    expect(eventDelayImpl._delayedWorkletParamsMap.size).toBe(1);
+
+    // Reload before hydration finishes.
+    updatePage({}, { reloadTemplate: true });
+
+    expect(refImpl._firstScreenWorkletRefMap).toEqual({});
+    expect(eventDelayImpl._delayedWorkletParamsMap.size).toBe(0);
+    expect(getFromWorkletRefMap({ _wvid: 1 }).current).toBe('positive-ref');
+    expect(globalThis.lynxWorkletImpl._workletMap.preserved).toBe(preservedWorklet);
+
+    const freshFirstScreenRef = getFromWorkletRefMap({ _wvid: -1, _initValue: 'after-reload' });
+    expect(freshFirstScreenRef).not.toBe(abortedFirstScreenRef);
+    expect(freshFirstScreenRef.current).toBe('after-reload');
   } finally {
     delay.clearDelayedBackgroundFunctions();
     resetFunctionCallReturnListener();

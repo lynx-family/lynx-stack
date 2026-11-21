@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { JsFunctionLifecycleManager } from '../../../src/worklet-runtime/run-on-background/lifecycle.js';
-import { installOnMtsDestruction, onMtsDestruction } from '../../../src/element-template/native/mts-destroy.js';
+import {
+  installOnMtsDestruction,
+  onMtsDestruction,
+  retireElementTemplateMainThreadForReload,
+} from '../../../src/element-template/native/mts-destroy.js';
 import {
   composeElementTemplateListAttributes,
   createElementTemplateListState,
@@ -97,18 +101,66 @@ describe('mts-destroy', () => {
     }
   });
 
-  it('retires callback owners before a new runtime can reuse background execution IDs', () => {
+  it('disposes callback owners without allocating a replacement manager on terminal destruction', () => {
     const previousWorkletImpl = globalThis.lynxWorkletImpl;
     const previous = new JsFunctionLifecycleManager();
+    const clearFirstScreenWorkletRefMap = vi.fn();
+    const clearDelayedWorklets = vi.fn();
     const oldCtx = { _wkltId: 'tap', _execId: 3 };
     previous.addRef(3, oldCtx);
     globalThis.lynxWorkletImpl = {
       ...previousWorkletImpl,
       _jsFunctionLifecycleManager: previous,
+      _refImpl: {
+        clearFirstScreenWorkletRefMap,
+      },
+      _eventDelayImpl: {
+        clearDelayedWorklets,
+      },
     } as typeof globalThis.lynxWorkletImpl;
     const dispatch = vi.spyOn(lynx.getJSContext(), 'dispatchEvent');
     try {
       onMtsDestruction();
+      expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager).toBeUndefined();
+      expect(clearFirstScreenWorkletRefMap).toHaveBeenCalledTimes(1);
+      expect(clearDelayedWorklets).toHaveBeenCalledTimes(1);
+      previous.removeRef(3);
+      previous.fire();
+      expect(dispatch).not.toHaveBeenCalled();
+    } finally {
+      dispatch.mockRestore();
+      globalThis.lynxWorkletImpl = previousWorkletImpl;
+    }
+  });
+
+  it('retires callback owners and recreates a fresh manager when retiring for entry reload', () => {
+    const g = globalThis as LynxWithNative;
+    const originalGetNative = g.lynx.getNative;
+    const removeEventListener = vi.fn();
+    g.lynx.getNative = () => ({ addEventListener: vi.fn(), removeEventListener });
+
+    const previousWorkletImpl = globalThis.lynxWorkletImpl;
+    const previous = new JsFunctionLifecycleManager();
+    const clearFirstScreenWorkletRefMap = vi.fn();
+    const clearDelayedWorklets = vi.fn();
+    const oldCtx = { _wkltId: 'tap', _execId: 3 };
+    previous.addRef(3, oldCtx);
+    globalThis.lynxWorkletImpl = {
+      ...previousWorkletImpl,
+      _jsFunctionLifecycleManager: previous,
+      _refImpl: {
+        clearFirstScreenWorkletRefMap,
+      },
+      _eventDelayImpl: {
+        clearDelayedWorklets,
+      },
+    } as typeof globalThis.lynxWorkletImpl;
+    const dispatch = vi.spyOn(lynx.getJSContext(), 'dispatchEvent');
+    try {
+      retireElementTemplateMainThreadForReload();
+      expect(removeEventListener).toHaveBeenCalledWith('__DestroyLifetime', onMtsDestruction);
+      expect(clearFirstScreenWorkletRefMap).toHaveBeenCalledTimes(1);
+      expect(clearDelayedWorklets).toHaveBeenCalledTimes(1);
       const current = globalThis.lynxWorkletImpl._jsFunctionLifecycleManager!;
       const next = { _wkltId: 'tap', _execId: 3 };
       current.addRef(3, next);
@@ -125,6 +177,7 @@ describe('mts-destroy', () => {
     } finally {
       dispatch.mockRestore();
       globalThis.lynxWorkletImpl = previousWorkletImpl;
+      g.lynx.getNative = originalGetNative;
     }
   });
 
