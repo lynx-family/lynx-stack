@@ -212,24 +212,36 @@ describe('transfer (background thread)', () => {
     expect(reportError).toHaveBeenCalledWith(new Error('Commit rendered outside a transfer instance'));
   });
 
-  it('keeps pre-hydration renders and layout effects with their instance across reuse', async () => {
+  it('keeps pre-hydration render and effect worklets with their instance across reuse', async () => {
     const sdkVersion = SystemInfo.lynxSdkVersion;
     SystemInfo.lynxSdkVersion = '4.3';
     const completed = [];
     const callback = vi.fn();
+    const staleCleanup = vi.fn();
     const initialize = { _wkltId: 'initialize', _jsFn: { callback: { _fn: callback, _jsFnId: 1 } } };
     const call = (label) => void runOnMainThread(initialize)(label).then(() => completed.push(label));
     const runCallback = execId =>
       runBackgroundFunction({ obj: { _execId: execId, _jsFnId: 1 }, params: [], resolveId: 0 });
+    let updateA;
     let updateB;
     let flushEffects;
     const requestAnimationFrame = options.requestAnimationFrame;
     function Card({ name }) {
       const [count, setCount] = useState(0);
+      if (name === 'a') updateA = setCount;
       if (name === 'b') updateB = setCount;
       call(`${name}:render:${count}`);
       useEffect(() => {
-        if (name === 'a' && count === 1) call('a:effect');
+        if (name === 'a' && count === 1) {
+          call('a:effect');
+          return () => call('a:effect-cleanup');
+        }
+        if (name === 'a' && count === 2) {
+          return () => {
+            staleCleanup();
+            call('a:stale-effect-cleanup');
+          };
+        }
       }, [count]);
       useLayoutEffect(() => {
         call(`${name}:layout`);
@@ -272,15 +284,33 @@ describe('transfer (background thread)', () => {
       expect(link.of(WorkletEvents.runWorkletCtx)).not.toContainEqual(
         expect.objectContaining({ params: ['a:effect'] }),
       );
+      updateA(2);
+      await waitSchedule();
+      flushEffects();
+      expect(link.of(WorkletEvents.runWorkletCtx)).not.toContainEqual(
+        expect.objectContaining({ params: ['a:effect-cleanup'] }),
+      );
       link.fire('__TransferFirstFrame', { transferId: 'work-a', snapshot: frameA });
-      expect(worklets('work-a', 0)).toEqual(['a:render:0', 'a:layout', 'a:render:1', 'a:effect']);
-      expect(new Set(calls('work-a', 0).map(({ worklet }) => worklet._execId)).size).toBe(4);
+      expect(worklets('work-a', 0)).toEqual([
+        'a:render:0',
+        'a:layout',
+        'a:render:1',
+        'a:effect',
+        'a:render:2',
+        'a:effect-cleanup',
+      ]);
+      expect(new Set(calls('work-a', 0).map(({ worklet }) => worklet._execId)).size).toBe(6);
       const lastExecId = calls('work-a', 0).at(-1).worklet._execId;
       ack('work-a', 1);
       link.fire('__SetTransferProps', { transferId: 'work-a', props: { name: 'reused' } });
       runCallback(calls('work-a', 0)[0].worklet._execId);
       expect(callback).toHaveBeenCalledOnce();
       await waitSchedule();
+      flushEffects();
+      expect(staleCleanup).toHaveBeenCalledOnce();
+      expect(link.of(WorkletEvents.runWorkletCtx)).not.toContainEqual(
+        expect.objectContaining({ params: ['a:stale-effect-cleanup'] }),
+      );
       const replacementFrame = firstFrame(JSON.parse(frameA).id);
       expect(replacementFrame).toContain('reused:0');
       link.fire('__TransferFirstFrame', { transferId: 'work-a', snapshot: replacementFrame });

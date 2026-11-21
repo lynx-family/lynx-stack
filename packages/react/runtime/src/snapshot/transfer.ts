@@ -102,6 +102,7 @@ function initialize(): void {
   const pendingCreates: CreateTransferEvent[] = [];
   let pageReady = !mts;
   let active: Instance | undefined;
+  let activeVersion: number | undefined;
 
   function send(type: string, data: unknown) {
     const target = mts ? lynx.getJSContext() : lynx.getCoreContext();
@@ -118,13 +119,16 @@ function initialize(): void {
     target.addEventListener(type, callback);
     removers.push(() => target.removeEventListener(type, callback));
   }
-  function withInstance<T>(instance: Instance | undefined, fn: () => T): T {
+  function withInstance<T>(instance: Instance | undefined, fn: () => T, version = instance?.version): T {
     const previous = active;
+    const previousVersion = activeVersion;
     active = instance;
+    activeVersion = version;
     try {
       return fn();
     } finally {
       active = previous;
+      activeVersion = previousVersion;
     }
   }
   function findOwner(vnode: VNode): Instance | undefined {
@@ -389,13 +393,19 @@ function initialize(): void {
       renderComponent?.(vnode, component);
     };
     options[DIFFED] = vnode => {
-      const effects = vnode[COMPONENT]?.[HOOKS]?.[PENDING_EFFECTS] as { [VALUE]: () => unknown }[] | undefined;
+      const effects = vnode[COMPONENT]?.[HOOKS]?.[PENDING_EFFECTS] as
+        | { [VALUE]: () => void | (() => void) }[]
+        | undefined;
       if (effects?.length) {
         const instance = findOwner(vnode);
         if (instance?.phase === 'waiting') {
+          const version = instance.version;
           for (const effect of effects) {
             const callback = effect[VALUE];
-            effect[VALUE] = () => withInstance(instance, () => callback.call(effect));
+            effect[VALUE] = () => {
+              const cleanup = withInstance(instance, () => callback.call(effect), version);
+              return typeof cleanup === 'function' ? () => withInstance(instance, cleanup, version) : cleanup;
+            };
           }
         }
       }
@@ -407,6 +417,7 @@ function initialize(): void {
     };
     const scheduleWorklet = options.scheduleMainThreadWorklet;
     function scheduleTransferWorklet(call: PendingMainThreadCall): boolean {
+      if (active && active.version !== activeVersion) return true;
       const instance = active ?? (isRendering.value ? rendering : undefined);
       if (!instance || (instance.phase !== 'waiting' && instance.phase !== 'disposed')) {
         return false;
