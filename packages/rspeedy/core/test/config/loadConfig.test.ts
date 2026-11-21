@@ -23,6 +23,26 @@ describe('Config - loadConfig', () => {
     expect(actual.content).toStrictEqual(expected.default)
   })
 
+  test('load TypeScript config with a type-only compiler import', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rspeedy-test'))
+    await writeFile(
+      join(cwd, 'lynx.config.ts'),
+      [
+        'import type { CompilerOptions } from \'typescript\'',
+        '',
+        'const compilerOptions: CompilerOptions = {}',
+        'void compilerOptions',
+        '',
+        'export default { source: { entry: \'typed-config\' } }',
+      ].join('\n'),
+    )
+
+    const actual = await loadConfig({ cwd })
+    expect(actual.content).toMatchObject({
+      source: { entry: 'typed-config' },
+    })
+  })
+
   test('load with the correct order', async () => {
     const cwd = join(__dirname, 'fixtures', 'order')
     const actual = await loadConfig({ cwd })

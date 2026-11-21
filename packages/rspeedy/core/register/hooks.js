@@ -9,6 +9,8 @@
 
 import { URL } from 'node:url'
 
+// Keep config loading independent of the consumer's TypeScript compiler API.
+// TypeScript 7 only exposes that API through unstable subpaths.
 import tsBlankSpace from 'ts-blank-space'
 
 /**
