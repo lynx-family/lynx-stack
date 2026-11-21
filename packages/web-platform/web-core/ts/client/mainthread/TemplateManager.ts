@@ -27,6 +27,7 @@ export class TemplateManager {
   readonly #bundles: Map<string, DecodedTemplate> = new Map();
   readonly #loadingBundles: Map<string, DecodedTemplate> = new Map();
   readonly #loadingPromises: Map<string, Promise<void>> = new Map();
+  readonly #sectionHandlerPromises: Map<string, Promise<void>[]> = new Map();
   readonly #lynxViewInstancesMap: Map<
     string,
     Promise<LynxViewInstance>
@@ -106,6 +107,7 @@ export class TemplateManager {
       );
     });
     this.#lynxViewInstancesMap.set(url, lynxViewInstancePromise);
+    this.#sectionHandlerPromises.set(url, []);
 
     await this.#ensureWorker();
 
@@ -190,12 +192,19 @@ export class TemplateManager {
     if (!lynxViewInstancePromise) return;
 
     switch (msg.type) {
-      case 'section':
+      case 'section': {
         /**
          * The lynxViewInstance is already awaited the wasm is ready
          */
-        this.#handleSection(msg, lynxViewInstancePromise);
+        const handlerPromise = this.#handleSection(
+          msg,
+          lynxViewInstancePromise,
+        );
+        // The done message may arrive before these async section handlers finish.
+        void handlerPromise.catch(() => {});
+        this.#sectionHandlerPromises.get(url)!.push(handlerPromise);
         break;
+      }
       case 'error':
         console.error(`Error decoding bundle ${url}:`, msg.error);
         this.#cleanup(url);
@@ -204,23 +213,43 @@ export class TemplateManager {
         this.#loadingPromises.delete(url);
         break;
       case 'done':
-        this.#cleanup(url);
-        const bundle = this.#loadingBundles.get(url);
-        if (bundle) {
-          this.#bundles.set(url, bundle);
-          this.#loadingBundles.delete(url);
-        }
-        this.#resolvePromise(url);
-        this.#loadingPromises.delete(url);
-        /* TODO: The promise resolution is deferred inside .then() without error handling.
-         *
-         */
-        lynxViewInstancePromise.then((instance) => {
-          instance.backgroundThread.markTiming('decode_end');
-          instance.backgroundThread.markTiming('load_template_start');
-        });
+        void this.#completeBundleLoad(url, lynxViewInstancePromise);
         break;
     }
+  }
+
+  async #completeBundleLoad(
+    url: string,
+    lynxViewInstancePromise: Promise<LynxViewInstance>,
+  ) {
+    // Publish a shared bundle only after every section has been applied.
+    const sectionResults = await Promise.allSettled(
+      this.#sectionHandlerPromises.get(url) ?? [],
+    );
+    const sectionFailure = sectionResults.find(
+      result => result.status === 'rejected',
+    );
+    if (sectionFailure?.status === 'rejected') {
+      this.#cleanup(url);
+      this.#removeBundle(url);
+      this.#rejectPromise(url, sectionFailure.reason);
+      this.#loadingPromises.delete(url);
+      return;
+    }
+
+    this.#cleanup(url);
+    const bundle = this.#loadingBundles.get(url);
+    if (bundle) {
+      this.#bundles.set(url, bundle);
+      this.#loadingBundles.delete(url);
+    }
+    this.#resolvePromise(url);
+    this.#loadingPromises.delete(url);
+
+    lynxViewInstancePromise.then((instance) => {
+      instance.backgroundThread.markTiming('decode_end');
+      instance.backgroundThread.markTiming('load_template_start');
+    });
   }
 
   async #handleSection(
@@ -278,6 +307,7 @@ export class TemplateManager {
 
   #cleanup(url: string) {
     this.#lynxViewInstancesMap.delete(url);
+    this.#sectionHandlerPromises.delete(url);
   }
 
   createBundle(url: string) {
