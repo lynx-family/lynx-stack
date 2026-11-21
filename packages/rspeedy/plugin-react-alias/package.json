@@ -46,7 +46,7 @@
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "@types/semver": "^7.8.0",
-    "semver": "^7.8.5"
+    "semver": "^7.8.6"
   },
   "peerDependencies": {
     "@lynx-js/react": "^0.128.0 || ^0.129.0",
