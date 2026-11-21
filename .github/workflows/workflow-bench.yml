@@ -123,7 +123,7 @@ jobs:
         # profile is kept so a later regression can be diffed against main's
         # profile. include-hidden-files keeps the dotfiles.
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: codspeed-valgrind-tmp-${{ github.sha }}
           path: ${{ runner.temp }}/codspeed-valgrind-tmp
@@ -139,7 +139,7 @@ jobs:
         run: |
           pnpm -r run --workspace-concurrency=1 perfetto
       - name: React benchmark - Upload perfetto output
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: benchmark-react-ptrace-${{ github.sha }}
           path: ./benchmark/react/dist/**/*.ptrace
