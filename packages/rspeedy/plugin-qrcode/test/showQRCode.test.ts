@@ -11,6 +11,7 @@ import showQRCode, {
   calculateQRCellSize,
   detectTerminalImageProtocol,
   encodeQRMatrixToPng,
+  formatITerm2Image,
   formatKittyImage,
   renderQRCode,
 } from '../src/showQRCode.js'
@@ -155,13 +156,40 @@ describe('showQRCode - Terminal Image Rendering', () => {
       })
     })
 
-    test('returns null on unsupported terminals (Apple Terminal, Alacritty, unknown)', () => {
+    test('detects iTerm2 (>= 2.9.20150512) and Mintty as iterm2 protocol', () => {
+      withEnv(
+        { TERM_PROGRAM: 'iTerm.app', TERM_PROGRAM_VERSION: '3.6.6' },
+        () => {
+          expect(detectTerminalImageProtocol(tty)).toBe('iterm2')
+        },
+      )
+      withEnv(
+        { TERM_PROGRAM: 'iTerm.app', TERM_PROGRAM_VERSION: '2.8.0' },
+        () => {
+          expect(detectTerminalImageProtocol(tty)).toBeNull()
+        },
+      )
+      withEnv({ LC_TERMINAL: 'iTerm2' }, () => {
+        expect(detectTerminalImageProtocol(tty)).toBe('iterm2')
+      })
+      withEnv({ TERM_PROGRAM: 'mintty' }, () => {
+        expect(detectTerminalImageProtocol(tty)).toBe('iterm2')
+      })
+    })
+
+    test('returns null on unsupported terminals (Apple Terminal, Alacritty, VS Code, unknown)', () => {
       withEnv({ TERM_PROGRAM: 'Apple_Terminal' }, () => {
         expect(detectTerminalImageProtocol(tty)).toBeNull()
       })
       withEnv({ TERM: 'alacritty' }, () => {
         expect(detectTerminalImageProtocol(tty)).toBeNull()
       })
+      withEnv(
+        { TERM_PROGRAM: 'vscode', TERM_PROGRAM_VERSION: '1.100.0' },
+        () => {
+          expect(detectTerminalImageProtocol(tty)).toBeNull()
+        },
+      )
       withEnv({ TERM: 'xterm-256color' }, () => {
         expect(detectTerminalImageProtocol(tty)).toBeNull()
       })
@@ -211,7 +239,7 @@ describe('showQRCode - Terminal Image Rendering', () => {
     })
   })
 
-  describe('formatKittyImage', () => {
+  describe('formatKittyImage & formatITerm2Image', () => {
     test('formats single-chunk and multi-chunk Kitty sequences with row padding', () => {
       const smallBuf = Buffer.from('hello-png')
       const single = formatKittyImage(smallBuf, 28, 14)
@@ -234,6 +262,20 @@ describe('showQRCode - Terminal Image Rendering', () => {
         '\u001b_Ga=T,f=100,q=2,C=1,c=20,r=10,m=1;',
       )
       expect(multiLines[0]).toContain('\u001b_Gq=2,m=0;')
+    })
+
+    test('formats iTerm2 OSC 1337 sequence with pre-allocated rows and cursor-up', () => {
+      const buf = Buffer.from('iterm-png')
+      const formatted = formatITerm2Image(buf, 24, 12)
+      const lines = formatted.split('\n')
+
+      expect(lines).toHaveLength(12)
+      expect(lines.slice(0, 11).every(line => line === '')).toBe(true)
+      expect(lines[11]).toBe(
+        `\u001b[11A\u001b]1337;File=inline=1;width=24;height=12;preserveAspectRatio=1;size=${buf.byteLength}:${
+          buf.toString('base64')
+        }\u0007`,
+      )
     })
   })
 
@@ -296,6 +338,25 @@ describe('showQRCode - Terminal Image Rendering', () => {
       })
     })
 
+    test('renders via iTerm2 protocol when terminal supports OSC 1337', () => {
+      const url = 'http://example.com/main.lynx.bundle'
+      withEnv(
+        { TERM_PROGRAM: 'iTerm.app', TERM_PROGRAM_VERSION: '3.6.6' },
+        () => {
+          const output = renderQRCode(url, {
+            isTTY: true,
+            columns: 80,
+            rows: 24,
+          })
+
+          expect(output).toContain(
+            '\u001b]1337;File=inline=1;width=28;height=14;',
+          )
+          expect(output.split('\n')).toHaveLength(14)
+        },
+      )
+    })
+
     test('falls back to uqr renderUnicodeCompact when terminal does not support images or is too small', () => {
       const url = 'http://example.com/main.lynx.bundle'
       withEnv({ TERM: 'xterm-256color' }, () => {
@@ -306,6 +367,7 @@ describe('showQRCode - Terminal Image Rendering', () => {
         })
 
         expect(output).not.toContain('\u001b_G')
+        expect(output).not.toContain('\u001b]1337;')
         expect(output).toContain('█')
       })
 
