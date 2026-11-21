@@ -13,7 +13,11 @@ afterEach(() => {
   for (const dom of windows.splice(0)) dom.window.close();
 });
 
-async function createRealm(scripts: Record<string, string>) {
+function readyMessageOf(iframe: HTMLIFrameElement): string {
+  return /postMessage\(("[^"]+")/.exec(iframe.srcdoc)![1]!.slice(1, -1);
+}
+
+function stubDom(scripts: Record<string, string> = {}) {
   const dom = new JSDOM('<!doctype html><body></body>', {
     url: 'http://localhost/',
     runScripts: 'dangerously',
@@ -40,12 +44,16 @@ async function createRealm(scripts: Record<string, string>) {
       send() {}
     },
   );
+  return dom;
+}
+
+async function createRealm(scripts: Record<string, string>) {
+  const dom = stubDom(scripts);
   const pending = createIFrameRealm(dom.window.document.body);
   const iframe = dom.window.document.querySelector('iframe')!;
   dom.window.dispatchEvent(
     new dom.window.MessageEvent('message', {
-      data: 'lynx:mtsready',
-      source: iframe.contentWindow,
+      data: readyMessageOf(iframe),
     }),
   );
   const realm = await pending;
@@ -108,5 +116,51 @@ describe('iframe script exports', () => {
     });
     expect(realm.loadScriptSync('root')).toBe('recovered');
     expect(realm.loadScriptSync('next')).toBe('next');
+  });
+});
+
+describe('iframe ready handshake', () => {
+  test('resolves on the realm token even when event.source is not the iframe window', async () => {
+    const dom = stubDom();
+    const pending = createIFrameRealm(dom.window.document.body);
+    const iframe = dom.window.document.querySelector('iframe')!;
+    dom.window.dispatchEvent(
+      new dom.window.MessageEvent('message', {
+        data: readyMessageOf(iframe),
+        source: null,
+      }),
+    );
+    expect((await pending).globalWindow).toBe(iframe.contentWindow);
+  });
+
+  test('ignores ready messages that do not carry the realm token', async () => {
+    const dom = stubDom();
+    const pending = createIFrameRealm(dom.window.document.body);
+    const iframe = dom.window.document.querySelector('iframe')!;
+    const settled = rstest.fn();
+    void pending.then(settled);
+    dom.window.dispatchEvent(
+      new dom.window.MessageEvent('message', {
+        data: 'lynx:mtsready',
+        source: iframe.contentWindow,
+      }),
+    );
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(settled).not.toHaveBeenCalled();
+    dom.window.dispatchEvent(
+      new dom.window.MessageEvent('message', {
+        data: readyMessageOf(iframe),
+      }),
+    );
+    await pending;
+    expect(settled).toHaveBeenCalledTimes(1);
+  });
+
+  test('gives each realm its own token', () => {
+    const dom = stubDom();
+    void createIFrameRealm(dom.window.document.body);
+    void createIFrameRealm(dom.window.document.body);
+    const [a, b] = [...dom.window.document.querySelectorAll('iframe')];
+    expect(readyMessageOf(a!)).not.toBe(readyMessageOf(b!));
   });
 });
