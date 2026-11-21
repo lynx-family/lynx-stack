@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib",
+    "jsx": "preserve",
+    "jsxImportSource": "@lynx-js/react",
+    "incremental": false,
+    "types": ["node", "@lynx-js/types"],
+  },
+  "include": ["src"],
+}

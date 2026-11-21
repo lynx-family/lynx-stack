@@ -1,0 +1,75 @@
+{
+  "name": "@lynx-js/islands",
+  "version": "0.0.1",
+  "description": "Expose Lynx UI modules and render independent islands in native hosts.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/islands"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Lynx Authors"
+  },
+  "type": "module",
+  "exports": {
+    "./shared": {
+      "types": "./lib/shared/index.d.ts",
+      "default": "./lib/shared/index.js"
+    },
+    "./build": {
+      "types": "./lib/build/index.d.ts",
+      "default": "./lib/build/index.js"
+    },
+    "./react": {
+      "types": "./lib/react/index.d.ts",
+      "default": "./lib/react/index.js"
+    },
+    "./runtime": {
+      "types": "./lib/runtime/index.d.ts",
+      "default": "./lib/runtime/index.js"
+    }
+  },
+  "files": [
+    "lib",
+    "!lib/**/*.js.map",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "scripts": {
+    "api-extractor": "node scripts/api-extractor.mjs",
+    "build": "pnpm run clean && tsc6 --project tsconfig.json",
+    "clean": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true});\"",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@lynx-js/lynx-xml": "workspace:*",
+    "@lynx-js/tasm": "0.0.49",
+    "@lynx-js/template-webpack-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-transform": "workspace:*",
+    "@lynx-js/types": "4.1.0",
+    "@microsoft/api-extractor": "catalog:",
+    "@rsbuild/core": "catalog:rsbuild"
+  },
+  "peerDependencies": {
+    "@lynx-js/react": ">=0.127.0 <1",
+    "@rsbuild/core": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@lynx-js/react": {
+      "optional": true
+    },
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
