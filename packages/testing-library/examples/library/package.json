@@ -13,6 +13,6 @@
     "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^7.0.0"
+    "@testing-library/jest-dom": "^7.0.1"
   }
 }
