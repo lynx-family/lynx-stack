@@ -89,7 +89,7 @@
     "picocolors": "^1.1.1",
     "rsbuild-plugin-tailwindcss": "0.2.4",
     "rslog": "^2.3.0",
-    "type-fest": "^5.8.0",
+    "type-fest": "^6.0.1",
     "yaml": "^2.9.0"
   },
   "engines": {
