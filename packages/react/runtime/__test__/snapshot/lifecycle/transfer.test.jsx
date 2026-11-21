@@ -229,8 +229,8 @@ describe('transfer (background thread)', () => {
       if (name === 'b') updateB = setCount;
       call(`${name}:render:${count}`);
       useEffect(() => {
-        if (name === 'a') call('a:effect');
-      }, []);
+        if (name === 'a' && count === 1) call('a:effect');
+      }, [count]);
       useLayoutEffect(() => {
         call(`${name}:layout`);
         if (name !== 'a') return;
@@ -268,8 +268,12 @@ describe('transfer (background thread)', () => {
       expect(worklets('work-b', 1)).toEqual(['b:render:1']);
       returnFrom('work-b', 1);
       ack('work-b', 2);
+      flushEffects();
+      expect(link.of(WorkletEvents.runWorkletCtx)).not.toContainEqual(
+        expect.objectContaining({ params: ['a:effect'] }),
+      );
       link.fire('__TransferFirstFrame', { transferId: 'work-a', snapshot: frameA });
-      expect(worklets('work-a', 0)).toEqual(['a:render:0', 'a:layout', 'a:effect', 'a:render:1']);
+      expect(worklets('work-a', 0)).toEqual(['a:render:0', 'a:layout', 'a:render:1', 'a:effect']);
       expect(new Set(calls('work-a', 0).map(({ worklet }) => worklet._execId)).size).toBe(4);
       const lastExecId = calls('work-a', 0).at(-1).worklet._execId;
       ack('work-a', 1);

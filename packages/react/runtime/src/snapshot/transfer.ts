@@ -8,7 +8,17 @@ import { addReloadScopedEventListener } from '../core/reload-scoped-event.js';
 import { getReloadVersion } from '../core/reload-version.js';
 import { prepareMainThreadFunctionCtx } from '../core/thread-function-call/main-thread.js';
 import { __root, enableTransferMode, warnRootRenderOnTransferPage } from '../root.js';
-import { CHILDREN, COMMIT, PARENT, RENDER_COMPONENT } from '../shared/render-constants.js';
+import {
+  CHILDREN,
+  COMMIT,
+  COMPONENT,
+  DIFFED,
+  HOOKS,
+  PARENT,
+  PENDING_EFFECTS,
+  RENDER_COMPONENT,
+  VALUE,
+} from '../shared/render-constants.js';
 import { isRendering } from './lifecycle/isRendering.js';
 import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../worklet-runtime/bindings/events.js';
@@ -372,10 +382,24 @@ function initialize(): void {
     /* eslint-disable @typescript-eslint/unbound-method */
     const renderComponent = options[RENDER_COMPONENT];
     const commit = options[COMMIT];
+    const diffed = options[DIFFED];
     /* eslint-enable @typescript-eslint/unbound-method */
     options[RENDER_COMPONENT] = (vnode, component) => {
       rendering = findOwner(vnode);
       renderComponent?.(vnode, component);
+    };
+    options[DIFFED] = vnode => {
+      const effects = vnode[COMPONENT]?.[HOOKS]?.[PENDING_EFFECTS] as { [VALUE]: () => unknown }[] | undefined;
+      if (effects?.length) {
+        const instance = findOwner(vnode);
+        if (instance?.phase === 'waiting') {
+          for (const effect of effects) {
+            const callback = effect[VALUE];
+            effect[VALUE] = () => withInstance(instance, () => callback.call(effect));
+          }
+        }
+      }
+      diffed?.(vnode);
     };
     options[COMMIT] = (vnode, queue) => {
       rendering = undefined;
@@ -395,6 +419,7 @@ function initialize(): void {
       Object.assign(options, {
         [RENDER_COMPONENT]: renderComponent,
         [COMMIT]: commit,
+        [DIFFED]: diffed,
         scheduleMainThreadWorklet: scheduleWorklet,
       });
     });
