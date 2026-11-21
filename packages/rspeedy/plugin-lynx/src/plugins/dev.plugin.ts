@@ -180,8 +180,14 @@ export function pluginDev(): RsbuildPlugin {
               assetPrefix,
               client: {
                 // Lynx cannot use `location.hostname`.
-                host: hostname,
-                port: '<port>',
+                host: config.dev?.client?.host !== undefined
+                    && config.dev.client.host !== ''
+                  ? config.dev.client.host
+                  : hostname,
+                port: config.dev?.client?.port !== undefined
+                    && config.dev.client.port !== ''
+                  ? config.dev.client.port
+                  : '<port>',
               },
               // A Lynx client reads the bundle from disk as often as it reads
               // it from the dev server, so the default is the opposite of
@@ -302,10 +308,17 @@ export function pluginDev(): RsbuildPlugin {
           '@lynx-js/webpack-dev-transport/hotDevServer',
         )
         const hostname = environment.config.dev?.client?.host ?? ''
+        const devServerPort = api.context.devServer?.port?.toString() ?? ''
+        const clientPort = environment.config.dev?.client?.port
+        const port = clientPort !== undefined
+            && clientPort !== ''
+            && clientPort !== '<port>'
+          ? clientPort.toString()
+          : devServerPort
 
         const searchParams = new URLSearchParams({
           hostname,
-          port: api.context.devServer?.port?.toString() ?? '',
+          port,
           pathname: '/rsbuild-hmr',
           hot: (environment.config.dev?.hmr ?? true) ? 'true' : 'false',
           'live-reload': (environment.config.dev?.liveReload ?? true)
