@@ -57,4 +57,48 @@ describe('executeTemplate', () => {
     // 3rd arg is viewAttributes
     expect(mockCreateElementAPI.mock.calls[0][2]).toBe('my-view-attr="123"');
   });
+
+  it('should forward transformSP to the decoder and the element APIs', () => {
+    const mockDecodeTemplate = rstest.mocked(decodeModule.decodeTemplate);
+    const mockCreateElementAPI = rstest.mocked(
+      createElementAPIModule.createElementAPI,
+    );
+
+    mockDecodeTemplate.mockReturnValue({
+      config: { enableCSSSelector: 'true' },
+      lepusCode: {},
+      styleInfo: new Uint8Array(),
+    } as DecodedTemplate);
+
+    mockCreateElementAPI.mockReturnValue({
+      globalThisAPIs: {} as ElementPAPIs,
+      wasmContext: {} as MainThreadServerContext,
+    });
+
+    const dummyBuffer = Buffer.from('test');
+
+    executeTemplate(
+      dummyBuffer,
+      {},
+      {},
+      () => {},
+      false, // transformVW
+      false, // transformVH
+      undefined, // viewAttributes
+      false, // transformREM
+      true, // transformSP
+    );
+
+    expect(mockDecodeTemplate).toHaveBeenCalledWith(
+      dummyBuffer,
+      false,
+      false,
+      false,
+      true,
+    );
+    expect(mockCreateElementAPI.mock.calls[0][3]).toMatchObject({
+      transformREM: false,
+      transformSP: true,
+    });
+  });
 });

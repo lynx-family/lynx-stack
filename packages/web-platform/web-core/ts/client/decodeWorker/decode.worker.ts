@@ -181,6 +181,7 @@ self.onmessage = async (
       transformVW,
       transformVH,
       transformREM,
+      transformSP,
     } = data;
     try {
       const response = await fetch(fetchUrl, {
@@ -198,6 +199,7 @@ self.onmessage = async (
         transformVW,
         transformVH,
         transformREM,
+        transformSP,
         overrideConfig,
       );
       postMessage({ type: 'done', url } as MainMessage);
@@ -214,6 +216,7 @@ async function handleStream(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
+  transformSP: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
   const streamReader = new StreamReader(reader);
@@ -237,6 +240,7 @@ async function handleStream(
       transformVW,
       transformVH,
       transformREM,
+      transformSP,
       overrideConfig,
     );
     return;
@@ -263,6 +267,7 @@ async function handleStream(
       transformVW,
       transformVH,
       transformREM,
+      transformSP,
       overrideConfig,
     );
     return;
@@ -333,6 +338,7 @@ async function handleStream(
           transformVW,
           transformVH,
           transformREM,
+          transformSP,
         );
         postMessage(
           {
@@ -494,6 +500,7 @@ async function handleMarkup(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
+  transformSP: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
   const bytes = new Uint8Array(head.length + rest.length);
@@ -534,6 +541,7 @@ async function handleMarkup(
     transformVW,
     transformVH,
     transformREM,
+    transformSP,
     overrideConfig,
   );
 }
@@ -544,6 +552,7 @@ async function handleJSON(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
+  transformSP: boolean,
   overrideConfig?: Partial<PageConfig>,
 ) {
   // Configurations
@@ -583,6 +592,7 @@ async function handleJSON(
       transformVW,
       transformVH,
       transformREM,
+      transformSP,
       config['isLazy'] === 'true' ? url : undefined,
     );
     postMessage(

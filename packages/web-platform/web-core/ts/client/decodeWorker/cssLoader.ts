@@ -22,6 +22,7 @@ export function loadStyleFromJSON(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
+  transformSP: boolean,
   entryName?: string,
 ): Uint8Array {
   const rawStyleInfo = new wasmInstance.RawStyleInfo();
@@ -108,6 +109,7 @@ export function loadStyleFromJSON(
     transformVW,
     transformVH,
     transformREM,
+    transformSP,
   );
 }
 

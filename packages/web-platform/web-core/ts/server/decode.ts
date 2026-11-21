@@ -19,6 +19,7 @@ export function decodeTemplate(
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
+  transformSP: boolean,
 ): DecodedTemplate {
   if (buffer.length < 8) {
     throw new Error('Buffer too short for Magic Header');
@@ -91,6 +92,7 @@ export function decodeTemplate(
           transformVW,
           transformVH,
           transformREM,
+          transformSP,
         );
         styleInfo = buffer;
         break;

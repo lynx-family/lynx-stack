@@ -16,12 +16,14 @@ export function executeTemplate(
   transformVH: boolean,
   viewAttributes?: string,
   transformREM?: boolean,
+  transformSP?: boolean,
 ): string | undefined {
   const result = decodeTemplate(
     templateBuffer,
     transformVW,
     transformVH,
     !!transformREM,
+    !!transformSP,
   );
   const config = result.config;
 
@@ -38,6 +40,7 @@ export function executeTemplate(
       transformVW: transformVW,
       transformVH: transformVH,
       transformREM: !!transformREM,
+      transformSP: !!transformSP,
     },
   );
 

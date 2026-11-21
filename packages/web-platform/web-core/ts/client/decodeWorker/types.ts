@@ -16,6 +16,7 @@ export interface LoadTemplateMessage extends DecodeWorkerMessage {
   transformVW: boolean;
   transformVH: boolean;
   transformREM: boolean;
+  transformSP: boolean;
   overrideConfig?: Record<string, string>;
 }
 
