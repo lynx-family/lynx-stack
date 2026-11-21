@@ -1,5 +1,19 @@
 # @lynx-js/genui
 
+## 0.8.1
+
+### Patch Changes
+
+- Fix an A2UI render loop when a component receives an array of objects or a synchronous `@call` returns a fresh array or object with unchanged contents. ([#4386](https://github.com/lynx-family/lynx-stack/pull/4386))
+
+- Updated dependency `@rsbuild/core` to `2.3.3`. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+  Updated dependency `@rspack/lite-tapable` to `1.3.0`.
+- Updated dependencies [[`7af903b`](https://github.com/lynx-family/lynx-stack/commit/7af903b087335b5ff07e30ecee6368651827373b), [`7af903b`](https://github.com/lynx-family/lynx-stack/commit/7af903b087335b5ff07e30ecee6368651827373b), [`a15eef3`](https://github.com/lynx-family/lynx-stack/commit/a15eef3aafec495999f65f95d27c55a545bd44c1), [`60fcc06`](https://github.com/lynx-family/lynx-stack/commit/60fcc06984cdb7ffcdc281cc649e70aacfee2399)]:
+  - @lynx-js/config-rsbuild-plugin@0.3.0
+  - @lynx-js/react-rsbuild-plugin@0.22.4
+  - @lynx-js/rsbuild-plugin@0.2.0
+  - @lynx-js/react-signals@0.0.7
+
 ## 0.8.0
 
 ### Minor Changes

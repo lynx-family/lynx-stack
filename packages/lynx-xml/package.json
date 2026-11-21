@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/lynx-xml",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Parse single-file Lynx XML documents into main-thread JavaScript, background JavaScript, and CSS.",
   "repository": {
     "type": "git",

@@ -1,5 +1,21 @@
 # @lynx-js/react
 
+## 0.129.4
+
+### Patch Changes
+
+- Detect repeated state updates from `useEffect` in development when `@lynx-js/react/debug` is imported. After more than 50 consecutive passive-effect batches each enqueue an update within the same render root, ReactLynx logs a `Maximum update depth exceeded` error with the triggering component stack while allowing updates to continue. ([#4368](https://github.com/lynx-family/lynx-stack/pull/4368))
+
+- Keep first-screen `runOnBackground` handles usable across hydration, rerenders, and main-thread garbage collection by transitioning queued handles out of first-screen mode and retaining their background execution lifecycle until collected. ([#4369](https://github.com/lynx-family/lynx-stack/pull/4369))
+
+- Isolate Fast Refresh component registries per template bundle while scoping VNode tracking to each `@lynx-js/react/refresh` runtime instance so multiple templates sharing a JS context (`shareJsContext`) update independently. ([#4353](https://github.com/lynx-family/lynx-stack/pull/4353))
+
+- Fix nested `<list>` items showing another item's content after the outer `<list>` reuses a `<list-item>` across items, for example horizontal cells appearing out of order after scrolling up and down. ([#4283](https://github.com/lynx-family/lynx-stack/pull/4283))
+
+- Enrich React `ref.invoke()` selector lookup failures (`NODE_NOT_FOUND` and `NO_UI_FOR_NODE`) with the invoked method, snapshot/template identifier, and development `exec()` call stack (including development warnings when `options.fail` is omitted). ([#4364](https://github.com/lynx-family/lynx-stack/pull/4364))
+
+- Add experimental `TransferRegistry` to `@lynx-js/react/internal`. Native hosts can render registered components as independent transfer instances; each instance renders its first frame on the main thread, hydrates on the background thread and sends ordered, acknowledged commits. ([#4311](https://github.com/lynx-family/lynx-stack/pull/4311))
+
 ## 0.129.3
 
 ### Patch Changes

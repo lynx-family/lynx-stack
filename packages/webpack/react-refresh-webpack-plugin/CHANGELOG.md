@@ -1,5 +1,11 @@
 # @lynx-js/react-refresh-webpack-plugin
 
+## 0.4.7
+
+### Patch Changes
+
+- Isolate Fast Refresh component registries per template bundle while scoping VNode tracking to each `@lynx-js/react/refresh` runtime instance so multiple templates sharing a JS context (`shareJsContext`) update independently. ([#4353](https://github.com/lynx-family/lynx-stack/pull/4353))
+
 ## 0.4.6
 
 ### Patch Changes

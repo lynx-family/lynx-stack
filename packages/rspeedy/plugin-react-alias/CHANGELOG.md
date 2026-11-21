@@ -1,5 +1,11 @@
 # @lynx-js/react-alias-rsbuild-plugin
 
+## 0.22.4
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.19.0` to the peer dependency range. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+
 ## 0.22.3
 
 No changes in this release.

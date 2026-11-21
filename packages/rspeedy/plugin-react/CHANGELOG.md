@@ -1,5 +1,19 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.22.4
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.19.0` to the peer dependency range. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+- Updated dependencies [[`48baa42`](https://github.com/lynx-family/lynx-stack/commit/48baa42d6483b4e2877e607301d8be51484aaf61), [`7af903b`](https://github.com/lynx-family/lynx-stack/commit/7af903b087335b5ff07e30ecee6368651827373b), [`9eda4ad`](https://github.com/lynx-family/lynx-stack/commit/9eda4ade2617354a659f43aa0490d8bc9fd526c5), [`7af903b`](https://github.com/lynx-family/lynx-stack/commit/7af903b087335b5ff07e30ecee6368651827373b), [`7af903b`](https://github.com/lynx-family/lynx-stack/commit/7af903b087335b5ff07e30ecee6368651827373b), [`a15eef3`](https://github.com/lynx-family/lynx-stack/commit/a15eef3aafec495999f65f95d27c55a545bd44c1)]:
+  - @lynx-js/react-refresh-webpack-plugin@0.4.7
+  - @lynx-js/template-webpack-plugin@0.16.9
+  - @lynx-js/react-webpack-plugin@0.15.2
+  - @lynx-js/react-alias-rsbuild-plugin@0.22.4
+  - @lynx-js/rsbuild-plugin@0.2.0
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/css-extract-webpack-plugin@0.11.2
+
 ## 0.22.3
 
 ### Patch Changes

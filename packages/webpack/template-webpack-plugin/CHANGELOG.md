@@ -1,5 +1,14 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.9
+
+### Patch Changes
+
+- Updated dependency `@rsbuild/core` to `2.3.3`. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+  Updated dependency `@rspack/lite-tapable` to `1.3.0`.
+- Updated dependencies [[`a7bd55e`](https://github.com/lynx-family/lynx-stack/commit/a7bd55eb0265bb8e9ec72e0e904ae73d5b6804f7), [`731dd5c`](https://github.com/lynx-family/lynx-stack/commit/731dd5ccb989b38f5ded9cd7796e64c8117c88f8)]:
+  - @lynx-js/web-core@0.26.9
+
 ## 0.16.8
 
 ### Patch Changes

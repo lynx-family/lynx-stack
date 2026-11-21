@@ -1,5 +1,17 @@
 # @lynx-js/external-bundle-rsbuild-plugin
 
+## 0.6.0
+
+### Minor Changes
+
+- Support standalone runtime URL resolvers evaluated on first import. String results preserve native synchronous loading, while Promise results support asynchronous URL delivery. Keep fixed URLs and bundlePath loading unchanged. ([#4370](https://github.com/lynx-family/lynx-stack/pull/4370))
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.19.0` to the peer dependency range. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+- Updated dependencies [[`ccb1dea`](https://github.com/lynx-family/lynx-stack/commit/ccb1dea9dbf3b52c5bdc47e39ca48ac93cd2b5d5), [`d35c6ef`](https://github.com/lynx-family/lynx-stack/commit/d35c6effebdb71a82acbac6f4e92cfbc0b85d664)]:
+  - @lynx-js/externals-loading-webpack-plugin@0.4.0
+
 ## 0.5.0
 
 ### Minor Changes
