@@ -10,11 +10,12 @@ function log(message: string) {
   console.info(`[transfer-run-on-background] ${message}`);
 }
 
-const held = new Map<string, () => void>();
+// Held first frames by transfer ID.
+const held = new Map<string, { name: string; deliver: () => void }>();
 
 function deliverHeldFrames() {
-  for (const [name, deliver] of held) {
-    held.delete(name);
+  for (const [transferId, { name, deliver }] of held) {
+    held.delete(transferId);
     log(`deliver ${name} frame`);
     deliver();
   }
@@ -90,7 +91,7 @@ if (__BACKGROUND__) {
           if (data.initialProps?.hold) holds.add(data.transferId);
         } else if (holds.delete(data.transferId)) {
           const name = names.get(data.transferId)!;
-          held.set(name, () => listener(event));
+          held.set(data.transferId, { name, deliver: () => listener(event) });
           log(`hold ${name} frame`);
           return;
         }
