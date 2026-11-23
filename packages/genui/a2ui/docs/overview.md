@@ -211,10 +211,11 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 ```
 
 - **Store layer** (`@lynx-js/genui/a2ui/store`) — pure data logic, no
-  React. The `MessageStore` is an append-only buffer with a
+  React. The `MessageStore` is a raw-message buffer with a
   `useSyncExternalStore`-friendly `subscribe` / `getSnapshot` API. Your
-  transport calls `store.push(msg)`; the store stays intentionally dumb
-  about protocol semantics.
+  transport calls `store.push(msg)` for incremental messages and
+  `store.replace(fullMessages)` for a complete final response. The store does
+  not interpret the protocol; the processor reconciles replacement state.
 - **`MessageProcessor`** — the protocol brain. It owns every `Surface`,
   applies `createSurface` / `updateComponents` / `updateDataModel` /
   `deleteSurface` into surface state, and emits typed events
@@ -260,7 +261,7 @@ The building blocks you compose against:
 - **`<A2UI>`** — the all-in-one component. It owns a `MessageProcessor`,
   subscribes to a developer-supplied `MessageStore`, and renders the most
   recent surface.
-- **`MessageStore`** — an append-only buffer of raw protocol messages you
+- **`MessageStore`** — a buffer of raw protocol messages you
   push into from any transport: fetch, SSE, WebSocket, or an in-process
   mock.
 - **Catalog API** — `defineCatalog`, `mergeCatalogs`, `serializeCatalog`,
@@ -300,18 +301,18 @@ Most apps only ever import from `@lynx-js/genui/a2ui`. Reach for `/store` and
 
 `<A2UI>` takes two required props and a set of optional render hooks.
 
-| Prop                | Type                                           | Required | Purpose                                                                                                 |
-| ------------------- | ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `messageStore`      | `MessageStore`                                 | yes      | The raw-message buffer your transport pushes into. `<A2UI>` subscribes and processes new tail messages. |
-| `catalogs`          | `readonly CatalogInput[]`                      | yes      | The components and function entries the renderer is allowed to instantiate.                             |
-| `onMessage`         | `(message, metadata) => void \| Promise<void>` | no       | Forward v1.0 wire messages and data-model metadata to your Agent; push replies into the store.          |
-| `onAction`          | `(action: UserActionPayload) => void`          | no       | Receives only the action payload, without its version envelope or transport metadata.                   |
-| `className`         | `string`                                       | no       | Applied to the surface root view (`surface-${surfaceId}`). Handy for surface-level theme classes.       |
-| `wrapSurface`       | `(children, { surfaceId }) => ReactNode`       | no       | Wraps each surface so you can apply an outer theme shell or wrapper styles.                             |
-| `renderEmpty`       | `() => ReactNode`                              | no       | Rendered before the first `beginRendering` arrives. Defaults to nothing.                                |
-| `renderFallback`    | `() => ReactNode`                              | no       | Rendered while the active resource is pending. Defaults to the built-in `<Loading>`.                    |
-| `renderError`       | `(err: unknown) => ReactNode`                  | no       | Rendered when the active resource fails.                                                                |
-| `renderUnsupported` | `(info) => ReactNode`                          | no       | Rendered for an unsupported component or data syntax.                                                   |
+| Prop                | Type                                           | Required | Purpose                                                                                                    |
+| ------------------- | ---------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| `messageStore`      | `MessageStore \| null`                         | yes      | The raw-message buffer; `null` ends the rendering session and renders nothing.                             |
+| `catalogs`          | `readonly CatalogInput[]`                      | yes      | The components and function entries the renderer is allowed to instantiate.                                |
+| `onMessage`         | `(message, metadata) => void \| Promise<void>` | no       | Forward v1.0 wire messages and data-model metadata to your Agent; push replies into the store.             |
+| `onAction`          | `(action: UserActionPayload) => void`          | no       | Receives only the action payload, without its version envelope or transport metadata.                      |
+| `className`         | `string`                                       | no       | Applied to the surface root view (`surface-${surfaceId}`). Handy for surface-level theme classes.          |
+| `wrapSurface`       | `(children, { surfaceId }) => ReactNode`       | no       | Wraps each surface so you can apply an outer theme shell or wrapper styles.                                |
+| `renderEmpty`       | `() => ReactNode`                              | no       | Rendered for a non-null store with no active resource, including after `replace([])`. Defaults to nothing. |
+| `renderFallback`    | `() => ReactNode`                              | no       | Rendered while the active resource is pending. Defaults to the built-in `<Loading>`.                       |
+| `renderError`       | `(err: unknown) => ReactNode`                  | no       | Rendered when the active resource fails.                                                                   |
+| `renderUnsupported` | `(info) => ReactNode`                          | no       | Rendered for an unsupported component or data syntax.                                                      |
 
 Lifecycle notes that save debugging time:
 
@@ -320,6 +321,13 @@ Lifecycle notes that save debugging time:
   `messageStore` instance later does **not** reset internal state. To start
   a fresh session or turn, mount with a different `key` derived from your
   turn/session id: `<A2UI key={turnId} messageStore={turnStore} … />`.
+- **Buffer changes and UI changes differ.** `clear()` keeps live surfaces;
+  `replace([])` removes them and returns to `renderEmpty`. A normal
+  `push(deleteSurface)` leaves the active renderer blank without calling
+  `renderEmpty`. Passing `messageStore={null}` renders nothing and ends the
+  session; a later non-null store starts a fresh one. See
+  [MessageStore behavior](./message-store.md) for the full operation and
+  lifecycle tables, replacement diff rules, and failure recovery.
 - **`onAction` is fire-and-forget.** The renderer never awaits it. Your
   Agent pushes follow-up messages back into the same `MessageStore` to
   update the UI.
@@ -329,6 +337,8 @@ Lifecycle notes that save debugging time:
 
 ## Where to go next
 
+- [MessageStore behavior](./message-store.md) — choose between `push`, `replace`,
+  and `clear`, preserve local input, and recover from rejected replacements.
 - [Catalogs, built-ins, and custom components](./catalog-guide.md) — compose
   the contract, add manifests, and register your own components.
 - [System prompts](./system-prompts.md) — generate the model instructions

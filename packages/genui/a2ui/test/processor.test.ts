@@ -191,6 +191,16 @@ describe('MessageProcessor', () => {
         && event.updates?.some(update => update.id === 'event-title:0')
       ),
     ).toBe(true);
+    expect(events[events.length - 1]?.updates?.map(update => update.id))
+      .toEqual([
+        'events',
+        'event-template:0',
+        'event-title:0',
+        'event-time:0',
+        'event-template:1',
+        'event-title:1',
+        'event-time:1',
+      ]);
   });
 
   test('rewrites non-children child references when cloning templates', () => {
