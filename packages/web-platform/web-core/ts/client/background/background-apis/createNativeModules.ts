@@ -3,7 +3,11 @@
 // LICENSE file in the root directory of this source tree.
 
 /* LYNX_NATIVE_MODULES_IMPORT */
-import { type Cloneable, type NativeModulesMap } from '../../../types/index.js';
+import {
+  type Cloneable,
+  type NativeModulesInitData,
+  type NativeModulesMap,
+} from '../../../types/index.js';
 import {
   nativeModulesCallEndpoint,
   switchExposureServiceEndpoint,
@@ -15,6 +19,7 @@ export async function createNativeModules(
   uiThreadRpc: Rpc,
   mainThreadRpc: Rpc,
   nativeModulesMap: NativeModulesMap,
+  nativeModulesInitData?: NativeModulesInitData,
 ): Promise<Record<string, any>> {
   const switchExposure = mainThreadRpc.createCall(
     switchExposureServiceEndpoint,
@@ -53,6 +58,7 @@ export async function createNativeModules(
             nativeModules,
             (name: string, data: Cloneable) =>
               nativeModulesCall(name, data, moduleName),
+            { initData: nativeModulesInitData?.[moduleName] },
           ),
       )
     ),

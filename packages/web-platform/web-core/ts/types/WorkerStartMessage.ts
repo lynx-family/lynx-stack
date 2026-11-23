@@ -4,7 +4,10 @@
 
 import type { Cloneable } from './Cloneable.js';
 import type { NapiModulesMap } from './NapiModules.js';
-import type { NativeModulesMap } from './NativeModules.js';
+import type {
+  NativeModulesInitData,
+  NativeModulesMap,
+} from './NativeModules.js';
 
 export interface WorkerStartMessage {
   mainThreadMessagePort: MessagePort;
@@ -14,6 +17,7 @@ export interface WorkerStartMessage {
   cardType: string;
   customSections: Record<string, Cloneable>;
   nativeModulesMap: NativeModulesMap;
+  nativeModulesInitData?: NativeModulesInitData;
   napiModulesMap: NapiModulesMap;
   entryTemplateUrl: string;
   isProfiling: boolean;

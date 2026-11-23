@@ -6,6 +6,7 @@ import type {
   Cloneable,
   II18nResource,
   NativeApp,
+  NativeModulesInitData,
   NativeModulesMap,
 } from '../../../types/index.js';
 import {
@@ -52,6 +53,7 @@ export async function createNativeApp(
   entryTemplateUrl: string,
   cardType: string,
   isProfiling = false,
+  nativeModulesInitData?: NativeModulesInitData,
 ): Promise<NativeApp> {
   const performanceApis = createPerformanceApis(
     timingSystem,
@@ -95,6 +97,7 @@ export async function createNativeApp(
       mainThreadRpc,
       mainThreadRpc,
       nativeModulesMap,
+      nativeModulesInitData,
     ),
     readScript,
     loadScriptAsync,

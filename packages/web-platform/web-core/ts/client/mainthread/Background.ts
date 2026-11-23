@@ -180,6 +180,7 @@ export class BackgroundThread implements AsyncDisposable {
         cardType,
         customSections,
         nativeModulesMap,
+        nativeModulesInitData: this.#lynxViewInstance.nativeModulesInitData,
         napiModulesMap,
         entryTemplateUrl: this.#lynxViewInstance.templateUrl,
         isProfiling: this.#lynxViewInstance.isProfiling,

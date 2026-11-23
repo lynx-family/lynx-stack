@@ -10,6 +10,7 @@ import type {
   NapiModulesCall,
   NapiModulesMap,
   NativeModulesCall,
+  NativeModulesInitData,
   NativeModulesMap,
 } from '../../types/index.js';
 import { lynxDisposedAttribute } from '../../constants.js';
@@ -40,6 +41,7 @@ export interface BrowserConfig {
  * @property {NativeModulesMap} nativeModulesMap [optional] use to customize NativeModules. key is module-name, value is esm url.
  * A `LynxConsoleModule` whose factory returns a Console-like object provides
  * the lexical `console` for this view's background bundles.
+ * @property {NativeModulesInitData} nativeModulesInitData [optional] per-module structured-cloneable initial data passed via the 3rd context argument (`{ initData }`) to background NativeModules factories.
  * @property {NativeModulesCall} onNativeModulesCall [optional] the NativeModules value handler. Arguments will be cached before this property is assigned.
  * @property {"auto" | null} height [optional] (attribute: "height") set it to "auto" for height auto-sizing
  * @property {"auto" | null} width [optional] (attribute: "width") set it to "auto" for width auto-sizing
@@ -144,6 +146,18 @@ export class LynxViewElement extends HTMLElement {
    * the lexical `console` for this view's background bundles.
    */
   nativeModulesMap: NativeModulesMap | undefined;
+
+  /**
+   * Per-module structured-cloneable initial data passed synchronously via the
+   * 3rd context argument (`{ initData }`) to background native module
+   * factories (`nativeModulesMap`).
+   *
+   * Set this property before loading the view. The value is read once per view
+   * instance; changes require reloading the view.
+   *
+   * @defaultValue undefined
+   */
+  nativeModulesInitData: NativeModulesInitData | undefined;
 
   /**
    * Host-provided modules exposed synchronously through main-thread `lynx.module(name)`.
