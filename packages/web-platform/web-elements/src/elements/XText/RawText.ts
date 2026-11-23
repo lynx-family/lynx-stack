@@ -26,6 +26,13 @@ export class RawTextAttributes {
     ) {
       return;
     }
+    if (!this.#text && newVal) {
+      const lastChild = this.#dom.lastChild;
+      if (lastChild?.nodeType === 3 && (lastChild as Text).data === newVal) {
+        this.#text = lastChild as Text;
+        return;
+      }
+    }
     this.#text?.remove();
     this.#text = undefined;
     if (newVal) {

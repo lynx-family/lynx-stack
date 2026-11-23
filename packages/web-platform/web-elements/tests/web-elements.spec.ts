@@ -151,6 +151,22 @@ test.describe('web-elements test suite', () => {
           const shallowClone = el.cloneNode(false) as HTMLElement;
           const shallowCloneChildCount = shallowClone.childNodes.length;
 
+          for (const child of el.childNodes) {
+            shallowClone.append(child.cloneNode(true));
+          }
+          document.body.append(shallowClone);
+          const connectedCloneChildCount = shallowClone.childNodes.length;
+          const connectedCloneText = shallowClone.textContent;
+          shallowClone.setAttribute('text', 'clone-updated');
+          const updatedCloneText = shallowClone.textContent;
+          shallowClone.remove();
+
+          const deepClone = el.cloneNode(true) as HTMLElement;
+          document.body.append(deepClone);
+          const deepCloneChildCount = deepClone.childNodes.length;
+          const deepCloneText = deepClone.textContent;
+          deepClone.remove();
+
           el.setAttribute('text', 'world');
           const updatedText = el.textContent;
 
@@ -163,6 +179,11 @@ test.describe('web-elements test suite', () => {
             detachedChildCount,
             connectedText,
             shallowCloneChildCount,
+            connectedCloneChildCount,
+            connectedCloneText,
+            updatedCloneText,
+            deepCloneChildCount,
+            deepCloneText,
             updatedText,
             clearedText,
           };
@@ -174,6 +195,11 @@ test.describe('web-elements test suite', () => {
         expect(item.detachedChildCount).toBe(0);
         expect(item.connectedText).toBe('hello');
         expect(item.shallowCloneChildCount).toBe(0);
+        expect(item.connectedCloneChildCount).toBe(1);
+        expect(item.connectedCloneText).toBe('hello');
+        expect(item.updatedCloneText).toBe('clone-updated');
+        expect(item.deepCloneChildCount).toBe(1);
+        expect(item.deepCloneText).toBe('hello');
         expect(item.updatedText).toBe('world');
         expect(item.clearedText).toBe('');
       }
