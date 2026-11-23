@@ -10,7 +10,7 @@
  */
 export interface DemoCardProps {
   /** Main title. */
-  title: string | { path: string };
+  title: string | { '@path': string };
   /** Visual tone. */
   tone?: 'neutral' | 'accent';
   /** Number of columns. */

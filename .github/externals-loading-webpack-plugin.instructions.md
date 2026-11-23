@@ -13,3 +13,7 @@ The plugin's source is covered by Rstest, not Vitest. Keep its exact source path
 When external loading mode is selected at runtime, compile consuming externals with promise semantics in both branches and resolve subpath exports only after the namespace is available. Keep boolean configurations unchanged. Runtime predicates must be standalone functions without build-time closures, and ReactLynx external-bundle producers must await the mounted namespace as well.
 
 For runtime-selected synchronous loading, mount successful namespaces directly so existing synchronous producer bundles can read subpaths, while catching loader errors as cached rejected Promises. Consuming modules still use Promise semantics. Runtime predicate examples shared with web must select asynchronous loading for `platform: "web"`.
+
+Fetch all external bundles on first import and share the fetch across imports and sections. Initialize the fetch handler on first then() or wait(), preserving synchronous values and asynchronous Promises, including runtime-selected loading modes. Validate fetch timing by executing compiled entry and dynamic imports in both layers.
+
+Serialize runtime URL resolvers as standalone functions without build-time closures. Preserve the native fetchBundle handler for string results so synchronous wait() remains available; only Promise URL results need an asynchronous chain. Keep fixed URLs and bundlePath on the existing loading path.

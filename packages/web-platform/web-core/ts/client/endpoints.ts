@@ -8,6 +8,7 @@ import type {
   CloneableObject,
   LynxCrossThreadEvent,
   InvokeCallbackRes,
+  FieldsCallbackRes,
   ElementAnimationOptions,
   ExternalBundleResponse,
   ContextCrossThreadEvent,
@@ -119,6 +120,18 @@ export const getPathInfoEndpoint = createRpcEndpoint<
   ],
   InvokeCallbackRes
 >('__getPathInfo', false, true);
+
+export const getFieldsEndpoint = createRpcEndpoint<
+  [
+    type: IdentifierType,
+    identifier: string,
+    component_id: string,
+    first_only: boolean,
+    fields: string[],
+    root_unique_id: number | undefined,
+  ],
+  FieldsCallbackRes
+>('__getFields', false, true);
 
 export const nativeModulesCallEndpoint = createRpcEndpoint<
   [name: string, data: Cloneable, moduleName: string],

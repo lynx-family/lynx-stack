@@ -1,5 +1,11 @@
 # @lynx-js/create-lynx
 
+## 0.2.2
+
+### Patch Changes
+
+- Scaffolded apps depend on \`agent-lynx\`, and their \`AGENTS.md\` says it can debug a Lynx page with the \`lynx-devtool\` skill. ([#4326](https://github.com/lynx-family/lynx-stack/pull/4326))
+
 ## 0.2.1
 
 ### Patch Changes

@@ -205,7 +205,7 @@ export interface ReactLynxExternalsPresetOptions {
    * @deprecated Prefer `bundlePath`, which resolves through the runtime public
    * path and enables automatic asset emission.
    */
-  url?: string
+  url?: NonNullable<ExternalValue['url']>
 }
 
 /**
@@ -362,7 +362,7 @@ export interface PluginExternalValue extends Omit<ExternalValue, 'url'> {
    * @deprecated Prefer `bundlePath`, which resolves through the runtime public
    * path and lets higher-level tooling manage asset emission.
    */
-  url?: string
+  url?: NonNullable<ExternalValue['url']>
 }
 
 /**

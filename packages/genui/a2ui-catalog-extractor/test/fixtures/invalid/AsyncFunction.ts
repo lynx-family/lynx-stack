@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Async functions are not supported by A2UI 0.9.
+ * Automatic schema extraction does not support async functions.
  *
  * @a2uiFunction asyncWork
  */

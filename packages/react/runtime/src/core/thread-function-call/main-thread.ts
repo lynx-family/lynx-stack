@@ -2,8 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { options as preactOptions } from 'preact';
+
 import { onFunctionCall } from './return-value.js';
-import { isSdkVersionGt } from '../../utils.js';
+import { isSdkVersionGt } from '../../shared/version.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxData } from '../../worklet-runtime/bindings/events.js';
 import type { Worklet } from '../../worklet-runtime/bindings/types.js';
@@ -48,6 +50,8 @@ export function createRunOnMainThread(
       return new Promise((resolve) => {
         if (isRuntimeDestroyed()) return;
         const worklet = fn as unknown as Worklet;
+        if (preactOptions.scheduleMainThreadWorklet?.({ worklet, params, resolve })) return;
+
         prepareMainThreadFunctionCtx(worklet);
         const data = {
           worklet,
@@ -70,7 +74,7 @@ function isRunOnBackgroundSupported(): boolean {
   return isSdkVersionGt(2, 15);
 }
 
-function prepareMainThreadFunctionCtx(worklet: unknown): void {
+export function prepareMainThreadFunctionCtx(worklet: unknown): void {
   if (isMainThreadFunction(worklet) && isRunOnBackgroundSupported()) {
     registerBackgroundFunctionCtx(worklet);
   }

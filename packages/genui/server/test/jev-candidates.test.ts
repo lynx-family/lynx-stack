@@ -85,13 +85,13 @@ test('keeps matching bindings ahead of unrelated paths without exposing their va
     schema: {
       oneOf: [{ type: 'string' }, {
         type: 'object',
-        properties: { path: { type: 'string' } },
-        required: ['path'],
+        properties: { '@path': { type: 'string' } },
+        required: ['@path'],
         additionalProperties: false,
       }],
     },
   });
-  expect(choices[0]?.value).toEqual({ path: '/title' });
+  expect(choices[0]?.value).toEqual({ '@path': '/title' });
   expect(JSON.stringify(choices)).not.toContain('private-');
 });
 

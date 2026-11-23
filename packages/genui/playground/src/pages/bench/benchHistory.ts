@@ -72,7 +72,8 @@ function isBenchVariable(value: unknown): value is BenchVariable {
 }
 
 function isBenchProtocol(value: unknown): value is BenchProtocol {
-  return value === 'a2ui' || value === 'openui' || value === 'lynx-xml'
+  return value === 'a2ui' || value === 'a2ui-express' || value === 'openui'
+    || value === 'lynx-xml'
     || value === 'html' || value === 'reactweb' || value === 'reactlynx';
 }
 

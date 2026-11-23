@@ -10,6 +10,8 @@ export function ProtocolSwitch(props: {
   let label = 'MCP Apps';
   if (protocol.name === 'a2ui') {
     label = 'A2UI';
+  } else if (protocol.name === 'a2ui-express') {
+    label = 'A2UI Express';
   } else if (protocol.name === 'openui') {
     label = 'OpenUI';
   } else if (protocol.name === 'reactlynx') {

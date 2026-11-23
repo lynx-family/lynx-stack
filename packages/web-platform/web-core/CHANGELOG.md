@@ -1,5 +1,31 @@
 # @lynx-js/web-core
 
+## 0.26.9
+
+### Patch Changes
+
+- Extract the single-file Lynx XML parser into the `@lynx-js/lynx-xml/parser` entry point and use it in the Web encoder. ([#4394](https://github.com/lynx-family/lynx-stack/pull/4394))
+
+  Add `@lynx-js/lynx-xml` to the packages supported by `upgrade-rspeedy`.
+- Preserve outer CommonJS exports when a main-thread script synchronously loads another external bundle chunk. ([#4354](https://github.com/lynx-family/lynx-stack/pull/4354))
+- Updated dependencies [[`a7bd55e`](https://github.com/lynx-family/lynx-stack/commit/a7bd55eb0265bb8e9ec72e0e904ae73d5b6804f7), [`12bd999`](https://github.com/lynx-family/lynx-stack/commit/12bd999852d7594a7dca98513ab8d7adbbb4bd38), [`84b0e5b`](https://github.com/lynx-family/lynx-stack/commit/84b0e5b14bac15de0728b3c93f7540ff5ea3178c)]:
+  - @lynx-js/lynx-xml@0.1.0
+  - @lynx-js/web-elements@0.12.19
+  - @lynx-js/web-worker-rpc@0.26.9
+
+## 0.26.8
+
+### Patch Changes
+
+- Support querying `id`, `dataset`, and `tag` with `NodesRef.fields()` from background-thread code, including ReactLynx `useEffect` callbacks. ([#4336](https://github.com/lynx-family/lynx-stack/pull/4336))
+
+- Support synchronous main-thread `lynx.module(name)` calls through host-provided `lynx-view.mainThreadModules`. ([#4343](https://github.com/lynx-family/lynx-stack/pull/4343))
+
+- Add the `is-profiling` attribute and `isProfiling` property to `<lynx-view>`. `lynx.performance.isProfileRecording()` now returns `true` only when profiling is explicitly enabled for the view and browser User Timing is available. Profiling is off by default. Configure it before loading the view; changes require reloading the view. ([#4330](https://github.com/lynx-family/lynx-stack/pull/4330))
+- Updated dependencies [[`a619bb3`](https://github.com/lynx-family/lynx-stack/commit/a619bb3344a4cdf0f145a34f3dca44ef71ee05d2)]:
+  - @lynx-js/web-elements@0.12.18
+  - @lynx-js/web-worker-rpc@0.26.8
+
 ## 0.26.7
 
 ### Patch Changes

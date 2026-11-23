@@ -136,10 +136,10 @@ test('records artifact build and upload after generation finishes', () => {
 });
 
 const messages = [{
-  version: 'v0.9',
+  version: '1.0',
   createSurface: { surfaceId: 'main', catalogId: BASIC_CATALOG.id },
 }, {
-  version: 'v0.9',
+  version: '1.0',
   updateComponents: {
     surfaceId: 'main',
     components: [{ id: 'root', component: 'Text', text: 'Hello' }],
@@ -155,7 +155,14 @@ function request(path: string, repair = false) {
     },
     body: JSON.stringify({
       messages: [{ role: 'user', content: 'Create a greeting' }],
-      action: { name: 'refresh' },
+      version: '1.0',
+      action: {
+        name: 'refresh',
+        surfaceId: 'main',
+        sourceComponentId: 'root',
+        timestamp: '2026-11-11T00:00:00Z',
+        context: {},
+      },
       surfaceId: 'main',
       catalog: BASIC_CATALOG,
       ...(repair ? { maxRepairAttempts: 1 } : {}),
@@ -186,7 +193,8 @@ test.each(
   async (path, repair) => {
     let now = 1_000;
     rstest.spyOn(performance, 'now').mockImplementation(() => now);
-    const text = JSON.stringify(messages);
+    const output = path.includes('/action') ? messages.slice(1) : messages;
+    const text = JSON.stringify(output);
     rstest.stubGlobal('__A2UI_AGENT_SERVICE__', {
       streamAsAsyncIterable() {
         now += 120;
@@ -210,7 +218,7 @@ test.each(
         return Promise.resolve({
           ok: true,
           text,
-          messages,
+          messages: output,
           errors: [],
           warnings: [],
           attempts: 1,
@@ -238,7 +246,7 @@ test.each(
         body += decoder.decode(chunk.value);
       }
       expect(body).not.toContain('event: done');
-      expect(publishA2UIPayload).toHaveBeenCalledWith(messages);
+      expect(publishA2UIPayload).toHaveBeenCalledWith(output);
       expect(eventPayload(body, 'metrics').metrics.generationMs).toBe(
         repair ? 850 : 500,
       );

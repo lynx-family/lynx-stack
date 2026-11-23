@@ -1,16 +1,174 @@
 {
+  "$id": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
   "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
+  "$defs": {
+    "anyComponent": {
+      "oneOf": [
+        {
+          "$ref": "#/components/Button"
+        },
+        {
+          "$ref": "#/components/Card"
+        },
+        {
+          "$ref": "#/components/CheckBox"
+        },
+        {
+          "$ref": "#/components/ChoicePicker"
+        },
+        {
+          "$ref": "#/components/Column"
+        },
+        {
+          "$ref": "#/components/DateTimeInput"
+        },
+        {
+          "$ref": "#/components/Divider"
+        },
+        {
+          "$ref": "#/components/Icon"
+        },
+        {
+          "$ref": "#/components/Image"
+        },
+        {
+          "$ref": "#/components/LazyComponent"
+        },
+        {
+          "$ref": "#/components/LineChart"
+        },
+        {
+          "$ref": "#/components/List"
+        },
+        {
+          "$ref": "#/components/Loading"
+        },
+        {
+          "$ref": "#/components/McpApp"
+        },
+        {
+          "$ref": "#/components/Modal"
+        },
+        {
+          "$ref": "#/components/PieChart"
+        },
+        {
+          "$ref": "#/components/RadioGroup"
+        },
+        {
+          "$ref": "#/components/Row"
+        },
+        {
+          "$ref": "#/components/Slider"
+        },
+        {
+          "$ref": "#/components/Tabs"
+        },
+        {
+          "$ref": "#/components/Text"
+        },
+        {
+          "$ref": "#/components/TextField"
+        }
+      ]
+    },
+    "anyFunction": {
+      "oneOf": [
+        {
+          "$ref": "#/functions/required"
+        },
+        {
+          "$ref": "#/functions/regex"
+        },
+        {
+          "$ref": "#/functions/length"
+        },
+        {
+          "$ref": "#/functions/numeric"
+        },
+        {
+          "$ref": "#/functions/email"
+        },
+        {
+          "$ref": "#/functions/formatString"
+        },
+        {
+          "$ref": "#/functions/formatNumber"
+        },
+        {
+          "$ref": "#/functions/formatCurrency"
+        },
+        {
+          "$ref": "#/functions/formatDate"
+        },
+        {
+          "$ref": "#/functions/pluralize"
+        },
+        {
+          "$ref": "#/functions/openUrl"
+        },
+        {
+          "$ref": "#/functions/and"
+        },
+        {
+          "$ref": "#/functions/or"
+        },
+        {
+          "$ref": "#/functions/not"
+        },
+        {
+          "$ref": "#/functions/add"
+        },
+        {
+          "$ref": "#/functions/subtract"
+        },
+        {
+          "$ref": "#/functions/multiply"
+        },
+        {
+          "$ref": "#/functions/divide"
+        },
+        {
+          "$ref": "#/functions/greater_than"
+        },
+        {
+          "$ref": "#/functions/less_than"
+        },
+        {
+          "$ref": "#/functions/equals"
+        },
+        {
+          "$ref": "#/functions/not_equals"
+        },
+        {
+          "$ref": "#/functions/contains"
+        },
+        {
+          "$ref": "#/functions/starts_with"
+        },
+        {
+          "$ref": "#/functions/ends_with"
+        }
+      ]
+    }
+  },
+  "protocolVersion": "1.0",
   "components": {
     "Button": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Button"
+        },
         "child": {
-          "type": "string"
+          "type": "string",
+          "$ref": "common_types.json#/$defs/ComponentId"
         },
         "variant": {
           "type": "string",
           "enum": [
-            "primary",
-            "borderless"
+            "borderless",
+            "primary"
           ]
         },
         "isValid": {
@@ -27,10 +185,48 @@
                     "name": {
                       "type": "string"
                     },
+                    "userMessage": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "@call": {
+                              "type": "string"
+                            },
+                            "catalogId": {
+                              "type": "string"
+                            },
+                            "args": {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          },
+                          "required": [
+                            "@call"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "@path": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "@path"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
                     "context": {
                       "type": "object",
                       "additionalProperties": true,
-                      "description": "Context is a JSON object map in v0.9."
+                      "description": "Context is a JSON object map in v1.0."
                     }
                   },
                   "required": [
@@ -50,29 +246,19 @@
                 "functionCall": {
                   "type": "object",
                   "properties": {
-                    "call": {
+                    "@call": {
+                      "type": "string"
+                    },
+                    "catalogId": {
                       "type": "string"
                     },
                     "args": {
                       "type": "object",
                       "additionalProperties": true
-                    },
-                    "returnType": {
-                      "type": "string",
-                      "enum": [
-                        "string",
-                        "number",
-                        "boolean",
-                        "object",
-                        "array",
-                        "any",
-                        "void"
-                      ]
                     }
                   },
                   "required": [
-                    "call",
-                    "args"
+                    "@call"
                   ],
                   "additionalProperties": false
                 }
@@ -83,9 +269,9 @@
               "additionalProperties": false
             }
           ],
-          "description": "v0.9 actions should use the `event` wrapper for server-dispatched clicks."
+          "description": "v1.0 actions should use the `event` wrapper for server-dispatched clicks."
         },
-        "checks": {
+        "@checks": {
           "type": "array",
           "items": {
             "type": "object",
@@ -93,81 +279,74 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
+                      },
+                      "catalogId": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
                       }
                     },
                     "required": [
-                      "path"
+                      "@call"
                     ],
                     "additionalProperties": false
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "call": {
+                      "@path": {
                         "type": "string"
-                      },
-                      "args": {
-                        "type": "object",
-                        "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
-                      "call",
-                      "args"
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
                 ]
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
         }
       },
       "required": [
+        "component",
         "child",
         "action"
       ],
       "description": "Props for the built-in Button catalog component."
     },
     "Card": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Card"
+        },
         "child": {
-          "type": "string"
+          "type": "string",
+          "$ref": "common_types.json#/$defs/ComponentId"
         },
         "variant": {
           "type": "string",
           "enum": [
             "elevated",
-            "outlined",
             "filled",
-            "ghost"
+            "ghost",
+            "outlined"
           ]
         },
         "weight": {
@@ -175,109 +354,96 @@
         }
       },
       "required": [
+        "component",
         "child"
       ],
       "description": "Props for the built-in Card catalog component."
     },
     "CheckBox": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "CheckBox"
+        },
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ]
         },
         "value": {
           "oneOf": [
             {
-              "type": "boolean"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "boolean"
             }
           ]
         },
-        "checks": {
+        "@checks": {
           "type": "array",
           "items": {
             "type": "object",
@@ -285,116 +451,100 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
+                      },
+                      "catalogId": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
                       }
                     },
                     "required": [
-                      "path"
+                      "@call",
+                      "args"
                     ],
                     "additionalProperties": false
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "call": {
+                      "@path": {
                         "type": "string"
-                      },
-                      "args": {
-                        "type": "object",
-                        "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
-                      "call",
-                      "args"
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
                 ]
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
         }
       },
       "required": [
+        "component",
         "label",
         "value"
       ],
       "description": "Props for the built-in CheckBox catalog component."
     },
     "ChoicePicker": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "ChoicePicker"
+        },
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The label for the group of options."
@@ -415,48 +565,39 @@
               "label": {
                 "oneOf": [
                   {
-                    "type": "string"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
-                      }
-                    },
-                    "required": [
-                      "path"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "call": {
+                      },
+                      "catalogId": {
                         "type": "string"
                       },
                       "args": {
                         "type": "object",
                         "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
-                      "call",
+                      "@call",
                       "args"
                     ],
                     "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "string"
                   }
                 ],
                 "description": "The text to display for this option."
@@ -477,51 +618,42 @@
         "value": {
           "oneOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           ],
           "description": "The list of currently selected values."
@@ -538,7 +670,7 @@
           "type": "boolean",
           "description": "If true, displays a search input to filter the options."
         },
-        "checks": {
+        "@checks": {
           "type": "array",
           "items": {
             "type": "object",
@@ -546,46 +678,34 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
+                      },
+                      "catalogId": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
                       }
                     },
                     "required": [
-                      "path"
+                      "@call",
+                      "args"
                     ],
                     "additionalProperties": false
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "call": {
+                      "@path": {
                         "type": "string"
-                      },
-                      "args": {
-                        "type": "object",
-                        "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
-                      "call",
-                      "args"
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -594,12 +714,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -607,85 +726,76 @@
         }
       },
       "required": [
+        "component",
         "options",
         "value"
       ],
       "description": "Props for the built-in ChoicePicker catalog component."
     },
     "Column": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Column"
+        },
+        "weight": {
+          "type": "number",
+          "description": "Relative space allocated by a Row or Column parent."
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "align": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ]
         },
         "justify": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
-            "stretch",
-            "spaceBetween",
             "spaceAround",
-            "spaceEvenly"
+            "spaceBetween",
+            "spaceEvenly",
+            "start",
+            "stretch"
           ]
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in Column catalog component."
     },
     "DateTimeInput": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "DateTimeInput"
+        },
         "value": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@path": {
                   "type": "string"
                 }
               },
               "required": [
-                "path"
+                "@path"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The current date/time value. Typically bound to a data path."
@@ -693,48 +803,39 @@
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The text label for the input field."
@@ -759,7 +860,7 @@
           "type": "string",
           "description": "Maximum allowed date/time value."
         },
-        "checks": {
+        "@checks": {
           "type": "array",
           "items": {
             "type": "object",
@@ -767,46 +868,34 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
+                      },
+                      "catalogId": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
                       }
                     },
                     "required": [
-                      "path"
+                      "@call",
+                      "args"
                     ],
                     "additionalProperties": false
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "call": {
+                      "@path": {
                         "type": "string"
-                      },
-                      "args": {
-                        "type": "object",
-                        "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
-                      "call",
-                      "args"
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -815,12 +904,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -828,12 +916,17 @@
         }
       },
       "required": [
+        "component",
         "value"
       ],
       "description": "Props for the built-in DateTimeInput catalog component."
     },
     "Divider": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Divider"
+        },
         "axis": {
           "type": "string",
           "enum": [
@@ -842,13 +935,31 @@
           ]
         }
       },
-      "required": [],
+      "required": [
+        "component"
+      ],
       "description": "Props for the built-in Divider catalog component."
     },
     "Icon": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Icon"
+        },
         "name": {
           "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
             {
               "type": "string",
               "enum": [
@@ -871,6 +982,12 @@
               "type": "string",
               "enum": [
                 "arrow_forward"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "calendar_today"
               ]
             },
             {
@@ -972,7 +1089,19 @@
             {
               "type": "string",
               "enum": [
+                "payment"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
                 "person"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "phone"
               ]
             },
             {
@@ -1014,6 +1143,18 @@
             {
               "type": "string",
               "enum": [
+                "skip_next"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "skip_previous"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
                 "star"
               ]
             },
@@ -1022,18 +1163,6 @@
               "enum": [
                 "warning"
               ]
-            },
-            {
-              "type": "object",
-              "properties": {
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
             }
           ],
           "description": "Google Material icon ligature name, e.g. \"info\", \"account_circle\", \"arrow_back\"."
@@ -1041,29 +1170,69 @@
         "size": {
           "type": "string",
           "enum": [
-            "sm",
+            "lg",
             "md",
-            "lg"
+            "sm"
           ]
         },
         "color": {
           "type": "string",
           "enum": [
-            "primary",
+            "inherit",
             "muted",
-            "inherit"
+            "primary"
           ]
         }
       },
       "required": [
+        "component",
         "name"
       ],
       "description": "Props for the built-in Icon catalog component."
     },
     "Image": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Image"
+        },
         "url": {
-          "type": "string",
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "@call": {
+                  "type": "string"
+                },
+                "catalogId": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "@call"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
+            }
+          ],
           "description": "Image URL or path binding."
         },
         "fit": {
@@ -1079,21 +1248,21 @@
         "mode": {
           "type": "string",
           "enum": [
-            "center",
-            "scaleToFill",
+            "aspectFill",
             "aspectFit",
-            "aspectFill"
+            "center",
+            "scaleToFill"
           ]
         },
         "variant": {
           "type": "string",
           "enum": [
-            "icon",
             "avatar",
-            "smallFeature",
-            "mediumFeature",
+            "header",
+            "icon",
             "largeFeature",
-            "header"
+            "mediumFeature",
+            "smallFeature"
           ]
         },
         "weight": {
@@ -1101,12 +1270,17 @@
         }
       },
       "required": [
+        "component",
         "url"
       ],
       "description": "Props for the built-in Image catalog component."
     },
     "LazyComponent": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "LazyComponent"
+        },
         "url": {
           "type": "string",
           "description": "URL of a ReactLynx standalone lazy bundle. The bundle must default-export a React component. Used by native Lynx rendering."
@@ -1137,36 +1311,53 @@
         }
       },
       "required": [
+        "component",
         "url"
       ]
     },
     "LineChart": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "LineChart"
+        },
         "labels": {
           "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
             {
               "type": "array",
               "items": {
                 "type": "string"
               }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
             }
           ],
           "description": "Category labels shown along the x axis."
         },
         "series": {
           "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
             {
               "type": "array",
               "items": {
@@ -1176,10 +1367,26 @@
                     "type": "string"
                   },
                   "values": {
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    }
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "@path": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "@path"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    ]
                   },
                   "color": {
                     "type": "string"
@@ -1191,18 +1398,6 @@
                 ],
                 "additionalProperties": false
               }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
             }
           ],
           "description": "One or more line series to render over the shared labels."
@@ -1232,38 +1427,20 @@
         }
       },
       "required": [
+        "component",
         "labels",
         "series"
       ],
       "description": "Props for the built-in LineChart catalog component."
     },
     "List": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "List"
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "direction": {
@@ -1276,34 +1453,45 @@
         "align": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ]
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in List catalog component."
     },
     "Loading": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Loading"
+        },
         "variant": {
           "type": "string",
           "enum": [
-            "inline",
-            "block"
+            "block",
+            "inline"
           ],
           "description": "Visual density for the skeleton placeholder."
         }
       },
-      "required": [],
+      "required": [
+        "component"
+      ],
       "description": "Props for the built-in Loading catalog component."
     },
     "McpApp": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "McpApp"
+        },
         "url": {
           "type": "string",
           "description": "URL of the trusted native Lynx bundle that renders the MCP App."
@@ -1320,8 +1508,8 @@
         "theme": {
           "type": "string",
           "enum": [
-            "light",
-            "dark"
+            "dark",
+            "light"
           ],
           "description": "Color theme passed to the nested Lynx page."
         },
@@ -1343,32 +1531,56 @@
         }
       },
       "required": [
+        "component",
         "url",
         "mcpAppData"
       ],
       "description": "Props for the built-in MCP App frame host. Bundle URLs and render data must come from a host-registered, trusted MCP Apps resource. They must not be invented by an agent or accepted as arbitrary executable content."
     },
     "Modal": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Modal"
+        },
         "trigger": {
           "type": "string",
+          "$ref": "common_types.json#/$defs/ComponentId",
           "description": "The ID of the component that opens the modal when interacted with."
         },
         "content": {
           "type": "string",
+          "$ref": "common_types.json#/$defs/ComponentId",
           "description": "The ID of the component to display inside the modal."
         }
       },
       "required": [
+        "component",
         "trigger",
         "content"
       ],
       "description": "Props for the built-in Modal catalog component."
     },
     "PieChart": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "PieChart"
+        },
         "data": {
           "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
             {
               "type": "array",
               "items": {
@@ -1390,18 +1602,6 @@
                 ],
                 "additionalProperties": false
               }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
             }
           ],
           "description": "Pie slices to render."
@@ -1409,8 +1609,8 @@
         "variant": {
           "type": "string",
           "enum": [
-            "pie",
-            "donut"
+            "donut",
+            "pie"
           ],
           "description": "Render the chart as a flat pie or a donut."
         },
@@ -1447,60 +1647,56 @@
         }
       },
       "required": [
+        "component",
         "data"
       ],
       "description": "Props for the built-in PieChart catalog component."
     },
     "RadioGroup": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "RadioGroup"
+        },
         "items": {
           "oneOf": [
             {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           ],
           "description": "The list of string options to display."
@@ -1508,48 +1704,39 @@
         "value": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The currently selected value."
@@ -1557,13 +1744,13 @@
         "usageHint": {
           "type": "string",
           "enum": [
-            "default",
             "card",
+            "default",
             "row"
           ],
           "description": "A hint for the visual style of the radio group."
         },
-        "checks": {
+        "@checks": {
           "type": "array",
           "items": {
             "type": "object",
@@ -1571,172 +1758,142 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
+                      },
+                      "catalogId": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
                       }
                     },
                     "required": [
-                      "path"
+                      "@call",
+                      "args"
                     ],
                     "additionalProperties": false
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "call": {
+                      "@path": {
                         "type": "string"
-                      },
-                      "args": {
-                        "type": "object",
-                        "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
-                      "call",
-                      "args"
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
                 ]
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           }
         }
       },
       "required": [
+        "component",
         "items",
         "value"
       ],
       "description": "Props for the built-in RadioGroup catalog component."
     },
     "Row": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Row"
+        },
+        "weight": {
+          "type": "number",
+          "description": "Relative space allocated by a Row or Column parent."
+        },
         "children": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "componentId": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "componentId",
-                "path"
-              ],
-              "additionalProperties": false
-            }
-          ],
+          "$ref": "common_types.json#/$defs/ChildList",
           "description": "Static child IDs array or template object."
         },
         "justify": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
-            "stretch",
-            "spaceBetween",
             "spaceAround",
-            "spaceEvenly"
+            "spaceBetween",
+            "spaceEvenly",
+            "start",
+            "stretch"
           ]
         },
         "align": {
           "type": "string",
           "enum": [
-            "start",
             "center",
             "end",
+            "start",
             "stretch"
           ]
         }
       },
       "required": [
+        "component",
         "children"
       ],
       "description": "Props for the built-in Row catalog component."
     },
     "Slider": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Slider"
+        },
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The label for the slider."
@@ -1752,53 +1909,44 @@
         "value": {
           "oneOf": [
             {
-              "type": "number"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "number"
             }
           ],
           "description": "The current value of the slider."
         },
-        "checks": {
+        "@checks": {
           "type": "array",
           "items": {
             "type": "object",
@@ -1806,46 +1954,34 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
+                      },
+                      "catalogId": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "object",
+                        "additionalProperties": true
                       }
                     },
                     "required": [
-                      "path"
+                      "@call",
+                      "args"
                     ],
                     "additionalProperties": false
                   },
                   {
                     "type": "object",
                     "properties": {
-                      "call": {
+                      "@path": {
                         "type": "string"
-                      },
-                      "args": {
-                        "type": "object",
-                        "additionalProperties": true
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "string",
-                          "number",
-                          "boolean",
-                          "object",
-                          "array",
-                          "any",
-                          "void"
-                        ]
                       }
                     },
                     "required": [
-                      "call",
-                      "args"
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -1854,12 +1990,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -1867,13 +2002,18 @@
         }
       },
       "required": [
+        "component",
         "max",
         "value"
       ],
       "description": "Props for the built-in Slider catalog component."
     },
     "Tabs": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Tabs"
+        },
         "tabs": {
           "type": "array",
           "items": {
@@ -1883,7 +2023,8 @@
                 "type": "string"
               },
               "child": {
-                "type": "string"
+                "type": "string",
+                "$ref": "common_types.json#/$defs/ComponentId"
               }
             },
             "required": [
@@ -1895,57 +2036,57 @@
         }
       },
       "required": [
+        "component",
         "tabs"
       ],
       "description": "Props for the built-in Tabs catalog component."
     },
     "Text": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "Text"
+        },
+        "weight": {
+          "type": "number",
+          "description": "Relative space allocated by a Row or Column parent."
+        },
         "text": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@call": {
                   "type": "string"
-                }
-              },
-              "required": [
-                "path"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "call": {
+                },
+                "catalogId": {
                   "type": "string"
                 },
                 "args": {
                   "type": "object",
                   "additionalProperties": true
-                },
-                "returnType": {
-                  "type": "string",
-                  "enum": [
-                    "string",
-                    "number",
-                    "boolean",
-                    "object",
-                    "array",
-                    "any",
-                    "void"
-                  ]
                 }
               },
               "required": [
-                "call",
+                "@call",
                 "args"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "@path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "Literal text, path binding, or function call."
@@ -1953,13 +2094,13 @@
         "variant": {
           "type": "string",
           "enum": [
+            "body",
+            "caption",
             "h1",
             "h2",
             "h3",
             "h4",
             "h5",
-            "caption",
-            "body",
             "markdown"
           ]
         },
@@ -1972,28 +2113,33 @@
         }
       },
       "required": [
+        "component",
         "text"
       ],
       "description": "Props for the built-in Text catalog component."
     },
     "TextField": {
+      "type": "object",
       "properties": {
+        "component": {
+          "const": "TextField"
+        },
         "label": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@path": {
                   "type": "string"
                 }
               },
               "required": [
-                "path"
+                "@path"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The text label for the input field."
@@ -2001,19 +2147,19 @@
         "value": {
           "oneOf": [
             {
-              "type": "string"
-            },
-            {
               "type": "object",
               "properties": {
-                "path": {
+                "@path": {
                   "type": "string"
                 }
               },
               "required": [
-                "path"
+                "@path"
               ],
               "additionalProperties": false
+            },
+            {
+              "type": "string"
             }
           ],
           "description": "The value of the text field."
@@ -2021,10 +2167,10 @@
         "variant": {
           "type": "string",
           "enum": [
-            "number",
             "longText",
-            "shortText",
-            "obscured"
+            "number",
+            "obscured",
+            "shortText"
           ],
           "description": "The type of input field to display."
         },
@@ -2032,7 +2178,7 @@
           "type": "string",
           "description": "A regular expression used for client-side validation of the input."
         },
-        "checks": {
+        "@checks": {
           "type": "array",
           "items": {
             "type": "object",
@@ -2040,24 +2186,12 @@
               "condition": {
                 "oneOf": [
                   {
-                    "type": "boolean"
-                  },
-                  {
                     "type": "object",
                     "properties": {
-                      "path": {
+                      "@call": {
                         "type": "string"
-                      }
-                    },
-                    "required": [
-                      "path"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "call": {
+                      },
+                      "catalogId": {
                         "type": "string"
                       },
                       "args": {
@@ -2065,38 +2199,44 @@
                         "additionalProperties": {
                           "oneOf": [
                             {
-                              "type": "string"
-                            },
-                            {
-                              "type": "number"
+                              "type": "object",
+                              "properties": {
+                                "@path": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "@path"
+                              ],
+                              "additionalProperties": false
                             },
                             {
                               "type": "boolean"
                             },
                             {
-                              "type": "object",
-                              "properties": {
-                                "path": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "path"
-                              ],
-                              "additionalProperties": false
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
                             }
                           ]
                         }
-                      },
-                      "returnType": {
-                        "type": "string",
-                        "enum": [
-                          "boolean"
-                        ]
                       }
                     },
                     "required": [
-                      "call"
+                      "@call"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "@path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "@path"
                     ],
                     "additionalProperties": false
                   }
@@ -2105,12 +2245,11 @@
               },
               "message": {
                 "type": "string",
-                "description": "The error message to display if the check fails."
+                "description": "Fallback when the validation result does not include a message."
               }
             },
             "required": [
-              "condition",
-              "message"
+              "condition"
             ],
             "additionalProperties": false
           },
@@ -2118,6 +2257,7 @@
         }
       },
       "required": [
+        "component",
         "label"
       ],
       "description": "Props for the built-in TextField catalog component."
@@ -2127,8 +2267,10 @@
     "required": {
       "type": "object",
       "description": "Checks that the value is not null, undefined, or empty.",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "required"
         },
         "args": {
@@ -2141,23 +2283,21 @@
           "required": [
             "value"
           ],
-          "additionalProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
+          "unevaluatedProperties": false
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "regex": {
       "type": "object",
       "description": "Checks that the value matches a regular expression string.",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "regex"
         },
         "args": {
@@ -2168,7 +2308,7 @@
             },
             "pattern": {
               "type": "string",
-              "description": "The regex pattern to match against."
+              "description": "The regular expression to search for in the value. Uses the A2UI regex dialect: a portable subset of ECMAScript pattern syntax in Unicode mode with no flags. Matching is case-sensitive, '.' excludes line terminators, and '^' and '$' match only at the ends of the value. Backreferences, lookbehind, named groups and '\\p{...}' are not allowed. Patterns longer than 256 code points or that could backtrack catastrophically are rejected."
             }
           },
           "required": [
@@ -2176,22 +2316,20 @@
             "pattern"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "length": {
       "type": "object",
       "description": "Checks string length constraints.",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "length"
         },
         "args": {
@@ -2227,22 +2365,20 @@
             }
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "numeric": {
       "type": "object",
       "description": "Checks numeric range constraints.",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "numeric"
         },
         "args": {
@@ -2276,22 +2412,20 @@
             }
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "email": {
       "type": "object",
       "description": "Checks that the value is a valid email address.",
+      "returnType": "validationResult",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "email"
         },
         "args": {
@@ -2305,22 +2439,20 @@
             "value"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatString": {
       "type": "object",
-      "description": "Performs string interpolation of data model values and other functions in the catalog functions list and returns the resulting string. The value string can contain interpolated expressions in the `${expression}` format. Supported expression types include: JSON Pointer paths to the data model (e.g., `${/absolute/path}` or `${relative/path}`), and client-side function calls (e.g., `${now()}`). Function arguments must be named (e.g., `${formatDate(value:${/currentDate}, format:'MM-dd')}`). To include a literal `${` sequence, escape it as `\\${`.",
+      "description": "Performs string interpolation of data model values and other functions in the catalog functions list and returns the resulting string. The value string can contain interpolated expressions in the `${expression}` format. Supported expression types include: JSON Pointer paths to the data model (e.g., `${/absolute/path}` or `${relative/path}`), and renderer-side function calls (e.g., `${now()}`). Function arguments must be named (e.g., `${formatDate(value:${/currentDate}, format:'MM-dd')}`). To include a literal `${` sequence, escape it as `\\${`.",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "formatString"
         },
         "args": {
@@ -2334,22 +2466,20 @@
             "value"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatNumber": {
       "type": "object",
       "description": "Formats a number with the specified grouping and decimal precision.",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "formatNumber"
         },
         "args": {
@@ -2372,22 +2502,20 @@
             "value"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatCurrency": {
       "type": "object",
       "description": "Formats a number as a currency string.",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "formatCurrency"
         },
         "args": {
@@ -2415,22 +2543,20 @@
             "value"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "formatDate": {
       "type": "object",
       "description": "Formats a timestamp into a string using a pattern.",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "formatDate"
         },
         "args": {
@@ -2450,22 +2576,20 @@
             "value"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "pluralize": {
       "type": "object",
       "description": "Returns a localized string based on the Common Locale Data Repository (CLDR) plural category of the count (zero, one, two, few, many, other). Requires an 'other' fallback. For English, just use 'one' and 'other'.",
+      "returnType": "string",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "pluralize"
         },
         "args": {
@@ -2505,53 +2629,60 @@
             "other"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "string"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "openUrl": {
       "type": "object",
-      "description": "Opens the specified URL in a browser or handler. This function has no return value.",
+      "description": "Opens the specified URL in a browser or handler (requires user activation). This function has no return value.",
+      "returnType": "void",
+      "allowedCallers": "rendererOnly",
+      "requiresUserActivation": true,
       "properties": {
-        "call": {
+        "@call": {
           "const": "openUrl"
         },
         "args": {
           "type": "object",
           "properties": {
             "url": {
-              "type": "string",
-              "format": "uri",
-              "description": "The URL to open."
+              "description": "The URL to open.",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "format": "uri"
+                },
+                {
+                  "$ref": "common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "common_types.json#/$defs/FunctionCall"
+                }
+              ]
             }
           },
           "required": [
             "url"
           ],
-          "additionalProperties": false
-        },
-        "returnType": {
-          "const": "void"
+          "unevaluatedProperties": false
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "and": {
       "type": "object",
       "description": "Performs a logical AND operation on a list of boolean values.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "and"
         },
         "args": {
@@ -2570,22 +2701,20 @@
             "values"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "or": {
       "type": "object",
       "description": "Performs a logical OR operation on a list of boolean values.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "or"
         },
         "args": {
@@ -2604,22 +2733,20 @@
             "values"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "not": {
       "type": "object",
       "description": "Performs a logical NOT operation on a boolean value.",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
       "properties": {
-        "call": {
+        "@call": {
           "const": "not"
         },
         "args": {
@@ -2634,16 +2761,334 @@
             "value"
           ],
           "unevaluatedProperties": false
-        },
-        "returnType": {
-          "const": "boolean"
         }
       },
       "required": [
-        "call",
+        "@call",
         "args"
-      ],
-      "unevaluatedProperties": false
+      ]
+    },
+    "add": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "add"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            },
+            "b": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "subtract": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "subtract"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            },
+            "b": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "multiply": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "multiply"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            },
+            "b": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "divide": {
+      "type": "object",
+      "returnType": "number",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "divide"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            },
+            "b": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "greater_than": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "greater_than"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            },
+            "b": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "less_than": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "less_than"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            },
+            "b": {
+              "$ref": "common_types.json#/$defs/DynamicNumber"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "equals": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "equals"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {},
+            "b": {}
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "not_equals": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "not_equals"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "a": {},
+            "b": {}
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "contains": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "contains"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "search": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value",
+            "search"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "starts_with": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "starts_with"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "search": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value",
+            "search"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
+    },
+    "ends_with": {
+      "type": "object",
+      "returnType": "boolean",
+      "allowedCallers": "rendererOnly",
+      "properties": {
+        "@call": {
+          "const": "ends_with"
+        },
+        "args": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "search": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value",
+            "search"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "@call",
+        "args"
+      ]
     }
   }
 }

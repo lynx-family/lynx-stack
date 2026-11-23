@@ -58,6 +58,7 @@ Runs the application logic (BTS).
 
 - **`startBackgroundThread.ts`**: Bootstraps the background worker, establishing RPC with the main thread.
 - **`createNativeApp.ts`**: Creates the `NativeApp` interface, which mimics the native Lynx environment for the application code. It proxies commands (like `createElement`) to the main thread via RPC.
+- **`crossThreadHandlers/createGetFields.ts`**: Bridges `NodesRef.fields()` to `registerGetFieldsHandler.ts` on the main thread for `id`, `dataset`, and `tag`, returning `{ data, status }` to lynx-core.
 - **`createBackgroundLynx.ts`**: Sets up the global `lynx` object in the worker.
 
 ### 3. Server Runtime (`ts/server`)

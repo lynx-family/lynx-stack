@@ -51,7 +51,7 @@ export function toRsbuildConfig(
 
       minify: config.output?.minify,
 
-      polyfill: 'off',
+      polyfill: config.output?.polyfill ?? 'off',
 
       sourceMap: config.output?.sourceMap,
     },

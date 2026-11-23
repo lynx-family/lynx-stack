@@ -1,17 +1,20 @@
 {
   "DemoCard": {
     "properties": {
+      "component": {
+        "const": "DemoCard"
+      },
       "title": {
         "oneOf": [
           {
             "type": "object",
             "properties": {
-              "path": {
+              "@path": {
                 "type": "string"
               }
             },
             "required": [
-              "path"
+              "@path"
             ],
             "additionalProperties": false
           },
@@ -100,9 +103,11 @@
       }
     },
     "required": [
+      "component",
       "title",
       "action"
     ],
-    "description": "Demo card fixture.\n\nGenerated from a TSX fixture."
+    "description": "Demo card fixture.\n\nGenerated from a TSX fixture.",
+    "type": "object"
   }
 }

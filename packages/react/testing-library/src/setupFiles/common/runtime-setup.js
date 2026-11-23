@@ -16,6 +16,7 @@ import {
   snapshotInstanceManager,
 } from '../../../../runtime/lib/snapshot/index.js';
 import { destroyWorklet } from '../../../../runtime/lib/snapshot/worklet/destroy.js';
+import { clearDelayedRunOnBackgroundFunctions } from '../../../../runtime/lib/worklet-runtime/bindings/observers.js';
 import { initApiEnv } from '../../../../runtime/lib/worklet-runtime/api/lynxApi.js';
 import { initEventListeners } from '../../../../runtime/lib/worklet-runtime/listeners.js';
 import { initWorklet } from '../../../../runtime/lib/worklet-runtime/workletRuntime.js';
@@ -111,6 +112,7 @@ globalThis.onResetLynxTestingEnv = () => {
   destroyWorklet();
 
   lynxTestingEnv.switchToMainThread();
+  clearDelayedRunOnBackgroundFunctions();
   initEventListeners();
   lynxTestingEnv.switchToBackgroundThread();
   injectTt();

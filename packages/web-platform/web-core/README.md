@@ -33,6 +33,21 @@ document.body.innerHTML = `
 </lynx-view>`;
 ```
 
+### Enable profiling
+
+Profiling is off by default. Add `is-profiling` to enable it for a view:
+
+```html
+<lynx-view is-profiling url="https://example.com/main.web.bundle" style="height:100vh; width:100vw"></lynx-view>
+```
+
+You can also set `view.isProfiling = true` before loading the view. An absent
+attribute, `is-profiling="false"`, or `view.isProfiling = false` disables profiling.
+The value is read once when the view instance is created and passed to the
+background worker at startup. Changes require reloading the view.
+`lynx.performance.isProfileRecording()` returns `true` only when profiling
+is enabled for that view and the browser supports User Timing marks and measures.
+
 ### Enable mouse-drag scrolling
 
 To make `<scroll-view>` respond to mouse dragging like a touchscreen, import
@@ -76,6 +91,35 @@ attributes remain unchanged. Images resolve their URLs again when connected or
 moved to another shadow-root host. Changing the hook does not reload images that
 are already connected. Without a hook, URLs are used unchanged. This hook does
 not resolve CSS URLs or bundle URLs.
+
+### Expose main-thread modules
+
+Set `mainThreadModules` before loading the view to provide synchronous host
+methods to main-thread scripts:
+
+```typescript
+import type { LynxViewElement } from '@lynx-js/web-core/client';
+import '@lynx-js/web-core/client';
+
+const view = document.createElement('lynx-view') as LynxViewElement;
+view.mainThreadModules = {
+  DeviceInfo: {
+    invoke(method) {
+      if (method === 'getPlatform') return 'web';
+      throw new Error(`Unknown method: ${method}`);
+    },
+  },
+};
+view.url = 'https://example.com/main.web.bundle';
+document.body.append(view);
+```
+
+Main-thread code can call `lynx.module('DeviceInfo')?.invoke('getPlatform')`.
+Modules belong to each view, and each lookup reads the current map. Missing
+modules return `undefined`, as do module lookups during server rendering.
+These objects run on the main thread; background-thread `NativeModules` still
+use `nativeModulesMap`. The host controls method access, including any read-only
+restrictions, and synchronization of shared data between threads.
 
 ## Document
 

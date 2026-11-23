@@ -52,6 +52,21 @@ declare function useTransition(): [false, typeof startTransition];
 declare function use<T>(resource: Promise<T> | Context<T>): T;
 
 /**
+ * Returns a deferred copy of a value.
+ *
+ * Note: This is Preact's `useDeferredValue` implementation, which differs from React's:
+ * - React defers the value with interruptible, low-priority rendering
+ * - Preact returns the previous value first and updates it in a follow-up render
+ *   once the current one has finished, without true concurrent rendering
+ *
+ * @param value - The value to defer
+ * @returns The deferred value
+ *
+ * @public
+ */
+declare function useDeferredValue<T>(value: T): T;
+
+/**
  * Runs an effect whose write is meant to be visible to the effects that read it.
  *
  * Preact has no separate insertion phase, so ReactLynx forwards this to `useEffect`.
@@ -75,12 +90,13 @@ declare function use<T>(resource: Promise<T> | Context<T>): T;
  * @deprecated `useInsertionEffect` in the background thread is an alias of `useEffect` and cannot offer React's insertion-phase timing: the effect has not run when `render` returns, and its cleanup is deferred to a later flush instead of running inside the unmount commit.
  */
 declare const useInsertionEffect: typeof import('@lynx-js/react').useEffect;
-export { startTransition, use, useInsertionEffect, useTransition };
+export { startTransition, use, useDeferredValue, useInsertionEffect, useTransition };
 
 // type for the default export
 declare const _default: typeof import('@lynx-js/react') & {
   startTransition: typeof startTransition;
   use: typeof use;
+  useDeferredValue: typeof useDeferredValue;
   useInsertionEffect: typeof useInsertionEffect;
   useTransition: typeof useTransition;
 };

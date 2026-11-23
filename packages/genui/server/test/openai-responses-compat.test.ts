@@ -156,9 +156,9 @@ test.each(['native', 'matched-core'] as const)(
     const catalogId = resolveBenchCatalog('Full Catalog').id
       + (profile === 'matched-core' ? '#matched-core' : '');
     const source = JSON.stringify([
-      { version: 'v0.9', createSurface: { surfaceId: 'main', catalogId } },
+      { version: '1.0', createSurface: { surfaceId: 'main', catalogId } },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [{

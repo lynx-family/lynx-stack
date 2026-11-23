@@ -37,6 +37,7 @@ type FormattedUpdateEntry =
     template: string;
     attributeSlots: unknown;
     childSlots: unknown;
+    options: unknown;
   }
   | {
     type: 'createTypedElement';
@@ -45,18 +46,6 @@ type FormattedUpdateEntry =
     attributes: unknown;
     childSlots: unknown;
     options: unknown;
-  }
-  | {
-    type: 'insertTypedListItem';
-    id: number;
-    item: unknown;
-    before: unknown;
-  }
-  | {
-    type: 'removeTypedListItem';
-    id: number;
-    item: unknown;
-    removedSubtreeHandleIds: unknown;
   }
   | {
     type: 'updateTypedListItem';
@@ -125,6 +114,7 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         template: entry.templateKey,
         attributeSlots: entry.attributeSlots,
         childSlots: entry.childSlots,
+        options: entry.options,
       };
     }
 
@@ -153,22 +143,6 @@ function formatUpdateEntry(entry: FormattedElementTemplateUpdateCommand): Format
         id: entry.targetId,
         attrSlotIndex: entry.attrSlotIndex,
         value: entry.value,
-      };
-
-    case 'insertTypedListItem':
-      return {
-        type: 'insertTypedListItem',
-        id: entry.targetId,
-        item: entry.item,
-        before: entry.beforeId,
-      };
-
-    case 'removeTypedListItem':
-      return {
-        type: 'removeTypedListItem',
-        id: entry.targetId,
-        item: entry.itemId,
-        removedSubtreeHandleIds: entry.removedSubtreeHandleIds,
       };
 
     case 'updateTypedListItem':

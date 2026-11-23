@@ -13,7 +13,7 @@ import {
 import type { TosStorageMethod } from '../common/tos-storage.js';
 
 export type A2UIStorageLocation =
-  | { method: 'a2ui'; type: 'preview' }
+  | { method: 'a2ui' | 'a2ui-express'; type: 'preview' }
   | { method: TosStorageMethod; type: 'conversation' };
 
 const A2UI_PREVIEW_LOCATION: A2UIStorageLocation = {

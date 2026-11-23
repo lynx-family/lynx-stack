@@ -2122,7 +2122,7 @@ export function ChatController<
             >
               {adapter.copy.agentLabel}
             </span>
-            {protocol.name === 'mcp-apps'
+            {protocol.name === 'mcp-apps' || protocol.name === 'a2ui-express'
               ? null
               : (
                 <button

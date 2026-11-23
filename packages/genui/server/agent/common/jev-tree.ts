@@ -44,9 +44,6 @@ export function jevChildIds(component: JevComponent): string[] {
   }
   if (isRecord(component.children)) {
     refs.push(component.children.componentId);
-    if (isRecord(component.children.template)) {
-      refs.push(component.children.template.componentId);
-    }
   }
   if (Array.isArray(component.tabs)) {
     for (const tab of component.tabs) if (isRecord(tab)) refs.push(tab.child);

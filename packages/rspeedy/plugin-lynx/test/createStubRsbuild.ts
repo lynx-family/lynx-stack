@@ -40,7 +40,14 @@ export async function createStubRsbuild(
     rsbuildConfig: {
       environments: { lynx: {} },
       ...rsbuildConfig,
-      plugins: [pluginLynx(lynxOptions), ...(rsbuildConfig.plugins ?? [])],
+      plugins: [
+        // These tests isolate shared engine behavior. Vanilla builds
+        // are exercised separately in vanilla.plugin.test.ts.
+        ...pluginLynx(lynxOptions).filter(plugin =>
+          plugin.name !== 'lynx:rsbuild:vanilla'
+        ),
+        ...(rsbuildConfig.plugins ?? []),
+      ],
     },
   })
 

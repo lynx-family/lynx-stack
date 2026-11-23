@@ -1,0 +1,5 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./parser/index.ts"],
+  "tsconfig": "./tsconfig.build.json"
+}

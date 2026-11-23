@@ -196,7 +196,14 @@ describe('Jev A2UI composition', () => {
       )!;
       const action = {
         surfaceId: 'main',
-        action: { name: button.id },
+        version: '1.0',
+        action: {
+          name: button.id,
+          surfaceId: 'main',
+          sourceComponentId: button.id,
+          timestamp: '2026-11-11T00:00:00Z',
+          context: {},
+        },
         conversation: {
           history: [{ role: 'assistant', content: initial.text }],
           dataModel: content.data,
@@ -441,12 +448,12 @@ describe('Catalog-driven, single-model Jev', () => {
     const catalog = await loadBasicCatalog();
     const previous = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
-      { version: 'v0.9', updateDataModel: { surfaceId: 'main', value: {} } },
+      { version: '1.0', updateDataModel: { surfaceId: 'main', value: {} } },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -520,12 +527,12 @@ describe('Catalog-driven, single-model Jev', () => {
     const catalog = await loadBasicCatalog();
     const previous = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
-      { version: 'v0.9', updateDataModel: { surfaceId: 'main', value: {} } },
+      { version: '1.0', updateDataModel: { surfaceId: 'main', value: {} } },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -575,30 +582,30 @@ describe('Catalog-driven, single-model Jev', () => {
     const catalog = await loadBasicCatalog();
     const previous = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
-      { version: 'v0.9', updateDataModel: { surfaceId: 'main', value: {} } },
+      { version: '1.0', updateDataModel: { surfaceId: 'main', value: {} } },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
-            { id: 'root', component: 'Column', children: ['jev-1', 'jev-2'] },
-            { id: 'jev-1', component: 'Text', text: 'Remove' },
-            { id: 'jev-2', component: 'Text', text: 'Keep' },
+            { id: 'root', component: 'Column', children: ['jev_1', 'jev_2'] },
+            { id: 'jev_1', component: 'Text', text: 'Remove' },
+            { id: 'jev_2', component: 'Text', text: 'Keep' },
           ],
         },
       },
     ];
     mockDecisions((id, choice, body) => {
       if (id.startsWith('add_')) return id === 'add_Text' ? '1' : '0';
-      if (id === 'keep_jev-1') return 'omit';
-      if (id === 'keep_jev-2') return 'preserve_layout';
-      expect(body.questions).not.toHaveProperty('order_jev-2');
-      expect(body.questions).not.toHaveProperty('parent_jev-2');
-      if (id === 'prop_jev-3_text') return pick(body, id, 'New');
-      if (id === 'order_jev-3') return '0';
+      if (id === 'keep_jev_1') return 'omit';
+      if (id === 'keep_jev_2') return 'preserve_layout';
+      expect(body.questions).not.toHaveProperty('order_jev_2');
+      expect(body.questions).not.toHaveProperty('parent_jev_2');
+      if (id === 'prop_jev_3_text') return pick(body, id, 'New');
+      if (id === 'order_jev_3') return '0';
       return choice;
     });
     const result = await generateJevComposition(
@@ -614,11 +621,11 @@ describe('Catalog-driven, single-model Jev', () => {
     );
     const content = await validated(result.text);
     expect(content.components.find(item => item.id === 'root')?.children)
-      .toEqual(['jev-3', 'jev-2']);
-    expect(content.components.find(item => item.id === 'jev-3')?.text).toBe(
+      .toEqual(['jev_3', 'jev_2']);
+    expect(content.components.find(item => item.id === 'jev_3')?.text).toBe(
       'New',
     );
-    expect(content.components.some(item => item.id === 'jev-1')).toBe(false);
+    expect(content.components.some(item => item.id === 'jev_1')).toBe(false);
   });
 
   test('resolves equivalent retained and Catalog values without a property request', async () => {
@@ -643,12 +650,12 @@ describe('Catalog-driven, single-model Jev', () => {
     });
     const previous = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
-      { version: 'v0.9', updateDataModel: { surfaceId: 'main', value: {} } },
+      { version: '1.0', updateDataModel: { surfaceId: 'main', value: {} } },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -683,9 +690,9 @@ describe('Catalog-driven, single-model Jev', () => {
   test('omits optional placeholder-only questions while retaining visual controls and required content', async () => {
     const fetch = mockDecisions((id, choice, body) => {
       if (id.startsWith('add_')) return id === 'add_Button' ? '1' : '0';
-      expect(body.questions).not.toHaveProperty('prop_jev-1_checks');
-      if (id === 'prop_jev-1_variant') return pick(body, id, 'borderless');
-      if (id === 'prop_jev-2_text') return pick(body, id, 'Continue');
+      expect(body.questions).not.toHaveProperty('prop_jev_1_@checks');
+      if (id === 'prop_jev_1_variant') return pick(body, id, 'borderless');
+      if (id === 'prop_jev_2_text') return pick(body, id, 'Continue');
       return choice;
     });
     const result = await generateJevComposition([{
@@ -703,7 +710,7 @@ describe('Catalog-driven, single-model Jev', () => {
       JSON.parse(init?.body as string) as EvaluationBody
     );
     expect(
-      bodies.some(body => Object.hasOwn(body.questions, 'prop_jev-1_variant')),
+      bodies.some(body => Object.hasOwn(body.questions, 'prop_jev_1_variant')),
     ).toBe(true);
   });
 
@@ -715,13 +722,13 @@ describe('Catalog-driven, single-model Jev', () => {
     await generateJevComposition([{
       role: 'user',
       content:
-        'Show "Continue" with this configuration: {"checks":[]}\n```json\n{"checks":[]}\n```',
+        'Show "Continue" with this configuration: {"@checks":[]}\n```json\n{"@checks":[]}\n```',
     }], { model: 'Jev' });
     const bodies = fetch.mock.calls.map(([, init]) =>
       JSON.parse(init?.body as string) as EvaluationBody
     );
     expect(
-      bodies.some(body => Object.hasOwn(body.questions, 'prop_jev-1_checks')),
+      bodies.some(body => Object.hasOwn(body.questions, 'prop_jev_1_@checks')),
     ).toBe(true);
   });
 
@@ -729,12 +736,12 @@ describe('Catalog-driven, single-model Jev', () => {
     const catalog = await loadBasicCatalog();
     const previous = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
-      { version: 'v0.9', updateDataModel: { surfaceId: 'main', value: {} } },
+      { version: '1.0', updateDataModel: { surfaceId: 'main', value: {} } },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -874,7 +881,7 @@ describe('Catalog-driven, single-model Jev', () => {
         return pick(
           body,
           id,
-          id === 'prop_jev-2_text' ? 'Buy Now' : 'Confirm Purchase',
+          id === 'prop_jev_2_text' ? 'Buy Now' : 'Confirm Purchase',
         );
       }
       return choice;
@@ -915,7 +922,7 @@ describe('Catalog-driven, single-model Jev', () => {
       };
       if (!state.copy_conflict) return pick(body, id, 'Alpha');
       expect(Object.keys(body.questions)).toEqual([id]);
-      expect(id).not.toBe('prop_jev-1_text');
+      expect(id).not.toBe('prop_jev_1_text');
       expect(Object.values(body.questions[id]!.criteria)).not.toContain(
         '"Alpha"',
       );
@@ -942,7 +949,7 @@ describe('Catalog-driven, single-model Jev', () => {
       ),
     )
       .toEqual(['Alpha', 'Beta', 'Gamma']);
-    expect(corrections).toEqual(['prop_jev-2_text', 'prop_jev-3_text']);
+    expect(corrections).toEqual(['prop_jev_2_text', 'prop_jev_3_text']);
     expect(fetch).toHaveBeenCalledTimes(5);
     expect(output.usage).toMatchObject({ inputTokens: 500 });
   });
@@ -986,7 +993,7 @@ describe('Catalog-driven, single-model Jev', () => {
     mockDecisions((id, choice, body) => {
       expect(JSON.parse(body.state)).not.toHaveProperty('copy_conflict');
       if (id.endsWith('_text')) return pick(body, id, 'Alpha');
-      if (id.endsWith('_variant') && id.includes('jev-2')) {
+      if (id.endsWith('_variant') && id.includes('jev_2')) {
         return pick(body, id, 'h2');
       }
       return choice;
@@ -1005,8 +1012,8 @@ describe('Catalog-driven, single-model Jev', () => {
       expect(JSON.parse(body.state)).not.toHaveProperty('copy_conflict');
       if (id === 'add_Column') return '2';
       if (id.endsWith('_text')) return pick(body, id, 'Alpha');
-      if (id === 'parent_jev-3') return 'jev-1';
-      if (id === 'parent_jev-4') return 'jev-2';
+      if (id === 'parent_jev_3') return 'jev_1';
+      if (id === 'parent_jev_4') return 'jev_2';
       return choice;
     });
     const output = await generateJevComposition([{
@@ -1016,17 +1023,17 @@ describe('Catalog-driven, single-model Jev', () => {
     const content = await validated(output.text);
     expect(content.components.filter(item => item.component === 'Text'))
       .toHaveLength(2);
-    expect(content.components.find(item => item.id === 'jev-1')?.children)
-      .toEqual(['jev-3']);
-    expect(content.components.find(item => item.id === 'jev-2')?.children)
-      .toEqual(['jev-4']);
+    expect(content.components.find(item => item.id === 'jev_1')?.children)
+      .toEqual(['jev_3']);
+    expect(content.components.find(item => item.id === 'jev_2')?.children)
+      .toEqual(['jev_4']);
   });
 
   test('preserves repeated copy across containers, styles, bindings, fixed slots and existing nodes', async () => {
     const catalog = await loadBasicCatalog();
     const content = {
       surface: {
-        version: 'v0.9' as const,
+        version: '1.0' as const,
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
       data: { title: 'Same' },
@@ -1042,8 +1049,8 @@ describe('Catalog-driven, single-model Jev', () => {
         { id: 'a3', component: 'Text', text: 'Same', variant: 'h2' },
         { id: 'b', component: 'Column', children: ['b1'] },
         { id: 'b1', component: 'Text', text: 'Same', variant: 'body' },
-        { id: 'bound1', component: 'Text', text: { path: '/title' } },
-        { id: 'bound2', component: 'Text', text: { path: '/title' } },
+        { id: 'bound1', component: 'Text', text: { '@path': '/title' } },
+        { id: 'bound2', component: 'Text', text: { '@path': '/title' } },
         { id: 'old1', component: 'Text', text: 'Same' },
         { id: 'old2', component: 'Text', text: 'Same' },
         {
@@ -1151,7 +1158,7 @@ describe('Catalog-driven, single-model Jev', () => {
     expect(
       content.components.find(component => component.component === 'Image')
         ?.url,
-    ).toEqual({ path: '/photo/url' });
+    ).toEqual({ '@path': '/photo/url' });
     // The only possible parent/order are resolved locally without a layout call.
     expect(fetch).toHaveBeenCalledTimes(2);
   });
@@ -1173,12 +1180,12 @@ describe('Catalog-driven, single-model Jev', () => {
     const url = 'https://images.example.com/existing.jpg';
     const messages = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
-      { version: 'v0.9', updateDataModel: { surfaceId: 'main', value: {} } },
+      { version: '1.0', updateDataModel: { surfaceId: 'main', value: {} } },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -1299,7 +1306,7 @@ describe('Catalog-driven, single-model Jev', () => {
     const parsed = validateA2UIOutput(result.text, catalog);
     expect(parsed.errors).toEqual([]);
     expect(readJevContent(parsed.messages).components).toContainEqual({
-      id: 'jev-1',
+      id: 'jev_1',
       component: 'Thermometer',
       celsius: 26,
       unit: 'C',
@@ -1327,7 +1334,7 @@ describe('Catalog-driven, single-model Jev', () => {
 
   test('publishes only the completed layout with aggregated usage', async () => {
     const fetch = mockDecisions((id, choice) =>
-      id === 'order_jev-1' ? '1' : (id === 'order_jev-2' ? '0' : choice)
+      id === 'order_jev_1' ? '1' : (id === 'order_jev_2' ? '0' : choice)
     );
     const stream = await streamJevComposition([{
       role: 'user',
@@ -1348,7 +1355,7 @@ describe('Catalog-driven, single-model Jev', () => {
     const result = await stream.finalize();
     const content = await validated(result.text);
     expect(content.components.find(item => item.id === 'root')?.children)
-      .toEqual(['jev-2', 'jev-1']);
+      .toEqual(['jev_2', 'jev_1']);
     expect(JSON.parse(wire)).toEqual(JSON.parse(result.text));
     expect(result.usage).toMatchObject({ inputTokens: 300 });
   });
@@ -1364,7 +1371,7 @@ describe('Catalog-driven, single-model Jev', () => {
     const content = await validated(result.text);
     expect(content.components).toHaveLength(2);
     expect(content.components.find(item => item.id === 'root')?.children)
-      .toEqual(['jev-1']);
+      .toEqual(['jev_1']);
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(result.usage).toMatchObject({ inputTokens: 200 });
   });
@@ -1381,7 +1388,7 @@ describe('Catalog-driven, single-model Jev', () => {
     const input = initialContent.components.find(item =>
       item.component === 'TextField'
     )!;
-    const binding = input.value as { path: string };
+    const binding = input.value as { '@path': string };
     initialFetch.mockRestore();
     const fetch = mockDecisions((id, choice, body) => {
       expect(body.state).not.toContain('private-input-value');
@@ -1389,7 +1396,7 @@ describe('Catalog-driven, single-model Jev', () => {
         'private-input-value',
       );
       if (id.startsWith('add_')) return '0';
-      if (id === 'keep_jev-1') return 'omit';
+      if (id === 'keep_jev_1') return 'omit';
       return choice;
     });
     const edited = await generateJevComposition(
@@ -1399,15 +1406,15 @@ describe('Catalog-driven, single-model Jev', () => {
         history: [{ role: 'assistant', content: initial.text }],
         dataModel: {
           ...initialContent.data,
-          [binding.path.slice(1)]: 'private-input-value',
+          [binding['@path'].slice(1)]: 'private-input-value',
         },
       },
     );
     const content = await validated(edited.text);
-    expect(content.components.some(item => item.id === 'jev-1')).toBe(false);
+    expect(content.components.some(item => item.id === 'jev_1')).toBe(false);
     expect(content.components.find(item => item.id === input.id)?.value)
       .toEqual(binding);
-    expect(content.data[binding.path.slice(1)]).toBe('private-input-value');
+    expect(content.data[binding['@path'].slice(1)]).toBe('private-input-value');
     expect(fetch).toHaveBeenCalledTimes(3);
   });
 
@@ -1415,18 +1422,18 @@ describe('Catalog-driven, single-model Jev', () => {
     const catalog = await loadBasicCatalog();
     const messages = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateDataModel: {
           surfaceId: 'main',
           value: { items: [{ title: 'Alpha' }] },
         },
       },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -1441,7 +1448,7 @@ describe('Catalog-driven, single-model Jev', () => {
               component: 'Column',
               children: { componentId: 'item', path: '/items' },
             },
-            { id: 'item', component: 'Text', text: { path: 'title' } },
+            { id: 'item', component: 'Text', text: { '@path': 'title' } },
             {
               id: 'modal',
               component: 'Modal',
@@ -1482,7 +1489,7 @@ describe('Catalog-driven, single-model Jev', () => {
       content: 'body',
     });
     expect(content.components.find(item => item.id === 'item')?.text).toEqual({
-      path: 'title',
+      '@path': 'title',
     });
   });
 
@@ -1559,7 +1566,18 @@ describe('Catalog-driven, single-model Jev', () => {
         dataModel: content.data,
       },
     );
-    await validated(result.text);
+    const validation = validateA2UIOutput(
+      result.text,
+      await loadBasicCatalog(),
+      {
+        requireCreateSurface: false,
+        existingSurfaceIds: ['main'],
+        existingDataModelBySurface: { main: content.data },
+      },
+    );
+    expect(validation.ok).toBe(true);
+    expect(validation.messages.some(message => 'createSurface' in message))
+      .toBe(false);
     expect(actionFetch).toHaveBeenCalled();
     expect(result.text).not.toMatch(
       /jev_demo|Demo complete|saved successfully/i,
@@ -1584,14 +1602,14 @@ describe('Catalog-driven, single-model Jev', () => {
     async count => {
       const fetch = mockDecisions((id, choice, body) => {
         if (id === 'add_Column') return String(count);
-        if (id.startsWith('parent_jev-')) {
-          const index = Number(id.slice('parent_jev-'.length));
-          if (index < count) return `jev-${index + 1}`;
+        if (id.startsWith('parent_jev_')) {
+          const index = Number(id.slice('parent_jev_'.length));
+          if (index < count) return `jev_${index + 1}`;
           // All containers can express nesting in one batch; only self/unit edges are excluded.
           expect(body.questions[id]!.criteria).not.toHaveProperty(
-            `jev-${index}`,
+            `jev_${index}`,
           );
-          if (index > count) return 'jev-1';
+          if (index > count) return 'jev_1';
         }
         return choice;
       });
@@ -1602,12 +1620,12 @@ describe('Catalog-driven, single-model Jev', () => {
       const content = await validated(result.text);
       expect(describeJevTree(content)).toHaveLength(count + 3);
       expect(content.components.find(item => item.id === 'root')?.children)
-        .toContain(`jev-${count}`);
+        .toContain(`jev_${count}`);
       for (let index = 1; index < count; index++) {
         expect(
-          content.components.find(item => item.id === `jev-${index + 1}`)
+          content.components.find(item => item.id === `jev_${index + 1}`)
             ?.children,
-        ).toContain(`jev-${index}`);
+        ).toContain(`jev_${index}`);
       }
       expect(fetch).toHaveBeenCalledTimes(5);
       expect(result.usage).toMatchObject({ inputTokens: 500 });
@@ -1615,9 +1633,9 @@ describe('Catalog-driven, single-model Jev', () => {
         JSON.parse(init?.body as string) as EvaluationBody
       );
       expect(
-        parentBatches.find(body => body.questions['parent_jev-1'])!.questions,
+        parentBatches.find(body => body.questions.parent_jev_1)!.questions,
       )
-        .toHaveProperty('parent_jev-2');
+        .toHaveProperty('parent_jev_2');
       expect(
         parentBatches.every(body =>
           !Object.keys(body.questions).some(id => id.startsWith('layer_'))
@@ -1636,7 +1654,7 @@ describe('Catalog-driven, single-model Jev', () => {
             : '0';
         }
         // With no other top-level container, the owner's sole valid parent is root.
-        expect(body.questions).not.toHaveProperty('parent_jev-1');
+        expect(body.questions).not.toHaveProperty('parent_jev_1');
         if (id.startsWith('parent_')) {
           return Object.entries(body.questions[id]!.criteria).find((
             [, value],
@@ -1662,15 +1680,15 @@ describe('Catalog-driven, single-model Jev', () => {
     let checked = 0;
     mockDecisions((id, choice, body) => {
       if (id === 'add_Column') return '7';
-      if (id.startsWith('parent_jev-')) {
-        const index = Number(id.slice('parent_jev-'.length));
-        if (index < 7) return `jev-${index + 1}`;
+      if (id.startsWith('parent_jev_')) {
+        const index = Number(id.slice('parent_jev_'.length));
+        if (index < 7) return `jev_${index + 1}`;
         if (index > 7) {
           // Seven nested containers already use all eight levels including root.
-          expect(body.questions[id]!.criteria).not.toHaveProperty('jev-1');
-          expect(body.questions[id]!.criteria).toHaveProperty('jev-2');
+          expect(body.questions[id]!.criteria).not.toHaveProperty('jev_1');
+          expect(body.questions[id]!.criteria).toHaveProperty('jev_2');
           checked++;
-          return 'jev-2';
+          return 'jev_2';
         }
       }
       return choice;
@@ -1682,8 +1700,8 @@ describe('Catalog-driven, single-model Jev', () => {
     const content = await validated(result.text);
     expect(checked).toBe(2);
     expect(describeJevTree(content)).toHaveLength(9);
-    expect(content.components.find(item => item.id === 'jev-2')?.children)
-      .toEqual(['jev-8', 'jev-9']);
+    expect(content.components.find(item => item.id === 'jev_2')?.children)
+      .toEqual(['jev_8', 'jev_9']);
   });
 
   test('rejects unoffered layout choices with usage without publishing the staging tree', async () => {
@@ -1718,7 +1736,7 @@ describe('Catalog-driven, single-model Jev', () => {
 
   test('validates shared children and missing references as graph errors', () => {
     const surface = {
-      version: 'v0.9' as const,
+      version: '1.0' as const,
       createSurface: {
         surfaceId: 'main',
         catalogId: 'https://example.com/catalog.json',
@@ -1814,7 +1832,14 @@ describe('Catalog-driven, single-model Jev', () => {
       body: JSON.stringify({
         model: 'Jev',
         surfaceId: 'main',
-        action: { name: button.id, context: { value: 'private-action-value' } },
+        version: '1.0',
+        action: {
+          name: button.id,
+          surfaceId: 'main',
+          sourceComponentId: button.id,
+          timestamp: '2026-11-11T00:00:00Z',
+          context: { value: 'private-action-value' },
+        },
         conversation: {
           history: [{ role: 'assistant', content: initial.text }],
           dataModel: content.data,
@@ -1982,11 +2007,11 @@ describe('Jev host-registered MCP App resources', () => {
     const catalog = await loadBasicCatalog();
     const previous = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -2022,11 +2047,11 @@ describe('Jev host-registered MCP App resources', () => {
     const catalog = await loadBasicCatalog();
     const previous = [
       {
-        version: 'v0.9',
+        version: '1.0',
         createSurface: { surfaceId: 'main', catalogId: catalog.id },
       },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: 'main',
           components: [
@@ -2071,7 +2096,7 @@ describe('Jev host-registered MCP App resources', () => {
 
   test('removes dangling fixed slots while preserving other tabs', () => {
     const surface = {
-      version: 'v0.9' as const,
+      version: '1.0' as const,
       createSurface: {
         surfaceId: 'main',
         catalogId: 'https://example.com/catalog.json',
@@ -2130,4 +2155,24 @@ describe('Jev host-registered MCP App resources', () => {
       }),
     ).toBeUndefined();
   });
+});
+
+test('reads inline 1.0 initialization when restoring Jev content', () => {
+  const components = [{
+    id: 'root',
+    component: 'Text',
+    text: { '@path': '/title' },
+  }];
+  const content = readJevContent([{
+    version: '1.0',
+    createSurface: {
+      surfaceId: 'main',
+      catalogId: actualCatalog.BASIC_CATALOG.id,
+      components,
+      dataModel: { title: 'Retained' },
+    },
+  }]);
+  expect(content.components).toEqual(components);
+  expect(content.data).toEqual({ title: 'Retained' });
+  expect(content.surface.createSurface).not.toHaveProperty('components');
 });

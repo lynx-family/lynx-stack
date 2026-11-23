@@ -113,6 +113,8 @@ export function BenchComparisonGroupsSection(props: {
       <div className='benchGroupGrid'>
         {props.groups.map((group, index) => {
           const groupName = group.name;
+          const coreCatalogOnly = group.protocol === 'openui'
+            || (hasA2UIAndOpenUI && group.protocol === 'a2ui');
           return (
             <article
               className='benchGroupCard'
@@ -204,15 +206,9 @@ export function BenchComparisonGroupsSection(props: {
                       </span>
                       <BenchDropdown
                         ariaLabel={`${groupName} Catalog`}
-                        value={group.protocol === 'openui'
-                          ? 'Core Catalog'
-                          : (hasA2UIAndOpenUI
-                              && (group.protocol === 'a2ui'
-                                || group.protocol === 'openui')
-                            ? 'Core Catalog'
-                            : group.catalog)}
+                        value={coreCatalogOnly ? 'Core Catalog' : group.catalog}
                         disabled={props.locked || !usesCatalog(group)
-                          || hasA2UIAndOpenUI}
+                          || coreCatalogOnly}
                         options={props.catalogOptions.map((catalog) => ({
                           value: catalog,
                           label: catalog,

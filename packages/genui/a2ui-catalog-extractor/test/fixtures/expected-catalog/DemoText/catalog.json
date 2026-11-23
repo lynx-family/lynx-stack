@@ -1,17 +1,20 @@
 {
   "DemoText": {
     "properties": {
+      "component": {
+        "const": "DemoText"
+      },
       "text": {
         "oneOf": [
           {
             "type": "object",
             "properties": {
-              "path": {
+              "@path": {
                 "type": "string"
               }
             },
             "required": [
-              "path"
+              "@path"
             ],
             "additionalProperties": false
           },
@@ -31,8 +34,10 @@
       }
     },
     "required": [
+      "component",
       "text"
     ],
-    "description": "Demo text fixture."
+    "description": "Demo text fixture.",
+    "type": "object"
   }
 }

@@ -35,6 +35,8 @@ export interface A2UIStreamState {
 }
 
 export interface A2UIAction {
+  envelope?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   action: Record<string, unknown>;
   surfaceId?: string;
 }
@@ -640,6 +642,30 @@ export const A2UI_CHAT_ADAPTER = {
         : null;
     },
     parseWindowMessage(data) {
+      if (
+        isRecord(data) && data.type === 'A2UI_PROTOCOL_MESSAGE'
+        && isRecord(data.message) && data.message.version === '1.0'
+      ) {
+        const message = data.message;
+        const payload = message.action ?? message.callAgentFunction
+          ?? message.rendererFunctionResponse;
+        if (!isRecord(payload)) return null;
+        return {
+          action: isRecord(message.action)
+            ? message.action
+            : {
+              name: message.callAgentFunction
+                ? 'callAgentFunction'
+                : 'rendererFunctionResponse',
+              context: payload,
+            },
+          envelope: message,
+          ...(isRecord(data.metadata) ? { metadata: data.metadata } : {}),
+          ...(typeof payload.surfaceId === 'string'
+            ? { surfaceId: payload.surfaceId }
+            : {}),
+        };
+      }
       if (!isRecord(data) || data.type !== 'A2UI_USER_ACTION') return null;
       if (!isRecord(data.action)) return null;
       const surfaceId = typeof data.surfaceId === 'string'
@@ -673,8 +699,9 @@ export const A2UI_CHAT_ADAPTER = {
           Accept: 'text/event-stream',
         },
         body: {
+          ...(action.envelope ?? { version: '1.0', action: action.action }),
           surfaceId: action.surfaceId,
-          action: action.action,
+          ...(action.metadata ? { metadata: action.metadata } : {}),
           conversation,
           ...provider,
         },

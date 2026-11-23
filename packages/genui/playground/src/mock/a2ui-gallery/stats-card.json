@@ -3,46 +3,53 @@
   "description": "Example of stats card demonstrating currency and number formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-stats-card",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-stats-card",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["header", "value", "trend-row"]
+            "children": [
+              "header",
+              "value",
+              "trend_row"
+            ]
           },
           {
             "id": "header",
             "component": "Row",
-            "children": ["metric-icon", "metric-name"],
+            "children": [
+              "metric_icon",
+              "metric_name"
+            ],
             "align": "center"
           },
           {
-            "id": "metric-icon",
+            "id": "metric_icon",
             "component": "Icon",
             "name": {
-              "path": "/icon"
+              "@path": "/icon"
             }
           },
           {
-            "id": "metric-name",
+            "id": "metric_name",
             "component": "Text",
             "text": {
-              "path": "/metricName"
+              "@path": "/metricName"
             },
             "variant": "caption"
           },
@@ -50,39 +57,40 @@
             "id": "value",
             "component": "Text",
             "text": {
-              "call": "formatCurrency",
+              "@call": "formatCurrency",
               "args": {
                 "value": {
-                  "path": "/value"
+                  "@path": "/value"
                 },
                 "currency": "USD"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h1"
           },
           {
-            "id": "trend-row",
+            "id": "trend_row",
             "component": "Row",
-            "children": ["trend-icon", "trend-text"],
+            "children": [
+              "trend_icon",
+              "trend_text"
+            ],
             "align": "center"
           },
           {
-            "id": "trend-icon",
+            "id": "trend_icon",
             "component": "Icon",
             "name": {
-              "path": "/trendIcon"
+              "@path": "/trendIcon"
             }
           },
           {
-            "id": "trend-text",
+            "id": "trend_text",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "+${/trendPercent}% from last month"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "body"
           }
@@ -90,7 +98,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-stats-card",
         "value": {

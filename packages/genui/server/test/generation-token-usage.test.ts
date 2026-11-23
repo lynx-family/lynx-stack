@@ -25,11 +25,11 @@ const tokenUsage = {
 };
 const a2uiText = JSON.stringify([
   {
-    version: 'v0.9',
+    version: '1.0',
     createSurface: { surfaceId: 'main', catalogId: BASIC_CATALOG.id },
   },
   {
-    version: 'v0.9',
+    version: '1.0',
     updateComponents: {
       surfaceId: 'main',
       components: [
@@ -97,7 +97,14 @@ describe('generation token usage on the wire', () => {
           },
           body: JSON.stringify({
             messages: [{ role: 'user', content: 'Create a card' }],
-            action: { name: 'refresh' },
+            version: '1.0',
+            action: {
+              name: 'refresh',
+              surfaceId: 'main',
+              sourceComponentId: 'root',
+              timestamp: '2026-11-11T00:00:00Z',
+              context: {},
+            },
             surfaceId: 'main',
             catalog: BASIC_CATALOG,
             validate,
@@ -139,7 +146,14 @@ describe('generation token usage on the wire', () => {
           },
           body: JSON.stringify({
             messages: [{ role: 'user', content: 'Create a card' }],
-            action: { name: 'refresh' },
+            version: '1.0',
+            action: {
+              name: 'refresh',
+              surfaceId: 'main',
+              sourceComponentId: 'root',
+              timestamp: '2026-11-11T00:00:00Z',
+              context: {},
+            },
             surfaceId: 'main',
             catalog: BASIC_CATALOG,
           }),
@@ -194,7 +208,14 @@ describe('generation token usage on the wire', () => {
             body: JSON.stringify({
               maxRepairAttempts: 1,
               messages: [{ role: 'user', content: 'Create a card' }],
-              action: { name: 'refresh' },
+              version: '1.0',
+              action: {
+                name: 'refresh',
+                surfaceId: 'main',
+                sourceComponentId: 'root',
+                timestamp: '2026-11-11T00:00:00Z',
+                context: {},
+              },
               surfaceId: 'main',
               catalog: BASIC_CATALOG,
             }),

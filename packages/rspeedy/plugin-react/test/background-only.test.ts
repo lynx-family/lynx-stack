@@ -5,6 +5,7 @@ import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
+import type { Rspack } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
@@ -104,28 +105,46 @@ describe('Config', () => {
       expect.fail('should have background-only rules')
     }
 
-    expect(rule.issuerLayer).toBe(LAYERS.MAIN_THREAD)
+    const backgroundRule = rule as Rspack.RuleSetRule
+    expect(backgroundRule.issuerLayer).toBe(LAYERS.MAIN_THREAD)
 
-    if (Array.isArray(rule.use)) {
-      const useEntry = rule.use.find(item => {
+    if (Array.isArray(backgroundRule.use)) {
+      const useEntry = backgroundRule.use.find(item => {
         if (typeof item === 'string') {
           return item.includes('invalid-import-error-loader')
-        } else {
-          return item.loader.includes('invalid-import-error-loader')
-            && typeof item.options === 'object'
-            && Object.prototype.hasOwnProperty.call(item.options, 'message')
-            && item.options['message']
-              === '\'background-only\' cannot be imported from a main-thread module.'
         }
+        if (typeof item !== 'object' || item === null || !('loader' in item)) {
+          return false
+        }
+        // `loader` / `options` come from a Rspack type alias eslint cannot resolve.
+        const loaderRecord = item as unknown as {
+          loader?: unknown
+          options?: { message?: unknown }
+        }
+        return typeof loaderRecord.loader === 'string'
+          && loaderRecord.loader.includes('invalid-import-error-loader')
+          && loaderRecord.options?.message
+            === '\'background-only\' cannot be imported from a main-thread module.'
       })
 
       if (!useEntry) {
         expect.fail('should have background-only rules')
       }
-    } else if (typeof rule.use === 'string') {
-      expect(rule.use.includes('invalid-import-error-loader')).toBe(true)
-    } else if (typeof rule.use === 'object') {
-      expect(rule.use.loader.includes('invalid-import-error-loader')).toBe(true)
+    } else if (typeof backgroundRule.use === 'string') {
+      expect(backgroundRule.use.includes('invalid-import-error-loader')).toBe(
+        true,
+      )
+    } else if (
+      typeof backgroundRule.use === 'object'
+      && backgroundRule.use !== null
+    ) {
+      const loaderRecord = backgroundRule.use as unknown as {
+        loader?: unknown
+      }
+      expect(
+        typeof loaderRecord.loader === 'string'
+          && loaderRecord.loader.includes('invalid-import-error-loader'),
+      ).toBe(true)
     }
   })
 })

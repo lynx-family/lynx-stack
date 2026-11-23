@@ -3,7 +3,6 @@
 // LICENSE file in the root directory of this source tree.
 import { catalogManifests } from '@lynx-js/genui/a2ui/catalog';
 
-import type { ProtocolName } from './utils/protocol.js';
 import {
   buildLazyComponentBundleUrl,
   getA2UIPlaygroundBaseUrl,
@@ -39,8 +38,8 @@ export interface ComponentDoc {
   category: ComponentCategory;
   description: string;
   props: ComponentProp[];
-  usage: Record<ProtocolName, object | object[]>;
-  usageExamples: Record<ProtocolName, ComponentUsageExample[]>;
+  usage: Record<'a2ui' | 'openui', object | object[]>;
+  usageExamples: Record<'a2ui' | 'openui', ComponentUsageExample[]>;
 }
 
 export const CATEGORIES: { id: ComponentCategory; label: string }[] = [
@@ -1417,14 +1416,14 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         id: 'name-input',
         component: 'TextField',
         label: 'Name',
-        value: { path: '/form/name' },
+        value: { '@path': '/form/name' },
         variant: 'shortText',
       },
       openui: {
         id: 'name-input',
         component: 'TextField',
         label: 'Name',
-        value: { path: '/form/name' },
+        value: { '@path': '/form/name' },
         variant: 'shortText',
       },
     },
@@ -1436,7 +1435,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'email-input',
             component: 'TextField',
             label: 'Email',
-            value: { path: '/form/email' },
+            value: { '@path': '/form/email' },
             variant: 'shortText',
           },
         },
@@ -1446,7 +1445,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'bio-input',
             component: 'TextField',
             label: 'Bio',
-            value: { path: '/form/bio' },
+            value: { '@path': '/form/bio' },
             variant: 'longText',
           },
         },
@@ -1456,7 +1455,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'password-input',
             component: 'TextField',
             label: 'Password',
-            value: { path: '/form/password' },
+            value: { '@path': '/form/password' },
             variant: 'obscured',
           },
         },
@@ -1466,7 +1465,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'age-input',
             component: 'TextField',
             label: 'Age',
-            value: { path: '/form/age' },
+            value: { '@path': '/form/age' },
             variant: 'number',
           },
         },
@@ -1478,7 +1477,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'name-input',
             component: 'TextField',
             label: 'Name',
-            value: { path: '/form/name' },
+            value: { '@path': '/form/name' },
             variant: 'shortText',
           },
         },
@@ -1578,7 +1577,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
         id: 'date-input',
         component: 'DateTimeInput',
         label: 'Date',
-        value: { path: '/date' },
+        value: { '@path': '/date' },
         enableDate: true,
         enableTime: false,
       },
@@ -1592,7 +1591,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'date-input',
             component: 'DateTimeInput',
             label: 'Date',
-            value: { path: '/date' },
+            value: { '@path': '/date' },
             enableDate: true,
             enableTime: false,
           },
@@ -1604,7 +1603,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'datetime-input',
             component: 'DateTimeInput',
             label: 'Event date',
-            value: { path: '/eventDate' },
+            value: { '@path': '/eventDate' },
             enableDate: true,
             enableTime: true,
             outputFormat: 'YYYY-MM-DD HH:mm',
@@ -1617,7 +1616,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
             id: 'booking-date',
             component: 'DateTimeInput',
             label: 'Booking date',
-            value: { path: '/bookingDate' },
+            value: { '@path': '/bookingDate' },
             enableDate: true,
             enableTime: false,
             min: '2026-05-01',
@@ -1668,7 +1667,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               { label: '巴黎', value: 'paris' },
               { label: '纽约', value: 'new-york' },
             ],
-            value: { path: '/city' },
+            value: { '@path': '/city' },
           },
           data: { city: ['tokyo'] },
         },
@@ -1685,7 +1684,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               { label: 'Low sugar', value: 'low-sugar' },
               { label: 'High protein', value: 'high-protein' },
             ],
-            value: { path: '/diet' },
+            value: { '@path': '/diet' },
           },
           data: { diet: ['vegetarian', 'high-protein'] },
         },
@@ -1704,7 +1703,7 @@ export const COMPONENT_CATALOG: ComponentDoc[] = [
               { label: 'Research', value: 'research' },
               { label: 'Product', value: 'product' },
             ],
-            value: { path: '/interests' },
+            value: { '@path': '/interests' },
           },
           data: { interests: ['design'] },
         },

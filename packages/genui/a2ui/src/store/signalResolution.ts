@@ -34,7 +34,12 @@ export function createResolvedSignal(
   const resolveFunctionCall = createResolveFunctionCall(options);
 
   if (isDataBinding(value)) {
-    return signalFromStore(processor, value.path, surfaceId, dataContextPath);
+    return signalFromStore(
+      processor,
+      value['@path'],
+      surfaceId,
+      dataContextPath,
+    );
   }
   if (isFunctionCall(value)) {
     return computed(() =>

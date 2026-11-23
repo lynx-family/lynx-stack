@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
@@ -34,18 +35,11 @@ const knownTransformSourcePathExceptions = new Set([
   'transform/tests/__swc_snapshots__/src/swc_plugin_compat_post/mod.rs/should_compat_dark_mode.js',
   'transform/tests/__swc_snapshots__/src/swc_plugin_compat_post/mod.rs/should_compat_dark_mode_custom_theme_expr.js',
 ]);
-
-const containedTestDirs = [
-  'alog',
-  'compat',
-  'css',
-  'debug',
-  'gesture',
-  'lifecycle',
-  'lynx',
-  'utils',
-  'worklet',
-];
+const snapshotRootFiles = new Set(
+  ['document', 'index', 'internal', 'lynx', 'lynx-api', 'root', 'runtime-marker'].map((name) =>
+    path.join(srcRoot, name)
+  ),
+);
 
 function toPosixPath(file: string): string {
   return file.split(path.sep).join('/');
@@ -77,21 +71,59 @@ function stripModuleExtension(filePath: string): string {
   return filePath.replace(/\.(?:[cm]?[jt]sx?)$/, '');
 }
 
+function getModuleSpecifiers(file: string): string[] {
+  const source = fs.readFileSync(file, 'utf8');
+  const scriptKind = file.endsWith('.tsx')
+    ? ts.ScriptKind.TSX
+    : file.endsWith('.jsx')
+    ? ts.ScriptKind.JSX
+    : file.endsWith('.ts')
+    ? ts.ScriptKind.TS
+    : ts.ScriptKind.JS;
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, false, scriptKind);
+  const specifiers: string[] = [];
+
+  function visit(node: ts.Node): void {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node))
+      && node.moduleSpecifier
+      && ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      specifiers.push(node.moduleSpecifier.text);
+    } else if (
+      ts.isExternalModuleReference(node)
+      && ts.isStringLiteral(node.expression)
+    ) {
+      specifiers.push(node.expression.text);
+    } else if (
+      ts.isImportTypeNode(node)
+      && ts.isLiteralTypeNode(node.argument)
+      && ts.isStringLiteral(node.argument.literal)
+    ) {
+      specifiers.push(node.argument.literal.text);
+    } else if (
+      ts.isCallExpression(node)
+      && node.arguments.length >= 1
+      && ts.isStringLiteralLike(node.arguments[0]!)
+      && (
+        node.expression.kind === ts.SyntaxKind.ImportKeyword
+        || (ts.isIdentifier(node.expression) && node.expression.text === 'require')
+      )
+    ) {
+      specifiers.push(node.arguments[0]!.text);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return specifiers;
+}
+
+function isWithinDir(target: string, dir: string): boolean {
+  return target === dir || target.startsWith(`${dir}${path.sep}`);
+}
+
 describe('snapshot containment guardrails', () => {
-  test('keeps legacy runtime implementation directories under snapshot backend', () => {
-    for (const dir of legacySourceDirs) {
-      expect(fs.existsSync(path.join(srcRoot, dir)), dir).toBe(false);
-      expect(fs.existsSync(path.join(srcRoot, 'snapshot', dir)), dir).toBe(true);
-    }
-  });
-
-  test('keeps legacy runtime tests under snapshot test namespace', () => {
-    for (const dir of containedTestDirs) {
-      expect(fs.existsSync(path.join(testRoot, dir)), dir).toBe(false);
-      expect(fs.existsSync(path.join(testRoot, 'snapshot', dir)), dir).toBe(true);
-    }
-  });
-
   test('keeps loose legacy runtime tests under snapshot test namespace', () => {
     const looseRuntimeTests = fs.readdirSync(testRoot, { withFileTypes: true })
       .filter((entry) => entry.isFile())
@@ -101,28 +133,9 @@ describe('snapshot containment guardrails', () => {
     expect(looseRuntimeTests).toEqual([]);
   });
 
-  test('does not import old implementation paths outside the snapshot backend', () => {
-    const legacyRootPrefixes = legacySourceDirs.map((dir) => `${path.join(srcRoot, dir)}${path.sep}`);
-    const offenders = walkFiles(srcRoot)
-      .filter((file) => !file.includes(`${path.sep}src${path.sep}snapshot${path.sep}`))
-      .filter((file) =>
-        getResolvedRelativeImports(file).some((resolved) =>
-          legacyRootPrefixes.some((prefix) => resolved.startsWith(prefix))
-        )
-      )
-      .map((file) => path.relative(runtimeRoot, file));
-
-    expect(offenders).toEqual([]);
-  });
-
   test('prevents element-template from depending on snapshot private paths', () => {
     const elementTemplateRoot = path.join(srcRoot, 'element-template');
     const snapshotPrefix = `${path.join(srcRoot, 'snapshot')}${path.sep}`;
-    const snapshotRootFiles = new Set(
-      ['document', 'index', 'internal', 'lynx', 'lynx-api', 'root', 'runtime-marker'].map((name) =>
-        path.join(srcRoot, name)
-      ),
-    );
     const offenders = walkFiles(elementTemplateRoot)
       .filter((file) =>
         getResolvedRelativeImports(file).some((resolved) =>
@@ -161,11 +174,6 @@ describe('snapshot containment guardrails', () => {
       `${path.join(srcRoot, 'snapshot')}${path.sep}`,
       `${path.join(srcRoot, 'element-template')}${path.sep}`,
     ];
-    const snapshotRootFiles = new Set(
-      ['document', 'index', 'internal', 'lynx', 'lynx-api', 'root', 'runtime-marker'].map((name) =>
-        path.join(srcRoot, name)
-      ),
-    );
     const offenders = [
       ...walkFiles(coreRoot),
       ...walkFiles(sharedRoot),
@@ -181,15 +189,50 @@ describe('snapshot containment guardrails', () => {
     expect(offenders).toEqual([]);
   });
 
-  test('allows ReactLynx hooks to live under core instead of snapshot', () => {
-    expect(fs.existsSync(path.join(srcRoot, 'snapshot', 'hooks'))).toBe(false);
-    expect(fs.existsSync(path.join(srcRoot, 'core', 'hooks'))).toBe(true);
+  test('keeps shared modules pure and free of framework or higher-layer runtime imports', () => {
+    const sharedPrefix = `${sharedRoot}${path.sep}`;
+    const importSpecifierPattern = /(?:from\s+|import\s*\(\s*|import\s+(?:type\s+)?)['"]([^'"]+)['"]/g;
+    const offenders = walkFiles(sharedRoot)
+      .filter((file) => {
+        const source = fs.readFileSync(file, 'utf8');
+        const specifiers = Array.from(source.matchAll(importSpecifierPattern), (match) => match[1]!);
+        return specifiers.some((specifier) => {
+          if (!specifier.startsWith('.')) {
+            return true;
+          }
+          const resolved = path.resolve(path.dirname(file), specifier);
+          return !resolved.startsWith(sharedPrefix);
+        });
+      })
+      .map((file) => path.relative(runtimeRoot, file));
+
+    expect(offenders).toEqual([]);
   });
 
-  test('keeps legacy-react-runtime entry implementation in core compat', () => {
-    expect(fs.existsSync(path.join(srcRoot, 'snapshot', 'legacy-react-runtime'))).toBe(false);
-    expect(fs.existsSync(path.join(srcRoot, 'element-template', 'legacy-react-runtime'))).toBe(false);
-    expect(fs.existsSync(path.join(srcRoot, 'core', 'compat', 'legacy-react-runtime.ts'))).toBe(true);
+  test('prevents non-worklet-runtime source modules from importing private worklet-runtime internals', () => {
+    const workletRuntimeDir = path.join(srcRoot, 'worklet-runtime');
+    const workletBindingsDir = path.join(workletRuntimeDir, 'bindings');
+    const isForbiddenWorkletRuntimeSpecifier = (file: string, specifier: string): boolean => {
+      if (specifier.startsWith('.')) {
+        const resolved = stripModuleExtension(path.resolve(path.dirname(file), specifier));
+        return isWithinDir(resolved, workletRuntimeDir) && !isWithinDir(resolved, workletBindingsDir);
+      }
+      if (specifier === '@lynx-js/react/worklet-runtime/bindings') {
+        return false;
+      }
+      return /^@lynx-js\/react(?:\/runtime\/(?:src|lib)|-runtime\/(?:src|lib))?\/worklet-runtime(?:\/|$)/.test(
+        specifier,
+      );
+    };
+
+    const offenders = walkFiles(srcRoot)
+      .filter((file) => !isWithinDir(file, workletRuntimeDir))
+      .filter((file) =>
+        getModuleSpecifiers(file).some((specifier) => isForbiddenWorkletRuntimeSpecifier(file, specifier))
+      )
+      .map((file) => path.relative(runtimeRoot, file));
+
+    expect(offenders).toEqual([]);
   });
 
   test('prevents transform output from referencing untracked old runtime source paths', () => {
@@ -206,27 +249,5 @@ describe('snapshot containment guardrails', () => {
       );
 
     expect(offenders).toEqual([]);
-  });
-
-  test('keeps package type metadata aligned with contained runtime paths', () => {
-    const packageJson = JSON.parse(
-      fs.readFileSync(path.join(reactRoot, 'package.json'), 'utf8'),
-    );
-    expect(packageJson.exports['./element-template/legacy-react-runtime']).toBeUndefined();
-    expect(packageJson.exports['./legacy-react-runtime']).toEqual({
-      types: './runtime/lib/core/compat/legacy-react-runtime.d.ts',
-      lazy: './runtime/lazy/legacy-react-runtime.js',
-      default: './runtime/lib/core/compat/legacy-react-runtime.js',
-    });
-
-    const typesVersions = JSON.stringify(packageJson.typesVersions ?? {});
-
-    expect(typesVersions).not.toContain('./runtime/lib/hooks/');
-    expect(typesVersions).not.toContain('./runtime/lib/legacy-react-runtime/');
-    expect(typesVersions).not.toContain('element-template/legacy-react-runtime');
-    expect(typesVersions).not.toContain('./runtime/lib/snapshot/legacy-react-runtime/');
-    expect(typesVersions).not.toContain('./runtime/lib/element-template/legacy-react-runtime/');
-    expect(typesVersions).toContain('./runtime/lib/core/hooks/react.d.ts');
-    expect(typesVersions).toContain('./runtime/lib/core/compat/legacy-react-runtime.d.ts');
   });
 });

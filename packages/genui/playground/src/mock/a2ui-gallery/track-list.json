@@ -3,44 +3,51 @@
   "description": "Example of track list demonstrating templating, relative paths, and number formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-track-list",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-track-list",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["header", "divider", "tracks-list"]
+            "children": [
+              "header",
+              "divider",
+              "tracks_list"
+            ]
           },
           {
             "id": "header",
             "component": "Row",
-            "children": ["playlist-icon", "playlist-name"],
+            "children": [
+              "playlist_icon",
+              "playlist_name"
+            ],
             "align": "center"
           },
           {
-            "id": "playlist-icon",
+            "id": "playlist_icon",
             "component": "Icon",
-            "name": "play"
+            "name": "play_arrow"
           },
           {
-            "id": "playlist-name",
+            "id": "playlist_name",
             "component": "Text",
             "text": {
-              "path": "/playlistName"
+              "@path": "/playlistName"
             },
             "variant": "h3"
           },
@@ -49,67 +56,74 @@
             "component": "Divider"
           },
           {
-            "id": "tracks-list",
+            "id": "tracks_list",
             "component": "Column",
             "children": {
               "path": "/tracks",
-              "componentId": "track-item-template"
+              "componentId": "track_item_template"
             }
           },
           {
-            "id": "track-item-template",
+            "id": "track_item_template",
             "component": "Row",
-            "children": ["track-num", "track-art", "track-info", "track-duration"],
+            "children": [
+              "track_num",
+              "track_art",
+              "track_info",
+              "track_duration"
+            ],
             "align": "center"
           },
           {
-            "id": "track-num",
+            "id": "track_num",
             "component": "Text",
             "text": {
-              "call": "formatNumber",
+              "@call": "formatNumber",
               "args": {
                 "value": {
-                  "path": "number"
+                  "@path": "number"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           },
           {
-            "id": "track-art",
+            "id": "track_art",
             "component": "Image",
             "url": {
-              "path": "art"
+              "@path": "art"
             },
             "fit": "cover"
           },
           {
-            "id": "track-info",
+            "id": "track_info",
             "component": "Column",
-            "children": ["track-title", "track-artist"]
+            "children": [
+              "track_title",
+              "track_artist"
+            ]
           },
           {
-            "id": "track-title",
+            "id": "track_title",
             "component": "Text",
             "text": {
-              "path": "title"
+              "@path": "title"
             },
             "variant": "body"
           },
           {
-            "id": "track-artist",
+            "id": "track_artist",
             "component": "Text",
             "text": {
-              "path": "artist"
+              "@path": "artist"
             },
             "variant": "caption"
           },
           {
-            "id": "track-duration",
+            "id": "track_duration",
             "component": "Text",
             "text": {
-              "path": "duration"
+              "@path": "duration"
             },
             "variant": "caption"
           }
@@ -117,7 +131,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-track-list",
         "value": {

@@ -10,6 +10,8 @@ import {
   normalizeTextFieldValue,
   normalizeTextFieldVariant,
 } from './utils.js';
+import { accessibilityProps } from '../../react/accessibility.js';
+import { useChecks } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/TextField.css';
@@ -21,26 +23,25 @@ import '../../../styles/catalog/TextField.css';
  */
 export interface TextFieldProps extends GenericComponentProps {
   /** The text label for the input field. */
-  label: string | { path: string };
+  label: string | { '@path': string };
   /** The value of the text field. */
-  value?: string | { path: string };
+  value?: string | { '@path': string };
   /** The type of input field to display. */
   variant?: 'longText' | 'number' | 'shortText' | 'obscured';
   /** A regular expression used for client-side validation of the input. */
   validationRegexp?: string;
   /** A list of checks to perform. */
-  checks?: Array<{
+  '@checks'?: Array<{
     /** The condition that indicates whether the check passes. */
     condition:
-      | boolean
-      | { path: string }
+      | { '@path': string }
       | {
-        call: string;
-        args?: Record<string, string | number | boolean | { path: string }>;
-        returnType?: 'boolean';
+        '@call': string;
+        catalogId?: string;
+        args?: Record<string, string | number | boolean | { '@path': string }>;
       };
-    /** The error message to display if the check fails. */
-    message: string;
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 
@@ -73,7 +74,13 @@ export function TextField(
     setTouched(true);
   };
 
-  const invalid = !isTextFieldValueValid(draftValue, validationRegexp);
+  const { ok, firstFailureMessage } = useChecks({
+    checks: props['@checks'],
+    componentId: id ?? '',
+    surface: props.surface,
+    dataContextPath: props.dataContextPath,
+  });
+  const invalid = !ok || !isTextFieldValueValid(draftValue, validationRegexp);
   const showInvalid = touched && invalid;
   const rootClassName = showInvalid
     ? `textfield textfield-${variant} textfield-invalid`
@@ -86,7 +93,7 @@ export function TextField(
   const controlIdProps = controlId ? { id: controlId } : {};
 
   return (
-    <view key={id} className={rootClassName}>
+    <view {...accessibilityProps(props)} key={id} className={rootClassName}>
       <text className='textfield-label'>{labelText}</text>
       {variant === 'longText'
         ? (
@@ -111,7 +118,11 @@ export function TextField(
             onBlur={handleBlur}
           />
         )}
-      {showInvalid && <text className='textfield-error'>Invalid value</text>}
+      {showInvalid && (
+        <text className='textfield-error'>
+          {firstFailureMessage ?? 'Invalid value'}
+        </text>
+      )}
     </view>
   );
 }

@@ -1,5 +1,17 @@
 # @lynx-js/cache-events-webpack-plugin
 
+## 0.2.4
+
+### Patch Changes
+
+- Keep main-thread `renderPage` calls cached until asynchronous entry startup finishes, even if ReactLynx registers its handler earlier. Flush the element tree after replay so the native first screen is committed without waiting for a background patch. ([#4350](https://github.com/lynx-family/lynx-stack/pull/4350))
+
+## 0.2.3
+
+### Patch Changes
+
+- Initialize main-thread `SystemInfo` and `NativeModules` compatibility globals before async entry dependencies execute. This allows ordinary modules to access these globals while an external ReactLynx bundle is still loading, without changing the background thread's native bridge. ([#4322](https://github.com/lynx-family/lynx-stack/pull/4322))
+
 ## 0.2.2
 
 ### Patch Changes

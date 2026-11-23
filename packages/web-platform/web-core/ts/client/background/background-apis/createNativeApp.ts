@@ -30,6 +30,7 @@ import type { TimingSystem } from './createTimingSystem.js';
 import { registerUpdateGlobalPropsHandler } from './crossThreadHandlers/registerUpdateGlobalPropsHandler.js';
 import { registerUpdateI18nResource } from './crossThreadHandlers/registerUpdateI18nResource.js';
 import { createGetPathInfo } from './crossThreadHandlers/createGetPathInfo.js';
+import { createGetFields } from './crossThreadHandlers/createGetFields.js';
 import { createChunkLoading } from './createChunkLoading.js';
 import type { LynxCrossThreadContext } from '../../LynxCrossThreadContext.js';
 
@@ -50,9 +51,11 @@ export async function createNativeApp(
   nativeModulesMap: NativeModulesMap,
   entryTemplateUrl: string,
   cardType: string,
+  isProfiling = false,
 ): Promise<NativeApp> {
   const performanceApis = createPerformanceApis(
     timingSystem,
+    isProfiling,
   );
   const callLepusMethod = mainThreadRpc.createCallbackify(
     callLepusMethodEndpoint,
@@ -105,6 +108,7 @@ export async function createNativeApp(
     callLepusMethod,
     setNativeProps,
     getPathInfo: createGetPathInfo(mainThreadRpc),
+    getFields: createGetFields(mainThreadRpc),
     invokeUIMethod: createInvokeUIMethod(mainThreadRpc),
     tt: null,
     setCard(tt) {

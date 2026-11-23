@@ -13,6 +13,8 @@ export function createServerLynx(
 ): MainThreadLynx {
   let pipelineIdInc = 0;
   return {
+    // SSR has no host view from which to resolve main-thread modules.
+    module: () => undefined,
     performance: {
       _generatePipelineOptions: () => ({
         pipelineID: `_pipeline_ssr_` + (pipelineIdInc++),

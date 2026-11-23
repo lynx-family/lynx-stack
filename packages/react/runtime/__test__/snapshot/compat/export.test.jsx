@@ -3,6 +3,7 @@ import ReactLynx from '@lynx-js/react';
 import {
   startTransition as preactStartTransition,
   use as preactUse,
+  useDeferredValue as preactUseDeferredValue,
   useTransition as preactUseTransition,
 } from 'preact/compat';
 
@@ -21,6 +22,11 @@ describe('Default export', () => {
     expect(compat.use).toBe(preactUse);
   });
 
+  it('should include useDeferredValue', () => {
+    expect(compat).toHaveProperty('useDeferredValue');
+    expect(compat.useDeferredValue).toBe(preactUseDeferredValue);
+  });
+
   it('should include useInsertionEffect', () => {
     expect(compat).toHaveProperty('useInsertionEffect');
     expect(compat.useInsertionEffect).toBe(ReactLynx.useEffect);
@@ -35,8 +41,8 @@ describe('Default export', () => {
   });
 
   it('should have correct number of exports', () => {
-    // +4 for startTransition, use, useInsertionEffect and useTransition
-    const expectedExportCount = Object.keys(ReactLynx).length + 4;
+    // +5 for startTransition, use, useDeferredValue, useInsertionEffect and useTransition
+    const expectedExportCount = Object.keys(ReactLynx).length + 5;
     expect(Object.keys(compat).length).toBe(expectedExportCount);
   });
 });

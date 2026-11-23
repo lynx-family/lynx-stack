@@ -61,6 +61,6 @@ describe('Slider utils', () => {
     expect(normalizeSliderLabel('Volume')).toBe('Volume');
     expect(normalizeSliderLabel(7)).toBe('7');
     expect(normalizeSliderLabel(undefined)).toBe('');
-    expect(normalizeSliderLabel({ path: '/label' })).toBe('');
+    expect(normalizeSliderLabel({ '@path': '/label' })).toBe('');
   });
 });

@@ -18,6 +18,7 @@ import {
   setActiveConversationId,
 } from '../storage/conversationRepo.js';
 import { applyA2UIMessagesToSnapshot } from '../storage/conversationSnapshot.js';
+import { sharedPreviewMessages } from '../storage/sharedConversation.js';
 import type { SharedConversationDoc } from '../storage/sharedConversation.js';
 import type {
   ConversationGenerationSettings,
@@ -464,7 +465,7 @@ export function useConversation(
           })),
           dataModel: cloneDataModel(doc.snapshot?.dataModel ?? {}),
           surfaceIds: new Set(doc.snapshot?.surfaceIds ?? []),
-          previewMessages: [],
+          previewMessages: sharedPreviewMessages(doc),
           previewPayloadUrls: doc.snapshot?.previewPayloadUrls ?? null,
         };
         conversationHotStateMapRef.current.set(

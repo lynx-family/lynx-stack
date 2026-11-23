@@ -94,14 +94,14 @@ export async function* composeJevA2UI(
     const output = [
       content.surface,
       {
-        version: 'v0.9',
+        version: '1.0',
         updateDataModel: {
           surfaceId: content.surface.createSurface.surfaceId,
           value: content.data,
         },
       },
       {
-        version: 'v0.9',
+        version: '1.0',
         updateComponents: {
           surfaceId: content.surface.createSurface.surfaceId,
           components: cleaned,
@@ -303,7 +303,7 @@ async function selectContent(
   const create = (name: string): JevComponent => {
     let id: string;
     do {
-      id = `jev-${++serial}`;
+      id = `jev_${++serial}`;
     } while (
       existingIds.has(id) || components.some(component => component.id === id)
     );
@@ -411,7 +411,7 @@ async function selectContent(
       // Keep live input bindings/values private and stable. New controls get local state.
       if (
         prop.name === 'value'
-        && prop.schema?.oneOf?.some(branch => branch.properties?.path)
+        && prop.schema?.oneOf?.some(branch => branch.properties?.['@path'])
       ) {
         if (old && Object.hasOwn(old, 'value')) continue;
         const path = `/jev-input-${component.id}`;
@@ -423,7 +423,7 @@ async function selectContent(
         if (typeof initial === 'number') empty = 0;
         if (Array.isArray(initial)) empty = [];
         data[path.slice(1)] = empty;
-        component.value = { path };
+        component.value = { '@path': path };
         continue;
       }
       const choices = source.choices(prop, component.component);
@@ -497,10 +497,10 @@ async function selectContent(
       const text = component.text;
       return component.component === 'Text'
           && (typeof text === 'string'
-            || (isRecord(text) && typeof text.path === 'string'))
+            || (isRecord(text) && typeof text['@path'] === 'string'))
         ? [{
           id: component.id,
-          text: typeof text === 'string' ? text : { path: text.path },
+          text: typeof text === 'string' ? text : { '@path': text['@path'] },
         }]
         : [];
     }),
@@ -551,7 +551,7 @@ async function selectContent(
     layout: retention.layout,
     surface: previous?.surface
       ?? {
-        version: 'v0.9' as const,
+        version: '1.0' as const,
         createSurface: { surfaceId: 'main', catalogId: options.catalog.id },
       },
     data,

@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { accessibilityProps } from '../../react/accessibility.js';
 import type { GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Loading.css';
@@ -24,7 +25,10 @@ export function Loading(
   const variant = props.variant ?? 'inline';
 
   return (
-    <view className={`loading loading-${variant}`}>
+    <view
+      {...accessibilityProps(props)}
+      className={`loading loading-${variant}`}
+    >
       <view className='loading-skeleton loading-skeleton-primary' />
       {variant === 'block'
         ? <view className='loading-skeleton loading-skeleton-secondary' />

@@ -38,7 +38,7 @@ const reduceA2UIStream = A2UI_CHAT_ADAPTER.stream.reduce.bind(
 
 test('does not accept invalid A2UI text as a successful response', () => {
   const payload = {
-    text: JSON.stringify([{ version: 'v0.9', invalid: true }]),
+    text: JSON.stringify([{ version: '1.0', invalid: true }]),
     validation: { ok: false, errors: ['Invalid component'], messages: [] },
   };
   expect(() => A2UI_CHAT_ADAPTER.stream.fromJson(payload)).toThrow(
@@ -1481,15 +1481,15 @@ test('A2UI can boot an empty live preview before any model output', () => {
 
 test('A2UI final preview comparison ignores streaming placeholders but keeps real corrections', () => {
   const create = {
-    version: 'v0.9',
+    version: '1.0',
     createSurface: { surfaceId: 'main', catalogId: 'catalog' },
   };
   const data = {
-    version: 'v0.9',
+    version: '1.0',
     updateDataModel: { surfaceId: 'main', value: { private: 'kept' } },
   };
   const update = (components: unknown[]) => ({
-    version: 'v0.9',
+    version: '1.0',
     updateComponents: { surfaceId: create.createSurface.surfaceId, components },
   });
   const root = { id: 'root', component: 'Column', children: ['title'] };

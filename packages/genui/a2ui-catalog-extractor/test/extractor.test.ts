@@ -103,7 +103,17 @@ describe('extractCatalogComponents', () => {
         );
     }
     expect(readFullCatalogJson(outDir)).toEqual({
+      $id: 'catalog.json',
       catalogId: 'catalog.json',
+      $defs: {
+        anyComponent: {
+          oneOf: [{ $ref: '#/components/DemoCard' }, {
+            $ref: '#/components/DemoText',
+          }, { $ref: '#/components/QuickStartCard' }],
+        },
+        anyFunction: { not: {} },
+      },
+      protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
@@ -111,6 +121,21 @@ describe('extractCatalogComponents', () => {
       },
       functions: {},
     });
+  });
+
+  test('escapes component and function names in catalog JSON Pointer references', () => {
+    const name = 'section/~entry';
+    const catalog = createA2UICatalog({
+      catalogId: 'https://example.com/catalog.json',
+      components: { [name]: { type: 'object' } },
+      functions: [{ name, parameters: {}, returnType: 'boolean' }],
+    });
+    expect(catalog.$defs).toEqual({
+      anyComponent: { oneOf: [{ $ref: '#/components/section~1~0entry' }] },
+      anyFunction: { oneOf: [{ $ref: '#/functions/section~1~0entry' }] },
+    });
+    expect(Object.keys(catalog.components ?? {})).toEqual([name]);
+    expect(Object.keys(catalog.functions ?? {})).toEqual([name]);
   });
 
   test('creates a full catalog from TSX-extracted components', async () => {
@@ -139,11 +164,18 @@ describe('extractCatalogComponents', () => {
           returnType: 'string',
         },
       ],
-      theme: {
-        accentColor: { type: 'string' },
-      },
     })).toEqual({
+      $id: 'https://example.com/catalog.json',
       catalogId: 'https://example.com/catalog.json',
+      $defs: {
+        anyComponent: {
+          oneOf: [{ $ref: '#/components/DemoCard' }, {
+            $ref: '#/components/DemoText',
+          }, { $ref: '#/components/QuickStartCard' }],
+        },
+        anyFunction: { oneOf: [{ $ref: '#/functions/formatDisplayValue' }] },
+      },
+      protocolVersion: '1.0',
       components: {
         DemoCard: expectedCatalogs['DemoCard']!['DemoCard'],
         DemoText: expectedCatalogs['DemoText']!['DemoText'],
@@ -153,8 +185,9 @@ describe('extractCatalogComponents', () => {
         formatDisplayValue: {
           type: 'object',
           description: 'Format a raw value for display.',
+          returnType: 'string',
           properties: {
-            call: {
+            '@call': {
               const: 'formatDisplayValue',
             },
             args: {
@@ -165,16 +198,9 @@ describe('extractCatalogComponents', () => {
               required: ['value'],
               additionalProperties: false,
             },
-            returnType: {
-              const: 'string',
-            },
           },
-          required: ['call', 'args'],
-          unevaluatedProperties: false,
+          required: ['@call', 'args'],
         },
-      },
-      theme: {
-        accentColor: { type: 'string' },
       },
     });
   });
@@ -219,7 +245,12 @@ describe('extractCatalogComponents', () => {
       { type: 'number', enum: [2] },
       { type: 'number', enum: [3] },
     ]);
-    expect(a!.schema.required).toEqual(['label', 'tone', 'columns']);
+    expect(a!.schema.required).toEqual([
+      'component',
+      'label',
+      'tone',
+      'columns',
+    ]);
     expect(project).toEqual(original);
   });
 
@@ -243,27 +274,37 @@ describe('extractCatalogComponents', () => {
     )
       .toEqual({
         CliBadge: {
+          type: 'object',
           properties: {
+            component: { const: 'CliBadge' },
             label: {
               type: 'string',
               description: 'Badge label.',
             },
           },
-          required: ['label'],
+          required: ['component', 'label'],
           description: 'CLI badge fixture.',
         },
       });
     expect(readFullCatalogJson(path.join(cwd, 'catalog-out'))).toEqual({
+      $id: 'catalog.json',
       catalogId: 'catalog.json',
+      $defs: {
+        anyComponent: { oneOf: [{ $ref: '#/components/CliBadge' }] },
+        anyFunction: { not: {} },
+      },
+      protocolVersion: '1.0',
       components: {
         CliBadge: {
+          type: 'object',
           properties: {
+            component: { const: 'CliBadge' },
             label: {
               type: 'string',
               description: 'Badge label.',
             },
           },
-          required: ['label'],
+          required: ['component', 'label'],
           description: 'CLI badge fixture.',
         },
       },
@@ -283,7 +324,7 @@ describe('extractCatalogComponents', () => {
       'https://cdn.example.com/a2ui/catalog.json',
     ], fixtureDir)).resolves.toBe(0);
 
-    expect(readFullCatalogJson(outDir)['catalogId']).toBe(
+    expect(readFullCatalogJson(outDir)['$id']).toBe(
       'https://cdn.example.com/a2ui/catalog.json',
     );
   });

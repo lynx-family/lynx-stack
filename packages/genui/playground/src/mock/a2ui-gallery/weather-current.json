@@ -3,56 +3,62 @@
   "description": "Example of weather current demonstrating templating and string formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-weather-current",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-weather-current",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["temp-row", "location", "description", "forecast-row"],
+            "children": [
+              "temp_row",
+              "location",
+              "description",
+              "forecast_row"
+            ],
             "align": "center"
           },
           {
-            "id": "temp-row",
+            "id": "temp_row",
             "component": "Row",
-            "children": ["temp-high", "temp-low"],
+            "children": [
+              "temp_high",
+              "temp_low"
+            ],
             "align": "start"
           },
           {
-            "id": "temp-high",
+            "id": "temp_high",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "${/tempHigh}°"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h1"
           },
           {
-            "id": "temp-low",
+            "id": "temp_low",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "${/tempLow}°"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h2"
           },
@@ -60,7 +66,7 @@
             "id": "location",
             "component": "Text",
             "text": {
-              "path": "/location"
+              "@path": "/location"
             },
             "variant": "h3"
           },
@@ -68,57 +74,59 @@
             "id": "description",
             "component": "Text",
             "text": {
-              "path": "/description"
+              "@path": "/description"
             },
             "variant": "caption"
           },
           {
-            "id": "forecast-row",
+            "id": "forecast_row",
             "component": "Row",
             "children": {
               "path": "/forecast",
-              "componentId": "forecast-day-template"
+              "componentId": "forecast_day_template"
             },
             "justify": "spaceAround"
           },
           {
-            "id": "forecast-day-template",
+            "id": "forecast_day_template",
             "component": "Column",
-            "children": ["day-name", "day-icon", "day-temp"],
+            "children": [
+              "day_name",
+              "day_icon",
+              "day_temp"
+            ],
             "align": "center"
           },
           {
-            "id": "day-name",
+            "id": "day_name",
             "component": "Text",
             "text": {
-              "call": "formatDate",
+              "@call": "formatDate",
               "args": {
                 "value": {
-                  "path": "date"
+                  "@path": "date"
                 },
                 "format": "E"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           },
           {
-            "id": "day-icon",
+            "id": "day_icon",
             "component": "Text",
             "text": {
-              "path": "icon"
+              "@path": "icon"
             },
             "variant": "h3"
           },
           {
-            "id": "day-temp",
+            "id": "day_temp",
             "component": "Text",
             "text": {
-              "call": "formatString",
+              "@call": "formatString",
               "args": {
                 "value": "${temp}°"
-              },
-              "returnType": "string"
+              }
             },
             "variant": "caption"
           }
@@ -126,7 +134,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-weather-current",
         "value": {

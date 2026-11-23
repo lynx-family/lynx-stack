@@ -16,4 +16,5 @@ export interface WorkerStartMessage {
   nativeModulesMap: NativeModulesMap;
   napiModulesMap: NapiModulesMap;
   entryTemplateUrl: string;
+  isProfiling: boolean;
 }

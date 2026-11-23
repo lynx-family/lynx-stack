@@ -47,7 +47,15 @@ export function flushDelayedRunOnBackgroundFunctions(): void {
 }
 
 export function clearDelayedRunOnBackgroundFunctions(): void {
-  globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl?.clearDelayedBackgroundFunctions?.();
+  const impl = globalThis.lynxWorkletImpl;
+  if (!impl) {
+    return;
+  }
+  const manager = impl._jsFunctionLifecycleManager;
+  if (manager?.recreate) {
+    impl._jsFunctionLifecycleManager = manager.recreate();
+  }
+  impl._runOnBackgroundDelayImpl?.clearDelayedBackgroundFunctions?.();
 }
 
 /**

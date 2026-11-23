@@ -106,6 +106,46 @@ function resolveExternal(
 }
 
 describe('re-evaluation entry support', () => {
+  it('registers background-only eager view snapshots before returning exports', async () => {
+    const fixtureDir = path.join(__dirname, './fixtures/background-view')
+    const distRoot = path.join(fixtureDir, 'dist')
+    await build(defineExternalBundleRslibConfig({
+      id: 'background-view',
+      source: { entry: { component: path.join(fixtureDir, 'eager.ts') } },
+      output: {
+        distPath: { root: distRoot },
+        minify: false,
+        globalObject: 'lynx',
+        externalsPresets: { reactlynx: true },
+      },
+      plugins: [pluginReactLynx()],
+    }, { enableJsBytecode: false }))
+
+    const decoded = await decodeTemplate(
+      path.join(distRoot, 'background-view.lynx.bundle'),
+    )
+    const snapshots: string[] = []
+    const internal = {
+      snapshotCreatorMap: {} as Record<string, (id: string) => void>,
+      createSnapshot: (id: string) => snapshots.push(id),
+    }
+    const result = await runInNewContext(
+      decoded['custom-sections']['component__main-thread']!,
+      {
+        lynx: {
+          [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: {
+            ReactLynx: { ReactInternal: internal },
+          },
+        },
+      },
+    ) as { marker: number }
+    expect(result.marker).toBe(42)
+    for (const [id, create] of Object.entries(internal.snapshotCreatorMap)) {
+      create(id)
+    }
+    expect(snapshots.length).toBeGreaterThan(0)
+  })
+
   it('does not let external libraries mark the consumer entry', async () => {
     const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
     const distRoot = path.join(fixtureDir, 'dist', 're-eval-entry-support')

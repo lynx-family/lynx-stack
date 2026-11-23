@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getFromWorkletRefMap,
+  initWorkletRef,
   isHydratedWorkletValue,
   removeValueFromWorkletRefMap,
   updateWorkletRefInitValueChanges,
@@ -684,5 +685,20 @@ describe('WorkletRef', () => {
     expect(getFromWorkletRefMap({ _wvid: 2 }).current).toBe(
       'background-thread-init-2',
     );
+  });
+
+  it('keeps ref maps isolated per RefImpl instance', () => {
+    const first = initWorkletRef();
+    const second = initWorkletRef();
+
+    first.updateWorkletRefInitValueChanges([[1, 'first-value']]);
+    second.updateWorkletRefInitValueChanges([[1, 'second-value']]);
+    first.updateWorkletRef({ _wvid: -1 }, 'first-element');
+    second.clearFirstScreenWorkletRefMap();
+
+    expect(first._workletRefMap[1].current).toBe('first-value');
+    expect(second._workletRefMap[1].current).toBe('second-value');
+    expect(first._firstScreenWorkletRefMap[-1].current.element).toBe('first-element');
+    expect(second._firstScreenWorkletRefMap).toEqual({});
   });
 });

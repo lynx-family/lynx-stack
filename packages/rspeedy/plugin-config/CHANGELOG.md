@@ -1,5 +1,17 @@
 # @lynx-js/config-rsbuild-plugin
 
+## 0.3.0
+
+### Minor Changes
+
+- Upgrade `@lynx-js/type-config` to `4.4.0` and support `preferredFps` in `pluginLynxConfig`. ([#4366](https://github.com/lynx-family/lynx-stack/pull/4366))
+
+  **BREAKING CHANGE**: `pluginLynxConfig` rejects `enableNewIntersectionObserver`. Remove it from your configuration. If your app still relies on the legacy observer implementation in an older Lynx SDK, keep using the previous plugin release until you can upgrade the SDK.
+
+### Patch Changes
+
+- Add `@lynx-js/rspeedy` `^0.19.0` to the peer dependency range. ([#4041](https://github.com/lynx-family/lynx-stack/pull/4041))
+
 ## 0.2.5
 
 ### Patch Changes

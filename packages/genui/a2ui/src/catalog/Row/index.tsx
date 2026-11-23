@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { NodeRenderer } from '../../react/A2UIRenderer.jsx';
-import type { GenericComponentProps } from '../../store/types.js';
+import { accessibilityProps } from '../../react/accessibility.js';
+import type { ChildList, GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Row.css';
 
@@ -12,8 +13,10 @@ import '../../../styles/catalog/Row.css';
  * @a2uiCatalog Row
  */
 export interface RowProps extends GenericComponentProps {
+  /** Relative space allocated by a Row or Column parent. */
+  weight?: number;
   /** Static child IDs array or template object. */
-  children: string[] | { componentId: string; path: string };
+  children: ChildList;
   justify?:
     | 'start'
     | 'center'
@@ -38,6 +41,7 @@ export function Row(props: RowProps): import('@lynx-js/react').ReactNode {
 
   return (
     <view
+      {...accessibilityProps(props)}
       className={`row alignment-${align} distribution-${justify}`}
     >
       {explicitChildren.map((childId: string) => {

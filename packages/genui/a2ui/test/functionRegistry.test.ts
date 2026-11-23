@@ -44,9 +44,15 @@ describe('FunctionRegistry', () => {
     registry.register({
       name: 'schemed',
       impl: () => 0,
-      definition: { parameters: { type: 'object' } },
+      definition: {
+        name: 'schemed',
+        returnType: 'number',
+        parameters: { type: 'object' },
+      },
     });
     expect(registry.list()[0]!.definition).toEqual({
+      name: 'schemed',
+      returnType: 'number',
       parameters: { type: 'object' },
     });
   });

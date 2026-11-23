@@ -99,6 +99,20 @@ export function applyLoaders(
   api: RsbuildPluginAPI,
   options: Required<PluginReactLynxOptions>,
 ): void {
+  api.modifyEnvironmentConfig({
+    order: 'post',
+    handler(config) {
+      const coreJs = /[\\/]node_modules[\\/]core-js[\\/]/
+      if (
+        config.output.polyfill !== 'off'
+        && !config.source.exclude?.some(rule =>
+          rule instanceof RegExp && rule.source === coreJs.source
+        )
+      ) {
+        config.source.exclude = [...(config.source.exclude ?? []), coreJs]
+      }
+    },
+  })
   api.modifyBundlerChain((chain, { CHAIN_ID, environment }) => {
     const rule = chain.module.rule(CHAIN_ID.RULE.JS)
     const jsMainRule = rule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
@@ -158,7 +172,9 @@ export function applyLoaders(
               jsc,
               env: {
                 ...swcLoaderOptions.env,
-                targets: MAIN_THREAD_ENV_TARGETS,
+                targets: environment.config.output.polyfill === 'off'
+                  ? MAIN_THREAD_ENV_TARGETS
+                  : { chrome: '92' },
                 // Lower `let`/`const` to `var`; QuickJS parses `var` faster.
                 // Spreading `swcLoaderOptions.env` carries `exclude` through,
                 // so the background opt-out also applies here.

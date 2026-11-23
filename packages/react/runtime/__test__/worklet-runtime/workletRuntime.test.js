@@ -1,7 +1,7 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Element } from '../../src/worklet-runtime/api/element';
 import { initApiEnv } from '../../src/worklet-runtime/api/lynxApi';
@@ -14,6 +14,11 @@ import {
 } from '../../src/worklet-runtime/workletRef';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
+afterEach(() => {
+  globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.dispose();
+  delete globalThis.lynxWorkletImpl;
+});
+
 describe('Worklet', () => {
   const consoleMock = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
@@ -21,6 +26,7 @@ describe('Worklet', () => {
     globalThis.SystemInfo = {
       lynxSdkVersion: '2.16',
     };
+    globalThis.lynxWorkletImpl?._jsFunctionLifecycleManager?.dispose();
     delete globalThis.lynxWorkletImpl;
     globalThis.lynx = {
       requestAnimationFrame: vi.fn(),
@@ -807,4 +813,50 @@ it('requestAnimationFrame should throw error before 2.16 2', async () => {
   };
   globalThis.runWorklet(worklet, [1]);
   expect(fn).toBeCalled();
+});
+
+it('preserves an already-bound handle execId and skips unbound handles without a root execId', () => {
+  globalThis.SystemInfo = { lynxSdkVersion: '2.16' };
+  initWorklet();
+  globalThis.registerWorklet('main-thread', 'capture-handles', function() {
+    return this._jsFn;
+  });
+
+  const prebound = { _jsFnId: 1, _execId: 4 };
+  globalThis.lynxWorkletImpl._jsFunctionLifecycleManager.addRef(4, prebound);
+  const unbound = { _jsFnId: 2 };
+
+  // Root without `_execId` preserves `prebound._execId` and leaves `unbound` uncounted.
+  const withoutExec = { _wkltId: 'capture-handles', _jsFn: { prebound, unbound } };
+  globalThis.runWorklet(withoutExec, []);
+  expect(prebound._execId).toBe(4);
+  expect(unbound._execId).toBeUndefined();
+  expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager.execIdRefCount.get(4)).toBe(1);
+
+  // Another root with `_execId = 9` still does not overwrite `prebound._execId`.
+  const withOtherExec = { _wkltId: 'capture-handles', _execId: 9, _jsFn: { prebound } };
+  globalThis.runWorklet(withOtherExec, []);
+  expect(prebound._execId).toBe(4);
+  expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager.execIdRefCount.get(4)).toBe(1);
+  expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager.execIdRefCount.get(9)).toBeUndefined();
+
+  // A hydrated handle from an older reload epoch must not register its retired `_execId` before re-hydration.
+  const staleEpochHandle = { _jsFnId: 3, _execId: 7, _isFirstScreen: false, _hydratedEpoch: 0 };
+  globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl.clearDelayedBackgroundFunctions();
+  globalThis.runWorklet({ _wkltId: 'capture-handles', _jsFn: { staleEpochHandle } }, []);
+  expect(globalThis.lynxWorkletImpl._jsFunctionLifecycleManager.execIdRefCount.get(7)).toBeUndefined();
+
+  // Short-circuit checks: a prebound handle without `_hydratedEpoch` must neither read root `_execId`
+  // nor dereference `_runOnBackgroundDelayImpl.epoch`.
+  globalThis.registerWorklet('main-thread', 'capture-arg-handle', function(cb) {
+    return cb._execId;
+  });
+  const args = [{ _jsFnId: 4, _execId: 12 }];
+  Object.defineProperty(args, '_execId', {
+    get() {
+      throw new Error('root _execId should not be read for prebound handle');
+    },
+  });
+  delete globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl;
+  expect(globalThis.runWorklet({ _wkltId: 'capture-arg-handle' }, args)).toBe(12);
 });

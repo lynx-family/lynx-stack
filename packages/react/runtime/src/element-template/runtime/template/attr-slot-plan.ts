@@ -35,6 +35,12 @@ export const __etAttrPlanMap = Object.create(null) as EtAttrPlanMap;
 
 export type MainThreadDynamicAttrKind = 'mt-event' | 'mt-ref' | 'gesture' | 'spread';
 
+const TYPED_LIST_TEMPLATE_TYPE = 'list';
+const TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX = 0;
+const TYPED_LIST_DYNAMIC_SLOT_KINDS: ReadonlyMap<number, MainThreadDynamicAttrKind> = new Map([
+  [TYPED_ELEMENT_ATTRIBUTES_SLOT_INDEX, 'spread'],
+]);
+
 const mainThreadDynamicAttrSlotKinds = new Map<
   string,
   ReadonlyMap<number, MainThreadDynamicAttrKind> | null
@@ -43,6 +49,9 @@ const mainThreadDynamicAttrSlotKinds = new Map<
 export function getMainThreadDynamicAttrSlotKinds(
   templateType: string,
 ): ReadonlyMap<number, MainThreadDynamicAttrKind> | undefined {
+  if (templateType === TYPED_LIST_TEMPLATE_TYPE) {
+    return TYPED_LIST_DYNAMIC_SLOT_KINDS;
+  }
   const cached = mainThreadDynamicAttrSlotKinds.get(templateType);
   if (cached !== undefined) {
     return cached ?? undefined;

@@ -125,7 +125,7 @@ describe('Background Preact render', () => {
     }
   });
 
-  it('emits incremental typed list ops for Preact multi-mutation renders', () => {
+  it('emits structural list ops for Preact multi-mutation renders', () => {
     const updateEvents: ElementTemplateUpdateCommitContext[] = [];
     const onUpdate = (event: { data: unknown }) => {
       updateEvents.push(parseElementTemplateUpdateEventPayload(event.data));
@@ -178,7 +178,7 @@ describe('Background Preact render', () => {
     // Preact 11's LIS-based children diff moves `c` in front of the kept `a`
     // (v10 moved `a` behind `c`); the resulting list state is identical.
     expect(formatted).toEqual([
-      { op: 'removeTypedListItem', targetId: listId, itemId: bId, removedSubtreeHandleIds: [bId] },
+      { op: 'removeNode', targetId: listId, childSlotIndex: 0, childId: bId, removedSubtreeHandleIds: [bId] },
       {
         op: 'createTemplate',
         handleId: expect.any(Number),
@@ -186,17 +186,15 @@ describe('Background Preact render', () => {
         bundleUrl: null,
         attributeSlots: [],
         childSlots: [],
+        options: { __listItemPlatformInfo: { 'item-key': 'd', 'full-span': true } },
       },
       {
-        op: 'insertTypedListItem',
+        op: 'insertNode',
         targetId: listId,
-        item: {
-          __etHandleRef: expect.any(Number),
-          type: '_et_list_item',
-          platformInfo: { 'item-key': 'd', 'full-span': true },
-          subtreeHandleIds: [],
-        },
-        beforeId: aId,
+        childSlotIndex: 0,
+        childId: expect.any(Number),
+        referenceId: aId,
+        attachedSubtreeHandleIds: null,
       },
       {
         op: 'updateTypedListItem',
@@ -205,20 +203,16 @@ describe('Background Preact render', () => {
           __etHandleRef: cId,
           type: '_et_list_item',
           platformInfo: { 'item-key': 'c', 'full-span': true },
-          subtreeHandleIds: [],
+          subtreeHandleIds: null,
         },
       },
-      { op: 'removeTypedListItem', targetId: listId, itemId: cId, removedSubtreeHandleIds: [] },
       {
-        op: 'insertTypedListItem',
+        op: 'insertNode',
         targetId: listId,
-        item: {
-          __etHandleRef: cId,
-          type: '_et_list_item',
-          platformInfo: { 'item-key': 'c', 'full-span': true },
-          subtreeHandleIds: [],
-        },
-        beforeId: aId,
+        childSlotIndex: 0,
+        childId: cId,
+        referenceId: aId,
+        attachedSubtreeHandleIds: null,
       },
       {
         op: 'updateTypedListItem',
@@ -227,12 +221,12 @@ describe('Background Preact render', () => {
           __etHandleRef: aId,
           type: '_et_list_item',
           platformInfo: { 'item-key': 'a', 'full-span': true },
-          subtreeHandleIds: [],
+          subtreeHandleIds: null,
         },
       },
     ]);
     expect(
-      (formatted[2] as { item: { __etHandleRef: number } }).item.__etHandleRef,
+      (formatted[2] as { childId: number }).childId,
     ).toBe((formatted[1] as { handleId: number }).handleId);
   });
 

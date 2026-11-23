@@ -12,6 +12,33 @@ import {
 } from '../src/utils/getESVersionTarget.js'
 
 describe('pluginSwc', () => {
+  test.each(['off', 'usage', 'entry'] as const)(
+    'polyfill %s controls targets and core-js exclusion',
+    async polyfill => {
+      const rsbuild = await createStubRsbuild({
+        output: { polyfill },
+        source: { exclude: [/vendor/] },
+        tools: { swc: { env: { exclude: ['transform-block-scoping'] } } },
+      })
+      const options = getLoaderOptions<Rspack.SwcLoaderOptions>(
+        await rsbuild.unwrapConfig(),
+        'builtin:swc-loader',
+      )
+      expect(options?.env?.targets).toEqual(
+        polyfill === 'off' ? ES_ENV_TARGETS : { chrome: '92' },
+      )
+      expect(options?.env?.exclude).toContain('transform-block-scoping')
+      expect(options?.env?.exclude).toEqual(['transform-block-scoping'])
+      const excludes = rsbuild.getNormalizedConfig().environments['lynx']!
+        .source.exclude ?? []
+      expect(excludes[0]).toEqual(/vendor/)
+      expect(excludes.some(rule =>
+        rule instanceof RegExp && rule.test(
+          '/project/node_modules/core-js/modules/es.object.has-own.js',
+        )
+      )).toBe(polyfill !== 'off')
+    },
+  )
   test('defaults', async () => {
     const rsbuild = await createStubRsbuild({ mode: 'production' })
 
@@ -40,7 +67,7 @@ describe('pluginSwc', () => {
     })
 
     await expect(rsbuild.unwrapConfig()).rejects.toThrowError(
-      /Rspeedy manages the SWC compilation target via `env`/,
+      /The Lynx Rsbuild plugin manages the SWC compilation target via `env`/,
     )
   })
 

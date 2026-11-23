@@ -71,12 +71,9 @@ describe('Element Template synchronous components', () => {
     expect(seen).toEqual([['arg', 'provided'], ['use', 'provided']]);
   });
 
-  it.each(['direct', 'spread'])('prepares %s page refs from typed attributes', mode => {
+  it('prepares page refs from typed attributes', () => {
     const ref = () => {};
-    const attributes = mode === 'direct'
-      ? { id: 'screen', ref }
-      : { id: 'screen', ...{ ref } };
-    const vnode = h(__ElementTemplatePage, { attributes });
+    const vnode = h(__ElementTemplatePage, { attributes: { id: 'screen', ref } });
 
     expect(renderToElementTemplate(vnode).pageAttributes).toEqual({ id: 'screen', ref: '0-0' });
   });

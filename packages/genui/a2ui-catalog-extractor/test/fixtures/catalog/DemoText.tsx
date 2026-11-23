@@ -9,7 +9,7 @@
  */
 export interface DemoTextProps {
   /** Literal text or data path binding. */
-  text: string | { path: string };
+  text: string | { '@path': string };
   /** Text presentation variant. */
   variant?: 'body' | 'caption';
 }

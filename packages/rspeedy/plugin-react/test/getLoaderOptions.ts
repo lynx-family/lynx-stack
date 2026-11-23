@@ -65,9 +65,19 @@ export function getLoaderOptions<T>(
         if (typeof u === 'string') {
           return false
         }
-        if (check(u.loader)) {
-          result = u.options as T
-          return true
+        if (typeof u === 'object' && u !== null && 'loader' in u) {
+          // `loader` is a Rspack type alias eslint cannot resolve on its own.
+          const loaderRecord = u as unknown as {
+            loader?: unknown
+            options?: T
+          }
+          if (
+            typeof loaderRecord.loader === 'string'
+            && check(loaderRecord.loader)
+          ) {
+            result = loaderRecord.options ?? null
+            return true
+          }
         }
         return false
       })

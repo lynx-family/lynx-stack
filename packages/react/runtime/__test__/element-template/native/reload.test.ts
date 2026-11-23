@@ -79,7 +79,6 @@ vi.mock('../../../src/element-template/runtime/template/handle.js', async import
 
 vi.mock('../../../src/element-template/runtime/list/list.js', () => ({
   destroyAllElementTemplateListStates: vi.fn(),
-  flushInitialElementTemplateListUpdates: vi.fn(() => []),
 }));
 
 vi.mock('../../../src/element-template/background/destroy.js', () => ({
@@ -511,12 +510,10 @@ describe('ElementTemplate reloadMainThread', () => {
             childSlots: [null, [{
               tag: 'list',
               uid: -4,
-              options: {
-                listChildren: [{
-                  templateKey: '_et_first_child',
-                  uid: -2,
-                }],
-              },
+              childSlots: [[{
+                templateKey: '_et_first_child',
+                uid: -2,
+              }]],
             }]],
           },
           {

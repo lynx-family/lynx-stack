@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-rsbuild-plugin",
-  "version": "0.22.2",
+  "version": "0.22.4",
   "description": "A rsbuild plugin for ReactLynx",
   "keywords": [
     "rsbuild",
@@ -59,7 +59,7 @@
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-sass": "2.0.1",
-    "@rsbuild/plugin-typed-css-modules": "1.2.4",
+    "@rsbuild/plugin-typed-css-modules": "1.3.0",
     "@rstest/core": "catalog:rstest",
     "rsbuild-plugin-arethetypeswrong": "0.4.0",
     "rsbuild-plugin-publint": "1.0.0",
@@ -71,7 +71,7 @@
   },
   "peerDependencies": {
     "@lynx-js/react": "^0.128.0 || ^0.129.0",
-    "@lynx-js/rspeedy": "^0.17.0 || ^0.18.0",
+    "@lynx-js/rspeedy": "^0.17.0 || ^0.18.0 || ^0.19.0",
     "@rsbuild/core": "^2.0.0"
   },
   "peerDependenciesMeta": {

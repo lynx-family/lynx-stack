@@ -4,6 +4,8 @@ applyTo: "packages/genui/playground/**"
 
 # GenUI Playground
 
+When replaying a complete A2UI preview, create a fresh message store and remount `A2UI` with a new key. Clearing and immediately refilling the existing store can be batched into one render, leaving the renderer's processed-message offset pointing past the replay and preserving stale Loading nodes.
+
 Maintain `public/lynx-genui-stream.html` as one static HTML with inline JavaScript and CSS. Keep the two-panel source editor and phone/wide preview, independent protocol/library/case/inline-mode drafts, copy/download, immediate or simulated streaming rendering, stop and reset; omit catalogs, system prompts and agent/transport configuration. Do not add a separate `src/stream/` entry or custom packaging; the existing publicDir copies this page unchanged and its renderer loads from the same deployment.
 
 Expose supported components through a link to the selected protocol's hosted Playground catalog or the Chat library documentation, without embedding the catalog in the standalone preview. Do not direct Chat users to the Stack catalog's different positional contracts. Keep the source and preview title bars at the same height. Simulated streaming waits for runtime readiness, sends A2UI messages in order and cumulative OpenUI text with `isStreaming: true`, then marks only a completed reply as final. Cancel playback on reset or protocol changes and clear unfinished OpenUI text on stop.

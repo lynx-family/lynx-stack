@@ -29,6 +29,11 @@ describe('resolveDynamic', () => {
 
   void beforeEach(() => {
     processor = new MessageProcessor();
+    processor.registerCatalog('test', { components: [], functions });
+    processor.processMessages([{
+      version: '1.0',
+      createSurface: { surfaceId, catalogId: 'test' },
+    }]);
   });
 
   test('resolves binding paths relative to the current data context', () => {
@@ -48,11 +53,11 @@ describe('resolveDynamic', () => {
     expect(
       resolveDynamicValue(
         processor,
-        { path: 'tempLow' },
+        { '@path': 'tempLow' },
         surfaceId,
         '/weather',
       ),
-    ).toBe(12);
+    ).toBe('12');
   });
 
   test('evaluates nested function calls when functions are provided', () => {
@@ -60,9 +65,8 @@ describe('resolveDynamic', () => {
       resolveDynamicValue(
         processor,
         {
-          call: 'add',
-          args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
-          returnType: 'number',
+          '@call': 'add',
+          args: { a: 1, b: { '@call': 'identity', args: { value: 2 } } },
         },
         surfaceId,
         undefined,
@@ -79,16 +83,14 @@ describe('resolveDynamic', () => {
       resolveDynamicValue(
         processor,
         {
-          call: 'add',
-          args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
-          returnType: 'number',
+          '@call': 'add',
+          args: { a: 1, b: { '@call': 'identity', args: { value: 2 } } },
         },
         surfaceId,
       ),
     ).toEqual({
-      call: 'add',
-      args: { a: 1, b: { call: 'identity', args: { value: 2 } } },
-      returnType: 'number',
+      '@call': 'add',
+      args: { a: 1, b: { '@call': 'identity', args: { value: 2 } } },
     });
   });
 });

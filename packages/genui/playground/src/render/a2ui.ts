@@ -9,8 +9,10 @@ import { lazyComponentDemo } from '../mock/basic/lazy-component.js';
 import { mcpAppDemo } from '../mock/basic/mcp-app.js';
 
 interface UserActionMessage {
-  type: 'A2UI_USER_ACTION';
-  action: unknown;
+  type: 'A2UI_USER_ACTION' | 'A2UI_PROTOCOL_MESSAGE';
+  action?: unknown;
+  message?: unknown;
+  metadata?: unknown;
 }
 
 interface MessagesMessage {
@@ -169,6 +171,10 @@ export function A2UIRender() {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'A2UI_PLAYBACK_SYNC', data }, '*');
         }
+      } else if (name === 'A2UI_PROTOCOL_MESSAGE') {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: name, ...(data as object) }, '*');
+        }
       } else if (name === 'A2UI_RUNTIME_READY') {
         if (window.parent && window.parent !== window) {
           const messagesUrl = initDataRef.current?.messagesUrl;
@@ -209,6 +215,7 @@ export function A2UIRender() {
         | MessagesMessage;
       switch (payload.type) {
         case 'A2UI_USER_ACTION':
+        case 'A2UI_PROTOCOL_MESSAGE':
           if (window.parent && window.parent !== window) {
             window.parent.postMessage(payload, '*');
           }

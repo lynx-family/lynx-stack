@@ -35,7 +35,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "vaul": "^1.1.2",
-    "xml-formatter": "^3.7.0"
+    "xml-formatter": "^3.7.1"
   },
   "devDependencies": {
     "@lynx-js/config-rsbuild-plugin": "workspace:*",
@@ -44,7 +44,7 @@
     "@lynx-js/rspeedy": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rsbuild/plugin-react": "2.1.0",
+    "@rsbuild/plugin-react": "2.1.1",
     "@rstest/core": "catalog:rstest",
     "@types/qrcode": "^1.5.6",
     "@types/react": "npm:@types/react@^19.2.18",

@@ -39,8 +39,8 @@
  */
 
 import * as CSS from '@lynx-js/css-serializer';
+import { parseLynxXML } from '@lynx-js/lynx-xml/parser';
 
-import { parseLynxXML } from '../common/xml/parseLynxXML.js';
 import { encode, type TasmJSONInfo } from './webEncoder.js';
 
 /**

@@ -63,7 +63,7 @@ function createNativeJob(maxRepairAttempts = 2) {
 function a2uiSource(matchedCore = true): string {
   return JSON.stringify([
     {
-      version: 'v0.9',
+      version: '1.0',
       createSurface: {
         surfaceId: 'main',
         catalogId: resolveBenchCatalog('Full Catalog').id
@@ -71,7 +71,7 @@ function a2uiSource(matchedCore = true): string {
       },
     },
     {
-      version: 'v0.9',
+      version: '1.0',
       updateComponents: {
         surfaceId: 'main',
         components: [{

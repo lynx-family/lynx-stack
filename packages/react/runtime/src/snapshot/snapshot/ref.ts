@@ -9,7 +9,10 @@ import type { OrdinaryRef } from '../../core/ref.js';
 import { RefProxy } from '../lifecycle/ref/delay.js';
 import type { SnapshotInstance } from '../snapshot/snapshot.js';
 
-type RefToken = [snapshotInstanceId: number, expIndex: number];
+type RefToken = [
+  refAttr: [snapshotInstanceId: number, expIndex: number],
+  snapshotType: string | undefined,
+];
 
 const refEffectQueue = /*#__PURE__*/ new OrdinaryRefEffectQueue<RefProxy, RefToken>();
 
@@ -85,16 +88,16 @@ function applyQueuedRefs(): void {
   if (!refEffectQueue.hasPending()) {
     return;
   }
-  refEffectQueue.flush(value => new RefProxy(value));
+  refEffectQueue.flush(([refAttr, snapshotType]) => new RefProxy(refAttr, snapshotType));
 }
 
 function queueRefAttrUpdate(
   oldRef: Ref | null | undefined,
   newRef: Ref | null | undefined,
-  snapshot: { readonly __id: number },
+  snapshot: { readonly __id: number; readonly type?: string },
   expIndex: number,
 ): void {
-  refEffectQueue.queue(oldRef, newRef, snapshot, expIndex, [snapshot.__id, expIndex]);
+  refEffectQueue.queue(oldRef, newRef, snapshot, expIndex, [[snapshot.__id, expIndex], snapshot.type]);
 }
 
 function clearQueuedRefs(): void {

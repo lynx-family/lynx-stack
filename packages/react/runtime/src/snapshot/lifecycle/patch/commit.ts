@@ -20,6 +20,7 @@
  */
 
 import { options } from 'preact';
+import type { VNode } from 'preact';
 
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -38,7 +39,7 @@ import {
 } from '../../../core/thread-function-call/main-thread.js';
 import { profileEnd, profileStart } from '../../../shared/profile.js';
 import { COMMIT } from '../../../shared/render-constants.js';
-import { hook, isEmptyObject } from '../../../utils.js';
+import { hook, isEmptyObject } from '../../../shared/utils.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { backgroundSnapshotInstanceManager } from '../../snapshot/backgroundSnapshot.js';
 import { applyQueuedRefs } from '../../snapshot/ref.js';
@@ -88,14 +89,35 @@ function takeGlobalPatchOptions(): GlobalPatchOptions {
   return res;
 }
 
+/**
+ * Delivers a collected commit and calls `finish` once it has been applied.
+ */
+type CommitTransport = (
+  vnode: VNode,
+  patchList: PatchList,
+  patchOptions: GlobalPatchOptions,
+  finish: () => void,
+) => void;
+
+const nativeTransport: CommitTransport = (_vnode, patchList, patchOptions, finish) => {
+  // Send the update to the native layer
+  lynx.getNativeApp().callLepusMethod(
+    LifecycleConstant.patchUpdate,
+    commitPatchUpdate(patchList, patchOptions),
+    finish,
+  );
+};
+
 let commitHookInstalled = false;
 let previousCommit: typeof options[typeof COMMIT];
+let commitTransport: CommitTransport = nativeTransport;
 
 /**
  * Replaces Preact's default commit hook with our custom implementation.
- * Calling it again is a no-op until {@link removeCommitHookForTesting} is called.
+ * Calling it again only replaces the transport until {@link removeCommitHookForTesting} is called.
  */
-function replaceCommitHook(): void {
+function replaceCommitHook(transport: CommitTransport = nativeTransport): void {
+  commitTransport = transport;
   if (commitHookInstalled) {
     return;
   }
@@ -172,10 +194,7 @@ function replaceCommitHook(): void {
       if (delayedRunOnMainThreadData.length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
-      const obj = commitPatchUpdate(patchList, patchOptions);
-
-      // Send the update to the native layer
-      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
+      commitTransport(vnode, patchList, patchOptions, () => {
         const commitTask = globalCommitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();
@@ -201,6 +220,7 @@ function removeCommitHookForTesting(): void {
     return;
   }
   commitHookInstalled = false;
+  commitTransport = nativeTransport;
   if (previousCommit) {
     options[COMMIT] = previousCommit;
     previousCommit = undefined;
@@ -273,6 +293,7 @@ export {
   globalCommitTaskMap,
   removeCommitHookForTesting,
   replaceCommitHook,
+  type CommitTransport,
   type PatchList,
   type PatchOptions,
 };

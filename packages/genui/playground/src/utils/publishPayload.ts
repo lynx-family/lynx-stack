@@ -46,6 +46,7 @@ export interface PublishedOpenUIPayload {
 
 export type PayloadStorageMethod =
   | 'a2ui'
+  | 'a2ui-express'
   | 'openui'
   | 'mcp-apps'
   | 'reactlynx'

@@ -1,16 +1,20 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { isRunOnBackgroundEnabled } from '../shared/version.js';
 import { Element } from './api/element.js';
-import type { ClosureValueType, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
+import type { ClosureValueType, JsFnHandle, RunWorkletOptions, Worklet, WorkletRefImpl } from './bindings/types.js';
 import { RunWorkletSource } from './bindings/types.js';
-import { initRunOnBackgroundDelay } from './delayRunOnBackground.js';
-import { delayExecUntilJsReady, initEventDelay } from './delayWorkletEvent.js';
+import { initEventDelay } from './delayWorkletEvent.js';
 import { initEomImpl } from './eomImpl.js';
 import { addEventMethodsIfNeeded } from './eventPropagation.js';
 import { hydrateCtx } from './hydrate.js';
-import { JsFunctionLifecycleManager, isRunOnBackgroundEnabled } from './jsFunctionLifecycle.js';
 import { isRealizedMainThreadObject } from './mainThreadObject.js';
+import {
+  JsFunctionLifecycleManager,
+  bindCapturedJsFnHandle,
+  initRunOnBackgroundDelay,
+} from './run-on-background/index.js';
 import { runRunOnMainThreadTask } from './runOnMainThread.js';
 import { mainThreadFlushLoopMark } from './utils/mainThreadFlushLoopGuard.js';
 import { profile } from './utils/profile.js';
@@ -74,7 +78,7 @@ function runWorklet(ctx: Worklet, params: ClosureValueType[], options?: RunWorkl
   }
 
   if ('_lepusWorkletHash' in ctx) {
-    delayExecUntilJsReady(ctx._lepusWorkletHash, params);
+    lynxWorkletImpl._eventDelayImpl.delayExecUntilJsReady(ctx._lepusWorkletHash, params);
     return;
   }
   return runWorkletImpl(ctx, params, options);
@@ -215,11 +219,7 @@ const transformWorkletInner = (
     }
     const isJsFn = '_jsFnId' in subObj;
     if (isJsFn) {
-      (subObj as Record<string, ClosureValueType>)['_execId'] = (ctx as Worklet)._execId;
-      lynxWorkletImpl._jsFunctionLifecycleManager?.addRef(
-        (ctx as Worklet)._execId!,
-        subObj,
-      );
+      bindCapturedJsFnHandle(subObj as JsFnHandle, ctx as Worklet);
       continue;
     }
   }

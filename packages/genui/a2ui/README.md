@@ -2,7 +2,7 @@
 
 English | [简体中文](./README_zh.md)
 
-`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v0.9. It
+`@lynx-js/genui/a2ui` is the ReactLynx client runtime for A2UI v1.0 only. It
 consumes validated A2UI server-to-client JSON messages and renders trusted
 ReactLynx components in your app.
 
@@ -20,6 +20,30 @@ If you have never used A2UI before, think of it this way:
 
 The result is not arbitrary generated code. It is a ReactLynx UI tree assembled
 from a trusted catalog.
+
+See the [current standard migration audit](./docs/protocol-1.0-audit.md) for wire, RPC, and validation changes.
+
+## Protocol versions
+
+The server and client support only A2UI `v1.0`. Older or versionless protocol
+messages are rejected. Send renderer events with `version: "1.0"`; action
+requests use the `action` envelope. Streams using 0.9 or the earlier 1.0 draft must be regenerated. Dynamic values use `@path`/`@call`, and components use `@catalogId`, `@checks`, `@metadata`, and `@accessibility`.
+The client supports inline `createSurface.components` and `dataModel`, typed
+subtree replacement, `null` deletion, and structured validation results.
+Styling stays in the host app and the Lynx component catalog.
+
+Use `onAction` for the existing action payload callback. To transport v1.0 wire
+events, use `onMessage(message, metadata)` and push incoming messages into
+`messageStore`. Choose one callback for sending actions to avoid duplicate requests.
+Set `catalogId` when using a custom catalog; it defaults to the Lynx catalog ID.
+Renderer functions accept agent calls only when their manifest declares
+`allowedCallers: 'agentOnly'` or `'rendererOrAgent'`.
+
+The server accepts v1.0 action envelopes at `/a2ui/action` and
+`/a2ui/action/stream`, with `metadata` and the existing `conversation` fields.
+It has no agent-side catalog function implementations and returns a correlated
+`UNKNOWN_FUNCTION` response for those requests. Forward renderer function results
+with the current transport `surfaceId` and `conversation` to continue generation.
 
 ## Install
 
@@ -68,11 +92,11 @@ async function sendPrompt(input: string) {
   messageStore={store}
   catalogs={catalogs}
   wrapSurface={(children) => <view className='a2ui-light'>{children}</view>}
-  onAction={(action) => {
+  onMessage={(message, metadata) => {
     void fetch('/a2ui/action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action),
+      body: JSON.stringify({ ...message, metadata }),
     })
       .then((res) => res.json())
       .then((payload) => store.push(normalizePayloadToMessages(payload)));

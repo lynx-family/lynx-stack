@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/lynx-stack-docs",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "The Lynx Stack API reference as MDX pages: the build configuration, the Rsbuild plugins, ReactLynx and every @lynx-js package.",
   "keywords": [
     "Lynx",
@@ -52,6 +52,7 @@
     "@lynx-js/i18next-translation-dedupe": "workspace:*",
     "@lynx-js/kitten-lynx-test-infra": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/lynx-xml": "workspace:*",
     "@lynx-js/motion": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
@@ -67,7 +68,6 @@
     "@lynx-js/runtime-wrapper-webpack-plugin": "workspace:*",
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@lynx-js/testing-environment": "workspace:*",
-    "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-worker-rpc": "workspace:*",
     "@lynx-js/webpack-runtime-globals": "workspace:*",

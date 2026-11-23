@@ -40,7 +40,7 @@ describe('TextField utils', () => {
     expect(normalizeTextFieldValue(null)).toBe('');
     expect(normalizeTextFieldValue(42)).toBe('42');
     expect(normalizeTextFieldValue('Lynx')).toBe('Lynx');
-    expect(normalizeTextFieldValue({ path: '/form/name' })).toBe('');
+    expect(normalizeTextFieldValue({ '@path': '/form/name' })).toBe('');
   });
 
   test('validates values with validationRegexp', () => {

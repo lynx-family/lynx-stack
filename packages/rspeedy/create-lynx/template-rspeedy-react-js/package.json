@@ -19,6 +19,7 @@
     "@rstest/core": "workspace:*",
     "@testing-library/dom": "workspace:*",
     "@testing-library/jest-dom": "workspace:*",
+    "agent-lynx": "workspace:*",
     "jsdom": "workspace:*"
   },
   "engines": {

@@ -1,6 +1,6 @@
 {
   "name": "@lynx-js/react-refresh-webpack-plugin",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "A webpack plugin to hot refresh for Lynx.",
   "keywords": [
     "webpack",
@@ -44,9 +44,10 @@
     "@lynx-js/test-tools": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
     "@rspack/core": "catalog:rspack",
-    "@rspack/lite-tapable": "1.1.5",
+    "@rspack/lite-tapable": "1.3.0",
     "@rstest/core": "catalog:rstest",
     "@types/node": "^24.13.3",
+    "preact": "catalog:lynxjs",
     "swc-loader": "^0.2.7"
   },
   "peerDependencies": {

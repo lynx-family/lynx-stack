@@ -8,6 +8,7 @@ export const DEFAULT_BENCH_UI_JUDGE_SERVER_URL =
 export type BenchRole = 'control' | 'experiment';
 export type BenchProtocol =
   | 'a2ui'
+  | 'a2ui-express'
   | 'openui'
   | 'lynx-xml'
   | 'html'
@@ -102,6 +103,11 @@ export const BENCH_PROTOCOL_OPTIONS = [
     label: 'ReactLynx',
     description: 'Compiled native ReactLynx page',
   },
+  {
+    value: 'a2ui-express',
+    label: 'A2UI Express',
+    description: 'Compiled A2UI Express source',
+  },
 ] as const;
 
 export function isDocumentBenchProtocol(protocol: BenchProtocol): boolean {
@@ -155,8 +161,8 @@ export function withBenchProtocol(
   group: BenchGroup,
   protocol: BenchProtocol,
 ): BenchGroup {
-  if (protocol === 'a2ui') {
-    return group.protocol === 'a2ui'
+  if (protocol === 'a2ui' || protocol === 'a2ui-express') {
+    return group.protocol === protocol
       ? group
       : withBenchGroupPatch(group, {
         protocol,
@@ -379,7 +385,8 @@ export function createCustomBenchScenario(id: string): BenchScenario {
 }
 
 export function usesCatalog(group: BenchGroup): boolean {
-  return group.protocol === 'a2ui' && group.profile === 'native';
+  return (group.protocol === 'a2ui' || group.protocol === 'a2ui-express')
+    && group.profile === 'native';
 }
 
 function getBaselineCompatibilityScore(

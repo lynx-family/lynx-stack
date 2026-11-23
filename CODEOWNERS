@@ -6,9 +6,10 @@ packages/i18n/** @luhc228
 packages/lynx/autolink-codegen/** @jianliang00
 packages/lynx/create-lynx-library/** @jianliang00
 packages/lynx/engine-bridge/** @pupiltong
+packages/lynx/lynx-runtime/** @hzy @HuJean @Yradex
 packages/rspeedy/plugin-react/** @upupming
 packages/react/** @hzy @HuJean @Yradex
 packages/react/transform/** @gaoachao
 packages/tailwind-preset/** @Dugyu @upupming
 packages/genui/** @pupiltong @gaoachao @HuJean @fzx2666-fz
-benchmark/react/** @hzy @HuJean @upupming
+benchmark/react/** @hzy @HuJean @Yradex @upupming

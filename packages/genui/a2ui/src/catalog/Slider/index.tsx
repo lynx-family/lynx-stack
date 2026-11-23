@@ -17,6 +17,7 @@ import {
   toSliderRatio,
   toSliderStepRatio,
 } from './utils.js';
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
 import type { GenericComponentProps } from '../../store/types.js';
@@ -30,52 +31,31 @@ import '../../../styles/catalog/Slider.css';
  */
 export interface SliderProps extends GenericComponentProps {
   /** The label for the slider. */
-  label?: string | { path: string } | {
-    call: string;
+  label?: string | { '@path': string } | {
+    '@call': string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** The minimum value of the slider. */
   min?: number;
   /** The maximum value of the slider. */
   max: number;
   /** The current value of the slider. */
-  value: number | { path: string } | {
-    call: string;
+  value: number | { '@path': string } | {
+    '@call': string;
+    catalogId?: string;
     args: Record<string, unknown>;
-    returnType?:
-      | 'string'
-      | 'number'
-      | 'boolean'
-      | 'array'
-      | 'object'
-      | 'any'
-      | 'void';
   };
   /** A list of checks to perform. */
-  checks?: Array<{
+  '@checks'?: Array<{
     /** The condition that indicates whether the check passes. */
-    condition: boolean | { path: string } | {
-      call: string;
+    condition: { '@path': string } | {
+      '@call': string;
+      catalogId?: string;
       args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
     };
-    /** The error message to display if the check fails. */
-    message: string;
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 
@@ -105,7 +85,7 @@ export function Slider(
     Math.round(fromSliderRatio(ratio, range, step)),
   );
   const labelText = normalizeSliderLabel(label);
-  const checks = props.checks as CheckLike[] | undefined;
+  const checks = props['@checks'] as CheckLike[] | undefined;
 
   const { ok, firstFailureMessage } = useChecks({
     checks,
@@ -122,6 +102,7 @@ export function Slider(
 
   return (
     <view
+      {...accessibilityProps(props)}
       key={id}
       className={`slider${ok ? '' : ' slider-invalid'}`}
     >

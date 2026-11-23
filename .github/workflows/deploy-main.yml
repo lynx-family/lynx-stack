@@ -117,6 +117,24 @@ jobs:
         --no-cache
         --logHeapUsage
         --silent
+  coverage-rstest:
+    needs: build-all
+    uses: ./.github/workflows/workflow-test.yml
+    if: github.repository == 'lynx-family/lynx-stack'
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      runs-on: lynx-ubuntu-26.04-medium
+      run: >
+        pnpm exec rstest run
+        -c rstest.config.ts
+        --coverage
+        --testTimeout=50000
+        --hookTimeout=50000
+        && pnpm --filter @lynx-js/genui-openui exec rstest run
+        --coverage
+        --testTimeout=50000
+        --hookTimeout=50000
   coverage-web-elements:
     needs: build-all
     uses: ./.github/workflows/workflow-test.yml

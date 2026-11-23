@@ -8,7 +8,10 @@ import type { ExternalBundleLynxAPIs } from './ExternalBundle.js';
 import type { LynxContextEventTarget } from './LynxContextEventTarget.js';
 import type { LynxEngineContext } from './LynxEngineContext.js';
 import type { LynxPerformance } from './NativeApp.js';
+import type { MainThreadModule } from './NativeModules.js';
 export interface MainThreadLynx extends ExternalBundleLynxAPIs {
+  /** Returns the current view's host-provided module, or undefined when unavailable. */
+  module(name: string): MainThreadModule | undefined;
   performance: LynxPerformance;
   getJSContext: () => LynxContextEventTarget;
   /**

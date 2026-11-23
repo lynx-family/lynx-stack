@@ -6,6 +6,7 @@ import type {
   Cloneable,
   I18nResourceTranslationOptions,
   InitI18nResources,
+  MainThreadModule,
   NapiModulesCall,
   NapiModulesMap,
   NativeModulesCall,
@@ -94,6 +95,31 @@ export class LynxViewElement extends HTMLElement {
   #url?: string;
 
   /**
+   * Enables profiling for this view when browser User Timing is available.
+   *
+   * Reflects the `is-profiling` attribute. An absent attribute or the value
+   * `"false"` disables profiling. Set this before loading the view. The value
+   * is read once per view instance; changes require reloading the view.
+   *
+   * @defaultValue false
+   * @example
+   * ```html
+   * <lynx-view is-profiling url="https://example.com/main.web.bundle"></lynx-view>
+   * ```
+   */
+  get isProfiling(): boolean {
+    const value = this.getAttribute('is-profiling');
+    return value !== null && value !== 'false';
+  }
+  set isProfiling(value: boolean) {
+    if (value) {
+      this.setAttribute('is-profiling', '');
+    } else {
+      this.removeAttribute('is-profiling');
+    }
+  }
+
+  /**
    * Resolves image source and placeholder URLs before loading them.
    *
    * Set this synchronous hook before loading the view. It receives the original
@@ -118,6 +144,29 @@ export class LynxViewElement extends HTMLElement {
    * the lexical `console` for this view's background bundles.
    */
   nativeModulesMap: NativeModulesMap | undefined;
+
+  /**
+   * Host-provided modules exposed synchronously through main-thread `lynx.module(name)`.
+   *
+   * Set this property before loading the view for first-frame calls. Each lookup
+   * reads the current map, so replacing or removing modules takes effect on the
+   * next lookup. The host controls which methods are available and keeps any
+   * shared data in sync with the background thread.
+   *
+   * @defaultValue undefined
+   * @example
+   * ```ts
+   * view.mainThreadModules = {
+   *   DeviceInfo: {
+   *     invoke(method) {
+   *       if (method === 'getPlatform') return 'web';
+   *       throw new Error(`Unknown method: ${method}`);
+   *     },
+   *   },
+   * };
+   * ```
+   */
+  mainThreadModules: Record<string, MainThreadModule> | undefined;
 
   /**
    * @param
@@ -604,6 +653,7 @@ export class LynxViewElement extends HTMLElement {
     this.#upgradeProperty('transformVW');
     this.#upgradeProperty('transformVH');
     this.#upgradeProperty('transformREM');
+    this.#upgradeProperty('isProfiling');
     if (this.url) {
       this.#url = this.url;
     }

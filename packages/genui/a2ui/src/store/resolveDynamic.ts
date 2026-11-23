@@ -7,7 +7,12 @@ import type {
   ExecuteFunctionCall,
   ResolveFunctionOptions,
 } from './resolveFunctionCall.js';
-import { isDataBinding, isFunctionCall, isObject } from './utils.js';
+import {
+  isDataBinding,
+  isFunctionCall,
+  isObject,
+  shallowEqual,
+} from './utils.js';
 
 /**
  * Resolve an A2UI data-binding path against an optional component data context.
@@ -49,41 +54,40 @@ export function resolveDeepValue(
     const previousItems = Array.isArray(previousResolved)
       ? previousResolved
       : [];
-    let changed = false;
-    const next = value.map((item, index) => {
-      const resolved = resolveDeepValue(
-        item,
-        previousItems[index],
-        resolveLeaf,
-      );
-      if (!Object.is(resolved, previousItems[index])) changed = true;
-      return resolved;
-    });
-    return !changed && Array.isArray(previousResolved)
-      ? previousResolved
-      : next;
+    const next = value.map((item, index) =>
+      resolveDeepValue(item, previousItems[index], resolveLeaf)
+    );
+    return shallowEqual(next, previousResolved) ? previousResolved : next;
   }
 
+  if (isDataBinding(value) && Object.keys(value).some(key => key !== '@path')) {
+    throw new Error('Invalid data binding shape');
+  }
   if (isObject(value) && !isDataBinding(value) && !isFunctionCall(value)) {
-    const previousObject = (
-      previousResolved && typeof previousResolved === 'object'
-        ? previousResolved
-        : undefined
-    ) as Record<string, unknown> | undefined;
-    let changed = false;
+    const previousObject = isObject(previousResolved)
+      ? previousResolved
+      : undefined;
     const next: Record<string, unknown> = {};
     for (
       const [key, item] of Object.entries(value)
     ) {
       const resolved = resolveDeepValue(
         item,
-        previousObject?.[key],
+        previousObject?.[key.startsWith('@@') ? key.slice(1) : key],
         resolveLeaf,
       );
-      next[key] = resolved;
-      if (!Object.is(resolved, previousObject?.[key])) changed = true;
+      if (key.startsWith('@') && !key.startsWith('@@')) {
+        throw new Error(`Unknown dynamic directive: ${key}`);
+      }
+      const literalKey = key.startsWith('@@') ? key.slice(1) : key;
+      Object.defineProperty(next, literalKey, {
+        value: resolved,
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      });
     }
-    return !changed && previousObject ? previousObject : next;
+    return shallowEqual(next, previousObject) ? previousObject : next;
   }
 
   return resolveLeaf(value, previousResolved);
@@ -110,8 +114,7 @@ export function createResolveFunctionCall(
       surfaceId,
       dataContextPath,
       {
-        functions: options.functions,
-        registry: options.registry,
+        ...options,
       },
     );
 }
@@ -127,13 +130,7 @@ function resolveSignal(
   const resolvedPath = processor.resolvePath(path, dataContextPath);
   const signal = store.getSignal(resolvedPath);
   const raw = signal.value;
-  if (raw === undefined || raw === null) return raw;
-  if (typeof raw !== 'string') return raw;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return raw;
-  }
+  return raw;
 }
 
 /**
@@ -156,7 +153,7 @@ export function resolveDynamicValue(
       if (isDataBinding(leaf)) {
         return resolveSignal(
           processor,
-          leaf.path,
+          leaf['@path'],
           surfaceId,
           dataContextPath,
         );

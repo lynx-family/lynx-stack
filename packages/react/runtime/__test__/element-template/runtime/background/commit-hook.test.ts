@@ -59,6 +59,7 @@ function createRawTextOps(id: number, text: string) {
     null,
     [text],
     [],
+    null,
   ];
 }
 
@@ -614,6 +615,13 @@ describe('ElementTemplate commit hook', () => {
       globalCommitContext.ops = createRawTextOps(1, 'flush');
 
       options.__c?.({} as unknown as object, []);
+      envManager.switchToMainThread();
+      expect(updateEvents).toEqual([{
+        ops: createRawTextOps(1, 'flush'),
+        flushOptions: {},
+        reloadVersion: getReloadVersion(),
+      }]);
+      envManager.switchToBackground();
       expect([...globalCommitContext.nonPayload.removedSubtreesAwaitingTeardown]).toEqual([]);
       vi.advanceTimersByTime(9999);
       expect(backgroundElementTemplateInstanceManager.get(root.instanceId)).toBe(root);
@@ -684,12 +692,14 @@ describe('ElementTemplate commit hook', () => {
         null,
         ['value'],
         [],
+        null,
         ElementTemplateUpdateOps.createTemplate,
         root.instanceId,
         'root',
         null,
         [],
         [[child.instanceId]],
+        null,
         ElementTemplateUpdateOps.insertNode,
         parent.instanceId,
         0,

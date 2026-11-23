@@ -1,5 +1,11 @@
 # @lynx-js/react-webpack-plugin
 
+## 0.15.2
+
+### Patch Changes
+
+- Register main-thread snapshot definitions for background-only components in external libraries, including components reached through eager imports. ([#4348](https://github.com/lynx-family/lynx-stack/pull/4348))
+
 ## 0.15.1
 
 ### Patch Changes

@@ -75,6 +75,8 @@ function capturePrintUrls(
 describe('pluginDev', () => {
   beforeEach(async () => {
     rstest.mock('../src/webpack/ProvidePlugin.js', { mock: true })
+    const { ProvidePlugin } = await import('../src/webpack/ProvidePlugin.js')
+    rstest.mocked(ProvidePlugin).mockClear()
 
     const { default: os } = await import('node:os')
 

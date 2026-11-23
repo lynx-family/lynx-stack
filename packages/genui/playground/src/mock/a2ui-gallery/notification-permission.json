@@ -3,41 +3,46 @@
   "description": "Example of notification permission",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-notification-permission",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-notification-permission",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["icon", "title", "description", "actions"],
+            "children": [
+              "icon",
+              "title",
+              "description",
+              "actions"
+            ],
             "align": "center"
           },
           {
             "id": "icon",
             "component": "Icon",
             "name": {
-              "path": "/icon"
+              "@path": "/icon"
             }
           },
           {
             "id": "title",
             "component": "Text",
             "text": {
-              "path": "/title"
+              "@path": "/title"
             },
             "variant": "h3"
           },
@@ -45,25 +50,28 @@
             "id": "description",
             "component": "Text",
             "text": {
-              "path": "/description"
+              "@path": "/description"
             },
             "variant": "body"
           },
           {
             "id": "actions",
             "component": "Row",
-            "children": ["yes-btn", "no-btn"],
+            "children": [
+              "yes_btn",
+              "no_btn"
+            ],
             "justify": "center"
           },
           {
-            "id": "yes-btn-text",
+            "id": "yes_btn_text",
             "component": "Text",
             "text": "Yes"
           },
           {
-            "id": "yes-btn",
+            "id": "yes_btn",
             "component": "Button",
-            "child": "yes-btn-text",
+            "child": "yes_btn_text",
             "action": {
               "event": {
                 "name": "accept",
@@ -72,14 +80,14 @@
             }
           },
           {
-            "id": "no-btn-text",
+            "id": "no_btn_text",
             "component": "Text",
             "text": "No"
           },
           {
-            "id": "no-btn",
+            "id": "no_btn",
             "component": "Button",
-            "child": "no-btn-text",
+            "child": "no_btn_text",
             "action": {
               "event": {
                 "name": "decline",
@@ -91,7 +99,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-notification-permission",
         "value": {

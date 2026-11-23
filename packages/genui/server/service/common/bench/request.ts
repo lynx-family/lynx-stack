@@ -181,7 +181,8 @@ function normalizeGroups(
         ...(model ? { model } : {}),
         reasoningEffort: parseReasoningEffort(item.reasoningEffort)
           ?? 'default',
-        ...(protocol === 'a2ui' && profile === 'native'
+        ...((protocol === 'a2ui' || protocol === 'a2ui-express')
+            && profile === 'native'
           ? { catalog: readCatalog(item.catalog) }
           : {}),
         extraInstruction: readString(item.extraInstruction, '', 2_000),
@@ -416,6 +417,7 @@ export function normalizeBenchJobRequest(
     (settings.judgeEnabled
       || enabledGroups.some((group) =>
         group.profile === 'matched-core'
+        || group.protocol === 'a2ui-express'
         || group.protocol === 'lynx-xml'
         || group.protocol === 'html'
         || group.protocol === 'reactweb'

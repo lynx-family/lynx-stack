@@ -8,7 +8,7 @@ import { A2UIProtocolMessageStreamParser } from '../agent/a2ui/a2ui-stream-parse
 import type { A2UIMessage } from '../agent/a2ui/a2ui-validator.js';
 
 const create = {
-  version: 'v0.9',
+  version: '1.0',
   createSurface: { surfaceId: 's', catalogId: 'test' },
 };
 const root = { id: 'root', component: 'Column', children: ['title'] };
@@ -18,7 +18,7 @@ const title = {
   text: 'Hello \\"世界\\" [ { } ]',
 };
 const update = (components: unknown[], surfaceId = 's') => ({
-  version: 'v0.9',
+  version: '1.0',
   updateComponents: { surfaceId, components },
 });
 
@@ -44,7 +44,7 @@ describe('A2UI incremental parsing', () => {
   test('waits for the entire batch before filling gaps across component and data messages', () => {
     const parser = new A2UIProtocolMessageStreamParser();
     const data = {
-      version: 'v0.9',
+      version: '1.0',
       updateDataModel: { surfaceId: 's', value: { title: 'Hello' } },
     };
     const source = [create, update([root]), data, update([title])];
@@ -140,7 +140,7 @@ describe('A2UI incremental parsing', () => {
   test('does not publish loading for a surface deleted in the same batch', () => {
     const parser = new A2UIProtocolMessageStreamParser();
     const source = [create, {
-      version: 'v0.9',
+      version: '1.0',
       deleteSurface: { surfaceId: 's' },
     }];
     expect(parser.push(JSON.stringify(source))).toEqual(source);
@@ -164,27 +164,57 @@ describe('A2UI incremental parsing', () => {
     },
   );
 
-  test('renders a complete component before its message ends without resending its parent', () => {
+  test('waits for a validated message while keeping the surrounding array open', () => {
     const parser = new A2UIProtocolMessageStreamParser();
     parser.push(JSON.stringify([create]));
-    const first = parser.push(
-      '[{"version":"v0.9","updateComponents":{"surfaceId":"s","components":['
+    expect(parser.push(
+      '[{"version":"1.0","updateComponents":{"surfaceId":"s","components":['
         + JSON.stringify(root),
-    );
-    expect(components(first)).toEqual([root, {
-      id: 'title',
-      component: 'Loading',
-      variant: 'block',
-    }]);
-    const second = parser.push(',' + JSON.stringify(title));
-    expect(components(second)).toEqual([title]);
-    expect(parser.push(']}}]')).toEqual([]);
+    )).toEqual([]);
+    expect(parser.push(',' + JSON.stringify(title))).toEqual([]);
+    expect(parser.push(']}}')).toEqual([update([root, title])]);
+    expect(parser.push(']')).toEqual([]);
+  });
+
+  test.each([
+    ',"version":"0.9"}',
+    ',"deleteSurface":{"surfaceId":"s"}}',
+    ',"unexpected":true}',
+  ])(
+    'discards components when a later envelope field is invalid: %s',
+    (suffix) => {
+      const parser = new A2UIProtocolMessageStreamParser();
+      parser.push(JSON.stringify([create, update([root, title])]));
+      const changedTitle = { ...title, text: 'Must not leak' };
+      const prefix = JSON.stringify(update([changedTitle])).slice(0, -1);
+      expect(parser.push('[' + prefix)).toEqual([]);
+      expect(parser.push(suffix + ']')).toEqual([]);
+      // Invalid updates must not enter the deduplication state either.
+      expect(parser.push(JSON.stringify([update([title])]))).toEqual([]);
+      expect(parser.push(JSON.stringify([update([changedTitle])]))).toEqual([
+        update([changedTitle]),
+      ]);
+    },
+  );
+
+  test('does not leak a valid component from a message containing an invalid component', () => {
+    const parser = new A2UIProtocolMessageStreamParser();
+    parser.push(JSON.stringify([create, update([root, title])]));
+    const changedTitle = { ...title, text: 'Must not leak' };
+    const prefix =
+      '[{"version":"1.0","updateComponents":{"surfaceId":"s","components":[';
+    expect(parser.push(prefix + JSON.stringify(changedTitle))).toEqual([]);
+    expect(parser.push(',{"id":"broken"}]}}]')).toEqual([]);
+    expect(parser.push(JSON.stringify([update([title])]))).toEqual([]);
+    expect(parser.push(JSON.stringify([update([changedTitle])]))).toEqual([
+      update([changedTitle]),
+    ]);
   });
 
   test('does not parse component-shaped data or nested component props as protocol updates', () => {
     const parser = new A2UIProtocolMessageStreamParser();
     const data = {
-      version: 'v0.9',
+      version: '1.0',
       updateDataModel: { surfaceId: 's', value: { components: [title] } },
     };
     const decorated = {
@@ -221,7 +251,7 @@ describe('A2UI incremental parsing', () => {
     const messages = parser.push(
       JSON.stringify([{
         updateComponents: { components: [title], surfaceId: 'next' },
-        version: 'v0.9',
+        version: '1.0',
       }]),
     );
     expect(messages).toEqual([update([title], 'next')]);
@@ -231,10 +261,10 @@ describe('A2UI incremental parsing', () => {
     const parser = new A2UIProtocolMessageStreamParser();
     parser.push(JSON.stringify([create, update([root, title])]));
     const data = {
-      version: 'v0.9',
+      version: '1.0',
       updateDataModel: { surfaceId: 's', value: { title: 'New title' } },
     };
-    const boundTitle = { ...title, text: { path: '/title' } };
+    const boundTitle = { ...title, text: { '@path': '/title' } };
     const result = parser.push(JSON.stringify([data, update([boundTitle])]));
     expect(result).toEqual([data, update([boundTitle])]);
     expect(parser.push(JSON.stringify([update([boundTitle])]))).toEqual([]);
@@ -244,7 +274,7 @@ describe('A2UI incremental parsing', () => {
     const parser = new A2UIProtocolMessageStreamParser();
     parser.push(JSON.stringify([create, update([root, title])]));
     const result = parser.push(JSON.stringify([
-      { version: 'v0.9', deleteSurface: { surfaceId: 's' } },
+      { version: '1.0', deleteSurface: { surfaceId: 's' } },
       create,
       update([root]),
     ]));

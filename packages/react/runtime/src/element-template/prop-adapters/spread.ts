@@ -5,8 +5,8 @@
 import { getEventValue } from './event-value.js';
 import { isGestureSlotValue, prepareGestureForNative } from './gesture.js';
 import { prepareSpreadRefAttrValue } from './ref.js';
+import { isEventPropKey, isNamespacedEventPropKey, transformAttrName } from '../../core/attribute-name.js';
 import { isMainThreadFunction } from '../../core/main-thread-function.js';
-import { isEventPropKey, isNamespacedEventPropKey, transformAttrName } from '../../shared/attribute-name.js';
 import type { SerializableValue } from '../protocol/types.js';
 import type { EtAttrAdapterContext } from '../runtime/template/attr-slot-plan.js';
 import { prepareMTEventCtxForNative } from '../runtime/template/main-thread-event-ctx.js';

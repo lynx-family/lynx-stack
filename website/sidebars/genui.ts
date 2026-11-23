@@ -109,6 +109,16 @@ export function createGenUIGuideReadmeDocs(options: {
     replacements: A2UI_ZH_LINK_REPLACEMENTS,
     sourceFile: path.join(a2uiPackageRoot, 'docs/system-prompts_zh.md'),
   });
+  syncDoc({
+    outFile: path.join(enGuideRoot, 'a2ui/protocol-1.0-audit.md'),
+    replacements: A2UI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(a2uiPackageRoot, 'docs/protocol-1.0-audit.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'a2ui/protocol-1.0-audit.md'),
+    replacements: A2UI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(a2uiPackageRoot, 'docs/protocol-1.0-audit_zh.md'),
+  });
   syncReadme({
     languageSwitch:
       'English | <a href="/zh/guide/genui/a2ui/catalog-extractor">简体中文</a>',
@@ -373,6 +383,10 @@ export const A2UI_EN_NAV_ITEMS = [
     text: 'System Prompts',
     link: '/guide/genui/a2ui/system-prompts',
   },
+  {
+    text: 'A2UI 1.0 Migration Audit',
+    link: '/guide/genui/a2ui/protocol-1.0-audit',
+  },
 ];
 
 export const A2UI_ZH_NAV_ITEMS = [
@@ -391,6 +405,10 @@ export const A2UI_ZH_NAV_ITEMS = [
   {
     text: 'System Prompts',
     link: '/zh/guide/genui/a2ui/system-prompts',
+  },
+  {
+    text: 'A2UI 1.0 迁移复核',
+    link: '/zh/guide/genui/a2ui/protocol-1.0-audit',
   },
 ];
 
@@ -586,6 +604,9 @@ const LYNX_XML_ZH_LINK_REPLACEMENTS = [
 ] as const;
 
 const A2UI_EN_LINK_REPLACEMENTS = [
+  ['./docs/protocol-1.0-audit.md', '/guide/genui/a2ui/protocol-1.0-audit'],
+  ['./protocol-1.0-audit.md', '/guide/genui/a2ui/protocol-1.0-audit'],
+  ['./protocol-1.0-audit_zh.md', '/zh/guide/genui/a2ui/protocol-1.0-audit'],
   ['./docs/overview.md', '/guide/genui/a2ui/overview'],
   ['./docs/catalog-guide.md', '/guide/genui/a2ui/catalog-guide'],
   ['./docs/system-prompts.md', '/guide/genui/a2ui/system-prompts'],
@@ -600,6 +621,12 @@ const A2UI_EN_LINK_REPLACEMENTS = [
 ] as const;
 
 const A2UI_ZH_LINK_REPLACEMENTS = [
+  [
+    './docs/protocol-1.0-audit_zh.md',
+    '/zh/guide/genui/a2ui/protocol-1.0-audit',
+  ],
+  ['./protocol-1.0-audit_zh.md', '/zh/guide/genui/a2ui/protocol-1.0-audit'],
+  ['./protocol-1.0-audit.md', '/guide/genui/a2ui/protocol-1.0-audit'],
   ['./docs/overview_zh.md', '/zh/guide/genui/a2ui/overview'],
   ['./docs/catalog-guide_zh.md', '/zh/guide/genui/a2ui/catalog-guide'],
   ['./docs/system-prompts_zh.md', '/zh/guide/genui/a2ui/system-prompts'],

@@ -18,11 +18,14 @@ import {
   resolveDynamicValue,
 } from '../store/resolveDynamic.js';
 import { executeFunctionCall } from '../store/resolveFunctionCall.js';
+import { coerceBoolean, coerceDynamic } from '../store/schema.js';
 import type { Surface } from '../store/types.js';
 import {
+  equalJsonValues,
   isCallExpression,
   isFunctionCall,
   isPlainDataBinding,
+  shallowEqual,
 } from '../store/utils.js';
 
 const noop = () => {
@@ -66,9 +69,9 @@ export function useDataBinding<T = unknown>(
   } else if (
     dynamicValue
     && typeof dynamicValue === 'object'
-    && 'path' in dynamicValue
+    && '@path' in dynamicValue
   ) {
-    path = (dynamicValue as Record<string, unknown>)['path'] as
+    path = (dynamicValue as Record<string, unknown>)['@path'] as
       | string
       | undefined;
   }
@@ -164,56 +167,91 @@ export function resolveProperties(
   previousResolved?: Record<string, unknown>,
 ) {
   if (!properties) return properties;
-  return resolveDeepValue(
-    properties,
-    previousResolved,
-    (leaf) => {
-      if (isFunctionCall(leaf) && surface && processor) {
-        return resolveDynamicValue(
-          processor,
-          leaf,
-          surface.surfaceId,
-          dataContextPath,
-          {
-            functions,
-            resolveFunctionCall: executeFunctionCall,
-          },
-        );
-      }
-
-      if (isPlainDataBinding(leaf)) {
-        const rawPath = (leaf as Record<string, unknown>)['path'] as
-          | string
-          | undefined;
-        const path = resolveBindingPath(rawPath ?? '', dataContextPath);
-        if (path && surface?.store) {
-          const signal = surface.store.getSignal(path);
-          return signal.value;
+  const resolve = (
+    value: unknown,
+    previous: unknown,
+    schema: Record<string, unknown> | undefined,
+  ) => {
+    let hasFunctionCall = false;
+    const resolved = resolveDeepValue(
+      value,
+      previous,
+      (leaf) => {
+        if (isFunctionCall(leaf) && surface && processor) {
+          hasFunctionCall = true;
+          return resolveDynamicValue(
+            processor,
+            leaf,
+            surface.surfaceId,
+            dataContextPath,
+            {
+              functions,
+              resolveFunctionCall: executeFunctionCall,
+            },
+          );
         }
-        return undefined;
+
+        if (isPlainDataBinding(leaf)) {
+          const rawPath = (leaf as Record<string, unknown>)['@path'] as
+            | string
+            | undefined;
+          const path = resolveBindingPath(rawPath ?? '', dataContextPath);
+          if (path && surface?.store) {
+            const signal = surface.store.getSignal(path);
+            return signal.value;
+          }
+          return undefined;
+        }
+
+        if (isCallExpression(leaf)) {
+          return UNSUPPORTED_PROP;
+        }
+
+        return leaf;
+      },
+    );
+    const next = schema
+      ? (schema['type'] === 'boolean'
+          && (isPlainDataBinding(value) || isFunctionCall(value))
+        ? coerceBoolean(resolved)
+        : coerceDynamic(resolved, schema, previous))
+      : resolved;
+    // A call can return fresh JSON on every read, including through a union
+    // or a prop with no catalog schema. Compare its final, coerced value.
+    return hasFunctionCall && equalJsonValues(next, previous) ? previous : next;
+  };
+  const result: Record<string, unknown> = {};
+  const componentCatalog = processor?.getCatalog(
+    typeof properties['@catalogId'] === 'string'
+      ? properties['@catalogId']
+      : surface?.catalogId,
+  );
+  const schema = componentCatalog?.components.find(entry =>
+    entry.name === properties['component']
+  )?.schema;
+  const schemas = schema?.['properties'] as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  for (const [key, value] of Object.entries(properties)) {
+    // Actions and checks are expressions evaluated at their own execution boundary.
+    if (
+      ['action', '@checks', '@metadata', 'children', '__template'].includes(key)
+    ) {
+      result[key] = value;
+      continue;
+    }
+    try {
+      result[key] = resolve(value, previousResolved?.[key], schemas?.[key]);
+    } catch (error) {
+      result[key] = null;
+      if (processor && surface) {
+        processor.reportExpressionError(error, surface.surfaceId);
       }
-
-      if (isCallExpression(leaf)) {
-        return UNSUPPORTED_PROP;
-      }
-
-      return leaf;
-    },
-  ) as Record<string, unknown>;
-}
-
-function shallowEqual(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>,
-): boolean {
-  if (a === b) return true;
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-  if (keysA.length !== keysB.length) return false;
-  for (const k of keysA) {
-    if (a[k] !== b[k]) return false;
+    }
   }
-  return true;
+  return previousResolved && shallowEqual(result, previousResolved)
+    ? previousResolved
+    : result;
 }
 
 /**
@@ -238,9 +276,6 @@ export function useResolvedProps(
       functions,
       cacheRef.current ?? undefined,
     );
-    if (cacheRef.current && shallowEqual(cacheRef.current, next)) {
-      return cacheRef.current;
-    }
     cacheRef.current = next;
     return next;
   }, [properties, surface, dataContextPath, processor, functions]);
@@ -273,7 +308,7 @@ export function useResolvedProps(
     (key: string, value: unknown) => {
       const prop = properties?.[key];
       if (isPlainDataBinding(prop)) {
-        const rawPath = (prop as Record<string, unknown>)['path'] as
+        const rawPath = (prop as Record<string, unknown>)['@path'] as
           | string
           | undefined;
         const path = resolveBindingPath(rawPath ?? '', dataContextPath);

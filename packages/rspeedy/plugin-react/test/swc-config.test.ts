@@ -367,7 +367,7 @@ describe('SWC configuration', () => {
     })
 
     await expect(rsbuild.initConfigs()).rejects.toThrowError(
-      /Rspeedy manages the SWC compilation target via `env`/,
+      /The Lynx Rsbuild plugin manages the SWC compilation target via `env`/,
     )
   })
 

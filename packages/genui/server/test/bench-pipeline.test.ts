@@ -102,6 +102,7 @@ function request(
 function artifact(protocol: BenchProtocol): ProtocolBenchRunArtifact {
   const judgePayloads = {
     a2ui: { kind: 'a2ui-messages', messages: [] },
+    'a2ui-express': { kind: 'a2ui-messages', messages: [] },
     openui: { kind: 'openui-text', rawText: 'root = Text("Ready")' },
     'lynx-xml': {
       kind: 'lynx-xml-source',
@@ -235,14 +236,14 @@ describe('Bench generation, capture and scoring pipeline', () => {
           return Promise.resolve({
             text: JSON.stringify([
               {
-                version: 'v0.9',
+                version: '1.0',
                 createSurface: {
                   surfaceId: 'main',
                   catalogId: options.catalog?.id,
                 },
               },
               {
-                version: 'v0.9',
+                version: '1.0',
                 updateComponents: {
                   surfaceId: 'main',
                   components: [

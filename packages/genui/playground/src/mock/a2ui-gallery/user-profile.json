@@ -3,34 +3,40 @@
   "description": "Example of user profile demonstrating number formatting.",
   "messages": [
     {
-      "version": "v0.9",
+      "version": "1.0",
       "createSurface": {
         "surfaceId": "gallery-user-profile",
-        "catalogId": "https://a2ui.org/specification/v0_9/basic_catalog.json",
+        "catalogId": "https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json",
         "sendDataModel": true
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateComponents": {
         "surfaceId": "gallery-user-profile",
         "components": [
           {
             "id": "root",
             "component": "Card",
-            "child": "main-column"
+            "child": "main_column"
           },
           {
-            "id": "main-column",
+            "id": "main_column",
             "component": "Column",
-            "children": ["header", "info", "bio", "stats-row", "follow-btn"],
+            "children": [
+              "header",
+              "info",
+              "bio",
+              "stats_row",
+              "follow_btn"
+            ],
             "align": "center"
           },
           {
             "id": "header",
             "component": "Image",
             "url": {
-              "path": "/avatar"
+              "@path": "/avatar"
             },
             "fit": "cover",
             "variant": "avatar"
@@ -38,14 +44,17 @@
           {
             "id": "info",
             "component": "Column",
-            "children": ["name", "username"],
+            "children": [
+              "name",
+              "username"
+            ],
             "align": "center"
           },
           {
             "id": "name",
             "component": "Text",
             "text": {
-              "path": "/name"
+              "@path": "/name"
             },
             "variant": "h2"
           },
@@ -53,7 +62,7 @@
             "id": "username",
             "component": "Text",
             "text": {
-              "path": "/username"
+              "@path": "/username"
             },
             "variant": "caption"
           },
@@ -61,105 +70,115 @@
             "id": "bio",
             "component": "Text",
             "text": {
-              "path": "/bio"
+              "@path": "/bio"
             },
             "variant": "body"
           },
           {
-            "id": "stats-row",
+            "id": "stats_row",
             "component": "Row",
-            "children": ["followers-col", "following-col", "posts-col"],
+            "children": [
+              "followers_col",
+              "following_col",
+              "posts_col"
+            ],
             "justify": "spaceAround"
           },
           {
-            "id": "followers-col",
+            "id": "followers_col",
             "component": "Column",
-            "children": ["followers-count", "followers-label"],
+            "children": [
+              "followers_count",
+              "followers_label"
+            ],
             "align": "center"
           },
           {
-            "id": "followers-count",
+            "id": "followers_count",
             "component": "Text",
             "text": {
-              "call": "formatNumber",
+              "@call": "formatNumber",
               "args": {
                 "value": {
-                  "path": "/followers"
+                  "@path": "/followers"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h3"
           },
           {
-            "id": "followers-label",
+            "id": "followers_label",
             "component": "Text",
             "text": "Followers",
             "variant": "caption"
           },
           {
-            "id": "following-col",
+            "id": "following_col",
             "component": "Column",
-            "children": ["following-count", "following-label"],
+            "children": [
+              "following_count",
+              "following_label"
+            ],
             "align": "center"
           },
           {
-            "id": "following-count",
+            "id": "following_count",
             "component": "Text",
             "text": {
-              "call": "formatNumber",
+              "@call": "formatNumber",
               "args": {
                 "value": {
-                  "path": "/following"
+                  "@path": "/following"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h3"
           },
           {
-            "id": "following-label",
+            "id": "following_label",
             "component": "Text",
             "text": "Following",
             "variant": "caption"
           },
           {
-            "id": "posts-col",
+            "id": "posts_col",
             "component": "Column",
-            "children": ["posts-count", "posts-label"],
+            "children": [
+              "posts_count",
+              "posts_label"
+            ],
             "align": "center"
           },
           {
-            "id": "posts-count",
+            "id": "posts_count",
             "component": "Text",
             "text": {
-              "call": "formatNumber",
+              "@call": "formatNumber",
               "args": {
                 "value": {
-                  "path": "/posts"
+                  "@path": "/posts"
                 }
-              },
-              "returnType": "string"
+              }
             },
             "variant": "h3"
           },
           {
-            "id": "posts-label",
+            "id": "posts_label",
             "component": "Text",
             "text": "Posts",
             "variant": "caption"
           },
           {
-            "id": "follow-btn-text",
+            "id": "follow_btn_text",
             "component": "Text",
             "text": {
-              "path": "/followText"
+              "@path": "/followText"
             }
           },
           {
-            "id": "follow-btn",
+            "id": "follow_btn",
             "component": "Button",
-            "child": "follow-btn-text",
+            "child": "follow_btn_text",
             "action": {
               "event": {
                 "name": "follow",
@@ -171,7 +190,7 @@
       }
     },
     {
-      "version": "v0.9",
+      "version": "1.0",
       "updateDataModel": {
         "surfaceId": "gallery-user-profile",
         "value": {

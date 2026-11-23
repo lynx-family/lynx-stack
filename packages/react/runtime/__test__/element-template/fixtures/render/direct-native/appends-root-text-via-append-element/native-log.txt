@@ -16,6 +16,7 @@ Array [
     ],
     Array [],
     -1,
+    undefined,
   ],
   Array [
     "__InsertNodeToElementTemplate",

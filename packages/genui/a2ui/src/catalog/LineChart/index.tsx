@@ -1,6 +1,7 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useResolvedProps } from '../../react/useDataBinding.js';
 import type { GenericComponentProps } from '../../store/types.js';
 import {
@@ -29,15 +30,15 @@ export interface LineChartSeries {
  */
 export interface LineChartProps extends GenericComponentProps {
   /** Category labels shown along the x axis. */
-  labels: string[] | { path: string };
+  labels: string[] | { '@path': string };
   /** One or more line series to render over the shared labels. */
   series:
     | Array<{
       name: string;
-      values: number[];
+      values: number[] | { '@path': string };
       color?: string;
     }>
-    | { path: string };
+    | { '@path': string };
   variant?: 'linear' | 'natural' | 'step';
   xLabel?: string;
   yLabel?: string;
@@ -274,7 +275,7 @@ export function LineChart(
   );
 
   return (
-    <view key={id} className='line-chart'>
+    <view {...accessibilityProps(props)} key={id} className='line-chart'>
       <view className='line-chart-header'>
         <view className='line-chart-header-copy'>
           <text className='line-chart-title'>

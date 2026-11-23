@@ -6,65 +6,60 @@ import { profile } from './utils/profile.js';
 
 interface EventDelayImpl {
   _delayedWorkletParamsMap: Map<string, ClosureValueType[][]>;
+  delayExecUntilJsReady(hash: string, params: ClosureValueType[]): void;
   runDelayedWorklet(worklet: Worklet, element: ElementNode): void;
   clearDelayedWorklets(): void;
 }
 
-let impl: EventDelayImpl | undefined;
-
 function initEventDelay(): EventDelayImpl {
-  return (impl = {
+  const instance: EventDelayImpl = {
     _delayedWorkletParamsMap: new Map(),
-    runDelayedWorklet,
-    clearDelayedWorklets,
-  });
+    delayExecUntilJsReady(
+      hash: string,
+      params: ClosureValueType[],
+    ): void {
+      profile('delayExecUntilJsReady: ' + hash, () => {
+        const map = instance._delayedWorkletParamsMap;
+        const paramVec = map.get(hash);
+        if (paramVec) {
+          paramVec.push(params);
+        } else {
+          map.set(hash, [params]);
+        }
+      });
+    },
+    runDelayedWorklet(worklet: Worklet, element: ElementNode): void {
+      profile('commitDelayedWorklet', () => {
+        const paramsVec = instance._delayedWorkletParamsMap.get(
+          worklet._wkltId,
+        );
+        if (paramsVec === undefined) {
+          return;
+        }
+        const leftParamsVec: ClosureValueType[][] = [];
+        paramsVec.forEach((params) => {
+          const firstParam = params[0] as { currentTarget?: { elementRefptr?: ElementNode } } | undefined;
+          if (firstParam?.currentTarget?.elementRefptr === element) {
+            setTimeout(() => {
+              profile('runDelayedWorklet', () => {
+                runWorklet(worklet, params);
+              });
+            }, 0);
+          } else {
+            leftParamsVec.push(params);
+          }
+        });
+        instance._delayedWorkletParamsMap.set(
+          worklet._wkltId,
+          leftParamsVec,
+        );
+      });
+    },
+    clearDelayedWorklets(): void {
+      instance._delayedWorkletParamsMap.clear();
+    },
+  };
+  return instance;
 }
 
-function delayExecUntilJsReady(
-  hash: string,
-  params: ClosureValueType[],
-): void {
-  profile('delayExecUntilJsReady: ' + hash, () => {
-    const map = impl!._delayedWorkletParamsMap;
-    const paramVec = map.get(hash);
-    if (paramVec) {
-      paramVec.push(params);
-    } else {
-      map.set(hash, [params]);
-    }
-  });
-}
-
-function runDelayedWorklet(worklet: Worklet, element: ElementNode): void {
-  profile('commitDelayedWorklet', () => {
-    const paramsVec = impl!._delayedWorkletParamsMap.get(
-      worklet._wkltId,
-    );
-    if (paramsVec === undefined) {
-      return;
-    }
-    const leftParamsVec: ClosureValueType[][] = [];
-    paramsVec.forEach((params) => {
-      const firstParam = params[0] as { currentTarget?: { elementRefptr?: ElementNode } } | undefined;
-      if (firstParam?.currentTarget?.elementRefptr === element) {
-        setTimeout(() => {
-          profile('runDelayedWorklet', () => {
-            runWorklet(worklet, params);
-          });
-        }, 0);
-      } else {
-        leftParamsVec.push(params);
-      }
-    });
-    impl!._delayedWorkletParamsMap.set(
-      worklet._wkltId,
-      leftParamsVec,
-    );
-  });
-}
-
-function clearDelayedWorklets(): void {
-  impl!._delayedWorkletParamsMap.clear();
-}
-
-export { type EventDelayImpl, initEventDelay, delayExecUntilJsReady, runDelayedWorklet, clearDelayedWorklets };
+export { type EventDelayImpl, initEventDelay };

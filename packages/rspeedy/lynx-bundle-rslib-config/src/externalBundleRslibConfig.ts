@@ -807,6 +807,21 @@ const externalBundleRsbuildPlugin = ({
             }
           }
         })
+        if (chain.plugins.has('lynx:react')) {
+          const entryPairs = backgroundEntryName
+            .filter(background =>
+              mainThreadEntryName.includes(`${background}__main-thread`)
+            )
+            .map(background => ({
+              mainThread: `${background}__main-thread`,
+              background,
+            }))
+          chain.plugin('lynx:react').tap(([options]) => [{
+            ...(options as Record<string, unknown>),
+            entryPairs,
+          }])
+        }
+
         chain
           .plugin(MarkMainThreadWebpackPlugin.name)
           .use(MarkMainThreadWebpackPlugin, [{

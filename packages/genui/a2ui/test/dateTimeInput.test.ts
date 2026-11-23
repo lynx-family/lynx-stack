@@ -46,7 +46,7 @@ describe('DateTimeInput utils', () => {
   test('ignores unsupported values', () => {
     expect(normalizeDateTimeInputValue(undefined)).toBeNull();
     expect(normalizeDateTimeInputValue('bad')).toBeNull();
-    expect(normalizeDateTimeInputValue({ path: '/date' })).toBeNull();
+    expect(normalizeDateTimeInputValue({ '@path': '/date' })).toBeNull();
     expect(normalizeDateTimeInputValue('2026-02-31')).toBeNull();
     expect(normalizeDateTimeInputValue('2026-13-01')).toBeNull();
     expect(normalizeDateTimeInputValue('24:99')).toBeNull();
@@ -164,7 +164,7 @@ describe('DateTimeInput utils', () => {
   test('normalizes labels, placeholders, and weekday labels', () => {
     expect(normalizeDateTimeInputLabel('Due')).toBe('Due');
     expect(normalizeDateTimeInputLabel(7)).toBe('7');
-    expect(normalizeDateTimeInputLabel({ path: '/label' })).toBe('');
+    expect(normalizeDateTimeInputLabel({ '@path': '/label' })).toBe('');
     expect(
       getDateTimeInputPlaceholder({ enableDate: true, enableTime: true }),
     ).toBe('Select date and time');

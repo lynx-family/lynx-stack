@@ -8,6 +8,7 @@ Object {
       "childSlots": Array [],
       "handleId": 3,
       "op": "createTemplate",
+      "options": null,
       "templateKey": "_et_builtin_raw_text",
     },
     Object {

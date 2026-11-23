@@ -11,6 +11,13 @@ import type { Config } from '../../src/index.js'
 import { createStubRspeedy } from '../createStubRspeedy.js'
 
 describe('Config - toRsBuildConfig', () => {
+  test('passes polyfill to Rsbuild, defaulting to off', () => {
+    expect(toRsbuildConfig({}).output?.polyfill).toBe('off')
+    for (const polyfill of ['off', 'usage', 'entry'] as const) {
+      expect(toRsbuildConfig({ output: { polyfill } }).output?.polyfill)
+        .toBe(polyfill)
+    }
+  })
   describe('splitChunks', () => {
     test('defaults splitChunks to false', () => {
       const rsbuildConfig = toRsbuildConfig({})

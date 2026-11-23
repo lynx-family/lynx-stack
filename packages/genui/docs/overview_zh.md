@@ -8,7 +8,7 @@ Lynx 生成完整、可执行的页面产物。
 
 | 组成部分      | A2UI                                        | OpenUI                                           | ReactLynx                     | Lynx XML                           |
 | ------------- | ------------------------------------------- | ------------------------------------------------ | ----------------------------- | ---------------------------------- |
-| 输出格式      | A2UI v0.9 messages                          | OpenUI Lang v0.5 assignments                     | `App.tsx` + `App.css`         | 独立 `.lynxml` 产物                |
+| 输出格式      | A2UI 1.0 messages                           | OpenUI Lang v0.5 assignments                     | `App.tsx` + `App.css`         | 独立 `.lynxml` 产物                |
 | UI 契约       | Catalog                                     | Library                                          | ReactLynx                     | Vanilla Lynx 与 Element PAPI       |
 | Client 输入   | 增量 protocol messages                      | 累计 OpenUI 文本                                 | 编译后的 Web 或 Native bundle | 按需转换、规范化并校验后的最终产物 |
 | 主要 renderer | `<A2UI>`                                    | `<OpenUiRenderer>`                               | Lynx 宿主                     | Lynx XML 运行时                    |

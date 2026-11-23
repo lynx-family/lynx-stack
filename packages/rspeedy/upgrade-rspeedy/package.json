@@ -1,6 +1,6 @@
 {
   "name": "upgrade-rspeedy",
-  "version": "0.18.5",
+  "version": "0.19.0",
   "description": "Upgrade Rspeedy-related packages",
   "keywords": [
     "webpack",
@@ -50,7 +50,9 @@
     "@lynx-js/i18next-translation-dedupe": "workspace:*",
     "@lynx-js/kitten-lynx-test-infra": "workspace:*",
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/lynx-runtime": "workspace:*",
     "@lynx-js/lynx-stack-docs": "workspace:*",
+    "@lynx-js/lynx-xml": "workspace:*",
     "@lynx-js/motion": "workspace:*",
     "@lynx-js/qrcode-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
@@ -70,7 +72,6 @@
     "@lynx-js/testing-environment": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@lynx-js/use-sync-external-store": "workspace:*",
-    "@lynx-js/vanilla-rsbuild-plugin": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-explorer": "workspace:*",

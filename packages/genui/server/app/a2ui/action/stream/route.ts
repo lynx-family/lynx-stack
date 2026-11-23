@@ -51,10 +51,17 @@ import { readJsonBodyWithLimit } from '../../../common/request';
 import { encodeSSE, sseHeaders } from '../../../common/sse';
 import { createStreamLogger } from '../../../common/stream-logger';
 import { extractTokenUsage, extractUsageMetrics } from '../../../common/usage';
-import { pickA2UIChatOptions, validateAction } from '../../_shared';
+import {
+  normalizeRendererEvent,
+  pickA2UIChatOptions,
+  rejectUnknownAgentFunction,
+  rendererEventError,
+  validateAction,
+} from '../../_shared';
+import type { A2UIRendererEventBody } from '../../_shared';
 import { publishA2UIPayload } from '../../payload-publisher';
 
-interface A2UIActionStreamBody {
+interface A2UIActionStreamBody extends A2UIRendererEventBody {
   conversation?: unknown;
   surfaceId?: string;
   action?: unknown;
@@ -103,9 +110,38 @@ async function postA2UIActionStream(req: Request) {
       { status: parsed.status },
     );
   }
-  const body = parsed.body;
+  if (parsed.body.version !== '1.0') {
+    return jsonWithCors(req, {
+      ok: false,
+      error: 'Only A2UI v1.0 is supported',
+    }, { status: 400 });
+  }
+  const protocolError = rendererEventError(parsed.body);
+  if (protocolError) {
+    return jsonWithCors(req, { ok: false, error: protocolError }, {
+      status: 400,
+    });
+  }
+  const body = normalizeRendererEvent(parsed.body);
+  const functionResponse = rejectUnknownAgentFunction(body);
+  if (functionResponse?.status === 200) {
+    return new Response(encodeSSE('done', functionResponse.body), {
+      headers: sseHeaders(req),
+    });
+  }
+  if (functionResponse) {
+    return jsonWithCors(req, functionResponse.body, {
+      status: functionResponse.status,
+    });
+  }
 
   const validationStartedAt = performance.now();
+  // This stateless agent has no outstanding renderer RPC to resume without a surface.
+  if (!body.surfaceId && (body.rendererFunctionResponse || body.error)) {
+    return new Response(encodeSSE('done', { ok: true, messages: [] }), {
+      headers: sseHeaders(req),
+    });
+  }
   const validatedAction = validateAction(body.action);
   if (!validatedAction.ok) {
     log('action.rejected', {

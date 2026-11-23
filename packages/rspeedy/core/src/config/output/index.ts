@@ -407,6 +407,22 @@ export interface Output {
   minify?: Minify | boolean | undefined
 
   /**
+   * Controls automatic polyfill injection. Install `core-js` in the application
+   * when using `'usage'` or `'entry'`.
+   *
+   * @remarks
+   * Lynx builds use Chrome 92 as an approximation to select polyfills. The
+   * `'entry'` mode also requires an explicit `core-js` import.
+   *
+   * @defaultValue `'off'`
+   * @example
+   * ```js
+   * output: { polyfill: 'usage' }
+   * ```
+   */
+  polyfill?: 'off' | 'usage' | 'entry' | undefined
+
+  /**
    * The {@link SourceMap} configures whether and how to generate source-map for outputs.
    *
    * @defaultValue When this option is unset in Lynx builds, JavaScript source maps use `'cheap-module-source-map'` in development and `'source-map'` in production; CSS source maps are also generated. All `.map` assets are removed before emit.

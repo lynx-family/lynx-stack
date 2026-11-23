@@ -24,7 +24,7 @@ import { increaseReloadVersion } from '../../core/reload-version.js';
 import { resetFunctionCallReturnListener } from '../../core/thread-function-call/return-value.js';
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
-import { isEmptyObject } from '../../utils.js';
+import { isEmptyObject } from '../../shared/utils.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';

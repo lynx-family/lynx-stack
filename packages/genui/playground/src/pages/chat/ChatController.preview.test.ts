@@ -30,18 +30,18 @@ import { PROTOCOLS } from '../../utils/protocol.js';
 rstest.mock('../../components/QrCode.js', () => ({ QrCode: () => null }));
 
 const create = {
-  version: 'v0.9',
+  version: '1.0',
   createSurface: { surfaceId: 'main', catalogId: 'catalog' },
 };
 const update = (text: string) => ({
-  version: 'v0.9',
+  version: '1.0',
   updateComponents: {
     surfaceId: 'main',
     components: [{ id: 'root', component: 'Text', text }],
   },
 });
 const loading = {
-  version: 'v0.9',
+  version: '1.0',
   updateComponents: {
     surfaceId: 'main',
     components: [{ id: 'root', component: 'Loading' }],
@@ -287,6 +287,32 @@ test('keeps the rendered iframe and avoids replay when the final surface matches
     type: 'A2UI_LIVE_MESSAGES',
     messages: [create, update('Next turn')],
   }, new URL(nextFrame.src).origin);
+});
+
+test('replays the final bound image when streaming withheld it as loading', async () => {
+  const frame = await send();
+  const post = await ready(frame);
+  const data = {
+    version: '1.0',
+    updateDataModel: {
+      surfaceId: 'main',
+      value: { photo: 'https://images.example.com/weather.jpg' },
+    },
+  };
+  const image = {
+    version: '1.0',
+    updateComponents: {
+      surfaceId: 'main',
+      components: [{ id: 'root', component: 'Image', url: { path: '/photo' } }],
+    },
+  };
+  await emit('message', { messages: [create, data, loading] });
+  await done([create, data, image]);
+  expect(post).toHaveBeenLastCalledWith({
+    type: 'A2UI_REPLAY_MESSAGES',
+    messages: [create, data, image],
+  }, new URL(frame.src).origin);
+  expect(container.querySelector('iframe')).toBe(frame);
 });
 
 async function mountOpenUI() {

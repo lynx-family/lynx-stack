@@ -88,6 +88,7 @@ function collectRecursiveCreateCommandStream(
     nativeTemplate.bundleUrl,
     instance.attributeSlots,
     instance.childSlots.map(children => (children ?? []).map(child => child.instanceId)),
+    null,
   );
   return commands;
 }

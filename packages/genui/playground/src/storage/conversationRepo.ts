@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { getDB } from './db.js';
+import { sharedPreviewMessages } from './sharedConversation.js';
 import type { SharedConversationDoc } from './sharedConversation.js';
 import type {
   ConversationMeta,
@@ -215,9 +216,8 @@ export function previewTextFromSharedMessages(
 
 /**
  * Write a shared conversation document into a brand-new local conversation
- * (fresh id, re-sequenced messages) and return its meta. The snapshot's
- * `previewMessages` is left empty on purpose — the chat page rebuilds the
- * preview from the assistant message history when the conversation activates.
+ * (fresh id, re-sequenced messages) and return its meta.
+ * Express restores the server-compiled preview from the shared snapshot.
  */
 export async function importConversation(
   doc: SharedConversationDoc,
@@ -248,7 +248,7 @@ export async function importConversation(
     conversationId: meta.id,
     dataModel: doc.snapshot?.dataModel ?? {},
     surfaceIds: doc.snapshot?.surfaceIds ?? [],
-    previewMessages: [],
+    previewMessages: sharedPreviewMessages(doc),
     previewPayloadUrls: doc.snapshot?.previewPayloadUrls,
     updatedAt: now,
   };

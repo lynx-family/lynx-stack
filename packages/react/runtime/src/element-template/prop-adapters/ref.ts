@@ -9,7 +9,11 @@ import type { SerializableValue } from '../protocol/types.js';
 
 export type EtRef = OrdinaryRef<ElementTemplateRefProxy>;
 
-type RefToken = [handleId: number, attrSlotIndex: number];
+type RefToken = [
+  handleId: number,
+  attrSlotIndex: number,
+  templateType: string | undefined,
+];
 
 const refEffectQueue = /*#__PURE__*/ new OrdinaryRefEffectQueue<ElementTemplateRefProxy, RefToken>();
 const delayedRefUiOps: (() => void)[] = [];
@@ -50,9 +54,10 @@ export class ElementTemplateRefProxy extends SelectorRefProxy<ElementTemplateRef
   constructor(
     private readonly handleId: number,
     private readonly attrSlotIndex: number,
+    templateType?: string,
   ) {
     super();
-    return this.createProxy();
+    return this.createProxy(templateType);
   }
 
   protected createProxyTarget(): ElementTemplateRefProxy {
@@ -120,16 +125,18 @@ export function prepareSpreadRefAttrValue(
 export function queueRefAttrUpdate(
   oldValue: unknown,
   newValue: unknown,
-  instance: { readonly instanceId: number },
+  instance: { readonly instanceId: number; readonly type?: string },
   attrSlotIndex: number,
 ): void {
   const oldRef = getRefFromValue(oldValue);
   const newRef = getRefFromValue(newValue);
-  refEffectQueue.queue(oldRef, newRef, instance, attrSlotIndex, [instance.instanceId, attrSlotIndex]);
+  refEffectQueue.queue(oldRef, newRef, instance, attrSlotIndex, [instance.instanceId, attrSlotIndex, instance.type]);
 }
 
 export function flushPendingRefs(): void {
-  refEffectQueue.flush(([handleId, attrSlotIndex]) => new ElementTemplateRefProxy(handleId, attrSlotIndex));
+  refEffectQueue.flush(([handleId, attrSlotIndex, templateType]) =>
+    new ElementTemplateRefProxy(handleId, attrSlotIndex, templateType)
+  );
 }
 
 export function clearPendingRefs(): void {

@@ -5,6 +5,7 @@ import type { GenerationUsageRecord } from '../utils/modelPricing.js';
 
 export type ConversationProtocol =
   | 'a2ui'
+  | 'a2ui-express'
   | 'openui'
   | 'mcp-apps'
   | 'reactlynx'

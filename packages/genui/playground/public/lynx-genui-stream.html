@@ -691,26 +691,26 @@ counter = Button("点击次数：" + $count, increment)
 form = Form("welcome", Buttons([counter]), [nameField])`;
       const a2uiExample = [
         {
-          version: 'v0.9',
+          version: '1.0',
           createSurface: {
             surfaceId: 'demo',
             catalogId:
-              'https://a2ui.org/specification/v0_9/basic_catalog.json',
+              'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
           },
         },
         {
-          version: 'v0.9',
+          version: '1.0',
           updateComponents: {
             surfaceId: 'demo',
             components: [{
               id: 'root',
               component: 'Text',
-              text: { path: '/text' },
+              text: { '@path': '/text' },
             }],
           },
         },
         {
-          version: 'v0.9',
+          version: '1.0',
           updateDataModel: {
             surfaceId: 'demo',
             path: '/text',
@@ -723,6 +723,8 @@ form = Form("welcome", Buttons([counter]), [nameField])`;
         'updateComponents',
         'updateDataModel',
         'deleteSurface',
+        'callRendererFunction',
+        'agentFunctionResponse',
       ];
       function normalize(input) {
         const wrapper = input;
@@ -737,13 +739,22 @@ form = Form("welcome", Buttons([counter]), [nameField])`;
             ? operations.filter(key => key in message)
             : [];
           const payload = message?.[keys[0]];
+          const rpc = keys[0] === 'callRendererFunction'
+            || keys[0] === 'agentFunctionResponse';
+          const validScope = rpc
+            ? typeof payload?.functionCallId === 'string'
+              && payload.functionCallId.length > 0
+              && (payload.surfaceId === undefined
+                || (typeof payload.surfaceId === 'string'
+                  && payload.surfaceId.length > 0))
+            : typeof payload?.surfaceId === 'string'
+              && payload.surfaceId.length > 0;
           if (
-            keys.length !== 1 || message?.version !== 'v0.9'
-            || typeof payload?.surfaceId !== 'string'
-            || !payload.surfaceId
+            keys.length !== 1 || message?.version !== '1.0'
+            || !validScope
           ) {
             throw new Error(
-              '每条消息需包含 version: "v0.9"、一个 A2UI 操作及非空 surfaceId。',
+              '每条消息需包含 version: "1.0"、一个 A2UI 操作及有效的 surfaceId 或 functionCallId。',
             );
           }
         }
@@ -1237,7 +1248,7 @@ form = Form("welcome", Buttons([counter]), [nameField])`;
         );
         editor.placeholder = openui
           ? '输入 OpenUI，或开启 inlineMode 输入 Markdown 与 OpenUI 代码块…'
-          : '输入 A2UI v0.9 JSON、消息数组或 NDJSON…';
+          : '输入 A2UI 1.0 JSON、消息数组或 NDJSON…';
         frame.title = openui
           ? 'Lynx OpenUI 实时预览'
           : 'Lynx A2UI 实时预览';

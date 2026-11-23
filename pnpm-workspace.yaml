@@ -6,6 +6,7 @@ packages:
   - packages/genui/*
   - packages/i18n/*
   - packages/lynx/*
+  - packages/lynx-xml
   - packages/repl
   - packages/react
   - packages/react-signals
@@ -122,8 +123,8 @@ catalog:
 catalogs:
   # Packages vendored from the Lynx toolchain.
   lynxjs:
-    preact: "npm:@lynx-js/internal-preact@11.0.0-rc.1-20260903085447-f95471a"
-    "@lynx-js/preact-devtools": "5.0.1-20260827072047-5f77e12"
+    preact: "npm:@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422"
+    "@lynx-js/preact-devtools": "5.0.1-20261117053910-9766f38"
 
   adb:
     "@yume-chan/adb": ^2.6.4
@@ -138,25 +139,25 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.2.9"
+    "@rsbuild/core": "2.3.3"
 
   # Rslib monorepo packages
   rslib:
-    "@rslib/core": "1.0.2"
+    "@rslib/core": "1.0.7"
 
   # Rspack monorepo packages
   rspack:
-    "@rspack/cli": "2.2.7"
-    "@rspack/core": "2.2.7"
-    "@rspack/dev-server": "2.2.1"
-    "@rspack/test-tools": "2.2.7"
+    "@rspack/cli": "2.3.3"
+    "@rspack/core": "2.3.3"
+    "@rspack/dev-server": "2.2.2"
+    "@rspack/test-tools": "2.3.3"
 
   # Rstest monorepo packages
   rstest:
-    "@rstest/adapter-rsbuild": "0.12.1"
-    "@rstest/adapter-rslib": "0.12.1"
-    "@rstest/coverage-istanbul": "0.12.1"
-    "@rstest/core": "0.12.1"
+    "@rstest/adapter-rsbuild": "0.12.6"
+    "@rstest/adapter-rslib": "0.12.6"
+    "@rstest/coverage-istanbul": "0.12.6"
+    "@rstest/core": "0.12.6"
 
 overrides:
   # Published @lynx-js/lynx-ui-* (pulled in by packages/genui/a2ui) peer-depend on
@@ -187,6 +188,7 @@ packageExtensions:
       wast-loader: ^1.14.1
 
 patchedDependencies:
+  "@cfworker/json-schema@4.1.4": patches/@cfworker__json-schema@4.1.4.patch
   "@napi-rs/cli@2.18.4": "patches/@napi-rs__cli@2.18.4.patch"
   "@rollup/plugin-typescript": "patches/@rollup__plugin-typescript.patch"
 

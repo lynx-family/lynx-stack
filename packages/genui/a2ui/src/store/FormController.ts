@@ -9,6 +9,8 @@ export interface CheckFailure {
   call: string;
   /** Operator-friendly message attached to the failing check. */
   message: string;
+  code?: string;
+  severity?: 'error' | 'warning' | 'info';
 }
 
 export interface CheckOutcome {

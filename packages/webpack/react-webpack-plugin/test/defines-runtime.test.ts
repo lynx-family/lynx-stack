@@ -97,6 +97,12 @@ export const onTap = __MAIN_THREAD__ ? null : handler;`,
       chunkFormat: 'commonjs',
       chunkLoading: 'lynx',
     },
+    // Rspack 2.3's inner graph treats an exported-but-uncalled dynamic
+    // `import()` as unused and deletes the async chunk. These fixtures only
+    // export `load`.
+    optimization: {
+      innerGraph: false,
+    },
     module: {
       rules: [
         {

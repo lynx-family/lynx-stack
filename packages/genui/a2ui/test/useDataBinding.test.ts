@@ -3,7 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 import { describe, expect, test } from '@rstest/core';
 
-import { resolveProperties } from '../src/react/useDataBinding.js';
+import { act, renderHook } from '@lynx-js/react/testing-library';
+
+import { basicFunctions } from '../src/functions/index.js';
+import {
+  resolveProperties,
+  useResolvedProps,
+} from '../src/react/useDataBinding.js';
+import { MessageProcessor } from '../src/store/MessageProcessor.js';
 import { SignalStore } from '../src/store/SignalStore.js';
 import type { Surface } from '../src/store/types.js';
 
@@ -17,6 +24,161 @@ function createSurface(): Surface {
 }
 
 describe('resolveProperties', () => {
+  test.each([
+    {
+      component: 'RadioGroup',
+      key: 'items',
+      call: 'choices',
+      initial: ['A', 'B'],
+      updated: ['A'],
+    },
+    {
+      component: 'CustomField',
+      key: 'validation',
+      call: 'required',
+      initial: { valid: true },
+      updated: { valid: false },
+    },
+    {
+      component: 'CustomField',
+      key: 'details',
+      call: 'details',
+      initial: { rows: [{ '@path': 'B' }] },
+      updated: { rows: [] },
+    },
+  ])(
+    'reuses the snapshot for $component with a synchronous $call result',
+    async ({
+      component,
+      key,
+      call,
+      initial,
+      updated,
+    }) => {
+      const processor = new MessageProcessor();
+      const surface = processor.getOrCreateSurface('s');
+      surface.catalogId = 'test';
+      processor.registerCatalog('test', {
+        components: [{
+          name: 'RadioGroup',
+          component: () => null,
+          schema: {
+            properties: {
+              items: {
+                oneOf: [{ type: 'array', items: { type: 'string' } }, {
+                  type: 'object',
+                }],
+              },
+            },
+          },
+        }, { name: 'CustomField', component: () => null }],
+        functions: [
+          ...basicFunctions,
+          {
+            kind: 'function',
+            name: 'choices',
+            impl: args => args['value'] ? ['A', 'B'] : ['A'],
+          },
+          {
+            kind: 'function',
+            name: 'details',
+            impl: args => ({
+              rows: args['value'] ? [{ '@path': args['value'] }] : [],
+            }),
+          },
+        ],
+      });
+      const props = {
+        component,
+        [key]: { '@call': call, args: { value: { '@path': '/input' } } },
+      };
+      const read = (previous?: Record<string, unknown>) =>
+        resolveProperties(
+          props,
+          surface,
+          undefined,
+          processor,
+          undefined,
+          previous,
+        );
+
+      surface.store.update('/input', 'B');
+      const first = read();
+      expect(first[key]).toEqual(initial);
+      expect(read(first)).toBe(first);
+
+      const view = renderHook(() =>
+        useResolvedProps(props, surface, undefined, processor)[0]
+      );
+      try {
+        const mounted = view.result.current;
+        expect(mounted[key]).toEqual(initial);
+        await act(() => surface.store.update('/input', ''));
+        const next = view.result.current;
+        expect(next[key]).toEqual(updated);
+        expect(mounted[key]).toEqual(initial);
+        expect(read(next)).toBe(next);
+      } finally {
+        view.unmount();
+      }
+    },
+  );
+
+  test.each(['literal', 'binding'])(
+    'keeps a stable snapshot for a schema-coerced %s object array',
+    source => {
+      const surface = createSurface();
+      surface.catalogId = 'test';
+      const processor = new MessageProcessor();
+      processor.registerCatalog('test', {
+        functions: [],
+        components: [{
+          name: 'Chart',
+          component: () => null,
+          schema: {
+            properties: {
+              points: {
+                type: 'array',
+                items: { properties: { x: { $ref: '#/$defs/DynamicNumber' } } },
+              },
+            },
+          },
+        }],
+      });
+
+      let points = [{ x: '1' }, { x: '2' }];
+      const read = (previous?: Record<string, unknown>) =>
+        resolveProperties(
+          {
+            component: 'Chart',
+            points: source === 'literal' ? points : { '@path': '/points' },
+          },
+          surface,
+          undefined,
+          processor,
+          undefined,
+          previous,
+        );
+      surface.store.update('/points', points);
+      const first = read();
+      expect(first['points']).toEqual([{ x: 1 }, { x: 2 }]);
+      expect(read(first)).toBe(first);
+
+      points = [{ x: '1' }, { x: '3' }];
+      surface.store.update('/points', points);
+      const updated = read(first);
+      expect(updated['points']).toEqual([{ x: 1 }, { x: 3 }]);
+      expect(first['points']).toEqual([{ x: 1 }, { x: 2 }]);
+      expect(read(updated)).toBe(updated);
+
+      points = [];
+      surface.store.update('/points', points);
+      const empty = read(updated);
+      expect(empty['points']).toEqual([]);
+      expect(read(empty)).toBe(empty);
+    },
+  );
+
   test('resolves path bindings and keeps primitive values', () => {
     const surface = createSurface();
     surface.store.update('/weather/tempLow', 12);
@@ -25,7 +187,7 @@ describe('resolveProperties', () => {
       {
         title: 'hello',
         visible: true,
-        tempLow: { path: 'weather/tempLow' },
+        tempLow: { '@path': 'weather/tempLow' },
       },
       surface,
     );
@@ -43,11 +205,10 @@ describe('resolveProperties', () => {
     const resolved = resolveProperties(
       {
         text: {
-          call: 'formatString',
+          '@call': 'formatString',
           args: {
             value: '${/tempLow}°',
           },
-          returnType: 'string',
         },
       },
       surface,
@@ -68,16 +229,16 @@ describe('resolveProperties', () => {
 
     const resolved = resolveProperties(
       {
-        labels: { path: '/weather/dates' },
+        labels: { '@path': '/weather/dates' },
         series: [
           {
             name: 'Temperature',
-            values: { path: '/weather/temperatures' },
+            values: { '@path': '/weather/temperatures' },
             color: '#FF5733',
           },
           {
             name: 'Precipitation',
-            values: { path: '/weather/precipitations' },
+            values: { '@path': '/weather/precipitations' },
             color: '#33A1FF',
           },
         ],
@@ -120,11 +281,11 @@ describe('resolveProperties', () => {
     surface.store.update('/weather/temperatures', [12, 14]);
 
     const props = {
-      labels: { path: '/weather/dates' },
+      labels: { '@path': '/weather/dates' },
       series: [
         {
           name: 'Temperature',
-          values: { path: '/weather/temperatures' },
+          values: { '@path': '/weather/temperatures' },
         },
       ],
     };

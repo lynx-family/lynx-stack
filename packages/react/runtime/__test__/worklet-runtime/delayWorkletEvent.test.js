@@ -3,11 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  clearDelayedWorklets,
-  delayExecUntilJsReady,
-  runDelayedWorklet,
-} from '../../src/worklet-runtime/delayWorkletEvent';
+import { initEventDelay } from '../../src/worklet-runtime/delayWorkletEvent';
 import { updateWorkletRefInitValueChanges } from '../../src/worklet-runtime/workletRef';
 import { initWorklet } from '../../src/worklet-runtime/workletRuntime';
 
@@ -42,11 +38,11 @@ describe('DelayWorkletEvent', () => {
         elementRefptr: 'element2',
       },
     };
-    delayExecUntilJsReady('1', [event, 1]);
+    globalThis.lynxWorkletImpl._eventDelayImpl.delayExecUntilJsReady('1', [event, 1]);
     globalThis.runWorklet({
       _lepusWorkletHash: '1',
     }, [event, 2]);
-    delayExecUntilJsReady('1', [event2, 3]);
+    globalThis.lynxWorkletImpl._eventDelayImpl.delayExecUntilJsReady('1', [event2, 3]);
 
     let worklet = {
       _c: {
@@ -58,7 +54,7 @@ describe('DelayWorkletEvent', () => {
     };
 
     updateWorkletRefInitValueChanges([[178, 333]]);
-    runDelayedWorklet(worklet, 'element');
+    globalThis.lynxWorkletImpl._eventDelayImpl.runDelayedWorklet(worklet, 'element');
     vi.runAllTimers();
     expect(fn).toBeCalledTimes(2);
     expect(fn).toHaveBeenNthCalledWith(1, expect.anything(), 1);
@@ -74,16 +70,31 @@ describe('DelayWorkletEvent', () => {
         elementRefptr: 'element',
       },
     };
-    delayExecUntilJsReady('1', [event]);
+    globalThis.lynxWorkletImpl._eventDelayImpl.delayExecUntilJsReady('1', [event]);
 
-    clearDelayedWorklets();
+    globalThis.lynxWorkletImpl._eventDelayImpl.clearDelayedWorklets();
 
     let worklet = {
       _wkltId: '1',
     };
 
-    runDelayedWorklet(worklet, 'element');
+    globalThis.lynxWorkletImpl._eventDelayImpl.runDelayedWorklet(worklet, 'element');
     vi.runAllTimers();
     expect(fn).not.toBeCalled();
+  });
+
+  it('keeps state isolated per EventDelayImpl instance', () => {
+    const fn = vi.fn();
+    globalThis.registerWorklet('main-thread', '1', fn);
+    const first = initEventDelay();
+    const second = initEventDelay();
+    const event = { currentTarget: { elementRefptr: 'element' } };
+
+    first.delayExecUntilJsReady('1', [event, 'first']);
+    second.clearDelayedWorklets();
+
+    first.runDelayedWorklet({ _wkltId: '1' }, 'element');
+    vi.runAllTimers();
+    expect(fn).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'first');
   });
 });

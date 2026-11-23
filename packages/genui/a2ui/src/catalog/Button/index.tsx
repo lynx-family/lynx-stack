@@ -2,9 +2,10 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { A2UIRenderer } from '../../react/A2UIRenderer.jsx';
+import { accessibilityProps } from '../../react/accessibility.js';
 import { useChecks } from '../../react/useChecks.js';
 import type { CheckLike } from '../../react/useChecks.js';
-import type { GenericComponentProps } from '../../store/types.js';
+import type { ComponentId, GenericComponentProps } from '../../store/types.js';
 
 import '../../../styles/catalog/Button.css';
 
@@ -14,44 +15,37 @@ import '../../../styles/catalog/Button.css';
  * @a2uiCatalog Button
  */
 export interface ButtonProps extends GenericComponentProps {
-  child: string;
+  /** @a2uiComponentId */
+  child: ComponentId;
   variant?: 'primary' | 'borderless';
   isValid?: boolean;
-  /** v0.9 actions should use the `event` wrapper for server-dispatched clicks. */
+  /** v1.0 actions should use the `event` wrapper for server-dispatched clicks. */
   action: {
     event: {
       name: string;
-      /** Context is a JSON object map in v0.9. */
+      userMessage?: string | { '@path': string } | {
+        '@call': string;
+        catalogId?: string;
+        args?: Record<string, unknown>;
+      };
+      /** Context is a JSON object map in v1.0. */
       context?: Record<string, unknown>;
     };
   } | {
     functionCall: {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
+      '@call': string;
+      catalogId?: string;
+      args?: Record<string, unknown>;
     };
   };
-  checks?: Array<{
-    condition: boolean | { path: string } | {
-      call: string;
-      args: Record<string, unknown>;
-      returnType?:
-        | 'string'
-        | 'number'
-        | 'boolean'
-        | 'array'
-        | 'object'
-        | 'any'
-        | 'void';
+  '@checks'?: Array<{
+    condition: { '@path': string } | {
+      '@call': string;
+      catalogId?: string;
+      args?: Record<string, unknown>;
     };
-    message: string;
+    /** Fallback when the validation result does not include a message. */
+    message?: string;
   }>;
 }
 
@@ -71,7 +65,7 @@ export function Button(
     variant = 'primary',
     dataContextPath,
   } = props;
-  const checks = props.checks as CheckLike[] | undefined;
+  const checks = props['@checks'] as CheckLike[] | undefined;
   const { ok, firstFailureMessage } = useChecks({
     checks,
     componentId: id ?? '',
@@ -97,6 +91,7 @@ export function Button(
   return (
     <>
       <view
+        {...accessibilityProps(props)}
         className={`button button-${variant}${
           isValid ? '' : ' button-disabled'
         }${ok ? '' : ' button-invalid'}`}

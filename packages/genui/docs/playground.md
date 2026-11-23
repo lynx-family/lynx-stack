@@ -33,7 +33,7 @@ a Lynx bundle that a Lynx container loads. The two bundles target different runt
 
 ## 1. Prepare A2UI messages
 
-Preview input is an array of A2UI v0.9 messages: `createSurface` creates a surface,
+Preview input is an array of A2UI 1.0 messages: `createSurface` creates a surface,
 `updateComponents` describes its component tree, and `updateDataModel` updates
 data bound to components. The component tree starts at `root`.
 

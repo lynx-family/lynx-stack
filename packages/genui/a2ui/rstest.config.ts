@@ -4,14 +4,17 @@
 import { defineConfig } from '@rstest/core';
 
 import { withDefaultConfig } from '@lynx-js/react/testing-library/rstest-config';
+import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 
 export default defineConfig({
+  coverage: { reporters: ['lcov', 'text'] },
   extends: withDefaultConfig({
     modifyRstestConfig(config) {
       return {
         ...config,
         name: 'genui/a2ui',
-        include: ['test/**/*.test.ts'],
+        include: ['test/**/*.test.{ts,tsx}'],
+        plugins: [...(config.plugins ?? []), pluginReactLynx()],
       };
     },
   }),

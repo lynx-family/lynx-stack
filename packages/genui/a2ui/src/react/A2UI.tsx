@@ -1,7 +1,6 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import * as v0_9 from '@a2ui/web_core/v0_9';
 
 import {
   memo,
@@ -22,15 +21,11 @@ import { MessageProcessor } from '../store/MessageProcessor.js';
 import type { MessageStore } from '../store/MessageStore.js';
 import { createResource } from '../store/Resource.js';
 import type {
+  RendererToAgentMessage,
   Resource,
   ResourceInfo,
   UserActionPayload,
 } from '../store/types.js';
-
-// Mark v0_9 used so the namespace import doesn't get pruned. Kept around so
-// future enhancements (typed protocol message guards) don't need a fresh
-// import diff.
-void v0_9;
 
 /**
  * Props for the all-in-one A2UI ReactLynx renderer.
@@ -41,13 +36,20 @@ export interface A2UIProps {
    * `<A2UI>` subscribes via `useSyncExternalStore` and processes new
    * messages incrementally.
    *
+   * Pass `null` to render nothing and end the current rendering session,
+   * without calling `renderEmpty`. Passing a store afterward starts a new
+   * session and processes all messages already in that store.
+   *
    * The internal `MessageProcessor` (surfaces, signals, resources) is
-   * created once per mount and is **not reset** if `messageStore` is
-   * later replaced with a different instance. Pass a `key` prop derived
+   * retained while `messageStore` stays non-null and is **not reset** if
+   * replaced directly with a different instance. Pass a `key` prop derived
    * from the store's identity if you want a fresh session, e.g.
    * `<A2UI key={turnId} messageStore={turnStore} ... />`.
+   *
+   * @example
+   * <A2UI messageStore={store ?? null} catalogs={catalogs} />
    */
-  messageStore: MessageStore;
+  messageStore: MessageStore | null;
   /**
    * Components the renderer is allowed to instantiate. Each item is either
    * a bare component (name read from `displayName ?? name`) or a tuple
@@ -62,6 +64,13 @@ export interface A2UIProps {
    * the renderer never awaits this.
    */
   onAction?: (action: UserActionPayload) => void;
+  /** Exact protocol catalog id; defaults to the built-in Lynx catalog id. */
+  catalogId?: string;
+  /** Forward v1.0 wire events and metadata; push responses into messageStore. */
+  onMessage?: (
+    message: RendererToAgentMessage,
+    metadata: Record<string, unknown>,
+  ) => void | Promise<void>;
   /**
    * Optional class name applied to the top-level `surface-${surfaceId}`
    * view for the active surface. Use this when theme switching is
@@ -76,7 +85,7 @@ export interface A2UIProps {
     children: ReactNode,
     ctx: { surfaceId: string },
   ) => ReactNode;
-  /** Render before the first `beginRendering` arrives from the buffer. */
+  /** Render when a non-null messageStore has no surface ready yet. */
   renderEmpty?: () => ReactNode;
   /** Render while the active resource is pending. */
   renderFallback?: () => ReactNode;
@@ -115,10 +124,21 @@ interface InternalSession {
  * />
  */
 function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
+  if (props.messageStore === null) {
+    return null;
+  }
+  return <A2UISession {...props} messageStore={props.messageStore} />;
+}
+
+function A2UISession(
+  props: A2UIProps & { messageStore: MessageStore },
+): ReactNode {
   const {
     messageStore,
     catalogs,
     onAction,
+    onMessage,
+    catalogId = 'https://unpkg.com/@lynx-js/genui/a2ui/dist/catalog.json',
     wrapSurface,
     renderEmpty,
     renderFallback,
@@ -129,6 +149,8 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
 
   // Keep the latest onAction in a ref so the once-mounted processor.onEvent
   // listener always calls the up-to-date prop without re-binding.
+  const onMessageRef = useRef(onMessage);
+  onMessageRef.current = onMessage;
   const onActionRef = useRef<typeof onAction>(onAction);
 
   useEffect(() => {
@@ -144,6 +166,8 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
     processedCount: 0,
   };
   const session = sessionRef.current;
+  const catalog = useMemo<Catalog>(() => defineCatalog(catalogs), [catalogs]);
+  session.processor.registerCatalog(catalogId, catalog);
 
   // Counter used to force a re-render whenever the processor emits an
   // update (new beginRendering, surfaceUpdate that mutated the active
@@ -210,19 +234,24 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       }
     });
 
-    const offEvent = proc.onEvent(({ message, resolve }) => {
-      // Empty resolve — there is no "response" channel from the renderer
-      // back into the protocol. Responses arrive via the buffer.
-      resolve([]);
-      if (
-        typeof message === 'object' && message !== null
-        && 'userAction' in message
-        && (message as { userAction: unknown }).userAction
-      ) {
-        const action =
-          (message as { userAction: UserActionPayload }).userAction;
+    const offEvent = proc.onEvent(({ message, resolve, reject }) => {
+      // Acknowledge transport completion; protocol responses arrive via the buffer.
+      try {
+        const pending = onMessageRef.current?.(
+          message as RendererToAgentMessage,
+          proc.getDataModelMetadata(),
+        );
+        void Promise.resolve(pending).then(() => resolve([]), error => {
+          console.error('[a2ui] onMessage handler rejected:', error);
+          reject(error);
+        });
+      } catch (e) {
+        console.error('[a2ui] onMessage handler threw:', e);
+        reject(e);
+      }
+      if ('action' in message) {
         try {
-          onActionRef.current?.(action);
+          onActionRef.current?.(message['action'] as UserActionPayload);
         } catch (e) {
           console.error('[a2ui] onAction handler threw:', e);
         }
@@ -247,11 +276,6 @@ function A2UIImpl(props: A2UIProps): import('@lynx-js/react').ReactNode {
       session.processor.processMessages(slice);
     }
   }, [messages, session]);
-
-  const catalog = useMemo<Catalog>(
-    () => defineCatalog(catalogs),
-    [catalogs],
-  );
 
   const activeResource = session.activeMessageId
     ? (session.resources.get(session.activeMessageId) ?? null)

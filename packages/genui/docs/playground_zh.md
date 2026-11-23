@@ -27,7 +27,7 @@
 
 ## 1. 准备 A2UI 消息
 
-预览输入是 A2UI v0.9 消息数组：`createSurface` 创建页面，`updateComponents`
+预览输入是 A2UI 1.0 消息数组：`createSurface` 创建页面，`updateComponents`
 描述组件树，`updateDataModel` 更新组件绑定的数据。组件树以 `root` 为根节点。
 
 下面的完整 HTML 示例加载一张商品卡片，包含图片、评分、评论数量、售价、原价和

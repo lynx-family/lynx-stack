@@ -10,7 +10,7 @@ import { arrangeJevLayout } from '../agent/common/jev-layout.js';
 import type { JevLayoutMode } from '../agent/common/jev-layout.js';
 
 const surface = {
-  version: 'v0.9' as const,
+  version: '1.0' as const,
   createSurface: {
     surfaceId: 'main',
     catalogId: 'https://example.com/catalog',
@@ -539,7 +539,7 @@ test('counts fixed compound and template depth while excluding unplaced movable 
       children: { path: '/items', componentId: 'row' },
     },
     { id: 'row', component: 'Row', children: ['text'] },
-    { id: 'text', component: 'Text', text: { path: 'title' } },
+    { id: 'text', component: 'Text', text: { '@path': 'title' } },
   ];
   // Include a parent-capable fixed slot so the Card unit participates in structure planning.
   components.find(item => item.id === 'card')!.child = 'slot';

@@ -38,6 +38,14 @@ export type A2UIBenchGenerateRaw = (
 export type A2UIBenchRetrySleep = BenchRetrySleep;
 
 export interface A2UIBenchAdapterOptions {
+  format?: {
+    protocol: 'a2ui-express';
+    outputInstruction: string;
+    validate: (
+      source: string,
+      catalog: A2UICatalog,
+    ) => ReturnType<typeof validateA2UIOutput>;
+  };
   generateRaw?: A2UIBenchGenerateRaw;
   retryDelayMs?: number;
   sleep?: A2UIBenchRetrySleep;
@@ -79,7 +87,10 @@ function normalizedAttemptLimit(maxAttempts: number): number {
   return Math.min(4, Math.max(1, Math.floor(maxAttempts)));
 }
 
-function buildPrompt(input: ProtocolBenchAdapterInput): string {
+function buildPrompt(
+  input: ProtocolBenchAdapterInput,
+  outputInstruction: string,
+): string {
   return [
     'Generate one Lynx UI for the benchmark scenario below.',
     '',
@@ -93,7 +104,7 @@ function buildPrompt(input: ProtocolBenchAdapterInput): string {
     'User request:',
     input.scenario.prompt,
     '',
-    'Return only valid A2UI v0.9 protocol messages using the selected catalog.',
+    outputInstruction,
     'Do not include benchmark metadata in the generated UI.',
   ]
     .filter((line): line is string => line !== undefined)
@@ -121,7 +132,7 @@ export function createA2UIBenchAdapter(
         imageGenerationScope,
       ));
   return {
-    protocol: 'a2ui',
+    protocol: options.format?.protocol ?? 'a2ui',
     async generate(input, signal) {
       if (signal?.aborted) {
         return abortedArtifact(
@@ -129,10 +140,16 @@ export function createA2UIBenchAdapter(
         );
       }
 
-      const catalog = createMatchedCoreCatalog();
+      const catalog = input.catalog
+        ? resolveBenchCatalog(input.catalog)
+        : createMatchedCoreCatalog();
       const initialMessages: ChatMessage[] = [{
         role: 'user',
-        content: buildPrompt(input),
+        content: buildPrompt(
+          input,
+          options.format?.outputInstruction
+            ?? 'Return only valid A2UI v1.0 protocol messages using the selected catalog.',
+        ),
       }];
       let messages = initialMessages;
       const attempts: ProtocolBenchAttemptResult[] = [];
@@ -177,7 +194,10 @@ export function createA2UIBenchAdapter(
             Math.round(performance.now() - startedAt),
           );
           finalText = generated.text;
-          const validation = validateA2UIOutput(generated.text, catalog);
+          const validation = (options.format?.validate ?? validateA2UIOutput)(
+            generated.text,
+            catalog,
+          );
           finalErrors = validation.errors;
           warnings.push(...validation.warnings);
           const usage = benchAttemptTokenCounts(generated.usage);
@@ -201,7 +221,11 @@ export function createA2UIBenchAdapter(
               initialMessages,
               messages,
               result: generated,
-              repairPrompt: formatErrorsForModel(validation.errors),
+              repairPrompt: options.format
+                ? [options.format.outputInstruction, ...validation.errors].join(
+                  '\n',
+                )
+                : formatErrorsForModel(validation.errors),
             });
           }
         } catch (error) {

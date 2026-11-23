@@ -214,9 +214,11 @@ export function initializeArkImageGenerationRunScope(
 }
 
 export function generatedArkImageURLs(
-  scope: ArkImageGenerationRunScope,
+  scope: { requestContext: unknown },
 ): readonly string[] {
-  const state = scope.requestContext.get(ARK_IMAGE_GENERATION_RUN_STATE_KEY);
+  const requestContext = scope
+    .requestContext as ArkImageGenerationRunScope['requestContext'];
+  const state = requestContext.get(ARK_IMAGE_GENERATION_RUN_STATE_KEY);
   return [...new Set(state.generatedURLs)];
 }
 
