@@ -134,7 +134,7 @@ describe('a markup card compiles to bundle bytes', () => {
    * about the bytes rather than about one reader's tolerance.
    */
   describe('and the SSR decoder reads them as an ordinary bundle', () => {
-    const decoded = decodeTemplate(buffer, false, false, false);
+    const decoded = decodeTemplate(buffer, false, false, false, false);
 
     test('recovers the config the engine hard-codes for a markup card', () => {
       expect(decoded.config).toMatchObject({

@@ -35,6 +35,7 @@ pub struct MainThreadServerContext {
   transform_vw: bool,
   transform_vh: bool,
   transform_rem: bool,
+  transform_sp: bool,
 }
 
 #[wasm_bindgen]
@@ -46,6 +47,7 @@ impl MainThreadServerContext {
     transform_vw: bool,
     transform_vh: bool,
     transform_rem: bool,
+    transform_sp: bool,
   ) -> Self {
     Self {
       elements: Vec::new(),
@@ -55,6 +57,7 @@ impl MainThreadServerContext {
       transform_vw,
       transform_vh,
       transform_rem,
+      transform_sp,
     }
   }
 
@@ -282,6 +285,7 @@ impl MainThreadServerContext {
             transform_vw: self.transform_vw,
             transform_vh: self.transform_vh,
             transform_rem: self.transform_rem,
+            transform_sp: self.transform_sp,
           },
         );
         element.set_attribute(key, transformed);
@@ -340,6 +344,7 @@ impl MainThreadServerContext {
         transform_vw: self.transform_vw,
         transform_vh: self.transform_vh,
         transform_rem: self.transform_rem,
+        transform_sp: self.transform_sp,
       },
     );
     if transformed_style_str == styles {
@@ -358,6 +363,7 @@ impl MainThreadServerContext {
         transform_vw: self.transform_vw,
         transform_vh: self.transform_vh,
         transform_rem: self.transform_rem,
+        transform_sp: self.transform_sp,
       },
     );
     if let Some(Some(element)) = self.elements.get_mut(element_id) {
@@ -536,7 +542,7 @@ mod tests {
 
   #[test]
   fn test_html_generation() {
-    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false, false);
 
     // Create <div>
     let div_id = ctx.create_element("div".to_string(), None, None, None);
@@ -567,7 +573,7 @@ mod tests {
 
   #[test]
   fn test_set_style_empty_value() {
-    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false, false);
     let div_id = ctx.create_element("div".to_string(), None, None, None);
 
     // This should not panic
@@ -580,7 +586,7 @@ mod tests {
 
   #[test]
   fn test_component_css_id() {
-    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false);
+    let mut ctx = MainThreadServerContext::new("".to_string(), true, false, false, false, false);
     // Create a component with component_css_id = 42
     let comp_id = ctx.create_element(
       "x-view".to_string(),

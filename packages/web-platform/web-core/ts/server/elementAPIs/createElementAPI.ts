@@ -108,6 +108,7 @@ export function createElementAPI(
     transformVW: boolean;
     transformVH: boolean;
     transformREM: boolean;
+    transformSP: boolean;
   },
 ): { globalThisAPIs: ElementPAPIs; wasmContext: MainThreadServerContext } {
   const wasmContext = new MainThreadServerContext(
@@ -116,6 +117,7 @@ export function createElementAPI(
     config.transformVW,
     config.transformVH,
     config.transformREM,
+    config.transformSP,
   );
   if (styleInfo) {
     const resource = new StyleSheetResource(styleInfo, undefined);

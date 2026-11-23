@@ -31,6 +31,7 @@ pub(crate) fn transform_inline_style_string(source: &str, config: &TransformerCo
       transform_vw: config.transform_vw,
       transform_vh: config.transform_vh,
       transform_rem: config.transform_rem,
+      transform_sp: config.transform_sp,
     },
   );
   transformer.parse(source);
@@ -51,6 +52,7 @@ pub(crate) fn transform_inline_style_key_value_vec(
       transform_vw: config.transform_vw,
       transform_vh: config.transform_vh,
       transform_rem: config.transform_rem,
+      transform_sp: config.transform_sp,
     },
   );
 
@@ -189,6 +191,29 @@ mod tests {
       result,
       "font-size:24px;--lynx-text-bg-color:initial;-webkit-background-clip:initial;background-clip:initial;color:blue;"
     );
+  }
+
+  #[test]
+  fn transform_sp_when_enabled() {
+    let source = "width:16sp;margin:4sp 2px;";
+    let result = transform_inline_style_string(
+      source,
+      &TransformerConfig {
+        transform_sp: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(
+      result,
+      "width:calc(16 * var(--sp-unit));margin:calc(4 * var(--sp-unit)) 2px;"
+    );
+  }
+
+  #[test]
+  fn keep_sp_when_disabled() {
+    let source = "width:16sp;";
+    let result = transform_inline_style_string(source, &TransformerConfig::default());
+    assert_eq!(result, "width:16sp;");
   }
 
   #[test]

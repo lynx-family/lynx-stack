@@ -86,6 +86,7 @@ export function createElementAPI(
   transform_vw: boolean,
   transform_vh: boolean,
   transform_rem: boolean,
+  transform_sp: boolean,
   config_enable_css_inheritance = false,
 ): ElementPAPIs {
   let wasmContext = new MainThreadWasmContext(
@@ -363,6 +364,7 @@ export function createElementAPI(
               transform_vw,
               transform_vh,
               transform_rem,
+              transform_sp,
             )
           ) {
             element.setAttribute('style', value);
@@ -382,6 +384,7 @@ export function createElementAPI(
             transform_vw,
             transform_vh,
             transform_rem,
+            transform_sp,
           );
         }
       }

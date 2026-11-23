@@ -124,6 +124,7 @@ pub fn set_inline_styles_in_str(
   transform_vw: bool,
   transform_vh: bool,
   transform_rem: bool,
+  transform_sp: bool,
 ) -> bool {
   let transformed_style_str = transform_inline_style_string(
     &styles,
@@ -131,6 +132,7 @@ pub fn set_inline_styles_in_str(
       transform_vw,
       transform_vh,
       transform_rem,
+      transform_sp,
     },
   );
   // we compare the transformed style string with the original one
@@ -149,6 +151,7 @@ pub fn set_inline_styles_in_key_value_vec(
   transform_vw: bool,
   transform_vh: bool,
   transform_rem: bool,
+  transform_sp: bool,
 ) {
   let transformed_style_str = transform_inline_style_key_value_vec(
     k_v_vec,
@@ -156,6 +159,7 @@ pub fn set_inline_styles_in_key_value_vec(
       transform_vw,
       transform_vh,
       transform_rem,
+      transform_sp,
     },
   );
   let _ = dom.set_attribute("style", &transformed_style_str);

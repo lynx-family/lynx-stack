@@ -97,7 +97,7 @@ mod tests {
         .remove(name)
         .expect("section should exist");
       assert!(style_info.style_content_str_size_hint > 0);
-      let style_content = StyleInfoDecoder::new(style_info, None, true, false, false, false)
+      let style_content = StyleInfoDecoder::new(style_info, None, true, false, false, false, false)
         .expect("StyleInfoDecoder should succeed")
         .style_content;
       assert!(style_content.contains(&format!(".{name}")));

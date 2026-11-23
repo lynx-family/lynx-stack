@@ -50,6 +50,7 @@ export class TemplateManager {
     transformVW: boolean,
     transformVH: boolean,
     transformREM: boolean,
+    transformSP: boolean,
     overrideConfig?: Record<string, string>,
   ): Promise<void> {
     if (this.#bundles.has(url)) {
@@ -82,6 +83,7 @@ export class TemplateManager {
         transformVW,
         transformVH,
         transformREM,
+        transformSP,
         overrideConfig,
       );
       this.#loadingPromises.set(url, promise);
@@ -95,6 +97,7 @@ export class TemplateManager {
     transformVW: boolean,
     transformVH: boolean,
     transformREM: boolean,
+    transformSP: boolean,
     overrideConfig?: Partial<PageConfig>,
   ): Promise<void> {
     const currentTime = performance.now() + performance.timeOrigin;
@@ -116,6 +119,7 @@ export class TemplateManager {
       transformVW,
       transformVH,
       transformREM,
+      transformSP,
       overrideConfig,
     };
     this.#worker!.postMessage(msg);

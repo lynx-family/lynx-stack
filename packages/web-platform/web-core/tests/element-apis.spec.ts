@@ -80,6 +80,7 @@ describe('Element APIs', () => {
         false,
         false,
         false,
+        false,
         enabled,
       );
       const page = api.__CreatePage('0', 0);
@@ -1007,6 +1008,55 @@ describe('Element APIs', () => {
     expect(targetStyle).toBe(
       'width: 50vw; height: 100vh; margin: 10rpx; padding: 5ppx;',
     );
+  });
+
+  test('__SetInlineStyles with sp when enabled', () => {
+    const mtsGlobalThisUnits = createElementAPI(
+      rootDom,
+      mtsBinding,
+      true,
+      true,
+      true,
+      false, // transformVW
+      false, // transformVH
+      false, // transformREM
+      true, // transformSP
+    );
+    const root = mtsGlobalThisUnits.__CreatePage('page', 0);
+    const stringTarget = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(stringTarget, 'string-target');
+    mtsGlobalThisUnits.__SetInlineStyles(
+      stringTarget,
+      'font-size: 16sp; width: 50vw;',
+    );
+    mtsGlobalThisUnits.__AppendElement(root, stringTarget);
+    const objectTarget = mtsGlobalThisUnits.__CreateView(0);
+    mtsGlobalThisUnits.__SetID(objectTarget, 'object-target');
+    mtsGlobalThisUnits.__SetInlineStyles(objectTarget, {
+      fontSize: '16sp',
+      lineHeight: '20.5sp',
+    });
+    mtsGlobalThisUnits.__AppendElement(root, objectTarget);
+    mtsGlobalThisUnits.__FlushElementTree();
+    expect(
+      rootDom.querySelector('#string-target')!.getAttribute('style'),
+    ).toBe('font-size:calc(16 * var(--sp-unit));width:50vw;');
+    expect(
+      rootDom.querySelector('#object-target')!.getAttribute('style'),
+    ).toBe(
+      'font-size:calc(16 * var(--sp-unit));line-height:calc(20.5 * var(--sp-unit));',
+    );
+  });
+
+  test('__SetInlineStyles keeps sp when disabled', () => {
+    const root = mtsGlobalThis.__CreatePage('page', 0);
+    const target = mtsGlobalThis.__CreateView(0);
+    mtsGlobalThis.__SetID(target, 'target');
+    mtsGlobalThis.__SetInlineStyles(target, { fontSize: '16sp' });
+    mtsGlobalThis.__AppendElement(root, target);
+    mtsGlobalThis.__FlushElementTree();
+    expect(rootDom.querySelector('#target')!.getAttribute('style'))
+      .toBe('font-size:16sp;');
   });
 
   test('__GetConfig__AddConfig', () => {
@@ -2250,6 +2300,7 @@ describe('Element APIs', () => {
         transformVW: false,
         transformVH: false,
         transformREM: false,
+        transformSP: false,
       };
       const { globalThisAPIs: api } = createServerElementAPI(
         binding,
@@ -2338,6 +2389,42 @@ describe('Element APIs', () => {
       expect(html4).toContain('calc(50 * var(--vw-unit))');
       expect(html4).toContain('calc(100 * var(--vh-unit))');
       expect(html4).toContain('calc(10 * var(--rpx-unit))');
+    });
+
+    test('ssr inline styles transform sp when enabled', () => {
+      const binding: SSRBinding = { ssrResult: '' };
+      const config = {
+        enableCSSSelector: true,
+        defaultOverflowVisible: false,
+        defaultDisplayLinear: true,
+        transformVW: false,
+        transformVH: false,
+        transformREM: false,
+        transformSP: true,
+      };
+      const { globalThisAPIs: api, wasmContext: wasmCtx } =
+        createServerElementAPI(binding, undefined, '', config);
+
+      const root = api.__CreatePage('page', 0);
+
+      const view1 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetAttribute(view1, 'style', 'font-size: 16sp;');
+      api.__AppendElement(root, view1);
+
+      const view2 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(view2, 'font-size: 16sp;');
+      api.__AppendElement(root, view2);
+
+      const view3 = api.__CreateElement('view', api.__GetElementUniqueID(root));
+      api.__SetInlineStyles(view3, { fontSize: '16sp' });
+      api.__AppendElement(root, view3);
+
+      api.__FlushElementTree();
+
+      for (const view of [view1, view2, view3]) {
+        expect(wasmCtx.generate_html(api.__GetElementUniqueID(view)))
+          .toContain('font-size:calc(16 * var(--sp-unit));');
+      }
     });
 
     test('ssr __GetComputedStyleByKey returns an empty string', () => {

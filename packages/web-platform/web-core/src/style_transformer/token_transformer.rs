@@ -12,6 +12,7 @@ pub struct TransformerConfig {
   pub transform_vw: bool,
   pub transform_vh: bool,
   pub transform_rem: bool,
+  pub transform_sp: bool,
 }
 
 /**
@@ -62,6 +63,12 @@ pub(crate) fn transform_one_token<'a>(
           return (
             token_type,
             Cow::Owned(format!("calc({value} * var(--vh-unit))")),
+          );
+        } else if config.transform_sp && suffix.eq_ignore_ascii_case("sp") {
+          let value = &token_value[..len - 2];
+          return (
+            token_type,
+            Cow::Owned(format!("calc({value} * var(--sp-unit))")),
           );
         }
       }
@@ -166,6 +173,51 @@ mod tests {
   fn test_transform_rem_disabled() {
     let (_, tv) = transform_one_token(DIMENSION_TOKEN, "2rem", &TransformerConfig::default());
     assert_eq!(tv, "2rem");
+  }
+
+  #[test]
+  fn test_transform_sp() {
+    let (_, tv) = transform_one_token(
+      DIMENSION_TOKEN,
+      "16sp",
+      &TransformerConfig {
+        transform_sp: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(tv, "calc(16 * var(--sp-unit))");
+  }
+
+  #[test]
+  fn test_transform_sp_float() {
+    let (_, tv) = transform_one_token(
+      DIMENSION_TOKEN,
+      "12.5sp",
+      &TransformerConfig {
+        transform_sp: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(tv, "calc(12.5 * var(--sp-unit))");
+  }
+
+  #[test]
+  fn test_transform_sp_case_insensitive() {
+    let (_, tv) = transform_one_token(
+      DIMENSION_TOKEN,
+      "16SP",
+      &TransformerConfig {
+        transform_sp: true,
+        ..Default::default()
+      },
+    );
+    assert_eq!(tv, "calc(16 * var(--sp-unit))");
+  }
+
+  #[test]
+  fn test_transform_sp_disabled() {
+    let (_, tv) = transform_one_token(DIMENSION_TOKEN, "16sp", &TransformerConfig::default());
+    assert_eq!(tv, "16sp");
   }
 
   #[test]

@@ -82,6 +82,7 @@ export class LynxViewElement extends HTMLElement {
     'transform-vw',
     'transform-vh',
     'transform-rem',
+    'transform-sp',
   ];
   /**
    * @private
@@ -252,6 +253,24 @@ export class LynxViewElement extends HTMLElement {
       this.setAttribute('transform-rem', '');
     } else {
       this.removeAttribute('transform-rem');
+    }
+  }
+
+  #transformSP: boolean = false;
+  /**
+   * @public
+   * @property transformSP
+   * Enable evaluating sp unit to the current CSS var(--sp-unit)
+   */
+  get transformSP(): boolean {
+    return this.#transformSP;
+  }
+  set transformSP(val: boolean) {
+    this.#transformSP = val;
+    if (val) {
+      this.setAttribute('transform-sp', '');
+    } else {
+      this.removeAttribute('transform-sp');
     }
   }
 
@@ -513,6 +532,9 @@ export class LynxViewElement extends HTMLElement {
         case 'transform-rem':
           this.transformREM = newValue !== 'false' && newValue !== null;
           break;
+        case 'transform-sp':
+          this.transformSP = newValue !== 'false' && newValue !== null;
+          break;
       }
     }
   }
@@ -610,6 +632,7 @@ export class LynxViewElement extends HTMLElement {
               this.transformVW,
               this.transformVH,
               this.transformREM,
+              this.transformSP,
               this.browserConfig,
             );
           });
@@ -619,6 +642,7 @@ export class LynxViewElement extends HTMLElement {
             this.transformVW,
             this.transformVH,
             this.transformREM,
+            this.transformSP,
             undefined, // overrideConfig
           );
 
@@ -653,6 +677,7 @@ export class LynxViewElement extends HTMLElement {
     this.#upgradeProperty('transformVW');
     this.#upgradeProperty('transformVH');
     this.#upgradeProperty('transformREM');
+    this.#upgradeProperty('transformSP');
     this.#upgradeProperty('isProfiling');
     if (this.url) {
       this.#url = this.url;
