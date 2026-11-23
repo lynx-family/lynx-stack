@@ -99,6 +99,7 @@ function initialize(): void {
   const workletReturns = new Map<number, { instance: Instance; resolve: (value: unknown) => void }>();
   let nextWorkletReturnId = 0;
   const removers: (() => void)[] = [];
+  const patchedDelays = new WeakSet<object>();
   const pendingCreates: CreateTransferEvent[] = [];
   let pageReady = !mts;
   let active: Instance | undefined;
@@ -328,6 +329,38 @@ function initialize(): void {
   }
   enableTransferMode();
 
+  /**
+   * The worklet runtime flushes its pre-hydration `runOnBackground` queue once per page, dropping calls whose
+   * first-screen handles are not bound yet. Each transfer instance hydrates separately, so a hydration only runs
+   * the calls already bound to the background and keeps the rest in place for the instances still waiting.
+   */
+  function keepDelayedBackgroundCalls() {
+    const delay = globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl;
+    if (!delay || patchedDelays.has(delay)) return;
+    patchedDelays.add(delay);
+    /* eslint-disable-next-line @typescript-eslint/unbound-method */
+    const run = delay.runDelayedBackgroundFunctions;
+    delay.runDelayedBackgroundFunctions = () => {
+      const queue = delay.delayedBackgroundFunctionArray;
+      if (queue.every(details => !details || details.jsFnHandle)) {
+        run();
+        // Later instances still queue their first-screen calls.
+        delay.hasHydrated = false;
+        return;
+      }
+      // Pending handles keep indices into the queue, so bound calls are cleared in place.
+      queue.forEach((details, index) => {
+        if (!details?.jsFnHandle) return;
+        queue[index] = undefined;
+        details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
+      });
+    };
+    removers.push(() => {
+      delay.runDelayedBackgroundFunctions = run;
+      patchedDelays.delete(delay);
+    });
+  }
+
   if (mts) {
     listen<[Record<string, unknown>?]>(lynx.getEngine(), '__RenderPage', ([initData]) => {
       lynx.__initData = initData ?? {};
@@ -355,6 +388,7 @@ function initialize(): void {
       if (instance && instance.phase !== 'disposed') {
         try {
           if (packet.seq !== instance.seq + 1) throw new Error('Transfer commit sequence mismatch');
+          if (packet.patchOptions.isHydration) keepDelayedBackgroundCalls();
           updateMainThread({ data: JSON.stringify(packet.patchList), patchOptions: packet.patchOptions });
           instance.seq = packet.seq;
           status = 'applied';

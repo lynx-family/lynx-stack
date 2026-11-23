@@ -86,6 +86,21 @@ main-thread refs after the native host updates A's props.
    revision 1. Tap **Run late worklet** to confirm post-hydration updates still
    complete.
 
+## First-screen runOnBackground across instances
+
+`transfer-run-on-background` checks `runOnBackground` calls made by a
+main-thread handler before its own instance hydrates. Creating an instance with
+`"hold": true` keeps its first frame on the background thread until
+**deliver held frames** is tapped in any instance.
+
+1. Create `FirstScreenRunOnBackground` with `{"name":"A"}`, then with
+   `{"name":"B","hold":true}`. A shows `hydrated`; B stays on `first screen`
+   and logs `hold B frame`.
+2. Tap **A: call runOnBackground**. A logs `A runOnBackground ran: tap`.
+3. Tap **B: call runOnBackground** twice, then **A: deliver held frames**. B
+   hydrates and logs `B runOnBackground ran: tap` for both earlier taps.
+4. Tap **B: call runOnBackground** again. B shows `background calls 3`.
+
 ## Limits
 
 These are internal Snapshot examples. ElementTemplate, lazy-component IFR,

@@ -7,6 +7,7 @@ export default defineConfig({
     entry: {
       'transfer-chat': './src/transfer-chat.tsx',
       'transfer-first-frame': './src/transfer-first-frame.tsx',
+      'transfer-run-on-background': './src/transfer-run-on-background.tsx',
     },
   },
   plugins: [pluginReactLynx()],
