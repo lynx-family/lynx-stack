@@ -11,14 +11,14 @@ export function ChatBubble(props: Record<string, unknown>) {
   const user = props['role'] === 'user';
   const text = typeof props['text'] === 'string' ? props['text'] : '';
   return (
-    <view
-      className={`chat-bubble ${user ? 'chat-user' : 'chat-assistant'}`}
-      bindtap={() => setCount(value => value + 1)}
-    >
-      <text className='chat-text'>{text}</text>
-      <text className='chat-counter'>
-        Count: {count} (+1)
-      </text>
+    <view className={`chat-row ${user ? 'chat-user' : 'chat-assistant'}`}>
+      <view
+        className='chat-bubble'
+        bindtap={() => setCount(value => value + 1)}
+      >
+        <text className='chat-text'>{text}</text>
+        <text className='chat-counter'>{count} taps · +1</text>
+      </view>
     </view>
   );
 }

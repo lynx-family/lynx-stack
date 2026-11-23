@@ -1,12 +1,28 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createElement, render } from 'preact';
+import { createElement, options, render } from 'preact';
 import type { ComponentType, ContainerNode, VNode } from 'preact';
 
+import { addReloadScopedEventListener } from '../core/reload-scoped-event.js';
 import { getReloadVersion } from '../core/reload-version.js';
+import { prepareMainThreadFunctionCtx } from '../core/thread-function-call/main-thread.js';
 import { __root, enableTransferMode, warnRootRenderOnTransferPage } from '../root.js';
-import { CHILDREN, PARENT } from '../shared/render-constants.js';
+import {
+  CHILDREN,
+  COMMIT,
+  COMPONENT,
+  DIFFED,
+  HOOKS,
+  PARENT,
+  PENDING_EFFECTS,
+  RENDER_COMPONENT,
+  VALUE,
+} from '../shared/render-constants.js';
+import { isRendering } from './lifecycle/isRendering.js';
+import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
+import type { RunWorkletCtxRetData } from '../worklet-runtime/bindings/events.js';
+import type { Worklet } from '../worklet-runtime/bindings/types.js';
 import { genCommitTaskId, replaceCommitHook } from './lifecycle/patch/commit.js';
 import type { PatchList, PatchOptions } from './lifecycle/patch/commit.js';
 import { updateMainThread } from './lifecycle/patch/updateMainThread.js';
@@ -41,6 +57,11 @@ interface Pending {
   packet: TransferCommit;
   finish: () => void;
 }
+export interface PendingMainThreadCall {
+  worklet: Worklet;
+  params: unknown[];
+  resolve: (value: any) => void;
+}
 interface Instance {
   init: CreateTransferEvent;
   Component: ComponentType<TransferProps>;
@@ -52,6 +73,7 @@ interface Instance {
   main?: SnapshotInstance;
   element?: FiberElement;
   background?: BackgroundSnapshotInstance;
+  firstFrameWorklets?: PendingMainThreadCall[] | undefined;
   queue: Pending[];
   inFlight?: Pending | undefined;
 }
@@ -74,10 +96,14 @@ function initialize(): void {
   const frames = new Map<string, TransferFirstFrame>();
   const disposed = new Set<string>();
   const owners = new WeakMap<object, Instance>();
+  const workletReturns = new Map<number, { instance: Instance; resolve: (value: unknown) => void }>();
+  let nextWorkletReturnId = 0;
   const removers: (() => void)[] = [];
+  const patchedDelays = new WeakSet<object>();
   const pendingCreates: CreateTransferEvent[] = [];
   let pageReady = !mts;
   let active: Instance | undefined;
+  let activeVersion: number | undefined;
 
   function send(type: string, data: unknown) {
     const target = mts ? lynx.getJSContext() : lynx.getCoreContext();
@@ -94,13 +120,16 @@ function initialize(): void {
     target.addEventListener(type, callback);
     removers.push(() => target.removeEventListener(type, callback));
   }
-  function withInstance<T>(instance: Instance, fn: () => T): T {
+  function withInstance<T>(instance: Instance | undefined, fn: () => T, version = instance?.version): T {
     const previous = active;
+    const previousVersion = activeVersion;
     active = instance;
+    activeVersion = version;
     try {
       return fn();
     } finally {
       active = previous;
+      activeVersion = previousVersion;
     }
   }
   function findOwner(vnode: VNode): Instance | undefined {
@@ -114,6 +143,7 @@ function initialize(): void {
 
   function renderBackground(instance: Instance) {
     const container = instance.background as unknown as ContainerNode;
+    instance.firstFrameWorklets = [];
     withInstance(instance, () => render(createElement(instance.Component, instance.props), container));
     const vnode = (container as unknown as Record<string, object | undefined>)[CHILDREN];
     if (vnode) owners.set(vnode, instance);
@@ -147,6 +177,10 @@ function initialize(): void {
   }
   /** Releases the commits of an instance that will never be applied. */
   function release(instance: Instance) {
+    instance.firstFrameWorklets = undefined;
+    for (const [id, call] of workletReturns) {
+      if (call.instance === instance) workletReturns.delete(id);
+    }
     instance.inFlight?.finish();
     instance.inFlight = undefined;
     instance.queue.forEach(item => item.finish());
@@ -186,10 +220,21 @@ function initialize(): void {
     instance.phase = 'hydrating';
     const serialized = JSON.parse(frame.snapshot) as SerializedSnapshotInstance;
     const snapshotPatch = withInstance(instance, () => hydrate(serialized, instance.background!));
+    const patchList: PatchList = { patchList: [{ id: genCommitTaskId(), snapshotPatch }] };
+    if (instance.firstFrameWorklets?.length) {
+      patchList.delayedRunOnMainThreadData = instance.firstFrameWorklets.map(({ worklet, params, resolve }) => {
+        const callWorklet = { ...worklet };
+        prepareMainThreadFunctionCtx(callWorklet);
+        const resolveId = --nextWorkletReturnId;
+        workletReturns.set(resolveId, { instance, resolve });
+        return { worklet: callWorklet, params, resolveId };
+      });
+    }
+    instance.firstFrameWorklets = undefined;
     enqueue(
       instance,
       'hydrate',
-      { patchList: [{ id: genCommitTaskId(), snapshotPatch }] },
+      patchList,
       { reloadVersion: getReloadVersion(), isHydration: true },
       () => {
         if (instance.phase === 'hydrating') instance.phase = 'live';
@@ -284,6 +329,38 @@ function initialize(): void {
   }
   enableTransferMode();
 
+  /**
+   * The worklet runtime flushes its pre-hydration `runOnBackground` queue once per page, dropping calls whose
+   * first-screen handles are not bound yet. Each transfer instance hydrates separately, so a hydration only runs
+   * the calls already bound to the background and keeps the rest in place for the instances still waiting.
+   */
+  function keepDelayedBackgroundCalls() {
+    const delay = globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl;
+    if (!delay || patchedDelays.has(delay)) return;
+    patchedDelays.add(delay);
+    /* eslint-disable-next-line @typescript-eslint/unbound-method */
+    const run = delay.runDelayedBackgroundFunctions;
+    delay.runDelayedBackgroundFunctions = () => {
+      const queue = delay.delayedBackgroundFunctionArray;
+      if (queue.every(details => !details || details.jsFnHandle)) {
+        run();
+        // Later instances still queue their first-screen calls.
+        delay.hasHydrated = false;
+        return;
+      }
+      // Pending handles keep indices into the queue, so bound calls are cleared in place.
+      queue.forEach((details, index) => {
+        if (!details?.jsFnHandle) return;
+        queue[index] = undefined;
+        details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
+      });
+    };
+    removers.push(() => {
+      delay.runDelayedBackgroundFunctions = run;
+      patchedDelays.delete(delay);
+    });
+  }
+
   if (mts) {
     listen<[Record<string, unknown>?]>(lynx.getEngine(), '__RenderPage', ([initData]) => {
       lynx.__initData = initData ?? {};
@@ -311,6 +388,7 @@ function initialize(): void {
       if (instance && instance.phase !== 'disposed') {
         try {
           if (packet.seq !== instance.seq + 1) throw new Error('Transfer commit sequence mismatch');
+          if (packet.patchOptions.isHydration) keepDelayedBackgroundCalls();
           updateMainThread({ data: JSON.stringify(packet.patchList), patchOptions: packet.patchOptions });
           instance.seq = packet.seq;
           status = 'applied';
@@ -338,9 +416,67 @@ function initialize(): void {
       }
       enqueue(instance, 'update', patchList, { ...patchOptions, reloadVersion: getReloadVersion() }, finish);
     });
+    let rendering: Instance | undefined;
+    /* eslint-disable @typescript-eslint/unbound-method */
+    const renderComponent = options[RENDER_COMPONENT];
+    const commit = options[COMMIT];
+    const diffed = options[DIFFED];
+    /* eslint-enable @typescript-eslint/unbound-method */
+    options[RENDER_COMPONENT] = (vnode, component) => {
+      rendering = findOwner(vnode);
+      renderComponent?.(vnode, component);
+    };
+    options[DIFFED] = vnode => {
+      const effects = vnode[COMPONENT]?.[HOOKS]?.[PENDING_EFFECTS] as
+        | { [VALUE]: () => void | (() => void) }[]
+        | undefined;
+      if (effects?.length) {
+        const instance = findOwner(vnode);
+        if (instance?.phase === 'waiting') {
+          const version = instance.version;
+          for (const effect of effects) {
+            const callback = effect[VALUE];
+            effect[VALUE] = () => {
+              const cleanup = withInstance(instance, () => callback.call(effect), version);
+              return typeof cleanup === 'function' ? () => withInstance(instance, cleanup, version) : cleanup;
+            };
+          }
+        }
+      }
+      diffed?.(vnode);
+    };
+    options[COMMIT] = (vnode, queue) => {
+      rendering = undefined;
+      withInstance(findOwner(vnode), () => commit?.(vnode, queue));
+    };
+    const scheduleWorklet = options.scheduleMainThreadWorklet;
+    function scheduleTransferWorklet(call: PendingMainThreadCall): boolean {
+      if (active && active.version !== activeVersion) return true;
+      const instance = active ?? (isRendering.value ? rendering : undefined);
+      if (!instance || (instance.phase !== 'waiting' && instance.phase !== 'disposed')) {
+        return false;
+      }
+      instance.firstFrameWorklets?.push(call);
+      return true;
+    }
+    options.scheduleMainThreadWorklet = scheduleTransferWorklet;
+    removers.push(() => {
+      Object.assign(options, {
+        [RENDER_COMPONENT]: renderComponent,
+        [COMMIT]: commit,
+        [DIFFED]: diffed,
+        scheduleMainThreadWorklet: scheduleWorklet,
+      });
+    });
     // Events of hydrated instances dispatch directly; earlier events have no handler and are dropped.
     enablePublishEvent();
     const core = lynx.getCoreContext();
+    removers.push(addReloadScopedEventListener<RunWorkletCtxRetData>(core, WorkletEvents.FunctionCallRet, data => {
+      const call = workletReturns.get(data.resolveId);
+      if (!call) return;
+      workletReturns.delete(data.resolveId);
+      call.resolve(data.returnValue);
+    }));
     listen(core, '__CreateTransfer', create);
     listen(core, '__TransferFirstFrame', acceptFrame);
     listen(core, '__SetTransferProps', setProps);

@@ -5,10 +5,14 @@
 // the thread, so the background side lives in `transfer.test.jsx`.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { runOnBackground } from '../../../src/core/background-function/run-on-background';
+import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value';
 import { root } from '../../../src/index';
 import { TransferRegistry } from '../../../src/internal';
 import { __root } from '../../../src/root';
 import { snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshotInstanceManager';
+import { WorkletEvents } from '../../../src/worklet-runtime/bindings/events';
+import { hydrateJsFnHandles, initRunOnBackgroundDelay } from '../../../src/worklet-runtime/run-on-background/index';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
 
@@ -190,5 +194,57 @@ describe('transfer (main thread)', () => {
     // A page rendered without data gets empty init data.
     engine.fire('__RenderPage', []);
     expect(lynx.__initData).toEqual({});
+  });
+
+  it('runs first-screen runOnBackground calls after their own transfer hydrates', () => {
+    const previousImpl = globalThis.lynxWorkletImpl;
+    const previousSdkVersion = SystemInfo.lynxSdkVersion;
+    SystemInfo.lynxSdkVersion = '4.0';
+    // Only the parts of the worklet runtime that `onHydrationFinished` touches.
+    globalThis.lynxWorkletImpl = {
+      _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
+      _refImpl: { clearFirstScreenWorkletRefMap() {} },
+      _eventDelayImpl: { clearDelayedWorklets() {} },
+    };
+    const firstScreenHandle = () => Object.assign(() => {}, { _isFirstScreen: true });
+    // What the hydrate patch of an instance binds onto its first-screen handles.
+    const bind = (handle, jsFnId, execId) =>
+      hydrateJsFnHandles({ _jsFn: { _jsFnId: jsFnId } }, { _jsFn: handle }, execId);
+    const sent = () => link.of(WorkletEvents.runOnBackground).map(({ obj }) => obj);
+    try {
+      create('rb-a');
+      create('rb-b');
+      const handleA = firstScreenHandle();
+      const handleB = firstScreenHandle();
+      const lateHandleB = firstScreenHandle();
+
+      // Both instances call from their first frames before any hydration.
+      void runOnBackground(handleA)();
+      void runOnBackground(handleB)();
+
+      // `rb-a` hydrates first.
+      bind(handleA, 1, 101);
+      expect(commit('rb-a', 1, true).status).toBe('applied');
+      expect(sent()).toEqual([{ _jsFnId: 1, _execId: 101 }]);
+
+      // `rb-b` is still waiting and calls again from its first frame.
+      void runOnBackground(lateHandleB)();
+
+      // `rb-b` hydrates: both of its calls should reach the background now.
+      bind(handleB, 2, 202);
+      bind(lateHandleB, 3, 202);
+      expect(commit('rb-b', 1, true).status).toBe('applied');
+      expect(sent()).toEqual([
+        { _jsFnId: 1, _execId: 101 },
+        { _jsFnId: 2, _execId: 202 },
+        { _jsFnId: 3, _execId: 202 },
+      ]);
+    } finally {
+      native.fire('__DestroyTransfer', { transferId: 'rb-a' });
+      native.fire('__DestroyTransfer', { transferId: 'rb-b' });
+      resetFunctionCallReturnListener();
+      globalThis.lynxWorkletImpl = previousImpl;
+      SystemInfo.lynxSdkVersion = previousSdkVersion;
+    }
   });
 });
