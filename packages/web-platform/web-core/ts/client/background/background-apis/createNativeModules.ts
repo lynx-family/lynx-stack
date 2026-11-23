@@ -51,17 +51,24 @@ export async function createNativeModules(
   await Promise.all(
     Object.entries(nativeModulesMap).map((
       [moduleName, moduleStr],
-    ) =>
-      import(/* webpackIgnore: true */ moduleStr).then(
+    ) => {
+      const initData = nativeModulesInitData
+          && Object.prototype.hasOwnProperty.call(
+            nativeModulesInitData,
+            moduleName,
+          )
+        ? nativeModulesInitData[moduleName]
+        : undefined;
+      return import(/* webpackIgnore: true */ moduleStr).then(
         module =>
           customNativeModules[moduleName] = module?.default?.(
             nativeModules,
             (name: string, data: Cloneable) =>
               nativeModulesCall(name, data, moduleName),
-            { initData: nativeModulesInitData?.[moduleName] },
+            { initData },
           ),
-      )
-    ),
+      );
+    }),
   );
   /* LYNX_NATIVE_MODULES_ADD */
 

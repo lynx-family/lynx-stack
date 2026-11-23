@@ -307,12 +307,22 @@ describe('createNativeApp', () => {
       {
         UnconfiguredModule: moduleUrl,
         ConfiguredModule: moduleUrl,
+        NullModule: moduleUrl,
+        FalseModule: moduleUrl,
+        ZeroModule: moduleUrl,
+        constructor: moduleUrl,
       },
       '/main.web.bundle',
       'react',
       false,
       {
-        ConfiguredModule: { city: 'beijing', theme: 'light' },
+        ConfiguredModule: {
+          city: 'beijing',
+          options: { theme: 'light', tags: ['a', 'b'] },
+        },
+        NullModule: null,
+        FalseModule: false,
+        ZeroModule: 0,
       },
     );
     const secondApp = await createNativeApp(
@@ -325,21 +335,29 @@ describe('createNativeApp', () => {
       'react',
       false,
       {
-        ConfiguredModule: { city: 'shanghai', theme: 'dark' },
+        ConfiguredModule: {
+          city: 'shanghai',
+          options: { theme: 'dark', tags: ['c'] },
+        },
       },
     );
 
     expect(firstApp.nativeModuleProxy.UnconfiguredModule.getInitData())
       .toBeUndefined();
+    expect(firstApp.nativeModuleProxy.constructor.getInitData())
+      .toBeUndefined();
+    expect(firstApp.nativeModuleProxy.NullModule.getInitData()).toBeNull();
+    expect(firstApp.nativeModuleProxy.FalseModule.getInitData()).toBe(false);
+    expect(firstApp.nativeModuleProxy.ZeroModule.getInitData()).toBe(0);
     expect(firstApp.nativeModuleProxy.UnconfiguredModule.hasSharedModules())
       .toBe(true);
     expect(firstApp.nativeModuleProxy.ConfiguredModule.getInitData()).toEqual({
       city: 'beijing',
-      theme: 'light',
+      options: { theme: 'light', tags: ['a', 'b'] },
     });
     expect(secondApp.nativeModuleProxy.ConfiguredModule.getInitData()).toEqual({
       city: 'shanghai',
-      theme: 'dark',
+      options: { theme: 'dark', tags: ['c'] },
     });
 
     await firstApp.nativeModuleProxy.ConfiguredModule.invokeHost('getStorage', {

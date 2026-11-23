@@ -31,7 +31,10 @@ describe('lynx-view nativeModulesInitData', () => {
 
     const view = new LynxViewElement();
     const initialData = {
-      CustomBridge: { city: 'beijing', theme: 'light' },
+      CustomBridge: {
+        city: 'beijing',
+        options: { theme: 'light', tags: ['a'] },
+      },
     };
     view.nativeModulesInitData = initialData;
 
@@ -48,7 +51,10 @@ describe('lynx-view nativeModulesInitData', () => {
 
     try {
       view.nativeModulesInitData = {
-        CustomBridge: { city: 'shanghai', theme: 'dark' },
+        CustomBridge: {
+          city: 'shanghai',
+          options: { theme: 'dark', tags: ['c'] },
+        },
       };
       instance.backgroundThread.startWebWorker(
         {},
