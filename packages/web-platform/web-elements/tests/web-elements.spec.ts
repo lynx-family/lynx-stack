@@ -137,6 +137,47 @@ test.describe('web-elements test suite', () => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
     });
+    test('raw-text and x-text cloneNode(false) should not append duplicate text', async ({ page }) => {
+      await gotoWebComponentPage(page, 'x-text/text-attribute-text');
+      const result = await page.evaluate(() => {
+        const cases = ['raw-text', 'x-text'].map((tag) => {
+          const el = document.createElement(tag);
+          el.setAttribute('text', 'hello');
+          const detachedChildCount = el.childNodes.length;
+
+          document.body.append(el);
+          const connectedText = el.textContent;
+
+          const shallowClone = el.cloneNode(false) as HTMLElement;
+          const shallowCloneChildCount = shallowClone.childNodes.length;
+
+          el.setAttribute('text', 'world');
+          const updatedText = el.textContent;
+
+          el.removeAttribute('text');
+          const clearedText = el.textContent;
+          el.remove();
+
+          return {
+            tag,
+            detachedChildCount,
+            connectedText,
+            shallowCloneChildCount,
+            updatedText,
+            clearedText,
+          };
+        });
+        return cases;
+      });
+
+      for (const item of result) {
+        expect(item.detachedChildCount).toBe(0);
+        expect(item.connectedText).toBe('hello');
+        expect(item.shallowCloneChildCount).toBe(0);
+        expect(item.updatedText).toBe('world');
+        expect(item.clearedText).toBe('');
+      }
+    });
     test('x-text/view-in-text', async ({ page }, { title }) => {
       await gotoWebComponentPage(page, title);
       await diffScreenShot(page, title, 'index');
