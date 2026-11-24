@@ -5,10 +5,12 @@
 /* LYNX_NATIVE_MODULES_IMPORT */
 import {
   type Cloneable,
+  type NativeModuleEventHandler,
   type NativeModulesInitData,
   type NativeModulesMap,
 } from '../../../types/index.js';
 import {
+  dispatchNativeModuleEventEndpoint,
   nativeModulesCallEndpoint,
   switchExposureServiceEndpoint,
 } from '../../endpoints.js';
@@ -48,34 +50,52 @@ export async function createNativeModules(
 
   const nativeModules = {};
   const customNativeModules: Record<string, Record<string, any>> = {};
+  const eventHandlers = new Map<string, NativeModuleEventHandler>();
+
   await Promise.all(
-    Object.entries(nativeModulesMap).map((
-      [moduleName, moduleStr],
-    ) => {
-      const initData = nativeModulesInitData
-          && Object.prototype.hasOwnProperty.call(
-            nativeModulesInitData,
-            moduleName,
-          )
-        ? nativeModulesInitData[moduleName]
-        : undefined;
+    Object.entries(nativeModulesMap).map(([moduleName, moduleStr]) => {
+      const initData = nativeModulesInitData?.[moduleName];
+      const setEventHandler = (
+        handler: NativeModuleEventHandler | undefined,
+      ) => {
+        if (handler) {
+          eventHandlers.set(moduleName, handler);
+        } else {
+          eventHandlers.delete(moduleName);
+        }
+      };
       return import(/* webpackIgnore: true */ moduleStr).then(
         module =>
           customNativeModules[moduleName] = module?.default?.(
             nativeModules,
             (name: string, data: Cloneable) =>
               nativeModulesCall(name, data, moduleName),
-            { initData },
+            { initData, setEventHandler },
           ),
       );
     }),
   );
   /* LYNX_NATIVE_MODULES_ADD */
 
-  return Object.assign(nativeModules, {
+  Object.assign(nativeModules, {
     bridge: bridgeModule,
     IntersectionObserverModule: intersectionObserverModule,
     LynxExposureModule: lynxExposureModule,
     ...customNativeModules,
   });
+
+  // Register after all modules and the shared registry are ready so Rpc's
+  // built-in message cache buffers and replays early events safely.
+  uiThreadRpc.registerHandler(
+    dispatchNativeModuleEventEndpoint,
+    (moduleName, data) => {
+      try {
+        eventHandlers.get(moduleName)?.(data);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  );
+
+  return nativeModules;
 }

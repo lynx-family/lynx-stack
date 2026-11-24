@@ -4,6 +4,7 @@ export type { LynxViewElement } from './mainthread/LynxView.js';
 export type {
   MainThreadModule,
   NativeModuleContext,
+  NativeModuleEventHandler,
   NativeModuleInitData,
   NativeModulesInitData,
   NativeModulesMap,
