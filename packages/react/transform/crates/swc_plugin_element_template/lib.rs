@@ -331,7 +331,18 @@ where
 
     let span = node.span();
     let opening_span = node.opening.span;
-    let (mut rendered_attrs, attributes) = typed_host_attributes_expr(node.opening.attrs.take());
+    let mut attrs = node.opening.attrs.take();
+    if let Some(css_id) = self.css_id_value {
+      attrs.push(jsx_expr_attr(
+        "css-id",
+        Expr::Lit(Lit::Num(Number {
+          span: DUMMY_SP,
+          value: css_id,
+          raw: None,
+        })),
+      ));
+    }
+    let (mut rendered_attrs, attributes) = typed_host_attributes_expr(attrs);
     let list_children = if node.children.is_empty() {
       empty_array_expr()
     } else {
