@@ -23,13 +23,20 @@ import {
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { pluginLynx } from '@lynx-js/rsbuild-plugin'
-import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin'
 
 import { decodeTemplate } from './utils.js'
 import {
   LAYERS as DEFAULT_LAYERS,
   defineExternalBundleRslibConfig,
 } from '../src/index.js'
+import {
+  ExternalBundleSectionMapPlugin,
+  sectionNaming,
+} from '../src/webpack/ExternalBundleSectionMapPlugin.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -1558,5 +1565,344 @@ describe('without a DSL plugin', () => {
 
     expect(fs.existsSync(path.join(distRoot, 'plain-engine-web.web.bundle')))
       .toBe(true)
+  })
+})
+
+describe('hashSectionNames', () => {
+  const fixtureDir = path.join(__dirname, './fixtures/utils-lib')
+
+  const readTasmSectionMap = (distRoot: string, bundleName: string) => {
+    const tasmJson = JSON.parse(
+      fs.readFileSync(
+        path.join(distRoot, '.lynx', bundleName, 'tasm.json'),
+        'utf-8',
+      ),
+    ) as {
+      customSections: Record<string, { content: unknown }>
+    }
+    return tasmJson.customSections['__sectionMap']?.content as
+      | Record<string, string>
+      | undefined
+  }
+
+  it('hashes background section names and emits __sectionMap while leaving main-thread and CSS sections unhashed', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-section-names')
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            utils: path.join(fixtureDir, 'index.ts'),
+          },
+        },
+        id: 'utils-hashed',
+        output: {
+          distPath: {
+            root: distRoot,
+          },
+        },
+        plugins: [pluginReactLynx()],
+      }, {
+        hashSectionNames: true,
+      }))
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+
+    const sectionMap = readTasmSectionMap(distRoot, 'utils-hashed')
+    expect(sectionMap).toBeDefined()
+    expect(Object.keys(sectionMap!)).toStrictEqual(['utils'])
+    expect(sectionMap!['utils']).toMatch(/^utils\.[0-9a-f]{8}$/)
+
+    const hashedName = sectionMap!['utils']!
+    const bundlePath = path.join(distRoot, 'utils-hashed.lynx.bundle')
+    const bundleBuffer = await fs.promises.readFile(bundlePath)
+    // `decode_napi`'s `SerializeCustomSections` omits table-valued custom
+    // sections, so also verify the encoded binary carries `__sectionMap`.
+    expect(bundleBuffer.includes(Buffer.from('__sectionMap'))).toBe(true)
+
+    const decodedResult = await decodeTemplate(bundlePath)
+    expect(Object.keys(decodedResult['custom-sections']).sort()).toStrictEqual([
+      hashedName,
+      'utils__main-thread',
+    ].sort())
+    expect(decodedResult['custom-sections']['utils']).toBeUndefined()
+    expect(decodedResult['custom-sections'][hashedName]).toBeTypeOf('string')
+    expect(
+      Array.isArray(decodedResult['custom-sections']['utils__main-thread']),
+    )
+      .toBe(true)
+  })
+
+  it('produces a deterministic hash for identical input and a different hash when content changes', async () => {
+    const tempDir = await fs.promises.mkdtemp(
+      path.join(fixtureDir, 'dist-hash-change-'),
+    )
+    const entryFile = path.join(tempDir, 'entry.ts')
+    const distA = path.join(tempDir, 'dist-a')
+    const distB = path.join(tempDir, 'dist-b')
+    const distC = path.join(tempDir, 'dist-c')
+
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      await fs.promises.writeFile(entryFile, 'export const version = "0.7.2"\n')
+      const buildBundle = async (distRoot: string) => {
+        await build(defineExternalBundleRslibConfig({
+          source: { entry: { dil: entryFile } },
+          id: 'dil-bundle',
+          output: { distPath: { root: distRoot } },
+          performance: { buildCache: false },
+          plugins: [pluginLynx()],
+        }, { hashSectionNames: true }))
+        return readTasmSectionMap(distRoot, 'dil-bundle')!
+      }
+
+      const mapA = await buildBundle(distA)
+      const mapB = await buildBundle(distB)
+      expect(mapA['dil']).toBe(mapB['dil'])
+
+      await fs.promises.writeFile(entryFile, 'export const version = "0.7.6"\n')
+      const mapC = await buildBundle(distC)
+      expect(mapC['dil']).toMatch(/^dil\.[0-9a-f]{8}$/)
+      expect(mapC['dil']).not.toBe(mapA['dil'])
+    } finally {
+      rstest.unstubAllEnvs()
+      await fs.promises.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
+  it('omits __sectionMap for main-thread-only bundles', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-mt-only')
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            utils: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.MAIN_THREAD,
+            },
+          },
+        },
+        id: 'utils-mt-only',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+      }, {
+        hashSectionNames: true,
+      }))
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+
+    expect(readTasmSectionMap(distRoot, 'utils-mt-only')).toBeUndefined()
+    const decodedResult = await decodeTemplate(
+      path.join(distRoot, 'utils-mt-only.lynx.bundle'),
+    )
+    expect(Object.keys(decodedResult['custom-sections'])).toStrictEqual([
+      'utils',
+    ])
+  })
+
+  it('records the hashed background section name in debug-metadata.json', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-debug-metadata')
+    rstest.stubEnv('CI', '1')
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+        id: 'utils-hashed-debug',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+      }, {
+        hashSectionNames: true,
+      }))
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+
+    const sectionMap = readTasmSectionMap(distRoot, 'utils-hashed-debug')!
+    const hashedName = sectionMap['utils']!
+
+    const metadata = JSON.parse(
+      await fs.promises.readFile(
+        path.join(
+          distRoot,
+          '.lynx',
+          'utils-hashed-debug',
+          'debug-metadata.json',
+        ),
+        'utf-8',
+      ),
+    ) as {
+      artifacts: {
+        kind: string
+        filename: string
+        tasmSection?: string[]
+      }[]
+    }
+    const bgArtifact = metadata.artifacts.find(a => a.kind === 'background')
+    expect(bgArtifact?.tasmSection).toEqual(['customSections', hashedName])
+  })
+
+  it('ignores hashSectionNames on the web target', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-web-target')
+
+    await build(defineExternalBundleRslibConfig({
+      source: { entry: { utils: path.join(fixtureDir, 'index.ts') } },
+      id: 'utils-hashed-web',
+      output: { distPath: { root: distRoot } },
+      plugins: [pluginReactLynx()],
+    }, {
+      target: 'web',
+      engineVersion: '3.5',
+      hashSectionNames: true,
+    }))
+
+    expect(fs.existsSync(path.join(distRoot, 'utils-hashed-web.web.bundle')))
+      .toBe(true)
+  })
+
+  it('rejects a main-thread entry named __sectionMap when hashSectionNames is enabled', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-reserved-mt')
+    const compilationErrors: string[] = []
+
+    await expect(
+      build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            __sectionMap: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.MAIN_THREAD,
+            },
+            utils: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.BACKGROUND,
+            },
+          },
+        },
+        id: 'utils-reserved-mt',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+        tools: {
+          bundlerChain(chain) {
+            chain.plugin('test:collect-errors').use({
+              apply(compiler: Rspack.Compiler) {
+                compiler.hooks.done.tap('test:collect-errors', stats => {
+                  for (const err of stats.compilation.errors) {
+                    compilationErrors.push(err.message)
+                  }
+                })
+              },
+            })
+          },
+        },
+      }, {
+        hashSectionNames: true,
+      })),
+    ).rejects.toThrow()
+
+    expect(compilationErrors.join('\n')).toMatch(
+      /Entry name "__sectionMap" is reserved when `hashSectionNames` is enabled\./,
+    )
+  })
+
+  it('scopes hashed background section names per encode when multiple templates share a compilation', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-multi-template')
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            alpha: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.BACKGROUND,
+            },
+            beta: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.BACKGROUND,
+            },
+          },
+        },
+        id: 'multi-alpha',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+        tools: {
+          bundlerChain(chain) {
+            // Restrict the primary template to `alpha` and attach a second
+            // template + section-map plugin for `beta` in the same compilation,
+            // plus an async `beforeEncode` tap so both encodes interleave.
+            chain
+              .plugin(LynxTemplatePlugin.name)
+              .tap(([options]: [Record<string, unknown>]) => [{
+                ...options,
+                chunks: ['alpha'],
+              }])
+            chain
+              .plugin('test:beta-section-map')
+              .use(ExternalBundleSectionMapPlugin, [
+                LynxTemplatePlugin,
+                'multi-beta.lynx.bundle',
+              ])
+            chain
+              .plugin('test:beta-template')
+              .use(LynxTemplatePlugin, [{
+                ...LynxTemplatePlugin.defaultOptions,
+                filename: 'multi-beta.lynx.bundle',
+                intermediate: '.lynx/multi-beta',
+                chunks: ['beta'],
+                customSectionNaming: compilation =>
+                  sectionNaming(compilation, { reserveSectionMap: true }),
+                appType: 'DynamicComponent',
+                enableSectionBytecode: false,
+                targetSdkVersion: '3.5',
+                debugInfoOutside: true,
+                enableCSSInvalidation: true,
+              }])
+            chain.plugin('test:interleave-before-encode').use({
+              apply(compiler: Rspack.Compiler) {
+                compiler.hooks.thisCompilation.tap(
+                  'test:interleave-before-encode',
+                  compilation => {
+                    LynxTemplatePlugin
+                      .getLynxTemplatePluginHooks(compilation)
+                      .beforeEncode
+                      .tapPromise(
+                        { name: 'test:interleave-before-encode', stage: 2000 },
+                        async args => {
+                          await new Promise(resolve => setTimeout(resolve, 20))
+                          return args
+                        },
+                      )
+                  },
+                )
+              },
+            })
+          },
+        },
+      }, {
+        hashSectionNames: true,
+        enableJsBytecode: false,
+      }))
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+
+    const alphaMap = readTasmSectionMap(distRoot, 'multi-alpha')
+    const betaMap = readTasmSectionMap(distRoot, 'multi-beta')
+    expect(alphaMap?.['alpha']).toMatch(/^alpha\.[0-9a-f]{8}$/)
+    expect(betaMap?.['beta']).toMatch(/^beta\.[0-9a-f]{8}$/)
+
+    const alphaDecoded = await decodeTemplate(
+      path.join(distRoot, 'multi-alpha.lynx.bundle'),
+    )
+    const betaDecoded = await decodeTemplate(
+      path.join(distRoot, 'multi-beta.lynx.bundle'),
+    )
+    expect(Object.keys(alphaDecoded['custom-sections'])).toStrictEqual([
+      alphaMap!['alpha'],
+    ])
+    expect(Object.keys(betaDecoded['custom-sections'])).toStrictEqual([
+      betaMap!['beta'],
+    ])
   })
 })

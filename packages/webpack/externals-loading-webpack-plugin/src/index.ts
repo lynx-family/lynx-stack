@@ -489,11 +489,29 @@ function createRetryingHandler(fetchBundle, retries) {
   }
 }
 
+${
+          isMainThreadLayer
+            ? ''
+            : `
+const sectionMapCache = Object.create(null);
+function resolveSectionPath(sectionPath, bundleName) {
+  if (!(bundleName in sectionMapCache)) {
+    sectionMapCache[bundleName] = lynx.getCustomSectionSync('__sectionMap', bundleName);
+  }
+  return sectionMapCache[bundleName]?.[sectionPath] ?? sectionPath;
+}
+`
+        }
 function createLoadExternalAsync(handler, sectionPath) {
   return new Promise((resolve, reject) => {
     handler.then((response) => {
       if (response.code === 0) {
         try {
+          ${
+          isMainThreadLayer
+            ? ''
+            : 'sectionPath = resolveSectionPath(sectionPath, response.url);'
+        }
           const result = lynx.loadScript(sectionPath, { bundleName: response.url });
           ${
           isMainThreadLayer
@@ -527,6 +545,11 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
   const response = handler.wait(timeout)
   if (response.code === 0) {
     try  {
+      ${
+          isMainThreadLayer
+            ? ''
+            : 'sectionPath = resolveSectionPath(sectionPath, response.url);'
+        }
       const result = lynx.loadScript(sectionPath, { bundleName: response.url });
       ${
           isMainThreadLayer

@@ -240,7 +240,11 @@ describe('external import order', () => {
       const loadScript = rstest.fn(() => component);
       runInNewContext(sources.get(`lazy-${mode}-${layer}`)!, {
         __externalOrder: state,
-        lynx: { fetchBundle, loadScript },
+        lynx: {
+          fetchBundle,
+          getCustomSectionSync: () => undefined,
+          loadScript,
+        },
         __LoadStyleSheet: () => null,
       });
       expect(state.resolutions).toBe(0);
@@ -280,6 +284,7 @@ describe('external import order', () => {
         __externalOrder: state,
         lynx: {
           fetchBundle,
+          getCustomSectionSync: () => undefined,
           loadScript: () => {
             state.events.push('load');
             return component;
@@ -316,7 +321,11 @@ describe('external import order', () => {
       const loadScript = rstest.fn();
       runInNewContext(sources.get(`lazy-resolver-${layer}`)!, {
         __externalOrder: state,
-        lynx: { fetchBundle, loadScript },
+        lynx: {
+          fetchBundle,
+          getCustomSectionSync: () => undefined,
+          loadScript,
+        },
         __LoadStyleSheet: () => null,
       });
       await expect(state.load()).rejects.toThrow(
@@ -348,6 +357,7 @@ describe('external import order', () => {
         __externalOrder: state,
         lynx: {
           fetchBundle,
+          getCustomSectionSync: () => undefined,
           loadScript,
           [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
         },
@@ -391,7 +401,11 @@ describe('external import order', () => {
       const loadScript = rstest.fn(() => component);
       runInNewContext(sources.get(`lazy-${mode}-${layer}`)!, {
         __externalOrder: state,
-        lynx: { fetchBundle, loadScript },
+        lynx: {
+          fetchBundle,
+          getCustomSectionSync: () => undefined,
+          loadScript,
+        },
         __LoadStyleSheet: () => null,
       });
       expect(fetchBundle).not.toHaveBeenCalled();
@@ -425,7 +439,11 @@ describe('external import order', () => {
       const loadScript = rstest.fn(() => component);
       runInNewContext(sources.get(`lazy-true-${layer}`)!, {
         __externalOrder: state,
-        lynx: { fetchBundle, loadScript },
+        lynx: {
+          fetchBundle,
+          getCustomSectionSync: () => undefined,
+          loadScript,
+        },
         __LoadStyleSheet: () => null,
       });
       expect(fetchBundle).not.toHaveBeenCalled();
@@ -446,7 +464,11 @@ describe('external import order', () => {
       const loadScript = rstest.fn();
       runInNewContext(sources.get(`lazy-true-${layer}`)!, {
         __externalOrder: state,
-        lynx: { fetchBundle, loadScript },
+        lynx: {
+          fetchBundle,
+          getCustomSectionSync: () => undefined,
+          loadScript,
+        },
         __LoadStyleSheet: () => null,
       });
       expect(fetchBundle).not.toHaveBeenCalled();
@@ -476,6 +498,7 @@ describe('external import order', () => {
           __externalOrder: state,
           lynx: {
             fetchBundle: (url: string) => ({ wait: () => ({ code: 0, url }) }),
+            getCustomSectionSync: () => undefined,
             loadScript,
             [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
           },
@@ -509,6 +532,7 @@ describe('external import order', () => {
         __externalOrder: state,
         lynx: {
           fetchBundle: (url: string) => Promise.resolve({ code: 0, url }),
+          getCustomSectionSync: () => undefined,
           loadScript,
         },
         __LoadStyleSheet: () => null,
@@ -533,6 +557,7 @@ describe('external import order', () => {
         __externalOrder: { events: [] },
         lynx: {
           fetchBundle: () => response,
+          getCustomSectionSync: () => undefined,
           loadScript,
           [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
         },
@@ -568,6 +593,7 @@ describe('external import order', () => {
         console: { error: rstest.fn() },
         lynx: {
           fetchBundle: (url: string) => Promise.resolve({ code: 0, url }),
+          getCustomSectionSync: () => undefined,
           loadScript,
           [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
         },
@@ -598,6 +624,7 @@ describe('external import order', () => {
           console: { error: rstest.fn() },
           lynx: {
             fetchBundle: (url: string) => ({ wait: () => ({ code: 0, url }) }),
+            getCustomSectionSync: () => undefined,
             loadScript,
             [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
           },

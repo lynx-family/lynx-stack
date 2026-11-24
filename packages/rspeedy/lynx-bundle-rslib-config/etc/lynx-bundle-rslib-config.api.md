@@ -23,6 +23,7 @@ export function defineExternalBundleRslibConfig(userLibConfig: ExternalBundleLib
 export interface EncodeOptions {
     enableJsBytecode?: boolean;
     engineVersion?: string;
+    hashSectionNames?: boolean;
     target?: 'web' | 'lynx';
 }
 
