@@ -6,6 +6,7 @@ import type { Rpc } from '@lynx-js/web-worker-rpc';
 import {
   dispatchIntersectionObserverEventEndpoint,
   intersectionObserverCommandEndpoint,
+  nativeModulesCallEndpoint,
   queryComponentEndpoint,
   updateBTSChunkEndpoint,
 } from '../ts/client/endpoints.js';
@@ -272,5 +273,105 @@ describe('createNativeApp', () => {
     );
 
     expect(onIntersectionObserverEvent).toHaveBeenCalledWith(2, 3, payload);
+  });
+
+  test('passes per-module nativeModulesInitData via the 3rd context argument', async () => {
+    const moduleUrl = `data:text/javascript,${
+      encodeURIComponent(`
+      export default function createModule(nativeModules, call, context) {
+        return {
+          getInitData() {
+            return context?.initData;
+          },
+          hasSharedModules() {
+            return typeof nativeModules === 'object' && nativeModules !== null;
+          },
+          invokeHost(method, payload) {
+            return call(method, payload);
+          },
+        };
+      }
+    `)
+    }`;
+
+    const first = createMainThreadRpc(() =>
+      Promise.resolve({ code: 0, detail: { schema: '' } })
+    );
+    const second = createMainThreadRpc(() =>
+      Promise.resolve({ code: 0, detail: { schema: '' } })
+    );
+
+    const firstApp = await createNativeApp(
+      first.rpc,
+      timingSystem,
+      {
+        UnconfiguredModule: moduleUrl,
+        ConfiguredModule: moduleUrl,
+        NullModule: moduleUrl,
+        FalseModule: moduleUrl,
+        ZeroModule: moduleUrl,
+        constructor: moduleUrl,
+      },
+      '/main.web.bundle',
+      'react',
+      false,
+      {
+        ConfiguredModule: {
+          city: 'beijing',
+          options: { theme: 'light', tags: ['a', 'b'] },
+        },
+        NullModule: null,
+        FalseModule: false,
+        ZeroModule: 0,
+      },
+    );
+    const secondApp = await createNativeApp(
+      second.rpc,
+      timingSystem,
+      {
+        ConfiguredModule: moduleUrl,
+      },
+      '/other.web.bundle',
+      'react',
+      false,
+      {
+        ConfiguredModule: {
+          city: 'shanghai',
+          options: { theme: 'dark', tags: ['c'] },
+        },
+      },
+    );
+
+    expect(firstApp.nativeModuleProxy.UnconfiguredModule.getInitData())
+      .toBeUndefined();
+    expect(firstApp.nativeModuleProxy.constructor.getInitData())
+      .toBeUndefined();
+    expect(firstApp.nativeModuleProxy.NullModule.getInitData()).toBeNull();
+    expect(firstApp.nativeModuleProxy.FalseModule.getInitData()).toBe(false);
+    expect(firstApp.nativeModuleProxy.ZeroModule.getInitData()).toBe(0);
+    expect(firstApp.nativeModuleProxy.UnconfiguredModule.hasSharedModules())
+      .toBe(true);
+    expect(firstApp.nativeModuleProxy.ConfiguredModule.getInitData()).toEqual({
+      city: 'beijing',
+      options: { theme: 'light', tags: ['a', 'b'] },
+    });
+    expect(secondApp.nativeModuleProxy.ConfiguredModule.getInitData()).toEqual({
+      city: 'shanghai',
+      options: { theme: 'dark', tags: ['c'] },
+    });
+
+    await firstApp.nativeModuleProxy.ConfiguredModule.invokeHost('getStorage', {
+      key: 'token',
+    });
+    expect(
+      first.calls.filter(
+        ({ endpointName }) => endpointName === nativeModulesCallEndpoint.name,
+      ),
+    ).toEqual([
+      {
+        endpointName: nativeModulesCallEndpoint.name,
+        args: ['getStorage', { key: 'token' }, 'ConfiguredModule'],
+      },
+    ]);
   });
 });

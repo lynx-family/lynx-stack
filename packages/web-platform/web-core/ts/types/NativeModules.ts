@@ -4,6 +4,24 @@
 
 export type NativeModulesMap = Record<string, string>;
 
+/** Structured-cloneable value supported in `nativeModulesInitData`. */
+export type NativeModuleInitData =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | NativeModuleInitData[]
+  | { [key: string]: NativeModuleInitData };
+
+/** Per-module structured-cloneable initial data forwarded to background native module factories. */
+export type NativeModulesInitData = Record<string, NativeModuleInitData>;
+
+/** Context passed as the 3rd argument to a background native module factory. */
+export interface NativeModuleContext {
+  initData?: NativeModuleInitData;
+}
+
 /** A host-provided module available synchronously through main-thread `lynx.module()`. */
 export interface MainThreadModule {
   /** Invokes a method synchronously with the supplied arguments. */

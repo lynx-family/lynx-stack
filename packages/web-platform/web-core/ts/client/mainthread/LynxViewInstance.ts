@@ -11,6 +11,7 @@ import type {
   JSRealm,
   MainThreadGlobalThis,
   NapiModulesMap,
+  NativeModulesInitData,
   NativeModulesMap,
   PageConfig,
 } from '../../types/index.js';
@@ -72,6 +73,7 @@ export class LynxViewInstance implements AsyncDisposable {
   readonly mtsWasmBinding: WASMJSBinding;
   readonly backgroundThread: BackgroundThread;
   readonly isProfiling: boolean;
+  readonly nativeModulesInitData: NativeModulesInitData | undefined;
   readonly i18nManager: I18nManager;
   readonly exposureServices: ExposureServices;
   readonly intersectionObserverService: IntersectionObserverService;
@@ -125,6 +127,7 @@ export class LynxViewInstance implements AsyncDisposable {
     browserConfig?: Record<string, any>,
   ) {
     this.isProfiling = parentDom.isProfiling;
+    this.nativeModulesInitData = parentDom.nativeModulesInitData;
     this.systemInfo = createSystemInfo(browserConfig);
     if (!isSSR) {
       this.rootDom.append(linkElement.cloneNode(false));

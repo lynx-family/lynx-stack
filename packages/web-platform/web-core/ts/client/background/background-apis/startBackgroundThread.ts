@@ -18,6 +18,7 @@ export function startBackgroundThread(
     mainThreadMessagePort,
     napiModulesMap,
     nativeModulesMap,
+    nativeModulesInitData,
     initData,
     globalProps,
     customSections,
@@ -36,6 +37,7 @@ export function startBackgroundThread(
     entryTemplateUrl,
     cardType,
     isProfiling,
+    nativeModulesInitData,
   );
   const lynxCore = import(
     /* webpackChunkName: "lynx-core-chunk" */
