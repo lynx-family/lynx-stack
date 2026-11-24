@@ -87,6 +87,29 @@ async function sendPrompt(input: string) {
 `MessageStore` 按到达顺序保存原始 protocol messages。`<A2UI>` 订阅它、处理新消息、渲染 active surface，并通过
 `onAction` 抛出 generated UI actions。
 
+## MessageStore
+
+| 目的                          | 方法                          | 行为                                                                     |
+| ----------------------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| 传入增量消息或新的 RPC 响应。 | `store.push(messages)`        | 在实时状态上追加操作；重复组件描述仍可能触发更新。                       |
+| 应用校验后的完整响应。        | `store.replace(fullMessages)` | 传入包含 `createSurface` 的独立快照；对目标状态做 diff，并删除缺失状态。 |
+| 清空渲染内容。                | `store.replace([])`           | 移除 surface，回到 `renderEmpty`。                                       |
+| 丢弃缓存消息，保留当前界面。  | `store.clear()`               | 保留实时 surface 和本地状态；同批次紧接着 `push` 也能正常消费。          |
+
+流式增量使用 `push`，完整尾帧使用 `replace`：
+
+```ts
+store.push(streamedMessages);
+store.replace(finalMessages);
+```
+
+替换时，服务端未改动的字段保留本地输入，数组按文档中的标识或下标规则合并。
+替换被拒绝时保留界面，通过 `onMessage` 和 console 报错，并暂停消费追加部分，直到收到修正后的
+`replace` 或 `clear`。
+
+详见 [MessageStore 行为](./docs/message-store_zh.md)：快照和通知约定、完整示例、深比较、数组合并、
+替换失败恢复、RPC，以及 `renderEmpty`、`clear` 和删除 surface 的区别。
+
 ## 你需要负责什么
 
 | 部分                      | 负责人    | 作用                                                                                                    |
@@ -109,6 +132,7 @@ async function sendPrompt(input: string) {
 ## 更多文档
 
 - [概览与架构](./docs/overview_zh.md)
+- [MessageStore 行为](./docs/message-store_zh.md)
 - [Catalogs、内置组件与自定义组件](./docs/catalog-guide_zh.md)
 - [System Prompts](./docs/system-prompts_zh.md)
 - [打开 GenUI Playground](https://lynxjs.org/genui)

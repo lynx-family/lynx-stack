@@ -108,6 +108,32 @@ async function sendPrompt(input: string) {
 subscribes to it, processes new messages, renders the active surface, and emits
 generated UI actions through `onAction`.
 
+## MessageStore
+
+| Intent                                                    | Method                        | Behavior                                                                                                |
+| --------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Deliver incremental messages or new RPC replies.          | `store.push(messages)`        | Appends operations to live state; repeated component descriptions can still update.                     |
+| Apply a validated complete response.                      | `store.replace(fullMessages)` | Requires a standalone snapshot including `createSurface`; diffs target state and removes missing state. |
+| Clear the rendered content.                               | `store.replace([])`           | Removes surfaces and returns to `renderEmpty`.                                                          |
+| Discard buffered messages while retaining the current UI. | `store.clear()`               | Keeps live surfaces and local state; subsequent `push` works even in the same batch.                    |
+
+Use `push` for streaming increments and `replace` for the final complete response:
+
+```ts
+store.push(streamedMessages);
+store.replace(finalMessages);
+```
+
+Replacement preserves local input on unchanged server fields and reconciles
+arrays using the documented identity/index rules. Rejected replacements preserve
+the current UI, report errors through `onMessage` and the console, and block their
+appended tail until a corrected `replace` or `clear`.
+
+See [MessageStore behavior](./docs/message-store.md) for snapshot and notification
+contracts, a complete example, deep comparison, array merging, rejected-replacement
+recovery, RPC handling, and the differences between `renderEmpty`, `clear`, and
+surface deletion.
+
 ## What You Own
 
 | Part                      | Owner            | Role                                                                                                                     |
@@ -132,6 +158,7 @@ generated UI actions through `onAction`.
 ## More Docs
 
 - [Overview and architecture](./docs/overview.md)
+- [MessageStore behavior](./docs/message-store.md)
 - [Catalogs, built-ins, and custom components](./docs/catalog-guide.md)
 - [System prompts](./docs/system-prompts.md)
 - [Open the GenUI playground](https://lynxjs.org/genui)

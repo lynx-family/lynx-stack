@@ -5,8 +5,12 @@
 import type { Signal } from '@lynx-js/react-signals';
 import { signal } from '@lynx-js/react-signals';
 
-import { compositionErrors } from './composition.js';
-import { expandMessage } from './protocol.js';
+import {
+  collectComponentReferences,
+  compositionErrors,
+} from './composition.js';
+import { expandMessage, replaceDataModel } from './protocol.js';
+import { reconcileDataModel } from './reconcile.js';
 import { resolveBindingPath } from './resolveDynamic.js';
 import { executeFunctionCall } from './resolveFunctionCall.js';
 import { createResource } from './Resource.js';
@@ -19,7 +23,7 @@ import type {
   ServerToClientMessage,
   Surface,
 } from './types.js';
-import { isObject } from './utils.js';
+import { equalJsonValues, isObject } from './utils.js';
 import type { Catalog } from '../catalog/defineCatalog.js';
 
 /**
@@ -51,6 +55,8 @@ function isMeaningfulResponse(value: unknown): boolean {
  */
 export class MessageProcessor {
   surfaces: Map<string, Surface>;
+  private serverDataModels = new Map<string, unknown>();
+  private renderedSurfaceIds: string[] = [];
   private catalogs = new Map<string, Catalog>();
   private functionValues = new Map<string, Signal<unknown>>();
   private functionFailures = new Map<string, Error>();
@@ -333,6 +339,15 @@ export class MessageProcessor {
   }
 
   private emitUpdate(data: Record<string, unknown>): void {
+    if (data['type'] === 'beginRendering' || data['type'] === 'deleteSurface') {
+      const id = data['surfaceId'] as string;
+      this.renderedSurfaceIds = this.renderedSurfaceIds.filter(value =>
+        value !== id
+      );
+      if (data['type'] === 'beginRendering') {
+        this.renderedSurfaceIds.push(id);
+      }
+    }
     for (const cb of this.updateListeners) cb(data);
   }
 
@@ -402,6 +417,164 @@ export class MessageProcessor {
     this.functionValues.clear();
     this.functionFailures.clear();
     this.surfaces.clear();
+    this.serverDataModels.clear();
+    this.renderedSurfaceIds = [];
+  }
+
+  /**
+   * Reconcile a complete message history or state snapshot with live surfaces.
+   * Reuses unchanged component resources and preserves local input wherever
+   * server data is unchanged. Missing state is removed. RPC envelopes are not
+   * replayed. Protocol errors leave the live state unchanged.
+   *
+   * @returns Whether the replacement was accepted. A rejected replacement
+   * reports protocol errors without changing the live state.
+   */
+  replaceMessages(messages: readonly ServerToClientMessage[]): boolean {
+    const target = new MessageProcessor();
+    target.catalogs = this.catalogs;
+    const errors: RendererToAgentMessage[] = [];
+    target.onEvent(({ message, resolve }) => {
+      errors.push(message as RendererToAgentMessage);
+      resolve([]);
+    });
+    target.processMessages(messages.filter(message =>
+      message.version !== '1.0'
+      || !('callRendererFunction' in message
+        || 'agentFunctionResponse' in message)
+    ));
+    if (
+      errors.length === 0 && messages.some(message => message.version !== '1.0')
+    ) {
+      errors.push({
+        version: '1.0',
+        error: {
+          code: 'UNSUPPORTED_VERSION',
+          message: 'Only A2UI v1.0 is supported',
+        },
+      });
+    }
+    if (errors.length > 0) {
+      for (const error of errors) {
+        void this.sendMessage(error).catch(() => undefined);
+      }
+      return false;
+    }
+
+    const desiredActive =
+      target.renderedSurfaceIds[target.renderedSurfaceIds.length - 1] ?? null;
+    for (const surfaceId of [...this.surfaces.keys()]) {
+      if (!target.surfaces.has(surfaceId)) {
+        this.processMessages([{
+          version: '1.0',
+          deleteSurface: { surfaceId },
+        }]);
+      }
+    }
+
+    for (const [surfaceId, desired] of target.surfaces) {
+      const existing = this.surfaces.get(surfaceId);
+      const nextServerData = target.serverDataModels.get(surfaceId);
+      const nextData = existing
+        ? reconcileDataModel(
+          this.serverDataModels.get(surfaceId),
+          nextServerData,
+          existing.store.getDataModel(),
+        )
+        : nextServerData;
+      this.serverDataModels.set(surfaceId, nextServerData);
+      if (!equalJsonValues(desired.store.getDataModel(), nextData)) {
+        for (const [id, component] of desired.components) {
+          if (component.dataContextPath !== undefined) {
+            desired.components.delete(id);
+            desired.resources.delete(id);
+          }
+        }
+        desired.store.update('/', nextData);
+        target.expandTemplates(desired);
+      }
+
+      const surface = this.getOrCreateSurface(surfaceId);
+      const catalogChanged = surface.catalogId !== desired.catalogId;
+      const previousRoot = surface.rootComponentId;
+      if (desired.catalogId === undefined) delete surface.catalogId;
+      else surface.catalogId = desired.catalogId;
+      surface.sendDataModel = desired.sendDataModel;
+      if (desired.metadata === undefined) delete surface.metadata;
+      else surface.metadata = desired.metadata;
+      const previousComponents = surface.components;
+      const changedIds = new Set<string>();
+      for (const [id, component] of desired.components) {
+        if (!equalJsonValues(previousComponents.get(id), component)) {
+          changedIds.add(id);
+        }
+      }
+      for (const id of previousComponents.keys()) {
+        if (!desired.components.has(id)) changedIds.add(id);
+      }
+      const membershipChanged = [...changedIds].some(id =>
+        previousComponents.has(id) !== desired.components.has(id)
+      );
+      const updates: ComponentInstance[] = [];
+      const nextComponents = new Map<string, ComponentInstance>();
+      for (const [id, component] of desired.components) {
+        const previous = previousComponents.get(id);
+        const instance = previous && !changedIds.has(id) ? previous : component;
+        nextComponents.set(id, instance);
+        if (!surface.resources.has(id)) {
+          surface.resources.set(id, createResource(id));
+        }
+        let needsUpdate = catalogChanged || changedIds.has(id)
+          // Dynamic child references may resolve from data or functions.
+          || (membershipChanged && id === desired.rootComponentId);
+        // Parents may read child props (for example weight) while rendering.
+        if (!needsUpdate && changedIds.size > 0) {
+          const schema = this.getCatalog(
+            instance['@catalogId'] ?? surface.catalogId,
+          )?.components.find(entry => entry.name === instance.component)
+            ?.schema;
+          needsUpdate = [...collectComponentReferences(instance, schema)]
+            .some(childId => changedIds.has(childId));
+        }
+        if (needsUpdate) updates.push(instance);
+      }
+      if (changedIds.size > 0) surface.components = nextComponents;
+      for (const id of surface.resources.keys()) {
+        if (!surface.components.has(id)) {
+          surface.resources.delete(id);
+        }
+      }
+      surface.rootComponentId = desired.rootComponentId ?? null;
+      if (!equalJsonValues(surface.store.getDataModel(), nextData)) {
+        surface.store.update('/', nextData);
+      }
+      if (previousRoot && !surface.rootComponentId) {
+        this.emitUpdate({
+          type: 'deleteSurface',
+          surfaceId,
+          targetId: previousRoot,
+          messageId: `surface:${surfaceId}`,
+        });
+      } else if (!previousRoot && surface.rootComponentId) {
+        this.emitUpdate({
+          type: 'beginRendering',
+          surfaceId,
+          messageId: `surface:${surfaceId}`,
+        });
+      }
+      if (updates.length > 0) {
+        this.emitUpdate({ type: 'surfaceUpdate', surfaceId, updates });
+      }
+    }
+    this.renderedSurfaceIds = target.renderedSurfaceIds;
+    // A push deletion intentionally leaves the renderer pointing at an empty
+    // resource, so its active pointer cannot be inferred from live surfaces.
+    this.emitUpdate({
+      type: 'replace',
+      surfaceId: desiredActive,
+      surfaceIds: target.renderedSurfaceIds,
+    });
+    return true;
   }
 
   getOrCreateSurface(surfaceId: string): Surface {
@@ -607,6 +780,7 @@ export class MessageProcessor {
         ] as Record<string, unknown>;
         const surfaceId = createSurface['surfaceId'] as string;
         const surface = this.getOrCreateSurface(surfaceId);
+        this.serverDataModels.set(surfaceId, {});
         const catId = createSurface['catalogId'];
         if (catId !== undefined) surface.catalogId = catId as string;
         const sData = createSurface['sendDataModel'];
@@ -721,10 +895,7 @@ export class MessageProcessor {
             surfaceId,
           });
         }
-        this.processMessages([{
-          version: '1.0',
-          updateDataModel: { surfaceId, value: surface.store.getDataModel() },
-        }]);
+        this.expandTemplates(surface);
       }
 
       if ('updateDataModel' in message && message.updateDataModel) {
@@ -735,78 +906,17 @@ export class MessageProcessor {
         };
         const surface = this.getOrCreateSurface(surfaceId);
 
-        surface.store.update(path === '' ? '/' : path ?? '/', value);
-
-        const componentUpdates: ComponentInstance[] = [];
-
-        for (const component of surface.components.values()) {
-          const anyComponent = component as unknown as Record<string, unknown>;
-          const templateInfo = anyComponent['__template'] as
-            | { componentId: string; path: string }
-            | undefined;
-
-          if (!templateInfo) continue;
-
-          const dataSignal = surface.store.getSignal(templateInfo.path);
-          const rawData = dataSignal.value;
-          let data: unknown;
-          if (typeof rawData === 'string') {
-            try {
-              data = rawData ? JSON.parse(rawData) : undefined;
-            } catch {
-              data = undefined;
-            }
-          } else {
-            data = rawData;
-          }
-
-          const explicitChildren: string[] = [];
-          const generatedUpdates: ComponentInstance[] = [];
-
-          if (Array.isArray(data)) {
-            data.forEach((_, index) => {
-              const suffix = `:${index}`;
-              const ctx = `${templateInfo.path}/${index}`;
-              const newId = this.cloneComponentTree(
-                templateInfo.componentId,
-                suffix,
-                ctx,
-                surface,
-                generatedUpdates,
-              );
-              if (newId) {
-                explicitChildren.push(newId);
-              }
-            });
-          } else if (isObject(data)) {
-            for (const key of Object.keys(data)) {
-              const suffix = `:${key}`;
-              const ctx = `${templateInfo.path}/${key}`;
-              const newId = this.cloneComponentTree(
-                templateInfo.componentId,
-                suffix,
-                ctx,
-                surface,
-                generatedUpdates,
-              );
-              if (newId) {
-                explicitChildren.push(newId);
-              }
-            }
-          }
-
-          anyComponent['children'] = explicitChildren;
-          componentUpdates.push(component);
-          componentUpdates.push(...generatedUpdates);
-        }
-
-        if (componentUpdates.length > 0) {
-          this.emitUpdate({
-            type: 'surfaceUpdate',
-            updates: componentUpdates,
-            surfaceId,
-          });
-        }
+        const resolvedPath = path === '' ? '/' : path ?? '/';
+        this.serverDataModels.set(
+          surfaceId,
+          replaceDataModel(
+            this.serverDataModels.get(surfaceId),
+            resolvedPath,
+            value,
+          ),
+        );
+        surface.store.update(resolvedPath, value);
+        this.expandTemplates(surface);
       }
 
       if ('deleteSurface' in message && message.deleteSurface) {
@@ -833,7 +943,49 @@ export class MessageProcessor {
           }
         }
         this.surfaces.delete(surfaceId);
+        this.serverDataModels.delete(surfaceId);
       }
+    }
+  }
+
+  private expandTemplates(surface: Surface): void {
+    const updates: ComponentInstance[] = [];
+    for (const component of surface.components.values()) {
+      const template = component.__template;
+      if (!template) continue;
+      const raw = surface.store.getSignal(template.path).value;
+      let data: unknown = raw;
+      if (typeof raw === 'string') {
+        try {
+          data = raw ? JSON.parse(raw) : undefined;
+        } catch {
+          data = undefined;
+        }
+      }
+      const children: string[] = [];
+      const generatedUpdates: ComponentInstance[] = [];
+      const clone = (key: string | number) => {
+        const id = this.cloneComponentTree(
+          template.componentId,
+          `:${key}`,
+          `${template.path}/${key}`,
+          surface,
+          generatedUpdates,
+        );
+        if (id) children.push(id);
+      };
+      if (Array.isArray(data)) data.forEach((_, index) => clone(index));
+      else if (isObject(data)) Object.keys(data).forEach(key => clone(key));
+      component['children'] = children;
+      updates.push(component);
+      updates.push(...generatedUpdates);
+    }
+    if (updates.length > 0) {
+      this.emitUpdate({
+        type: 'surfaceUpdate',
+        surfaceId: surface.surfaceId,
+        updates,
+      });
     }
   }
 }

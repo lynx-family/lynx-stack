@@ -90,6 +90,16 @@ export function createGenUIGuideReadmeDocs(options: {
     sourceFile: path.join(a2uiPackageRoot, 'docs/overview_zh.md'),
   });
   syncDoc({
+    outFile: path.join(enGuideRoot, 'a2ui/message-store.md'),
+    replacements: A2UI_EN_LINK_REPLACEMENTS,
+    sourceFile: path.join(a2uiPackageRoot, 'docs/message-store.md'),
+  });
+  syncDoc({
+    outFile: path.join(zhGuideRoot, 'a2ui/message-store.md'),
+    replacements: A2UI_ZH_LINK_REPLACEMENTS,
+    sourceFile: path.join(a2uiPackageRoot, 'docs/message-store_zh.md'),
+  });
+  syncDoc({
     outFile: path.join(enGuideRoot, 'a2ui/catalog-guide.md'),
     replacements: A2UI_EN_LINK_REPLACEMENTS,
     sourceFile: path.join(a2uiPackageRoot, 'docs/catalog-guide.md'),
@@ -376,6 +386,10 @@ export const A2UI_EN_NAV_ITEMS = [
     link: '/guide/genui/a2ui/overview',
   },
   {
+    text: 'MessageStore Behavior',
+    link: '/guide/genui/a2ui/message-store',
+  },
+  {
     text: 'Catalogs & Components',
     link: '/guide/genui/a2ui/catalog-guide',
   },
@@ -397,6 +411,10 @@ export const A2UI_ZH_NAV_ITEMS = [
   {
     text: '概览与架构',
     link: '/zh/guide/genui/a2ui/overview',
+  },
+  {
+    text: 'MessageStore 行为',
+    link: '/zh/guide/genui/a2ui/message-store',
   },
   {
     text: 'Catalogs 与组件',
@@ -608,9 +626,11 @@ const A2UI_EN_LINK_REPLACEMENTS = [
   ['./protocol-1.0-audit.md', '/guide/genui/a2ui/protocol-1.0-audit'],
   ['./protocol-1.0-audit_zh.md', '/zh/guide/genui/a2ui/protocol-1.0-audit'],
   ['./docs/overview.md', '/guide/genui/a2ui/overview'],
+  ['./docs/message-store.md', '/guide/genui/a2ui/message-store'],
   ['./docs/catalog-guide.md', '/guide/genui/a2ui/catalog-guide'],
   ['./docs/system-prompts.md', '/guide/genui/a2ui/system-prompts'],
   ['./overview.md', '/guide/genui/a2ui/overview'],
+  ['./message-store.md', '/guide/genui/a2ui/message-store'],
   ['./catalog-guide.md', '/guide/genui/a2ui/catalog-guide'],
   ['./system-prompts.md', '/guide/genui/a2ui/system-prompts'],
   [
@@ -628,9 +648,11 @@ const A2UI_ZH_LINK_REPLACEMENTS = [
   ['./protocol-1.0-audit_zh.md', '/zh/guide/genui/a2ui/protocol-1.0-audit'],
   ['./protocol-1.0-audit.md', '/guide/genui/a2ui/protocol-1.0-audit'],
   ['./docs/overview_zh.md', '/zh/guide/genui/a2ui/overview'],
+  ['./docs/message-store_zh.md', '/zh/guide/genui/a2ui/message-store'],
   ['./docs/catalog-guide_zh.md', '/zh/guide/genui/a2ui/catalog-guide'],
   ['./docs/system-prompts_zh.md', '/zh/guide/genui/a2ui/system-prompts'],
   ['./overview_zh.md', '/zh/guide/genui/a2ui/overview'],
+  ['./message-store_zh.md', '/zh/guide/genui/a2ui/message-store'],
   ['./catalog-guide_zh.md', '/zh/guide/genui/a2ui/catalog-guide'],
   ['./system-prompts_zh.md', '/zh/guide/genui/a2ui/system-prompts'],
   [

@@ -179,9 +179,9 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 ```
 
 - **Store layer**（`@lynx-js/genui/a2ui/store`）——纯数据逻辑，没有 React。
-  `MessageStore` 是一个 append-only buffer，带有对 `useSyncExternalStore`
-  友好的 `subscribe` / `getSnapshot` API。你的传输层调用 `store.push(msg)`；
-  store 刻意对协议语义保持「无知」。
+  `MessageStore` 是原始消息 buffer，带有对 `useSyncExternalStore`
+  友好的 `subscribe` / `getSnapshot` API。传输层使用 `store.push(msg)` 追加增量消息，
+  使用 `store.replace(fullMessages)` 替换最终全量响应；store 不解释协议，由 processor 对齐替换后的状态。
 - **`MessageProcessor`**——协议大脑。它拥有每一个 `Surface`，把
   `createSurface` / `updateComponents` / `updateDataModel` / `deleteSurface`
   应用进 surface 状态，并发出带类型的事件（`beginRendering`、`surfaceUpdate`、
@@ -221,7 +221,7 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 
 - **`<A2UI>`**——all-in-one 组件。它拥有 `MessageProcessor`，订阅开发者传入的
   `MessageStore`，并渲染最新的 surface。
-- **`MessageStore`**——原始 protocol messages 的 append-only buffer。你可以从
+- **`MessageStore`**——原始 protocol messages 的 buffer。你可以从
   fetch、SSE、WebSocket 或 in-process mock 等任意传输层写入。
 - **Catalog API**——`defineCatalog`、`mergeCatalogs`、`serializeCatalog`、
   `resolveCatalog` 和 `defineFunction`。这里没有全局 component registry；每个
@@ -258,18 +258,18 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 
 `<A2UI>` 接收两个必填 prop 和一组可选的 render hooks。
 
-| Prop                | 类型                                           | 必填 | 用途                                                                              |
-| ------------------- | ---------------------------------------------- | ---- | --------------------------------------------------------------------------------- |
-| `messageStore`      | `MessageStore`                                 | 是   | 你的传输层写入的 raw-message buffer。`<A2UI>` 订阅它并处理新的 tail messages。    |
-| `catalogs`          | `readonly CatalogInput[]`                      | 是   | renderer 被允许实例化的 component 和 function entries。                           |
-| `onMessage`         | `(message, metadata) => void \| Promise<void>` | 否   | 向 Agent 转发 v1.0 协议消息和数据模型元数据；把响应推回 store。                   |
-| `onAction`          | `(action: UserActionPayload) => void`          | 否   | 只接收 action payload，不包含版本封装或传输元数据。                               |
-| `className`         | `string`                                       | 否   | 加在 surface root view（`surface-${surfaceId}`）上。适合做 surface 级主题 class。 |
-| `wrapSurface`       | `(children, { surfaceId }) => ReactNode`       | 否   | 包裹每个 surface，便于套一层外部主题壳或 wrapper 样式。                           |
-| `renderEmpty`       | `() => ReactNode`                              | 否   | 在第一条 `beginRendering` 到达前渲染。默认什么都不渲染。                          |
-| `renderFallback`    | `() => ReactNode`                              | 否   | 在 active resource 处于 pending 时渲染。默认是内置的 `<Loading>`。                |
-| `renderError`       | `(err: unknown) => ReactNode`                  | 否   | 在 active resource 失败时渲染。                                                   |
-| `renderUnsupported` | `(info) => ReactNode`                          | 否   | 在遇到不支持的 component 或数据语法时渲染。                                       |
+| Prop                | 类型                                           | 必填 | 用途                                                                               |
+| ------------------- | ---------------------------------------------- | ---- | ---------------------------------------------------------------------------------- |
+| `messageStore`      | `MessageStore \| null`                         | 是   | 传输层写入的原始消息 buffer；`null` 结束渲染 session，不显示内容。                 |
+| `catalogs`          | `readonly CatalogInput[]`                      | 是   | renderer 被允许实例化的 component 和 function entries。                            |
+| `onMessage`         | `(message, metadata) => void \| Promise<void>` | 否   | 向 Agent 转发 v1.0 协议消息和数据模型元数据；把响应推回 store。                    |
+| `onAction`          | `(action: UserActionPayload) => void`          | 否   | 只接收 action payload，不包含版本封装或传输元数据。                                |
+| `className`         | `string`                                       | 否   | 加在 surface root view（`surface-${surfaceId}`）上。适合做 surface 级主题 class。  |
+| `wrapSurface`       | `(children, { surfaceId }) => ReactNode`       | 否   | 包裹每个 surface，便于套一层外部主题壳或 wrapper 样式。                            |
+| `renderEmpty`       | `() => ReactNode`                              | 否   | 非 null store 没有 active resource 时渲染，包括 `replace([])` 后；默认不渲染内容。 |
+| `renderFallback`    | `() => ReactNode`                              | 否   | 在 active resource 处于 pending 时渲染。默认是内置的 `<Loading>`。                 |
+| `renderError`       | `(err: unknown) => ReactNode`                  | 否   | 在 active resource 失败时渲染。                                                    |
+| `renderUnsupported` | `(info) => ReactNode`                          | 否   | 在遇到不支持的 component 或数据语法时渲染。                                        |
 
 能省下调试时间的生命周期说明：
 
@@ -278,6 +278,11 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
   `messageStore` 实例**不会**重置内部状态。要开启新的 session 或 turn，请用一个
   由 turn/session id 派生的 `key` 来 mount：
   `<A2UI key={turnId} messageStore={turnStore} … />`。
+- **Buffer 变化与界面变化不同。** `clear()` 保留当前 surface；`replace([])` 移除它们，
+  回到 `renderEmpty`。普通 `push(deleteSurface)` 删除当前 surface 后画面留空，不调用
+  `renderEmpty`。`messageStore={null}` 不渲染内容并结束 session，之后传入非 null store
+  会启动新 session。完整操作和生命周期对照、替换 diff 及失败恢复见
+  [MessageStore 行为](./message-store_zh.md)。
 - **`onAction` 是 fire-and-forget。** renderer 从不 await 它。你的 Agent 把后续
   messages 推回同一个 `MessageStore` 来更新 UI。
 - **`className` vs `wrapSurface`。** 两者都能驱动主题切换；`className` 给 surface
@@ -285,6 +290,8 @@ MessageStore ──subscribe──► <A2UI> ──► MessageProcessor ──�
 
 ## 下一步
 
+- [MessageStore 行为](./message-store_zh.md)——选择 `push`、`replace` 或 `clear`，
+  保留本地输入，并处理替换失败。
 - [Catalogs、内置组件与自定义组件](./catalog-guide_zh.md)——组合 contract、加入
   manifest、注册你自己的组件。
 - [System Prompts](./system-prompts_zh.md)——生成让 Agent 与你的 catalog 配套的模型指令。

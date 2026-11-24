@@ -63,6 +63,31 @@ describe('createMessageStore', () => {
     expect(calls).toBe(0);
   });
 
+  test('replace publishes a frozen copy in one notification', () => {
+    const store = createMessageStore({ initialMessages: [A, B] });
+    const incoming = [B];
+    const previous = store.getSnapshot();
+    let calls = 0;
+    store.subscribe(() => calls++);
+    store.replace(incoming);
+    expect(store.getSnapshot()).toEqual([B]);
+    expect(store.getSnapshot()).not.toBe(incoming);
+    expect(previous).toEqual([A, B]);
+    expect(Object.isFrozen(store.getSnapshot())).toBe(true);
+    incoming.push(A);
+    expect(store.getSnapshot()).toEqual([B]);
+    expect(calls).toBe(1);
+    store.push(A);
+    expect(store.getSnapshot()).toEqual([B, A]);
+  });
+
+  test('replace with an empty array removes all buffered messages', () => {
+    const store = createMessageStore({ initialMessages: [A, B] });
+    store.replace([]);
+    expect(store.getSnapshot()).toEqual([]);
+    expect(store.getSnapshot()).toBe(store.getSnapshot());
+  });
+
   test('subscribers can unsubscribe', () => {
     const store = createMessageStore();
     let calls = 0;

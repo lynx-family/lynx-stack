@@ -17,3 +17,5 @@ When documenting the GenUI playground, only present the hosted URL `https://lynx
 Keep the legacy hosted playground route `https://lynx-stack.dev/a2ui` as a Rspress client redirect to `https://lynx-stack.dev/genui` for users with old links. Configure it in `website/rspress.config.ts` with `@rspress/plugin-client-redirects`, and preserve hash fragments when changing redirect code so links such as `/a2ui/#/openui` continue to land on the matching GenUI route.
 
 Avoid literal wording such as "recommended shape" / "推荐形状" in user-facing docs. Prefer "interface best practice", "implementation pattern", "接口设计最佳实践", or other product-facing phrases that read naturally to React developers.
+
+Keep the README MessageStore section as an operation summary linking to the paired docs/message-store guides. Document buffer state separately from live rendering state, including rejected-replacement recovery, local-input and array merge rules, and the different effects of clear(), replace([]), push(deleteSurface), and messageStore=null. Synchronize new guide routes through website/sidebars/genui.ts.

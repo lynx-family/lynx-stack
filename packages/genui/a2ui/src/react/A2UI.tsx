@@ -15,15 +15,17 @@ import type { MemoExoticComponent, ReactNode } from '@lynx-js/react';
 import { A2UIProvider } from './A2UIProvider.jsx';
 import { A2UIRenderer } from './A2UIRenderer.jsx';
 import type { UnsupportedInfo } from './A2UIRenderer.jsx';
+import { applyProcessorUpdate, createA2UISessionState } from './A2UISession.js';
+import type { A2UISessionState } from './A2UISession.js';
 import type { Catalog, CatalogInput } from '../catalog/defineCatalog.js';
 import { defineCatalog } from '../catalog/defineCatalog.js';
-import { MessageProcessor } from '../store/MessageProcessor.js';
 import type { MessageStore } from '../store/MessageStore.js';
-import { createResource } from '../store/Resource.js';
+import {
+  getSnapshotReplacement,
+  getSnapshotReset,
+} from '../store/MessageStore.js';
 import type {
   RendererToAgentMessage,
-  Resource,
-  ResourceInfo,
   UserActionPayload,
 } from '../store/types.js';
 
@@ -95,14 +97,6 @@ export interface A2UIProps {
   renderUnsupported?: (info: UnsupportedInfo) => ReactNode;
 }
 
-interface InternalSession {
-  processor: MessageProcessor;
-  resources: Map<string, Resource>;
-  activeMessageId: string | null;
-  /** How many messages from the buffer have been processed so far. */
-  processedCount: number;
-}
-
 /**
  * The all-in-one A2UI component. Owns a `MessageProcessor` internally,
  * processes raw messages from the buffer on each render, and renders
@@ -158,13 +152,8 @@ function A2UISession(
   }, [onAction]);
 
   // Per-instance session. Created once; mutated as messages arrive.
-  const sessionRef = useRef<InternalSession | null>(null);
-  sessionRef.current ??= {
-    processor: new MessageProcessor(),
-    resources: new Map(),
-    activeMessageId: null,
-    processedCount: 0,
-  };
+  const sessionRef = useRef<A2UISessionState | null>(null);
+  sessionRef.current ??= createA2UISessionState();
   const session = sessionRef.current;
   const catalog = useMemo<Catalog>(() => defineCatalog(catalogs), [catalogs]);
   session.processor.registerCatalog(catalogId, catalog);
@@ -190,46 +179,7 @@ function A2UISession(
     const proc = session.processor;
 
     const offUpdate = proc.onUpdate((data) => {
-      const { type, surfaceId, messageId } = data as {
-        type: string;
-        surfaceId: string;
-        messageId: string;
-        targetId?: string;
-      };
-      const surface = proc.getOrCreateSurface(surfaceId);
-
-      if (type === 'beginRendering') {
-        let resource = session.resources.get(messageId);
-        if (!resource) {
-          resource = createResource<ResourceInfo>(messageId);
-          session.resources.set(messageId, resource);
-        }
-        resource.complete({ type: 'beginRendering', surfaceId, surface });
-        session.activeMessageId = messageId;
-        forceUpdate();
-      } else if (type === 'surfaceUpdate') {
-        const updates =
-          (data as { updates?: ReadonlyArray<{ id?: string }> }).updates ?? [];
-        for (const update of updates) {
-          if (!update.id) continue;
-          const r = surface.resources.get(update.id);
-          r?.complete({
-            type: 'surfaceUpdate',
-            surfaceId,
-            surface,
-            component: update as ResourceInfo['component'] & object,
-          } as ResourceInfo);
-        }
-      } else if (type === 'deleteSurface') {
-        const targetId = (data as { targetId?: string }).targetId
-          ?? surface.rootComponentId;
-        if (targetId && surface.resources.has(targetId)) {
-          surface.resources.get(targetId)!.complete({
-            type: 'deleteSurface',
-            surfaceId,
-            surface,
-          });
-        }
+      if (applyProcessorUpdate(session, data)) {
         forceUpdate();
       }
     });
@@ -267,6 +217,46 @@ function A2UISession(
   // Process any new messages in the buffer.
 
   useEffect(() => {
+    const reset = getSnapshotReset(messages);
+    if (reset && reset !== session.reset) {
+      session.reset = reset;
+      session.replacement = undefined;
+      session.processedCount = 0;
+    }
+    const replacement = getSnapshotReplacement(messages);
+    if (replacement !== session.replacement) {
+      if (replacement) {
+        const previous = session.activeMessageId
+          ? session.resources.get(session.activeMessageId)?.value?.surface
+          : undefined;
+        const previousRoot = previous?.rootComponentId
+          ? previous.resources.get(previous.rootComponentId)
+          : undefined;
+        if (!session.processor.replaceMessages(replacement)) {
+          console.warn(
+            '[a2ui] Replacement rejected; keeping the previous rendering state. Correct the full snapshot with replace().',
+          );
+          return;
+        }
+        session.replacement = replacement;
+        session.reset = undefined;
+        const current = session.activeMessageId
+          ? session.resources.get(session.activeMessageId)?.value?.surface
+          : undefined;
+        const currentRoot = current?.rootComponentId
+          ? current.resources.get(current.rootComponentId)
+          : undefined;
+        // Only an explicit replacement can change the renderer's identity.
+        // Appended messages retain the historical unkeyed reconciliation.
+        if (previous !== current || previousRoot !== currentRoot) {
+          session.replacementRevision += 1;
+          forceUpdate();
+        }
+        session.processedCount = replacement.length;
+      } else {
+        session.replacement = undefined;
+      }
+    }
     if (messages.length === session.processedCount) return;
     const slice = messages.slice(
       session.processedCount,
@@ -296,7 +286,7 @@ function A2UISession(
 
   return (
     <A2UIProvider processor={session.processor} catalog={catalog}>
-      <A2UIRenderer {...rendererProps} />
+      <A2UIRenderer key={session.replacementRevision} {...rendererProps} />
     </A2UIProvider>
   );
 }

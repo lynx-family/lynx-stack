@@ -27,11 +27,12 @@ consumer provided.
 Core pieces:
 
 - `MessageStore` (`src/store/MessageStore.ts`)
-  - Append-only buffer of raw protocol messages.
+  - Buffer of raw protocol messages supporting append and full replacement.
   - `useSyncExternalStore`-friendly `subscribe` / `getSnapshot` API.
   - The developer's transport (fetch / SSE / WebSocket / in-process
     mock) calls `store.push(msg)` — the store is intentionally dumb
-    about protocol semantics.
+    about protocol semantics. `store.replace(fullMessages)` records a replacement
+    boundary so A2UI can reconcile state before consuming subsequent pushes.
 - `MessageProcessor` (`src/store/MessageProcessor.ts`)
   - Owns all `Surface` instances.
   - Applies `createSurface` / `updateComponents` / `updateDataModel` /
@@ -52,7 +53,8 @@ Core pieces:
 - `<A2UI>` (`src/react/A2UI.tsx`)
   - All-in-one renderer. Per-mount `MessageProcessor`. Subscribes to
     the developer-supplied `MessageStore`, processes new tail messages
-    on each render, and renders the most recent surface.
+    on each render, reconciles full replacements without resetting the session,
+    and renders the most recent surface.
   - Wires `processor.onEvent` → the consumer's `onAction` prop.
 - `<A2UIRenderer>` / `NodeRenderer` (`src/react/A2UIRenderer.tsx`)
   - Subscribes to a `Resource` and renders either:

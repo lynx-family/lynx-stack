@@ -51,9 +51,22 @@ export function compositionErrors(
   return errors;
 }
 
-function collect(value: unknown, schema: unknown, refs: Set<string>): void {
+function collect(
+  value: unknown,
+  schema: unknown,
+  refs: Set<string>,
+  includeAlternatives = false,
+): void {
   if (!schema || typeof schema !== 'object') return;
   const node = schema as Record<string, unknown>;
+  if (includeAlternatives) {
+    for (const keyword of ['anyOf', 'oneOf', 'allOf']) {
+      const alternatives = node[keyword];
+      if (Array.isArray(alternatives)) {
+        for (const branch of alternatives) collect(value, branch, refs, true);
+      }
+    }
+  }
   const ref = typeof node['$ref'] === 'string' ? node['$ref'] : '';
   if (ref.endsWith('/ComponentId') && typeof value === 'string') {
     refs.add(value);
@@ -65,13 +78,54 @@ function collect(value: unknown, schema: unknown, refs: Set<string>): void {
       && typeof value.componentId === 'string'
     ) refs.add(value.componentId);
   } else if (Array.isArray(value)) {
-    for (const item of value) collect(item, node['items'], refs);
+    for (const item of value) {
+      collect(item, node['items'], refs, includeAlternatives);
+    }
   } else if (value && typeof value === 'object') {
     const properties = node['properties'] as
       | Record<string, unknown>
       | undefined;
     for (const [key, item] of Object.entries(value)) {
-      collect(item, properties?.[key], refs);
+      collect(item, properties?.[key], refs, includeAlternatives);
     }
   }
+}
+
+/**
+ * Collect declared component references, falling back to built-in child fields
+ * when a catalog has no schema. Literal text and metadata are not references.
+ *
+ * @internal
+ */
+export function collectComponentReferences(
+  component: ComponentInstance,
+  schema: Record<string, unknown> | undefined,
+): Set<string> {
+  const refs = new Set<string>();
+  if (schema) {
+    collect(component, schema, refs, true);
+  } else {
+    const children = component['children'];
+    if (Array.isArray(children)) {
+      for (const id of children) if (typeof id === 'string') refs.add(id);
+    } else if (
+      children && typeof children === 'object' && 'componentId' in children
+      && typeof children.componentId === 'string'
+    ) refs.add(children.componentId);
+    for (const key of ['child', 'trigger', 'content']) {
+      const id = component[key];
+      if (typeof id === 'string') refs.add(id);
+    }
+    const tabs = component['tabs'];
+    if (Array.isArray(tabs)) {
+      for (const tab of tabs as unknown[]) {
+        if (
+          tab && typeof tab === 'object' && 'child' in tab
+          && typeof tab.child === 'string'
+        ) refs.add(tab.child);
+      }
+    }
+  }
+  if (component.__template) refs.add(component.__template.componentId);
+  return refs;
 }
