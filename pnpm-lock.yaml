@@ -194,8 +194,8 @@ catalogs:
       version: 1.0.7
   rspack:
     '@rspack/test-tools':
-      specifier: 2.3.3
-      version: 2.3.3
+      specifier: 2.3.4
+      version: 2.3.4
   rstest:
     '@rstest/adapter-rsbuild':
       specifier: 0.12.6
@@ -3595,7 +3595,7 @@ importers:
         version: 2.3.4(@swc/helpers@0.5.24)
       '@rspack/test-tools':
         specifier: catalog:rspack
-        version: 2.3.3(@rspack/core@2.3.4(@swc/helpers@0.5.24))(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
+        version: 2.3.4(@rspack/core@2.3.4(@swc/helpers@0.5.24))(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.12.6(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@31.0.1)
@@ -6660,8 +6660,8 @@ packages:
       '@rspack/core':
         optional: true
 
-  '@rspack/test-tools@2.3.3':
-    resolution: {integrity: sha512-ZuDpQKg72X7FMGaoukZ7WdObRbEHw4bjOgQ0J5or4RBJ79EA+qEJii+l6cMVCyKwR/Htd18tKQlfl/bPZpnAFQ==}
+  '@rspack/test-tools@2.3.4':
+    resolution: {integrity: sha512-5TEJUzA5x24geoOQ4Cb8GQdjeOD+VGNgy/uGqIvXdctPTjUruganO1OR2mtypih1NZHb13KRmsFBmfOg+L909Q==}
     peerDependencies:
       '@rspack/core': 2.3.4
 
@@ -11203,8 +11203,8 @@ packages:
   path-serializer@0.6.0:
     resolution: {integrity: sha512-LlnjpuCARGnJ4X3IirMg0qozvqyTQHmM5ZqUDYmz+yanhjHSP5BqpmgHkOjiFHad9+bYNW9f5ECXv1tUyw2B9A==}
 
-  path-serializer@0.7.0:
-    resolution: {integrity: sha512-QlO3NuhGp1ZjOojCEfe2x6dZ+OOw70ugmjwvETPlWrsllhZouPNRQAKXNs9zTA1CnKVWTtBA5n6V6xtbA9Me5A==}
+  path-serializer@0.8.1:
+    resolution: {integrity: sha512-pLXRdZZ+at18TWuIbmqeFV7GCCxdeXFGFb1W6uBRTtEvIJVoqDgALircIKdrbwoATpuhnuCVOAEW1tkqQoxMGQ==}
 
   path-to-regexp@8.3.0:
     resolution: {integrity: sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA==}
@@ -16719,7 +16719,7 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.3.4(@swc/helpers@0.5.24)
 
-  '@rspack/test-tools@2.3.3(@rspack/core@2.3.4(@swc/helpers@0.5.24))(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))':
+  '@rspack/test-tools@2.3.4(@rspack/core@2.3.4(@swc/helpers@0.5.24))(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25)(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))':
     dependencies:
       '@rspack/core': 2.3.4(@swc/helpers@0.5.24)
       chalk: 6.0.1
@@ -16730,7 +16730,7 @@ snapshots:
       jest-diff: 30.5.2
       jsdom: 31.0.1
       memfs: 4.80.1
-      path-serializer: 0.7.0
+      path-serializer: 0.8.1
       pretty-format: 30.5.1
       rimraf: 5.0.10
       rspack-merge: 1.0.1
@@ -21920,7 +21920,7 @@ snapshots:
 
   path-serializer@0.6.0: {}
 
-  path-serializer@0.7.0: {}
+  path-serializer@0.8.1: {}
 
   path-to-regexp@8.3.0:
     optional: true
