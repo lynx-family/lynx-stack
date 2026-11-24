@@ -9,23 +9,23 @@ Store 保存原始消息；`<A2UI>` 持有消息处理后产生的 surface、组
 
 ## 操作对照
 
-| 操作                                      | 原始消息 buffer                      | 对已挂载 `<A2UI>` 的影响                            |
-| ----------------------------------------- | ------------------------------------ | --------------------------------------------------- |
-| `createMessageStore()`                    | 初始为空。                           | surface 就绪前显示 `renderEmpty`。                  |
-| `createMessageStore({ initialMessages })` | 复制传入的数组。                     | 挂载后处理这些消息。                                |
-| `push(message)` / `push(messages)`        | 按顺序追加消息。                     | 在已有状态上应用追加的协议操作。                    |
-| `replace(fullMessages)`                   | 整体替换数组。                       | 构建目标状态，与当前状态做 diff 并对齐。            |
-| `replace([])`                             | 变为空数组。                         | 移除全部 surface，回到 `renderEmpty`。              |
-| `clear()`                                 | 变为空数组。                         | 保留当前 surface 和本地状态，重置 buffer 消费游标。 |
-| `getSnapshot()`                           | 返回当前只读数组。                   | 不触发消息处理或渲染。                              |
-| `subscribe(callback)`                     | 监听 buffer 变化，返回取消订阅函数。 | 不直接监听用户输入或组件 state。                    |
+| 操作                                      | 原始消息 buffer                      | 对已挂载 `<A2UI>` 的影响                              |
+| ----------------------------------------- | ------------------------------------ | ----------------------------------------------------- |
+| `createMessageStore()`                    | 初始为空。                           | surface 就绪前显示 `renderEmpty`。                    |
+| `createMessageStore({ initialMessages })` | 复制传入的数组。                     | 挂载后处理这些消息。                                  |
+| `push(message)` / `push(messages)`        | 按顺序追加消息。                     | 在已有状态上应用追加的协议操作。                      |
+| `replace(fullMessages)`                   | 整体替换数组。                       | 构建目标状态，与当前状态做 diff 并对齐。              |
+| `replace([])`                             | 变为空数组。                         | 移除全部 surface，回到 `renderEmpty`。                |
+| `clear()`                                 | 变为空数组。                         | 保留当前 surface 和本地状态，后续 `push` 作用于它们。 |
+| `getSnapshot()`                           | 返回当前只读数组。                   | 不触发消息处理或渲染。                                |
+| `subscribe(callback)`                     | 监听 buffer 变化，返回取消订阅函数。 | 不直接监听用户输入或组件 state。                      |
 
 `push`、`replace` 和 `clear` 均返回 `void`，同步修改 buffer。方法返回不代表渲染完成，
 也不代表替换已通过协议检查。非空 `push` 每次通知一次订阅者，`replace` 每次通知一次，
 `clear` 在 buffer 非空时通知一次。`push([])` 和清空已为空的 buffer 都不产生通知。
 
-两次修改之间，`getSnapshot()` 返回同一个数组引用。Store 会复制并冻结数组，但不会深拷贝或
-深冻结消息对象。提交后的消息及嵌套 JSON 应保持不可变，后续更新创建新值。原始快照不包含
+两次修改之间，`getSnapshot()` 返回同一个数组引用。Store 在修改后首次读取时才复制并冻结数组，
+因此应在需要消息时读取，而不是每次 `push` 都读取。Store 不会深拷贝或深冻结消息对象。提交后的消息及嵌套 JSON 应保持不可变，后续更新创建新值。原始快照不包含
 用户本地输入，不能当作全部实时 UI 状态的导出。
 
 ## 流式消息与尾帧全量
@@ -86,16 +86,23 @@ store.replace(fullResponse('完整回答'));
 `createSurface`，且中间没有删除该 surface，会被拒绝。
 
 `updateComponents` 按 ID 新增或更新本次提供的组件，未提供的 ID 继续保留。每个提供的组件都是
-该组件的新描述，不是只合并部分 props 的 patch。当前 `push` 路径不对组件描述做深比较去重：
-重复发送相同组件仍可能通知其资源、重新执行组件函数。ReactLynx 后续的渲染 diff 可能避免原生节点
-变化，但组件执行已经发生。
+该组件的新描述，不是只合并部分 props 的 patch。与当前描述完全相同的组件视为重发：不通知任何
+资源，组件函数也不会重新执行。确实变化的组件会被通知；当它是新出现的，或其 `weight`、组件类型
+变化时，引用它的父节点也会被通知。因此组件可以跨消息以任意顺序到达，父子双方都存在后子节点
+即会渲染。
+
+值与当前相同的 `updateDataModel` 同样是空操作。模板实例只在模板路径上的条目，或模板自身的组件
+发生变化时才会重建。
 
 `updateDataModel` 替换指定 JSON Pointer 路径上的值；省略路径或使用空路径表示根节点，`null`
 表示删除目标值。这是明确的服务端写入，可以覆盖本地输入。下文的本地输入合并规则适用于 `replace`。
 
-一次 `push` 传入多条消息，只通知 buffer 订阅者一次。同批次内先 `replace(fullMessages)` 再
-`push(updates)`，会先处理全量替换，再消费追加部分。如果消费前又发生一次 `replace`，以最后一份
-完整 buffer 为准，已被替换掉的消息不会继续应用。
+一次 `push` 传入多条消息，只通知 buffer 订阅者一次。`<A2UI>` 按调用顺序依次应用每一次 `push`、
+`replace` 和 `clear`，同一批次内的多次调用也是如此：先 `replace(fullMessages)` 再 `push(updates)`，
+会先应用全量替换，再应用追加部分。无法应用的消息会被上报并跳过，其后的消息照常应用。
+
+Buffer 会保留所有 `push` 的消息，直到下一次 `replace` 或 `clear`。长流应以
+`replace(finalMessages)` 结束，或在消息上屏后调用 `clear()` 释放它们。
 
 ## 什么才是完整替换
 
@@ -118,7 +125,8 @@ store.replace(fullResponse('完整回答'));
   数组顺序影响结果。
 - 未变化的组件描述和资源会复用。渲染状态和当前 surface 全部相同时，不发布组件资源更新。
 - 变化的组件和相关父节点会收到通知；数据绑定更新其消费者，子节点集合变化也可能刷新根节点。
-- 父组件更新可能带动普通子组件执行，因此增量资源更新不等于只执行变化的组件函数。
+- 父组件更新时，通过 `NodeRenderer` 渲染且描述未变的后代不会重新执行；以其他方式渲染子节点的
+  catalog 组件仍会带动它们执行。
 
 当前 surface 和根资源身份保留时，不整体重挂载。替换到另一个 active surface，或重建根资源时，
 会重置渲染子树。组件类型、父级结构变化也可能重置局部 state；同一 UI 实体应尽量保持 ID 稳定。
@@ -162,8 +170,8 @@ Processor 会先在独立状态中检查替换消息，再修改实时状态。�
 | 不满足 catalog 对父子组件组合的限制。    | `UNALLOWED_PARENT` 或 `UNALLOWED_CHILD`                                    |
 
 拒绝后保留当前界面和消费位置。原始 buffer 已经变成失败的快照，因此 `getSnapshot()` 可能与当前
-画面对应的状态不同。追加在失败快照后的消息不会直接应用到旧状态。后续 `push` 可能再次尝试替换、
-再次报错；仅靠追加消息不会修复原来的失败快照。
+画面对应的状态不同。追加在失败快照后的消息不会直接应用到旧状态。拒绝只上报一次：后续 `push`
+既不会修复失败的快照，也不会再次校验它。
 
 Renderer 会输出：
 
@@ -211,5 +219,6 @@ store.push(updatesForExistingSurfaces);
 `renderEmpty` 是渲染函数，可能执行多次；`renderFallback` 则用于已有资源处于 pending 的加载态。
 
 从 `null` 变为非 null store 会启动新 session，并消费该 store 中缓存的消息。
-直接把一个非 null store 换成另一个非 null store 不会重置 session。新 turn 应使用新的 store
-及对应的 `<A2UI key={turnId}>`，详见[概览](./overview_zh.md)。
+直接把一个非 null store 换成另一个非 null store 不会重置 session：渲染器会像 `replace` 一样
+对齐到新 store 的内容，未变化的组件保持挂载，新 store 中已有的 RPC 消息不会重放。新 turn 应使用
+新的 store 及对应的 `<A2UI key={turnId}>`，详见[概览](./overview_zh.md)。

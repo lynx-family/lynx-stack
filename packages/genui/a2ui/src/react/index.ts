@@ -18,6 +18,7 @@
 export { A2UI } from './A2UI.jsx';
 export type { A2UIProps } from './A2UI.jsx';
 export { NodeRenderer } from './A2UIRenderer.jsx';
+export type { NodeRendererProps } from './A2UIRenderer.jsx';
 export { useAction } from './useAction.js';
 export type { ActionProps } from './useAction.js';
 export { useDataBinding, useResolvedProps } from './useDataBinding.js';

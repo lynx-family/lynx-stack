@@ -35,17 +35,51 @@ export function expandMessage(
   ];
 }
 
+/** Split a JSON Pointer into unescaped keys. A leading slash is optional. */
+function pointerSegments(path: string): string[] {
+  return path === '/' || path === ''
+    ? []
+    : path.replace(/^\//, '').split('/').map(key =>
+      key.replace(/~1/g, '/').replace(/~0/g, '~')
+    );
+}
+
+/** Escape one key for use inside a JSON Pointer. */
+export function escapePointerSegment(key: string): string {
+  return key.replace(/~/g, '~0').replace(/\//g, '~1');
+}
+
+/** Canonical absolute form of a data-model path: `/` for the root. */
+export function normalizePointer(path: string): string {
+  if (path === '' || path === '/') return '/';
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
+/**
+ * Read the value at a JSON Pointer, or `undefined` when any step is missing.
+ * Sees exactly the entries `flattenDataModel` reports.
+ */
+export function readDataModel(current: unknown, path: string): unknown {
+  let value = current;
+  for (const key of pointerSegments(path)) {
+    if (
+      value === null || typeof value !== 'object'
+      || !Object.prototype.propertyIsEnumerable.call(value, key)
+    ) {
+      return undefined;
+    }
+    value = (value as Record<string, unknown>)[key];
+  }
+  return value;
+}
+
 /** Immutable JSON Pointer replacement/deletion for v1.0 data models. */
 export function replaceDataModel(
   current: unknown,
   path: string,
   value: unknown,
 ): unknown {
-  const segments = path === '/' || path === ''
-    ? []
-    : path.replace(/^\//, '').split('/').map(key =>
-      key.replace(/~1/g, '/').replace(/~0/g, '~')
-    );
+  const segments = pointerSegments(path);
   const set = (container: unknown, index: number): unknown => {
     if (index === segments.length) return value === null ? undefined : value;
     const key = segments[index]!;
@@ -85,9 +119,7 @@ export function flattenDataModel(
     for (const [key, child] of Object.entries(value)) {
       flattenDataModel(
         child,
-        `${path === '/' ? '' : path}/${
-          key.replace(/~/g, '~0').replace(/\//g, '~1')
-        }`,
+        `${path === '/' ? '' : path}/${escapePointerSegment(key)}`,
         result,
       );
     }

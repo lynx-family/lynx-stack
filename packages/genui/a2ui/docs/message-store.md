@@ -11,16 +11,16 @@ data model without adding a message to the buffer.
 
 ## Operations at a glance
 
-| Operation                                 | Raw message buffer                                                   | Effect on a mounted `<A2UI>`                                               |
-| ----------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `createMessageStore()`                    | Starts empty.                                                        | Shows `renderEmpty` until a surface is ready.                              |
-| `createMessageStore({ initialMessages })` | Copies the supplied array.                                           | Processes its messages when mounted.                                       |
-| `push(message)` / `push(messages)`        | Appends messages in order.                                           | Applies the appended protocol operations to existing state.                |
-| `replace(fullMessages)`                   | Replaces the entire array.                                           | Builds the target state and reconciles it with live state.                 |
-| `replace([])`                             | Becomes empty.                                                       | Removes all surfaces and returns to `renderEmpty`.                         |
-| `clear()`                                 | Becomes empty.                                                       | Keeps live surfaces and local state; resets the buffer consumption cursor. |
-| `getSnapshot()`                           | Returns the current readonly array.                                  | Does not trigger processing or rendering.                                  |
-| `subscribe(callback)`                     | Registers a buffer-change listener; returns an unsubscribe function. | Does not subscribe directly to user input or component state.              |
+| Operation                                 | Raw message buffer                                                   | Effect on a mounted `<A2UI>`                                     |
+| ----------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `createMessageStore()`                    | Starts empty.                                                        | Shows `renderEmpty` until a surface is ready.                    |
+| `createMessageStore({ initialMessages })` | Copies the supplied array.                                           | Processes its messages when mounted.                             |
+| `push(message)` / `push(messages)`        | Appends messages in order.                                           | Applies the appended protocol operations to existing state.      |
+| `replace(fullMessages)`                   | Replaces the entire array.                                           | Builds the target state and reconciles it with live state.       |
+| `replace([])`                             | Becomes empty.                                                       | Removes all surfaces and returns to `renderEmpty`.               |
+| `clear()`                                 | Becomes empty.                                                       | Keeps live surfaces and local state; later pushes apply to them. |
+| `getSnapshot()`                           | Returns the current readonly array.                                  | Does not trigger processing or rendering.                        |
+| `subscribe(callback)`                     | Registers a buffer-change listener; returns an unsubscribe function. | Does not subscribe directly to user input or component state.    |
 
 `push`, `replace`, and `clear` return `void`. They change the buffer synchronously;
 returning from a call does not mean that rendering has completed or that a
@@ -29,8 +29,9 @@ replacement passed protocol checks. Subscribers are notified once for a nonempty
 nonempty. `push([])` and clearing an already-empty buffer are no-ops.
 
 `getSnapshot()` keeps the same array reference between mutations. The store
-copies and freezes the array, but does not deep-copy or freeze the message
-objects. Treat submitted messages and nested JSON as immutable; create new
+copies and freezes the array when you read it after a mutation, so read it when
+you need the messages rather than on every `push`. It does not deep-copy or
+freeze the message objects. Treat submitted messages and nested JSON as immutable; create new
 values for subsequent updates. A raw snapshot does not include local input edits
 and should not be treated as an export of all live UI state.
 
@@ -97,10 +98,16 @@ without first deleting it is rejected.
 
 For `updateComponents`, supplied component IDs are inserted or updated; omitted
 IDs remain in the surface. Each supplied component is its new description, not
-a patch of selected props. The current `push` path does not deep-deduplicate
-component descriptions: repeating an identical component can notify its resource
-and execute the component again. ReactLynx's later rendering diff may avoid
-native node changes even though component code ran.
+a patch of selected props. A description that is identical to the one already
+held is treated as a resend: it notifies nothing and its component does not run
+again. A component that does change is announced together with the parents
+that refer to it when it is new, or when its `weight` or component type changes.
+Components may therefore arrive in any order across messages; a parent renders
+a child as soon as both exist.
+
+`updateDataModel` with a value equal to the current one is likewise a no-op.
+Template instances are rebuilt only when the items at the template's path, or
+the template's own components, change.
 
 `updateDataModel` replaces the value at its JSON Pointer path; an omitted or
 empty path targets the root, and `null` deletes the targeted value. These are
@@ -108,10 +115,15 @@ explicit server writes, so they can overwrite local input. The local-input merge
 policy below applies to `replace`.
 
 Multiple messages passed in one `push` generate one buffer notification.
-`replace(fullMessages)` followed by `push(updates)` in the same batch processes
-the replacement first, then its appended tail. If another `replace` arrives
-before consumption, the latest full buffer takes precedence over discarded
-messages.
+`<A2UI>` applies every `push`, `replace`, and `clear` in the order it was made,
+including several made in one batch: `replace(fullMessages)` followed by
+`push(updates)` applies the replacement first, then its appended tail. A
+message that cannot be applied is reported and skipped; the messages after it
+are still applied.
+
+The buffer keeps every pushed message until the next `replace` or `clear`. End
+a long stream with `replace(finalMessages)`, or call `clear()` once its messages
+are on screen, to release them.
 
 ## What counts as a complete replacement
 
@@ -143,8 +155,9 @@ identity alone, or the original streaming batch boundaries:
   is published.
 - Changed components and relevant parents are notified. Data bindings update
   their consumers; child membership changes may also refresh the root.
-- Parent updates can execute ordinary descendants too. Incremental resource
-  updates do not guarantee that only changed component functions run.
+- A parent update does not run a descendant again when the descendant is
+  rendered through `NodeRenderer` with an unchanged description. A catalog
+  component that renders children some other way still runs them.
 
 The current surface and root resource remain mounted while their identities are
 retained. Replacing the active surface or recreating its root resource resets the
@@ -202,9 +215,9 @@ state. Any reported protocol error rejects the whole replacement. Common causes:
 
 Rejection preserves the live UI and its consumption position. The raw buffer
 already contains the rejected snapshot, so `getSnapshot()` can differ from what
-is on screen. Its appended tail is not applied to the old live state. A later
-`push` can cause another attempt and another error; it does not repair the
-rejected replacement by itself.
+is on screen. Its appended tail is not applied to the old live state. The
+rejection is reported once: a later `push` neither repairs the rejected
+replacement nor evaluates it again.
 
 The renderer logs:
 
@@ -258,5 +271,8 @@ different: it renders while an existing resource is pending.
 
 Passing a non-null store after `null` starts a fresh session and consumes that
 store's buffered messages. Directly swapping one non-null store for another does
-not reset the session. For a new turn, use a fresh store with a turn-specific
-`<A2UI key={turnId}>`, as described in the [overview](./overview.md).
+not reset the session: the renderer reconciles to the new store's contents as
+`replace` would, keeping unchanged components mounted and not replaying RPC
+messages already in that store. For a new turn, use a fresh store with a
+turn-specific `<A2UI key={turnId}>`, as described in the
+[overview](./overview.md).

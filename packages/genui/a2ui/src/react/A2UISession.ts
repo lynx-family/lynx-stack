@@ -3,12 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 
 import { MessageProcessor } from '../store/MessageProcessor.js';
-import { createResource } from '../store/Resource.js';
+import { createMessageReader } from '../store/MessageStore.js';
 import type {
-  Resource,
-  ResourceInfo,
-  ServerToClientMessage,
-} from '../store/types.js';
+  MessageReader,
+  MessageRun,
+  MessageStore,
+} from '../store/MessageStore.js';
+import { createResource } from '../store/Resource.js';
+import type { Resource, ResourceInfo, Surface } from '../store/types.js';
 
 /**
  * Mutable rendering state owned by one mounted `<A2UI>` session.
@@ -21,10 +23,14 @@ export interface A2UISessionState {
   activeMessageId: string | null;
   /** Changes only when replacement state switches or clears the active surface. */
   replacementRevision: number;
-  /** How many messages from the buffer have been processed so far. */
-  processedCount: number;
-  replacement: readonly ServerToClientMessage[] | undefined;
-  reset: readonly ServerToClientMessage[] | undefined;
+  /** Position in the store currently feeding this session. */
+  reader: MessageReader | undefined;
+  /** Whether the processor may already hold state from an earlier store. */
+  attached: boolean;
+  /** Generation whose snapshot was rejected; its appended tail is ignored. */
+  rejected: object | undefined;
+  /** Guards against a store mutation made while messages are being applied. */
+  draining: boolean;
 }
 
 /**
@@ -38,10 +44,96 @@ export function createA2UISessionState(): A2UISessionState {
     resources: new Map(),
     activeMessageId: null,
     replacementRevision: 0,
-    processedCount: 0,
-    replacement: undefined,
-    reset: undefined,
+    reader: undefined,
+    attached: false,
+    rejected: undefined,
+    draining: false,
   };
+}
+
+/**
+ * Point the session at a store. A session that has already consumed another
+ * store reconciles to the new store's contents instead of stacking them.
+ *
+ * @internal
+ */
+export function attachMessageStore(
+  session: A2UISessionState,
+  store: MessageStore,
+): void {
+  session.reader = createMessageReader(store, { adopt: session.attached });
+  session.attached = true;
+  session.rejected = undefined;
+}
+
+function activeSurface(session: A2UISessionState): Surface | undefined {
+  return session.activeMessageId
+    ? session.resources.get(session.activeMessageId)?.value?.surface
+    : undefined;
+}
+
+function rootResource(surface: Surface | undefined): Resource | undefined {
+  return surface?.rootComponentId
+    ? surface.resources.get(surface.rootComponentId)
+    : undefined;
+}
+
+function applyRun(session: A2UISessionState, run: MessageRun): boolean {
+  if (run.kind === 'append') {
+    // The tail of a rejected snapshot was written against state that never
+    // existed, so it waits for a corrected `replace` or a `clear`.
+    if (session.rejected === run.epoch) return false;
+    session.processor.processMessages(run.messages);
+    return false;
+  }
+  const previous = activeSurface(session);
+  const previousRoot = rootResource(previous);
+  if (!session.processor.replaceMessages(run.messages)) {
+    session.rejected = run.epoch;
+    console.warn(
+      '[a2ui] Replacement rejected; keeping the previous rendering state. Correct the full snapshot with replace().',
+    );
+    return false;
+  }
+  session.rejected = undefined;
+  const current = activeSurface(session);
+  // Only an explicit replacement can change the renderer's identity.
+  // Appended messages retain the historical unkeyed reconciliation.
+  if (previous !== current || previousRoot !== rootResource(current)) {
+    session.replacementRevision += 1;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Apply every message the session has not seen yet, in order. Returns whether
+ * the `<A2UI>` shell must re-render.
+ *
+ * A message that throws is reported and skipped so that one malformed
+ * message cannot discard the ones that follow it.
+ *
+ * @internal
+ */
+export function drainMessages(session: A2UISessionState): boolean {
+  const reader = session.reader;
+  // A mutation made from inside a processor callback lands in the same
+  // buffer; the loop below picks it up once the current run is applied.
+  if (!reader || session.draining) return false;
+  session.draining = true;
+  let rerender = false;
+  try {
+    for (let run = reader.read(); run; run = reader.read()) {
+      try {
+        if (applyRun(session, run)) rerender = true;
+      } catch (error) {
+        console.error('[a2ui] Failed to apply messages:', error);
+      }
+    }
+  } finally {
+    session.draining = false;
+  }
+  return rerender;
 }
 
 function applyReplacementUpdate(

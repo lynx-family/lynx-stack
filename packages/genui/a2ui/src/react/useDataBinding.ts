@@ -265,44 +265,63 @@ export function useResolvedProps(
   processor?: MessageProcessor,
   functions?: readonly CatalogFunctionEntry[],
 ): readonly [Record<string, unknown>, (key: string, value: unknown) => void] {
-  const cacheRef = useRef<Record<string, unknown> | null>(null);
+  // Coercion follows the component's catalog schema, and a surface can be
+  // given another catalog without its components changing identity.
+  const catalog = processor?.getCatalog(
+    typeof properties?.['@catalogId'] === 'string'
+      ? properties['@catalogId']
+      : surface?.catalogId,
+  );
+  const resolve = useCallback(
+    (previous: Record<string, unknown> | undefined) =>
+      resolveProperties(
+        properties,
+        surface,
+        dataContextPath,
+        processor,
+        functions,
+        previous,
+      ),
+    [properties, surface, dataContextPath, processor, functions, catalog],
+  );
 
-  const computeSnapshot = useCallback(() => {
-    const next = resolveProperties(
-      properties,
-      surface,
-      dataContextPath,
-      processor,
-      functions,
-      cacheRef.current ?? undefined,
-    );
-    cacheRef.current = next;
-    return next;
-  }, [properties, surface, dataContextPath, processor, functions]);
+  // The props are resolved once per set of inputs and once more whenever a
+  // signal they read changes. `getSnapshot` only hands out that result: it
+  // never evaluates a binding or a function itself, so a function that
+  // returns a new object on every call cannot make the snapshot unstable.
+  const cacheRef = useRef<
+    {
+      resolve: typeof resolve;
+      value: Record<string, unknown>;
+    } | null
+  >(null);
+
+  const getSnapshot = useCallback(() => {
+    const cache = cacheRef.current;
+    if (cache?.resolve === resolve) return cache.value;
+    const value = resolve(cache?.value);
+    cacheRef.current = { resolve, value };
+    return value;
+  }, [resolve]);
 
   const subscribe = useCallback(
     (cb: () => void) => {
       if (!surface?.store) return noop;
       return effect(() => {
-        resolveProperties(
-          properties,
-          surface,
-          dataContextPath,
-          processor,
-          functions,
-          cacheRef.current ?? undefined,
-        );
+        // Evaluated inside the effect so that every signal read becomes a
+        // dependency of it.
+        const cache = cacheRef.current;
+        const value = resolve(cache?.value);
+        if (cache?.resolve !== resolve || cache.value !== value) {
+          cacheRef.current = { resolve, value };
+        }
         cb();
       });
     },
-    [properties, surface, dataContextPath, processor, functions],
+    [resolve, surface],
   );
 
-  const resolved = useSyncExternalStore(
-    subscribe,
-    computeSnapshot,
-    computeSnapshot,
-  );
+  const resolved = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   const setValue = useCallback(
     (key: string, value: unknown) => {

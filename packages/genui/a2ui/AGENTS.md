@@ -28,17 +28,30 @@ Core pieces:
 
 - `MessageStore` (`src/store/MessageStore.ts`)
   - Buffer of raw protocol messages supporting append and full replacement.
-  - `useSyncExternalStore`-friendly `subscribe` / `getSnapshot` API.
+  - `useSyncExternalStore`-friendly `subscribe` / `getSnapshot` API. The
+    snapshot array is built on demand, so a `push` is an append, not a copy.
   - The developer's transport (fetch / SSE / WebSocket / in-process
     mock) calls `store.push(msg)` — the store is intentionally dumb
-    about protocol semantics. `store.replace(fullMessages)` records a replacement
-    boundary so A2UI can reconcile state before consuming subsequent pushes.
+    about protocol semantics.
+  - Internally the buffer is a linked list of generations: `replace` and
+    `clear` start a new one, `push` appends to the current one. Consumers use
+    `createMessageReader(store)`, which hands out every message exactly once
+    and in order as `replace` and `append` runs. Do not track a position by
+    message count: it cannot tell a replaced buffer from an appended one.
 - `MessageProcessor` (`src/store/MessageProcessor.ts`)
   - Owns all `Surface` instances.
   - Applies `createSurface` / `updateComponents` / `updateDataModel` /
     `deleteSurface` into surface state.
   - Emits typed update events (`beginRendering`, `surfaceUpdate`,
     `deleteSurface`) consumed by the React layer.
+  - Component instances are immutable: a change stores a new object, and a
+    definition or data value equal to the current one is a no-op. Readers
+    rely on identity to tell whether anything changed.
+  - A `surfaceUpdate` lists the changed components plus the parents that must
+    render again (a child appeared, or its `weight` / type changed). The
+    reference index behind this lives in `src/store/surfaceState.ts`.
+  - A message that cannot be applied is reported and skipped; it never stops
+    the messages after it.
   - `sendMessage({ version: '1.0', action })` fans out to `onEvent` listeners.
 - `Resource` (`src/store/Resource.ts`)
   - `pending` / `success` / `error` state machine. Snapshot reference
@@ -47,14 +60,19 @@ Core pieces:
   - One per surface root + per component instance.
 - `SignalStore` (`src/store/SignalStore.ts`)
   - `@lynx-js/react-signals` wrapper used as the per-surface data model
-  - Creates a signal with its first written value so main-thread first-screen
-    rendering does not depend on the intentionally inactive signal setter.
     (JSON-pointer-style paths).
+  - Signals are created when a path is first read, with the current value, so
+    main-thread first-screen rendering does not depend on the intentionally
+    inactive signal setter.
+  - A write notifies only the written path, its ancestors and its descendants.
 - `<A2UI>` (`src/react/A2UI.tsx`)
   - All-in-one renderer. Per-mount `MessageProcessor`. Subscribes to
-    the developer-supplied `MessageStore`, processes new tail messages
-    on each render, reconciles full replacements without resetting the session,
-    and renders the most recent surface.
+    the developer-supplied `MessageStore` in an effect and applies every
+    mutation in order as it is reported (`src/react/A2UISession.ts`), without
+    re-rendering the shell per push. Reconciles full replacements without
+    resetting the session, and renders the most recent surface.
+  - A rejected replacement is reported once; its appended tail is ignored
+    until the next `replace` or `clear`.
   - Wires `processor.onEvent` → the consumer's `onAction` prop.
 - `<A2UIRenderer>` / `NodeRenderer` (`src/react/A2UIRenderer.tsx`)
   - Subscribes to a `Resource` and renders either:
@@ -89,13 +107,19 @@ Core pieces:
 
 - When `updateComponents` contains a "templated children" placeholder,
   `MessageProcessor` stores `__template` metadata on the component.
-- When `updateDataModel` updates the template's data path, the
-  processor:
+- Whenever the items at the template's data path, or the components of
+  the template subtree, change, the processor (`src/store/templates.ts`):
   - reads the data at the path,
-  - clones the template subtree via `cloneComponentTree`,
+  - copies the template subtree once per item as `<id>:<key>`,
   - rewrites child IDs and sets `dataContextPath` to an item-specific
     scope,
+  - expands a template nested inside an item against that item, naming
+    its copies `<id>:<key>:<innerKey>`,
+  - keeps copies that would come out identical, and removes copies (and
+    their resources) whose item is gone,
   - sets `children` to the generated concrete IDs.
+- `useResolvedProps` resolves props once per instance and once per change of
+  a signal they read; `getSnapshot` only returns that cached result.
 
 This is why some components can appear/disappear when only the data
 model changes.

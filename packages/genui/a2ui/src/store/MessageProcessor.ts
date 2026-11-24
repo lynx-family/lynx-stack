@@ -8,6 +8,7 @@ import { signal } from '@lynx-js/react-signals';
 import {
   collectComponentReferences,
   compositionErrors,
+  describeComponentReferences,
 } from './composition.js';
 import { expandMessage, replaceDataModel } from './protocol.js';
 import { reconcileDataModel } from './reconcile.js';
@@ -15,6 +16,18 @@ import { resolveBindingPath } from './resolveDynamic.js';
 import { executeFunctionCall } from './resolveFunctionCall.js';
 import { createResource } from './Resource.js';
 import { SignalStore } from './SignalStore.js';
+import {
+  adoptSurfaceState,
+  indexReferences,
+  surfaceState,
+  templateChildren,
+} from './surfaceState.js';
+import {
+  affectsParent,
+  expandTemplates,
+  templatesAreStale,
+} from './templates.js';
+import type { TemplateHost } from './templates.js';
 import type {
   ComponentInstance,
   FunctionResponse,
@@ -49,6 +62,48 @@ function isMeaningfulResponse(value: unknown): boolean {
   return true;
 }
 
+const SURFACE_PAYLOADS = [
+  'createSurface',
+  'updateComponents',
+  'updateDataModel',
+  'deleteSurface',
+] as const;
+
+/**
+ * Where a surface message is too malformed to apply, as a JSON Pointer, or
+ * `undefined` when its envelope has the shape the handlers rely on.
+ */
+function malformedAt(
+  message: Record<string, unknown>,
+): { path: string; surfaceId?: string } | undefined {
+  for (const kind of SURFACE_PAYLOADS) {
+    if (!(kind in message)) continue;
+    const payload = message[kind];
+    if (!isObject(payload) || Array.isArray(payload)) {
+      return { path: `/${kind}` };
+    }
+    const surfaceId = payload['surfaceId'];
+    if (typeof surfaceId !== 'string') return { path: `/${kind}/surfaceId` };
+    const components = payload['components'];
+    if (
+      kind === 'updateComponents'
+        ? !Array.isArray(components)
+        : (kind === 'createSurface' && components !== undefined
+          && !Array.isArray(components))
+    ) {
+      return { path: `/${kind}/components`, surfaceId };
+    }
+    const path = payload['path'];
+    if (
+      kind === 'updateDataModel' && path !== undefined
+      && typeof path !== 'string'
+    ) {
+      return { path: `/${kind}/path`, surfaceId };
+    }
+  }
+  return undefined;
+}
+
 /**
  * Stateful A2UI protocol processor that turns v1.0 messages into
  * renderable surfaces, resources, data-model signals, and user-action events.
@@ -58,6 +113,10 @@ export class MessageProcessor {
   private serverDataModels = new Map<string, unknown>();
   private renderedSurfaceIds: string[] = [];
   private catalogs = new Map<string, Catalog>();
+  private defaultCatalogId: string | undefined;
+  private warnedCatalogs = new Set<string>();
+  /** Set on the scratch processor a replacement is validated in. */
+  private quiet = false;
   private functionValues = new Map<string, Signal<unknown>>();
   private functionFailures = new Map<string, Error>();
   private reportedExpressionErrors = new WeakSet<object>();
@@ -72,14 +131,38 @@ export class MessageProcessor {
     }
   >();
 
-  /** Register a trusted catalog for qualified v1.0 function resolution. */
-  registerCatalog(catalogId: string, catalog: Catalog): void {
+  /**
+   * Register a trusted catalog for qualified v1.0 function resolution.
+   *
+   * With `default`, the catalog also serves surfaces and components that
+   * name no catalog, which the v1.0 schema allows.
+   */
+  registerCatalog(
+    catalogId: string,
+    catalog: Catalog,
+    options: { default?: boolean } = {},
+  ): void {
     this.catalogs.set(catalogId, catalog);
+    if (options.default) this.defaultCatalogId = catalogId;
   }
 
-  /** Resolve a catalog by its exact wire identifier. */
+  /**
+   * The identifier a catalog lookup uses: the given one, or the default
+   * catalog's when none is given.
+   *
+   * @internal
+   */
+  resolveCatalogId(catalogId: string | undefined): string | undefined {
+    return catalogId ?? this.defaultCatalogId;
+  }
+
+  /**
+   * Resolve a catalog by its exact wire identifier. An omitted identifier
+   * resolves to the default catalog when one is registered.
+   */
   getCatalog(catalogId: string | undefined): Catalog | undefined {
-    return catalogId === undefined ? undefined : this.catalogs.get(catalogId);
+    const id = this.resolveCatalogId(catalogId);
+    return id === undefined ? undefined : this.catalogs.get(id);
   }
 
   /** Send a v1.0 event through the host transport. */
@@ -106,8 +189,9 @@ export class MessageProcessor {
     surfaceId: string,
     callFunction: ProtocolFunctionCall,
   ): Promise<unknown> {
-    const catalogId = callFunction.catalogId
-      ?? this.surfaces.get(surfaceId)?.catalogId;
+    const catalogId = this.resolveCatalogId(
+      callFunction.catalogId ?? this.surfaces.get(surfaceId)?.catalogId,
+    );
     if (!catalogId) {
       return Promise.reject(new Error('Function call requires a catalog'));
     }
@@ -204,6 +288,20 @@ export class MessageProcessor {
     if (error && typeof error === 'object') {
       if (this.reportedExpressionErrors.has(error)) return;
       this.reportedExpressionErrors.add(error);
+    }
+    // A broken expression fails again every time it is evaluated. The agent
+    // needs to hear about it once per state it produced, not once per render.
+    if (
+      code === 'EXPRESSION_ERROR'
+      && !(error instanceof Error && 'functionCallId' in error)
+    ) {
+      const surface = this.surfaces.get(surfaceId);
+      if (surface) {
+        const reported = surfaceState(surface).reportedErrors;
+        const text = error instanceof Error ? error.message : String(error);
+        if (reported.has(text)) return;
+        reported.add(text);
+      }
     }
     void this.sendMessage({
       version: '1.0',
@@ -433,6 +531,8 @@ export class MessageProcessor {
   replaceMessages(messages: readonly ServerToClientMessage[]): boolean {
     const target = new MessageProcessor();
     target.catalogs = this.catalogs;
+    target.defaultCatalogId = this.defaultCatalogId;
+    target.quiet = true;
     const errors: RendererToAgentMessage[] = [];
     target.onEvent(({ message, resolve }) => {
       errors.push(message as RendererToAgentMessage);
@@ -484,15 +584,12 @@ export class MessageProcessor {
         : nextServerData;
       this.serverDataModels.set(surfaceId, nextServerData);
       if (!equalJsonValues(desired.store.getDataModel(), nextData)) {
-        for (const [id, component] of desired.components) {
-          if (component.dataContextPath !== undefined) {
-            desired.components.delete(id);
-            desired.resources.delete(id);
-          }
-        }
+        // Local input changes which items exist, so the snapshot's template
+        // instances have to follow the data that will actually be shown.
         desired.store.update('/', nextData);
-        target.expandTemplates(desired);
+        target.syncTemplates(desired);
       }
+      const desiredState = surfaceState(desired);
 
       const surface = this.getOrCreateSurface(surfaceId);
       const catalogChanged = surface.catalogId !== desired.catalogId;
@@ -526,7 +623,9 @@ export class MessageProcessor {
         }
         let needsUpdate = catalogChanged || changedIds.has(id)
           // Dynamic child references may resolve from data or functions.
-          || (membershipChanged && id === desired.rootComponentId);
+          || (membershipChanged
+            && (id === desired.rootComponentId
+              || desiredState.dynamicReferrers.has(id)));
         // Parents may read child props (for example weight) while rendering.
         if (!needsUpdate && changedIds.size > 0) {
           const schema = this.getCatalog(
@@ -545,6 +644,10 @@ export class MessageProcessor {
         }
       }
       surface.rootComponentId = desired.rootComponentId ?? null;
+      // The snapshot's bookkeeping describes exactly the components that
+      // were just committed, under the same ids.
+      adoptSurfaceState(surface, desired);
+      if (!existing || catalogChanged) this.checkCatalog(surface);
       if (!equalJsonValues(surface.store.getDataModel(), nextData)) {
         surface.store.update('/', nextData);
       }
@@ -610,376 +713,372 @@ export class MessageProcessor {
     return resolveBindingPath(path, context);
   }
 
-  private cloneComponentTree(
-    originalId: string,
-    newIdSuffix: string,
-    dataContextPath: string,
+  private readonly templateHost: TemplateHost = {
+    resolvePath: (path, dataContextPath) =>
+      this.resolvePath(path, dataContextPath),
+    index: (surface, id, instance) =>
+      this.indexComponent(surface, id, instance),
+  };
+
+  /** Keep the reference index in step with a stored or removed component. */
+  private indexComponent(
     surface: Surface,
-    updates: ComponentInstance[],
-  ): string | null {
-    const original = surface.components.get(originalId);
-    if (!original) return null;
-
-    const newId = `${originalId}${newIdSuffix}`;
-    const cloned = JSON.parse(JSON.stringify(original)) as ComponentInstance;
-    (cloned as unknown as Record<string, unknown>)['id'] = newId;
-    cloned.dataContextPath = dataContextPath;
-
-    surface.components.set(newId, cloned);
-    updates.push(cloned);
-
-    if (!surface.resources.has(newId)) {
-      surface.resources.set(newId, createResource(newId));
+    id: string,
+    instance: ComponentInstance | undefined,
+  ): void {
+    const state = surfaceState(surface);
+    if (!instance) {
+      indexReferences(state, id, undefined);
+      return;
     }
+    const schema = this.getCatalog(instance['@catalogId'] ?? surface.catalogId)
+      ?.components.find(entry => entry.name === instance.component)?.schema;
+    indexReferences(state, id, describeComponentReferences(instance, schema));
+  }
 
-    const anyCloned = cloned as unknown as Record<string, unknown>;
-    const clonedRefs = new Map<string, string | null>();
-
-    const cloneReference = (childId: string): string | null => {
-      if (clonedRefs.has(childId)) return clonedRefs.get(childId) ?? null;
-      const newChildId = this.cloneComponentTree(
-        childId,
-        newIdSuffix,
-        dataContextPath,
-        surface,
-        updates,
+  /** Tell the agent, once, that a surface names a catalog nobody registered. */
+  private checkCatalog(surface: Surface): void {
+    const catalogId = surface.catalogId;
+    // A bare processor has no notion of the catalogs a host supports.
+    if (
+      this.quiet || this.defaultCatalogId === undefined
+      || catalogId === undefined || this.catalogs.has(catalogId)
+    ) {
+      return;
+    }
+    if (!this.warnedCatalogs.has(catalogId)) {
+      this.warnedCatalogs.add(catalogId);
+      console.warn(
+        `[a2ui] Surface "${surface.surfaceId}" uses catalog "${catalogId}", `
+          + 'which is not registered. Its components render as unsupported.',
       );
-      clonedRefs.set(childId, newChildId);
-      return newChildId;
-    };
+    }
+    this.reportProtocolError({
+      code: 'VALIDATION_FAILED',
+      surfaceId: surface.surfaceId,
+      path: '/createSurface/catalogId',
+      message: `Unknown catalog "${catalogId}"`,
+    });
+  }
 
-    const cloneStringField = (field: string) => {
-      const childId = anyCloned[field];
-      if (typeof childId !== 'string') return;
-      const newChildId = cloneReference(childId);
-      if (newChildId) {
-        anyCloned[field] = newChildId;
-      }
-    };
+  private reportProtocolError(
+    error: { code: string; message: string; surfaceId?: string; path?: string },
+  ): void {
+    void this.sendMessage({ version: '1.0', error }).catch(failure => {
+      console.warn('[a2ui] Error reporting failed:', failure);
+    });
+  }
 
-    if (Array.isArray(anyCloned['children'])) {
-      const newChildren: string[] = [];
-      for (const childId of anyCloned['children']) {
-        if (typeof childId !== 'string') continue;
-        const newChildId = cloneReference(childId);
-        if (newChildId) newChildren.push(newChildId);
+  /**
+   * Apply messages in order. A message that cannot be applied is reported
+   * and skipped; the messages after it are still applied.
+   */
+  processMessages(messages: readonly ServerToClientMessage[]): void {
+    for (const message of messages) {
+      try {
+        this.processMessage(message);
+      } catch (error) {
+        console.error('[a2ui] Failed to process message:', error);
       }
-      anyCloned['children'] = newChildren;
+    }
+  }
+
+  private processMessage(message: ServerToClientMessage): void {
+    if (message.version !== '1.0') {
+      const source = Object.values(message).find((
+        value,
+      ): value is Record<string, unknown> =>
+        value !== null && typeof value === 'object'
+        && ('surfaceId' in value || 'functionCallId' in value)
+      );
+      const location = typeof source?.['surfaceId'] === 'string'
+        ? { surfaceId: source['surfaceId'] }
+        : (typeof source?.['functionCallId'] === 'string'
+          ? { functionCallId: source['functionCallId'] }
+          : undefined);
+      if (!location) {
+        console.warn('[a2ui] Only A2UI v1.0 is supported', message.version);
+        return;
+      }
+      this.reportProtocolError({
+        code: 'UNSUPPORTED_VERSION',
+        ...location,
+        message: 'Only A2UI v1.0 is supported',
+      });
+      return;
+    }
+    const malformed = malformedAt(message as Record<string, unknown>);
+    if (malformed) {
+      if (malformed.surfaceId === undefined) {
+        console.warn('[a2ui] Ignoring a malformed message at', malformed.path);
+        return;
+      }
+      this.reportProtocolError({
+        code: 'VALIDATION_FAILED',
+        surfaceId: malformed.surfaceId,
+        path: malformed.path,
+        message: 'Malformed message',
+      });
+      return;
+    }
+    if (
+      'createSurface' in message
+      && this.surfaces.has(message.createSurface.surfaceId)
+    ) {
+      this.reportProtocolError({
+        code: 'VALIDATION_FAILED',
+        surfaceId: message.createSurface.surfaceId,
+        path: '/createSurface/surfaceId',
+        message: 'Surface already exists',
+      });
+      return;
+    }
+    for (const part of expandMessage(message)) this.applyMessage(part);
+  }
+
+  private applyMessage(message: ServerToClientMessage): void {
+    if ('callRendererFunction' in message) {
+      void this.callRendererFunction(message.callRendererFunction).catch(
+        error => {
+          console.warn('[a2ui] RPC response delivery failed:', error);
+        },
+      );
+      return;
+    }
+    if ('agentFunctionResponse' in message) {
+      this.completeFunctionCall(message.agentFunctionResponse);
+      return;
+    }
+    const payload = Object.values(message).find((
+      value,
+    ): value is { surfaceId: string } =>
+      value !== null && typeof value === 'object' && 'surfaceId' in value
+    );
+    if (
+      payload && !('createSurface' in message)
+      && !this.surfaces.has(payload.surfaceId)
+    ) {
+      this.reportProtocolError({
+        code: 'VALIDATION_FAILED',
+        surfaceId: payload.surfaceId,
+        path: '/',
+        message: 'Surface must be created exactly once before updates',
+      });
+      return;
+    }
+    if ('createSurface' in message && message.createSurface) {
+      this.createSurface(message.createSurface);
+    }
+    if ('updateComponents' in message && message.updateComponents) {
+      this.updateComponents(
+        message.updateComponents.surfaceId,
+        message.updateComponents.components,
+        (message as { messageId?: string }).messageId,
+      );
+    }
+    if ('updateDataModel' in message && message.updateDataModel) {
+      this.updateDataModel(message.updateDataModel);
+    }
+    if ('deleteSurface' in message && message.deleteSurface) {
+      this.deleteSurface(
+        message.deleteSurface.surfaceId,
+        (message as { messageId?: string }).messageId,
+      );
+    }
+  }
+
+  private createSurface(
+    createSurface: {
+      surfaceId: string;
+      catalogId?: string;
+      sendDataModel?: boolean;
+      metadata?: { extensions?: Record<string, unknown> };
+    },
+  ): void {
+    const surface = this.getOrCreateSurface(createSurface.surfaceId);
+    this.serverDataModels.set(createSurface.surfaceId, {});
+    if (createSurface.catalogId !== undefined) {
+      surface.catalogId = createSurface.catalogId;
+    }
+    if (createSurface.sendDataModel !== undefined) {
+      surface.sendDataModel = createSurface.sendDataModel;
+    }
+    if (createSurface.metadata) surface.metadata = createSurface.metadata;
+    this.checkCatalog(surface);
+  }
+
+  private updateComponents(
+    surfaceId: string,
+    components: readonly ComponentInstance[],
+    messageId: string | undefined,
+  ): void {
+    const surface = this.getOrCreateSurface(surfaceId);
+    const state = surfaceState(surface);
+    state.reportedErrors.clear();
+
+    // A definition identical to the one already held is a resend. Applying
+    // it would re-render its component for nothing.
+    const isResend = (item: ComponentInstance) => {
+      const source = state.sources.get(item.id);
+      return source !== undefined && !state.generated.has(item.id)
+        && (source === item || equalJsonValues(source, item));
+    };
+    const pending = components.filter(item =>
+      isObject(item) && typeof item.id === 'string' && item.id !== ''
+      && !isResend(item)
+    );
+    if (pending.length === 0) return;
+
+    const proposed = new Map(surface.components);
+    for (const component of pending) proposed.set(component.id, component);
+    const violations = compositionErrors(
+      proposed,
+      surface.catalogId,
+      id => this.getCatalog(id),
+    );
+    if (violations.length > 0) {
+      for (const error of violations) {
+        this.reportProtocolError({ ...error, surfaceId });
+      }
+      return;
     }
 
-    cloneStringField('child');
+    const changed = new Map<string, ComponentInstance>();
+    const parentsToNotify = new Set<string>();
+    let membershipChanged = false;
+    let templatesChanged = false;
+    for (const item of pending) {
+      const existing = surface.components.get(item.id);
+      const instance: ComponentInstance = { ...item };
+      if (existing?.dataContextPath !== undefined) {
+        instance.dataContextPath = existing.dataContextPath;
+      }
+      const template = templateChildren(instance);
+      if (template) {
+        instance.__template = {
+          componentId: template.componentId,
+          path: this.resolvePath(template.path, instance.dataContextPath),
+        };
+        // An unchanged template keeps its instances; expansion below then
+        // has nothing to report for it.
+        const previous = existing?.__template;
+        if (
+          previous?.componentId === instance.__template.componentId
+          && previous.path === instance.__template.path
+          && Array.isArray(existing?.['children'])
+        ) {
+          instance['children'] = existing['children'];
+        }
+      }
+      if (
+        template || state.templates.has(item.id)
+        || state.templateSources.has(item.id)
+      ) {
+        templatesChanged = true;
+      }
+      if (!existing) membershipChanged = true;
+      if (affectsParent(existing, instance)) parentsToNotify.add(item.id);
 
-    if (Array.isArray(anyCloned['tabs'])) {
-      anyCloned['tabs'] = (anyCloned['tabs'] as unknown[]).map((tab) => {
-        if (!tab || typeof tab !== 'object') return tab;
-        const tabObject = tab as Record<string, unknown>;
-        const childId = tabObject['child'];
-        if (typeof childId !== 'string') return tab;
-        const newChildId = cloneReference(childId);
-        if (!newChildId) return tab;
-        return { ...tabObject, child: newChildId };
+      surface.components.set(item.id, instance);
+      state.sources.set(item.id, item);
+      state.generated.delete(item.id);
+      if (!surface.resources.has(item.id)) {
+        surface.resources.set(item.id, createResource(item.id));
+      }
+      this.indexComponent(surface, item.id, instance);
+      changed.set(item.id, instance);
+    }
+
+    if (!surface.rootComponentId && surface.components.has('root')) {
+      surface.rootComponentId = 'root';
+      // Fall back to a surface-derived id so consumers that key
+      // resources by `messageId` still get a non-empty key when the
+      // protocol message lacks one (the v1.0 stream does not require
+      // `messageId` on every message).
+      this.emitUpdate({
+        type: 'beginRendering',
+        surfaceId,
+        messageId: messageId ?? `surface:${surfaceId}`,
       });
     }
 
-    cloneStringField('trigger');
-    cloneStringField('content');
+    // A component renders its own changes. Its parents render again only
+    // when they could not have rendered it before, or lay it out by a prop
+    // that changed. This is what makes a child that arrives in a later
+    // message appear.
+    const updates = new Map(changed);
+    const notify = (id: string) => {
+      const instance = surface.components.get(id);
+      if (instance && !updates.has(id)) updates.set(id, instance);
+    };
+    for (const id of parentsToNotify) {
+      for (const parentId of state.referrers.get(id) ?? []) notify(parentId);
+    }
+    if (membershipChanged) {
+      // A child slot bound to data may now resolve to a component that exists.
+      for (const id of state.dynamicReferrers) notify(id);
+    }
+    this.emitUpdate({
+      type: 'surfaceUpdate',
+      updates: [...updates.values()],
+      surfaceId,
+    });
 
-    return newId;
+    if (templatesChanged) this.syncTemplates(surface);
   }
 
-  processMessages(messages: ServerToClientMessage[]): void {
-    for (const message of messages) {
-      if (message.version !== '1.0') {
-        const source = Object.values(message).find((
-          value,
-        ): value is Record<string, unknown> =>
-          value !== null && typeof value === 'object'
-          && ('surfaceId' in value || 'functionCallId' in value)
-        );
-        const location = typeof source?.['surfaceId'] === 'string'
-          ? { surfaceId: source['surfaceId'] }
-          : (typeof source?.['functionCallId'] === 'string'
-            ? { functionCallId: source['functionCallId'] }
-            : undefined);
-        if (!location) {
-          console.warn('[a2ui] Only A2UI v1.0 is supported', message.version);
-          continue;
-        }
-        void this.sendMessage({
-          version: '1.0',
-          error: {
-            code: 'UNSUPPORTED_VERSION',
-            ...location,
-            message: 'Only A2UI v1.0 is supported',
-          },
-        }).catch(error => {
-          console.warn('[a2ui] Error reporting failed:', error);
-        });
-        continue;
-      }
-      if (
-        'createSurface' in message
-        && this.surfaces.has(message.createSurface.surfaceId)
-      ) {
-        void this.sendMessage({
-          version: '1.0',
-          error: {
-            code: 'VALIDATION_FAILED',
-            surfaceId: message.createSurface.surfaceId,
-            path: '/createSurface/surfaceId',
-            message: 'Surface already exists',
-          },
-        }).catch(error => {
-          console.warn('[a2ui] Error reporting failed:', error);
-        });
-        continue;
-      }
-      this.processExpandedMessages(expandMessage(message));
-    }
+  private updateDataModel(
+    update: { surfaceId: string; path?: string; value?: unknown },
+  ): void {
+    const surface = this.getOrCreateSurface(update.surfaceId);
+    const state = surfaceState(surface);
+    state.reportedErrors.clear();
+    const path = update.path === '' ? '/' : update.path ?? '/';
+    this.serverDataModels.set(
+      update.surfaceId,
+      replaceDataModel(
+        this.serverDataModels.get(update.surfaceId),
+        path,
+        update.value,
+      ),
+    );
+    surface.store.update(path, update.value);
+    if (templatesAreStale(surface, state)) this.syncTemplates(surface);
   }
 
-  private processExpandedMessages(messages: ServerToClientMessage[]): void {
-    for (const message of messages) {
-      if ('callRendererFunction' in message) {
-        void this.callRendererFunction(message.callRendererFunction).catch(
-          error => {
-            console.warn('[a2ui] RPC response delivery failed:', error);
-          },
-        );
-        continue;
-      }
-      if ('agentFunctionResponse' in message) {
-        this.completeFunctionCall(message.agentFunctionResponse);
-        continue;
-      }
-      const payload = Object.values(message).find((
-        value,
-      ): value is { surfaceId: string } =>
-        value !== null && typeof value === 'object' && 'surfaceId' in value
-      );
-      if (
-        payload && !('createSurface' in message)
-        && !this.surfaces.has(payload.surfaceId)
-      ) {
-        void this.sendMessage({
-          version: '1.0',
-          error: {
-            code: 'VALIDATION_FAILED',
-            surfaceId: payload.surfaceId,
-            path: '/',
-            message: 'Surface must be created exactly once before updates',
-          },
-        }).catch(error => {
-          console.warn('[a2ui] Error reporting failed:', error);
-        });
-        continue;
-      }
-      if ('createSurface' in message && message.createSurface) {
-        const createSurface = (message as unknown as Record<string, unknown>)[
-          'createSurface'
-        ] as Record<string, unknown>;
-        const surfaceId = createSurface['surfaceId'] as string;
-        const surface = this.getOrCreateSurface(surfaceId);
-        this.serverDataModels.set(surfaceId, {});
-        const catId = createSurface['catalogId'];
-        if (catId !== undefined) surface.catalogId = catId as string;
-        const sData = createSurface['sendDataModel'];
-        if (sData !== undefined) surface.sendDataModel = sData as boolean;
-        if (createSurface['metadata']) {
-          surface.metadata = createSurface['metadata'] as NonNullable<
-            Surface['metadata']
-          >;
-        }
-      }
+  private deleteSurface(
+    surfaceId: string,
+    messageId: string | undefined,
+  ): void {
+    const surface = this.surfaces.get(surfaceId);
+    // Same fallback as the synthesized `beginRendering` event so
+    // consumers that key lifecycle state by `messageId` always see
+    // a non-empty key when the protocol message lacks one.
+    this.emitUpdate({
+      type: 'deleteSurface',
+      surfaceId,
+      targetId: surface?.rootComponentId ?? surfaceId,
+      messageId: messageId ?? `surface:${surfaceId}`,
+    });
 
-      if ('updateComponents' in message && message.updateComponents) {
-        const { surfaceId, components } = message.updateComponents;
-        const surface = this.getOrCreateSurface(surfaceId);
-
-        const proposed = new Map(surface.components);
-        for (const component of components) {
-          proposed.set(component.id, component);
-        }
-        const violations = compositionErrors(
-          proposed,
-          surface.catalogId,
-          id => this.getCatalog(id),
-        );
-        if (violations.length > 0) {
-          for (const error of violations) {
-            void this.sendMessage({
-              version: '1.0',
-              error: { ...error, surfaceId },
-            }).catch(() => undefined);
-          }
-          continue;
-        }
-
-        const updatesMap = new Map<string, ComponentInstance>();
-
-        for (const item of components as ComponentInstance[]) {
-          if (!item.id) continue;
-          const existing = surface.components.get(item.id);
-          const dataContextPath = existing?.dataContextPath;
-          const instance = { ...item } as ComponentInstance;
-          if (dataContextPath !== undefined) {
-            instance.dataContextPath = dataContextPath;
-          }
-
-          const anyInstance = instance as unknown as Record<string, unknown>;
-          if (
-            anyInstance['children']
-            && !Array.isArray(anyInstance['children'])
-            && typeof anyInstance['children'] === 'object'
-            && anyInstance['children'] !== null
-            && typeof (anyInstance['children'] as Record<string, unknown>)[
-                'componentId'
-              ] === 'string'
-            && typeof (anyInstance['children'] as Record<string, unknown>)[
-                'path'
-              ] === 'string'
-          ) {
-            const templatePath = this.resolvePath(
-              (anyInstance['children'] as Record<string, unknown>)[
-                'path'
-              ] as string,
-              dataContextPath,
-            );
-            instance.__template = {
-              componentId: (anyInstance['children'] as Record<string, unknown>)[
-                'componentId'
-              ] as string,
-              path: templatePath,
-            };
-          }
-
-          surface.components.set(instance.id!, instance);
-          updatesMap.set(instance.id!, instance);
-
-          if (!surface.resources.has(instance.id!)) {
-            surface.resources.set(instance.id!, createResource(instance.id!));
-          }
-        }
-
-        if (!surface.rootComponentId) {
-          if (surface.components.has('root')) {
-            surface.rootComponentId = 'root';
-          }
-
-          if (surface.rootComponentId) {
-            if (!surface.resources.has(surface.rootComponentId)) {
-              surface.resources.set(
-                surface.rootComponentId,
-                createResource(surface.rootComponentId),
-              );
-            }
-            // Fall back to a surface-derived id so consumers that key
-            // resources by `messageId` still get a non-empty key when the
-            // protocol message lacks one (the v1.0 stream does not require
-            // `messageId` on every message).
-            const messageId = (message as { messageId?: string }).messageId
-              ?? `surface:${surfaceId}`;
-            this.emitUpdate({
-              type: 'beginRendering',
-              surfaceId,
-              messageId,
-            });
-          }
-        }
-
-        const updates = Array.from(updatesMap.values());
-        if (updates.length > 0) {
-          this.emitUpdate({
-            type: 'surfaceUpdate',
-            updates,
-            surfaceId,
-          });
-        }
-        this.expandTemplates(surface);
-      }
-
-      if ('updateDataModel' in message && message.updateDataModel) {
-        const { surfaceId, path, value } = message.updateDataModel as {
-          surfaceId: string;
-          path?: string;
-          value?: unknown;
-        };
-        const surface = this.getOrCreateSurface(surfaceId);
-
-        const resolvedPath = path === '' ? '/' : path ?? '/';
-        this.serverDataModels.set(
-          surfaceId,
-          replaceDataModel(
-            this.serverDataModels.get(surfaceId),
-            resolvedPath,
-            value,
-          ),
-        );
-        surface.store.update(resolvedPath, value);
-        this.expandTemplates(surface);
-      }
-
-      if ('deleteSurface' in message && message.deleteSurface) {
-        const { surfaceId } = message.deleteSurface;
-        const surface = this.surfaces.get(surfaceId);
-
-        // Same fallback as the synthesized `beginRendering` event so
-        // consumers that key lifecycle state by `messageId` always see
-        // a non-empty key when the protocol message lacks one.
-        const messageId = (message as { messageId?: string }).messageId
-          ?? `surface:${surfaceId}`;
-        this.emitUpdate({
-          type: 'deleteSurface',
-          surfaceId,
-          targetId: surface?.rootComponentId ?? surfaceId,
-          messageId,
-        });
-
-        this.cancelFunctionCalls(surfaceId);
-        for (const key of this.functionValues.keys()) {
-          if ((JSON.parse(key) as unknown[])[0] === surfaceId) {
-            this.functionValues.delete(key);
-            this.functionFailures.delete(key);
-          }
-        }
-        this.surfaces.delete(surfaceId);
-        this.serverDataModels.delete(surfaceId);
+    this.cancelFunctionCalls(surfaceId);
+    for (const key of this.functionValues.keys()) {
+      if ((JSON.parse(key) as unknown[])[0] === surfaceId) {
+        this.functionValues.delete(key);
+        this.functionFailures.delete(key);
       }
     }
+    this.surfaces.delete(surfaceId);
+    this.serverDataModels.delete(surfaceId);
   }
 
-  private expandTemplates(surface: Surface): void {
-    const updates: ComponentInstance[] = [];
-    for (const component of surface.components.values()) {
-      const template = component.__template;
-      if (!template) continue;
-      const raw = surface.store.getSignal(template.path).value;
-      let data: unknown = raw;
-      if (typeof raw === 'string') {
-        try {
-          data = raw ? JSON.parse(raw) : undefined;
-        } catch {
-          data = undefined;
-        }
-      }
-      const children: string[] = [];
-      const generatedUpdates: ComponentInstance[] = [];
-      const clone = (key: string | number) => {
-        const id = this.cloneComponentTree(
-          template.componentId,
-          `:${key}`,
-          `${template.path}/${key}`,
-          surface,
-          generatedUpdates,
-        );
-        if (id) children.push(id);
-      };
-      if (Array.isArray(data)) data.forEach((_, index) => clone(index));
-      else if (isObject(data)) Object.keys(data).forEach(key => clone(key));
-      component['children'] = children;
-      updates.push(component);
-      updates.push(...generatedUpdates);
-    }
+  /** Re-expand templates and announce the instances that changed. */
+  private syncTemplates(surface: Surface): void {
+    const updates = expandTemplates(
+      surface,
+      surfaceState(surface),
+      this.templateHost,
+    );
     if (updates.length > 0) {
       this.emitUpdate({
         type: 'surfaceUpdate',
