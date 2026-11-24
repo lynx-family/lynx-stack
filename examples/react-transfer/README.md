@@ -20,17 +20,20 @@ Registering the first component turns the page into a transfer page:
 
 ## Protocol
 
-- Native sends `__CreateTransfer`, `__SetTransferProps` and `__DestroyTransfer`
-  to the main thread through `lynx.getNative()`.
+- Native sends `__CreateTransfer`, `__UpdateTransfer`, `__ReloadTransfer` and
+  `__DestroyTransfer` to the main thread through `lynx.getNative()`.
 - The main thread renders the first frame into a `transfer-view`, forwards the
   commands and sends `__TransferFirstFrame` to the background thread.
 - The background thread hydrates each component against its first frame, then
   sends `__TransferCommit` packets one at a time. The main thread applies each
   one and answers with `__TransferCommitResult`.
-- Like a template reload, `__SetTransferProps` re-renders the component on both
-  threads and re-syncs its first frame; component state resets. Commits carry a
-  `version` that counts props updates, so commits for a replaced frame are
-  dropped and `seq` restarts at 1.
+- Like `updateGlobalProps`, `__UpdateTransfer` re-renders the component on the
+  background thread and keeps its state, for example while a message streams.
+  The main thread keeps its elements until the background commits arrive.
+- Like a template reload, `__ReloadTransfer` re-renders the component on both
+  threads and re-syncs its first frame; component state resets. Use it when a
+  recycled view shows another component. Commits carry a `version` that counts
+  reloads, so commits for a replaced frame are dropped and `seq` restarts at 1.
 - Commits and events before hydration are dropped. A failed commit disposes the
   component and sends `__TransferDisposed`.
 
@@ -66,7 +69,8 @@ adb shell am start -W -n com.lynx.explorer/.LynxViewShellActivity \
 For the chat demo, create `ChatBubble` with
 `{"role":"user","text":"Hello"}` and a second `ChatBubble` with
 `{"role":"assistant","text":"Hi"}`. Tap the bubbles to change their counters.
-Select a bubble and use **Set props** to replace its props and reset its counter.
+Select a bubble and use **Update** to change its props in place, or **Reload**
+to replace its props and reset its counter.
 
 ## First-frame worklet regression
 
@@ -79,7 +83,7 @@ main-thread refs after the native host updates A's props.
 2. Both cards show `Early worklet: ran`. In the `[transfer-first-frame]` logs,
    `A render 1 queued` precedes `B update ran`, which precedes
    `deliver A frame: 0`. The A render and layout worklets complete after that.
-3. Select A and set its props to `{"name":"A","revision":1}` using **Set props**.
+3. Select A and set its props to `{"name":"A","revision":1}` using **Reload**.
    A advances to revision 1 and logs
    `A render 0 ran: 1` and `A layout: 1 ran`. B stays at revision 0.
 4. Tap **Subscribe (.on)** and **Select tab (.set)** in A. Both log success for
