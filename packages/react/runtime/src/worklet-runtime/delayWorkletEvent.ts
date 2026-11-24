@@ -8,10 +8,11 @@ interface EventDelayImpl {
   _delayedWorkletParamsMap: Map<string, ClosureValueType[][]>;
   delayExecUntilJsReady(hash: string, params: ClosureValueType[]): void;
   runDelayedWorklet(worklet: Worklet, element: ElementNode): void;
-  clearDelayedWorklets(): void;
+  clearDelayedWorklets(cancelScheduled?: boolean): void;
 }
 
 function initEventDelay(): EventDelayImpl {
+  let generation = 0;
   const instance: EventDelayImpl = {
     _delayedWorkletParamsMap: new Map(),
     delayExecUntilJsReady(
@@ -36,11 +37,15 @@ function initEventDelay(): EventDelayImpl {
         if (paramsVec === undefined) {
           return;
         }
+        const scheduledGeneration = generation;
         const leftParamsVec: ClosureValueType[][] = [];
         paramsVec.forEach((params) => {
           const firstParam = params[0] as { currentTarget?: { elementRefptr?: ElementNode } } | undefined;
           if (firstParam?.currentTarget?.elementRefptr === element) {
             setTimeout(() => {
+              if (scheduledGeneration !== generation) {
+                return;
+              }
               profile('runDelayedWorklet', () => {
                 runWorklet(worklet, params);
               });
@@ -55,7 +60,10 @@ function initEventDelay(): EventDelayImpl {
         );
       });
     },
-    clearDelayedWorklets(): void {
+    clearDelayedWorklets(cancelScheduled?: boolean): void {
+      if (cancelScheduled) {
+        generation++;
+      }
       instance._delayedWorkletParamsMap.clear();
     },
   };

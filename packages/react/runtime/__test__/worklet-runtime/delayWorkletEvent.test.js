@@ -97,4 +97,25 @@ describe('DelayWorkletEvent', () => {
     vi.runAllTimers();
     expect(fn).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'first');
   });
+
+  it('replays scheduled events across normal hydration clear, but cancels them on reload/dispose clear', () => {
+    const fn = vi.fn();
+    globalThis.registerWorklet('main-thread', '1', fn);
+    const makeEvent = () => ({ currentTarget: { elementRefptr: 'element' } });
+
+    // Normal hydration finishes synchronously after scheduling replay: timer must still run.
+    globalThis.lynxWorkletImpl._eventDelayImpl.delayExecUntilJsReady('1', [makeEvent(), 'hydrated']);
+    globalThis.lynxWorkletImpl._eventDelayImpl.runDelayedWorklet({ _wkltId: '1' }, 'element');
+    globalThis.lynxWorkletImpl._eventDelayImpl.clearDelayedWorklets();
+    vi.runAllTimers();
+    expect(fn).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'hydrated');
+
+    // Reload/dispose invalidates already-scheduled replays so old callbacks never run.
+    fn.mockClear();
+    globalThis.lynxWorkletImpl._eventDelayImpl.delayExecUntilJsReady('1', [makeEvent(), 'stale']);
+    globalThis.lynxWorkletImpl._eventDelayImpl.runDelayedWorklet({ _wkltId: '1' }, 'element');
+    globalThis.lynxWorkletImpl._eventDelayImpl.clearDelayedWorklets(true);
+    vi.runAllTimers();
+    expect(fn).not.toHaveBeenCalled();
+  });
 });

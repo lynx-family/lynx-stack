@@ -9,8 +9,6 @@
 
 import { render } from 'preact';
 
-import { clearDelayedRunOnBackgroundFunctions } from '@lynx-js/react/worklet-runtime/bindings';
-
 import { destroyBackground } from './destroy.js';
 import { renderMainThread } from './render.js';
 import {
@@ -25,6 +23,7 @@ import { resetFunctionCallReturnListener } from '../../core/thread-function-call
 import { __root, setRoot } from '../../root.js';
 import { profileEnd, profileStart } from '../../shared/profile.js';
 import { isEmptyObject } from '../../shared/utils.js';
+import { resetWorkletRuntimeForReload } from '../../worklet-runtime/bindings/lifecycle.js';
 import { LifecycleConstant } from '../lifecycle/constant.js';
 import { __pendingListUpdates } from '../list/pendingListUpdates.js';
 import { hydrate } from '../renderToOpcodes/hydrate.js';
@@ -39,7 +38,7 @@ function reloadMainThread(data: unknown, options: UpdatePageOption): void {
     profileStart('ReactLynx::reloadMainThread');
   }
 
-  clearDelayedRunOnBackgroundFunctions();
+  resetWorkletRuntimeForReload();
   resetFunctionCallReturnListener();
   increaseReloadVersion();
 
