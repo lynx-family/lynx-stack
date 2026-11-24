@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import {
+  addFontEndpoint,
   dispatchCoreContextOnBackgroundEndpoint,
   dispatchDevtoolEventOnBackgroundEndpoint,
   dispatchDevtoolEventOnMainThreadEndpoint,
@@ -10,6 +11,7 @@ import {
   fetchExternalBundleEndpoint,
   reloadEndpoint,
 } from '../../endpoints.js';
+import type { FontFaceDescriptor } from '../../endpoints.js';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import { createGetCustomSection } from './crossThreadHandlers/createGetCustomSection.js';
 import { createElement } from './createElement.js';
@@ -73,6 +75,11 @@ export function createBackgroundLynx(
     ) => nativeApp.queryComponent(source, callback),
     reload: () => {
       mainThreadRpc.invoke(reloadEndpoint, []);
+    },
+    addFont: (fontFace: FontFaceDescriptor, callback?: () => void) => {
+      mainThreadRpc.invoke(addFontEndpoint, [fontFace]).then(() => {
+        callback?.();
+      });
     },
     fetchBundle(url: string) {
       return fetchExternalBundle(url);
