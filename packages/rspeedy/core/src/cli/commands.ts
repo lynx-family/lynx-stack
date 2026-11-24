@@ -9,6 +9,7 @@ import type { Command } from 'commander'
 
 import type { BuildOptions } from './build.js'
 import type { DevOptions } from './dev.js'
+import { registerEncodePoolCleanup } from './exit.js'
 import type { InspectOptions } from './inspect.js'
 import type { PreviewOptions } from './preview.js'
 import { version } from '../version.js'
@@ -23,6 +24,7 @@ export interface CommonOptions {
 
 function applyCommonOptions(command: Command) {
   command
+    .hook('preAction', registerEncodePoolCleanup)
     .option(
       '-c --config <config>',
       'specify the configuration file, can be a relative or absolute path',
