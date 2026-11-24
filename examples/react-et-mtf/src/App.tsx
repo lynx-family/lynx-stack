@@ -13,6 +13,19 @@ const NOT_RUN = 'Not run';
 
 let backgroundSequence = 0;
 
+interface ExposureEventItem {
+  'exposure-id'?: unknown;
+}
+
+type ExposureListener = (events: unknown) => void;
+
+const EXPOSURE_ID_PREFIX = 'react-et-mtf-exposure';
+const EXPOSURE_LISTENER_KEY = '__reactEtMtfExposureListener';
+
+type MainThreadGlobal = typeof globalThis & {
+  [EXPOSURE_LISTENER_KEY]?: ExposureListener;
+};
+
 function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
@@ -37,6 +50,9 @@ export function App() {
   const [payloadResult, setPayloadResult] = useState(NOT_RUN);
   const [mainDirectResult, setMainDirectResult] = useState(NOT_RUN);
   const [mainRoundTripResult, setMainRoundTripResult] = useState(NOT_RUN);
+  const [exposureResult, setExposureResult] = useState(NOT_RUN);
+  const [exposureListenerReady, setExposureListenerReady] = useState(false);
+  const [exposureRun, setExposureRun] = useState(0);
   const [completedUpdates, setCompletedUpdates] = useState(0);
 
   useEffect(() => {
@@ -68,6 +84,89 @@ export function App() {
     },
     [],
   );
+
+  const configureExposureListener = useCallback((enabled: boolean) => {
+    'main thread';
+    const emitter = lynx.getJSModule('GlobalEventEmitter');
+    const mainThreadGlobal = globalThis as MainThreadGlobal;
+    const listener = mainThreadGlobal[EXPOSURE_LISTENER_KEY];
+
+    if (!enabled) {
+      if (listener) {
+        emitter.removeListener('exposure', listener);
+        delete mainThreadGlobal[EXPOSURE_LISTENER_KEY];
+      }
+      return;
+    }
+
+    if (listener) {
+      return;
+    }
+
+    const handledExposureIds = new Set<string>();
+    const nextListener = (events: unknown) => {
+      if (!Array.isArray(events)) {
+        return;
+      }
+
+      let exposureId: string | undefined;
+      for (const event of events) {
+        if (typeof event !== 'object' || event === null) {
+          continue;
+        }
+        const candidate = (event as ExposureEventItem)['exposure-id'];
+        if (
+          typeof candidate === 'string'
+          && candidate.startsWith(`${EXPOSURE_ID_PREFIX}-`)
+          && candidate !== `${EXPOSURE_ID_PREFIX}-0`
+          && !handledExposureIds.has(candidate)
+        ) {
+          exposureId = candidate;
+          break;
+        }
+      }
+      if (!exposureId) {
+        return;
+      }
+
+      handledExposureIds.add(exposureId);
+      void runOnBackground((receivedExposureId: string) => {
+        backgroundSequence += 1;
+        setStatus('Exposure event check passed');
+        setExposureResult(
+          `exposure-id ${receivedExposureId} reached background #${backgroundSequence}`,
+        );
+        setCompletedUpdates((count) => count + 1);
+      })(exposureId);
+    };
+    mainThreadGlobal[EXPOSURE_LISTENER_KEY] = nextListener;
+    emitter.addListener('exposure', nextListener);
+  }, []);
+
+  useEffect(() => {
+    void runOnMainThread(configureExposureListener)(true)
+      .then(() => setExposureListenerReady(true))
+      .catch((error: unknown) => {
+        setStatus('Exposure event setup failed');
+        setExposureResult(`Error: ${formatError(error)}`);
+      });
+    return () => {
+      void runOnMainThread(configureExposureListener)(false).catch(
+        (error: unknown) => {
+          console.error('Failed to remove exposure listener', error);
+        },
+      );
+    };
+  }, [configureExposureListener]);
+
+  const onExposureRun = useCallback(() => {
+    if (!exposureListenerReady) {
+      setStatus('Exposure listener is not ready');
+      return;
+    }
+    const nextRun = exposureRun + 1;
+    setExposureRun(nextRun);
+  }, [exposureListenerReady, exposureRun]);
 
   const runNestedReport = useCallback((label: string) => {
     'main thread';
@@ -187,27 +286,36 @@ export function App() {
   );
   const mainDirectPassed = mainDirectResult.startsWith('background to main #');
   const mainRoundTripPassed = mainRoundTripResult.startsWith('round trip #');
+  const exposurePassed = exposureResult.startsWith(
+    `exposure-id ${EXPOSURE_ID_PREFIX}-`,
+  ) && exposureResult.includes(' reached background #');
   const passedCount = Number(directPassed)
     + Number(nestedPassed)
     + Number(burstPassed)
     + Number(payloadPassed)
     + Number(mainDirectPassed)
-    + Number(mainRoundTripPassed);
-  const allPassed = passedCount === 6;
+    + Number(mainRoundTripPassed)
+    + Number(exposurePassed);
+  const allPassed = passedCount === 7;
 
   return (
-    <view className='Page'>
+    <scroll-view
+      scroll-y
+      className='Page'
+      exposure-id={`${EXPOSURE_ID_PREFIX}-${exposureRun}`}
+      exposure-scene='react-et-mtf'
+    >
       <view className='Header'>
         <text className='Title'>ET main-thread smoke</text>
         <text className='Subtitle'>
-          Event, background, and main-thread function checks
+          Event, GlobalEventEmitter, background, and main-thread function checks
         </text>
       </view>
 
       <view className={allPassed ? 'Summary Summary--pass' : 'Summary'}>
         <view className='SummaryColumn'>
           <text className='SummaryLabel'>Overall</text>
-          <text className='SummaryValue'>{`${passedCount} / 6 passed`}</text>
+          <text className='SummaryValue'>{`${passedCount} / 7 passed`}</text>
         </view>
         <view className='SummaryColumn'>
           <text className='SummaryLabel'>Last result</text>
@@ -287,6 +395,27 @@ export function App() {
         </view>
 
         <view
+          className={checkCardClass(exposurePassed)}
+          bindtap={onExposureRun}
+        >
+          <view className='CheckHeader'>
+            <text className='CheckTitle'>
+              Exposure event to GlobalEventEmitter
+            </text>
+            <text className={checkBadgeClass(exposurePassed)}>
+              {checkBadgeText(exposurePassed)}
+            </text>
+          </view>
+          <text className='CheckExpected'>
+            Expected on SDK 4.2+: tap RUN to assign a new exposure-id and
+            receive exposure event on GlobalEventEmitter.
+          </text>
+          <text className='CheckActual CheckActual--small'>
+            Actual: {exposureResult}
+          </text>
+        </view>
+
+        <view
           className={checkCardClass(mainDirectPassed)}
           bindtap={onMainDirectTap}
         >
@@ -322,6 +451,6 @@ export function App() {
           </text>
         </view>
       </view>
-    </view>
+    </scroll-view>
   );
 }

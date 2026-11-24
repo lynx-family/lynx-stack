@@ -3,7 +3,7 @@
 }
 
 .Page {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f5f7fb;
   display: flex;
   flex-direction: column;
