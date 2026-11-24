@@ -390,6 +390,7 @@ describe('render transform contract', () => {
     }));
     expect(rootRef).not.toHaveProperty('attributes.component-at-indexes');
     expect(typedCreateLog[2]).not.toHaveProperty('component-at-indexes');
+    expect(typedCreateLog[2]).not.toHaveProperty('css-id');
     expect(typedCreateLog[3]).toEqual([[expect.objectContaining({ tag: 'list-item' })]]);
     expect(typedCreateLog[5]).toEqual({});
 
@@ -404,6 +405,38 @@ describe('render transform contract', () => {
         options: { __listItemPlatformInfo: { 'item-key': 'first' } },
       })]],
       options: {},
+    });
+  });
+
+  it('passes scoped css-id to a nested typed list after spread attributes', async () => {
+    await compileAndRender(
+      `
+      import './style.css';
+
+      export function App() {
+        const listProps = { 'css-id': 1 };
+        return (
+          <view>
+            <list className="horizontal-list" scroll-orientation="horizontal" {...listProps}>
+              <list-item item-key="first" />
+            </list>
+          </view>
+        );
+      }
+    `,
+      { cssScopeAll: true },
+    );
+
+    const typedCreateLog = lastMock!.nativeLog.find((entry) =>
+      Array.isArray(entry)
+      && entry[0] === '__CreateTypedElementTemplate'
+      && entry[1] === 'list'
+    ) as unknown[] | undefined;
+
+    expect(typedCreateLog?.[2]).toMatchObject({
+      class: 'horizontal-list',
+      'css-id': 1460700,
+      'scroll-orientation': 'horizontal',
     });
   });
 
