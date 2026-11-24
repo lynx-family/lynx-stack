@@ -38,6 +38,7 @@ export function createElementTemplateWithReservedHandle(
   childSlots: RuntimeChildSlots | null | undefined,
   hasDynamicAttributes = true,
   options?: RuntimeOptions | null,
+  isCreatedByPatch = false,
 ): ElementTemplateHandle {
   // Adapter-free compiled hosts need neither dynamic state nor native slot preparation.
   const templateType = hasDynamicAttributes ? elementTemplateTypeTag(templateKey, bundleUrl) : undefined;
@@ -59,6 +60,7 @@ export function createElementTemplateWithReservedHandle(
         handleId,
         templateType,
         attributeSlots,
+        isCreatedByPatch,
       );
     }
   }

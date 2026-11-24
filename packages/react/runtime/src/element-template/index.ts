@@ -131,7 +131,7 @@ export { useLynxGlobalEventListener };
 
 export * from './client/root.js';
 export { runOnBackground } from './runtime/template/main-thread-background-function.js';
-export { runOnMainThread } from './runtime/template/main-thread-function.js';
+export { runOnMainThread } from './background/main-thread-function.js';
 export { MainThreadRef, useMainThreadRef } from '../core/main-thread-ref.js';
 export { defineMainThreadObjectType, useMainThreadObject } from '../core/main-thread-object.js';
 
