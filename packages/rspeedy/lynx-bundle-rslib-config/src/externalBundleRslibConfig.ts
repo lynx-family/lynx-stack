@@ -8,11 +8,12 @@ import { rsbuild } from '@rslib/core'
 import type { LibConfig, RslibConfig, Rspack } from '@rslib/core'
 
 import type { LynxConfig } from '@lynx-js/rsbuild-plugin'
-import type {
-  CustomSectionNaming,
-  LynxTemplatePlugin as LynxTemplatePluginClass,
-} from '@lynx-js/template-webpack-plugin'
+import type { LynxTemplatePlugin as LynxTemplatePluginClass } from '@lynx-js/template-webpack-plugin'
 
+import {
+  ExternalBundleSectionMapPlugin,
+  sectionNaming,
+} from './webpack/ExternalBundleSectionMapPlugin.js'
 import { MainThreadRuntimeWrapperWebpackPlugin } from './webpack/MainThreadRuntimeWrapperWebpackPlugin.js'
 import { MarkMainThreadWebpackPlugin } from './webpack/MarkMainThreadWebpackPlugin.js'
 
@@ -56,6 +57,28 @@ export interface EncodeOptions {
    * @defaultValue `false` when `NODE_ENV` is `'development'`, otherwise `true`
    */
   enableJsBytecode?: boolean
+
+  /**
+   * Append a short content hash to background custom section names and emit a
+   * `__sectionMap` custom section mapping each logical section name to its
+   * hashed name.
+   *
+   * @remarks
+   * Works around `LynxGroup`-scoped `loadScript` caching in `lynx-core`, which
+   * keys its cache only by `(bundleName, sectionName)` and can otherwise serve
+   * a stale background section after an in-place bundle update at the same URL.
+   *
+   * Consuming applications resolve logical names via
+   * `lynx.getCustomSectionSync('__sectionMap', bundleUrl)` (supported
+   * automatically by `@lynx-js/externals-loading-webpack-plugin`). Older
+   * consumers that call `lynx.loadScript(logicalName, ...)` directly without
+   * reading `__sectionMap` will not find renamed sections.
+   *
+   * Only takes effect for the `'lynx'` target.
+   *
+   * @defaultValue `false`
+   */
+  hashSectionNames?: boolean
 }
 
 /**
@@ -406,6 +429,7 @@ function toAsyncExternals(externals: Externals): Externals {
 function withBundleCacheDigest(
   buildCache: Required<LibConfig>['performance']['buildCache'],
   bundleName: string,
+  hashSectionNames?: boolean,
 ): NonNullable<Required<LibConfig>['performance']['buildCache']> {
   if (buildCache === false) {
     return false
@@ -413,7 +437,11 @@ function withBundleCacheDigest(
   const options = typeof buildCache === 'object' ? buildCache : {}
   return {
     ...options,
-    cacheDigest: [bundleName, ...options.cacheDigest ?? []],
+    cacheDigest: [
+      bundleName,
+      ...(hashSectionNames ? ['hashSectionNames'] : []),
+      ...options.cacheDigest ?? [],
+    ],
   }
 }
 
@@ -583,6 +611,7 @@ export function defineExternalBundleRslibConfig(
             buildCache: withBundleCacheDigest(
               userLibConfig.performance?.buildCache,
               bundleName,
+              encodeOptions.hashSectionNames,
             ),
           },
           output: {
@@ -603,6 +632,7 @@ export function defineExternalBundleRslibConfig(
         engineVersion: encodeOptions.engineVersion,
         target: encodeOptions.target,
         enableJsBytecode: encodeOptions.enableJsBytecode,
+        hashSectionNames: encodeOptions.hashSectionNames,
       }),
     ],
   }
@@ -628,38 +658,6 @@ export const LAYERS: ExposedLayers = {
   MAIN_THREAD: 'lynx:main-thread',
 }
 
-// The consuming application loads a section by the name of the chunk it holds.
-// `__LoadStyleSheet` derives the `:CSS` one from that name.
-function sectionNaming(compilation: Rspack.Compilation): CustomSectionNaming {
-  const names = new Map<string, string>()
-
-  for (const chunk of compilation.chunks) {
-    if (chunk.name === undefined) {
-      continue
-    }
-    for (const file of [...chunk.files, ...chunk.auxiliaryFiles]) {
-      names.set(file, chunk.name)
-    }
-  }
-
-  // A manifest key is a path (`/utils.js`), an asset name is not.
-  const nameOf = (key: string): string => {
-    const name = names.get(key) ?? names.get(key.replace(/^\//, ''))
-    if (name === undefined) {
-      throw new Error(
-        `No chunk owns \`${key}\`, so the section it belongs to cannot be named.`,
-      )
-    }
-    return name
-  }
-
-  return {
-    mainThread: nameOf,
-    background: nameOf,
-    css: assetName => `${nameOf(assetName)}:CSS`,
-  }
-}
-
 /**
  * Rewrite user entries into explicit background/main-thread entries.
  *
@@ -673,11 +671,13 @@ const externalBundleRsbuildPlugin = ({
   engineVersion,
   target,
   enableJsBytecode,
+  hashSectionNames,
 }: {
   bundleName: string
   engineVersion: string | undefined
   target: 'web' | 'lynx' | undefined
   enableJsBytecode: boolean | undefined
+  hashSectionNames: boolean | undefined
 }): rsbuild.RsbuildPlugin => ({
   name: 'lynx:external-bundle',
   // ensure dsl plugin has exposed LAYERS
@@ -829,6 +829,11 @@ const externalBundleRsbuildPlugin = ({
           .end()
 
         const isWeb = target === 'web'
+        const enableSectionHashing = Boolean(hashSectionNames) && !isWeb
+        const hashedBackgroundNamesByCompilation = new WeakMap<
+          Rspack.Compilation,
+          Map<string, string>
+        >()
 
         // The native lynx_core module wrapper is added at build time only for
         // the `tasm` target. For web, the runtime (createChunkLoading) wraps
@@ -843,6 +848,16 @@ const externalBundleRsbuildPlugin = ({
           .end()
         }
 
+        if (enableSectionHashing) {
+          chain
+            .plugin(ExternalBundleSectionMapPlugin.NAME)
+            .use(ExternalBundleSectionMapPlugin, [
+              LynxTemplatePlugin,
+              hashedBackgroundNamesByCompilation,
+            ])
+            .end()
+        }
+
         chain
           .plugin(LynxTemplatePlugin.name)
           .use(LynxTemplatePlugin, [{
@@ -850,7 +865,13 @@ const externalBundleRsbuildPlugin = ({
             filename: `${bundleName}.${isWeb ? 'web' : 'lynx'}.bundle`,
             intermediate: intermediateDir,
             chunks: [...mainThreadEntryName, ...backgroundEntryName],
-            customSectionNaming: sectionNaming,
+            customSectionNaming: enableSectionHashing
+              ? compilation =>
+                sectionNaming(
+                  compilation,
+                  hashedBackgroundNamesByCompilation.get(compilation),
+                )
+              : sectionNaming,
             appType: 'DynamicComponent',
             // For web the `JsBytecode` tag only routes a section to the right
             // slot, so it must survive regardless of the user option.

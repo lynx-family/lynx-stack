@@ -127,6 +127,7 @@ describe('runtime async selection', () => {
             info === 'web'
               ? Promise.resolve({ code: 0, url: 'component.bundle' })
               : { wait, then },
+          getCustomSectionSync: () => undefined,
           loadScript,
         },
         __LoadStyleSheet: () => null,
@@ -155,6 +156,7 @@ describe('runtime async selection', () => {
         console: { error: rstest.fn() },
         lynx: {
           fetchBundle: (url: string) => ({ wait: () => wait(url) }),
+          getCustomSectionSync: () => undefined,
           loadScript,
           [Symbol.for('__LYNX_EXTERNAL_GLOBAL__')]: globals,
         },

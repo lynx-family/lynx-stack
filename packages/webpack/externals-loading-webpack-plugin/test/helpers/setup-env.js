@@ -29,6 +29,7 @@ function __injectGlobals(target) {
         then: (callback) => callback({ url, code: 0, err: null }),
       };
     },
+    getCustomSectionSync: () => undefined,
     loadScript: (sectionPath) => {
       const module = CustomSections[sectionPath] ?? {};
       return module;
