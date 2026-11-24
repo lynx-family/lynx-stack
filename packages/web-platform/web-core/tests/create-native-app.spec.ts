@@ -5,6 +5,7 @@ import { describe, expect, rstest, test } from '@rstest/core';
 import type { Rpc } from '@lynx-js/web-worker-rpc';
 import {
   dispatchIntersectionObserverEventEndpoint,
+  dispatchNativeModuleEventEndpoint,
   intersectionObserverCommandEndpoint,
   nativeModulesCallEndpoint,
   queryComponentEndpoint,
@@ -310,7 +311,6 @@ describe('createNativeApp', () => {
         NullModule: moduleUrl,
         FalseModule: moduleUrl,
         ZeroModule: moduleUrl,
-        constructor: moduleUrl,
       },
       '/main.web.bundle',
       'react',
@@ -344,8 +344,6 @@ describe('createNativeApp', () => {
 
     expect(firstApp.nativeModuleProxy.UnconfiguredModule.getInitData())
       .toBeUndefined();
-    expect(firstApp.nativeModuleProxy.constructor.getInitData())
-      .toBeUndefined();
     expect(firstApp.nativeModuleProxy.NullModule.getInitData()).toBeNull();
     expect(firstApp.nativeModuleProxy.FalseModule.getInitData()).toBe(false);
     expect(firstApp.nativeModuleProxy.ZeroModule.getInitData()).toBe(0);
@@ -373,5 +371,129 @@ describe('createNativeApp', () => {
         args: ['getStorage', { key: 'token' }, 'ConfiguredModule'],
       },
     ]);
+  });
+
+  test('routes host events to per-module and per-app handlers via context.setEventHandler', async () => {
+    const moduleUrl = `data:text/javascript,${
+      encodeURIComponent(`
+      export default function createModule(_nativeModules, _call, context) {
+        const received = [];
+        context.setEventHandler((data) => {
+          received.push(data);
+        });
+        return {
+          getReceived() {
+            return received;
+          },
+          setHandler(handler) {
+            context.setEventHandler(handler);
+          },
+        };
+      }
+    `)
+    }`;
+
+    const first = createMainThreadRpc(() =>
+      Promise.resolve({ code: 0, detail: { schema: '' } })
+    );
+    const second = createMainThreadRpc(() =>
+      Promise.resolve({ code: 0, detail: { schema: '' } })
+    );
+
+    const firstAppPromise = createNativeApp(
+      first.rpc,
+      timingSystem,
+      {
+        ModuleA: moduleUrl,
+        ModuleB: moduleUrl,
+      },
+      '/main.web.bundle',
+      'react',
+    );
+    const secondAppPromise = createNativeApp(
+      second.rpc,
+      timingSystem,
+      {
+        ModuleA: moduleUrl,
+      },
+      '/other.web.bundle',
+      'react',
+    );
+
+    // Handler is only registered after modules finish initializing so Rpc's
+    // built-in message cache buffers events arriving during dynamic import.
+    expect(
+      first.handlers.has(dispatchNativeModuleEventEndpoint.name),
+    ).toBe(false);
+
+    const [firstApp, secondApp] = await Promise.all([
+      firstAppPromise,
+      secondAppPromise,
+    ]);
+
+    const dispatchFirst = first.handlers.get(
+      dispatchNativeModuleEventEndpoint.name,
+    )!;
+    const dispatchSecond = second.handlers.get(
+      dispatchNativeModuleEventEndpoint.name,
+    )!;
+    dispatchFirst('ModuleA', { seq: 1 });
+    dispatchFirst('ModuleA', { seq: 2 });
+    dispatchFirst('UnknownModule', { ignored: true });
+    dispatchSecond('ModuleA', { seq: 100 });
+
+    expect(firstApp.nativeModuleProxy.ModuleA.getReceived()).toEqual([
+      { seq: 1 },
+      { seq: 2 },
+    ]);
+    expect(firstApp.nativeModuleProxy.ModuleB.getReceived()).toEqual([]);
+    expect(secondApp.nativeModuleProxy.ModuleA.getReceived()).toEqual([
+      { seq: 100 },
+    ]);
+
+    // Post-load events are isolated per module and per app instance.
+    dispatchFirst('ModuleB', { target: 'B' });
+    dispatchSecond('ModuleA', { seq: 101 });
+    expect(firstApp.nativeModuleProxy.ModuleA.getReceived()).toEqual([
+      { seq: 1 },
+      { seq: 2 },
+    ]);
+    expect(firstApp.nativeModuleProxy.ModuleB.getReceived()).toEqual([
+      { target: 'B' },
+    ]);
+    expect(secondApp.nativeModuleProxy.ModuleA.getReceived()).toEqual([
+      { seq: 100 },
+      { seq: 101 },
+    ]);
+
+    // Replacing and clearing the handler updates routing for that module only.
+    const replacedReceived: unknown[] = [];
+    firstApp.nativeModuleProxy.ModuleA.setHandler((data: unknown) => {
+      replacedReceived.push(data);
+    });
+    dispatchFirst('ModuleA', { seq: 3 });
+    expect(firstApp.nativeModuleProxy.ModuleA.getReceived()).toEqual([
+      { seq: 1 },
+      { seq: 2 },
+    ]);
+    expect(replacedReceived).toEqual([{ seq: 3 }]);
+
+    firstApp.nativeModuleProxy.ModuleA.setHandler(undefined);
+    dispatchFirst('ModuleA', { seq: 4 });
+    expect(replacedReceived).toEqual([{ seq: 3 }]);
+
+    // Handler exceptions are caught and logged without crashing dispatch.
+    const errorSpy = rstest.spyOn(console, 'error').mockImplementation(
+      () => {},
+    );
+    try {
+      firstApp.nativeModuleProxy.ModuleA.setHandler(() => {
+        throw new Error('handler failure');
+      });
+      expect(() => dispatchFirst('ModuleA', { seq: 5 })).not.toThrow();
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 });

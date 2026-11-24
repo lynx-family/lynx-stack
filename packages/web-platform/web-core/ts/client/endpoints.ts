@@ -194,6 +194,11 @@ export const dispatchNapiModuleEndpoint = createRpcEndpoint<
   [data: Cloneable],
   void
 >('dispatchNapiModule', false, false);
+
+export const dispatchNativeModuleEventEndpoint = createRpcEndpoint<
+  [moduleName: string, data: unknown],
+  void
+>('dispatchNativeModuleEvent', false, false);
 export const dispatchCoreContextOnBackgroundEndpoint = createRpcEndpoint<
   [{
     type: string;

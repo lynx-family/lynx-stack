@@ -10,6 +10,7 @@ import {
   dispatchDevtoolEventOnBackgroundEndpoint,
   dispatchDevtoolEventOnMainThreadEndpoint,
   dispatchJSContextOnMainThreadEndpoint,
+  dispatchNativeModuleEventEndpoint,
   disposeEndpoint,
   markTimingEndpoint,
   postTimingFlagsEndpoint,
@@ -83,6 +84,9 @@ export class BackgroundThread implements AsyncDisposable {
   readonly sendDevtoolEvent: RpcCallType<
     typeof dispatchDevtoolEventOnBackgroundEndpoint
   >;
+  readonly sendNativeModuleEvent: RpcCallType<
+    typeof dispatchNativeModuleEventEndpoint
+  >;
   readonly publicComponentEvent: RpcCallType<
     typeof publicComponentEventEndpoint
   >;
@@ -127,6 +131,9 @@ export class BackgroundThread implements AsyncDisposable {
     this.sendGlobalEvent = this.#rpc.createCall(sendGlobalEventEndpoint);
     this.sendDevtoolEvent = this.#rpc.createCall(
       dispatchDevtoolEventOnBackgroundEndpoint,
+    );
+    this.sendNativeModuleEvent = this.#rpc.createCall(
+      dispatchNativeModuleEventEndpoint,
     );
     this.publicComponentEvent = this.#rpc.createCall(
       publicComponentEventEndpoint,

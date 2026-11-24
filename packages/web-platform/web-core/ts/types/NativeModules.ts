@@ -17,9 +17,14 @@ export type NativeModuleInitData =
 /** Per-module structured-cloneable initial data forwarded to background native module factories. */
 export type NativeModulesInitData = Record<string, NativeModuleInitData>;
 
+/** Handler registered by a background native module to receive host-dispatched events. */
+export type NativeModuleEventHandler = (data: unknown) => void;
+
 /** Context passed as the 3rd argument to a background native module factory. */
 export interface NativeModuleContext {
   initData?: NativeModuleInitData;
+  /** Set or clear the handler for events dispatched via `lynxView.sendNativeModuleEvent(moduleName, data)`. */
+  setEventHandler: (handler: NativeModuleEventHandler | undefined) => void;
 }
 
 /** A host-provided module available synchronously through main-thread `lynx.module()`. */

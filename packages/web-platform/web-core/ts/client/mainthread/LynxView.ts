@@ -492,6 +492,17 @@ export class LynxViewElement extends HTMLElement {
   /**
    * @public
    * @method
+   * send a structured-cloneable event to a background native module registered
+   * in `nativeModulesMap`, which can be received via `context.setEventHandler(handler)`
+   * in the module factory.
+   */
+  sendNativeModuleEvent(moduleName: string, data: unknown) {
+    this.#instance?.backgroundThread.sendNativeModuleEvent(moduleName, data);
+  }
+
+  /**
+   * @public
+   * @method
    * reload the current page
    */
   reload() {
