@@ -830,10 +830,7 @@ const externalBundleRsbuildPlugin = ({
 
         const isWeb = target === 'web'
         const enableSectionHashing = Boolean(hashSectionNames) && !isWeb
-        const hashedBackgroundNamesByCompilation = new WeakMap<
-          Rspack.Compilation,
-          Map<string, string>
-        >()
+        const filename = `${bundleName}.${isWeb ? 'web' : 'lynx'}.bundle`
 
         // The native lynx_core module wrapper is added at build time only for
         // the `tasm` target. For web, the runtime (createChunkLoading) wraps
@@ -853,7 +850,7 @@ const externalBundleRsbuildPlugin = ({
             .plugin(ExternalBundleSectionMapPlugin.NAME)
             .use(ExternalBundleSectionMapPlugin, [
               LynxTemplatePlugin,
-              hashedBackgroundNamesByCompilation,
+              filename,
             ])
             .end()
         }
@@ -862,15 +859,12 @@ const externalBundleRsbuildPlugin = ({
           .plugin(LynxTemplatePlugin.name)
           .use(LynxTemplatePlugin, [{
             ...LynxTemplatePlugin.defaultOptions,
-            filename: `${bundleName}.${isWeb ? 'web' : 'lynx'}.bundle`,
+            filename,
             intermediate: intermediateDir,
             chunks: [...mainThreadEntryName, ...backgroundEntryName],
             customSectionNaming: enableSectionHashing
               ? compilation =>
-                sectionNaming(
-                  compilation,
-                  hashedBackgroundNamesByCompilation.get(compilation),
-                )
+                sectionNaming(compilation, { reserveSectionMap: true })
               : sectionNaming,
             appType: 'DynamicComponent',
             // For web the `JsBytecode` tag only routes a section to the right

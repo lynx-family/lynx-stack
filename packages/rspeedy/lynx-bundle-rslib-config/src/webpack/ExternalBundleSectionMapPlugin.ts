@@ -46,15 +46,23 @@ function resolveChunkName(names: Map<string, string>, key: string): string {
 // `__LoadStyleSheet` derives the `:CSS` one from that name.
 export function sectionNaming(
   compilation: Rspack.Compilation,
-  hashedBackgroundNames?: Map<string, string>,
+  options?: { reserveSectionMap?: boolean },
 ): CustomSectionNaming {
   const names = getChunkAssetNames(compilation)
   const nameOf = (key: string): string => resolveChunkName(names, key)
+  const reserveSectionMap = options?.reserveSectionMap ?? false
 
   return {
-    mainThread: nameOf,
-    background: manifestKey =>
-      hashedBackgroundNames?.get(manifestKey) ?? nameOf(manifestKey),
+    mainThread: assetName => {
+      const name = nameOf(assetName)
+      if (reserveSectionMap && name === SECTION_MAP_KEY) {
+        throw new Error(
+          `Entry name "${SECTION_MAP_KEY}" is reserved when \`hashSectionNames\` is enabled.`,
+        )
+      }
+      return name
+    },
+    background: nameOf,
     css: assetName => `${nameOf(assetName)}:CSS`,
   }
 }
@@ -64,10 +72,7 @@ export class ExternalBundleSectionMapPlugin {
 
   constructor(
     private LynxTemplatePlugin: typeof LynxTemplatePluginClass,
-    private hashedBackgroundNamesByCompilation: WeakMap<
-      Rspack.Compilation,
-      Map<string, string>
-    >,
+    private filenameTemplate?: string,
   ) {}
 
   apply(compiler: Rspack.Compiler): void {
@@ -84,8 +89,14 @@ export class ExternalBundleSectionMapPlugin {
             stage: 1000,
           },
           (args) => {
+            if (
+              this.filenameTemplate !== undefined
+              && args.filenameTemplate !== this.filenameTemplate
+            ) {
+              return args
+            }
+
             const names = getChunkAssetNames(compilation)
-            const hashedNames = new Map<string, string>()
             const sectionMap: Record<string, string> = {}
 
             for (
@@ -107,15 +118,25 @@ export class ExternalBundleSectionMapPlugin {
                 .digest('hex')
                 .slice(0, SECTION_HASH_LENGTH)
               const hashedName = `${logicalName}.${hash}`
-              hashedNames.set(manifestKey, hashedName)
               sectionMap[logicalName] = hashedName
+
+              // Move the background entry directly into this encode's
+              // `customSections` so hashed names are scoped strictly to the
+              // encode that produced them (no compilation-wide shared state).
+              args.encodeData.customSections[hashedName] = { content }
+              delete args.encodeData.manifest[manifestKey]
+
+              const assetName = manifestKey.replace(/^\//, '')
+              const asset = compilation.getAsset(assetName)
+              if (asset) {
+                compilation.updateAsset(asset.name, asset.source, {
+                  ...asset.info,
+                  'lynx:tasm-section': ['customSections', hashedName],
+                })
+              }
             }
 
             if (Object.keys(sectionMap).length > 0) {
-              this.hashedBackgroundNamesByCompilation.set(
-                compilation,
-                hashedNames,
-              )
               args.encodeData.customSections[SECTION_MAP_KEY] = {
                 content: sectionMap,
               }

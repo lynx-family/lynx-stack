@@ -23,13 +23,20 @@ import {
 
 import { LAYERS, pluginReactLynx } from '@lynx-js/react-rsbuild-plugin'
 import { pluginLynx } from '@lynx-js/rsbuild-plugin'
-import { LynxEncodePlugin } from '@lynx-js/template-webpack-plugin'
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin'
 
 import { decodeTemplate } from './utils.js'
 import {
   LAYERS as DEFAULT_LAYERS,
   defineExternalBundleRslibConfig,
 } from '../src/index.js'
+import {
+  ExternalBundleSectionMapPlugin,
+  sectionNaming,
+} from '../src/webpack/ExternalBundleSectionMapPlugin.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -1753,5 +1760,149 @@ describe('hashSectionNames', () => {
 
     expect(fs.existsSync(path.join(distRoot, 'utils-hashed-web.web.bundle')))
       .toBe(true)
+  })
+
+  it('rejects a main-thread entry named __sectionMap when hashSectionNames is enabled', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-reserved-mt')
+    const compilationErrors: string[] = []
+
+    await expect(
+      build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            __sectionMap: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.MAIN_THREAD,
+            },
+            utils: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.BACKGROUND,
+            },
+          },
+        },
+        id: 'utils-reserved-mt',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+        tools: {
+          bundlerChain(chain) {
+            chain.plugin('test:collect-errors').use({
+              apply(compiler: Rspack.Compiler) {
+                compiler.hooks.done.tap('test:collect-errors', stats => {
+                  for (const err of stats.compilation.errors) {
+                    compilationErrors.push(err.message)
+                  }
+                })
+              },
+            })
+          },
+        },
+      }, {
+        hashSectionNames: true,
+      })),
+    ).rejects.toThrow()
+
+    expect(compilationErrors.join('\n')).toMatch(
+      /Entry name "__sectionMap" is reserved when `hashSectionNames` is enabled\./,
+    )
+  })
+
+  it('scopes hashed background section names per encode when multiple templates share a compilation', async () => {
+    const distRoot = path.join(fixtureDir, 'dist', 'hash-multi-template')
+    rstest.stubEnv('DEBUG', 'rspeedy')
+    try {
+      await build(defineExternalBundleRslibConfig({
+        source: {
+          entry: {
+            alpha: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.BACKGROUND,
+            },
+            beta: {
+              import: path.join(fixtureDir, 'index.ts'),
+              layer: LAYERS.BACKGROUND,
+            },
+          },
+        },
+        id: 'multi-alpha',
+        output: { distPath: { root: distRoot } },
+        plugins: [pluginReactLynx()],
+        tools: {
+          bundlerChain(chain) {
+            // Restrict the primary template to `alpha` and attach a second
+            // template + section-map plugin for `beta` in the same compilation,
+            // plus an async `beforeEncode` tap so both encodes interleave.
+            chain
+              .plugin(LynxTemplatePlugin.name)
+              .tap(([options]: [Record<string, unknown>]) => [{
+                ...options,
+                chunks: ['alpha'],
+              }])
+            chain
+              .plugin('test:beta-section-map')
+              .use(ExternalBundleSectionMapPlugin, [
+                LynxTemplatePlugin,
+                'multi-beta.lynx.bundle',
+              ])
+            chain
+              .plugin('test:beta-template')
+              .use(LynxTemplatePlugin, [{
+                ...LynxTemplatePlugin.defaultOptions,
+                filename: 'multi-beta.lynx.bundle',
+                intermediate: '.lynx/multi-beta',
+                chunks: ['beta'],
+                customSectionNaming: compilation =>
+                  sectionNaming(compilation, { reserveSectionMap: true }),
+                appType: 'DynamicComponent',
+                enableSectionBytecode: false,
+                targetSdkVersion: '3.5',
+                debugInfoOutside: true,
+                enableCSSInvalidation: true,
+              }])
+            chain.plugin('test:interleave-before-encode').use({
+              apply(compiler: Rspack.Compiler) {
+                compiler.hooks.thisCompilation.tap(
+                  'test:interleave-before-encode',
+                  compilation => {
+                    LynxTemplatePlugin
+                      .getLynxTemplatePluginHooks(compilation)
+                      .beforeEncode
+                      .tapPromise(
+                        { name: 'test:interleave-before-encode', stage: 2000 },
+                        async args => {
+                          await new Promise(resolve => setTimeout(resolve, 20))
+                          return args
+                        },
+                      )
+                  },
+                )
+              },
+            })
+          },
+        },
+      }, {
+        hashSectionNames: true,
+        enableJsBytecode: false,
+      }))
+    } finally {
+      rstest.unstubAllEnvs()
+    }
+
+    const alphaMap = readTasmSectionMap(distRoot, 'multi-alpha')
+    const betaMap = readTasmSectionMap(distRoot, 'multi-beta')
+    expect(alphaMap?.['alpha']).toMatch(/^alpha\.[0-9a-f]{8}$/)
+    expect(betaMap?.['beta']).toMatch(/^beta\.[0-9a-f]{8}$/)
+
+    const alphaDecoded = await decodeTemplate(
+      path.join(distRoot, 'multi-alpha.lynx.bundle'),
+    )
+    const betaDecoded = await decodeTemplate(
+      path.join(distRoot, 'multi-beta.lynx.bundle'),
+    )
+    expect(Object.keys(alphaDecoded['custom-sections'])).toStrictEqual([
+      alphaMap!['alpha'],
+    ])
+    expect(Object.keys(betaDecoded['custom-sections'])).toStrictEqual([
+      betaMap!['beta'],
+    ])
   })
 })
