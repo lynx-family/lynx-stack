@@ -5,9 +5,7 @@ export function profile<Ret, Fn extends (...args: unknown[]) => Ret>(
   sliceName: string,
   f: Fn,
 ): Ret {
-  /* v8 ignore next 9 */
-  // TODO: change it to __PROFILE__
-  if (__DEV__) {
+  if (__PROFILE__) {
     console.profile?.(sliceName);
     try {
       return f();

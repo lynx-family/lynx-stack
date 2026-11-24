@@ -3,12 +3,13 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 */
-import { render, options, Component, createElement } from 'preact';
+import { render, options, Component, createElement, process } from 'preact';
 import { beforeAll, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { setupDocument } from '../../../src/document';
 import { setupPage, snapshotInstanceManager } from '../../../src/snapshot';
 import { initProfileHook } from '../../../src/snapshot/debug/profileHooks';
+import { globalPatchOptions } from '../../../src/snapshot/lifecycle/patch/commit';
 import { useState } from '../../../src/index';
 import {
   COMMIT,
@@ -228,12 +229,7 @@ describe('profile', () => {
           "ReactLynx::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "["count"]",
               "componentName": "ClassComponent",
-              "current state keys": "["count"]",
-              "currentValue": "{"count":0}",
-              "next state keys": "["count"]",
-              "nextValue": "{"count":1}",
             },
             "flowId": 666,
           },
@@ -292,13 +288,8 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "[]",
               "componentName": "App",
-              "current state keys": "[]",
-              "currentValue": "0",
               "hookIdx": "0",
-              "next state keys": "[]",
-              "nextValue": "1",
             },
             "flowId": 666,
           },
@@ -307,13 +298,8 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "["count","newKey"]",
               "componentName": "App",
-              "current state keys": "["count","unchanged"]",
-              "currentValue": "{"count":0,"unchanged":"unchanged"}",
               "hookIdx": "1",
-              "next state keys": "["count","unchanged","newKey"]",
-              "nextValue": "{"count":1,"unchanged":"unchanged","newKey":"newValue"}",
             },
             "flowId": 666,
           },
@@ -322,13 +308,8 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "["count"]",
               "componentName": "App",
-              "current state keys": "["count","circularKey"]",
-              "currentValue": "{"count":0,"circularKey":"[Unserializable: Circular]"}",
               "hookIdx": "2",
-              "next state keys": "["count","circularKey"]",
-              "nextValue": "{"count":1,"circularKey":{"count":0,"circularKey":"[Unserializable: Circular]"}}",
             },
             "flowId": 666,
           },
@@ -361,19 +342,159 @@ describe('profile', () => {
           "ReactLynx::hooks::setState",
           {
             "args": {
-              "changed (shallow diff) state keys": "[]",
               "componentName": "App",
-              "current state keys": "[]",
-              "currentValue": ""() => \\"A\\""",
               "hookIdx": "0",
-              "next state keys": "[]",
-              "nextValue": ""() => \\"B\\""",
             },
             "flowId": 666,
           },
         ],
       ]
     `);
+  });
+
+  test('associates batched Hook updates with one render and commit flow', () => {
+    process();
+    let update;
+    const rendered = [];
+    function App() {
+      const [value, setValue] = useState(0);
+      rendered.push(value);
+      update = setValue;
+      return <view />;
+    }
+    const previousFlowIds = globalPatchOptions.flowIds;
+    onTestFinished(() => {
+      globalPatchOptions.flowIds = previousFlowIds;
+    });
+    globalPatchOptions.flowIds = undefined;
+    render(<App />, scratch);
+    lynx.performance.profileMark.mockClear();
+    lynx.performance.profileFlowId.mockClear();
+    lynx.performance.profileFlowId.mockReturnValueOnce(701).mockReturnValueOnce(702);
+    lynx.performance.profileStart.mockClear();
+    lynx.performance.profileEnd.mockClear();
+
+    update(value => value + 1);
+    update(value => value + 1);
+    expect(rendered).toEqual([0]);
+    expect(lynx.performance.profileMark.mock.calls).toEqual([
+      ['ReactLynx::hooks::setState', { flowId: 701, args: { componentName: 'App', hookIdx: '0' } }],
+      ['ReactLynx::hooks::setState', { flowId: 701, args: { componentName: 'App', hookIdx: '0' } }],
+    ]);
+    expect(lynx.performance.profileFlowId).toHaveBeenCalledTimes(1);
+
+    process();
+    expect(rendered).toEqual([0, 2]);
+    expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::diff::App', { flowId: 701 });
+    expect(lynx.performance.profileStart).toHaveBeenCalledWith('ReactLynx::commit', {
+      flowId: 701,
+      flowIds: [701],
+    });
+
+    update(value => value + 1);
+    expect(lynx.performance.profileMark).toHaveBeenLastCalledWith('ReactLynx::hooks::setState', {
+      flowId: 702,
+      args: { componentName: 'App', hookIdx: '0' },
+    });
+    process();
+    expect(rendered).toEqual([0, 2, 3]);
+    expect(lynx.performance.profileFlowId).toHaveBeenCalledTimes(2);
+
+    lynx.performance.profileMark.mockClear();
+    update(value => value);
+    process();
+    expect(rendered).toEqual([0, 2, 3]);
+    expect(lynx.performance.profileMark).not.toHaveBeenCalled();
+  });
+
+  test('records only metadata without inspecting Hook state', () => {
+    let update;
+    let rendered;
+    function App() {
+      const [value, setValue] = useState(null);
+      rendered = value;
+      update = setValue;
+      return <view />;
+    }
+    render(<App />, scratch);
+
+    const inspect = vi.fn(() => {
+      throw new Error('state must not be inspected');
+    });
+    const record = { toJSON: inspect };
+    Object.defineProperty(record, 'getter', { enumerable: true, get: inspect });
+    const opaque = new Proxy({}, {
+      ownKeys: inspect,
+      get: inspect,
+      getOwnPropertyDescriptor: inspect,
+      getPrototypeOf: inspect,
+      has: inspect,
+    });
+    const revoked = Proxy.revocable({}, {});
+    revoked.revoke();
+    const circular = [];
+    circular.push(circular);
+    const values = [
+      'x'.repeat(65536),
+      Object.fromEntries(Array.from({ length: 1000 }, (_, i) => [`key${i}`, i])),
+      record,
+      opaque,
+      revoked.proxy,
+      circular,
+      1n,
+      Symbol('state'),
+      undefined,
+      () => 'function state',
+    ];
+
+    for (const value of values) {
+      lynx.performance.profileMark.mockClear();
+      update(() => value);
+      expect(lynx.performance.profileMark.mock.calls).toEqual([
+        ['ReactLynx::hooks::setState', { flowId: 666, args: { componentName: 'App', hookIdx: '0' } }],
+      ]);
+      process();
+      expect(rendered).toBe(value);
+    }
+    expect(inspect).not.toHaveBeenCalled();
+  });
+
+  test.each(['hook', 'class'])('continues a %s update when trace emission throws', kind => {
+    let update;
+    let rendered;
+    function HookComponent() {
+      const [value, setValue] = useState(0);
+      rendered = value;
+      update = setValue;
+      return <view />;
+    }
+    class ClassComponent extends Component {
+      state = { value: 0 };
+      render() {
+        rendered = this.state.value;
+        update = value => this.setState({ value });
+        return <view />;
+      }
+    }
+    render(kind === 'hook' ? <HookComponent /> : <ClassComponent />, scratch);
+
+    const sinkError = vi.fn(() => {
+      throw new Error('trace sink failed');
+    });
+    lynx.performance.profileMark.mockImplementationOnce(sinkError);
+    update(1n);
+    process();
+    expect(sinkError).toHaveBeenCalledTimes(1);
+    expect(rendered).toBe(1n);
+
+    const flowError = vi.fn(() => {
+      throw new Error('flow allocation failed');
+    });
+    lynx.performance.profileFlowId.mockImplementationOnce(flowError);
+    update(2n);
+    process();
+    expect(flowError).toHaveBeenCalledTimes(1);
+    expect(rendered).toBe(2n);
   });
 
   test('should handle missing component instance', async () => {

@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { Component, options } from 'preact';
-import type { ComponentClass, ComponentType, VNode } from 'preact';
+import type { ComponentClass, VNode } from 'preact';
 
 import type { TraceOption } from '@lynx-js/types';
 
@@ -16,64 +16,13 @@ import {
   DIFFED,
   HOOKS,
   LIST,
-  NEXT_STATE,
   NEXT_VALUE,
   RENDER,
-  VALUE,
   VNODE,
 } from '../../shared/render-constants.js';
 import { getDisplayName } from '../../shared/utils.js';
 import { globalPatchOptions } from '../lifecycle/patch/commit.js';
 import { __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
-
-const format = (val: unknown) => {
-  if (typeof val === 'function') {
-    return val.toString();
-  }
-  return val;
-};
-
-function safeJsonStringify(val: unknown) {
-  const seen = new WeakSet<object>();
-
-  return JSON.stringify(val, function(_key, value: unknown) {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Unserializable: Circular]';
-      }
-      seen.add(value);
-    }
-
-    return value;
-  });
-}
-
-function buildSetStateProfileMarkArgs(
-  type: string | ComponentType | undefined,
-  currentState: unknown,
-  nextState: unknown,
-): Record<string, string> {
-  const EMPTY_OBJ = {};
-
-  const currentStateObj = (currentState ?? EMPTY_OBJ) as Record<string, unknown>;
-  const nextStateObj = (nextState ?? EMPTY_OBJ) as Record<string, unknown>;
-
-  return {
-    componentName: (type && typeof type === 'function')
-      ? getDisplayName(type as ComponentClass)
-      : 'Unknown',
-    'current state keys': JSON.stringify(Object.keys(currentStateObj)),
-    'next state keys': JSON.stringify(Object.keys(nextStateObj)),
-    'changed (shallow diff) state keys': JSON.stringify(
-      // the setState is in assign manner, we assume nextState is a superset of currentState
-      Object.keys(nextStateObj).filter(
-        key => currentStateObj[key] !== nextStateObj[key],
-      ),
-    ),
-    currentValue: safeJsonStringify(format(currentState)),
-    nextValue: safeJsonStringify(format(nextState)),
-  };
-}
 
 export function initProfileHook(): void {
   // early-exit if required profiling APIs are unavailable
@@ -102,27 +51,38 @@ export function initProfileHook(): void {
     const sFlowID = Symbol('FLOW_ID');
     type PatchedComponent = Component & { [sFlowID]?: number };
 
+    function markSetState(component: PatchedComponent, hookIdx?: number): void {
+      try {
+        const type = component[VNODE]!.type;
+        if (
+          hookIdx === undefined
+          && !(typeof type === 'function' && ('prototype' in type) && ('render' in type.prototype))
+        ) {
+          return;
+        }
+        // Update traces describe the framework's work without inspecting application state.
+        const args: Record<string, string> = {
+          componentName: typeof type === 'function' ? getDisplayName(type as ComponentClass) : 'Unknown',
+        };
+        if (hookIdx !== undefined) {
+          args['hookIdx'] = String(hookIdx);
+        }
+        const flowId = component[sFlowID] ?? profileFlowId();
+        profileMark(hookIdx === undefined ? 'ReactLynx::setState' : 'ReactLynx::hooks::setState', { flowId, args });
+        component[sFlowID] = flowId;
+      } catch {
+        // A profiling failure must not interrupt Preact's update or scheduling.
+      }
+    }
+
     if (typeof __BACKGROUND__ !== 'undefined' && __BACKGROUND__) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const oldSetState = Component.prototype.setState;
-      Component.prototype.setState = function(this: PatchedComponent & { [NEXT_STATE]: unknown }, state, callback) {
+      Component.prototype.setState = function(this: PatchedComponent, state, callback) {
         oldSetState?.call(this, state, callback);
 
         if (this[BITS] & COMPONENT_DIRTY) {
-          const type = this[VNODE]!.type;
-          const isClassComponent = typeof type === 'function' && ('prototype' in type)
-            && ('render' in type.prototype);
-
-          if (isClassComponent) {
-            profileMark('ReactLynx::setState', {
-              flowId: this[sFlowID] ??= profileFlowId(),
-              args: buildSetStateProfileMarkArgs(
-                type,
-                this.state,
-                this[NEXT_STATE],
-              ),
-            });
-          }
+          markSetState(this);
         }
       };
     }
@@ -171,34 +131,13 @@ export function initProfileHook(): void {
             Object.defineProperty(hookState, NEXT_VALUE, {
               get: () => hookState['internalNextValue'],
               set: (value) => {
-                if (Array.isArray(value)) {
-                  // hookState[VALUE] is [state, dispatch]
-                  const currentValueTuple = hookState[VALUE] as unknown[];
-                  const currentValue = currentValueTuple[0];
-                  const [nextValue] = value as unknown[];
-
-                  const component = hookState[COMPONENT] as PatchedComponent | undefined;
-                  if (!component) {
-                    hookState['internalNextValue'] = value;
-                    return;
-                  }
-
-                  const type = component[VNODE]!.type;
-                  const flowId = component[sFlowID] ??= profileFlowId();
-
-                  profileMark('ReactLynx::hooks::setState', {
-                    flowId,
-                    args: {
-                      hookIdx: String(hookIdx),
-                      ...buildSetStateProfileMarkArgs(
-                        type,
-                        currentValue,
-                        nextValue,
-                      ),
-                    },
-                  });
-                }
                 hookState['internalNextValue'] = value;
+                if (Array.isArray(value)) {
+                  const component = hookState[COMPONENT] as PatchedComponent | undefined;
+                  if (component) {
+                    markSetState(component, hookIdx);
+                  }
+                }
               },
               configurable: true,
             });
