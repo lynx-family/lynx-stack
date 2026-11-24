@@ -11,7 +11,6 @@ pub enum AttrName {
   Class,
   ID,
   Ref,
-  TimingFlag,
   UnsupportedNamespacedRef,
   MTRef,
   Gesture,
@@ -29,8 +28,6 @@ impl From<String> for AttrName {
       AttrName::ID
     } else if name == "ref" {
       AttrName::Ref
-    } else if name == "__lynx_timing_flag" {
-      AttrName::TimingFlag
     } else if is_lynx_event_attribute_name(name.as_str()) {
       AttrName::Event
     } else {

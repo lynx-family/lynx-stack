@@ -8,7 +8,6 @@ use swc_core::{
     utils::is_literal,
     visit::{VisitMut, VisitMutWith},
   },
-  quote_expr,
 };
 use swc_plugins_shared::{
   css::get_string_inline_style_from_literal,
@@ -203,13 +202,6 @@ where
       }
       AttrName::Event | AttrName::Ref => {
         self.push_dynamic_attr(*jsx_attr_value((*value).clone()), attr_name, key);
-      }
-      AttrName::TimingFlag => {
-        self.push_dynamic_attr(
-          *quote_expr!("{__ltf: $flag}", flag: Expr = *jsx_attr_value((*value).clone())),
-          attr_name,
-          key,
-        );
       }
       AttrName::WorkletEvent
       | AttrName::UnsupportedNamespacedRef

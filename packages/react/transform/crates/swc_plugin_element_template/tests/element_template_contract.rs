@@ -708,6 +708,41 @@ fn should_keep_static_attribute_values_out_of_et_attribute_slots() {
 }
 
 #[test]
+fn should_pass_timing_flags_to_native_as_plain_attributes() {
+  for input in [
+    r#"<text __lynx_timing_flag="__lynx_timing_actual_fmp" />"#,
+    r#"<text __lynx_timing_flag={"__lynx_timing_actual_fmp"} />"#,
+  ] {
+    let template = first_user_template_json(input);
+    assert_eq!(
+      template["attributesArray"],
+      serde_json::json!([{
+        "kind": "static",
+        "key": "__lynx_timing_flag",
+        "value": "__lynx_timing_actual_fmp"
+      }]),
+    );
+  }
+
+  let (code, template) = first_user_template_json_with_code(
+    r#"<text __lynx_timing_flag={flag} />"#,
+    element_template_config(),
+  );
+  assert_eq!(
+    template["attributesArray"],
+    serde_json::json!([{
+      "kind": "slot",
+      "key": "__lynx_timing_flag",
+      "attrSlotIndex": 0.0
+    }]),
+  );
+  assert!(
+    without_whitespace(&code).contains(",[flag],"),
+    "Expected the raw timing flag in the attribute slot, got: {code}"
+  );
+}
+
+#[test]
 fn should_not_consume_hidden_et_slots_for_list_item_platform_attrs() {
   let (code, template) = first_user_template_json_with_code(
     r#"

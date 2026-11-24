@@ -222,7 +222,7 @@ describe('React - alias', () => {
     expect(config.resolve.alias).not.toHaveProperty('@lynx-js/preact-devtools$')
   })
 
-  test('element-template aliases transformed legacy runtime and background lepus entry to ET runtime', async () => {
+  test('element-template aliases bare React and the background Lepus entry to ET', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
 
@@ -252,6 +252,10 @@ describe('React - alias', () => {
           path.sep,
         ),
       ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      'react$',
+      Reflect.get(config.resolve.alias, '@lynx-js/react$'),
     )
     expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/legacy-react-runtime$',
