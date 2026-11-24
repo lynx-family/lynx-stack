@@ -14,7 +14,7 @@ So far, support compared to Lynx Elements on the client:
 | view           | ✅              | Full Support |
 | X-Elements     |                 |              |
 | svg            | ✅              | Full Support |
-| x-blur-view    | ✅              | Full Support |
+| x-blur-view    | ✅              | Partial      |
 | x-input        | ✅              | Full Support |
 | x-textarea     | ✅              | Full Support |
 | x-swiper       | ✅              | Full Support |
@@ -23,6 +23,10 @@ So far, support compared to Lynx Elements on the client:
 | x-refresh-view | ✅              | Full Support |
 | x-overlay-ng   | ✅              | Full Support |
 | x-audio-tt     | ✅              | Full Support |
+
+`blur-view` in Lynx maps to `x-blur-view` in the browser. It supports background
+blur through `blur-radius` using CSS `backdrop-filter`. Native blur presets,
+Liquid Glass effects, and Android capture controls are not supported.
 
 ## Usage
 
