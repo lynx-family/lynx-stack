@@ -1204,34 +1204,6 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
-  examples/react-transfer:
-    dependencies:
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../packages/react
-    devDependencies:
-      '@lynx-js/preact-devtools':
-        specifier: catalog:lynxjs
-        version: 5.0.1-20261123125323-a3af24e
-      '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/plugin-react
-      '@lynx-js/rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../../packages/rspeedy/plugin-lynx
-      '@lynx-js/types':
-        specifier: 4.1.0
-        version: 4.1.0
-      '@rsbuild/core':
-        specifier: catalog:rsbuild
-        version: 2.3.3(core-js@3.50.0)
-      '@types/react':
-        specifier: ^19.2.18
-        version: 19.2.18
-      preact:
-        specifier: catalog:lynxjs
-        version: '@lynx-js/internal-preact@11.0.0-rc.1-20261117064723-40db422'
-
   examples/react-ui-sourcemap:
     dependencies:
       '@lynx-js/react':
