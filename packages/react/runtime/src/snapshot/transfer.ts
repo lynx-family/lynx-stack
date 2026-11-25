@@ -41,7 +41,7 @@ interface Scope {
   transferId: string;
 }
 type CreateTransferEvent = Scope & { componentName: string; initialProps: TransferProps };
-type SetTransferPropsEvent = Scope & { props: TransferProps };
+type TransferPropsEvent = Scope & { props: TransferProps };
 type TransferFirstFrame = Scope & { snapshot: string };
 type TransferCommit = Scope & {
   version: number;
@@ -67,7 +67,7 @@ interface Instance {
   Component: ComponentType<TransferProps>;
   props: TransferProps;
   phase: 'waiting' | 'hydrating' | 'live' | 'disposed';
-  /** Counts props updates; each one re-syncs the first frame and restarts `seq`. */
+  /** Counts reloads; each one re-syncs the first frame and restarts `seq`. */
   version: number;
   seq: number;
   main?: SnapshotInstance;
@@ -143,8 +143,8 @@ function initialize(): void {
 
   function renderBackground(instance: Instance) {
     const container = instance.background as unknown as ContainerNode;
-    instance.firstFrameWorklets = [];
     withInstance(instance, () => render(createElement(instance.Component, instance.props), container));
+    // Each `render` call creates a new root vnode.
     const vnode = (container as unknown as Record<string, object | undefined>)[CHILDREN];
     if (vnode) owners.set(vnode, instance);
   }
@@ -268,6 +268,7 @@ function initialize(): void {
       renderMain(instance);
     } else {
       instance.background = new BackgroundSnapshotInstance('root');
+      instance.firstFrameWorklets = [];
       renderBackground(instance);
       const frame = frames.get(init.transferId);
       if (frame) {
@@ -276,20 +277,36 @@ function initialize(): void {
       }
     }
   }
-  /** Re-renders both threads with the new props and re-syncs the first frame, like a template reload. */
-  function setProps(update: SetTransferPropsEvent) {
+  /** Replaces the props of an instance; returns the instance to re-render, if it has been created. */
+  function replaceProps(update: TransferPropsEvent): Instance | undefined {
     const pending = pendingCreates.find(init => init.transferId === update.transferId);
     if (pending) {
       pending.initialProps = update.props;
-      return;
+      return undefined;
     }
     const instance = instances.get(update.transferId);
+    if (instance) instance.props = update.props;
+    return instance;
+  }
+  /** Re-renders the background with the new props and keeps component state, like `updateGlobalProps`. */
+  function updateProps(update: TransferPropsEvent) {
+    const instance = replaceProps(update);
     if (!instance) return;
-    instance.props = update.props;
+    // The main thread keeps its elements; background commits bring them up to date.
+    if (mts) {
+      send('__UpdateTransfer', update);
+      return;
+    }
+    renderBackground(instance);
+  }
+  /** Re-renders both threads with the new props and re-syncs the first frame, like a template reload. */
+  function reloadProps(update: TransferPropsEvent) {
+    const instance = replaceProps(update);
+    if (!instance) return;
     instance.version++;
     instance.seq = 0;
     if (mts) {
-      send('__SetTransferProps', update);
+      send('__ReloadTransfer', update);
       renderMain(instance);
       return;
     }
@@ -297,6 +314,7 @@ function initialize(): void {
     instance.phase = 'waiting';
     release(instance);
     withInstance(instance, () => render(null, instance.background as unknown as ContainerNode));
+    instance.firstFrameWorklets = [];
     renderBackground(instance);
   }
   function dispose(scope: Scope, notify = true) {
@@ -378,7 +396,8 @@ function initialize(): void {
     });
     const native = lynx.getNative();
     listen(native, '__CreateTransfer', create);
-    listen(native, '__SetTransferProps', setProps);
+    listen(native, '__UpdateTransfer', updateProps);
+    listen(native, '__ReloadTransfer', reloadProps);
     listen<Scope>(native, '__DestroyTransfer', scope => dispose(scope));
     listen<TransferCommit>(lynx.getJSContext(), '__TransferCommit', packet => {
       const instance = instances.get(packet.transferId);
@@ -479,7 +498,8 @@ function initialize(): void {
     }));
     listen(core, '__CreateTransfer', create);
     listen(core, '__TransferFirstFrame', acceptFrame);
-    listen(core, '__SetTransferProps', setProps);
+    listen(core, '__UpdateTransfer', updateProps);
+    listen(core, '__ReloadTransfer', reloadProps);
     listen<Scope>(core, '__DestroyTransfer', scope => dispose(scope, false));
     listen<TransferCommitResult>(core, '__TransferCommitResult', result => {
       const instance = instances.get(result.transferId);

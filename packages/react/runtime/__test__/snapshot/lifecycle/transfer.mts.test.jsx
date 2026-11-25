@@ -100,9 +100,11 @@ describe('transfer (main thread)', () => {
     create('1');
     native.fire('__CreateTransfer', { transferId: 'missing', componentName: 'Missing', initialProps: {} });
     // Props sent before the page renders replace the queued initial props.
-    native.fire('__SetTransferProps', { transferId: '1', props: { text: 'queued' } });
+    native.fire('__UpdateTransfer', { transferId: '1', props: { text: 'early' } });
+    native.fire('__ReloadTransfer', { transferId: '1', props: { text: 'queued' } });
     expect(link.of('__TransferFirstFrame')).toHaveLength(0);
-    expect(link.of('__SetTransferProps')).toHaveLength(0);
+    expect(link.of('__UpdateTransfer')).toHaveLength(0);
+    expect(link.of('__ReloadTransfer')).toHaveLength(0);
 
     engine.fire('__RenderPage', [{ text: 'init' }]);
     expect(lynx.__initData).toEqual({ text: 'init' });
@@ -129,11 +131,11 @@ describe('transfer (main thread)', () => {
     expect(commit('404', 1)).toEqual({ transferId: '404', version: 0, seq: 1, status: 'disposed' });
   });
 
-  it('re-renders and re-syncs the first frame when props change', () => {
+  it('re-renders and re-syncs the first frame when props reload', () => {
     const view = elementTree.root.children[0].children[0];
     const size = snapshotInstanceManager.values.size;
-    native.fire('__SetTransferProps', { transferId: '1', props: { text: 'x' } });
-    expect(link.of('__SetTransferProps')).toEqual([{ transferId: '1', props: { text: 'x' } }]);
+    native.fire('__ReloadTransfer', { transferId: '1', props: { text: 'x' } });
+    expect(link.of('__ReloadTransfer')).toEqual([{ transferId: '1', props: { text: 'x' } }]);
 
     // Like a template reload, the new frame reuses the elements of the previous one.
     expect(elementTree.root.children[0].children[0]).toBe(view);
@@ -185,7 +187,7 @@ describe('transfer (main thread)', () => {
     });
     const size = snapshotInstanceManager.values.size;
     native.fire('__CreateTransfer', { transferId: '4', componentName: 'Flaky', initialProps: {} });
-    native.fire('__SetTransferProps', { transferId: '4', props: { fail: true } });
+    native.fire('__ReloadTransfer', { transferId: '4', props: { fail: true } });
     expect(reportError).toHaveBeenCalledWith(new Error('flaky'));
     expect(elementTree.root.children).toHaveLength(0);
     expect(snapshotInstanceManager.values.size).toBe(size);
@@ -246,5 +248,39 @@ describe('transfer (main thread)', () => {
       globalThis.lynxWorkletImpl = previousImpl;
       SystemInfo.lynxSdkVersion = previousSdkVersion;
     }
+  });
+
+  it('keeps its elements on an update and re-renders them on a reload', () => {
+    const element = () => elementTree.root.children.find(child => child.props['transfer-id'] === 'u');
+    const text = () => element().children[0].children[0].children[0].props.text;
+    native.fire('__CreateTransfer', { transferId: 'u', componentName: 'Bubble', initialProps: { text: 'a' } });
+    const frames = link.of('__TransferFirstFrame').length;
+    const view = element().children[0];
+    expect(commit('u', 1, true).status).toBe('applied');
+
+    // The background renders updates; the main thread only forwards them.
+    native.fire('__UpdateTransfer', { transferId: 'u', props: { text: 'b' } });
+    expect(link.of('__UpdateTransfer')).toEqual([{ transferId: 'u', props: { text: 'b' } }]);
+    expect(link.of('__TransferFirstFrame')).toHaveLength(frames);
+    expect(text()).toBe('a');
+    expect(commit('u', 2)).toEqual({ transferId: 'u', version: 0, seq: 2, status: 'applied' });
+
+    // A reload renders the latest props into the same elements and re-syncs the first frame.
+    const reloads = link.of('__ReloadTransfer').length;
+    native.fire('__ReloadTransfer', { transferId: 'u', props: { text: 'c' } });
+    expect(link.of('__ReloadTransfer').at(-1)).toEqual({ transferId: 'u', props: { text: 'c' } });
+    expect(link.of('__TransferFirstFrame')).toHaveLength(frames + 1);
+    expect(element().children[0]).toBe(view);
+    expect(text()).toBe('c');
+    expect(commit('u', 1, true, 1).status).toBe('applied');
+    native.fire('__DestroyTransfer', { transferId: 'u' });
+
+    // Updates and reloads for unknown or destroyed instances are ignored.
+    native.fire('__UpdateTransfer', { transferId: 'u', props: { text: 'd' } });
+    native.fire('__UpdateTransfer', { transferId: 'missing', props: {} });
+    native.fire('__ReloadTransfer', { transferId: 'u', props: { text: 'e' } });
+    native.fire('__ReloadTransfer', { transferId: 'missing', props: {} });
+    expect(link.of('__UpdateTransfer')).toHaveLength(1);
+    expect(link.of('__ReloadTransfer')).toHaveLength(reloads + 1);
   });
 });

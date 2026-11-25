@@ -136,8 +136,8 @@ describe('transfer (background thread)', () => {
     expect(commits('1')[1]).toMatchObject({ seq: 2, kind: 'update' });
     expect(JSON.stringify(commits('1')[1].patchList)).toContain('a:1');
 
-    // Like a template reload, a props update remounts the component and waits for a new first frame.
-    link.fire('__SetTransferProps', { transferId: '1', props: { text: 'b' } });
+    // Like a template reload, a reload remounts the component and waits for a new first frame.
+    link.fire('__ReloadTransfer', { transferId: '1', props: { text: 'b' } });
     ack('1', 2);
     expect(commits('1')).toHaveLength(2);
     const frame = firstFrame();
@@ -168,7 +168,7 @@ describe('transfer (background thread)', () => {
     // Disposed by the main thread: torn down without echoing back.
     link.fire('__DestroyTransfer', { transferId: '1' });
     expect(link.of('__TransferDisposed')).toHaveLength(1);
-    link.fire('__SetTransferProps', { transferId: '1', props: { text: 'd' } });
+    link.fire('__ReloadTransfer', { transferId: '1', props: { text: 'd' } });
     expect(commits('1')).toHaveLength(3);
 
     link.fire('__CreateTransfer', { transferId: '3', componentName: 'Missing', initialProps: {} });
@@ -191,8 +191,8 @@ describe('transfer (background thread)', () => {
     await waitSchedule();
     expect(commits('4')).toHaveLength(1);
 
-    // A props update releases the in-flight and queued commits; their results no longer match.
-    link.fire('__SetTransferProps', { transferId: '4', props: { text: 'f' } });
+    // A reload releases the in-flight and queued commits; their results no longer match.
+    link.fire('__ReloadTransfer', { transferId: '4', props: { text: 'f' } });
     ack('4', 1);
     link.fire('__TransferFirstFrame', { transferId: '4', snapshot: emptyFrame(-102) });
     expect(commits('4')).toMatchObject([{ version: 0, seq: 1 }, { version: 1, seq: 1, kind: 'hydrate' }]);
@@ -302,7 +302,7 @@ describe('transfer (background thread)', () => {
       expect(new Set(calls('work-a', 0).map(({ worklet }) => worklet._execId)).size).toBe(6);
       const lastExecId = calls('work-a', 0).at(-1).worklet._execId;
       ack('work-a', 1);
-      link.fire('__SetTransferProps', { transferId: 'work-a', props: { name: 'reused' } });
+      link.fire('__ReloadTransfer', { transferId: 'work-a', props: { name: 'reused' } });
       runCallback(calls('work-a', 0)[0].worklet._execId);
       expect(callback).toHaveBeenCalledOnce();
       await waitSchedule();
@@ -346,6 +346,65 @@ describe('transfer (background thread)', () => {
       resetBackgroundFunctionRuntime();
       SystemInfo.lynxSdkVersion = sdkVersion;
     }
+  });
+
+  it('updates props in place and keeps state, while a reload resets it', async () => {
+    let mounts = 0;
+    let setN;
+    function Streamed(props) {
+      const [mounted, setMounted] = useState(false);
+      const [n, setNState] = useState(0);
+      setN = setNState;
+      useEffect(() => {
+        mounts++;
+        setMounted(true);
+      }, []);
+      return mounted ? <text>{`${props.text}:${n}`}</text> : null;
+    }
+    TransferRegistry.registerComponent('Streamed', () => Streamed);
+    link.fire('__CreateTransfer', { transferId: 's', componentName: 'Streamed', initialProps: { text: 'a' } });
+    link.fire('__TransferFirstFrame', { transferId: 's', snapshot: firstFrame() });
+    ack('s', 1);
+    await waitSchedule();
+    expect(mounts).toBe(1);
+    expect(JSON.stringify(commits('s')[1].patchList)).toContain('a:0');
+    ack('s', 2);
+
+    // An update re-renders the mounted component with new props and keeps its state.
+    link.fire('__UpdateTransfer', { transferId: 's', props: { text: 'b' } });
+    expect(commits('s')[2]).toMatchObject({ version: 0, seq: 3, kind: 'update' });
+    expect(JSON.stringify(commits('s')[2].patchList)).toContain('b:0');
+    ack('s', 3);
+    // Later commits still belong to the instance.
+    const errors = reportError.mock.calls.length;
+    setN(1);
+    await waitSchedule();
+    expect(reportError.mock.calls.length).toBe(errors);
+    expect(JSON.stringify(commits('s')[3].patchList)).toContain('b:1');
+    ack('s', 4);
+    expect(mounts).toBe(1);
+
+    // A reload remounts it and resets its state; updates before the new first frame are kept.
+    link.fire('__ReloadTransfer', { transferId: 's', props: { text: 'c' } });
+    link.fire('__UpdateTransfer', { transferId: 's', props: { text: 'd' } });
+    expect(commits('s')).toHaveLength(4);
+    link.fire('__TransferFirstFrame', { transferId: 's', snapshot: firstFrame() });
+    expect(commits('s')[4]).toMatchObject({ version: 1, seq: 1, kind: 'hydrate' });
+    ack('s', 1, 'applied', 1);
+    await waitSchedule();
+    expect(mounts).toBe(2);
+    setN(5);
+    await waitSchedule();
+    expect(JSON.stringify(commits('s').at(-1).patchList)).toContain('d:5');
+    link.fire('__DestroyTransfer', { transferId: 's' });
+
+    // Updates for destroyed or unknown instances render nothing.
+    const sent = commits('s').length;
+    link.fire('__UpdateTransfer', { transferId: 's', props: { text: 'e' } });
+    link.fire('__UpdateTransfer', { transferId: 'missing', props: {} });
+    await waitSchedule();
+    expect(commits('s')).toHaveLength(sent);
+    expect(mounts).toBe(2);
   });
 
   it('removes its listeners when the lifetime is destroyed', () => {
