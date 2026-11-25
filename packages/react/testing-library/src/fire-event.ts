@@ -42,7 +42,7 @@ export const fireEvent: any = (elemOrNodesRef, ...args) => {
 
 export const eventMap = {
   // LynxBindCatchEvent — TouchEvent family, bubble/capture per
-  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
+  // https://lynxjs.org/api/lynx-api/event/touch-event.html
   tap: {
     defaultInit: { bubbles: true },
   },

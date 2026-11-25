@@ -69,6 +69,8 @@ jobs:
         run: node .github/scripts/check-new-packages-published.cjs origin/main
       - name: Preact Dedupe Check
         run: node .github/scripts/check-single-preact-instance.cjs
+      - name: Internal Keyword Check
+        run: node .github/scripts/check-no-internal-keywords.cjs
       - name: API Check
         run: pnpm turbo api-extractor
       - name: Changeset Check

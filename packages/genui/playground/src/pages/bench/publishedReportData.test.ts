@@ -49,8 +49,6 @@ function expectAllowedKeys(
 describe('published benchmark record', () => {
   it('publishes the complete canonical matched-core run', () => {
     expect(PUBLISHED_REPORT_FIXTURE).toMatchObject({
-      larkUrl:
-        'https://bytedance.larkoffice.com/docx/E6xPdVshBoV4bkxHGdwc5SoTnub',
       scope: {
         completeReportCount: 1,
         failedRuns: 0,
@@ -143,7 +141,6 @@ describe('published benchmark record', () => {
       'title',
       'description',
       'screenshotBasePath',
-      'larkUrl',
       'sources',
       'scope',
       'summary',
@@ -306,7 +303,7 @@ describe('published benchmark record', () => {
         jobId: 'phase-two-formal-2026-07-30',
       }),
     ]);
-    expect(urls).toEqual([PUBLISHED_REPORT_FIXTURE.larkUrl]);
+    expect(urls).toEqual([]);
     expect(serialized).not.toMatch(
       /OPENAI_API_KEY|api[_-]?key|authorization|bearer\s|private-provider|internal-provider|baseURLs?|base\s+urls?/i,
     );

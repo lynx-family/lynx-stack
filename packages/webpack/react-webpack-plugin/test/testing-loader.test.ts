@@ -67,9 +67,9 @@ describe('testing loader', () => {
     // Partial compat without required `target` field — this was the bug
     const result = await runTestingLoader(jsxContent, {
       compat: {
-        componentsPkg: ['@byted-lynx/react-components'],
+        componentsPkg: ['@custom/react-components'],
         newRuntimePkg: '@lynx-js/react',
-        oldRuntimePkg: ['@byted-lynx/react-runtime'],
+        oldRuntimePkg: ['@custom/react-runtime'],
         // intentionally missing: target, addComponentElement, etc.
       },
       engineVersion: '3.2',

@@ -160,7 +160,7 @@ export interface ReactLynxExternalsPresetOptions {
    * Package name that provides the ReactLynx runtime bundle.
    *
    * Override this when wrapping the plugin for another distribution, such as
-   * `@byted-lynx/react-umd`.
+   * `@custom/react-umd`.
    *
    * @defaultValue `'@lynx-js/react-umd'`
    */

@@ -3,7 +3,6 @@
   "title": "A2UI vs OpenUI",
   "screenshotBasePath": "/bench/phase-two/screenshots",
   "description": "Matched-core evaluation across three scenarios and ten repeats. A fixed report of generation quality, token usage, latency, and paired screenshot evidence.",
-  "larkUrl": "https://bytedance.larkoffice.com/docx/E6xPdVshBoV4bkxHGdwc5SoTnub",
   "sources": [
     {
       "id": "phase-two-formal-source-1",

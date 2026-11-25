@@ -23,8 +23,8 @@ describe('normalizeRemoteUrl', () => {
   test('SSH-style url is rewritten to https', () => {
     expect(normalizeRemoteUrl('git@github.com:lynx-family/lynx-stack.git'))
       .toBe('https://github.com/lynx-family/lynx-stack')
-    expect(normalizeRemoteUrl('git@code.byted.org:lynx/revilo'))
-      .toBe('https://code.byted.org/lynx/revilo')
+    expect(normalizeRemoteUrl('git@git.example.com:org/repo'))
+      .toBe('https://git.example.com/org/repo')
   })
 
   test('HTTPS-style url drops trailing .git', () => {
@@ -37,8 +37,8 @@ describe('normalizeRemoteUrl', () => {
   test('ssh:// scheme is converted to https so commitUrl is browsable', () => {
     expect(normalizeRemoteUrl('ssh://git@github.com:22/owner/repo.git'))
       .toBe('https://github.com/owner/repo')
-    expect(normalizeRemoteUrl('ssh://git@code.byted.org/lynx/revilo'))
-      .toBe('https://code.byted.org/lynx/revilo')
+    expect(normalizeRemoteUrl('ssh://git@git.example.com/org/repo'))
+      .toBe('https://git.example.com/org/repo')
   })
 
   test('git+ssh:// scheme is converted to https', () => {
