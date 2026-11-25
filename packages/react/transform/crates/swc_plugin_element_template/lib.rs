@@ -165,7 +165,7 @@ fn list_item_platform_info_expr(attrs: &[JSXAttrOrSpread]) -> Option<Expr> {
   }))
 }
 
-pub fn internal_runtime_pkg(runtime_pkg: &str) -> String {
+fn internal_runtime_pkg(runtime_pkg: &str) -> String {
   const INTERNAL_SUFFIXES: &[&str] = &[
     "/internal",
     "/internal.ts",

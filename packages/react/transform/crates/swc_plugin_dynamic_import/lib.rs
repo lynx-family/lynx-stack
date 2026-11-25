@@ -319,11 +319,14 @@ where
         })),
       );
 
+      let lazy_import_pkg = self
+        .opts
+        .runtime_pkg
+        .strip_suffix("/internal")
+        .unwrap_or(&self.opts.runtime_pkg);
       prepend_stmt(
         &mut n.body,
-        create_import_decl(
-          &format!("{}/experimental/lazy/import", self.opts.runtime_pkg).replace("/internal", ""),
-        ),
+        create_import_decl(&format!("{lazy_import_pkg}/experimental/lazy/import")),
       );
     }
     if match self.opts.inject_lazy_bundle {
@@ -332,11 +335,16 @@ where
       None => true,
     } && self.has_inner_lazy_bundle
     {
+      let lazy_bundle_runtime_pkg =
+        if self.opts.runtime_pkg == "@lynx-js/react/element-template/internal" {
+          "@lynx-js/react/element-template/internal"
+        } else {
+          "@lynx-js/react/internal"
+        };
       prepend_stmt(
         &mut n.body,
         create_import_decl(&format!(
-          "data:text/javascript;charset=utf-8,import {{ loadLazyBundle }} from \"{}\";lynx.loadLazyBundle = loadLazyBundle;",
-          self.opts.runtime_pkg
+          "data:text/javascript;charset=utf-8,import {{ loadLazyBundle }} from \"{lazy_bundle_runtime_pkg}\";lynx.loadLazyBundle = loadLazyBundle;"
         )),
       );
     }

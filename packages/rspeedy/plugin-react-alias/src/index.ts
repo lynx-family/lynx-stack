@@ -110,6 +110,11 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           elementTemplate
             ? resolve(
               '@lynx-js/react/element-template/experimental/lazy/import',
+            ).catch(() =>
+              path.join(
+                reactLynxDir,
+                'runtime/lazy/element-template-import.js',
+              )
             )
             : Promise.resolve(null),
         ])
@@ -293,6 +298,10 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           chain
             .resolve
             .alias
+            .set(
+              '@lynx-js/react/lepus$',
+              elementTemplateEntry!,
+            )
             .set(
               '@lynx-js/react/element-template$',
               elementTemplateEntry!,

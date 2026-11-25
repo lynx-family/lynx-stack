@@ -1,7 +1,9 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import fs from 'node:fs'
 import { createRequire } from 'node:module'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -258,6 +260,10 @@ describe('React - alias', () => {
       Reflect.get(config.resolve.alias, '@lynx-js/react$'),
     )
     expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/lepus$',
+      Reflect.get(config.resolve.alias, '@lynx-js/react$'),
+    )
+    expect(config.resolve.alias).toHaveProperty(
       '@lynx-js/react/legacy-react-runtime$',
       expect.stringContaining(
         '/packages/react/runtime/lib/core/compat/legacy-react-runtime.js'
@@ -425,6 +431,98 @@ describe('React - alias', () => {
         ),
       ),
     )
+  })
+
+  test('falls back to runtime/lazy/element-template-import.js for older @lynx-js/react peers', async () => {
+    rstest.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const require = createRequire(import.meta.url)
+    const realReactPkgPath = require.resolve('@lynx-js/react/package.json')
+    const realReactDir = path.dirname(realReactPkgPath)
+    const realPreactDir = path.dirname(
+      createRequire(realReactPkgPath).resolve('preact/package.json'),
+    )
+    const tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'plugin-react-alias-legacy-peer-'),
+    )
+
+    try {
+      const fakeReactDir = path.join(
+        tmpDir,
+        'node_modules',
+        '@lynx-js',
+        'react',
+      )
+      fs.mkdirSync(path.join(fakeReactDir, 'node_modules'), { recursive: true })
+
+      const pkg = JSON.parse(
+        fs.readFileSync(realReactPkgPath, 'utf8'),
+      ) as { exports?: Record<string, unknown> }
+      if (pkg.exports) {
+        delete pkg.exports['./element-template/experimental/lazy/import']
+      }
+      fs.writeFileSync(
+        path.join(fakeReactDir, 'package.json'),
+        JSON.stringify(pkg, null, 2),
+      )
+
+      const dirSymlinkType = process.platform === 'win32' ? 'junction' : 'dir'
+      for (
+        const entry of fs.readdirSync(realReactDir, { withFileTypes: true })
+      ) {
+        if (entry.name === 'package.json' || entry.name === 'node_modules') {
+          continue
+        }
+        if (entry.isDirectory()) {
+          fs.symlinkSync(
+            path.join(realReactDir, entry.name),
+            path.join(fakeReactDir, entry.name),
+            dirSymlinkType,
+          )
+        } else if (entry.isFile()) {
+          fs.copyFileSync(
+            path.join(realReactDir, entry.name),
+            path.join(fakeReactDir, entry.name),
+          )
+        }
+      }
+      fs.symlinkSync(
+        realPreactDir,
+        path.join(fakeReactDir, 'node_modules', 'preact'),
+        dirSymlinkType,
+      )
+
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactAlias({
+              LAYERS,
+              elementTemplate: true,
+              rootPath: tmpDir,
+            }),
+          ],
+        },
+        cwd: tmpDir,
+      })
+
+      const [config] = await rsbuild.initConfigs()
+      const expectedLazyImport = path.join(
+        fs.realpathSync(fakeReactDir),
+        'runtime/lazy/element-template-import.js',
+      )
+
+      expect(config?.resolve?.alias).toHaveProperty(
+        '@lynx-js/react/experimental/lazy/import$',
+        expectedLazyImport,
+      )
+      expect(config?.resolve?.alias).toHaveProperty(
+        '@lynx-js/react/element-template/experimental/lazy/import$',
+        expectedLazyImport,
+      )
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 
   test('layered lepus hooks alias for main thread', async () => {

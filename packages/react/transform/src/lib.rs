@@ -64,9 +64,7 @@ use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitor
 use swc_plugin_element_template::napi::{
   ElementTemplateAsset, ElementTemplateTransformer, ElementTemplateTransformerConfig,
 };
-use swc_plugin_element_template::{
-  internal_runtime_pkg, ElementTemplateAsset as CoreElementTemplateAsset,
-};
+use swc_plugin_element_template::ElementTemplateAsset as CoreElementTemplateAsset;
 use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
@@ -278,7 +276,7 @@ impl Default for TransformNodiffOptions {
       define_dce: Either::A(false),
       directive_dce: Either::A(false),
       worklet: Either::A(false),
-      dynamic_import: Some(Either::B(Default::default())),
+      dynamic_import: Some(Either::A(true)),
       experimental_transform_builtin_attribute_names: None,
       inject: Some(Either::A(false)),
       input_source_map: None,
@@ -650,7 +648,7 @@ fn transform_react_lynx_inner(
         true,
       ),
     };
-    let (element_template_plugin_config, element_template_enabled) =
+    let (mut element_template_plugin_config, element_template_enabled) =
       match options.element_template.as_ref() {
         Some(Either::A(config)) => (
           ElementTemplateTransformerConfig {
@@ -687,6 +685,25 @@ fn transform_react_lynx_inner(
       });
     }
     let use_element_template_plugin = element_template_enabled;
+    const BUILTIN_ET_RUNTIME_PKG: &str = "@lynx-js/react/element-template";
+    const BUILTIN_ET_INTERNAL_PKG: &str = "@lynx-js/react/element-template/internal";
+    const BUILTIN_ET_LAZY_IMPORT_PKG: &str =
+      "@lynx-js/react/element-template/experimental/lazy/import";
+    if use_element_template_plugin && element_template_plugin_config.runtime_pkg == "@lynx-js/react"
+    {
+      element_template_plugin_config.runtime_pkg = BUILTIN_ET_RUNTIME_PKG.into();
+    }
+    let et_runtime_entries = (use_element_template_plugin
+      && matches!(
+        element_template_plugin_config.runtime_pkg.as_str(),
+        BUILTIN_ET_RUNTIME_PKG | BUILTIN_ET_INTERNAL_PKG
+      ))
+    .then(|| {
+      (
+        BUILTIN_ET_INTERNAL_PKG.to_string(),
+        BUILTIN_ET_LAZY_IMPORT_PKG.to_string(),
+      )
+    });
     let use_snapshot_plugin = snapshot_enabled && !use_element_template_plugin;
     let jsx_backend_enabled = use_snapshot_plugin || use_element_template_plugin;
     let active_jsx_import_source = if use_element_template_plugin {
@@ -820,21 +837,6 @@ fn transform_react_lynx_inner(
         ..Default::default()
       },
     );
-
-    let et_runtime_entries = use_element_template_plugin.then(|| {
-      let runtime_pkg = match element_template_plugin_config.runtime_pkg.as_str() {
-        "@lynx-js/react" => "@lynx-js/react/element-template",
-        runtime_pkg => runtime_pkg,
-      };
-      let internal_pkg = internal_runtime_pkg(runtime_pkg);
-      let lazy_import_pkg = format!(
-        "{}/experimental/lazy/import",
-        internal_pkg
-          .strip_suffix("/internal")
-          .unwrap_or(runtime_pkg)
-      );
-      (internal_pkg, lazy_import_pkg)
-    });
 
     let (compat_config, compat_enabled) = match options.compat.clone() {
       Either::A(enabled) => (CompatVisitorConfig::default(), enabled),
@@ -1442,6 +1444,212 @@ mod tests {
         .contains("import \"@my-org/react/experimental/lazy/import\""),
       "{}",
       result.code
+    );
+  }
+
+  #[test]
+  fn should_normalize_default_et_runtime_and_omitted_dynamic_import() {
+    use swc_plugins_shared::target_napi::TransformTarget;
+
+    let cases = [
+      Some(Either::A(true)),
+      Some(Either::B(ElementTemplateTransformerConfig {
+        target: TransformTarget::LEPUS,
+        filename: "test.jsx".into(),
+        runtime_pkg: "@lynx-js/react".into(),
+        ..Default::default()
+      })),
+    ];
+
+    for element_template in cases {
+      let result = transform_react_lynx_inner(
+        r#"
+          export function App(Comp, props, url) {
+            const loadRemote = () => import(url, { with: { type: 'component' } });
+            const loadLocal = () => import('./lazy.tsx', { with: { type: 'component' } });
+            return (
+              <view>
+                <Comp {...props} />
+                <component is={url} />
+                {loadRemote}
+                {loadLocal}
+              </view>
+            );
+          }
+        "#
+        .into(),
+        TransformNodiffOptions {
+          filename: "test.jsx".into(),
+          css_scope: Either::A(false),
+          compat: Either::B(CompatVisitorConfig {
+            add_component_element: Either::A(true),
+            ..Default::default()
+          }),
+          element_template,
+          ..Default::default()
+        },
+      );
+      assert!(result.errors.is_empty(), "{:?}", result.errors);
+      assert!(
+        result
+          .code
+          .contains("\"@lynx-js/react/element-template/internal\""),
+        "{}",
+        result.code
+      );
+      assert!(
+        result
+          .code
+          .contains("import \"@lynx-js/react/element-template/experimental/lazy/import\""),
+        "{}",
+        result.code
+      );
+      assert!(
+        result.code.contains(
+          "import { loadLazyBundle } from \\\"@lynx-js/react/element-template/internal\\\";"
+        ) || result
+          .code
+          .contains("import { loadLazyBundle } from \"@lynx-js/react/element-template/internal\";"),
+        "{}",
+        result.code
+      );
+      assert!(
+        !result.code.contains("\"@lynx-js/react/internal\""),
+        "{}",
+        result.code
+      );
+      assert!(
+        !result
+          .code
+          .contains("\"@lynx-js/react/experimental/lazy/import\""),
+        "{}",
+        result.code
+      );
+    }
+  }
+
+  #[test]
+  fn should_preserve_custom_runtime_pkgs_in_worklet_dynamic_import_and_et() {
+    use swc_plugins_shared::target_napi::TransformTarget;
+
+    // Custom scoped worklet runtime packages keep their own package root/subpath.
+    for (runtime_pkg, expected_init) in [
+      (
+        "@acme/element-template/internal",
+        "@acme/element-template/worklet-runtime/init",
+      ),
+      (
+        "@my-org/react/element-template/internal",
+        "@my-org/react/element-template/worklet-runtime/init",
+      ),
+    ] {
+      let result = transform_react_lynx_inner(
+        r#"
+          export function App() {
+            const onTap = () => {
+              'main thread';
+              return 1;
+            };
+            return <view main-thread:bindtap={onTap} />;
+          }
+        "#
+        .into(),
+        TransformNodiffOptions {
+          filename: "test.jsx".into(),
+          css_scope: Either::A(false),
+          worklet: Either::B(WorkletVisitorConfig {
+            target: TransformTarget::JS,
+            runtime_pkg: runtime_pkg.into(),
+            ..Default::default()
+          }),
+          ..Default::default()
+        },
+      );
+      assert!(result.errors.is_empty(), "{:?}", result.errors);
+      let defines = result.defines_for_worklet.unwrap();
+      let imports = defines[0].imports.as_ref().unwrap();
+      assert!(
+        imports.iter().any(|imp| imp.source == expected_init),
+        "expected {expected_init}, got {:?}",
+        imports
+          .iter()
+          .map(|imp| imp.source.as_str())
+          .collect::<Vec<_>>()
+      );
+    }
+
+    // Custom dynamicImport runtime_pkg strips only a trailing `/internal` and keeps
+    // the synthetic `data:` bootstrap on `@lynx-js/react/internal`.
+    let custom_di = transform_react_lynx_inner(
+      r#"
+        export function load(url) {
+          return [
+            import(url, { with: { type: 'component' } }),
+            import('./lazy.tsx', { with: { type: 'component' } }),
+          ];
+        }
+      "#
+      .into(),
+      TransformNodiffOptions {
+        filename: "test.jsx".into(),
+        css_scope: Either::A(false),
+        dynamic_import: Some(Either::B(DynamicImportVisitorConfig {
+          runtime_pkg: "@acme/internal-react/internal".into(),
+          ..Default::default()
+        })),
+        ..Default::default()
+      },
+    );
+    assert!(custom_di.errors.is_empty(), "{:?}", custom_di.errors);
+    assert!(
+      custom_di
+        .code
+        .contains("import \"@acme/internal-react/experimental/lazy/import\""),
+      "{}",
+      custom_di.code
+    );
+    assert!(
+      custom_di
+        .code
+        .contains("import { loadLazyBundle } from \\\"@lynx-js/react/internal\\\";")
+        || custom_di
+          .code
+          .contains("import { loadLazyBundle } from \"@lynx-js/react/internal\";"),
+      "{}",
+      custom_di.code
+    );
+
+    // A relative file-path ET runtime_pkg does not synthesize invalid helper subpaths.
+    let custom_et = transform_react_lynx_inner(
+      r#"
+        export function App(url) {
+          return <component is={url} />;
+        }
+      "#
+      .into(),
+      TransformNodiffOptions {
+        filename: "test.jsx".into(),
+        css_scope: Either::A(false),
+        compat: Either::B(CompatVisitorConfig {
+          add_component_element: Either::A(true),
+          ..Default::default()
+        }),
+        element_template: Some(Either::B(ElementTemplateTransformerConfig {
+          target: TransformTarget::JS,
+          filename: "test.jsx".into(),
+          runtime_pkg: "./runtime/internal.ts".into(),
+          ..Default::default()
+        })),
+        ..Default::default()
+      },
+    );
+    assert!(custom_et.errors.is_empty(), "{:?}", custom_et.errors);
+    assert!(
+      !custom_et
+        .code
+        .contains("./runtime/internal.ts/experimental/lazy/import"),
+      "{}",
+      custom_et.code
     );
   }
 

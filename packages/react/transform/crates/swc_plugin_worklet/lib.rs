@@ -960,14 +960,17 @@ impl WorkletVisitor {
   }
 
   fn registration_import(&self) -> ModuleItem {
-    let runtime_pkg = self
-      .cfg
-      .runtime_pkg
-      .strip_suffix("/element-template/internal")
-      .or_else(|| self.cfg.runtime_pkg.strip_suffix("/internal"))
-      // A scoped package named `internal` is a package root, not an entry.
-      .filter(|pkg| !pkg.starts_with('@') || pkg.contains('/'))
-      .unwrap_or(&self.cfg.runtime_pkg);
+    let runtime_pkg = if self.cfg.runtime_pkg == "@lynx-js/react/element-template/internal" {
+      "@lynx-js/react"
+    } else {
+      self
+        .cfg
+        .runtime_pkg
+        .strip_suffix("/internal")
+        // A scoped package named `internal` is a package root, not an entry.
+        .filter(|pkg| !pkg.starts_with('@') || pkg.contains('/'))
+        .unwrap_or(&self.cfg.runtime_pkg)
+    };
     ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
       span: DUMMY_SP,
       phase: ImportPhase::Evaluation,
