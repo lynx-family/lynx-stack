@@ -918,7 +918,12 @@ fn transform_react_lynx_inner(
             .with_main_thread_programmability(Rc::clone(&main_thread_programmability));
         Optional::new(visit_mut_pass(visitor), config)
       }
-      Either::B(config) => {
+      Either::B(mut config) => {
+        if let Some((internal_pkg, _)) = &et_runtime_entries {
+          if config.runtime_pkg == "@lynx-js/react/internal" {
+            config.runtime_pkg = internal_pkg.clone();
+          }
+        }
         let visitor =
           WorkletVisitor::new(config)
             .with_content_hash(content_hash);
@@ -944,10 +949,17 @@ fn transform_react_lynx_inner(
           config,
         )
       }
-      Either::B(config) => Optional::new(
-        visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
-        true,
-      ),
+      Either::B(mut config) => {
+        if let Some((internal_pkg, _)) = &et_runtime_entries {
+          if config.runtime_pkg == "@lynx-js/react/internal" {
+            config.runtime_pkg = internal_pkg.clone();
+          }
+        }
+        Optional::new(
+          visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
+          true,
+        )
+      }
     };
 
     let inject_plugin = match options.inject.unwrap_or(Either::A(false)) {
@@ -1526,6 +1538,86 @@ mod tests {
         result.code
       );
     }
+
+    // Object configs with the legacy built-in `@lynx-js/react/internal` runtimePkg
+    // also normalize to ET while preserving `layer` and `target`.
+    let object_config_result = transform_react_lynx_inner(
+      r#"
+        export function App(url) {
+          const onTap = () => {
+            'main thread';
+            return 1;
+          };
+          const loadRemote = () => import(url, { with: { type: 'component' } });
+          const loadLocal = () => import('./lazy.tsx', { with: { type: 'component' } });
+          return (
+            <view main-thread:bindtap={onTap}>
+              {loadRemote}
+              {loadLocal}
+            </view>
+          );
+        }
+      "#
+      .into(),
+      TransformNodiffOptions {
+        filename: "test.jsx".into(),
+        css_scope: Either::A(false),
+        worklet: Either::B(WorkletVisitorConfig {
+          target: TransformTarget::JS,
+          runtime_pkg: "@lynx-js/react/internal".into(),
+          ..Default::default()
+        }),
+        dynamic_import: Some(Either::B(DynamicImportVisitorConfig {
+          layer: "react__background".into(),
+          runtime_pkg: "@lynx-js/react/internal".into(),
+          ..Default::default()
+        })),
+        element_template: Some(Either::A(true)),
+        ..Default::default()
+      },
+    );
+    assert!(
+      object_config_result.errors.is_empty(),
+      "{:?}",
+      object_config_result.errors
+    );
+    assert!(
+      object_config_result
+        .code
+        .contains("\"@lynx-js/react/element-template/internal\""),
+      "{}",
+      object_config_result.code
+    );
+    assert!(
+      object_config_result
+        .code
+        .contains("import \"@lynx-js/react/element-template/experimental/lazy/import\""),
+      "{}",
+      object_config_result.code
+    );
+    assert!(
+      object_config_result.code.contains(
+        "import { loadLazyBundle } from \\\"@lynx-js/react/element-template/internal\\\";"
+      ) || object_config_result
+        .code
+        .contains("import { loadLazyBundle } from \"@lynx-js/react/element-template/internal\";"),
+      "{}",
+      object_config_result.code
+    );
+    assert!(
+      !object_config_result
+        .code
+        .contains("\"@lynx-js/react/internal\""),
+      "{}",
+      object_config_result.code
+    );
+    assert!(
+      !object_config_result
+        .code
+        .contains("\"@lynx-js/react/experimental/lazy/import\""),
+      "{}",
+      object_config_result.code
+    );
   }
 
   #[test]

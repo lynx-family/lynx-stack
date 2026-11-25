@@ -525,6 +525,87 @@ describe('React - alias', () => {
     }
   })
 
+  test('fails fast when @lynx-js/react declares the ET lazy-import export but its target is missing', async () => {
+    rstest.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+
+    const require = createRequire(import.meta.url)
+    const realReactPkgPath = require.resolve('@lynx-js/react/package.json')
+    const realReactDir = path.dirname(realReactPkgPath)
+    const realPreactDir = path.dirname(
+      createRequire(realReactPkgPath).resolve('preact/package.json'),
+    )
+    const tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'plugin-react-alias-broken-export-'),
+    )
+
+    try {
+      const fakeReactDir = path.join(
+        tmpDir,
+        'node_modules',
+        '@lynx-js',
+        'react',
+      )
+      fs.mkdirSync(path.join(fakeReactDir, 'node_modules'), { recursive: true })
+
+      const pkg = JSON.parse(
+        fs.readFileSync(realReactPkgPath, 'utf8'),
+      ) as { exports?: Record<string, unknown> }
+      if (pkg.exports) {
+        pkg.exports['./element-template/experimental/lazy/import'] = {
+          import: './runtime/lazy/missing-element-template-import.js',
+        }
+      }
+      fs.writeFileSync(
+        path.join(fakeReactDir, 'package.json'),
+        JSON.stringify(pkg, null, 2),
+      )
+
+      const dirSymlinkType = process.platform === 'win32' ? 'junction' : 'dir'
+      for (
+        const entry of fs.readdirSync(realReactDir, { withFileTypes: true })
+      ) {
+        if (entry.name === 'package.json' || entry.name === 'node_modules') {
+          continue
+        }
+        if (entry.isDirectory()) {
+          fs.symlinkSync(
+            path.join(realReactDir, entry.name),
+            path.join(fakeReactDir, entry.name),
+            dirSymlinkType,
+          )
+        } else if (entry.isFile()) {
+          fs.copyFileSync(
+            path.join(realReactDir, entry.name),
+            path.join(fakeReactDir, entry.name),
+          )
+        }
+      }
+      fs.symlinkSync(
+        realPreactDir,
+        path.join(fakeReactDir, 'node_modules', 'preact'),
+        dirSymlinkType,
+      )
+
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          plugins: [
+            pluginReactAlias({
+              LAYERS,
+              elementTemplate: true,
+              rootPath: tmpDir,
+            }),
+          ],
+        },
+        cwd: tmpDir,
+      })
+
+      await expect(rsbuild.initConfigs()).rejects.toThrow()
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
+  })
+
   test('layered lepus hooks alias for main thread', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')

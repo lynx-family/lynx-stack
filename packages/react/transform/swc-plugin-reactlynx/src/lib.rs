@@ -336,10 +336,17 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         config,
       )
     }
-    Either::B(config) => Optional::new(
-      visit_mut_pass(WorkletVisitor::new(config).with_content_hash(content_hash)),
-      true,
-    ),
+    Either::B(mut config) => {
+      if let Some(runtime_pkg) = &et_internal_pkg {
+        if config.runtime_pkg == "@lynx-js/react/internal" {
+          config.runtime_pkg = runtime_pkg.clone();
+        }
+      }
+      Optional::new(
+        visit_mut_pass(WorkletVisitor::new(config).with_content_hash(content_hash)),
+        true,
+      )
+    }
   };
 
   let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
@@ -356,10 +363,17 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
         config,
       )
     }
-    Either::B(config) => Optional::new(
-      visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
-      true,
-    ),
+    Either::B(mut config) => {
+      if let Some(runtime_pkg) = &et_internal_pkg {
+        if config.runtime_pkg == "@lynx-js/react/internal" {
+          config.runtime_pkg = runtime_pkg.clone();
+        }
+      }
+      Optional::new(
+        visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
+        true,
+      )
+    }
   };
 
   let inject_plugin = match options.inject.unwrap_or(Either::A(false)) {

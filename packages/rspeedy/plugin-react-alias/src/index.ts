@@ -32,7 +32,18 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
       const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
         paths: [rootPath ?? api.context.rootPath],
       })
-      const { version } = require(reactLynxPkg) as { version: string }
+      const { version, exports: reactExports } = require(reactLynxPkg) as {
+        version: string
+        exports?: Record<string, unknown>
+      }
+      const hasElementTemplateLazyImportExport = Boolean(
+        reactExports
+          && typeof reactExports === 'object'
+          && Object.hasOwn(
+            reactExports,
+            './element-template/experimental/lazy/import',
+          ),
+      )
 
       const reactLynxDir = path.dirname(reactLynxPkg)
 
@@ -66,6 +77,20 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
         Object.defineProperty(chain, S_PLUGIN_REACT_ALIAS, {
           value: true,
         })
+        let elementTemplateLazyImportPromise: Promise<string | null> = Promise
+          .resolve(null)
+        if (elementTemplate) {
+          elementTemplateLazyImportPromise = hasElementTemplateLazyImportExport
+            ? resolve(
+              '@lynx-js/react/element-template/experimental/lazy/import',
+            )
+            : Promise.resolve(
+              path.join(
+                reactLynxDir,
+                'runtime/lazy/element-template-import.js',
+              ),
+            )
+        }
         const [
           jsxRuntimeBackground,
           jsxRuntimeMainThread,
@@ -107,16 +132,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           elementTemplate
             ? resolve('@lynx-js/react/element-template/internal')
             : Promise.resolve(null),
-          elementTemplate
-            ? resolve(
-              '@lynx-js/react/element-template/experimental/lazy/import',
-            ).catch(() =>
-              path.join(
-                reactLynxDir,
-                'runtime/lazy/element-template-import.js',
-              )
-            )
-            : Promise.resolve(null),
+          elementTemplateLazyImportPromise,
         ])
 
         const jsxRuntime = {
