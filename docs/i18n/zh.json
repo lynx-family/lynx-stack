@@ -1048,7 +1048,7 @@
   "Override the generated artifact's Lynx engine version.": "覆盖生成产物的 Lynx 引擎版本。",
   "Override the root component name. Defaults to `'Stack'`.": "覆盖根组件名称。默认为 `'Stack'`。",
   "Override the runtime bundle URL directly.": "直接覆盖运行时 bundle 的 URL。",
-  "Override this when wrapping the plugin for another distribution, such as\n`@byted-lynx/react-umd`.": "为其他发行版封装该插件时（例如\n`@byted-lynx/react-umd`），可覆盖该选项。",
+  "Override this when wrapping the plugin for another distribution, such as\n`@custom/react-umd`.": "为其他发行版封装该插件时（例如\n`@custom/react-umd`），可覆盖该选项。",
   "Overrides the Rsbuild `output.minify.jsOptions` for background-thread bundles.": "为后台线程 bundle 覆盖 Rsbuild 的 `output.minify.jsOptions`。",
   "Overrides the Rsbuild `output.minify.jsOptions` for main-thread bundles.": "为主线程 bundle 覆盖 Rsbuild 的 `output.minify.jsOptions`。",
   "Package name that provides the ReactLynx runtime bundle.": "提供 ReactLynx 运行时 bundle 的包名。",

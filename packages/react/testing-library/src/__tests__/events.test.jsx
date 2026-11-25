@@ -308,7 +308,7 @@ describe('Event handler property semantics', () => {
     expect(parent).toHaveBeenCalledTimes(1);
   });
 
-  // https://lynx.bytedance.net/next/zh/api/lynx-api/event/touch-event.html
+  // https://lynxjs.org/api/lynx-api/event/touch-event.html
   // Every TouchEvent-family event (BaseTouchEvent in @lynx-js/types)
   // bubbles in Lynx: touch{start,move,end,cancel}, longpress.
   it.each(['touchstart', 'touchmove', 'touchend', 'touchcancel', 'longpress'])(
