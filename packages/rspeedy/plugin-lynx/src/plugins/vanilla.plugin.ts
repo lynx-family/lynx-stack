@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type {
@@ -26,6 +27,8 @@ const VANILLA_LAYERS = {
   MAIN_THREAD: 'vanilla:main-thread',
 } as const
 Object.freeze(VANILLA_LAYERS)
+
+const lynxml = /\.lynxml$/
 
 interface LynxEntryContext {
   environmentName: string
@@ -138,8 +141,16 @@ function configureThreadMacros(
   chain: RspackChain,
   CHAIN_ID: ChainIdentifier,
 ): void {
-  const rule = chain.module.rule(CHAIN_ID.RULE.JS)
-    .oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
+  const jsRule = chain.module.rule(CHAIN_ID.RULE.JS)
+  jsRule.test([jsRule.get('test')!, lynxml])
+  const rule = jsRule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN)
+  // Resolve from the package entry so both tsc's lib/ output and the published
+  // Rslib dist/ bundle find their colocated loader.
+  const require = createRequire(import.meta.url)
+  const lynxmlLoader = path.join(
+    path.dirname(require.resolve('@lynx-js/rsbuild-plugin')),
+    'loaders/lynxml-loader.js',
+  )
   const uses = rule.uses.entries() ?? {}
   const swc = uses[CHAIN_ID.USE.SWC]
   if (!swc) {
@@ -185,6 +196,13 @@ function configureThreadMacros(
         },
       } satisfies Rspack.SwcLoaderOptions,
     )
+    // Nested rule loaders run before the parent SWC pipeline. Keep extraction
+    // inside JS_MAIN so ?raw and import attributes retain Rsbuild's behavior.
+    threadRule.rule('lynxml')
+      .test(lynxml)
+      .use('lynxml')
+      .loader(lynxmlLoader)
+      .options({ section: isMain ? 'main' : 'background' })
   }
   // Modules outside the Vanilla layers retain the original loader behavior.
   rule.oneOf(`${PLUGIN_NAME}:default`).uses.merge(uses)

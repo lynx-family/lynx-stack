@@ -19,7 +19,7 @@ import { pluginLynx } from '../src/index.js'
 
 const vanillaExample = new URL('../../../../examples/vanilla/', import.meta.url)
 const source = (name: string) =>
-  fileURLToPath(new URL(`src/${name}`, vanillaExample))
+  fileURLToPath(new URL(`src/main/${name}`, vanillaExample))
 const outputDirs: string[] = []
 
 afterAll(async () => {
@@ -29,6 +29,173 @@ afterAll(async () => {
 })
 
 describe('Vanilla source entries', () => {
+  test.each(
+    [
+      { environment: 'lynx', mode: 'development' },
+      { environment: 'lynx', mode: 'production' },
+      { environment: 'web', mode: 'development' },
+      { environment: 'web', mode: 'production' },
+    ] as const,
+  )(
+    'builds LynXML entries for $environment in $mode',
+    async ({ environment, mode }) => {
+      const root = await mkdtemp(path.join(tmpdir(), 'lynxml entries-'))
+      outputDirs.push(root)
+      const output = path.join(root, 'dist')
+      await Promise.all([
+        writeFile(
+          path.join(root, 'card.lynxml'),
+          [
+            '<!doctype lynx>',
+            '<lynx engine-version="4.2">',
+            '<script thread="background">',
+            'import { background } from "./background.js";',
+            'console.log(background);',
+            'if (__MAIN_THREAD__) require("./missing-main.js");',
+            '</script>',
+            '<style>',
+            '@import "./theme.css";',
+            '.card { width: 100px; color: red; }',
+            '</style>',
+            '<script thread="main">',
+            'import { main } from "./main.js";',
+            'console.log(main);',
+            'if (__BACKGROUND__) require("./missing-background.js");',
+            '</script>',
+            '</lynx>',
+          ].join('\n'),
+        ),
+        writeFile(
+          path.join(root, 'minimal.lynxml'),
+          '<lynx engine-version="4.2"><script thread="main">'
+            + 'console.log("XML_MINIMAL");</script></lynx>',
+        ),
+        writeFile(
+          path.join(root, 'empty.lynxml'),
+          '<lynx engine-version="4.2"><style></style>'
+            + '<script thread="main"></script>'
+            + '<script thread="background"></script></lynx>',
+        ),
+        writeFile(
+          path.join(root, 'main.js'),
+          'import raw from "./raw.lynxml?raw";'
+            + 'export const main = "XML_MAIN" + raw;',
+        ),
+        writeFile(path.join(root, 'raw.lynxml'), '<raw>XML_RAW_SOURCE</raw>'),
+        writeFile(
+          path.join(root, 'background.js'),
+          'export const background = "XML_BACKGROUND";',
+        ),
+        writeFile(path.join(root, 'theme.css'), '.theme { height: 42px; }'),
+        writeFile(
+          path.join(root, 'pre-entry.js'),
+          'console.log("XML_PRE_ENTRY");',
+        ),
+      ])
+      const rsbuild = await createRsbuild({
+        cwd: root,
+        rsbuildConfig: {
+          mode,
+          environments: { [environment]: {} },
+          splitChunks: false,
+          source: {
+            ...(mode === 'development'
+              ? { preEntry: './pre-entry.js' }
+              : {}),
+            entry: {
+              card: 'xml-card',
+              minimal: './minimal.lynxml',
+              empty: './empty.lynxml',
+            },
+          },
+          resolve: {
+            alias: { 'xml-card': path.join(root, 'card.lynxml?variant=test') },
+          },
+          output: { distPath: { root: output } },
+          plugins: [pluginLynx()],
+        },
+      })
+      await rsbuild.build()
+
+      for (const entry of ['card', 'minimal', 'empty']) {
+        const bundle = await readFile(
+          path.join(output, `${entry}.${environment}.bundle`),
+        )
+        expect(bundle.byteLength).toBeGreaterThan(0)
+        const data = JSON.parse(
+          await readFile(path.join(output, `.lynx/${entry}/tasm.json`), 'utf8'),
+        ) as { lepusCode: { root: string }, manifest: Record<string, string> }
+        const background = Object.values(data.manifest).join('\n')
+        if (mode === 'development') {
+          expect(data.lepusCode.root).toContain('XML_PRE_ENTRY')
+          expect(background).toContain('XML_PRE_ENTRY')
+        }
+        expect(background).not.toContain('XML_MAIN')
+        expect(background).not.toContain('XML_MINIMAL')
+        expect(data.lepusCode.root).not.toContain('XML_BACKGROUND')
+        if (entry === 'card') {
+          expect(data.lepusCode.root).toContain('XML_MAIN')
+          expect(data.lepusCode.root).toContain('XML_RAW_SOURCE')
+          expect(background).toContain('XML_BACKGROUND')
+        } else if (entry === 'minimal') {
+          expect(data.lepusCode.root).toContain('XML_MINIMAL')
+          expect(existsSync(path.join(output, '.lynx/minimal/minimal.css')))
+            .toBe(false)
+        }
+        expect(
+          existsSync(
+            path.join(
+              output,
+              `.lynx/${entry}.background/${entry}.background.css`,
+            ),
+          ),
+        ).toBe(false)
+      }
+      const css = await readFile(
+        path.join(output, '.lynx/card/card.css'),
+        'utf8',
+      )
+      expect(css).toContain('.theme')
+      expect(css).toContain('.card')
+      expect(css).not.toContain('<style>')
+    },
+  )
+
+  test('reports invalid LynXML syntax during compilation', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'lynxml-invalid-'))
+    outputDirs.push(root)
+    const errors: string[] = []
+    const rsbuild = await createRsbuild({
+      cwd: root,
+      rsbuildConfig: {
+        mode: 'development',
+        source: { entry: { main: './invalid.lynxml' } },
+        output: { distPath: { root: path.join(root, 'dist') } },
+        plugins: [pluginLynx()],
+        tools: {
+          rspack: {
+            plugins: [{
+              apply(compiler: Rspack.Compiler) {
+                compiler.hooks.done.tap('test:lynxml-errors', stats => {
+                  errors.push(
+                    ...stats.compilation.errors.map(error => error.message),
+                  )
+                })
+              },
+            }],
+          },
+        },
+      },
+    })
+    await writeFile(
+      path.join(root, 'invalid.lynxml'),
+      '<lynx engine-version="4.2"><style>.card { color: red; }</style></lynx>',
+    )
+    await expect(rsbuild.build()).rejects.toThrow()
+    expect(errors.join('\n')).toContain('invalid TemplateBundle XML at offset')
+    expect(errors.join('\n')).toContain('missing \'<script thread="main">\'')
+  })
+
   test('builds standalone Lynx and Web bundles in named environments', async () => {
     const nativeEnvironment = 'lynx-preview'
     const webEnvironment = 'web-preview'
@@ -121,7 +288,7 @@ describe('Vanilla source entries', () => {
   })
 
   test.each(['lynx', 'web'])(
-    'compiles the single-entry Vanilla example for %s',
+    'compiles the TypeScript and LynXML Vanilla examples for %s',
     async environment => {
       const cwd = fileURLToPath(vanillaExample)
       const { content } = await loadConfig({ cwd })
@@ -182,6 +349,20 @@ describe('Vanilla source entries', () => {
           path.join(output, '.lynx/main.background/main.background.css'),
         ),
       ).toBe(false)
+      const xml = JSON.parse(
+        await readFile(path.join(output, '.lynx/lynxml/tasm.json'), 'utf8'),
+      ) as { lepusCode: { root: string }, manifest: Record<string, string> }
+      expect(xml.lepusCode.root).toContain('Hello LynXML')
+      expect(xml.lepusCode.root).toContain('__CreatePage')
+      expect(xml.lepusCode.root).not.toContain('getCoreContext')
+      const xmlBackground = Object.values(xml.manifest).join('\n')
+      expect(xmlBackground).toContain('getCoreContext')
+      expect(xmlBackground).not.toContain('__CreatePage')
+      expect(existsSync(path.join(output, '.lynx/lynxml/lynxml.css'))).toBe(
+        true,
+      )
+      expect(existsSync(path.join(output, `lynxml.${environment}.bundle`)))
+        .toBe(true)
       const { printUrls } = rsbuild.getNormalizedConfig().server
       assert(typeof printUrls === 'function')
       const urls = printUrls({
@@ -190,7 +371,7 @@ describe('Vanilla source entries', () => {
         routes: [],
         protocol: 'http',
       })
-      expect(urls).toHaveLength(environment === 'web' ? 2 : 1)
+      expect(urls).toHaveLength(environment === 'web' ? 4 : 2)
       expect(urls?.[0]).toHaveProperty(
         'url',
         expect.stringContaining(`/main.${environment}.bundle`),

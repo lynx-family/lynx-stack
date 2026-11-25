@@ -12,6 +12,9 @@
  * Vanilla entries compile for both threads using the `__MAIN_THREAD__` and
  * `__BACKGROUND__` macros. Import CSS from the main-thread source.
  * No sibling sources are discovered automatically.
+ * A `.lynxml` entry uses its required main-thread script, optional background
+ * script, and optional stylesheet. Its source sections use the same JavaScript
+ * and CSS pipelines; XML syntax is validated by `@lynx-js/lynx-xml/parser`.
  *
  * DSL plugins such as
  * {@link @lynx-js/react-rsbuild-plugin#pluginReactLynx | pluginReactLynx}

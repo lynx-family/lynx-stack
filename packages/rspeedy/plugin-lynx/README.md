@@ -68,6 +68,48 @@ framework or promise a performance improvement over one. The template's
 `react_nodiff` encoding mode refers to the engine's Element PAPI format and does
 not add a React runtime.
 
+## LynXML applications
+
+Point `source.entry` at a `.lynxml` file to build it with the same Vanilla
+pipeline:
+
+```ts
+export default defineConfig({
+  source: { entry: { main: './src/index.lynxml' } },
+  environments: { lynx: {}, web: {} },
+  plugins: [pluginLynx()],
+})
+```
+
+```xml title="src/index.lynxml"
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.content { width: 100px; height: 100px; background-color: red; }
+</style>
+<script thread="main">
+lynx.getEngine().addEventListener('__RenderPage', () => {
+  const page = __CreatePage('0', 0);
+  const pageId = __GetElementUniqueID(page);
+  const content = __CreateView(pageId);
+  __SetClasses(content, 'content');
+  __AppendElement(page, content);
+});
+</script>
+</lynx>
+```
+
+The shared `@lynx-js/lynx-xml/parser` validates the document. A main-thread script
+is required; the stylesheet and background script are optional. JavaScript
+imports, CSS `@import`, and asset URLs resolve relative to the XML file. Each
+script goes through its thread's SWC pipeline, including thread macros. Styles
+use the configured CSS loaders and are collected only from the main thread.
+XML syntax errors fail compilation with the parser's offset and message.
+
+The `engine-version` attribute is validated as part of the XML syntax. This
+build path uses the Vanilla encoder and runtime wrapper's default version
+(`3.2`); the attribute does not override those options.
+
 ## Framework applications
 
 A framework plugin such as `pluginReactLynx` generates its own thread entries.

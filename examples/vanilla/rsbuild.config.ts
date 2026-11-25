@@ -6,7 +6,8 @@ import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 export default defineConfig({
   source: {
     entry: {
-      main: './src/index.ts',
+      main: './src/main/index.ts',
+      lynxml: './src/counter.lynxml',
     },
   },
   plugins: [

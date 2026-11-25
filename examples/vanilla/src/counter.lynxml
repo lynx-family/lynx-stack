@@ -1,0 +1,144 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+:root {
+  background-color: #101114;
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.content {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  color: #a5b4fc;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.counter {
+  margin-top: 16px;
+  color: #b7bbc8;
+  font-size: 18px;
+}
+
+.button {
+  width: 180px;
+  height: 52px;
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #4f6ef7;
+  border-radius: 12px;
+}
+
+.button:active {
+  opacity: 0.8;
+}
+
+.button-label {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+}
+</style>
+<script thread="main">
+Object.assign(globalThis, {
+  processData(data) {
+    return data;
+  },
+});
+
+const engine = lynx.getEngine();
+const background = lynx.getJSContext();
+const page = __CreatePage('0', 0);
+const pageId = __GetElementUniqueID(page);
+const tapOptions = {};
+__SetClasses(page, 'page');
+
+let button;
+let counterText;
+
+function onTap() {
+  background.dispatchEvent({ type: 'IncrementCounter' });
+}
+
+function onCounterUpdated(event) {
+  const count = event.data?.count;
+  if (typeof count !== 'number' || !counterText) return;
+  __ReplaceElements(
+    counterText,
+    [__CreateRawText(`Clicked ${count} times`)],
+    __GetChildren(counterText),
+  );
+  __FlushElementTree();
+}
+
+function renderPage() {
+  if (button || counterText) return;
+
+  const content = __CreateView(pageId);
+  __SetClasses(content, 'content');
+  __AppendElement(page, content);
+
+  const title = __CreateText(pageId);
+  __SetClasses(title, 'title');
+  __AppendElement(title, __CreateRawText('Hello LynXML'));
+  __AppendElement(content, title);
+
+  counterText = __CreateText(pageId);
+  __SetClasses(counterText, 'counter');
+  __AppendElement(counterText, __CreateRawText('Clicked 0 times'));
+  __AppendElement(content, counterText);
+
+  button = __CreateView(pageId);
+  __SetClasses(button, 'button');
+  const label = __CreateText(pageId);
+  __SetClasses(label, 'button-label');
+  __AppendElement(label, __CreateRawText('Click me'));
+  __AppendElement(button, label);
+  __AppendElement(content, button);
+  __AddEventListener(button, 'tap', onTap, tapOptions);
+}
+
+function cleanup() {
+  background.dispatchEvent({ type: '__DestroyLifetime' });
+  background.removeEventListener('CounterUpdated', onCounterUpdated);
+  engine.removeEventListener('__RenderPage', renderPage);
+  engine.removeEventListener('__DestroyLifetime', cleanup);
+  if (button) __RemoveEventListener(button, 'tap', onTap, tapOptions);
+  button = undefined;
+  counterText = undefined;
+}
+
+background.addEventListener('CounterUpdated', onCounterUpdated);
+engine.addEventListener('__RenderPage', renderPage);
+engine.addEventListener('__DestroyLifetime', cleanup);
+</script>
+<script thread="background">
+const main = lynx.getCoreContext();
+let count = 0;
+
+function onIncrement() {
+  count += 1;
+  main.dispatchEvent({ type: 'CounterUpdated', data: { count } });
+}
+
+function cleanup() {
+  main.removeEventListener('IncrementCounter', onIncrement);
+  main.removeEventListener('__DestroyLifetime', cleanup);
+}
+
+main.addEventListener('IncrementCounter', onIncrement);
+main.addEventListener('__DestroyLifetime', cleanup);
+</script>
+</lynx>
