@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import 'preact';
-import type { PendingMainThreadCall } from '../src/snapshot/transfer.js';
 
 declare module 'preact' {
   interface Options {
@@ -23,7 +22,6 @@ declare module 'preact' {
     __?(vnode: VNode, parentDom: any): void;
     /** _hook */
     __h?: (component: Component, index: number, type: number) => void;
-    scheduleMainThreadWorklet?: (call: PendingMainThreadCall) => boolean;
   }
 
   interface PreactContext<T> {

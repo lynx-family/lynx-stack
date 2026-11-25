@@ -34,8 +34,6 @@ export {
 
 export { __page, __pageId, __root };
 
-export { TransferRegistry } from './snapshot/transfer.js';
-
 export {
   BackgroundSnapshotInstance,
   SnapshotInstance,

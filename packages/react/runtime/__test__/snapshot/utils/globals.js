@@ -211,7 +211,6 @@ afterEach((context) => {
     'preact/debug',
     'should remove event listener when throw in cleanup',
     'should not throw if error - instead it will render an empty page',
-    'rolls back a creation whose first frame throws',
   ];
   if (skippedTasks.some(task => context.task.name.includes(task))) {
     return;

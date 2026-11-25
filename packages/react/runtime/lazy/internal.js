@@ -56,7 +56,6 @@ export const {
   snapshotManager,
   snapshotCreatorMap,
   SnapshotInstance,
-  TransferRegistry,
   transformRef,
   transformToWorklet,
   updateEvent,

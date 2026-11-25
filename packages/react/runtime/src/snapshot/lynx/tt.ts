@@ -150,7 +150,8 @@ function onLifecycleEventImpl(type: LifecycleConstant, data: unknown): void {
         delayedEvents.length = 0;
       }
 
-      enablePublishEvent();
+      lynx.getApp().publishEvent = publishEvent;
+      lynx.getApp().publicComponentEvent = publicComponentEvent;
 
       // console.debug("********** After hydration:");
       // printSnapshotInstance(__root as BackgroundSnapshotInstance);
@@ -262,12 +263,6 @@ function publicComponentEvent(_componentId: string, handlerName: string, data: E
   publishEvent(handlerName, data);
 }
 
-/** Dispatches native events to their background handlers instead of delaying them. */
-function enablePublishEvent(): void {
-  lynx.getApp().publishEvent = publishEvent;
-  lynx.getApp().publicComponentEvent = publicComponentEvent;
-}
-
 function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
   delayedPublishEvent(handlerName, data);
 }
@@ -283,4 +278,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { enablePublishEvent, injectTt, flushDelayedLifecycleEvents };
+export { injectTt, flushDelayedLifecycleEvents };

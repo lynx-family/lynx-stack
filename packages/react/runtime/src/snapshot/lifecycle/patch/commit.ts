@@ -20,7 +20,6 @@
  */
 
 import { options } from 'preact';
-import type { VNode } from 'preact';
 
 import type { RunWorkletCtxData } from '@lynx-js/react/worklet-runtime/bindings';
 
@@ -89,35 +88,14 @@ function takeGlobalPatchOptions(): GlobalPatchOptions {
   return res;
 }
 
-/**
- * Delivers a collected commit and calls `finish` once it has been applied.
- */
-type CommitTransport = (
-  vnode: VNode,
-  patchList: PatchList,
-  patchOptions: GlobalPatchOptions,
-  finish: () => void,
-) => void;
-
-const nativeTransport: CommitTransport = (_vnode, patchList, patchOptions, finish) => {
-  // Send the update to the native layer
-  lynx.getNativeApp().callLepusMethod(
-    LifecycleConstant.patchUpdate,
-    commitPatchUpdate(patchList, patchOptions),
-    finish,
-  );
-};
-
 let commitHookInstalled = false;
 let previousCommit: typeof options[typeof COMMIT];
-let commitTransport: CommitTransport = nativeTransport;
 
 /**
  * Replaces Preact's default commit hook with our custom implementation.
- * Calling it again only replaces the transport until {@link removeCommitHookForTesting} is called.
+ * Calling it again is a no-op until {@link removeCommitHookForTesting} is called.
  */
-function replaceCommitHook(transport: CommitTransport = nativeTransport): void {
-  commitTransport = transport;
+function replaceCommitHook(): void {
   if (commitHookInstalled) {
     return;
   }
@@ -194,7 +172,10 @@ function replaceCommitHook(transport: CommitTransport = nativeTransport): void {
       if (delayedRunOnMainThreadData.length) {
         patchList.delayedRunOnMainThreadData = takeDelayedRunOnMainThreadData();
       }
-      commitTransport(vnode, patchList, patchOptions, () => {
+      const obj = commitPatchUpdate(patchList, patchOptions);
+
+      // Send the update to the native layer
+      lynx.getNativeApp().callLepusMethod(LifecycleConstant.patchUpdate, obj, () => {
         const commitTask = globalCommitTaskMap.get(commitTaskId);
         if (commitTask) {
           commitTask();
@@ -220,7 +201,6 @@ function removeCommitHookForTesting(): void {
     return;
   }
   commitHookInstalled = false;
-  commitTransport = nativeTransport;
   if (previousCommit) {
     options[COMMIT] = previousCommit;
     previousCommit = undefined;
@@ -293,7 +273,6 @@ export {
   globalCommitTaskMap,
   removeCommitHookForTesting,
   replaceCommitHook,
-  type CommitTransport,
   type PatchList,
   type PatchOptions,
 };
