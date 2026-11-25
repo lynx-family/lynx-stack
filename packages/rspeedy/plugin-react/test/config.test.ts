@@ -2858,8 +2858,8 @@ describe('Config', () => {
     async (direct, late, expectedEntry) => {
       const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
 
-      const rsbuild = await createRsbuild({
-        rsbuildConfig: {
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
           plugins: [
             pluginReactLynx({
               experimental_useElementTemplate: direct,
