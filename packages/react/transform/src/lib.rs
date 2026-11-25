@@ -1452,18 +1452,21 @@ mod tests {
     use swc_plugins_shared::target_napi::TransformTarget;
 
     let worklet_src = "export function App() { const onTap = () => { 'main thread'; return 1; }; return <view main-thread:bindtap={onTap} />; }";
-    for (runtime_pkg, expected_init) in [
+    for (runtime_pkg, expected_init, enable_et) in [
       (
         "@lynx-js/react/element-template/internal",
         "@lynx-js/react/worklet-runtime/init",
+        true,
       ),
       (
         "@acme/element-template/internal",
         "@acme/element-template/worklet-runtime/init",
+        false,
       ),
       (
         "@my-org/react/element-template/internal",
         "@my-org/react/element-template/worklet-runtime/init",
+        false,
       ),
     ] {
       let result = transform_react_lynx_inner(
@@ -1476,11 +1479,29 @@ mod tests {
             runtime_pkg: runtime_pkg.into(),
             ..Default::default()
           }),
+          element_template: enable_et.then(|| {
+            Either::B(ElementTemplateTransformerConfig {
+              target: TransformTarget::JS,
+              filename: "test.jsx".into(),
+              runtime_pkg: "@lynx-js/react/element-template".into(),
+              ..Default::default()
+            })
+          }),
           ..Default::default()
         },
       );
       assert!(result.errors.is_empty(), "{:?}", result.errors);
+      if enable_et {
+        assert!(
+          result
+            .code
+            .contains("\"@lynx-js/react/element-template/internal\""),
+          "{}",
+          result.code
+        );
+      }
       let defines = result.defines_for_worklet.unwrap();
+      assert_eq!(defines.len(), 1);
       let imports = defines[0].imports.as_ref().unwrap();
       assert!(
         imports.iter().any(|imp| imp.source == expected_init),
