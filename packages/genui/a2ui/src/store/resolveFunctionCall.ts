@@ -179,8 +179,9 @@ function evaluateFunctionCall(
   if (fn['@call'].startsWith('@')) {
     throw new Error(`Unknown system function ${fn['@call']}`);
   }
-  const catalogId = fn.catalogId ?? options.interpolationCatalogId
-    ?? surface.catalogId;
+  const catalogId = processor.resolveCatalogId(
+    fn.catalogId ?? options.interpolationCatalogId ?? surface.catalogId,
+  );
   const catalog = processor.getCatalog(catalogId);
   if (!catalog) throw new Error('Unknown function catalog');
   options = { ...options, functions: catalog.functions };

@@ -78,8 +78,10 @@ describe('A2UI message replacement', () => {
         expect(warning).toHaveBeenCalledWith(
           '[a2ui] Replacement rejected; keeping the previous rendering state. Correct the full snapshot with replace().',
         );
+        // A rejected snapshot is reported once, not once per later push.
         await act(() => store.push(update('Must not apply')));
-        await waitFor(() => expect(onMessage).toHaveBeenCalledTimes(2));
+        expect(onMessage).toHaveBeenCalledTimes(1);
+        expect(warning).toHaveBeenCalledTimes(1);
         expect(view.getByText('Original')).toBeTruthy();
         expect(view.queryByText('Must not apply')).toBeNull();
         await act(() => {

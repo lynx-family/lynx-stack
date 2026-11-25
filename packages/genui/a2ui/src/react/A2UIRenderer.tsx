@@ -12,6 +12,7 @@ import { resolveCatalog } from '../catalog/defineCatalog.js';
 import { Loading } from '../catalog/Loading/index.jsx';
 import type { LoadingProps } from '../catalog/Loading/index.jsx';
 import type { ComponentInstance, Resource, Surface } from '../store/types.js';
+import { shallowEqual } from '../store/utils.js';
 
 const noop = () => {
   /* no-op subscribe disposer */
@@ -233,15 +234,21 @@ export const A2UIRenderer: MemoExoticComponent<
   (props: A2UIRendererProps) => ReactNode
 > = memo(A2UIRendererImpl);
 
+/**
+ * Props for `NodeRenderer`, the component catalog components use to render a
+ * child by its definition.
+ */
+export interface NodeRendererProps {
+  component: ComponentInstance;
+  surface: Surface;
+  suppressActionDispatch?: boolean;
+  renderUnsupported?:
+    | ((info: UnsupportedInfo) => ReactNode)
+    | undefined;
+}
+
 function NodeRendererImpl(
-  props: {
-    component: ComponentInstance;
-    surface: Surface;
-    suppressActionDispatch?: boolean;
-    renderUnsupported?:
-      | ((info: UnsupportedInfo) => ReactNode)
-      | undefined;
-  },
+  props: NodeRendererProps,
 ): import('@lynx-js/react').ReactNode {
   const {
     component: initialComponent,
@@ -262,10 +269,17 @@ function NodeRendererImpl(
   const component =
     (latest.value as { component?: ComponentInstance } | undefined)?.component
       ?? initialComponent;
-  const effectiveComponent = initialComponent.dataContextPath !== undefined
-      && component.dataContextPath !== initialComponent.dataContextPath
-    ? { ...component, dataContextPath: initialComponent.dataContextPath }
-    : component;
+  // A template instance knows its own item; a parent's context is only for
+  // children that have none of their own. Kept stable across renders, since
+  // the resolved props are cached per instance.
+  const inheritedContext = initialComponent.dataContextPath;
+  const effectiveComponent = useMemo(
+    () =>
+      inheritedContext !== undefined && component.dataContextPath === undefined
+        ? { ...component, dataContextPath: inheritedContext }
+        : component,
+    [component, inheritedContext],
+  );
 
   const qualifiedCatalog = processor.getCatalog(
     typeof effectiveComponent['@catalogId'] === 'string'
@@ -330,4 +344,23 @@ function NodeRendererImpl(
   );
 }
 
-export const NodeRenderer = NodeRendererImpl;
+function sameNode(
+  previous: NodeRendererProps,
+  next: NodeRendererProps,
+): boolean {
+  return previous.surface === next.surface
+    && previous.suppressActionDispatch === next.suppressActionDispatch
+    && previous.renderUnsupported === next.renderUnsupported
+    // A parent that scopes its child writes `{ ...child, dataContextPath }`
+    // on every render, so the definitions are compared by content.
+    && shallowEqual(previous.component, next.component);
+}
+
+/**
+ * Render one component definition with the active catalog. A node subscribes
+ * to its own definition and data, so re-rendering its parent with the same
+ * definition does not re-render it.
+ */
+export const NodeRenderer: MemoExoticComponent<
+  (props: NodeRendererProps) => ReactNode
+> = memo(NodeRendererImpl, sameNode);

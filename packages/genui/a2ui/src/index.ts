@@ -12,7 +12,12 @@ export {
   useDataBinding,
   useResolvedProps,
 } from './react/index.js';
-export type { A2UIProps, ActionProps, CheckLike } from './react/index.js';
+export type {
+  A2UIProps,
+  ActionProps,
+  CheckLike,
+  NodeRendererProps,
+} from './react/index.js';
 
 // Store — a pure raw-message buffer. The developer's IO module pushes
 // protocol messages into it; `<A2UI>` subscribes and processes them.

@@ -41,9 +41,9 @@ export function compositionErrors(
   const root = components.get('root');
   if (root) edge(undefined, root);
   for (const parent of components.values()) {
-    const refs = new Set<string>();
-    collect(parent, schemaFor(parent), refs);
-    for (const id of refs) {
+    const sink: ReferenceSink = { refs: new Set(), dynamic: false };
+    collect(parent, schemaFor(parent), sink);
+    for (const id of sink.refs) {
       const child = components.get(id);
       if (child) edge(parent, child);
     }
@@ -51,10 +51,23 @@ export function compositionErrors(
   return errors;
 }
 
+/** A child slot whose value is computed at render time. */
+function isDynamic(value: unknown): boolean {
+  return value !== null && typeof value === 'object'
+    && (typeof (value as Record<string, unknown>)['@path'] === 'string'
+      || typeof (value as Record<string, unknown>)['@call'] === 'string');
+}
+
+interface ReferenceSink {
+  refs: Set<string>;
+  /** Set when a child slot holds a binding or a call instead of an id. */
+  dynamic: boolean;
+}
+
 function collect(
   value: unknown,
   schema: unknown,
-  refs: Set<string>,
+  sink: ReferenceSink,
   includeAlternatives = false,
 ): void {
   if (!schema || typeof schema !== 'object') return;
@@ -63,32 +76,75 @@ function collect(
     for (const keyword of ['anyOf', 'oneOf', 'allOf']) {
       const alternatives = node[keyword];
       if (Array.isArray(alternatives)) {
-        for (const branch of alternatives) collect(value, branch, refs, true);
+        for (const branch of alternatives) collect(value, branch, sink, true);
       }
     }
   }
   const ref = typeof node['$ref'] === 'string' ? node['$ref'] : '';
-  if (ref.endsWith('/ComponentId') && typeof value === 'string') {
-    refs.add(value);
+  if (ref.endsWith('/ComponentId')) {
+    if (typeof value === 'string') sink.refs.add(value);
+    else if (isDynamic(value)) sink.dynamic = true;
   } else if (ref.endsWith('/ChildList')) {
     if (Array.isArray(value)) {
-      for (const id of value) if (typeof id === 'string') refs.add(id);
+      for (const id of value) if (typeof id === 'string') sink.refs.add(id);
     } else if (
       value && typeof value === 'object' && 'componentId' in value
       && typeof value.componentId === 'string'
-    ) refs.add(value.componentId);
+    ) sink.refs.add(value.componentId);
+    else if (isDynamic(value)) sink.dynamic = true;
   } else if (Array.isArray(value)) {
     for (const item of value) {
-      collect(item, node['items'], refs, includeAlternatives);
+      collect(item, node['items'], sink, includeAlternatives);
     }
   } else if (value && typeof value === 'object') {
     const properties = node['properties'] as
       | Record<string, unknown>
       | undefined;
     for (const [key, item] of Object.entries(value)) {
-      collect(item, properties?.[key], refs, includeAlternatives);
+      collect(item, properties?.[key], sink, includeAlternatives);
     }
   }
+}
+
+/**
+ * Describe what a component refers to through its child slots, falling back
+ * to the built-in child fields when its catalog has no schema. Literal text
+ * and metadata are not references.
+ *
+ * @internal
+ */
+export function describeComponentReferences(
+  component: ComponentInstance,
+  schema: Record<string, unknown> | undefined,
+): { references: Set<string>; dynamic: boolean } {
+  const sink: ReferenceSink = { refs: new Set(), dynamic: false };
+  if (schema) {
+    collect(component, schema, sink, true);
+  } else {
+    const children = component['children'];
+    if (Array.isArray(children)) {
+      for (const id of children) if (typeof id === 'string') sink.refs.add(id);
+    } else if (
+      children && typeof children === 'object' && 'componentId' in children
+      && typeof children.componentId === 'string'
+    ) sink.refs.add(children.componentId);
+    for (const key of ['child', 'trigger', 'content']) {
+      const id = component[key];
+      if (typeof id === 'string') sink.refs.add(id);
+      else if (isDynamic(id)) sink.dynamic = true;
+    }
+    const tabs = component['tabs'];
+    if (Array.isArray(tabs)) {
+      for (const tab of tabs as unknown[]) {
+        if (tab && typeof tab === 'object' && 'child' in tab) {
+          if (typeof tab.child === 'string') sink.refs.add(tab.child);
+          else if (isDynamic(tab.child)) sink.dynamic = true;
+        }
+      }
+    }
+  }
+  if (component.__template) sink.refs.add(component.__template.componentId);
+  return { references: sink.refs, dynamic: sink.dynamic };
 }
 
 /**
@@ -101,31 +157,5 @@ export function collectComponentReferences(
   component: ComponentInstance,
   schema: Record<string, unknown> | undefined,
 ): Set<string> {
-  const refs = new Set<string>();
-  if (schema) {
-    collect(component, schema, refs, true);
-  } else {
-    const children = component['children'];
-    if (Array.isArray(children)) {
-      for (const id of children) if (typeof id === 'string') refs.add(id);
-    } else if (
-      children && typeof children === 'object' && 'componentId' in children
-      && typeof children.componentId === 'string'
-    ) refs.add(children.componentId);
-    for (const key of ['child', 'trigger', 'content']) {
-      const id = component[key];
-      if (typeof id === 'string') refs.add(id);
-    }
-    const tabs = component['tabs'];
-    if (Array.isArray(tabs)) {
-      for (const tab of tabs as unknown[]) {
-        if (
-          tab && typeof tab === 'object' && 'child' in tab
-          && typeof tab.child === 'string'
-        ) refs.add(tab.child);
-      }
-    }
-  }
-  if (component.__template) refs.add(component.__template.componentId);
-  return refs;
+  return describeComponentReferences(component, schema).references;
 }

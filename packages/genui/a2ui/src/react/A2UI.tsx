@@ -2,28 +2,22 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import {
-  memo,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useSyncExternalStore,
-} from '@lynx-js/react';
+import { memo, useEffect, useMemo, useReducer, useRef } from '@lynx-js/react';
 import type { MemoExoticComponent, ReactNode } from '@lynx-js/react';
 
 import { A2UIProvider } from './A2UIProvider.jsx';
 import { A2UIRenderer } from './A2UIRenderer.jsx';
 import type { UnsupportedInfo } from './A2UIRenderer.jsx';
-import { applyProcessorUpdate, createA2UISessionState } from './A2UISession.js';
+import {
+  applyProcessorUpdate,
+  attachMessageStore,
+  createA2UISessionState,
+  drainMessages,
+} from './A2UISession.js';
 import type { A2UISessionState } from './A2UISession.js';
 import type { Catalog, CatalogInput } from '../catalog/defineCatalog.js';
 import { defineCatalog } from '../catalog/defineCatalog.js';
 import type { MessageStore } from '../store/MessageStore.js';
-import {
-  getSnapshotReplacement,
-  getSnapshotReset,
-} from '../store/MessageStore.js';
 import type {
   RendererToAgentMessage,
   UserActionPayload,
@@ -35,17 +29,20 @@ import type {
 export interface A2UIProps {
   /**
    * The raw-message buffer the developer pushes protocol messages into.
-   * `<A2UI>` subscribes via `useSyncExternalStore` and processes new
-   * messages incrementally.
+   * `<A2UI>` subscribes to it and applies every `push`, `replace` and
+   * `clear` in the order it was made.
    *
    * Pass `null` to render nothing and end the current rendering session,
    * without calling `renderEmpty`. Passing a store afterward starts a new
    * session and processes all messages already in that store.
    *
    * The internal `MessageProcessor` (surfaces, signals, resources) is
-   * retained while `messageStore` stays non-null and is **not reset** if
-   * replaced directly with a different instance. Pass a `key` prop derived
-   * from the store's identity if you want a fresh session, e.g.
+   * retained while `messageStore` stays non-null. Replacing the store
+   * directly with a different instance reconciles the rendered state to the
+   * new store's contents, as `replace` does: unchanged components stay
+   * mounted and RPC messages already in that store are not replayed. Pass a
+   * `key` prop derived from the store's identity if you want a fresh
+   * session instead, e.g.
    * `<A2UI key={turnId} messageStore={turnStore} ... />`.
    *
    * @example
@@ -99,7 +96,7 @@ export interface A2UIProps {
 
 /**
  * The all-in-one A2UI component. Owns a `MessageProcessor` internally,
- * processes raw messages from the buffer on each render, and renders
+ * applies raw messages from the buffer as they arrive, and renders
  * the most recent `beginRendering` surface tree.
  *
  * @example
@@ -156,7 +153,8 @@ function A2UISession(
   sessionRef.current ??= createA2UISessionState();
   const session = sessionRef.current;
   const catalog = useMemo<Catalog>(() => defineCatalog(catalogs), [catalogs]);
-  session.processor.registerCatalog(catalogId, catalog);
+  // Also the catalog for surfaces that name none, which the schema allows.
+  session.processor.registerCatalog(catalogId, catalog, { default: true });
 
   // Counter used to force a re-render whenever the processor emits an
   // update (new beginRendering, surfaceUpdate that mutated the active
@@ -164,13 +162,6 @@ function A2UISession(
   // already handles fine-grained updates inside the active surface;
   // this is just for the activeResource pointer + first paint.
   const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
-
-  // Subscribe to the developer's raw buffer.
-  const messages = useSyncExternalStore(
-    messageStore.subscribe,
-    messageStore.getSnapshot,
-    messageStore.getSnapshot,
-  );
 
   // One-time wiring of processor → resource bookkeeping + onAction
   // dispatch. The processor instance itself is stable across renders.
@@ -214,58 +205,18 @@ function A2UISession(
     };
   }, [session]);
 
-  // Process any new messages in the buffer.
-
+  // Follow the developer's buffer. Messages are applied as soon as the store
+  // reports them, without re-rendering this shell for every push; the shell
+  // re-renders only when the active surface changes.
   useEffect(() => {
-    const reset = getSnapshotReset(messages);
-    if (reset && reset !== session.reset) {
-      session.reset = reset;
-      session.replacement = undefined;
-      session.processedCount = 0;
-    }
-    const replacement = getSnapshotReplacement(messages);
-    if (replacement !== session.replacement) {
-      if (replacement) {
-        const previous = session.activeMessageId
-          ? session.resources.get(session.activeMessageId)?.value?.surface
-          : undefined;
-        const previousRoot = previous?.rootComponentId
-          ? previous.resources.get(previous.rootComponentId)
-          : undefined;
-        if (!session.processor.replaceMessages(replacement)) {
-          console.warn(
-            '[a2ui] Replacement rejected; keeping the previous rendering state. Correct the full snapshot with replace().',
-          );
-          return;
-        }
-        session.replacement = replacement;
-        session.reset = undefined;
-        const current = session.activeMessageId
-          ? session.resources.get(session.activeMessageId)?.value?.surface
-          : undefined;
-        const currentRoot = current?.rootComponentId
-          ? current.resources.get(current.rootComponentId)
-          : undefined;
-        // Only an explicit replacement can change the renderer's identity.
-        // Appended messages retain the historical unkeyed reconciliation.
-        if (previous !== current || previousRoot !== currentRoot) {
-          session.replacementRevision += 1;
-          forceUpdate();
-        }
-        session.processedCount = replacement.length;
-      } else {
-        session.replacement = undefined;
-      }
-    }
-    if (messages.length === session.processedCount) return;
-    const slice = messages.slice(
-      session.processedCount,
-    );
-    session.processedCount = messages.length;
-    if (slice.length > 0) {
-      session.processor.processMessages(slice);
-    }
-  }, [messages, session]);
+    attachMessageStore(session, messageStore);
+    const drain = () => {
+      if (drainMessages(session)) forceUpdate();
+    };
+    const unsubscribe = messageStore.subscribe(drain);
+    drain();
+    return unsubscribe;
+  }, [messageStore, session]);
 
   const activeResource = session.activeMessageId
     ? (session.resources.get(session.activeMessageId) ?? null)
