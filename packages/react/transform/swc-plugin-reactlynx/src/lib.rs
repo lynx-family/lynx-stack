@@ -24,7 +24,9 @@ use swc_plugin_css_scope::{CSSScopeVisitor, CSSScopeVisitorConfig};
 use swc_plugin_define_dce::DefineDCEVisitorConfig;
 use swc_plugin_directive_dce::{DirectiveDCEVisitor, DirectiveDCEVisitorConfig};
 use swc_plugin_dynamic_import::{DynamicImportVisitor, DynamicImportVisitorConfig};
-use swc_plugin_element_template::{ElementTemplateTransformer, ElementTemplateTransformerConfig};
+use swc_plugin_element_template::{
+  internal_runtime_pkg, ElementTemplateTransformer, ElementTemplateTransformerConfig,
+};
 use swc_plugin_inject::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_list::{LegacyListVisitor, ListVisitor};
 use swc_plugin_shake::{ShakeVisitor, ShakeVisitorConfig};
@@ -251,6 +253,14 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     ),
     use_snapshot_plugin,
   );
+  let et_internal_pkg = use_element_template_plugin.then(|| {
+    let runtime_pkg = match element_template_plugin_config.runtime_pkg.as_str() {
+      "@lynx-js/react" => "@lynx-js/react/element-template",
+      runtime_pkg => runtime_pkg,
+    };
+    internal_runtime_pkg(runtime_pkg)
+  });
+
   let element_template_plugin = Optional::new(
     visit_mut_pass(
       ElementTemplateTransformer::new_with_element_templates(
@@ -298,10 +308,19 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
   );
 
   let worklet_plugin = match options.worklet {
-    Either::A(config) => Optional::new(
-      visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
-      config,
-    ),
+    Either::A(config) => {
+      let visitor_config = match &et_internal_pkg {
+        Some(runtime_pkg) => WorkletVisitorConfig {
+          runtime_pkg: runtime_pkg.clone(),
+          ..Default::default()
+        },
+        None => WorkletVisitorConfig::default(),
+      };
+      Optional::new(
+        visit_mut_pass(WorkletVisitor::new(visitor_config).with_content_hash(content_hash)),
+        config,
+      )
+    }
     Either::B(config) => Optional::new(
       visit_mut_pass(WorkletVisitor::new(config).with_content_hash(content_hash)),
       true,
@@ -309,13 +328,19 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
   };
 
   let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
-    Either::A(config) => Optional::new(
-      visit_mut_pass(DynamicImportVisitor::new(
-        Default::default(),
-        Some(&comments),
-      )),
-      config,
-    ),
+    Either::A(config) => {
+      let visitor_config = match &et_internal_pkg {
+        Some(runtime_pkg) => DynamicImportVisitorConfig {
+          runtime_pkg: runtime_pkg.clone(),
+          ..Default::default()
+        },
+        None => DynamicImportVisitorConfig::default(),
+      };
+      Optional::new(
+        visit_mut_pass(DynamicImportVisitor::new(visitor_config, Some(&comments))),
+        config,
+      )
+    }
     Either::B(config) => Optional::new(
       visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
       true,

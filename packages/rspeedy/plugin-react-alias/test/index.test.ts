@@ -222,7 +222,7 @@ describe('React - alias', () => {
     expect(config.resolve.alias).not.toHaveProperty('@lynx-js/preact-devtools$')
   })
 
-  test('element-template aliases bare React and the background Lepus entry to ET', async () => {
+  test('element-template aliases bare React, Lepus, JSX runtimes, and lazy import to ET', async () => {
     rstest.stubEnv('NODE_ENV', 'development')
     const { pluginReactAlias } = await import('../src/index.js')
 
@@ -271,10 +271,70 @@ describe('React - alias', () => {
           .replaceAll('/', path.sep),
       ),
     )
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/element-template/experimental/lazy/import$',
+      expect.stringContaining(
+        '/packages/react/runtime/lazy/element-template-import.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(config.resolve.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-dev-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
 
     if (!config.module?.rules) {
       expect.fail('should have config.module.rules')
     }
+
+    const mainThreadRule = config.module.rules.find((rule) => {
+      if (!rule || typeof rule !== 'object') {
+        return false
+      }
+      return rule.issuerLayer === LAYERS.MAIN_THREAD && !!rule.resolve?.alias
+    }) as RuleSetRule
+
+    if (!mainThreadRule || !mainThreadRule.resolve?.alias) {
+      expect.fail('should have main-thread alias rule')
+    }
+
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/lepus$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-runtime/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(mainThreadRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-dev-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-dev-runtime/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
 
     const backgroundRule = config.module.rules.find((rule) => {
       if (!rule || typeof rule !== 'object') {
@@ -291,6 +351,75 @@ describe('React - alias', () => {
       '@lynx-js/react/lepus$',
       expect.stringContaining(
         '/packages/react/runtime/lib/element-template/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(backgroundRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(backgroundRule.resolve.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-dev-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+  })
+
+  test('reads elementTemplate and lazy options when bundler chain runs', async () => {
+    rstest.stubEnv('NODE_ENV', 'development')
+    const { pluginReactAlias } = await import('../src/index.js')
+    const state = { elementTemplate: false, lazy: false }
+
+    const rsbuild = await createRsbuild({
+      rsbuildConfig: {
+        plugins: [
+          pluginReactAlias({
+            LAYERS,
+            get elementTemplate() {
+              return state.elementTemplate
+            },
+            get lazy() {
+              return state.lazy
+            },
+          }),
+          {
+            name: 'test:late-enable-et',
+            setup() {
+              state.elementTemplate = true
+              state.lazy = true
+            },
+          },
+        ],
+      },
+      cwd: path.dirname(fileURLToPath(import.meta.url)),
+    })
+
+    const [config] = await rsbuild.initConfigs()
+
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react$',
+      expect.stringContaining(
+        '/packages/react/runtime/lazy/element-template.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/element-template/internal$',
+      expect.stringContaining(
+        '/packages/react/runtime/lazy/element-template-internal.js'.replaceAll(
           '/',
           path.sep,
         ),

@@ -64,7 +64,9 @@ use swc_plugin_dynamic_import::napi::{DynamicImportVisitor, DynamicImportVisitor
 use swc_plugin_element_template::napi::{
   ElementTemplateAsset, ElementTemplateTransformer, ElementTemplateTransformerConfig,
 };
-use swc_plugin_element_template::ElementTemplateAsset as CoreElementTemplateAsset;
+use swc_plugin_element_template::{
+  internal_runtime_pkg, ElementTemplateAsset as CoreElementTemplateAsset,
+};
 use swc_plugin_inject::napi::{InjectVisitor, InjectVisitorConfig};
 use swc_plugin_refresh::{RefreshVisitor, RefreshVisitorConfig};
 use swc_plugin_shake::napi::{ShakeVisitor, ShakeVisitorConfig};
@@ -819,19 +821,35 @@ fn transform_react_lynx_inner(
       },
     );
 
-    let compat_plugin = match options.compat.clone() {
-      Either::A(config) => Optional::new(
-        visit_mut_pass(CompatVisitor::new(
-          CompatVisitorConfig::default(),
-          Some(&comments),
-        )),
-        config,
-      ),
-      Either::B(config) => Optional::new(
-        visit_mut_pass(CompatVisitor::new(config, Some(&comments))),
-        true,
-      ),
+    let et_runtime_entries = use_element_template_plugin.then(|| {
+      let runtime_pkg = match element_template_plugin_config.runtime_pkg.as_str() {
+        "@lynx-js/react" => "@lynx-js/react/element-template",
+        runtime_pkg => runtime_pkg,
+      };
+      let internal_pkg = internal_runtime_pkg(runtime_pkg);
+      let lazy_import_pkg = format!(
+        "{}/experimental/lazy/import",
+        internal_pkg
+          .strip_suffix("/internal")
+          .unwrap_or(runtime_pkg)
+      );
+      (internal_pkg, lazy_import_pkg)
+    });
+
+    let (compat_config, compat_enabled) = match options.compat.clone() {
+      Either::A(enabled) => (CompatVisitorConfig::default(), enabled),
+      Either::B(config) => (config, true),
     };
+    let use_et_compat_entry =
+      use_element_template_plugin && compat_config.new_runtime_pkg == "@lynx-js/react";
+    let mut compat_visitor = CompatVisitor::new(compat_config, Some(&comments));
+    if use_et_compat_entry {
+      if let Some((internal_pkg, lazy_import_pkg)) = &et_runtime_entries {
+        compat_visitor =
+          compat_visitor.with_runtime_entries(internal_pkg.clone(), lazy_import_pkg.clone());
+      }
+    }
+    let compat_plugin = Optional::new(visit_mut_pass(compat_visitor), compat_enabled);
 
     let transform_builtin_attribute_names = options
       .experimental_transform_builtin_attribute_names
@@ -884,7 +902,14 @@ fn transform_react_lynx_inner(
 
     let worklet_plugin = match options.worklet {
       Either::A(config) => {
-        let visitor = WorkletVisitor::default().with_content_hash(content_hash);
+        let visitor_config = match &et_runtime_entries {
+          Some((internal_pkg, _)) => WorkletVisitorConfig {
+            runtime_pkg: internal_pkg.clone(),
+            ..Default::default()
+          },
+          None => WorkletVisitorConfig::default(),
+        };
+        let visitor = WorkletVisitor::new(visitor_config).with_content_hash(content_hash);
         let visitor =
           visitor
             .with_defines_collector(defines_collector.clone())
@@ -904,13 +929,19 @@ fn transform_react_lynx_inner(
     };
 
     let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
-      Either::A(config) => Optional::new(
-        visit_mut_pass(DynamicImportVisitor::new(
-          Default::default(),
-          Some(&comments),
-        )),
-        config,
-      ),
+      Either::A(config) => {
+        let visitor_config = match &et_runtime_entries {
+          Some((internal_pkg, _)) => DynamicImportVisitorConfig {
+            runtime_pkg: internal_pkg.clone(),
+            ..Default::default()
+          },
+          None => DynamicImportVisitorConfig::default(),
+        };
+        Optional::new(
+          visit_mut_pass(DynamicImportVisitor::new(visitor_config, Some(&comments))),
+          config,
+        )
+      }
       Either::B(config) => Optional::new(
         visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
         true,
@@ -1244,6 +1275,175 @@ mod wasm {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn should_route_et_compat_worklet_and_dynamic_import_to_et_internal_entries() {
+    use swc_plugins_shared::target_napi::TransformTarget;
+
+    for target in [TransformTarget::JS, TransformTarget::LEPUS] {
+      let result = transform_react_lynx_inner(
+        r#"
+          export function App(Comp, props, url) {
+            const onTap = () => {
+              'main thread';
+              return 1;
+            };
+            const loadRemote = () => import(url, { with: { type: 'component' } });
+            const loadLocal = () => import('./lazy.tsx', { with: { type: 'component' } });
+            return (
+              <view main-thread:bindtap={onTap}>
+                <Comp {...props} />
+                <component is={url} />
+                {loadRemote}
+                {loadLocal}
+              </view>
+            );
+          }
+        "#
+        .into(),
+        TransformNodiffOptions {
+          filename: "test.jsx".into(),
+          css_scope: Either::A(false),
+          compat: Either::B(CompatVisitorConfig {
+            add_component_element: Either::A(true),
+            ..Default::default()
+          }),
+          worklet: Either::A(true),
+          dynamic_import: Some(Either::A(true)),
+          element_template: Some(Either::B(ElementTemplateTransformerConfig {
+            target,
+            filename: "test.jsx".into(),
+            runtime_pkg: "@lynx-js/react/element-template".into(),
+            ..Default::default()
+          })),
+          ..Default::default()
+        },
+      );
+      assert!(result.errors.is_empty(), "{:?}", result.errors);
+      assert!(
+        result
+          .code
+          .contains("\"@lynx-js/react/element-template/internal\""),
+        "{}",
+        result.code
+      );
+      assert!(
+        result
+          .code
+          .contains("import \"@lynx-js/react/element-template/experimental/lazy/import\""),
+        "{}",
+        result.code
+      );
+      assert!(
+        result.code.contains(
+          "import { loadLazyBundle } from \\\"@lynx-js/react/element-template/internal\\\";"
+        ) || result
+          .code
+          .contains("import { loadLazyBundle } from \"@lynx-js/react/element-template/internal\";"),
+        "{}",
+        result.code
+      );
+      assert!(
+        !result.code.contains("\"@lynx-js/react/internal\""),
+        "{}",
+        result.code
+      );
+      assert!(
+        !result
+          .code
+          .contains("\"@lynx-js/react/experimental/lazy/import\""),
+        "{}",
+        result.code
+      );
+    }
+  }
+
+  #[test]
+  fn should_keep_worklet_registration_init_on_shared_entry_for_et_internal_pkg() {
+    let result = transform_react_lynx_inner(
+      r#"
+        export function App() {
+          const onTap = () => {
+            'main thread';
+            return 1;
+          };
+          return <view main-thread:bindtap={onTap} />;
+        }
+      "#
+      .into(),
+      TransformNodiffOptions {
+        filename: "test.jsx".into(),
+        css_scope: Either::A(false),
+        worklet: Either::B(WorkletVisitorConfig {
+          target: swc_plugins_shared::target_napi::TransformTarget::JS,
+          runtime_pkg: "@lynx-js/react/element-template/internal".into(),
+          ..Default::default()
+        }),
+        element_template: Some(Either::B(ElementTemplateTransformerConfig {
+          target: swc_plugins_shared::target_napi::TransformTarget::JS,
+          filename: "test.jsx".into(),
+          runtime_pkg: "@lynx-js/react/element-template".into(),
+          ..Default::default()
+        })),
+        ..Default::default()
+      },
+    );
+    assert!(result.errors.is_empty(), "{:?}", result.errors);
+    assert!(
+      result
+        .code
+        .contains("\"@lynx-js/react/element-template/internal\""),
+      "{}",
+      result.code
+    );
+    let defines = result.defines_for_worklet.unwrap();
+    assert_eq!(defines.len(), 1);
+    let imports = defines[0].imports.as_ref().unwrap();
+    assert!(
+      imports
+        .iter()
+        .any(|imp| imp.source == "@lynx-js/react/worklet-runtime/init"),
+      "{:?}",
+      imports
+        .iter()
+        .map(|imp| imp.source.as_str())
+        .collect::<Vec<_>>()
+    );
+  }
+
+  #[test]
+  fn should_preserve_custom_compat_runtime_in_et_builds() {
+    let result = transform_react_lynx_inner(
+      "export function App(Comp, props, url) { return [<Comp {...props} />, <component is={url} />]; }"
+        .into(),
+      TransformNodiffOptions {
+        filename: "test.jsx".into(),
+        css_scope: Either::A(false),
+        compat: Either::B(CompatVisitorConfig {
+          new_runtime_pkg: "@my-org/react".into(),
+          add_component_element: Either::A(true),
+          ..Default::default()
+        }),
+        element_template: Some(Either::A(true)),
+        ..Default::default()
+      },
+    );
+    assert!(result.errors.is_empty(), "{:?}", result.errors);
+    assert!(
+      result
+        .code
+        .contains("import * as ReactLynx from \"@my-org/react/internal\""),
+      "{}",
+      result.code
+    );
+    assert!(
+      result
+        .code
+        .contains("import \"@my-org/react/experimental/lazy/import\""),
+      "{}",
+      result.code
+    );
+  }
 
   fn worklet_definition(source: &str, filename: &str) -> Define {
     let result = transform_react_lynx_inner(

@@ -445,8 +445,12 @@ export function pluginReactLynx(
   return [
     pluginAutoLynx(),
     pluginReactAlias({
-      lazy: resolvedOptions.experimental_isLazyBundle,
-      elementTemplate: resolvedOptions.experimental_useElementTemplate,
+      get lazy() {
+        return resolvedOptions.experimental_isLazyBundle
+      },
+      get elementTemplate() {
+        return resolvedOptions.experimental_useElementTemplate
+      },
       LAYERS,
     }),
     {

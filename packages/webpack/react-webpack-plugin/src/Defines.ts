@@ -113,8 +113,9 @@ export function renderDefines(defines: readonly Define[]): string {
 export function renderDefinesModule(
   definesForSnapshot: readonly Define[],
   definesForWorklet: readonly Define[],
+  runtimePkg = '@lynx-js/react/internal',
 ): string {
-  const prelude = [`import * as ReactLynx from '@lynx-js/react/internal';`];
+  const prelude = [`import * as ReactLynx from '${runtimePkg}';`];
   const defines = [...definesForWorklet, ...definesForSnapshot];
   const locals = new Set(
     defines.flatMap(define => define.imports?.map(({ local }) => local) ?? []),

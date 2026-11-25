@@ -963,7 +963,8 @@ impl WorkletVisitor {
     let runtime_pkg = self
       .cfg
       .runtime_pkg
-      .strip_suffix("/internal")
+      .strip_suffix("/element-template/internal")
+      .or_else(|| self.cfg.runtime_pkg.strip_suffix("/internal"))
       // A scoped package named `internal` is a package root, not an entry.
       .filter(|pkg| !pkg.starts_with('@') || pkg.contains('/'))
       .unwrap_or(&self.cfg.runtime_pkg);

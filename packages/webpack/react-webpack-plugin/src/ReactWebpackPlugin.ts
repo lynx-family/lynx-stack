@@ -25,6 +25,10 @@ import {
   REACT_RUNTIME_REQUIREMENTS_BUILD_INFO,
 } from './loaders/main-thread.js';
 import type { ReactRuntimeRequirementsBuildInfo } from './loaders/main-thread.js';
+import {
+  ELEMENT_TEMPLATE_INTERNAL_PKG,
+  RUNTIME_PKG,
+} from './loaders/options.js';
 import { createLynxProcessEvalResultRuntimeModule } from './LynxProcessEvalResultRuntimeModule.js';
 import { applyMainThreadHMR } from './MainThreadHMR.js';
 
@@ -582,7 +586,14 @@ class ReactWebpackPlugin {
 
     const entryPairs = options.entryPairs ?? [];
     if (entryPairs.length > 0) {
-      applyDefinesInjection(compiler, entryPairs, this.constructor.name);
+      applyDefinesInjection(
+        compiler,
+        entryPairs,
+        this.constructor.name,
+        options.experimental_useElementTemplate
+          ? ELEMENT_TEMPLATE_INTERNAL_PKG
+          : RUNTIME_PKG,
+      );
       if (
         isDev && !options.experimental_isLazyBundle
         && compiler.options.plugins.some(plugin =>

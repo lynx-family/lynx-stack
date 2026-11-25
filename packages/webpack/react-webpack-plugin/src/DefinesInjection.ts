@@ -33,6 +33,7 @@ export function applyDefinesInjection(
   compiler: Compiler,
   entryPairs: EntryPair[],
   pluginName: string,
+  runtimePkg?: string,
 ): void {
   const { EntryPlugin, experiments } = compiler.webpack;
   const virtualModules = new experiments.VirtualModulesPlugin({});
@@ -187,7 +188,7 @@ export function applyDefinesInjection(
           );
           virtualModules.writeModule(
             request,
-            renderDefinesModule(missingSnapshot, missingWorklet)
+            renderDefinesModule(missingSnapshot, missingWorklet, runtimePkg)
               + ((compiler as unknown as Record<symbol, unknown>)[
                   MAIN_THREAD_HMR
                 ]

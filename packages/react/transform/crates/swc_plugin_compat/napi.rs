@@ -475,6 +475,13 @@ where
       inner: CoreVisitor::new(cfg.into(), comments),
     }
   }
+
+  pub fn with_runtime_entries(mut self, runtime_entry: String, lazy_import_entry: String) -> Self {
+    self.inner = self
+      .inner
+      .with_runtime_entries(runtime_entry, lazy_import_entry);
+    self
+  }
 }
 
 impl<C> VisitMut for CompatVisitor<C>

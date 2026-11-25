@@ -22,7 +22,7 @@ export interface Options {
 const S_PLUGIN_REACT_ALIAS = Symbol.for('@lynx-js/plugin-react-alias')
 
 export function pluginReactAlias(options: Options): RsbuildPlugin {
-  const { LAYERS, lazy, rootPath, elementTemplate } = options ?? {}
+  const { LAYERS, rootPath } = options ?? {}
 
   return {
     name: 'lynx:react-alias',
@@ -49,6 +49,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           // This bundler chain has already been processed
           return
         }
+        const { lazy, elementTemplate } = options ?? {}
         const resolve = createLazyResolver(
           rspack,
           rootPath ?? api.context.rootPath,
@@ -80,6 +81,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
           reactCompat,
           elementTemplateEntry,
           elementTemplateInternalEntry,
+          elementTemplateLazyImportEntry,
         ] = await Promise.all([
           resolve('@lynx-js/react/jsx-runtime'),
           resolve('@lynx-js/react/lepus/jsx-runtime'),
@@ -104,6 +106,11 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             : Promise.resolve(null),
           elementTemplate
             ? resolve('@lynx-js/react/element-template/internal')
+            : Promise.resolve(null),
+          elementTemplate
+            ? resolve(
+              '@lynx-js/react/element-template/experimental/lazy/import',
+            )
             : Promise.resolve(null),
         ])
 
@@ -139,7 +146,7 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
                   .set('react/jsx-dev-runtime', jsxDevRuntime.mainThread)
                   .set('@lynx-js/react/jsx-runtime', jsxRuntime.mainThread)
                   .set('@lynx-js/react/jsx-dev-runtime', jsxDevRuntime.mainThread)
-                  .set('@lynx-js/react/lepus$', reactLepus.mainThread)
+                  .set('@lynx-js/react/lepus$', elementTemplateEntry ?? reactLepus.mainThread)
                   .set('@lynx-js/react/lepus/jsx-runtime', jsxRuntime.mainThread)
                   .set('@lynx-js/react/lepus/jsx-dev-runtime', jsxDevRuntime.mainThread)
                   .set('preact/hooks', reactHooks.mainThread)
@@ -165,6 +172,33 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             .end()
           .end()
 
+        if (elementTemplate) {
+          chain.module
+            .rule('react:jsx-runtime:main-thread')
+            .resolve
+            .alias
+            .set(
+              '@lynx-js/react/element-template/jsx-runtime$',
+              elementTemplateJsxRuntime!,
+            )
+            .set(
+              '@lynx-js/react/element-template/jsx-dev-runtime$',
+              elementTemplateJsxDevRuntime!,
+            )
+          chain.module
+            .rule('react:jsx-runtime:background')
+            .resolve
+            .alias
+            .set(
+              '@lynx-js/react/element-template/jsx-runtime$',
+              jsxRuntime.background,
+            )
+            .set(
+              '@lynx-js/react/element-template/jsx-dev-runtime$',
+              jsxDevRuntime.background,
+            )
+        }
+
         // react-transform may add imports of the following entries
         // We need to add aliases for that
         const transformedEntries = [
@@ -180,9 +214,15 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
 
         const transformedEntryAliases = new Map<string, string>()
         if (elementTemplate) {
+          // Keep legacy internal and lazy-import aliases pointing at ET entries
+          // for prebuilt consumers (e.g. refresh, DevTools, older lazy shells).
           transformedEntryAliases.set(
             'experimental/lazy/import',
-            path.join(reactLynxDir, 'runtime/lazy/element-template-import.js'),
+            elementTemplateLazyImportEntry!,
+          )
+          transformedEntryAliases.set(
+            'internal',
+            elementTemplateInternalEntry!,
           )
         }
         transformedEntryAliases.set(
@@ -241,11 +281,6 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
             elementTemplateEntry ?? reactLepus.background,
           )
           .set(
-            '@lynx-js/react/internal$',
-            elementTemplateInternalEntry
-              ?? chain.resolve.alias.get('@lynx-js/react/internal$'),
-          )
-          .set(
             '@lynx-js/react/jsx-runtime',
             jsxRuntime.background,
           )
@@ -267,12 +302,16 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
               elementTemplateInternalEntry!,
             )
             .set(
-              '@lynx-js/react/element-template/jsx-runtime',
-              elementTemplateJsxRuntime!,
+              '@lynx-js/react/element-template/experimental/lazy/import$',
+              elementTemplateLazyImportEntry!,
             )
             .set(
-              '@lynx-js/react/element-template/jsx-dev-runtime',
-              elementTemplateJsxDevRuntime!,
+              '@lynx-js/react/element-template/jsx-runtime$',
+              jsxRuntime.background,
+            )
+            .set(
+              '@lynx-js/react/element-template/jsx-dev-runtime$',
+              jsxDevRuntime.background,
             )
         }
 

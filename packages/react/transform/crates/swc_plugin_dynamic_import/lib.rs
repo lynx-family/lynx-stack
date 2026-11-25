@@ -334,7 +334,10 @@ where
     {
       prepend_stmt(
         &mut n.body,
-        create_import_decl("data:text/javascript;charset=utf-8,import { loadLazyBundle } from \"@lynx-js/react/internal\";lynx.loadLazyBundle = loadLazyBundle;"),
+        create_import_decl(&format!(
+          "data:text/javascript;charset=utf-8,import {{ loadLazyBundle }} from \"{}\";lynx.loadLazyBundle = loadLazyBundle;",
+          self.opts.runtime_pkg
+        )),
       );
     }
   }

@@ -147,7 +147,28 @@ describe('testing loader', () => {
     );
   });
 
-  it('targets public internal helpers for compat component wrappers in element-template mode', async () => {
+  it('uses standard Preact JSX in MIXED element-template mode', async () => {
+    const jsxContent = `
+      function Child({ children }) {
+        return children;
+      }
+      export function App() {
+        return <Child key="item"><view /></Child>;
+      }
+    `;
+
+    const result = await runTestingLoader(jsxContent, {
+      engineVersion: '3.2',
+      experimental_useElementTemplate: true,
+    });
+
+    expect(result.code).toContain('"@lynx-js/react/jsx-runtime"');
+    expect(result.code).not.toContain(
+      '"@lynx-js/react/element-template/jsx-runtime"',
+    );
+  });
+
+  it('targets ET internal helpers for compat, worklet, and dynamic import in element-template mode', async () => {
     const jsxContent = `
       import { Component } from '@lynx-js/react-runtime';
       class CompatChild extends Component {
@@ -155,8 +176,19 @@ describe('testing loader', () => {
           return <text />;
         }
       }
-      export function App() {
-        return <CompatChild id="child-id" className="child-class" />;
+      export function App({ url }) {
+        const onTap = () => {
+          'main thread';
+          return 1;
+        };
+        const load = () => import(url, { with: { type: 'component' } });
+        return (
+          <view main-thread:bindtap={onTap}>
+            <CompatChild id="child-id" className="child-class" />
+            <component is={url} />
+            {load}
+          </view>
+        );
       }
     `;
 
@@ -168,12 +200,15 @@ describe('testing loader', () => {
       experimental_useElementTemplate: true,
     });
 
+    expect(result.code).toContain('@lynx-js/react/element-template/internal');
     expect(result.code).toContain(
-      '@lynx-js/react/internal',
+      '@lynx-js/react/element-template/experimental/lazy/import',
     );
     expect(result.code).toContain('wrapWithLynxComponent');
+    expect(result.code).toContain('__ComponentIsPolyfill');
+    expect(result.code).not.toContain('"@lynx-js/react/internal"');
     expect(result.code).not.toContain(
-      '@lynx-js/react/element-template/internal',
+      '"@lynx-js/react/experimental/lazy/import"',
     );
   });
 });

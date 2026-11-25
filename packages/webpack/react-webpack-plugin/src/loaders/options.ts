@@ -24,6 +24,8 @@ export const JSX_IMPORT_SOURCE = {
 const PUBLIC_RUNTIME_PKG = '@lynx-js/react';
 export const RUNTIME_PKG = '@lynx-js/react/internal';
 export const ELEMENT_TEMPLATE_RUNTIME_PKG = '@lynx-js/react/element-template';
+export const ELEMENT_TEMPLATE_INTERNAL_PKG =
+  '@lynx-js/react/element-template/internal';
 const OLD_RUNTIME_PKG = '@lynx-js/react-runtime';
 const COMPONENT_PKG = '@lynx-js/react-components';
 
@@ -231,7 +233,9 @@ function getCommonOptions(
     // TODO: config
     worklet: {
       filename: filename,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: useElementTemplate
+        ? ELEMENT_TEMPLATE_INTERNAL_PKG
+        : RUNTIME_PKG,
       target: 'MIXED',
     },
     directiveDCE: false,
@@ -277,7 +281,9 @@ export function getMainThreadTransformOptions(
       : false,
     dynamicImport: {
       layer: `react__main-thread`,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: useElementTemplate
+        ? ELEMENT_TEMPLATE_INTERNAL_PKG
+        : RUNTIME_PKG,
     },
     defineDCE: {
       define: {
@@ -357,7 +363,9 @@ export function getBackgroundTransformOptions(
       : false,
     dynamicImport: {
       layer: `react__background`,
-      runtimePkg: RUNTIME_PKG,
+      runtimePkg: useElementTemplate
+        ? ELEMENT_TEMPLATE_INTERNAL_PKG
+        : RUNTIME_PKG,
     },
     snapshot: useElementTemplate ? false : {
       ...(commonOptions.snapshot as JsxTransformerConfig),

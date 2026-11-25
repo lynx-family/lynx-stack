@@ -9,6 +9,7 @@ import type { LoaderContext } from '@rspack/core';
 import type { ElementTemplateConfig } from '@lynx-js/react/transform';
 
 import {
+  ELEMENT_TEMPLATE_INTERNAL_PKG,
   ELEMENT_TEMPLATE_RUNTIME_PKG,
   JSX_IMPORT_SOURCE,
   RUNTIME_PKG,
@@ -78,7 +79,9 @@ function testingLoader(
         ? {
           preserveJsx: false,
           runtimePkg: ELEMENT_TEMPLATE_RUNTIME_PKG,
-          jsxImportSource: JSX_IMPORT_SOURCE.ELEMENT_TEMPLATE,
+          // MIXED mode runs in a no-layer test environment; keep standard Preact
+          // JSX so background diffing preserves keys and VNode metadata.
+          jsxImportSource: JSX_IMPORT_SOURCE.BACKGROUND,
           filename,
           target: 'MIXED',
         } satisfies ElementTemplateConfig
@@ -91,7 +94,9 @@ function testingLoader(
       engineVersion,
       worklet: {
         filename,
-        runtimePkg: RUNTIME_PKG,
+        runtimePkg: experimental_useElementTemplate
+          ? ELEMENT_TEMPLATE_INTERNAL_PKG
+          : RUNTIME_PKG,
         target: 'MIXED',
       },
       refresh: false,
