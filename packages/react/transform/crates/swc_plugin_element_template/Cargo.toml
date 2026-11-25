@@ -26,4 +26,4 @@ swc_plugins_shared = { path = "../swc_plugins_shared" }
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(swc_ast_unknown)'] }
 
 [dev-dependencies]
-insta = { version = "1.48.0", features = ["json"] }
+insta = { version = "1.49.0", features = ["json"] }
