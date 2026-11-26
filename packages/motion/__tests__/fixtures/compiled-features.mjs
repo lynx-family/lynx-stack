@@ -138,7 +138,7 @@ await test('full: object animation and relative sequence segments reach their fi
 });
 
 await test('full: element transforms, percentage dimensions, and colors use private DOM bindings', async () => {
-  const { native, dom } = element('.styled', { backgroundColor: '#000000' });
+  const { native, dom } = element('.styled', { 'background-color': '#000000' });
   await motion.animate(dom, {
     x: 40,
     scale: 1.2,
@@ -147,7 +147,7 @@ await test('full: element transforms, percentage dimensions, and colors use priv
   }, { duration: 0.04 });
   assert.match(native.styles.transform, /translateX\(40px\).*scale\(1.2\)/);
   assert.equal(native.styles.width, '50%');
-  assert.match(native.styles.backgroundColor, /#ffffff|255.*255.*255/ig);
+  assert.match(native.styles['background-color'], /#ffffff|255.*255.*255/ig);
 });
 
 await test('full: selectors and stagger animate every matched element', async () => {

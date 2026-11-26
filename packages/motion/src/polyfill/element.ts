@@ -43,7 +43,11 @@ export class ElementCompt {
             this.element.setStyleProperty('transform', 'scale(1, 1)');
             return true;
           }
-          this.element.setStyleProperty(prop, String(value));
+          const property = prop.replace(
+            /[A-Z]/g,
+            letter => `-${letter.toLowerCase()}`,
+          );
+          this.element.setStyleProperty(property, String(value));
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           target[prop] = value;
         }
