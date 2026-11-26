@@ -20,6 +20,7 @@ export const {
   RUNTIME_BACKEND_ELEMENT_TEMPLATE,
   RUNTIME_BACKEND_SNAPSHOT,
   SnapshotInstance,
+  __ComponentIsPolyfill,
   __ElementTemplatePage,
   __dynamicImport,
   __etAttrPlanMap,

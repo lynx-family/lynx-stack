@@ -2,17 +2,14 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { Suspense, createElement, lazy, cloneElement as preactCloneElement } from 'preact/compat';
-import type { FC } from 'react';
+import { cloneElement as preactCloneElement } from 'preact/compat';
 
 import './runtime-marker.js';
 import './lynx.js';
 
-import { useMemo } from './core/hooks/react.js';
-import { loadLazyBundle } from './core/lynx/lazy-bundle.js';
+import { __ComponentIsPolyfill as componentIsPolyfill } from './core/compat/componentIs.js';
 import * as ReactLynxInternalSelf from './internal.js';
 import { __root } from './root.js';
-import { factory as factory2 } from './snapshot/compat/componentIs.js';
 import { BackgroundSnapshotInstance } from './snapshot/snapshot/backgroundSnapshot.js';
 import { __page, __pageId, createSnapshot, snapshotManager } from './snapshot/snapshot/definition.js';
 import { DynamicPartType } from './snapshot/snapshot/dynamicPartType.js';
@@ -88,14 +85,8 @@ export { withInitDataInState } from './core/initData.js';
 
 export { wrapWithLynxComponent } from './core/compat/lynxComponent.js';
 
-/**
- * @internal a polyfill for <component is=? />
- */
-export const __ComponentIsPolyfill: FC<{ is: string }> = /* @__PURE__ */ factory2(
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  { Suspense, lazy, createElement, useMemo } as any,
-  loadLazyBundle,
-);
+/** @internal Compatibility for the compiler lowering of <component is=? />. */
+export const __ComponentIsPolyfill = componentIsPolyfill;
 
 export { loadLazyBundle } from './core/lynx/lazy-bundle.js';
 

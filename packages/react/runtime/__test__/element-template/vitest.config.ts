@@ -113,7 +113,7 @@ const config: UserConfigExport = defineConfig({
     include: ['**/__test__/element-template/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     coverage: {
       reportsDirectory: 'coverage/element-template',
-      include: ['src/element-template/**', 'lazy/element-template*.js'],
+      include: ['src/element-template/**', 'src/core/compat/componentIs.ts', 'lazy/element-template*.js'],
       exclude: [
         'src/element-template/**/*.d.ts',
         'src/element-template/protocol/types.ts',

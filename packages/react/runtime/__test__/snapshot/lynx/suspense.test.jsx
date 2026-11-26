@@ -10,6 +10,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { replaceCommitHook } from '../../../src/snapshot/lifecycle/patch/commit';
 import { injectUpdateMainThread } from '../../../src/snapshot/lifecycle/patch/updateMainThread';
 import { installComponentCompat } from '../../../src/core/component';
+import { __ComponentIsPolyfill } from '../../../src/internal';
 import { __root } from '../../../src/root';
 import {
   setupPage,
@@ -39,10 +40,57 @@ afterEach(() => {
   vi.runAllTimers();
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   elementTree.clear();
 });
 
 describe('suspense', () => {
+  it('renders an empty component and reports an invalid legacy component URL', () => {
+    const reportError = vi.spyOn(lynx, 'reportError').mockImplementation(() => {});
+    __root.__jsx = createElement(__ComponentIsPolyfill, { is: null });
+    renderPage();
+    expect(reportError).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('You must provide a string'),
+    }));
+  });
+
+  it('loads a legacy component asynchronously and remounts it when its URL changes', async () => {
+    globalEnvManager.switchToBackground();
+    const query = vi.fn();
+    const mount = vi.fn();
+    const renderChild = vi.fn();
+    function Child({ label }) {
+      useState(() => mount(label));
+      renderChild(label);
+      return null;
+    }
+    const app = lynx.getApp();
+    vi.stubGlobal('lynx', {
+      ...lynx,
+      QueryComponent: query,
+      getApp: () => ({ ...app, getDynamicComponentExports: () => ({ default: Child }) }),
+    });
+
+    render(createElement(__ComponentIsPolyfill, { is: 'one', label: 'first' }), __root);
+    expect(query).toHaveBeenCalledWith('one', expect.any(Function));
+    expect(renderChild).not.toHaveBeenCalled();
+    query.mock.calls[0][1]({ code: 0, detail: { schema: 'one' } });
+    await vi.runAllTimersAsync();
+    expect(renderChild).toHaveBeenLastCalledWith('first');
+
+    render(createElement(__ComponentIsPolyfill, { is: 'one', label: 'updated' }), __root);
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(mount.mock.calls).toEqual([['first']]);
+    expect(renderChild).toHaveBeenLastCalledWith('updated');
+
+    render(createElement(__ComponentIsPolyfill, { is: 'two', label: 'second' }), __root);
+    expect(query).toHaveBeenLastCalledWith('two', expect.any(Function));
+    query.mock.calls[1][1]({ code: 0, detail: { schema: 'two' } });
+    await vi.runAllTimersAsync();
+    expect(mount.mock.calls).toEqual([['first'], ['second']]);
+    expect(renderChild).toHaveBeenLastCalledWith('second');
+  });
+
   /**
    * Tests the basic functionality of the `Suspense` component.
    *
