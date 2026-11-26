@@ -5,6 +5,7 @@
 import './runtime-marker.js';
 import './native/index.js';
 
+import { __ComponentIsPolyfill as componentIsPolyfill } from '../core/compat/componentIs.js';
 import { __root } from './runtime/page/root-instance.js';
 
 /**
@@ -39,6 +40,9 @@ export {
 } from '../core/lynx/runtime-backend.js';
 
 export { withInitDataInState } from '../core/initData.js';
+
+/** @internal Compatibility for the compiler lowering of <component is=? />. */
+export const __ComponentIsPolyfill = componentIsPolyfill;
 
 export { wrapWithLynxComponent } from '../core/compat/lynxComponent.js';
 

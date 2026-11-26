@@ -160,7 +160,6 @@ export default defineConfig({
         'src/snapshot/lynx/calledByNative.ts',
         'src/snapshot/lynx/env.ts',
         'src/snapshot/lynx/tt.ts',
-        'src/snapshot/compat/componentIs.ts',
         'src/snapshot/snapshot/types.ts',
 
         '__test__/snapshot/page.test.jsx',

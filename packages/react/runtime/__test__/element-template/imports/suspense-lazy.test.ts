@@ -1,4 +1,4 @@
-import type { ComponentType } from 'preact';
+import { type ComponentType, h } from 'preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ElementTemplateRuntime, * as ElementTemplateRoot from '@lynx-js/react/element-template';
@@ -6,7 +6,9 @@ import { Suspense, lazy } from '@lynx-js/react/element-template';
 import * as ElementTemplateInternal from '@lynx-js/react/element-template/internal';
 import { loadLazyBundle } from '@lynx-js/react/element-template/internal';
 
+import { renderToElementTemplate } from '../../../src/element-template/runtime/render/render-direct.js';
 import { ElementTemplateEnvManager } from '../test-utils/debug/envManager.js';
+import { registerBuiltinRawTextTemplate } from '../test-utils/debug/registry.js';
 
 interface LazyExports {
   default: ComponentType<Record<string, never>>;
@@ -187,16 +189,57 @@ describe('element-template Suspense and lazy imports', () => {
     expect(ElementTemplateRuntime.lazy).toBe(lazy);
   });
 
-  it('exposes shared loadLazyBundle without enabling component-is', () => {
+  it('exposes loadLazyBundle and the compiler compatibility helper for component-is', () => {
     expect(loadLazyBundle).toEqual(expect.any(Function));
     expect(ElementTemplateInternal.loadLazyBundle).toBe(loadLazyBundle);
-    expect('__ComponentIsPolyfill' in ElementTemplateInternal).toBe(false);
+    expect(ElementTemplateInternal.__ComponentIsPolyfill).toEqual(expect.any(Function));
+  });
+
+  it('renders an ET lazy component with forwarded props on the first screen', () => {
+    envManager.resetEnv('main');
+    registerBuiltinRawTextTemplate();
+    const QueryComponent = vi.fn(() => ({
+      evalResult: { default: ({ label }: { label: string }) => label },
+    }));
+    vi.stubGlobal('__QueryComponent', QueryComponent);
+    const props = { is: 'entry-component', label: 'label from host' };
+
+    try {
+      const result = renderToElementTemplate(h(ElementTemplateInternal.__ComponentIsPolyfill, props));
+
+      expect(QueryComponent).toHaveBeenCalledExactlyOnceWith('entry-component');
+      expect(result.rootRefs.map(ref => __SerializeElementTemplate(ref).attributeSlots)).toEqual([
+        ['label from host'],
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('reports an invalid dynamic component URL without loading a bundle', () => {
+    envManager.resetEnv('main');
+    const reportError = vi.spyOn(lynx, 'reportError').mockImplementation(() => {});
+    const QueryComponent = vi.fn();
+    vi.stubGlobal('__QueryComponent', QueryComponent);
+    const props = { is: null } as unknown as { is: string };
+
+    try {
+      const result = renderToElementTemplate(h(ElementTemplateInternal.__ComponentIsPolyfill, props));
+
+      expect(result.rootRefs).toEqual([]);
+      expect(reportError).toHaveBeenCalledExactlyOnceWith(
+        new Error('You must provide a string to props `is` when using syntax `<component is=? />`.'),
+      );
+      expect(QueryComponent).not.toHaveBeenCalled();
+    } finally {
+      reportError.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('exposes dynamic import helpers without enabling Snapshot-only internals', () => {
     expect(internalWithDynamicImport.__dynamicImport).toEqual(expect.any(Function));
     expect(internalWithDynamicImport.loadDynamicJS).toEqual(expect.any(Function));
-    expect('__ComponentIsPolyfill' in ElementTemplateInternal).toBe(false);
     expect('__DynamicPartSlot' in ElementTemplateInternal).toBe(false);
     expect('snapshotCreatorMap' in ElementTemplateInternal).toBe(false);
   });
