@@ -8,7 +8,9 @@
  * A rsbuild plugin that integrates with ReactLynx.
  */
 
-import { createRequire } from 'node:module'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { RsbuildPlugin } from '@rsbuild/core'
 
@@ -534,16 +536,24 @@ export function pluginReactLynx(
         }
 
         api.expose(Symbol.for('LAYERS'), LAYERS)
-        const require = createRequire(import.meta.url)
 
-        const { version } = require('../package.json') as { version: string }
-
-        const webpackPluginPath = require.resolve(
-          '@lynx-js/react-webpack-plugin',
-        )
-        api.logger?.debug(
-          `Using @lynx-js/react-webpack-plugin v${version} at ${webpackPluginPath}`,
-        )
+        // Only for a debug log. A build in the browser (`@rspack/browser`)
+        // does not have this package on its file system, so the log is
+        // skipped there instead of failing setup.
+        try {
+          const { version } = JSON.parse(
+            fs.readFileSync(
+              path.join(
+                path.dirname(fileURLToPath(import.meta.url)),
+                '../package.json',
+              ),
+              'utf-8',
+            ),
+          ) as { version: string }
+          api.logger?.debug(`Using @lynx-js/react-rsbuild-plugin v${version}`)
+        } catch {
+          // Not available in the browser.
+        }
       },
     },
     {
