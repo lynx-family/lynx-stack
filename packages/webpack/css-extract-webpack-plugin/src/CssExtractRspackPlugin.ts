@@ -99,7 +99,12 @@ class CssExtractRspackPlugin {
    *
    * @public
    */
-  static loader: string = require.resolve('./rspack-loader.js');
+  static get loader(): string {
+    // Resolved on access rather than at import time, so this module can be
+    // imported where Node.js module resolution is not available (a build in
+    // the browser through `@rspack/browser`).
+    return require.resolve('./rspack-loader.js');
+  }
 
   /**
    * `defaultOptions` is the default options that the {@link CssExtractRspackPlugin} uses.

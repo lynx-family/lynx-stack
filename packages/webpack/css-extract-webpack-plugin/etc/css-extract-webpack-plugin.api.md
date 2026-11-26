@@ -13,7 +13,7 @@ export class CssExtractRspackPlugin {
     constructor(options?: CssExtractRspackPluginOptions | undefined);
     apply(compiler: Compiler): void;
     static defaultOptions: Readonly<CssExtractRspackPluginOptions & Pick<Required<CssExtractRspackPluginOptions>, 'cssPlugins'>>;
-    static loader: string;
+    static get loader(): string;
 }
 
 // @public
