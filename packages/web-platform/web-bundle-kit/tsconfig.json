@@ -1,6 +1,10 @@
 {
   "extends": "../tsconfig.json",
+  // Not part of the root build (`packages/web-platform/tsconfig.json`): the
+  // sources need `generated/` and the declarations of rslib-built plugins,
+  // which exist only after `pnpm turbo build`. Checked by `test:type`.
   "compilerOptions": {
+    "composite": false,
     "noEmit": true,
     "allowJs": false,
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],

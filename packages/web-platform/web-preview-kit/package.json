@@ -25,7 +25,8 @@
     "build": "rsbuild build",
     "serve": "node ./scripts/serve.mjs",
     "test": "rstest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:type": "tsc6 --noEmit"
   },
   "devDependencies": {
     "@lynx-js/lynx-core": "0.1.4",

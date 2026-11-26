@@ -27,8 +27,14 @@ import { rspack } from '@rspack/core';
 
 import { createLayout, findPackageRoot } from './layout.mjs';
 import { collectMirror } from './mirror.mjs';
+import { isInside, pathKey, relativeSpecifier } from './paths.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// Real, like the paths Rspack resolves to, so that the conditions on `root`
+// below match when the checkout is reached through a symbolic link or a
+// junction.
+const root = realpathSync(
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
+);
 const dist = path.join(root, 'dist');
 const generated = path.join(root, 'generated');
 const require = createRequire(path.join(root, 'package.json'));
@@ -128,6 +134,11 @@ const stringified = STRINGIFIED.flatMap(([dir, pattern]) => {
   return files;
 });
 
+// Rspack's resource paths, compared with the lists above, may spell a path
+// differently from Node.js on Windows (the case of the drive letter, for
+// one), so lists are compared through `pathKey` and `isInside`.
+const stringifiedKeys = new Set(stringified.map((file) => pathKey(file)));
+
 // Write the module that registers them. Paths are relative to `generated/`,
 // so the build does not depend on where the repository is checked out.
 mkdirSync(generated, { recursive: true });
@@ -141,7 +152,7 @@ writeFileSync(
       if (!virtual) {
         throw new Error(`${file} is not in the virtual node_modules tree`);
       }
-      const request = path.relative(generated, file).split(path.sep).join('/');
+      const request = relativeSpecifier(generated, file);
       return `  ${JSON.stringify(virtual)}: () => import(${
         JSON.stringify(request)
       }),`;
@@ -202,6 +213,15 @@ globalThis.__webBundleKitBuild = {
   isCommonJS,
 };
 
+// What virtual-path-loader leaves alone: the kit's own code and what it
+// loads from next to itself at run time.
+const notVirtual = [
+  path.join(root, 'src'),
+  dirs.rspackBrowser,
+  dirs.napiRuntime,
+  generated,
+];
+
 rmSync(dist, { recursive: true, force: true });
 
 const compiler = rspack({
@@ -253,12 +273,8 @@ const compiler = rspack({
       },
       {
         test: /\.[cm]?js$/,
-        exclude: [
-          path.join(root, 'src'),
-          dirs.rspackBrowser,
-          dirs.napiRuntime,
-          generated,
-        ],
+        exclude: (resource) =>
+          notVirtual.some((dir) => isInside(resource, dir)),
         enforce: 'pre',
         loader: path.join(root, 'scripts/virtual-path-loader.cjs'),
         // The loader reads `layout` and `isCommonJS` from here; Rspack
@@ -268,7 +284,7 @@ const compiler = rspack({
       {
         // Listed after virtual-path-loader, so it runs first, on the
         // published text.
-        include: stringified,
+        include: (resource) => stringifiedKeys.has(pathKey(resource)),
         enforce: 'pre',
         loader: path.join(root, 'scripts/verbatim-functions-loader.cjs'),
       },
@@ -331,11 +347,15 @@ if (json.errors.length > 0) {
   // The mirror: placeholders for every bundled module, so that resolving them
   // in memfs succeeds, and the real content of runtime packages.
   const bundled = new Set();
+  const bundledKeys = new Set();
   for (const module of stats.compilation.modules) {
     const resource = module.resource?.split('?')[0];
-    if (resource) bundled.add(resource);
+    if (resource) {
+      bundled.add(resource);
+      bundledKeys.add(pathKey(resource));
+    }
   }
-  const unused = stringified.filter((file) => !bundled.has(file));
+  const unused = stringified.filter((file) => !bundledKeys.has(pathKey(file)));
   if (unused.length > 0) {
     throw new Error(
       `STRINGIFIED lists files the kit does not bundle (stale entries, or the plugin moved them):\n  ${

@@ -25,7 +25,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "rstest",
-    "test:e2e": "node e2e/run.mjs"
+    "test:e2e": "node e2e/run.mjs",
+    "test:type": "tsc6 --noEmit"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",

@@ -15,6 +15,8 @@
 import { globSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+import { toPosix } from './paths.mjs';
+
 /**
  * Packages, by name in the virtual tree, whose files are compiled into a card
  * or read at build time, with the files to take. `null` takes the files the
@@ -69,21 +71,18 @@ function listPackageFiles(realDir, patterns) {
         for (const nested of globSync('**/*', { cwd: absolute })) {
           if (statSync(path.join(absolute, nested)).isFile()) {
             out.add(
-              path.posix.join(
-                match.split(path.sep).join('/'),
-                nested.split(path.sep).join('/'),
-              ),
+              path.posix.join(toPosix(match), toPosix(nested)),
             );
           }
         }
       } else {
-        out.add(match.split(path.sep).join('/'));
+        out.add(toPosix(match));
       }
     }
   }
   for (const pattern of negated) {
     for (const match of globSync(pattern, { cwd: realDir })) {
-      out.delete(match.split(path.sep).join('/'));
+      out.delete(toPosix(match));
     }
   }
   return [...out].filter((file) => !EXCLUDE.some((re) => re.test(file))).sort();

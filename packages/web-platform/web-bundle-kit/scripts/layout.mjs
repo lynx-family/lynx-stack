@@ -16,6 +16,8 @@
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+import { pathKey, virtualPathOf } from './paths.mjs';
+
 /**
  * @typedef {{ name: string, version: string, realDir: string, virtualDir: string, json: Record<string, any> }} PackageInstance
  */
@@ -68,7 +70,7 @@ export function findPackageRoot(file) {
 export function createLayout(rootDirs) {
   /** @type {Map<string, PackageInstance>} virtual dir -> instance */
   const byVirtualDir = new Map();
-  /** @type {Map<string, PackageInstance>} real dir -> first instance */
+  /** @type {Map<string, PackageInstance>} pathKey(real dir) -> first instance */
   const byRealDir = new Map();
   /** @type {string[]} */
   const missing = [];
@@ -107,7 +109,8 @@ export function createLayout(rootDirs) {
       json,
     };
     byVirtualDir.set(chosen, instance);
-    if (!byRealDir.has(realDir)) byRealDir.set(realDir, instance);
+    const key = pathKey(realDir);
+    if (!byRealDir.has(key)) byRealDir.set(key, instance);
     return { instance, isNew: true };
   }
 
@@ -155,17 +158,16 @@ export function createLayout(rootDirs) {
       // prebundled packages inside them (`@rsbuild/core/compiled/*`).
       const real = realpathSync(realFile);
       for (let dir = path.dirname(real);; dir = path.dirname(dir)) {
-        const instance = byRealDir.get(dir);
+        const instance = byRealDir.get(pathKey(dir));
         if (instance) {
-          const relative = path.relative(dir, real).split(path.sep).join('/');
-          return path.posix.join(instance.virtualDir, relative);
+          return virtualPathOf(instance.virtualDir, dir, real);
         }
         if (path.dirname(dir) === dir) return undefined;
       }
     },
     /** The instance placed for a real package directory. */
     instanceOf(realDir) {
-      return byRealDir.get(realpathSync(realDir));
+      return byRealDir.get(pathKey(realpathSync(realDir)));
     },
   };
 }

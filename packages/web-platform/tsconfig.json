@@ -18,8 +18,6 @@
     { "path": "./web-core/tsconfig.json" },
     { "path": "./web-rsbuild-plugin/tsconfig.json" },
     { "path": "./web-rsbuild-server-middleware/tsconfig.json" },
-    { "path": "./web-bundle-kit/tsconfig.json" },
-    { "path": "./web-preview-kit/tsconfig.json" },
     /** packages-end */
   ],
   "include": [],

@@ -48,7 +48,8 @@ The first `createWebBundler` call loads Rspack and the mirror; later bundlers in
 ## Scripts
 
 - `pnpm turbo build --filter=@lynx-js/web-bundle-kit`: build `dist/`.
-- `pnpm run test --project web-platform/web-bundle-kit`: unit tests of path checks, change application, diagnostics and the watch file system.
+- `pnpm run test --project web-platform/web-bundle-kit`: unit tests of path checks, change application, diagnostics, the watch file system and the path mapping of the build scripts (run with `path.win32` too).
+- `pnpm run test:type` (after a build): type-checks the kit. The kit is not part of the root `tsc --build`, because its sources need `generated/` and the type declarations of the plugins, which only a build produces; CI runs it in the `test-type` job (`pnpm -r run test:type`).
 - `node e2e/run.mjs` (after a build): end-to-end test in Chromium with Playwright. It builds `e2e/fixture` (two cards, CSS, a CSS module and an image) in production and renders it in `<lynx-view>`, then watches with hot updates: it checks that the development cards use the same `__name__` identifiers as a Node.js build of the fixture (`e2e/node-build.mjs`), renders the development card, edits CSS and TSX and applies each hot update in the card, introduces and fixes a syntax error, and checks that the project's `node_modules` wins over the mirror. `KIT_E2E_BAIL=1` stops at the first failure; `KIT_E2E_VERBOSE=1` prints warnings and the browser console.
 
 ## Adding to the kit
@@ -57,3 +58,4 @@ The first `createWebBundler` call loads Rspack and the mirror; later bundlers in
 - A new file compiled into cards (a runtime): add its package or folder to `RUNTIME_FILES` in `scripts/mirror.mjs`.
 - A new module whose functions a plugin stringifies into cards (`Template.getFunctionContent`, `fn.toString()`): add it to `STRINGIFIED` in `scripts/build.mjs`. Its functions must be top-level declarations, and the caller must use `fn.toString()`, not `Function.prototype.toString.call(fn)`. Search the plugins for `getFunctionContent` and `toString()` when you update them.
 - A new Node.js built-in: add a stand-in to `src/node/builtins.cjs`.
+- Paths in `scripts/`: convert real paths to virtual paths, `mirror.json` keys or import specifiers, and compare them with Rspack's resource paths, with the helpers of `scripts/paths.mjs`, so that the build also works on Windows.

@@ -1,15 +1,20 @@
 {
   "extends": "../tsconfig.json",
+  // Not part of the root build (`packages/web-platform/tsconfig.json`): the
+  // types of `@lynx-js/web-bundle-kit` come from its sources, which need its
+  // build. Checked by `test:type` after `pnpm turbo build`.
   "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./lib",
-    "emitDeclarationOnly": true,
+    "composite": false,
+    "noEmit": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
-    "types": [],
+    "types": ["node"],
   },
-  "include": ["src"],
-  "references": [
-    { "path": "../web-core/tsconfig.json" },
+  "include": [
+    "src",
+    "demo",
+    "tests",
+    "rsbuild.config.ts",
+    "rstest.config.ts",
+    "playwright.config.ts",
   ],
 }

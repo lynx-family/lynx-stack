@@ -77,6 +77,12 @@ Unit tests (rstest), from the repository root or this directory:
 pnpm rstest --project web-platform/web-preview-kit
 ```
 
+Type check (after `pnpm turbo build`; the kit is not part of the root `tsc --build`, because the types of `@lynx-js/web-bundle-kit` need its build; CI runs it in the `test-type` job with `pnpm -r run test:type`):
+
+```bash
+pnpm run test:type                             # in this directory
+```
+
 End-to-end tests (Playwright, Chromium; build the kit first):
 
 ```bash
