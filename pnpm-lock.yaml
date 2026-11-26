@@ -193,6 +193,9 @@ catalogs:
       specifier: 1.0.7
       version: 1.0.7
   rspack:
+    '@rspack/browser':
+      specifier: 2.3.4
+      version: 2.3.4
     '@rspack/test-tools':
       specifier: 2.3.4
       version: 2.3.4
@@ -3102,6 +3105,45 @@ importers:
         specifier: ^1.61.1
         version: 1.61.1
 
+  packages/web-platform/web-bundle-kit:
+    devDependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-lynx
+      '@lynx-js/web-core':
+        specifier: workspace:*
+        version: link:../web-core
+      '@playwright/test':
+        specifier: ^1.61.1
+        version: 1.61.1
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
+      '@rspack/browser':
+        specifier: catalog:rspack
+        version: 2.3.4(@swc/helpers@0.5.24)
+      '@rspack/core':
+        specifier: 2.3.4
+        version: 2.3.4(@swc/helpers@0.5.24)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.12.6(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@31.0.1)
+      acorn:
+        specifier: ^8.19.0
+        version: 8.19.0
+      events:
+        specifier: ^3.3.0
+        version: 3.3.0
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
+
   packages/web-platform/web-core:
     dependencies:
       '@lynx-js/css-serializer':
@@ -3265,6 +3307,45 @@ importers:
       '@rsdoctor/core':
         specifier: 2.0.0
         version: 2.0.0(@rspack/core@2.3.4(@swc/helpers@0.5.24))(@types/node@24.13.3)
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+
+  packages/web-platform/web-preview-kit:
+    devDependencies:
+      '@lynx-js/lynx-core':
+        specifier: 0.1.4
+        version: 0.1.4
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../react
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../rspeedy/plugin-react
+      '@lynx-js/rspeedy':
+        specifier: workspace:*
+        version: link:../../rspeedy/core
+      '@lynx-js/web-bundle-kit':
+        specifier: workspace:*
+        version: link:../web-bundle-kit
+      '@lynx-js/web-core':
+        specifier: workspace:*
+        version: link:../web-core
+      '@lynx-js/web-elements':
+        specifier: workspace:*
+        version: link:../web-elements
+      '@lynx-js/web-platform-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../web-rsbuild-plugin
+      '@playwright/test':
+        specifier: ^1.61.1
+        version: 1.61.1
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.12.6(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@31.0.1)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -6635,6 +6716,14 @@ packages:
 
   '@rspack/binding@2.3.4':
     resolution: {integrity: sha512-wSOT16LVITL/IKeIiLXgN5Q5jZIDqnQ7Gmk+wzKOSZ6OHYNfEBXAKhSJuYtCBq8ovJuGl8cJjdqatAlHE5XKIA==}
+
+  '@rspack/browser@2.3.4':
+    resolution: {integrity: sha512-yToL+wGqsKekzWAGLbgPInlq5f/DSHg5WULsvYlGwrBb0yL9J7IgIJcAJlSpCaKL7fgz7DvjK8TdQW4Ml9Pujw==}
+    peerDependencies:
+      '@swc/helpers': ^0.5.23
+    peerDependenciesMeta:
+      '@swc/helpers':
+        optional: true
 
   '@rspack/core@2.3.4':
     resolution: {integrity: sha512-T8HGkIjPVDlGlIN8st/ICe8Gfixq8te75g/8crSdNSf8F+6884sBcKNky0CRdfPxao1C5SXV+Vjv1XJTjyu83w==}
@@ -13203,6 +13292,10 @@ packages:
     resolution: {integrity: sha512-jyuiGJdtvY434z5bUZrjz67v76/ePNvFZTp9Mdz29IlH4+GPsgyGjiv0fKI+M7BdkU6ADjulUcKAd3tUK3WlEw==}
     engines: {node: '>=10.13.0'}
 
+  webpack-sources@3.7.1:
+    resolution: {integrity: sha512-mcxs7A2LsEdwsNqQburqS4QHPR2Ca3NGplUakn6J5GPQvnVZ4oD4IM4FJcT3f8AVN2e2EsjuIVxKj4rorHvyuQ==}
+    engines: {node: '>=10.13.0'}
+
   webpack@5.109.2:
     resolution: {integrity: sha512-U9/cvLzxObKNEZ9+TtdqrHM5/9z3lgl2c+c4BzbqGxFQvQvBAq87yql5A8pQ+rrMbS496MZJeF5enVBndIy2hw==}
     engines: {node: '>=10.13.0'}
@@ -14345,7 +14438,6 @@ snapshots:
     dependencies:
       '@emnapi/wasi-threads': 2.2.0
       tslib: 2.8.1
-    optional: true
 
   '@emnapi/runtime@1.11.1':
     dependencies:
@@ -14359,7 +14451,6 @@ snapshots:
   '@emnapi/runtime@2.0.0-beta.3':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@emnapi/wasi-threads@1.2.2':
     dependencies:
@@ -14373,7 +14464,6 @@ snapshots:
   '@emnapi/wasi-threads@2.2.0':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@epic-web/invariant@1.0.0': {}
 
@@ -15873,7 +15963,6 @@ snapshots:
       '@emnapi/core': 2.0.0-beta.3
       '@emnapi/runtime': 2.0.0-beta.3
       '@tybys/wasm-util': 0.10.3
-    optional: true
 
   '@nodable/entities@3.1.0': {}
 
@@ -16705,6 +16794,18 @@ snapshots:
       '@rspack/binding-win32-ia32-msvc': 2.3.4
       '@rspack/binding-win32-x64-msvc': 2.3.4
 
+  '@rspack/browser@2.3.4(@swc/helpers@0.5.24)':
+    dependencies:
+      '@emnapi/core': 2.0.0-beta.3
+      '@emnapi/runtime': 2.0.0-beta.3
+      '@napi-rs/wasm-runtime': 1.2.7(@emnapi/core@2.0.0-beta.3)(@emnapi/runtime@2.0.0-beta.3)
+      '@rspack/lite-tapable': 1.3.0
+      '@swc/types': 0.1.28
+      memfs: 4.80.1
+      webpack-sources: 3.7.1
+    optionalDependencies:
+      '@swc/helpers': 0.5.24
+
   '@rspack/core@2.3.4(@swc/helpers@0.5.24)':
     dependencies:
       '@rspack/binding': 2.3.4
@@ -17253,7 +17354,6 @@ snapshots:
   '@tybys/wasm-util@0.10.3':
     dependencies:
       tslib: 2.8.1
-    optional: true
 
   '@types/argparse@1.0.38': {}
 
@@ -23985,6 +24085,8 @@ snapshots:
       wildcard: 2.0.1
 
   webpack-sources@3.5.1: {}
+
+  webpack-sources@3.7.1: {}
 
   webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25):
     dependencies:

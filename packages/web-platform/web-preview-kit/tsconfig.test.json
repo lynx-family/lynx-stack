@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
+    "types": ["node"]
+  },
+  "include": [
+    "src",
+    "demo",
+    "tests",
+    "rsbuild.config.ts",
+    "rstest.config.ts",
+    "playwright.config.ts"
+  ]
+}

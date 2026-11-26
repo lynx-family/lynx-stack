@@ -147,6 +147,7 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
+    "@rspack/browser": "2.3.4"
     "@rspack/cli": "2.3.4"
     "@rspack/core": "2.3.4"
     "@rspack/dev-server": "2.2.2"

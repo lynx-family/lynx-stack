@@ -1,0 +1,44 @@
+{
+  "name": "@lynx-js/web-preview-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "An embeddable page that builds and previews ReactLynx cards in a browser, driven over postMessage.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-preview-kit"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    "./client": {
+      "types": "./src/client/index.ts",
+      "default": "./src/client/index.ts"
+    },
+    "./protocol": {
+      "types": "./src/protocol.ts",
+      "default": "./src/protocol.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "rsbuild build",
+    "serve": "node ./scripts/serve.mjs",
+    "test": "rstest",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-core": "0.1.4",
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rspeedy": "workspace:*",
+    "@lynx-js/web-bundle-kit": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
+    "@lynx-js/web-elements": "workspace:*",
+    "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
+    "@playwright/test": "^1.61.1",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rstest/core": "catalog:rstest",
+    "tslib": "^2.8.1"
+  }
+}

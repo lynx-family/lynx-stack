@@ -1,0 +1,44 @@
+{
+  "name": "@lynx-js/web-bundle-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Builds Lynx web bundles in a browser, with Rsbuild on top of @rspack/browser.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lynx-family/lynx-stack.git",
+    "directory": "packages/web-platform/web-bundle-kit"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "rstest",
+    "test:e2e": "node e2e/run.mjs"
+  },
+  "devDependencies": {
+    "@lynx-js/react": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@lynx-js/web-core": "workspace:*",
+    "@playwright/test": "^1.61.1",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rspack/browser": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
+    "acorn": "^8.19.0",
+    "events": "^3.3.0",
+    "path-browserify": "^1.0.1"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./lib",
+    "emitDeclarationOnly": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
+    "types": [],
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../web-core/tsconfig.json" },
+  ],
+}
