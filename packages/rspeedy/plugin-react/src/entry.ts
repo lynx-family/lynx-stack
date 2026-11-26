@@ -253,7 +253,6 @@ export function applyEntry(
             experimental_isLazyBundle,
             lazyBundleFetcher,
             cssPlugins: [],
-            enableReuseLoadScriptExports: experimental_reEvalJSOnReload,
           }])
           .end()
       })

@@ -2667,7 +2667,6 @@ describe('Config', () => {
         "enableCSSSelector": true,
         "enableNewGesture": false,
         "enableRemoveCSSScope": true,
-        "enableReuseLoadScriptExports": false,
         "experimental_isLazyBundle": false,
         "filename": "main.lynx.bundle",
         "intermediate": ".lynx/main",
@@ -2676,32 +2675,6 @@ describe('Config', () => {
         "targetSdkVersion": "3.2",
       }
     `)
-  })
-
-  test('reuses loadScript exports for experimental entry re-evaluation', async () => {
-    const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
-
-    const rsbuild = await createRspeedy({
-      rspeedyConfig: {
-        plugins: [
-          pluginReactLynx({
-            experimental_reEvalJSOnReload: true,
-          }),
-          pluginStubRspeedyAPI(),
-        ],
-      },
-    })
-
-    const [config] = await rsbuild.initConfigs()
-    const templatePlugin = config?.plugins?.find((
-      p,
-    ): p is LynxTemplatePlugin => p?.constructor.name === 'LynxTemplatePlugin')
-
-    expect(templatePlugin).toBeDefined()
-    const templateOptions = (templatePlugin as unknown as {
-      options: { enableReuseLoadScriptExports?: boolean }
-    }).options
-    expect(templateOptions.enableReuseLoadScriptExports).toBe(true)
   })
 
   test.each([
