@@ -5,7 +5,7 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createContext, createPortal, useContext, useState } from '../../../src/index';
+import { createContext, createPortal, Suspense, useContext, useId, useState } from '../../../src/index';
 import { __root } from '../../../src/root';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot';
 
@@ -685,6 +685,46 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     expect(listElement.componentAtIndex()).toBe(-1);
     expect(listElement.enqueueComponent()).toBeUndefined();
     expect(snapshotInstanceManager.values.has(childId)).toBe(false);
+  });
+
+  it('does not generate duplicate useId inside and outside createPortal', () => {
+    const host = { _nodeSelectToken: { type: 0, identifier: '[data-testid="host"]' } };
+    const ids = {};
+
+    function PortalChild({ label }) {
+      ids[label] = useId();
+      return <text>{ids[label]}</text>;
+    }
+
+    function SuspensePortal({ label }) {
+      ids.suspenseOuter = useId();
+      return (
+        <>
+          {createPortal(<PortalChild label={label} />, host)}
+        </>
+      );
+    }
+
+    function App() {
+      ids.parentBefore = useId();
+      return (
+        <view>
+          <text data-testid='host' />
+          {createPortal(<PortalChild label='portal' />, host)}
+          <Suspense fallback={<text>loading</text>}>
+            <SuspensePortal label='suspensePortal' />
+          </Suspense>
+        </view>
+      );
+    }
+
+    globalEnvManager.switchToBackground();
+    render(<App />, __root);
+
+    expect(ids.parentBefore).toBe('P0-0');
+    expect(ids.portal).toBe('P0-1');
+    expect(ids.suspenseOuter).toBe('PP0-2-0');
+    expect(ids.suspensePortal).toBe('PP0-2-1');
   });
 });
 

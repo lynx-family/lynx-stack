@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { isValidElement, render } from 'preact';
+import { Suspense } from 'preact/compat';
+import { useId as useBackgroundId } from 'preact/hooks';
 import { beforeEach, afterEach, vi } from 'vitest';
 import { globalEnvManager } from '../../snapshot/utils/envManager';
 import { describe } from 'vitest';
@@ -275,5 +278,38 @@ describe('mainThread hooks', () => {
 
     localSignal.value = 4;
     expect(localSignal.value).toBe(3);
+  });
+
+  it('generates consistent useId inside Suspense on main thread and background thread', () => {
+    const mainIds: string[] = [];
+    const bgIds: string[] = [];
+
+    function MainChild() {
+      mainIds.push(useId());
+      return <text>main</text>;
+    }
+    function BgChild() {
+      bgIds.push(useBackgroundId());
+      return <text>bg</text>;
+    }
+
+    expect(isValidElement(<MainChild />)).toBe(true);
+    __root.__jsx = (
+      <Suspense fallback={<text>loading</text>}>
+        <MainChild />
+      </Suspense>
+    );
+    renderPage();
+
+    globalEnvManager.switchToBackground();
+    render(
+      <Suspense fallback={<text>loading</text>}>
+        <BgChild />
+      </Suspense>,
+      __root,
+    );
+
+    expect(mainIds).toEqual(['PP0-0-0']);
+    expect(bgIds).toEqual(mainIds);
   });
 });

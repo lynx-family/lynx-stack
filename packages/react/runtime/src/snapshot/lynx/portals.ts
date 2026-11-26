@@ -10,7 +10,7 @@ import type { NodesRef } from '@lynx-js/types';
 
 import { serializeNodesRef } from './nodesRef.js';
 import { pendingInsertBefore } from './portalsPending.js';
-import { CHILDREN, MASK, PARENT, VNODE } from '../../shared/render-constants.js';
+import { COMPONENT, MASK, PARENT, VNODE } from '../../shared/render-constants.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
@@ -25,13 +25,15 @@ interface PortalProps {
 interface PortalThis extends Component<PortalProps> {
   _container?: NodesRef;
   _temp?: ContainerNode;
+  _mask?: VNode[typeof MASK];
 }
 
 function ContextProvider(
-  this: { getChildContext: () => unknown },
-  props: RenderableProps<{ context: unknown }>,
+  this: { getChildContext: () => unknown; [MASK]?: VNode[typeof MASK] },
+  props: RenderableProps<{ context: unknown; mask: VNode[typeof MASK] }>,
 ): ComponentChildren {
   this.getChildContext = () => props.context;
+  this[MASK] = props.mask;
   return props.children;
 }
 
@@ -48,6 +50,7 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
     render(null, _this._temp!);
     delete _this._temp;
     delete _this._container;
+    delete _this._mask;
   };
 
   // When we change container we should clear our old container and
@@ -57,11 +60,22 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
   }
 
   if (!_this._temp) {
-    // Ensure the element has a mask for useId invocations
-    let root: VNode<any> | null | undefined = _this[VNODE];
-    while (root !== null && !root![MASK] && root![PARENT] !== null) {
-      root = root![PARENT];
+    // Ensure the element has a mask for useId invocations.
+    // Preact v11 stores `_mask` on the component instance (root or Suspense
+    // boundary) rather than the VNode; walk up to the nearest masked
+    // component/vnode and share its mask through ContextProvider.
+    interface MaskLookupNode {
+      [COMPONENT]?: { [MASK]?: VNode[typeof MASK] } | null | undefined;
+      [MASK]?: VNode[typeof MASK];
+      [PARENT]?: MaskLookupNode | null | undefined;
     }
+    let root: MaskLookupNode = _this[VNODE]!;
+    while (!(root[COMPONENT] ?? root)[MASK] && root[PARENT]) {
+      root = root[PARENT];
+    }
+    const target = root[COMPONENT]!;
+    const mask = target[MASK] ?? (target[MASK] = [0, 0]);
+    _this._mask = mask;
 
     _this._container = container;
 
@@ -70,7 +84,6 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
       nodeType: number;
       parentNode: NodesRef;
       childNodes: BackgroundSnapshotInstance[];
-      [CHILDREN]: { [MASK]: VNode[typeof MASK] };
       insertBefore(this: FakeRoot, child: BackgroundSnapshotInstance, before: BackgroundSnapshotInstance | null): void;
       removeChild(this: FakeRoot, child: BackgroundSnapshotInstance): void;
     }
@@ -78,7 +91,6 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
       nodeType: 1,
       parentNode: container,
       childNodes: [],
-      [CHILDREN]: { [MASK]: root![MASK] },
       insertBefore(child, before) {
         // Track the child in our local children list AND wire up the BSI's
         // `__parent` pointer to the fakeRoot, regardless of pre-/post-hydrate
@@ -148,7 +160,7 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
   render(
     createElement(
       ContextProvider,
-      { context: _this.context },
+      { context: _this.context, mask: _this._mask },
       props[VNODE],
     ),
     _this._temp,

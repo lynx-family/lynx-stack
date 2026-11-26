@@ -18,7 +18,7 @@ describe('element-template jsx-runtime', () => {
       __i: -1,
       __u: 0,
     });
-    expect(vnode.constructor).toBeUndefined();
+    expect(vnode.constructor).toBe(Symbol.for('pv'));
   });
 
   it('normalizes missing host props to an empty object', () => {

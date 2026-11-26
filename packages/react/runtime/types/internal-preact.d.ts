@@ -51,7 +51,7 @@ declare module 'preact' {
     /** _parent */
     __?: VNode | null;
     /** _mask */
-    __m?: [number, number];
+    __m?: [number | string, number];
     /** _children */
     __k?: VNode[];
   }
@@ -59,6 +59,8 @@ declare module 'preact' {
   interface Component<P = {}, S = {}> {
     /** _vnode */
     __v?: VNode<P> | null;
+    /** _mask */
+    __m?: [number | string, number];
     /** _renderCallbacks */
     __h: ((this: Component<P, S>) => void)[];
     /** _bits (Preact 11: COMPONENT_FORCE = 1 << 2, COMPONENT_DIRTY = 1 << 3) */

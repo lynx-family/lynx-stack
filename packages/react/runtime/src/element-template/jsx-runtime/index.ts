@@ -4,6 +4,8 @@
 
 import { CHILDREN, COMPONENT, DIFF, DOM, FLAGS, INDEX, PARENT } from '../../shared/render-constants.js';
 
+const VNODE_MARKER: symbol = Symbol.for('pv');
+
 type ComponentLike = ((...args: unknown[]) => unknown) & {
   defaultProps?: Record<string, unknown>;
   prototype?: { render?: unknown };
@@ -17,7 +19,7 @@ interface ElementTemplateVNode {
   __b: number;
   __e: null;
   __c: null;
-  constructor: undefined;
+  constructor: typeof VNODE_MARKER;
   __i: number;
   __u: number;
 }
@@ -38,7 +40,7 @@ function createVNode(
       [DIFF]: 0,
       [DOM]: null,
       [COMPONENT]: null,
-      constructor: void 0,
+      constructor: VNODE_MARKER,
       [INDEX]: -1,
       [FLAGS]: 0,
     };
@@ -73,7 +75,7 @@ function createVNode(
       [DIFF]: 0,
       [DOM]: null,
       [COMPONENT]: null,
-      constructor: void 0,
+      constructor: VNODE_MARKER,
       [INDEX]: -1,
       [FLAGS]: 0,
     };

@@ -182,8 +182,8 @@ catalogs:
       specifier: 5.0.1-20261123125323-a3af24e
       version: 5.0.1-20261123125323-a3af24e
     preact:
-      specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
-      version: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+      specifier: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
+      version: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
   rsbuild:
     '@rsbuild/core':
       specifier: 2.3.3
@@ -1230,7 +1230,7 @@ importers:
         version: 19.2.18
       preact:
         specifier: catalog:lynxjs
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
 
   examples/react-ui-sourcemap:
     dependencies:
@@ -1985,7 +1985,7 @@ importers:
     dependencies:
       preact:
         specifier: catalog:lynxjs
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
     devDependencies:
       '@lynx-js/types':
         specifier: 4.1.0
@@ -2001,7 +2001,7 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^2.11.2
-        version: 2.11.2(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9)
+        version: 2.11.2(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f)
       '@preact/signals-core':
         specifier: ^1.14.4
         version: 1.14.4
@@ -2014,7 +2014,7 @@ importers:
         version: 1.0.7(@microsoft/api-extractor@7.59.4(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
       preact:
         specifier: catalog:lynxjs
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
 
   packages/react-umd:
     devDependencies:
@@ -2041,13 +2041,13 @@ importers:
         version: link:..
       '@prefresh/core':
         specifier: ^1.5.11
-        version: 1.5.11(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9)
+        version: 1.5.11(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f)
       '@prefresh/utils':
         specifier: ^1.2.1
         version: 1.2.1
       preact:
         specifier: catalog:lynxjs
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
 
   packages/react/runtime:
     devDependencies:
@@ -2107,7 +2107,7 @@ importers:
         version: 7.0.0(@testing-library/dom@10.4.1)
       preact:
         specifier: catalog:lynxjs
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
       pretty-format:
         specifier: ^30.4.1
         version: 30.4.1
@@ -3444,7 +3444,7 @@ importers:
         version: 24.13.3
       preact:
         specifier: catalog:lynxjs
-        version: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+        version: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
       swc-loader:
         specifier: ^0.2.7
         version: 0.2.7(@swc/core@1.15.47(@swc/helpers@0.5.24))(webpack@5.109.2(@swc/core@1.15.47(@swc/helpers@0.5.24))(cssnano@7.1.2(postcss@8.5.25))(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.25))
@@ -11507,8 +11507,8 @@ packages:
       rxjs:
         optional: true
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9:
-    resolution: {integrity: sha512-A0WxsQuhS6mkTc4yH9H2Y1FcugGB5gLu3DopLQL8pE4gvF6auvkbpcn2e1xksjBB7WpRMeM5azjP9ThqWYdLlQ==, tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f:
+    resolution: {integrity: sha512-AOJDOT1L7+rX+isparN5evNLed9dLeDlaLhdkLC+dQJ+UosbrlKLDd86hEmoTTZXlBrOQ4tAzlxPJwCB7WjWDQ==, tarball: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f}
     version: 11.2.0
     peerDependencies:
       preact-render-to-string: '>=6.7.0'
@@ -15979,14 +15979,14 @@ snapshots:
 
   '@preact/signals-core@1.14.4': {}
 
-  '@preact/signals@2.11.2(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9)':
+  '@preact/signals@2.11.2(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f)':
     dependencies:
       '@preact/signals-core': 1.14.4
-      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
 
-  '@prefresh/core@1.5.11(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9)':
+  '@prefresh/core@1.5.11(preact@https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f)':
     dependencies:
-      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9
+      preact: https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f
 
   '@prefresh/utils@1.2.1': {}
 
@@ -22183,7 +22183,7 @@ snapshots:
     optionalDependencies:
       rxjs: 7.8.2
 
-  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@f56f7e9: {}
+  preact@https://pkg.pr.new/lynx-family/internal-preact/preact@da5a16f: {}
 
   prelude-ls@1.2.1: {}
 

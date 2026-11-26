@@ -7,6 +7,7 @@ import { CHILDREN, COMPONENT, DIFF, DOM, FLAGS, INDEX, PARENT, SnapshotInstance 
 // compares against it. Inlined rather than imported so the main thread does not
 // have to pull in compat.
 const REACT_ELEMENT_TYPE = Symbol.for('react.element');
+const VNODE_MARKER = Symbol.for('pv');
 
 // A SnapshotInstance is the main thread's element, so it has to satisfy
 // `isValidElement` too. Assigning per instance would add a property after the
@@ -65,7 +66,7 @@ function createVNode(type, props, _key) {
       [DIFF]: 0,
       [DOM]: null,
       [COMPONENT]: null,
-      constructor: void 0,
+      constructor: VNODE_MARKER,
       // __v: --vnodeId,
       [INDEX]: -1,
       [FLAGS]: 0,
