@@ -18,6 +18,7 @@
     },
     "./encode": {
       "types": "./dist/encode/index.d.ts",
+      "browser": "./dist/encode/index.js",
       "import": "./dist/encode_prod/index.js",
       "default": "./dist/encode_prod/index.js"
     },

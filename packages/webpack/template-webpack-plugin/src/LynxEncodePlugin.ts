@@ -6,7 +6,7 @@ import { availableParallelism } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
 import type { Chunk, Compiler } from '@rspack/core';
-import Tinypool from 'tinypool';
+import type Tinypool from 'tinypool';
 
 import type { EncodeResult } from '@lynx-js/tasm';
 
@@ -20,7 +20,7 @@ import type { EncodeWorkerOptions } from './worker/encode.js';
 
 const require = createRequire(import.meta.url);
 
-const ENCODE_WORKER_PATH = require.resolve('../lib/worker/encode.js');
+let encodePool: Tinypool | undefined;
 
 // https://github.com/web-infra-dev/rsbuild/blob/main/packages/core/src/types/config.ts#L1029
 type InlineChunkTestFunction = (params: {
@@ -66,11 +66,27 @@ export class LynxEncodePlugin {
    * slots for parallel encode; watch-mode rebuilds keep the same workers
    * warm. `availableParallelism()` honors cgroup CPU limits (containers,
    * CI runners), so we don't need to subtract a core ourselves.
+   *
+   * The pool is created on first access. Importing this module therefore
+   * neither loads `tinypool` nor starts worker threads, so a build without a
+   * native Lynx bundle (the web target, or a build in the browser through
+   * `@rspack/browser`) never needs `worker_threads`.
    */
-  static encodePool: Tinypool = new Tinypool({
-    filename: pathToFileURL(ENCODE_WORKER_PATH).href,
-    maxThreads: availableParallelism(),
-  });
+  static get encodePool(): Tinypool {
+    if (!encodePool) {
+      // `require` keeps this getter synchronous. tinypool is ESM-only, which
+      // `require()` loads on the Node.js versions Rspack supports.
+      const { default: Pool } = require('tinypool') as {
+        default: typeof Tinypool;
+      };
+      encodePool = new Pool({
+        filename: pathToFileURL(require.resolve('../lib/worker/encode.js'))
+          .href,
+        maxThreads: availableParallelism(),
+      });
+    }
+    return encodePool;
+  }
   constructor(protected options?: LynxEncodePluginOptions | undefined) {}
 
   /**

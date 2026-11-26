@@ -14,7 +14,7 @@ import * as CSS from '@lynx-js/css-serializer';
 import { cssChunksToMap } from '@lynx-js/css-serializer';
 import { Plugins } from '@lynx-js/css-serializer';
 import { SyncWaterfallHook } from '@rspack/lite-tapable';
-import Tinypool from 'tinypool';
+import type Tinypool from 'tinypool';
 
 export { CSS }
 
@@ -66,7 +66,7 @@ export class LynxEncodePlugin {
     static BEFORE_ENCODE_STAGE: number;
     static defaultOptions: Readonly<Required<LynxEncodePluginOptions>>;
     static ENCODE_STAGE: number;
-    static encodePool: Tinypool;
+    static get encodePool(): Tinypool;
     // (undocumented)
     protected options?: LynxEncodePluginOptions | undefined;
 }
