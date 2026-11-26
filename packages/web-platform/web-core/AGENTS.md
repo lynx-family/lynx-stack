@@ -173,7 +173,7 @@ The external mts chunk is a webpack/rspack **library** that writes to bare `expo
 - `createMainThreadGlobalAPIs` → `LynxViewInstance.replaceStyleSheetWithBase64`, which skips a bundle identical to the last one for that entry (the runtime repeats the call per css id).
 - `ts/client/mainthread/hotUpdateStyleSheet.ts` reads the bundle's `StyleInfo` section and decodes it with `decode_style_info`, using the entry's stored config and the view's `transform*` flags, as the decode worker does on load.
 - `MainThreadWasmContext.replace_style_sheet` → `StyleManager.replace_style_sheet` removes the `<style>` elements recorded for that entry, pushes the new sheet, and, without `enableCSSSelector`, recomputes the CSS OG styles of the entry's elements (matched by `l-e-name`).
-- `entry` is `'__Card__'`/`undefined` for the card or the lazy bundle url. A web bundle has no runtime wrapper and so no `lynx.__chunk_entries__`; the background runtime instead reads lynx-core's global `globDynamicComponentEntry` when it is evaluated, which only identifies its own template. Async chunks of the card are not hot-updated on web.
+- `entry` is `'__Card__'`/`undefined` for the card or the lazy bundle url. A web bundle has no runtime wrapper and so no `lynx.__chunk_entries__`, so on web the runtime sends every update without an entry and each is applied to the card. The card's own chunk is listed last, so the card ends up with its own CSS; the styles of async chunks and lazy bundles are not hot-updated on web.
 
 ### Style-engine test gotcha
 
