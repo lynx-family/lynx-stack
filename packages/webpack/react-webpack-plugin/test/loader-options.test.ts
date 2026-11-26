@@ -88,7 +88,7 @@ describe('loader options', () => {
     });
   });
 
-  it('keeps ET dynamic import output on the aliasable internal runtime package', () => {
+  it('routes ET worklet and dynamic import helpers to the ET internal runtime package', () => {
     const context = createLoaderContext({
       experimental_useElementTemplate: true,
     });
@@ -102,19 +102,21 @@ describe('loader options', () => {
       undefined,
     );
 
+    expect(mainThreadOptions.worklet).toMatchObject({
+      runtimePkg: '@lynx-js/react/element-template/internal',
+      target: 'LEPUS',
+    });
+    expect(backgroundOptions.worklet).toMatchObject({
+      runtimePkg: '@lynx-js/react/element-template/internal',
+      target: 'JS',
+    });
     expect(mainThreadOptions.dynamicImport).toMatchObject({
       layer: 'react__main-thread',
-      runtimePkg: '@lynx-js/react/internal',
+      runtimePkg: '@lynx-js/react/element-template/internal',
     });
     expect(backgroundOptions.dynamicImport).toMatchObject({
       layer: 'react__background',
-      runtimePkg: '@lynx-js/react/internal',
+      runtimePkg: '@lynx-js/react/element-template/internal',
     });
-    expect(mainThreadOptions.dynamicImport?.runtimePkg).not.toBe(
-      '@lynx-js/react/element-template/internal',
-    );
-    expect(backgroundOptions.dynamicImport?.runtimePkg).not.toBe(
-      '@lynx-js/react/element-template/internal',
-    );
   });
 });

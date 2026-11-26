@@ -75,10 +75,7 @@ const transformReactLynx = async (
     defineDCE: options?.defineDCE ?? false,
     directiveDCE: options?.directiveDCE ?? false,
     worklet: options?.worklet ?? false,
-    dynamicImport: options?.dynamicImport ?? {
-      runtimePkg: '@lynx-js/react/internal',
-      layer: '',
-    },
+    dynamicImport: options?.dynamicImport ?? true,
     inject: options?.inject ?? false,
   };
 

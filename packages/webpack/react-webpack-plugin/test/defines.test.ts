@@ -296,6 +296,19 @@ describe('renderDefinesModule', () => {
     expect(code).not.toContain('loadWorkletRuntime');
   });
 
+  it('allows overriding the runtime internal package for ET defines modules', () => {
+    const code = renderDefinesModule(
+      [],
+      [define('w', 'register("w");')],
+      '@lynx-js/react/element-template/internal',
+    );
+
+    expect(code).toContain(
+      'import * as ReactLynx from \'@lynx-js/react/element-template/internal\';',
+    );
+    expect(code).not.toContain('\'@lynx-js/react/internal\'');
+  });
+
   it('emits the `require` fallback only for definitions that call it', () => {
     const code = renderDefinesModule(
       [define('a', 'require("@lynx-js/react/internal").createSnapshot;')],

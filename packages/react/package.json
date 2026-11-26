@@ -47,6 +47,10 @@
       "lazy": "./runtime/lazy/element-template-internal.js",
       "default": "./runtime/lib/element-template/internal.js"
     },
+    "./element-template/experimental/lazy/import": {
+      "types": "./runtime/lazy/import.d.ts",
+      "default": "./runtime/lazy/element-template-import.js"
+    },
     "./element-template/jsx-runtime": {
       "types": "./runtime/lib/element-template/jsx-runtime/index.d.ts",
       "lazy": "./runtime/lazy/element-template-jsx-runtime.js",
@@ -164,6 +168,9 @@
       ],
       "element-template/internal": [
         "./runtime/lib/element-template/internal.d.ts"
+      ],
+      "element-template/experimental/lazy/import": [
+        "./runtime/lazy/import.d.ts"
       ],
       "element-template/jsx-runtime": [
         "./runtime/lib/element-template/jsx-runtime/index.d.ts"

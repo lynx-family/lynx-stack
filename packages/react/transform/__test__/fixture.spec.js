@@ -393,7 +393,7 @@ describe('element template', () => {
     expect(result.elementTemplates?.some(template => template.compiledTemplate.type === 'list-item')).toBe(true);
     expect(result.code).toMatchInlineSnapshot(`
       "import { jsx as _jsx } from "react/jsx-runtime";
-      import * as ReactLynxInternal from "@lynx-js/react/internal";
+      import * as ReactLynxInternal from "@lynx-js/react/element-template/internal";
       const _et_4f796f70cdd7_bundle = globDynamicComponentEntry;
       const _et_4f796f70cdd7 = \`\${_et_4f796f70cdd7_bundle}:\${"_et_4f796f70cdd7"}\`;
       const _et_b8da8bac988e_bundle = globDynamicComponentEntry;

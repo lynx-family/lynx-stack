@@ -393,6 +393,8 @@ where
   C: Comments + Clone,
 {
   opts: CompatVisitorConfig,
+  runtime_entry: Option<String>,
+  lazy_import_entry: Option<String>,
 
   // state
   is_components_pkg: bool,
@@ -458,6 +460,8 @@ where
   pub fn new(opts: CompatVisitorConfig, comments: Option<C>) -> Self {
     CompatVisitor {
       opts,
+      runtime_entry: None,
+      lazy_import_entry: None,
       is_components_pkg: false,
       is_old_runtime_pkg: false,
       old_runtime_import_ids: vec![],
@@ -467,6 +471,12 @@ where
       comments,
       has_component_is: false,
     }
+  }
+
+  pub fn with_runtime_entries(mut self, runtime_entry: String, lazy_import_entry: String) -> Self {
+    self.runtime_entry = Some(runtime_entry);
+    self.lazy_import_entry = Some(lazy_import_entry);
+    self
   }
 
   fn wrap_with_lynx_component_helper(&mut self, state: AddComponentElementState) -> Expr {
@@ -1194,6 +1204,10 @@ where
     n.visit_mut_children_with(self);
 
     if let Some(runtime_id) = Lazy::<Ident>::get(&self.runtime_id) {
+      let runtime_entry = self
+        .runtime_entry
+        .clone()
+        .unwrap_or_else(|| format!("{}/internal", self.opts.new_runtime_pkg));
       prepend_stmt(
         &mut n.body,
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
@@ -1206,7 +1220,7 @@ where
           src: Box::new(Str {
             span: DUMMY_SP,
             raw: None,
-            value: format!("{}/internal", self.opts.new_runtime_pkg).into(),
+            value: runtime_entry.into(),
           }),
           type_only: Default::default(),
           with: Default::default(),
@@ -1215,6 +1229,10 @@ where
     }
 
     if self.has_component_is {
+      let lazy_import_entry = self
+        .lazy_import_entry
+        .clone()
+        .unwrap_or_else(|| format!("{}/experimental/lazy/import", self.opts.new_runtime_pkg));
       prepend_stmt(
         &mut n.body,
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
@@ -1224,7 +1242,7 @@ where
           src: Box::new(Str {
             span: DUMMY_SP,
             raw: None,
-            value: format!("{}/experimental/lazy/import", self.opts.new_runtime_pkg).into(),
+            value: lazy_import_entry.into(),
           }),
           type_only: Default::default(),
           with: Default::default(),

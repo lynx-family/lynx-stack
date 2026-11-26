@@ -90,10 +90,30 @@ impl Default for ReactLynxTransformOptions {
       define_dce: Either::A(false),
       directive_dce: Either::A(false),
       worklet: Either::A(false),
-      dynamic_import: Some(Either::B(Default::default())),
+      dynamic_import: Some(Either::A(true)),
       inject: Some(Either::A(false)),
     }
   }
+}
+
+const BUILTIN_ET_RUNTIME_PKG: &str = "@lynx-js/react/element-template";
+const BUILTIN_ET_INTERNAL_PKG: &str = "@lynx-js/react/element-template/internal";
+
+fn normalize_builtin_et_internal_pkg(
+  use_element_template_plugin: bool,
+  config: &mut ElementTemplateTransformerConfig,
+) -> Option<String> {
+  if !use_element_template_plugin {
+    return None;
+  }
+  if config.runtime_pkg == "@lynx-js/react" {
+    config.runtime_pkg = BUILTIN_ET_RUNTIME_PKG.into();
+  }
+  matches!(
+    config.runtime_pkg.as_str(),
+    BUILTIN_ET_RUNTIME_PKG | BUILTIN_ET_INTERNAL_PKG
+  )
+  .then(|| BUILTIN_ET_INTERNAL_PKG.to_string())
 }
 
 #[plugin_transform]
@@ -216,7 +236,7 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
       true,
     ),
   };
-  let (element_template_plugin_config, element_template_enabled) =
+  let (mut element_template_plugin_config, element_template_enabled) =
     match options.element_template.as_ref() {
       Some(Either::A(config)) => (
         ElementTemplateTransformerConfig {
@@ -251,6 +271,11 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
     ),
     use_snapshot_plugin,
   );
+  let et_internal_pkg = normalize_builtin_et_internal_pkg(
+    use_element_template_plugin,
+    &mut element_template_plugin_config,
+  );
+
   let element_template_plugin = Optional::new(
     visit_mut_pass(
       ElementTemplateTransformer::new_with_element_templates(
@@ -298,28 +323,57 @@ pub fn process_transform(program: Program, metadata: TransformPluginProgramMetad
   );
 
   let worklet_plugin = match options.worklet {
-    Either::A(config) => Optional::new(
-      visit_mut_pass(WorkletVisitor::default().with_content_hash(content_hash)),
-      config,
-    ),
-    Either::B(config) => Optional::new(
-      visit_mut_pass(WorkletVisitor::new(config).with_content_hash(content_hash)),
-      true,
-    ),
+    Either::A(config) => {
+      let visitor_config = match &et_internal_pkg {
+        Some(runtime_pkg) => WorkletVisitorConfig {
+          runtime_pkg: runtime_pkg.clone(),
+          ..Default::default()
+        },
+        None => WorkletVisitorConfig::default(),
+      };
+      Optional::new(
+        visit_mut_pass(WorkletVisitor::new(visitor_config).with_content_hash(content_hash)),
+        config,
+      )
+    }
+    Either::B(mut config) => {
+      if let Some(runtime_pkg) = &et_internal_pkg {
+        if config.runtime_pkg == "@lynx-js/react/internal" {
+          config.runtime_pkg = runtime_pkg.clone();
+        }
+      }
+      Optional::new(
+        visit_mut_pass(WorkletVisitor::new(config).with_content_hash(content_hash)),
+        true,
+      )
+    }
   };
 
   let dynamic_import_plugin = match options.dynamic_import.unwrap_or(Either::A(true)) {
-    Either::A(config) => Optional::new(
-      visit_mut_pass(DynamicImportVisitor::new(
-        Default::default(),
-        Some(&comments),
-      )),
-      config,
-    ),
-    Either::B(config) => Optional::new(
-      visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
-      true,
-    ),
+    Either::A(config) => {
+      let visitor_config = match &et_internal_pkg {
+        Some(runtime_pkg) => DynamicImportVisitorConfig {
+          runtime_pkg: runtime_pkg.clone(),
+          ..Default::default()
+        },
+        None => DynamicImportVisitorConfig::default(),
+      };
+      Optional::new(
+        visit_mut_pass(DynamicImportVisitor::new(visitor_config, Some(&comments))),
+        config,
+      )
+    }
+    Either::B(mut config) => {
+      if let Some(runtime_pkg) = &et_internal_pkg {
+        if config.runtime_pkg == "@lynx-js/react/internal" {
+          config.runtime_pkg = runtime_pkg.clone();
+        }
+      }
+      Optional::new(
+        visit_mut_pass(DynamicImportVisitor::new(config, Some(&comments))),
+        true,
+      )
+    }
   };
 
   let inject_plugin = match options.inject.unwrap_or(Either::A(false)) {
@@ -400,7 +454,7 @@ mod tests {
     assert_eq!(options.define_dce, Either::A(true));
     assert_eq!(options.directive_dce, Either::A(true));
     assert_eq!(options.worklet, Either::A(true));
-    assert_eq!(options.dynamic_import, Some(Either::B(Default::default())));
+    assert_eq!(options.dynamic_import, Some(Either::A(true)));
     assert_eq!(options.inject, Some(Either::A(false)));
     assert_eq!(options.engine_version, None);
   }
@@ -599,5 +653,28 @@ mod tests {
     }"#;
     let options: ReactLynxTransformOptions = serde_json::from_str(json_data).unwrap();
     assert_eq!(options.engine_version, Some("3.2".to_string()));
+  }
+
+  #[test]
+  fn test_normalize_builtin_et_internal_pkg() {
+    let mut default_config = ElementTemplateTransformerConfig::default();
+    assert_eq!(
+      normalize_builtin_et_internal_pkg(true, &mut default_config).as_deref(),
+      Some("@lynx-js/react/element-template/internal")
+    );
+    assert_eq!(
+      default_config.runtime_pkg,
+      "@lynx-js/react/element-template"
+    );
+
+    let mut custom_config = ElementTemplateTransformerConfig {
+      runtime_pkg: "./runtime/internal.ts".into(),
+      ..Default::default()
+    };
+    assert_eq!(
+      normalize_builtin_et_internal_pkg(true, &mut custom_config),
+      None
+    );
+    assert_eq!(custom_config.runtime_pkg, "./runtime/internal.ts");
   }
 }

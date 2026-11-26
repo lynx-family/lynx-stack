@@ -9,9 +9,10 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
-import type { RsbuildInstance, Rspack } from '@rsbuild/core'
+import type { RsbuildInstance, RsbuildPlugin, Rspack } from '@rsbuild/core'
 import { afterAll, describe, expect, rstest, test } from '@rstest/core'
 
+import { LAYERS } from '@lynx-js/react-webpack-plugin'
 import type {
   ReactWebpackPlugin,
   ReactWebpackPluginOptions,
@@ -635,17 +636,28 @@ describe('Config', () => {
       ),
     )
     expect(config?.resolve?.alias).toHaveProperty(
-      '@lynx-js/react/element-template/jsx-runtime',
+      '@lynx-js/react/element-template/experimental/lazy/import$',
       expect.stringContaining(
-        '/packages/react/runtime/lib/element-template/jsx-runtime/index.js'
+        '/packages/react/runtime/lazy/element-template-import.js'
           .replaceAll('/', path.sep),
       ),
     )
     expect(config?.resolve?.alias).toHaveProperty(
-      '@lynx-js/react/element-template/jsx-dev-runtime',
+      '@lynx-js/react/element-template/jsx-runtime$',
       expect.stringContaining(
-        '/packages/react/runtime/lib/element-template/jsx-dev-runtime/index.js'
-          .replaceAll('/', path.sep),
+        '/packages/react/runtime/jsx-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-dev-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/jsx-dev-runtime/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
       ),
     )
     expect(config?.resolve?.alias).toHaveProperty(
@@ -664,6 +676,39 @@ describe('Config', () => {
           '/',
           path.sep,
         ),
+      ),
+    )
+    const mainThreadRule = config?.module?.rules?.find(
+      rule =>
+        rule
+        && typeof rule === 'object'
+        && rule.issuerLayer === LAYERS.MAIN_THREAD
+        && !!rule.resolve?.alias,
+    )
+    const mainThreadAlias = mainThreadRule && typeof mainThreadRule === 'object'
+      ? mainThreadRule.resolve?.alias
+      : undefined
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/lepus$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/index.js'.replaceAll(
+          '/',
+          path.sep,
+        ),
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-runtime/index.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
+    expect(mainThreadAlias).toHaveProperty(
+      '@lynx-js/react/element-template/jsx-dev-runtime$',
+      expect.stringContaining(
+        '/packages/react/runtime/lib/element-template/jsx-dev-runtime/index.js'
+          .replaceAll('/', path.sep),
       ),
     )
 
@@ -2796,7 +2841,52 @@ describe('Config', () => {
           .replaceAll('/', path.sep),
       ),
     )
+    expect(config?.resolve?.alias).toHaveProperty(
+      '@lynx-js/react/element-template/experimental/lazy/import$',
+      expect.stringContaining(
+        '/packages/react/runtime/lazy/element-template-import.js'
+          .replaceAll('/', path.sep),
+      ),
+    )
   })
+
+  test.each([
+    [false, true, '/packages/react/runtime/lib/element-template/index.js'],
+    [true, false, '/packages/react/runtime/lib/index.js'],
+  ])(
+    'keeps pluginReactAlias synced when lynx.config overrides experimental_useElementTemplate (%s -> %s)',
+    async (direct, late, expectedEntry) => {
+      const { pluginReactLynx } = await import('../src/pluginReactLynx.js')
+
+      const rsbuild = await createRspeedy({
+        rspeedyConfig: {
+          plugins: [
+            pluginReactLynx({
+              experimental_useElementTemplate: direct,
+            }),
+            {
+              name: 'lynx:config',
+              setup(api) {
+                api.expose(Symbol.for('lynx.config'), {
+                  config: {
+                    experimental_useElementTemplate: late,
+                  },
+                })
+              },
+            } satisfies RsbuildPlugin,
+            pluginStubRspeedyAPI(),
+          ],
+        },
+      })
+
+      const [config] = await rsbuild.initConfigs()
+
+      expect(config?.resolve?.alias).toHaveProperty(
+        '@lynx-js/react$',
+        expect.stringContaining(expectedEntry.replaceAll('/', path.sep)),
+      )
+    },
+  )
   ;['development', 'production'].forEach(mode => {
     test(`lazyBundle on ${mode} mode`, async () => {
       rstest.stubEnv('NODE_ENV', mode)
