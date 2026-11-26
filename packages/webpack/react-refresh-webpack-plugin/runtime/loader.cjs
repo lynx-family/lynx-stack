@@ -5,13 +5,14 @@ const moduleHot = module.hot;
 
 if (moduleHot) {
   const currentExports = __prefresh_utils__.getExports(module);
-  const previousHotModuleExports = moduleHot.data
-    && moduleHot.data.moduleExports;
 
   __prefresh_utils__.registerExports(currentExports, module.id);
 
   if (isPrefreshComponent) {
-    if (previousHotModuleExports) {
+    // `moduleHot.data` is set whenever this evaluation replaces an earlier
+    // instance, including one that never ran this footer (the error module of
+    // a failed build), so a fix right after a failed build is flushed too.
+    if (moduleHot.data) {
       try {
         __prefresh_utils__.flush();
         if (
