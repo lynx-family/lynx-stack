@@ -1,0 +1,331 @@
+.deck {
+  width: 100%;
+  height: 100%;
+  background-color: #15141d;
+}
+
+.deck-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.deck-slide {
+  position: relative;
+  width: 100vw;
+  height: 100%;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.deck-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.deck-foreground-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: row;
+  width: 500%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.deck-overlay-page {
+  position: relative;
+  width: 100vw;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.deck-glow {
+  position: absolute;
+  width: 100%;
+  height: 22%;
+  bottom: 0;
+  background-image: radial-gradient(
+    ellipse at bottom,
+    #351d493a,
+    #15141d00 72%
+  );
+}
+
+.deck-slide-1 .deck-glow {
+  background-image: radial-gradient(
+    ellipse at bottom,
+    #203d633b,
+    #15141d00 72%
+  );
+}
+
+.deck-slide-2 .deck-glow {
+  background-image: radial-gradient(
+    ellipse at bottom,
+    #214b3c40,
+    #15141d00 72%
+  );
+}
+
+.deck-slide-3 .deck-glow,
+.deck-slide-4 .deck-glow {
+  background-image: radial-gradient(
+    ellipse at bottom,
+    #553a3336,
+    #15141d00 72%
+  );
+}
+
+.deck-back {
+  position: absolute;
+  left: 22px;
+  top: 8px;
+  padding: 4px 0 10px;
+}
+
+.deck-back-text,
+.deck-pill-text,
+.deck-title,
+.deck-description,
+.deck-restart-text {
+  font-family: Inter, Roboto, sans-serif;
+}
+
+.deck-back-text {
+  color: #918e9a;
+  font-size: 13px;
+}
+
+.deck-art {
+  position: absolute;
+  top: 7.5%;
+  left: 50%;
+  width: 100%;
+  max-width: 420px;
+  height: 280px;
+  transform: translateX(-50%);
+}
+
+.deck-card {
+  position: absolute;
+  align-items: center;
+  border-radius: 24px;
+}
+
+.card-main {
+  left: 27.5%;
+  width: 45%;
+  height: 247px;
+  background-color: #de2039;
+}
+
+.card-blue,
+.card-silver {
+  top: 44px;
+  width: 43%;
+  height: 190px;
+  border-radius: 22px;
+}
+
+.card-blue {
+  left: -1%;
+  background-color: #346de5;
+  transform: translateY(8px) rotate(-6deg);
+}
+
+.card-silver {
+  right: -1%;
+  background-color: #d2cfce;
+  transform: rotate(8deg);
+}
+
+.card-symbol {
+  position: absolute;
+  top: 54px;
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  background-color: #ed990e;
+}
+
+.card-symbol-round {
+  border-radius: 40px;
+  background-color: #dedddc;
+}
+
+.card-blue .card-symbol,
+.card-silver .card-symbol {
+  top: 27px;
+}
+
+.card-silver .card-symbol {
+  background-color: #9d9a97;
+}
+
+.card-line {
+  position: absolute;
+  bottom: 53px;
+  width: 80px;
+  height: 20px;
+  border-radius: 12px;
+  background-color: #ffffff33;
+}
+
+.card-blue .card-line,
+.card-silver .card-line {
+  bottom: 26px;
+}
+
+.deck-slide-3 .card-blue {
+  left: 15%;
+  top: 35px;
+}
+
+.card-accent {
+  position: absolute;
+  right: 6%;
+  top: 89px;
+  width: 30%;
+  height: 141px;
+  border-radius: 26px;
+  background-color: #f3ae69;
+}
+
+.deck-pill {
+  position: absolute;
+  border-radius: 32px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #ffffff0a;
+  background-color: #15141dd9;
+  padding: 14px 16px;
+  align-items: center;
+}
+
+.deck-pill-text {
+  color: #f9f8fc;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.pill-source {
+  top: 211px;
+  align-self: center;
+}
+
+.pill-map {
+  top: -20px;
+  left: 6%;
+}
+
+.pill-template {
+  top: 6px;
+  right: 1%;
+}
+
+.pill-spring {
+  top: 97px;
+  left: 5%;
+}
+
+.pill-scroll {
+  top: 217px;
+  right: 26%;
+}
+
+.deck-slide-2 .pill-spring {
+  left: 34%;
+  top: 61px;
+}
+
+.deck-slide-2 .pill-source {
+  top: 225px;
+}
+
+.deck-slide-3 .pill-spring {
+  left: 7%;
+  top: 193px;
+}
+
+.deck-slide-3 .pill-scroll {
+  right: 1%;
+  top: 224px;
+}
+
+.deck-copy {
+  position: absolute;
+  top: 48.2%;
+  left: 0;
+  right: 0;
+  height: 29%;
+  align-items: center;
+  justify-content: center;
+  padding: 0 25px;
+}
+
+.deck-title {
+  color: #fbfaff;
+  font-size: 29px;
+  line-height: 36px;
+  text-align: center;
+}
+
+.deck-description {
+  max-width: 340px;
+  margin-top: 20px;
+  color: #c6c3cf;
+  font-size: 15px;
+  line-height: 23px;
+  text-align: center;
+}
+
+.deck-pagination {
+  position: absolute;
+  left: 50%;
+  bottom: 13%;
+  display: flex;
+  flex-direction: row;
+  transform: translateX(-50%);
+}
+
+.deck-dot-target {
+  width: 16px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: #625f6c;
+}
+
+.deck-dot-active {
+  background-color: #fbfaff;
+}
+
+.deck-restart {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 5%;
+  height: 44px;
+  border-radius: 24px;
+  background-color: #dedce5;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-restart-text {
+  color: #17151e;
+  font-size: 15px;
+  font-weight: 500;
+}

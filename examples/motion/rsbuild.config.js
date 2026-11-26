@@ -16,6 +16,7 @@ export default defineConfig({
       main: './src/index.tsx',
       mini: './src/Mini/main.tsx',
       features: './src/FeatureTests/index.tsx',
+      'scroll-linked': './src/ScrollLinked/index.tsx',
     },
   },
   plugins: [
