@@ -101,6 +101,7 @@
       "default": "./components/lib/index.js"
     },
     "./transform": {
+      "browser": "./transform/cjs/browser.cjs",
       "require": "./transform/cjs/main.cjs",
       "import": {
         "types": "./transform/index.d.ts",
