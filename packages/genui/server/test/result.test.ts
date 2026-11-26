@@ -84,6 +84,65 @@ describe('Mastra result finalization', () => {
     expect(error.upstreamRequestId).toBe('wrapped-request');
   });
 
+  test.each([
+    ['UND_ERR_CONNECT_TIMEOUT', 'connection'],
+    ['UND_ERR_HEADERS_TIMEOUT', 'response headers'],
+    ['UND_ERR_BODY_TIMEOUT', 'response body'],
+    ['ETIMEDOUT', 'request'],
+  ])('exposes a wrapped %s timeout reason', async (code, phase) => {
+    const timeout = Object.assign(new Error('Exceeded 10000ms'), { code });
+    const upstream = new Error('Cannot connect to API', {
+      cause: new TypeError('fetch failed', { cause: timeout }),
+    });
+    const usage = { inputTokens: 12 };
+    await expect(finalizeResult({
+      text: '',
+      error: upstream,
+      usage,
+      finishReason: 'error',
+    })).rejects.toMatchObject({
+      name: 'GenerationUpstreamError',
+      code: 'UPSTREAM_TIMEOUT',
+      message: `Upstream model ${phase} timed out: Exceeded 10000ms`,
+      cause: upstream,
+      result: { text: '', usage, finishReason: 'error' },
+    });
+  });
+
+  test.each([
+    [{ name: 'TimeoutError', message: 'Deadline exceeded' }, 'request'],
+    [{ name: 'APIConnectionTimeoutError' }, 'request'],
+    [{ statusCode: 408, message: 'Request Timeout' }, 'request'],
+    [{ statusCode: 504, message: 'Gateway Timeout' }, 'request'],
+    [
+      'Cannot connect to API: Connect Timeout Error (timeout: 10000ms)',
+      'connection',
+    ],
+    [{ lastError: { code: 'UND_ERR_CONNECT_TIMEOUT' } }, 'connection'],
+  ])('recognizes timeout evidence in %j', (cause, phase) => {
+    const error = new GenerationUpstreamError(cause, {
+      text: '',
+      usage: undefined,
+      finishReason: 'error',
+    });
+    expect(error.code).toBe('UPSTREAM_TIMEOUT');
+    expect(error.message).toContain(`Upstream model ${phase} timed out`);
+  });
+
+  test.each([
+    { name: 'AbortError', message: 'Request cancelled' },
+    { code: 'ECONNREFUSED', message: 'Cannot connect to API' },
+    { statusCode: 400, message: 'Invalid timeout parameter' },
+  ])('does not classify %j as a timeout', (cause) => {
+    const error = new GenerationUpstreamError(cause, {
+      text: '',
+      usage: undefined,
+      finishReason: 'error',
+    });
+    expect(error.code).toBeUndefined();
+    expect(error.message).toBe(cause.message);
+  });
+
   test('prefers aggregate token usage for streamed results', async () => {
     await expect(finalizeResult({
       text: Promise.resolve('generated'),

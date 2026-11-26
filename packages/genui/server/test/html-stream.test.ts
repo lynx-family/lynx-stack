@@ -6,6 +6,7 @@ import { Readable } from 'node:stream';
 
 import { describe, expect, test } from '@rstest/core';
 
+import { finalizeResult } from '../service/common/result.js';
 import app from '../src/app.js';
 
 const ARTIFACT = [
@@ -112,6 +113,61 @@ describe('HTML stream route', () => {
       expect(body).toContain('[REDACTED]');
       expect(body).not.toContain(apiKey);
       expect(body).not.toContain(encodedKey);
+    } finally {
+      global.__HTML_AGENT_SERVICE__ = previous;
+    }
+  });
+
+  test('returns the upstream timeout reason and code with redacted details', async () => {
+    const global = globalThis as GlobalWithHtmlService;
+    const previous = global.__HTML_AGENT_SERVICE__;
+    const apiKey = 'timeout-test-secret';
+    const reason =
+      `Connect Timeout Error (attempted address: ${apiKey}:443, timeout: 10000ms)`;
+    global.__HTML_AGENT_SERVICE__ = {
+      streamAsAsyncIterable() {
+        return Promise.resolve({
+          textStream: Readable.from([]),
+          finalize: async () => {
+            await finalizeResult({
+              text: '',
+              error: new Error(`Cannot connect to API: ${reason}`),
+              usage: { inputTokens: 12 },
+              finishReason: 'error',
+            });
+            throw new Error('Expected finalization to fail');
+          },
+        });
+      },
+    };
+
+    try {
+      const response = await app.request('/html/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '203.0.113.50',
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: 'Create a card' }],
+          model: 'gpt-custom',
+          apiKey,
+          baseURL: 'https://api.openai.com/v1',
+        }),
+      });
+      const body = await response.text();
+      expect(body).toContain('event: error');
+      expect(body).toContain('"code":"UPSTREAM_TIMEOUT"');
+      expect(body).toContain('Upstream model connection timed out');
+      expect(body).toContain(
+        'attempted address: [REDACTED]:443, timeout: 10000ms',
+      );
+      expect(body).toContain('"usage":{"inputTokens":12}');
+      expect(body).toContain('"finishReason":"error"');
+      expect(body).toMatch(/"metrics":\{"generationMs":\d/u);
+      expect(body).not.toContain('"statusCode"');
+      expect(body).not.toContain('event: done');
+      expect(body).not.toContain(apiKey);
     } finally {
       global.__HTML_AGENT_SERVICE__ = previous;
     }
