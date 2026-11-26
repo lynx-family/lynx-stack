@@ -46,6 +46,7 @@ const config: RslibConfig = defineConfig({
         entry: {
           'upstream/full': './src/upstream/full.ts',
           'upstream/mini': './src/upstream/mini.ts',
+          'upstream/values': './src/upstream/values.ts',
         },
       },
       output: {
