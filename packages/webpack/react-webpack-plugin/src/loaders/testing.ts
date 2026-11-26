@@ -1,7 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import type { LoaderContext } from '@rspack/core';
@@ -15,6 +14,7 @@ import {
   RUNTIME_PKG,
 } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
+import { loadTransform } from './transform.js';
 
 function normalizeSlashes(file: string) {
   return file.replaceAll(path.win32.sep, '/');
@@ -24,7 +24,6 @@ function testingLoader(
   this: LoaderContext<ReactLoaderOptions>,
   content: string,
 ): void {
-  const require = createRequire(import.meta.url);
   const {
     compat = false,
     defineDCE = { define: {} },
@@ -32,11 +31,9 @@ function testingLoader(
     experimental_transformBuiltinAttributeNames,
     experimental_useElementTemplate = false,
     shake = false,
-    transformPath = '@lynx-js/react/transform',
-  } = this.getOptions();
-  const { transformReactLynxSync } = require(
     transformPath,
-  ) as typeof import('@lynx-js/react/transform');
+  } = this.getOptions();
+  const { transformReactLynxSync } = loadTransform(transformPath);
   const filename = normalizeSlashes(
     path.relative(
       this.rootContext,

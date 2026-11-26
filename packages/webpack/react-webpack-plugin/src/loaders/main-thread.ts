@@ -1,8 +1,6 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module';
-
 import type { LoaderContext, LoaderDefinitionFunction } from '@rspack/core';
 
 import { UI_SOURCE_MAP_RECORDS_BUILD_INFO } from '@lynx-js/debug-metadata';
@@ -17,6 +15,7 @@ import {
 } from './defines-import-by-boundary.js';
 import { getMainThreadTransformOptions } from './options.js';
 import type { ReactLoaderOptions } from './options.js';
+import { loadTransform } from './transform.js';
 import { MAIN_THREAD_HMR } from '../hmr/enabled.js';
 
 export const ELEMENT_TEMPLATE_BUILD_INFO = 'lynx:element-templates';
@@ -32,11 +31,8 @@ const mainThreadLoader: LoaderDefinitionFunction<ReactLoaderOptions> = function(
   content,
   sourceMap,
 ): void {
-  const require = createRequire(import.meta.url);
-  const { transformPath = '@lynx-js/react/transform' } = this.getOptions();
-  const { transformReactLynxSync } = require(
-    transformPath,
-  ) as typeof import('@lynx-js/react/transform');
+  const { transformPath } = this.getOptions();
+  const { transformReactLynxSync } = loadTransform(transformPath);
   let swcInputSourceMap: string | undefined;
   if (this.sourceMap && sourceMap) {
     if (typeof sourceMap === 'string') {

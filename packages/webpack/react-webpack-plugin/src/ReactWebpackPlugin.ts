@@ -34,6 +34,8 @@ import { applyMainThreadHMR } from './MainThreadHMR.js';
 
 const require = createRequire(import.meta.url);
 
+let loaders: Record<keyof typeof LAYERS | 'TESTING', string> | undefined;
+
 interface ElementTemplateBuildInfo {
   templateId: string;
   compiledTemplate: Record<string, unknown>;
@@ -452,11 +454,16 @@ class ReactWebpackPlugin {
    *
    * @public
    */
-  static loaders: Record<keyof typeof LAYERS | 'TESTING', string> = {
-    BACKGROUND: require.resolve('../lib/loaders/background.js'),
-    MAIN_THREAD: require.resolve('../lib/loaders/main-thread.js'),
-    TESTING: require.resolve('../lib/loaders/testing.js'),
-  };
+  static get loaders(): Record<keyof typeof LAYERS | 'TESTING', string> {
+    // Resolved on first access rather than at import time, so this module can
+    // be imported where Node.js module resolution is not available (a build
+    // in the browser through `@rspack/browser`).
+    return loaders ??= {
+      BACKGROUND: require.resolve('../lib/loaders/background.js'),
+      MAIN_THREAD: require.resolve('../lib/loaders/main-thread.js'),
+      TESTING: require.resolve('../lib/loaders/testing.js'),
+    };
+  }
 
   constructor(
     private readonly options?: ReactWebpackPluginOptions | undefined,

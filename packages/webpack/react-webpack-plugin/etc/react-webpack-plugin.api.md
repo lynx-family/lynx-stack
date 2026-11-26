@@ -49,7 +49,7 @@ export class ReactWebpackPlugin {
     constructor(options?: ReactWebpackPluginOptions | undefined);
     apply(compiler: Compiler): void;
     static defaultOptions: Readonly<Required<ReactWebpackPluginOptions>>;
-    static loaders: Record<keyof typeof LAYERS | 'TESTING', string>;
+    static get loaders(): Record<keyof typeof LAYERS | 'TESTING', string>;
 }
 
 // @public
