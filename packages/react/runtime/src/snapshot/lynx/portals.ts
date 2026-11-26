@@ -10,12 +10,14 @@ import type { NodesRef } from '@lynx-js/types';
 
 import { serializeNodesRef } from './nodesRef.js';
 import { pendingInsertBefore } from './portalsPending.js';
-import { COMPONENT, MASK, PARENT, VNODE } from '../../shared/render-constants.js';
+import { MASK, VNODE } from '../../shared/render-constants.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
 
 export { clearPendingPortalInsertBefore } from './portalsPending.js';
+
+let portalMaskId = 0;
 
 interface PortalProps {
   [VNODE]: ComponentChildren;
@@ -60,22 +62,11 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
   }
 
   if (!_this._temp) {
-    // Ensure the element has a mask for useId invocations.
-    // Preact v11 stores `_mask` on the component instance (root or Suspense
-    // boundary) rather than the VNode; walk up to the nearest masked
-    // component/vnode and share its mask through ContextProvider.
-    interface MaskLookupNode {
-      [COMPONENT]?: { [MASK]?: VNode[typeof MASK] } | null | undefined;
-      [MASK]?: VNode[typeof MASK];
-      [PARENT]?: MaskLookupNode | null | undefined;
-    }
-    let root: MaskLookupNode = _this[VNODE]!;
-    while (!(root[COMPONENT] ?? root)[MASK] && root[PARENT]) {
-      root = root[PARENT];
-    }
-    const target = root[COMPONENT]!;
-    const mask = target[MASK] ?? (target[MASK] = [0, 0]);
-    _this._mask = mask;
+    // Give each portal subtree its own isolated mask prefix so `useId()` inside
+    // a portal never collides with outer components AND never consumes the
+    // outer counter (the main thread skips portals on first screen, so sharing
+    // the outer counter would shift `useId()` on siblings rendered after a portal).
+    _this._mask = ['p' + portalMaskId++, 0];
 
     _this._container = container;
 

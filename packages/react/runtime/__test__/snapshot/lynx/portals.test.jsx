@@ -687,44 +687,76 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     expect(snapshotInstanceManager.values.has(childId)).toBe(false);
   });
 
-  it('does not generate duplicate useId inside and outside createPortal', () => {
+  it('keeps useId unique inside createPortal and consistent across threads for following siblings', () => {
     const host = { _nodeSelectToken: { type: 0, identifier: '[data-testid="host"]' } };
-    const ids = {};
+    const mainIds = {};
+    const bgIds = {};
 
-    function PortalChild({ label }) {
-      ids[label] = useId();
-      return <text>{ids[label]}</text>;
+    function record(label, id) {
+      if (__MAIN_THREAD__) {
+        mainIds[label] = id;
+      } else {
+        bgIds[label] = id;
+      }
+      return id;
     }
 
-    function SuspensePortal({ label }) {
-      ids.suspenseOuter = useId();
+    function PortalChild({ label }) {
+      const id = record(label, useId());
+      return <text>{id}</text>;
+    }
+
+    function SiblingAfterPortal() {
+      const id = record('siblingAfter', useId());
+      return <text>{id}</text>;
+    }
+
+    function SuspensePortal() {
+      record('suspenseOuter', useId());
       return (
         <>
-          {createPortal(<PortalChild label={label} />, host)}
+          {createPortal(<PortalChild label='suspensePortal' />, host)}
+          <PortalChild label='suspenseSiblingAfter' />
         </>
       );
     }
 
     function App() {
-      ids.parentBefore = useId();
       return (
         <view>
           <text data-testid='host' />
-          {createPortal(<PortalChild label='portal' />, host)}
+          {createPortal(<PortalChild label='portalFirst' />, host)}
+          <SiblingAfterPortal />
           <Suspense fallback={<text>loading</text>}>
-            <SuspensePortal label='suspensePortal' />
+            <SuspensePortal />
           </Suspense>
         </view>
       );
     }
 
-    globalEnvManager.switchToBackground();
-    render(<App />, __root);
+    mountAndHydrate(<App />);
 
-    expect(ids.parentBefore).toBe('P0-0');
-    expect(ids.portal).toBe('P0-1');
-    expect(ids.suspenseOuter).toBe('PP0-2-0');
-    expect(ids.suspensePortal).toBe('PP0-2-1');
+    // Siblings rendered after a portal must receive identical IDs on both threads.
+    expect(mainIds.siblingAfter).toBe('P0-0');
+    expect(bgIds.siblingAfter).toBe('P0-0');
+    expect(mainIds.suspenseOuter).toBe('PP0-1-0');
+    expect(bgIds.suspenseOuter).toBe('PP0-1-0');
+    expect(mainIds.suspenseSiblingAfter).toBe('PP0-1-1');
+    expect(bgIds.suspenseSiblingAfter).toBe('PP0-1-1');
+
+    // Portal subtrees render only on background and must have unique IDs that
+    // never collide with outer or sibling IDs.
+    expect(mainIds.portalFirst).toBeUndefined();
+    expect(mainIds.suspensePortal).toBeUndefined();
+    const allBgIds = [
+      bgIds.portalFirst,
+      bgIds.siblingAfter,
+      bgIds.suspenseOuter,
+      bgIds.suspensePortal,
+      bgIds.suspenseSiblingAfter,
+    ];
+    expect(allBgIds.every(id => typeof id === 'string' && id.length > 0)).toBe(true);
+    expect(new Set(allBgIds).size).toBe(allBgIds.length);
   });
 });
 
