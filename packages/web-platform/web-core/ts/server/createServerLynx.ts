@@ -33,6 +33,12 @@ export function createServerLynx(
       // Return a basic mock for SSR
       return {} as any;
     },
+    getDevtool() {
+      // SSR renders once, so there are no CSS hot updates to apply.
+      return {
+        replaceStyleSheetByIdWithBase64: () => {},
+      };
+    },
     getEngine() {
       // SSR renders the first frame only; there is no engine lifetime to
       // observe, so hand back an inert proxy. `hasEventListener` reporting

@@ -9,11 +9,14 @@ use crate::template::template_sections::style_info::StyleSheetResource;
 use fnv::FnvHashMap;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{CssStyleSheet, HtmlStyleElement, Node, ShadowRoot};
+use web_sys::{CssStyleSheet, Element, HtmlStyleElement, Node, ShadowRoot};
 
 pub struct StyleManager {
   root_node: Node,
   css_query_map_by_entry_name: FnvHashMap<String, StyleSheetResource>,
+  /// The `<style>` elements appended for each entry, so that
+  /// `replace_style_sheet` can remove them.
+  style_elements_by_entry_name: FnvHashMap<String, Vec<Element>>,
   css_og_style_sheet: Option<CssStyleSheet>,
   unique_id_to_style_declarations_map: Option<FnvHashMap<usize, web_sys::CssStyleDeclaration>>,
 }
@@ -23,6 +26,7 @@ impl StyleManager {
     StyleManager {
       root_node,
       css_query_map_by_entry_name: FnvHashMap::default(),
+      style_elements_by_entry_name: FnvHashMap::default(),
       css_og_style_sheet: None,
       unique_id_to_style_declarations_map: None,
     }
@@ -122,6 +126,11 @@ impl StyleManager {
         .root_node
         .append_child(&new_style_element)
         .map_err(|e| JsError::new(&format!("Failed to append child: {e:?}")))?;
+      self
+        .style_elements_by_entry_name
+        .entry(entry_key.clone())
+        .or_default()
+        .push(new_style_element.unchecked_into::<Element>());
     }
 
     if let Some(font_face_element) = &resource.font_face_element {
@@ -141,11 +150,33 @@ impl StyleManager {
         .host()
         .append_child(&new_font_face_element)
         .map_err(|e| JsError::new(&format!("Failed to append child: {e:?}")))?;
+      self
+        .style_elements_by_entry_name
+        .entry(entry_key.clone())
+        .or_default()
+        .push(new_font_face_element.unchecked_into::<Element>());
     }
 
     self
       .css_query_map_by_entry_name
       .insert(entry_key, resource.clone());
     Ok(())
+  }
+
+  /// Replaces every style sheet pushed for an entry with `resource`, for CSS
+  /// hot module replacement. The entry's `<style>` elements are removed before
+  /// the new ones are appended, and its CSS OG query map is replaced.
+  pub fn replace_style_sheet(
+    &mut self,
+    resource: &StyleSheetResource,
+    entry_name: Option<String>,
+  ) -> Result<(), JsError> {
+    let entry_key = entry_name.as_deref().unwrap_or("__Card__");
+    if let Some(elements) = self.style_elements_by_entry_name.remove(entry_key) {
+      for element in elements {
+        element.remove();
+      }
+    }
+    self.push_style_sheet(resource, entry_name)
   }
 }

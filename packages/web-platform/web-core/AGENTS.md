@@ -166,7 +166,18 @@ Built with `defineExternalBundleRslibConfig(userLibConfig, { target: 'web' })` f
 
 The external mts chunk is a webpack/rspack **library** that writes to bare `exports`. The bts chunk wrapper (`createBundleInitReturnObj`) passes `exports` as a parameter, so the bts chunk fits `Manifest` directly. But the `LepusCode` decode wrapper is `(function(){ const navigator=…; [module.exports=]CODE })()` — it provides the iframe `module` but **not** `exports`, and its lazy variant expects CODE to be an _expression_ (the shape lazy-component roots use). So the decode worker's `LepusCode` case has an **external variant** (gated on `config.isExternalBundle`) that prepends `var exports=(module.exports={});` to give the library chunk a CommonJS env. Don't try to make one wrapper serve both shapes — the lazy _expression_ form and the library _exports_ form are incompatible.
 
+### CSS hot updates
+
+`@lynx-js/css-extract-webpack-plugin` emits `<name>.<hash>.css.hot-update.json`, whose `content` is a base64 web bundle (from `WebEncodePlugin`) holding **all** the CSS of the template. Its background-thread runtime dispatches `lynx.hmr.css`, and the main-thread runtime calls `lynx.getDevtool().replaceStyleSheetByIdWithBase64(cssId, content, entry)` for the changed css id and each dependency.
+
+- `createMainThreadGlobalAPIs` → `LynxViewInstance.replaceStyleSheetWithBase64`, which skips a bundle identical to the last one for that entry (the runtime repeats the call per css id).
+- `ts/client/mainthread/hotUpdateStyleSheet.ts` reads the bundle's `StyleInfo` section and decodes it with `decode_style_info`, using the entry's stored config and the view's `transform*` flags, as the decode worker does on load.
+- `MainThreadWasmContext.replace_style_sheet` → `StyleManager.replace_style_sheet` removes the `<style>` elements recorded for that entry, pushes the new sheet, and, without `enableCSSSelector`, recomputes the CSS OG styles of the entry's elements (matched by `l-e-name`).
+- `entry` is `'__Card__'`/`undefined` for the card or the lazy bundle url. A web bundle has no runtime wrapper and so no `lynx.__chunk_entries__`; the background runtime instead reads lynx-core's global `globDynamicComponentEntry` when it is evaluated, which only identifies its own template. Async chunks of the card are not hot-updated on web.
+
 ### Style-engine test gotcha
+
+jsdom creates no `sheet` for a `<style>` inside a shadow root, so the CSS OG rules (`enableCSSSelector: false`) cannot be read in tests; spy on the binding's `getClassList`, which `update_css_og_style` calls for every element it recomputes.
 
 When testing external/lazy stylesheets, assert **`background-color`**, not `color`: the web style transformer makes `color` cascade/inherit, so a `color` assertion can pass even when the stylesheet was never applied (false positive). `decode_style_info`'s `entryName` (set when `isLazy`) scopes selectors with `[l-e-name="<url>"]`; pass `isLazy: 'false'` to load an external bundle's CSS globally.
 

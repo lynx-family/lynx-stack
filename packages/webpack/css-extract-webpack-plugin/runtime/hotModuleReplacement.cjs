@@ -16,13 +16,34 @@ function debounce(fn, time) {
   };
 }
 
+// The entry (`'__Card__'` or a lazy bundle url) of the template this runtime
+// belongs to. On native Lynx, the runtime wrapper of each chunk records its
+// entry in `lynx.__chunk_entries__`. A web bundle has no runtime wrapper, but
+// lynx-core sets the global `globDynamicComponentEntry` while it runs a
+// template's code, so it is read here, when this module is first evaluated.
+const ownEntry = typeof globDynamicComponentEntry === 'undefined'
+  ? undefined
+  : globDynamicComponentEntry;
+
 function updateStyle(cssId = 0) {
   const cssHotUpdateList = __webpack_require__.cssHotUpdateList;
   if (!cssHotUpdateList) {
     throw new Error('cssHotUpdateList is not found');
   }
 
-  for (const [chunkName, cssHotUpdatePath] of cssHotUpdateList) {
+  const chunkEntries = lynx.__chunk_entries__;
+  cssHotUpdateList.forEach(([chunkName, cssHotUpdatePath], index) => {
+    let entry;
+    if (chunkEntries) {
+      entry = chunkEntries[chunkName];
+    } else if (index === cssHotUpdateList.length - 1) {
+      // The template's own chunk is listed last.
+      entry = ownEntry;
+    } else {
+      // Without `lynx.__chunk_entries__` (on web), the entry of an async
+      // chunk is unknown, so its CSS is not updated.
+      return;
+    }
     lynx.requireModuleAsync(
       // lynx.requireModuleAsync has two level hash and we cannot delete
       // the LynxGroup level cache here.
@@ -42,13 +63,13 @@ function updateStyle(cssId = 0) {
               cssId,
               content: ret.content,
               deps: ret.deps,
-              entry: lynx.__chunk_entries__[chunkName],
+              entry,
             },
           });
         }
       },
     );
-  }
+  });
 }
 
 /**
