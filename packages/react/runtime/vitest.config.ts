@@ -122,6 +122,7 @@ export default defineConfig({
       deps: {
         inline: [
           /@lynx-js\/internal-preact/,
+          /[\\/]preact[@/]/,
         ],
       },
     },

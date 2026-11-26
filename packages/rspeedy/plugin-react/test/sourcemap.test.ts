@@ -29,7 +29,7 @@ import { createStubRspeedy as createRspeedy } from './createRspeedy.js'
 const functionNames = [
   'functionThatThrows',
   'innerFunction',
-  'function renderComponent',
+  'function createElement',
 ]
 const tempDirs: string[] = []
 
@@ -364,9 +364,9 @@ describe('Sourcemap', () => {
       })
       expect(functionName2Source).toMatchInlineSnapshot(`
         {
-          "function renderComponent": {
+          "function createElement": {
             "column": 0,
-            "line": 319,
+            "line": 121,
             "name": null,
             "source": "preact.mjs",
           },
