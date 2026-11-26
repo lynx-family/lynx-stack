@@ -1,9 +1,10 @@
 // Copyright 2024 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module'
+import fs from 'node:fs'
 import path from 'node:path'
 
+import { rspack as rsbuildRspack } from '@rsbuild/core'
 import type { RsbuildPlugin } from '@rsbuild/core'
 import gte from 'semver/functions/gte.js'
 
@@ -27,12 +28,22 @@ export function pluginReactAlias(options: Options): RsbuildPlugin {
   return {
     name: 'lynx:react-alias',
     setup(api) {
-      const require = createRequire(import.meta.url)
-
-      const reactLynxPkg = require.resolve('@lynx-js/react/package.json', {
-        paths: [rootPath ?? api.context.rootPath],
-      })
-      const { version, exports: reactExports } = require(reactLynxPkg) as {
+      // Resolve with Rspack and read with `fs` rather than Node.js `require`,
+      // so a build in the browser (`@rspack/browser`) finds the project's own
+      // `@lynx-js/react` in its in-memory file system.
+      const { ResolverFactory } = rsbuildRspack.experiments.resolver
+      const resolved = new ResolverFactory({
+        enablePnp: !!process.versions['pnp'],
+      }).sync(rootPath ?? api.context.rootPath, '@lynx-js/react/package.json')
+      if (resolved.error !== undefined || resolved.path === undefined) {
+        throw new Error(
+          resolved.error ?? 'Failed to resolve @lynx-js/react/package.json',
+        )
+      }
+      const reactLynxPkg = resolved.path
+      const { version, exports: reactExports } = JSON.parse(
+        fs.readFileSync(reactLynxPkg, 'utf-8'),
+      ) as {
         version: string
         exports?: Record<string, unknown>
       }

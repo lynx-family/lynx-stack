@@ -3,34 +3,28 @@
 // LICENSE file in the root directory of this source tree.
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { URL } from 'node:url'
 
 import { createRsbuild } from '@rsbuild/core'
 import { describe, expect, rstest, test } from '@rstest/core'
 
 import { LAYERS } from '@lynx-js/react-webpack-plugin'
 
-rstest.mock('node:module', () => {
-  const original = rstest.requireActual<typeof import('node:module')>(
-    'node:module',
-  )
-  const { createRequire: originalCreateRequire } = original
-  return {
-    ...original as object,
-    createRequire: rstest.fn().mockImplementation((path: string | URL) => {
-      const originalRequire = originalCreateRequire(path)
-      const mockedRequire = (id: string) => {
-        if (/[\\/](?:packages[\\/])?react[\\/]*package\.json$/.test(id)) {
-          return { version: '0.112.0-canary-20250728-1f7b2d07' }
-        } else {
-          // eslint-disable-next-line
-          return originalRequire(id)
-        }
-      }
-      mockedRequire.resolve = originalRequire.resolve
-      return mockedRequire
-    }),
-  }
+// `pluginReactAlias` reads `@lynx-js/react/package.json` with `fs`.
+rstest.mock('node:fs', () => {
+  const original = rstest.requireActual<typeof import('node:fs')>('node:fs')
+  const readFileSync = ((file: unknown, ...rest: unknown[]) => {
+    if (
+      typeof file === 'string'
+      && /[\\/](?:packages[\\/])?react[\\/]*package\.json$/.test(file)
+    ) {
+      return JSON.stringify({ version: '0.112.0-canary-20250728-1f7b2d07' })
+    }
+    return (original.readFileSync as (...args: unknown[]) => unknown)(
+      file,
+      ...rest,
+    )
+  }) as typeof original.readFileSync
+  return { ...original, readFileSync, default: { ...original, readFileSync } }
 })
 
 describe('@lynx-js/react/compat - alias', () => {
