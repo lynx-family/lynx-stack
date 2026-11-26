@@ -110,7 +110,12 @@ export class ReactRefreshRspackPlugin {
    * }
    * ```
    */
-  static loader: string = require.resolve('../loader.cjs');
+  static get loader(): string {
+    // Resolved on access rather than at import time, so this module can be
+    // imported where Node.js module resolution is not available (a build in
+    // the browser through `@rspack/browser`).
+    return require.resolve('../loader.cjs');
+  }
 
   /**
    * The entry point of a rspack plugin.

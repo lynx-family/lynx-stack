@@ -10,7 +10,7 @@ import type { Compiler } from '@rspack/core';
 export class ReactRefreshRspackPlugin {
     constructor(options?: ReactRefreshRspackPluginOptions);
     apply(compiler: Compiler): void;
-    static loader: string;
+    static get loader(): string;
 }
 
 // @public
