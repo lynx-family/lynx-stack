@@ -25,7 +25,7 @@
   "scripts": {
     "build": "rsbuild build",
     "test": "rstest",
-    "test:e2e": "node e2e/run.mjs",
+    "test:e2e": "playwright test",
     "test:type": "tsc6 --noEmit"
   },
   "devDependencies": {

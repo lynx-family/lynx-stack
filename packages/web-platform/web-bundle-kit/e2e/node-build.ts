@@ -4,24 +4,34 @@
 
 // Builds a project in Node.js with the configuration the kit gives it in
 // src/bundler.ts, with the plugins as published: the reference the kit's
-// output is compared with in run.mjs.
+// output is compared with in development.spec.ts.
 
 import { createRsbuild } from '@rsbuild/core';
 
 import { pluginReactLynx } from '@lynx-js/react-rsbuild-plugin';
 import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 
-/**
- * @param {{ root: string, entries: Record<string, string>, outDir: string, publicPath: string, mode: 'development' | 'production', hmr: boolean }} options
- */
+export interface NodeBuildOptions {
+  /** The project. */
+  root: string;
+  /** The cards, by name. */
+  entries: Record<string, string>;
+  outDir: string;
+  publicPath: string;
+  mode: 'development' | 'production';
+  hmr: boolean;
+}
+
 export async function buildInNode(
-  { root, entries, outDir, publicPath, mode, hmr },
-) {
+  { root, entries, outDir, publicPath, mode, hmr }: NodeBuildOptions,
+): Promise<void> {
   const rsbuild = await createRsbuild({
     cwd: root,
     loadEnv: false,
     config: {
       mode,
+      // Only problems: the test output stays quiet on success.
+      logLevel: 'warn',
       source: {
         entry: Object.fromEntries(
           Object.entries(entries).map(([name, entry]) => [name, `./${entry}`]),
