@@ -56,6 +56,7 @@ function createMainThreadRpc(
       ) => {
         handlers.set(endpoint.name, handler);
       }),
+      registerHandlerLazy: rstest.fn(),
       invoke: rstest.fn(() => Promise.resolve(undefined)),
     } as unknown as Rpc,
     handlers,
@@ -96,6 +97,31 @@ describe('createNativeApp', () => {
       expect(otherApp.isProfileRecording()).toBe(false);
     },
   );
+
+  test('setCard gives the background lynx an empty chunk-entry map', async () => {
+    const { rpc } = createMainThreadRpc(rstest.fn());
+    const nativeApp = await createNativeApp(
+      rpc,
+      timingSystem,
+      {},
+      '/main.web.bundle',
+      'react',
+    );
+    const context = { __start: rstest.fn() };
+    const lynx: Record<string, unknown> = {
+      getCoreContext: () => context,
+      getDevtool: () => context,
+    };
+
+    nativeApp.setCard(
+      { lynx } as unknown as Parameters<
+        typeof nativeApp.setCard
+      >[0],
+    );
+
+    // What the CSS hot update runtime reads for each chunk.
+    expect(lynx['__chunk_entries__']).toEqual({});
+  });
 
   test('waits for the main-thread query when the background chunk is cached', async () => {
     const source = '/lazy-component.web.bundle';

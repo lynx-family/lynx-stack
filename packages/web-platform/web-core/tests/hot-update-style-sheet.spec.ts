@@ -11,6 +11,7 @@ import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
 import {
   createStyleSheetResourceFromBundle,
+  isLazyBundle,
   readBundleSection,
 } from '../ts/client/mainthread/hotUpdateStyleSheet.js';
 import type { LynxViewInstance } from '../ts/client/mainthread/LynxViewInstance.js';
@@ -18,7 +19,10 @@ import { encode } from '../ts/encode/webEncoder.js';
 import { createTestLynxViewInstance } from './createTestLynxViewInstance.js';
 
 /** A CSS hot update bundle, as `@lynx-js/css-extract-webpack-plugin` emits it. */
-function hotUpdateBundle(backgroundColor: string): Uint8Array {
+function hotUpdateBundle(
+  backgroundColor: string,
+  appType = 'card',
+): Uint8Array {
   return encode(
     {
       styleInfo: {
@@ -33,7 +37,7 @@ function hotUpdateBundle(backgroundColor: string): Uint8Array {
       },
       manifest: {},
       cardType: 'react',
-      appType: 'card',
+      appType,
       pageConfig: {},
       lepusCode: {},
       customSections: {},
@@ -80,6 +84,7 @@ describe('CSS hot update style sheets', () => {
     const resource = createStyleSheetResourceFromBundle(
       Buffer.from(hotUpdateBundle('blue')).toString('base64'),
       undefined,
+      false,
       true,
       false,
       false,
@@ -95,6 +100,32 @@ describe('CSS hot update style sheets', () => {
     ).join('\n');
     expect(text).toContain('.test');
     expect(text).toContain('background-color:blue');
+  });
+
+  test('createStyleSheetResourceFromBundle leaves out a bundle of the other kind', () => {
+    const card = hotUpdateBundle('blue');
+    const lazy = hotUpdateBundle('blue', 'DynamicComponent');
+    expect(isLazyBundle(card)).toBe(false);
+    expect(isLazyBundle(lazy)).toBe(true);
+
+    const create = (bundle: Uint8Array, entryName?: string) =>
+      createStyleSheetResourceFromBundle(
+        Buffer.from(bundle).toString('base64'),
+        entryName,
+        entryName !== undefined,
+        true,
+        false,
+        false,
+        false,
+        false,
+      );
+    // On web the update of a lazy bundle arrives without its url. Applied to
+    // the card, it would replace the card's style sheets.
+    expect(create(lazy)).toBeUndefined();
+    expect(create(card, 'lazy.web.bundle')).toBeUndefined();
+    const resource = create(lazy, 'lazy.web.bundle');
+    expect(resource).toBeDefined();
+    resource!.free();
   });
 
   test('lynx.getDevtool().replaceStyleSheetByIdWithBase64 replaces the entry', () => {

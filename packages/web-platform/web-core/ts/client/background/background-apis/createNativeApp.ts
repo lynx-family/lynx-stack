@@ -138,6 +138,12 @@ export async function createNativeApp(
         tt,
       );
       timingSystem.registerGlobalEmitter(tt.GlobalEventEmitter);
+      // Development runtimes read the entry of a chunk from
+      // `lynx.__chunk_entries__`, as the CSS hot update of
+      // `@lynx-js/css-extract-webpack-plugin` does. The runtime wrapper of a
+      // native bundle creates it; a web bundle has none, so the entry of every
+      // chunk is unknown here.
+      tt.lynx.__chunk_entries__ ??= {};
       (tt.lynx.getCoreContext() as LynxCrossThreadContext).__start();
       (tt.lynx.getDevtool() as LynxCrossThreadContext).__start();
       nativeApp.tt = tt;

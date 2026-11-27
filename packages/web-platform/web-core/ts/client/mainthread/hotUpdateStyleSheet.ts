@@ -59,29 +59,56 @@ export function readBundleSection(
 }
 
 /**
+ * Whether an encoded web bundle is the bundle of a lazy bundle rather than of
+ * a card: `isLazy` in its Configurations section, a JSON string in UTF-16.
+ */
+export function isLazyBundle(bundle: Uint8Array): boolean {
+  const configurations = readBundleSection(
+    bundle,
+    TemplateSectionLabel.Configurations,
+  );
+  if (!configurations) {
+    return false;
+  }
+  const config = JSON.parse(
+    new TextDecoder('utf-16le').decode(configurations),
+  ) as Record<string, string>;
+  return config['isLazy'] === 'true';
+}
+
+/**
  * Decodes the StyleInfo of a base64 encoded web bundle into a style sheet, the
  * way the decode worker does for a template that is loaded. Returns
- * `undefined` when the bundle has no StyleInfo.
+ * `undefined` when the bundle has no StyleInfo, or is not for this entry.
  *
  * Used for CSS hot updates: `@lynx-js/css-extract-webpack-plugin` encodes all
  * the CSS of a template into such a bundle.
  *
  * @param entryName - The lazy bundle url, whose selectors are scoped to it, or
  * `undefined` for the card.
+ * @param isLazy - Whether the entry is a lazy bundle. On web the hot update
+ * runtime does not know the entry of a chunk and sends every update for the
+ * card, so the update of a lazy bundle is told apart by its own
+ * configuration and left out.
  */
 export function createStyleSheetResourceFromBundle(
   base64Bundle: string,
   entryName: string | undefined,
+  isLazy: boolean,
   enableCSSSelector: boolean,
   transformVW: boolean,
   transformVH: boolean,
   transformREM: boolean,
   transformSP: boolean,
 ): StyleSheetResource | undefined {
-  const styleInfo = readBundleSection(
-    Uint8Array.from(atob(base64Bundle), (char) => char.charCodeAt(0)),
-    TemplateSectionLabel.StyleInfo,
+  const bundle = Uint8Array.from(
+    atob(base64Bundle),
+    (char) => char.charCodeAt(0),
   );
+  if (isLazyBundle(bundle) !== isLazy) {
+    return undefined;
+  }
+  const styleInfo = readBundleSection(bundle, TemplateSectionLabel.StyleInfo);
   if (!styleInfo) {
     return undefined;
   }

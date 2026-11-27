@@ -224,11 +224,12 @@ export class LynxViewInstance implements AsyncDisposable {
     if (!wasmContext) {
       return;
     }
+    const config = templateManager.getBundle(entryUrl)?.config;
     const resource = createStyleSheetResourceFromBundle(
       base64Bundle,
       entryName,
-      templateManager.getBundle(entryUrl)?.config?.enableCSSSelector
-        === 'true',
+      config?.isLazy === 'true',
+      config?.enableCSSSelector === 'true',
       this.transformVW,
       this.transformVH,
       this.transformREM,
