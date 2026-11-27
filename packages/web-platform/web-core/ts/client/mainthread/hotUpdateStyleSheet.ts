@@ -45,6 +45,11 @@ export function readBundleSection(
     const sectionLabel = view.getUint32(offset, true);
     const length = view.getUint32(offset + 4, true);
     offset += 8;
+    if (offset + length > bundle.byteLength) {
+      throw new Error(
+        `Unexpected EOF reading section content. Expected ${length} bytes.`,
+      );
+    }
     if (sectionLabel === label) {
       return bundle.subarray(offset, offset + length);
     }

@@ -1,7 +1,11 @@
 import './jsdom.js';
 import { describe, expect, rstest, test } from '@rstest/core';
 
-import { TemplateSectionLabel } from '../ts/constants.js';
+import {
+  MagicHeader0,
+  MagicHeader1,
+  TemplateSectionLabel,
+} from '../ts/constants.js';
 import { createElementAPI } from '../ts/client/mainthread/elementAPIs/createElementAPI.js';
 import { WASMJSBinding } from '../ts/client/mainthread/elementAPIs/WASMJSBinding.js';
 import { createMainThreadGlobalAPIs } from '../ts/client/mainthread/createMainThreadGlobalAPIs.js';
@@ -48,6 +52,23 @@ describe('CSS hot update style sheets', () => {
     expect(() =>
       readBundleSection(new Uint8Array(16), TemplateSectionLabel.StyleInfo)
     ).toThrow('Not an encoded web bundle');
+  });
+
+  test('readBundleSection rejects a section longer than the bundle', () => {
+    const bundle = new Uint8Array(12 + 8 + 4);
+    const view = new DataView(bundle.buffer);
+    view.setUint32(0, MagicHeader0, true);
+    view.setUint32(4, MagicHeader1, true);
+    view.setUint32(8, 1, true);
+    view.setUint32(12, TemplateSectionLabel.StyleInfo, true);
+    // The section claims 10 bytes; 4 are left.
+    view.setUint32(16, 10, true);
+    // Whether it is the section asked for or one to skip.
+    for (const label of [TemplateSectionLabel.StyleInfo, 99]) {
+      expect(() => readBundleSection(bundle, label)).toThrow(
+        'Unexpected EOF reading section content. Expected 10 bytes.',
+      );
+    }
   });
 
   test('createStyleSheetResourceFromBundle decodes the bundle\'s StyleInfo', () => {
