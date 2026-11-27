@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { fetchIslandBundle } from './fetch.js';
 import type { IslandReference } from './types.js';
 import { islandSections } from '../shared/index.js';
 
@@ -34,18 +35,20 @@ export function prepareIslandBackground(
 }
 
 function initialize(source: IslandReference): Promise<void> {
-  const key = source.expose;
+  const key = JSON.stringify([source.entry ?? '__Card__', source.expose]);
   const cached = loaded.get(key);
   if (cached) return cached;
 
-  const request = Promise.resolve().then(() => {
-    lynx.loadScript(islandSections(source.expose).background, {
-      bundleName: '__Card__',
+  const request = (source.entry === undefined
+    ? Promise.resolve('__Card__')
+    : fetchIslandBundle(source.entry)).then(bundleName => {
+      lynx.loadScript(islandSections(source.expose).background, {
+        bundleName,
+      });
+    }).catch(error => {
+      loaded.delete(key);
+      throw error;
     });
-  }).catch(error => {
-    loaded.delete(key);
-    throw error;
-  });
   loaded.set(key, request);
   return request;
 }

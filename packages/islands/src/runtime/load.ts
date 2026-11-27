@@ -3,6 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 
 import { dispatchIslandBackground } from './background-bridge.js';
+import { fetchIslandBundle } from './fetch.js';
 import type {
   DispatchIslandBackground,
   IslandModule,
@@ -12,19 +13,53 @@ import type {
 import { islandSections } from '../shared/index.js';
 
 /**
- * Synchronously load an exposed module from the current host bundle without creating a UI instance.
+ * Load an exposed module without creating a UI instance.
  *
- * Resource loading errors throw synchronously. The returned factory and its
+ * Host sections load synchronously; remote entries load asynchronously. The factory and its
  * `backgroundReady` promise stay on the main thread. Instances can render before
  * background initialization finishes.
  *
- * @param source - Exposed module in the current host bundle.
+ * @param source - Exposed module and optional remote entry URL.
  * @param dispatchBackground - Host background dispatcher; defaults to the native Lynx context bridge.
  * @internal
  */
 export function loadIslandModule<Data>(
   source: IslandReference,
   dispatchBackground: DispatchIslandBackground = dispatchIslandBackground,
+): LoadedIslandModule<Data> | Promise<LoadedIslandModule<Data>> {
+  if (source.entry !== undefined) {
+    const engine = lynx.getNative();
+    let destroyed = false;
+    let onDestroy!: () => void;
+    const request = new Promise<LoadedIslandModule<Data>>((resolve, reject) => {
+      onDestroy = () => {
+        destroyed = true;
+        reject(new Error('Island module load cancelled'));
+      };
+      engine.addEventListener('__DestroyLifetime', onDestroy);
+      void fetchIslandBundle(source.entry!).then(bundleName => {
+        if (destroyed) return;
+        resolve(
+          loadSections<Data>(
+            { ...source, entry: bundleName },
+            bundleName,
+            dispatchBackground,
+          ),
+        );
+      }).catch(reject);
+    });
+    const cleanup = () =>
+      engine.removeEventListener('__DestroyLifetime', onDestroy);
+    void request.then(cleanup, cleanup);
+    return request;
+  }
+  return loadSections<Data>(source, '__Card__', dispatchBackground);
+}
+
+function loadSections<Data>(
+  source: IslandReference,
+  bundleName: string,
+  dispatchBackground: DispatchIslandBackground,
 ): LoadedIslandModule<Data> {
   const sections = islandSections(source.expose);
   const styleGlobals = globalThis as typeof globalThis & {
@@ -34,13 +69,13 @@ export function loadIslandModule<Data>(
   if (typeof styleGlobals.__LoadStyleSheet !== 'function') {
     throw new Error('__LoadStyleSheet requires Lynx SDK 3.7 or newer');
   }
-  const stylesheet = styleGlobals.__LoadStyleSheet(sections.css, '__Card__');
+  const stylesheet = styleGlobals.__LoadStyleSheet(sections.css, bundleName);
   if (stylesheet == null) {
     throw new Error(`Missing island stylesheet: ${sections.css}`);
   }
   const artifact = lynx.loadScript<IslandModule<Data>>(
     sections.main,
-    { bundleName: '__Card__' },
+    { bundleName },
   );
   if (typeof artifact?.create !== 'function') {
     throw new Error(`Missing island module factory: ${sections.main}`);
@@ -48,7 +83,7 @@ export function loadIslandModule<Data>(
   styleGlobals.__AdoptStyleSheet(stylesheet);
 
   const context = lynx.getJSContext();
-  const engine = lynx.getEngine();
+  const engine = lynx.getNative();
   const replyEvent = `LynxIsland:ready:${Date.now()}:${Math.random()}`;
   let destroyed = false;
   let rejectBackground!: (error: Error) => void;
@@ -88,7 +123,13 @@ export function loadIslandModule<Data>(
   } catch (error) {
     rejectBackground(asError(error));
   }
-  return { create: () => artifact.create(), backgroundReady };
+  return {
+    create: () => {
+      if (destroyed) throw new Error('Island module load cancelled');
+      return artifact.create();
+    },
+    backgroundReady,
+  };
 }
 
 function asError(error: unknown): Error {

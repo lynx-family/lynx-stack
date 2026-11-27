@@ -70,7 +70,7 @@ export function useIsland<Props>(
     snapshot: string | undefined | null;
     cached: {
       key: string;
-      module: LoadedIslandModule<Props>;
+      module: LoadedIslandModule<Props> | Promise<LoadedIslandModule<Props>>;
     } | null;
     render: ((options?: IslandRenderOptions) => void) | null;
     containerId: number | undefined;
@@ -107,7 +107,7 @@ export function useIsland<Props>(
         return;
       }
       const report = runOnBackground(notify);
-      const sourceKey = next.expose;
+      const sourceKey = JSON.stringify([next.entry ?? '__Card__', next.expose]);
       const key = JSON.stringify([sourceKey, selector]);
       state.render = options => {
         // Thread transport creates new objects. Compare the serialized snapshot,
@@ -164,6 +164,7 @@ export function useIsland<Props>(
         }, error => {
           if (state.island === current) {
             state.island = null;
+            state.cached = null;
             void report('render-error', String(error));
           }
         });
@@ -210,13 +211,14 @@ export function useIsland<Props>(
   }, [binding, commit, container]);
 
   const expose = module?.expose;
+  const entry = module?.entry;
   useEffect(() => {
     const next: IslandReference | null = expose === undefined
       ? null
-      : { expose };
+      : { expose, entry };
     void runOnMainThread(commit)(next, container, props).catch(error => {
       lynx.reportError(String(error));
     });
-  }, [commit, expose, container, props]);
+  }, [commit, expose, entry, container, props]);
   return ref;
 }

@@ -14,10 +14,19 @@ export interface IslandExpose {
 }
 
 // @public
+export type IslandsOutput = {
+    mode: 'inline';
+} | {
+    mode: 'remote';
+    filename: string;
+};
+
+// @public
 export interface IslandsPluginOptions {
     entry?: string;
     environment?: string;
     exposes: Record<string, string | IslandExpose>;
+    output?: IslandsOutput;
 }
 
 // @public

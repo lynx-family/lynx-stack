@@ -61,14 +61,22 @@ function compile(target, helpers) {
   );
 }
 
-for (const changed of [false, true]) {
-  test(`compiled hydration ${changed ? 'applies changed props' : 'skips unchanged props'} with host-owned first flush`, async () => {
+for (
+  const { changed, remote } of [
+    { changed: false, remote: false },
+    { changed: true, remote: false },
+    { changed: false, remote: true },
+    { changed: true, remote: true },
+  ]
+) {
+  test(`compiled hydration ${changed ? 'applies changed props' : 'skips unchanged props'} with remote=${remote}`, async () => {
     const listeners = new Map();
     const engine = new Map();
     const calls = [];
     const errors = [];
     const backgroundFunctions = new Map();
     const effects = [];
+    const fetches = [];
     let flushes = 0;
     let nextFunctionId = 0;
     let nativeContainer = { id: 1 };
@@ -78,13 +86,18 @@ for (const changed of [false, true]) {
       __PROFILE__: false,
       SystemInfo: { lynxSdkVersion: '4.2' },
       lynx: {
+        fetchBundle: url => ({
+          then: callback => {
+            fetches.push(() => callback({ code: 0, url }));
+          },
+        }),
         reportError: error => errors.push(String(error)),
         getJSContext: () => ({
           addEventListener: (name, callback) => listeners.set(name, callback),
           removeEventListener: name => listeners.delete(name),
           dispatchEvent: () => undefined,
         }),
-        getEngine: () => ({
+        getNative: () => ({
           addEventListener: (name, callback) => engine.set(name, callback),
           removeEventListener: name => engine.delete(name),
         }),
@@ -175,12 +188,18 @@ for (const changed of [false, true]) {
         return backgroundRef;
       },
     });
-    const reference = { expose: 'card' };
+    const reference = {
+      expose: 'card',
+      ...(remote ? { entry: 'https://example.test/cards.lynx.bundle' } : {}),
+    };
     const options = { container: '#slot', props: { title: 'First frame' } };
     const firstScreen = mainHook(reference, options);
     const element = nativeContainer;
     globalThis.runWorklet(firstScreen, [{ elementRefptr: element }]);
-    assert.deepEqual(calls, ['style', 'create', ['render', 'First frame']]);
+    assert.deepEqual(
+      calls,
+      remote ? [] : ['style', 'create', ['render', 'First frame']],
+    );
     assert.equal(flushes, 0);
     // Native commits after the host's synchronous first-screen rendering.
     globalThis.__FlushElementTree();
@@ -218,24 +237,34 @@ for (const changed of [false, true]) {
       firstInstance,
     );
     await effects.shift()();
+    for (const finish of fetches.splice(0)) finish();
     await firstInstance.backgroundReady;
     assert.deepEqual(errors, []);
     assert.equal(calls.filter(call => call === 'create').length, 1);
     assert.deepEqual(
       calls.filter(call => Array.isArray(call) && call[0] === 'update'),
-      changed ? [['update', 'Background props']] : [],
+      changed && !remote ? [['update', 'Background props']] : [],
     );
-    assert.equal(flushes, changed ? 2 : 1);
+    if (remote) {
+      assert.deepEqual(
+        calls.filter(call => Array.isArray(call) && call[0] === 'render'),
+        [['render', changed ? 'Background props' : 'First frame']],
+      );
+    }
+    const initialFlushes = changed || remote ? 2 : 1;
+    assert.equal(flushes, initialFlushes);
     assert.equal(calls.filter(call => call === 'background-start').length, 1);
     assert.equal(calls.filter(call => call === 'background-ready').length, 1);
     // Replacing the container must not reuse the first render's flush:false.
     globalThis.runWorklet(hydrated, [null]);
     nativeContainer = { id: 2 };
     globalThis.runWorklet(hydrated, [{ elementRefptr: nativeContainer }]);
+    await globalThis.lynxWorkletImpl._refImpl._workletRefMap[1].current.island
+      .ready;
     assert.equal(calls.filter(call => call === 'create').length, 2);
     assert.equal(
       flushes,
-      changed ? 4 : 3,
+      initialFlushes + 2,
       'replacement disposes and renders with native commits',
     );
     globalThis.runWorklet(hydrated, [null]);
@@ -244,7 +273,7 @@ for (const changed of [false, true]) {
     await Promise.resolve();
     assert.equal(
       flushes,
-      changed ? 5 : 4,
+      initialFlushes + 3,
       'independent disposal still commits',
     );
     globalThis.lynxWorkletImpl._jsFunctionLifecycleManager.dispose();

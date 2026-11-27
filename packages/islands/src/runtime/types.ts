@@ -3,12 +3,14 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * Identify an exposed module in the current host bundle.
+ * Identify an exposed module in the host bundle or a remote resource.
  * @internal
  */
 export interface IslandReference {
   /** Key in the build plugin's `exposes` map. */
   expose: string;
+  /** Absolute resource URL. @defaultValue Omitted, selecting the current host bundle. */
+  entry?: string | undefined;
 }
 
 /** Options for one synchronous island render call.

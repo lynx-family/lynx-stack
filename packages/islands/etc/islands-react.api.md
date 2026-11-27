@@ -12,6 +12,7 @@ export function Island<Data>(input: IslandProps<Data>): ReactElement;
 // @public
 export interface IslandProps<Data> {
     className?: string;
+    entry?: string | undefined;
     name: string;
     props: Data;
 }

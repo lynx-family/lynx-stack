@@ -1,0 +1,6 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": { "env": ["ISLAND_ENTRY", "LYNX_HOST"] }
+  }
+}

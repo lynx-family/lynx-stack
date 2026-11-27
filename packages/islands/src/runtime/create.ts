@@ -37,7 +37,7 @@ export interface IslandInstance<Props> {
 /**
  * Create a container-specific island instance from a reference or an already loaded module.
  *
- * Modules render synchronously before this function returns.
+ * Host modules render synchronously; remote modules render after loading.
  * Resource loading errors throw synchronously; readiness promises report
  * renderer failures and background initialization.
  *
@@ -53,11 +53,14 @@ export interface IslandInstance<Props> {
  * @internal
  */
 export function createIsland<Props>(
-  source: IslandReference | LoadedIslandModule<Props>,
+  source:
+    | IslandReference
+    | LoadedIslandModule<Props>
+    | Promise<LoadedIslandModule<Props>>,
   { container, props }: CreateIslandOptions<Props>,
 ): IslandInstance<Props> {
   return createIslandFromModule(
-    'create' in source
+    'create' in source || 'then' in source
       ? source
       : loadIslandModule<Props>(source),
     { container, props },
@@ -65,32 +68,49 @@ export function createIsland<Props>(
 }
 
 export function createIslandFromModule<Props>(
-  module: LoadedIslandModule<Props>,
+  module: LoadedIslandModule<Props> | Promise<LoadedIslandModule<Props>>,
   { container, props }: CreateIslandOptions<Props>,
   renderOptions?: IslandRenderOptions,
 ): IslandInstance<Props> {
   let renderer: IslandRenderer<Props> | undefined;
   let disposed = false;
+  let latestProps = props;
+  let loaded: LoadedIslandModule<Props> | undefined;
+  let rejectReady!: (error: Error) => void;
   // Promise executors run synchronously, preserving first-frame node creation.
-  const ready = new Promise<void>(resolve => {
-    const nextRenderer = module.create();
-    if (
-      typeof nextRenderer?.render !== 'function'
-      || typeof nextRenderer.update !== 'function'
-      || typeof nextRenderer.dispose !== 'function'
-    ) {
-      throw new Error('Invalid island renderer');
+  const ready = new Promise<void>((resolve, reject) => {
+    rejectReady = reject;
+    const render = (
+      value: LoadedIslandModule<Props>,
+      options?: IslandRenderOptions,
+    ) => {
+      if (disposed) return;
+      loaded = value;
+      const nextRenderer = value.create();
+      if (
+        typeof nextRenderer?.render !== 'function'
+        || typeof nextRenderer.update !== 'function'
+        || typeof nextRenderer.dispose !== 'function'
+      ) {
+        throw new Error('Invalid island renderer');
+      }
+      try {
+        nextRenderer.render(container, latestProps, options);
+      } catch (error) {
+        nextRenderer.dispose();
+        throw error;
+      }
+      renderer = nextRenderer;
+      resolve();
+    };
+    if ('then' in module) {
+      // Async rendering happens after the host commit and must flush itself.
+      void module.then(value => render(value)).catch(reject);
+    } else {
+      render(module, renderOptions);
     }
-    try {
-      nextRenderer.render(container, props, renderOptions);
-    } catch (error) {
-      nextRenderer.dispose();
-      throw error;
-    }
-    renderer = nextRenderer;
-    resolve();
   });
-  const backgroundReady = ready.then(() => module.backgroundReady).then(() => {
+  const backgroundReady = ready.then(() => loaded!.backgroundReady).then(() => {
     if (disposed) throw new Error('Island background activation cancelled');
     renderer?.setBackgroundReady?.();
   });
@@ -104,6 +124,7 @@ export function createIslandFromModule<Props>(
     backgroundReady,
     async update(nextProps) {
       if (disposed) throw new Error('Cannot update a disposed island');
+      latestProps = nextProps;
       if (renderer) {
         renderer.update(nextProps);
       } else {
@@ -115,6 +136,7 @@ export function createIslandFromModule<Props>(
       renderer?.dispose();
       renderer = undefined;
       disposed = true;
+      rejectReady(new Error('Island rendering cancelled'));
     },
   };
 }

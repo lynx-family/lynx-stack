@@ -4,11 +4,14 @@
 
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
+
+import { createRsbuild } from '@rsbuild/core';
 
 import { parseLynxXML } from '@lynx-js/lynx-xml/parser';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
@@ -191,6 +194,85 @@ test('build rejects missing or empty public expose names', () => {
       }),
     /expose name/,
   );
+});
+
+for (
+  const filename of [
+    '',
+    '/cards.lynx.bundle',
+    '../cards.lynx.bundle',
+    'cards\\file.bundle',
+    'https://example.test/cards.bundle',
+  ]
+) {
+  test(`rejects invalid remote asset filename ${JSON.stringify(filename)}`, () => {
+    assert.throws(() =>
+      pluginIslands({
+        exposes: { card: source },
+        output: { mode: 'remote', filename },
+      }), /relative asset path/);
+  });
+}
+
+test('resource-only Rsbuild producer encodes without a React plugin or app entry', async context => {
+  const directory = mkdtempSync(join(tmpdir(), 'lynx-islands-remote-'));
+  context.after(() => rmSync(directory, { recursive: true, force: true }));
+  const encoded = [];
+  const rsbuild = await createRsbuild({
+    cwd: directory,
+    rsbuildConfig: {
+      environments: { lynx: {} },
+      plugins: [
+        pluginIslands({
+          exposes: {
+            first: join(rootPath, source),
+            second: join(rootPath, source),
+          },
+          output: { mode: 'remote', filename: 'assets/cards.lynx.bundle' },
+        }),
+        {
+          name: 'test:island-encoding',
+          setup(api) {
+            api.modifyRspackConfig(config => {
+              config.plugins.push({
+                apply(compiler) {
+                  compiler.hooks.thisCompilation.tap(
+                    'test:record-assets',
+                    compilation => {
+                      compilation.hooks.processAssets.tap({
+                        name: 'test:record-assets',
+                        stage: compiler.webpack.Compilation
+                          .PROCESS_ASSETS_STAGE_REPORT,
+                      }, () => {
+                        encoded.push(...compilation.getAssets());
+                      });
+                    },
+                  );
+                },
+              });
+            });
+          },
+        },
+      ],
+    },
+  });
+  await rsbuild.build();
+  assert.deepEqual(encoded.map(asset => asset.name), [
+    'assets/cards.lynx.bundle',
+  ]);
+  const asset = encoded[0];
+  assert.ok(asset.source.size() > 0);
+  // The native decoder validates the emitted binary, not a stub encoder.
+  const require = createRequire(
+    import.meta.resolve('@lynx-js/template-webpack-plugin'),
+  );
+  const tasm = await import(require.resolve('@lynx-js/tasm'));
+  const decoded = tasm.supportNapi()
+    ? tasm.decode_napi(Buffer.from(asset.source.buffer()))
+    : await tasm.decode_wasm(Buffer.from(asset.source.buffer()));
+  assert.ok(decoded);
+  assert.ok(JSON.stringify(decoded).includes('first/main'));
+  assert.ok(JSON.stringify(decoded).includes('second/background'));
 });
 
 test('shared parser preserves scripts and handles absent optional sections', async context => {

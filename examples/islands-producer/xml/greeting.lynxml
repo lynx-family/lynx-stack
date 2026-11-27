@@ -1,0 +1,111 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+<style>
+.Greeting {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #eff4ff;
+}
+.GreetingTitle { color: #2348cc; font-size: 24px; }
+.GreetingDetail { color: #46577f; font-size: 16px; margin-top: 12px; }
+</style>
+<script thread="main">
+function create() {
+  let card = null;
+  let title = null;
+  let detail = null;
+  let revision = 0;
+  let data = null;
+  let backgroundReady = false;
+  const background = lynx.getJSContext();
+
+  function text(pageId, className, content) {
+    const element = __CreateText(pageId);
+    const raw = __CreateRawText(content);
+    __SetClasses(element, className);
+    __AppendElement(element, raw);
+    return { element, raw };
+  }
+
+  function send() {
+    if (!card || !backgroundReady) return;
+    background.dispatchEvent({
+      type: 'Greeting:request',
+      data: { id: __GetElementUniqueID(card), revision, title: data.title },
+    });
+  }
+
+  function onResult(event) {
+    if (!card || event.data.id !== __GetElementUniqueID(card)
+      || event.data.revision !== revision) return;
+    __SetAttribute(detail, 'text', event.data.message);
+    __FlushElementTree();
+  }
+
+  function render(selector, props, { flush = true } = {}) {
+    const page = __GetPageElement();
+    const container = page && __QuerySelector(page, selector, {});
+    if (!container) throw new Error('Greeting requires an existing host container');
+    if (card) throw new Error('Greeting is already rendered');
+    const pageId = __GetElementUniqueID(page);
+    card = __CreateView(pageId);
+    __SetClasses(card, 'Greeting');
+    const heading = text(pageId, 'GreetingTitle', props.title);
+    const description = text(pageId, 'GreetingDetail', 'Waiting for background work…');
+    title = heading.raw;
+    detail = description.raw;
+    __AppendElement(card, heading.element);
+    __AppendElement(card, description.element);
+    __AppendElement(container, card);
+    data = props;
+    background.addEventListener('Greeting:result', onResult);
+    send();
+    if (flush) __FlushElementTree();
+  }
+
+  function update(props) {
+    data = props;
+    revision++;
+    __SetAttribute(title, 'text', props.title);
+    send();
+    __FlushElementTree();
+  }
+
+  function dispose() {
+    if (!card) return;
+    background.removeEventListener('Greeting:result', onResult);
+    __RemoveElement(card);
+    card = null;
+    title = null;
+    detail = null;
+    data = null;
+    __FlushElementTree();
+  }
+
+  return {
+    render,
+    update,
+    dispose,
+    setBackgroundReady() { backgroundReady = true; send(); },
+  };
+}
+module.exports = { create };
+</script>
+<script thread="background">
+const main = lynx.getCoreContext();
+main.addEventListener('Greeting:request', event => {
+  main.dispatchEvent({
+    type: 'Greeting:result',
+    data: {
+      id: event.data.id,
+      revision: event.data.revision,
+      message: `Background received: ${event.data.title}`,
+    },
+  });
+});
+</script>
+</lynx>

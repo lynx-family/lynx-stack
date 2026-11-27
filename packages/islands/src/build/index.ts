@@ -12,7 +12,10 @@ import type { RsbuildPlugin, Rspack } from '@rsbuild/core';
 
 import { parseLynxXML } from '@lynx-js/lynx-xml/parser';
 import type { LynxXMLParseResult } from '@lynx-js/lynx-xml/parser';
-import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin';
 import type { EncodeOptions } from '@lynx-js/template-webpack-plugin';
 
 import { parseStylesheet } from './stylesheet.js';
@@ -33,7 +36,22 @@ export interface IslandExpose {
   parse?(this: void, source: string): LynxXMLParseResult;
 }
 
-/** Configure exposed island modules in a host bundle.
+/** Choose whether island sections belong to the host or a separate resource.
+ * @public
+ */
+export type IslandsOutput =
+  | {
+    /** Include the sections in the configured host entry. */
+    mode: 'inline';
+  }
+  | {
+    /** Emit a separate resource for hosts to load by URL. */
+    mode: 'remote';
+    /** Asset filename relative to the output directory, such as `cards.lynx.bundle`. */
+    filename: string;
+  };
+
+/** Configure exposed island modules in a host bundle or a remote resource.
  * @public
  */
 export interface IslandsPluginOptions {
@@ -49,12 +67,21 @@ export interface IslandsPluginOptions {
   exposes: Record<string, string | IslandExpose>;
   /** Host entry that receives the sections. @defaultValue `'main'` */
   entry?: string;
+  /**
+   * Delivery of all exposed modules.
+   * @defaultValue `{ mode: 'inline' }`
+   * @example
+   * ```ts
+   * const output = { mode: 'remote', filename: 'cards.lynx.bundle' };
+   * ```
+   */
+  output?: IslandsOutput;
   /** Rsbuild environment that generates the Lynx host bundle. @defaultValue `'lynx'` */
   environment?: string;
 }
 
 /**
- * Watch and package island sections in the host bundle.
+ * Watch and package island sections in the host bundle or a separate resource.
  *
  * @example
  * ```ts
@@ -74,6 +101,7 @@ export function pluginIslands(
   const {
     exposes,
     entry = 'main',
+    output = { mode: 'inline' },
     environment: environmentName = 'lynx',
   } = options;
   if (
@@ -81,6 +109,16 @@ export function pluginIslands(
     || Object.keys(exposes).some(key => !key.trim())
   ) {
     throw new Error('Islands requires at least one nonempty expose name');
+  }
+  if (
+    output.mode === 'remote'
+    && (!output.filename.trim()
+      || /[\\:?#[\]]/.test(output.filename)
+      || output.filename.split('/').some(part =>
+        !part || part === '.' || part === '..'
+      ))
+  ) {
+    throw new Error('Island output filename must be a relative asset path');
   }
   const name = `lynx:islands:${Object.keys(exposes).join(',')}`;
   return {
@@ -98,11 +136,17 @@ export function pluginIslands(
       }));
       api.modifyRspackConfig((config, { environment }) => {
         if (environment.name !== environmentName) return;
+        // A resource-only producer has no JavaScript application entry.
+        if (output.mode === 'remote') config.entry ??= {};
         const devReload = api.context.action === 'dev'
           && (environment.config.dev?.hmr !== false
             || environment.config.dev?.liveReload !== false);
         let hotInvalidationModule: string | undefined;
-        if (devReload) {
+        const entries = config.entry && typeof config.entry === 'object'
+            && !Array.isArray(config.entry)
+          ? config.entry
+          : undefined;
+        if (devReload && (output.mode === 'inline' || entries?.[entry])) {
           if (
             !config.entry || typeof config.entry !== 'object'
             || Array.isArray(config.entry)
@@ -186,6 +230,57 @@ export function pluginIslands(
                 };
               }
 
+              if (output.mode === 'remote') {
+                compilation.hooks.processAssets.tapPromise({
+                  name,
+                  stage:
+                    compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+                }, async () => {
+                  const { filename } = output;
+                  if (compilation.getAsset(filename)) {
+                    throw new Error(`Duplicate island output: ${filename}`);
+                  }
+                  const result = await LynxEncodePlugin.encodePool.run({
+                    encodeOptions: {
+                      compilerOptions: {
+                        enableFiberArch: true,
+                        useLepusNG: true,
+                        enableReuseContext: true,
+                        bundleModuleMode: 'ReturnByFunction',
+                        debugInfoOutside: true,
+                        defaultDisplayLinear: false,
+                        defaultOverflowVisible: false,
+                        enableCSSInvalidation: true,
+                        enableCSSSelector: true,
+                        enableRemoveCSSScope: true,
+                        targetSdkVersion: '3.7',
+                      },
+                      sourceContent: {
+                        dsl: 'react_nodiff',
+                        appType: 'DynamicComponent',
+                        config: { lepusStrict: true },
+                      },
+                      manifest: {},
+                      lepusCode: undefined,
+                      css: { cssMap: {}, cssSource: {} },
+                      customSections,
+                    } satisfies EncodeOptions,
+                  }) as {
+                    status: number;
+                    buffer: Uint8Array;
+                    error_msg: string;
+                  };
+                  if (result.status !== 0) throw new Error(result.error_msg);
+                  compilation.emitAsset(
+                    filename,
+                    new compiler.webpack.sources.RawSource(
+                      Buffer.from(result.buffer),
+                    ),
+                  );
+                });
+                return;
+              }
+
               LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation)
                 .beforeEncode.tap(name, args => {
                   if (!args.chunkGroups.some(group => group.name === entry)) {
@@ -250,7 +345,8 @@ ${source}
 // Match the native ReturnByFunction + tt.define convention so Lynx injects its
 // background-thread APIs into the artifact module.
 function wrapBackground(section: string, source: string): string {
-  const moduleId = JSON.stringify(`${section}.js`);
+  const hash = createHash('sha256').update(source).digest('hex').slice(0, 16);
+  const moduleId = JSON.stringify(`${section}.${hash}.js`);
   return `(function () {
     function init(lynxCoreInject) {
       const tt = lynxCoreInject.tt;

@@ -22,13 +22,29 @@ function host(options = {}) {
   const engineListeners = new Set();
   const backgroundListeners = new Map();
   const pending = [];
+  const fetches = [];
   const calls = [];
   const dispatch = callback => {
     if (flags.deferBackground) pending.push(callback);
     else callback();
   };
   const runtime = thread => ({
-    fetchBundle: () => assert.fail('Islands must use the current host bundle'),
+    fetchBundle(entry) {
+      calls.push([thread, 'fetch', entry]);
+      if (flags.throwFetch) throw new Error('fetch threw');
+      return {
+        then(callback) {
+          const finish = () =>
+            callback({
+              url: flags.resolvedUrl ?? entry,
+              code: flags.failFetch ? -1 : 0,
+              error_msg: 'fetch failed',
+            });
+          if (flags.deferFetch) fetches.push(finish);
+          else finish();
+        },
+      };
+    },
     loadScript(section, options) {
       calls.push([thread, 'script', section, options.bundleName]);
       if (thread === 'background' && flags.failBackground) {
@@ -67,7 +83,7 @@ function host(options = {}) {
       addEventListener: (name, callback) => listeners.set(name, callback),
       removeEventListener: name => listeners.delete(name),
     }),
-    getEngine: () => ({
+    getNative: () => ({
       addEventListener: (_name, callback) => engineListeners.add(callback),
       removeEventListener: (_name, callback) =>
         engineListeners.delete(callback),
@@ -90,6 +106,7 @@ function host(options = {}) {
   };
   for (const context of [main, background]) {
     runInNewContext(script('shared/sections'), context);
+    runInNewContext(script('runtime/fetch'), context);
   }
   runInNewContext(script('runtime/prepare-background'), background);
   runInNewContext(script('runtime/load'), main);
@@ -116,6 +133,10 @@ function host(options = {}) {
     finish() {
       flags.deferBackground = false;
       for (const callback of pending.splice(0)) callback();
+    },
+    finishFetch() {
+      flags.deferFetch = false;
+      for (const callback of fetches.splice(0)) callback();
     },
   };
 }
@@ -191,6 +212,7 @@ test('module loading is synchronous, uses host sections and does not create an i
   assert.equal(typeof module.create, 'function');
   assert.equal(module.then, undefined);
   assert.equal(h.calls.some(call => call[0] === 'create'), false);
+  assert.equal(h.calls.some(call => call[1] === 'fetch'), false);
   assert.ok(
     h.calls.some(call => call[0] === 'style' && call[2] === '__Card__'),
   );
@@ -205,6 +227,165 @@ test('module loading is synchronous, uses host sections and does not create an i
   );
   assert.equal(h.listeners.size, 0);
   assert.equal(h.engineListeners.size, 0);
+});
+
+const remote = {
+  ...reference,
+  entry: 'https://example.test/cards.lynx.bundle',
+};
+
+test('remote resources use the resolved bundle URL on both threads and for CSS', async () => {
+  const h = host({ resolvedUrl: 'https://example.test/resolved.lynx.bundle' });
+  const module = await h.load(remote);
+  await module.backgroundReady;
+  assert.equal(h.calls.some(call => call[0] === 'create'), false);
+  assert.deepEqual(
+    h.calls.filter(call => call[1] === 'fetch').map(call => call[0]),
+    ['main', 'background'],
+  );
+  assert.ok(
+    h.calls.filter(call => call[1] === 'script').every(call =>
+      call[3] === h.flags.resolvedUrl
+    ),
+  );
+  assert.equal(
+    h.calls.find(call => call[0] === 'style')[2],
+    h.flags.resolvedUrl,
+  );
+  assert.equal(h.listeners.size, 0);
+  assert.equal(h.engineListeners.size, 0);
+});
+
+test('background initialization distinguishes the same expose in separate bundles', async () => {
+  const h = host();
+  const modules = await Promise.all([
+    h.load(remote),
+    h.load(remote),
+    h.load({ ...remote, entry: 'https://example.test/other.lynx.bundle' }),
+    h.load(),
+  ]);
+  await Promise.all(modules.map(module => module.backgroundReady));
+  assert.equal(
+    h.calls.filter(call => call[0] === 'background' && call[1] === 'script')
+      .length,
+    3,
+  );
+});
+
+for (const flag of ['failFetch', 'throwFetch']) {
+  test(`remote ${flag} releases listeners and can retry`, async () => {
+    const h = host({ [flag]: true });
+    await assert.rejects(h.load(remote), /fetch/);
+    await nextTurn();
+    assert.equal(h.listeners.size, 0);
+    assert.equal(h.engineListeners.size, 0);
+    assert.equal(h.calls.some(call => call[1] === 'script'), false);
+    h.flags[flag] = false;
+    const module = await h.load(remote);
+    await module.backgroundReady;
+  });
+}
+
+test('relative remote URLs fail before fetching', async () => {
+  const h = host();
+  await assert.rejects(
+    h.load({ ...remote, entry: 'cards.lynx.bundle' }),
+    /absolute/,
+  );
+  assert.equal(h.calls.some(call => call[1] === 'fetch'), false);
+  assert.equal(h.engineListeners.size, 0);
+});
+
+test('page destruction cancels a pending fetch before executing scripts or styles', async () => {
+  const h = host({ deferFetch: true });
+  const loading = h.load(remote);
+  h.destroy();
+  await assert.rejects(loading, /cancelled/);
+  h.finishFetch();
+  await nextTurn();
+  assert.equal(
+    h.calls.some(call => call[1] === 'script' || call[0] === 'style'),
+    false,
+  );
+  assert.equal(h.engineListeners.size, 0);
+});
+
+test('pending remote rendering coalesces props and flushes after loading', async () => {
+  const h = host({ deferFetch: true });
+  const instance = h.create(h.load(remote), {
+    container: '#slot',
+    props: { title: 'Initial' },
+  });
+  const update = instance.update({ title: 'Latest' });
+  assert.equal(h.calls.some(call => call[0] === 'create'), false);
+  h.finishFetch();
+  await update;
+  await instance.backgroundReady;
+  assert.deepEqual(h.calls.filter(call => call[0] === 'render'), [[
+    'render',
+    '#slot',
+    { title: 'Latest' },
+  ]]);
+  assert.equal(flushes(h), 1);
+  instance.dispose();
+});
+
+test('disposing a pending remote instance prevents late creation', async () => {
+  const h = host({ deferFetch: true });
+  const instance = h.create(h.load(remote), { container: '#slot', props: {} });
+  instance.dispose();
+  await assert.rejects(instance.ready, /cancelled/);
+  h.finishFetch();
+  await nextTurn();
+  assert.equal(h.calls.some(call => call[0] === 'create'), false);
+});
+
+test('remote hydration reuses a pending instance with latest props and its own flush', async () => {
+  const h = host({ deferFetch: true });
+  const react = reactHost(h);
+  const ref = react.render(remote, 'Initial');
+  const element = refElement();
+  ref(element);
+  const first = react.slot.current.island;
+  ref(null);
+  react.effects.shift();
+  react.render(remote, 'Latest')(element);
+  react.effects.shift()();
+  assert.equal(react.slot.current.island, first);
+  h.finishFetch();
+  await first.backgroundReady;
+  assert.deepEqual(h.calls.filter(call => call[0] === 'render'), [[
+    'render',
+    '#slot',
+    { title: 'Latest' },
+  ]]);
+  assert.equal(flushes(h), 1);
+  ref(null);
+});
+
+test('switching remote URLs cannot render an older pending instance', async () => {
+  const h = host({ deferFetch: true });
+  const react = reactHost(h);
+  const ref = react.render(remote, 'Old');
+  ref(refElement());
+  const first = react.slot.current.island;
+  react.effects.shift();
+  react.render(
+    { ...remote, entry: 'https://example.test/other.lynx.bundle' },
+    'New',
+  );
+  react.effects.shift()();
+  const second = react.slot.current.island;
+  assert.notEqual(first, second);
+  h.finishFetch();
+  await assert.rejects(first.ready, /cancelled/);
+  await second.backgroundReady;
+  assert.deepEqual(h.calls.filter(call => call[0] === 'render'), [[
+    'render',
+    '#slot',
+    { title: 'New' },
+  ]]);
+  ref(null);
 });
 
 test('concurrent background initialization is shared per expose', async () => {

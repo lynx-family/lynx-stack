@@ -1,0 +1,15 @@
+{
+  "name": "@lynx-js/example-islands-producer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "dev": "rsbuild dev",
+    "test:type": "tsc6 --noEmit"
+  },
+  "devDependencies": {
+    "@lynx-js/islands": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild"
+  }
+}
