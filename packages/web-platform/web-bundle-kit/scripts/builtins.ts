@@ -14,7 +14,11 @@ import path from 'node:path';
 export type StandIn = string | { package: string };
 
 export const standIns: Record<string, StandIn> = {
-  assert: 'src/node/assert.ts',
+  // The npm package. CommonJS code that requires it gets the `assert`
+  // function itself. It requires the npm `util` as `util/`, which the alias
+  // of `util` does not match. That `util` reads `process.env` when it loads;
+  // the stand-ins load with Rsbuild, after setup installs `process`.
+  assert: { package: 'assert/build/assert.js' },
   buffer: 'src/node/buffer.ts',
   child_process: 'src/node/child-process.ts',
   crypto: 'src/node/crypto.ts',

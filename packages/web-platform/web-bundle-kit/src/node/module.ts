@@ -16,9 +16,9 @@
 // This module imports every other stand-in and no stand-in imports it, so
 // there is no import cycle: they are all evaluated before the table below.
 
+import assert from 'assert/build/assert.js';
 import events from 'events/events.js';
 
-import assert from './assert.js';
 import buffer from './buffer.js';
 import childProcess from './child-process.js';
 import crypto from './crypto.js';
@@ -172,11 +172,12 @@ const nodeModule = {
 
 /** What `require()` from `createRequire` returns for each built-in. */
 const builtins: Record<BuiltinName, unknown> = {
+  // `assert` and `events` are the npm packages, which the kit's build also
+  // aliases them to.
   assert,
   buffer,
   child_process: childProcess,
   crypto,
-  // The npm package, which the kit's build also aliases `events` to.
   events,
   fs,
   'fs/promises': fsPromises,

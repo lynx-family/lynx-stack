@@ -33,12 +33,14 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
+    "@noble/hashes": "^2.4.0",
     "@playwright/test": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rspack/browser": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "acorn": "^8.19.0",
+    "assert": "^2.1.0",
     "events": "^3.3.0",
     "path-browserify": "^1.0.1"
   }

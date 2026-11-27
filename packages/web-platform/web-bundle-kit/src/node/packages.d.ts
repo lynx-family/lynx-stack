@@ -26,6 +26,14 @@ declare module '@napi-rs/wasm-runtime/fs' {
   export const memfs: MemFs['memfs'];
 }
 
+declare module 'assert/build/assert.js' {
+  // The npm package follows the `assert` of an older Node.js: it has no
+  // `CallTracker`, `partialDeepStrictEqual` or `Assert`.
+  import assert = require('node:assert');
+
+  export = assert;
+}
+
 declare module 'events/events.js' {
   import EventEmitter = require('node:events');
 

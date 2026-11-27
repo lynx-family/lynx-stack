@@ -1,13 +1,14 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import nodeAssert from 'node:assert';
 import { createHash as nodeCreateHash } from 'node:crypto';
 
 import { memfs as createMemfs } from '@napi-rs/wasm-runtime/fs';
 import { afterAll, describe, expect, test } from '@rstest/core';
+import assert from 'assert/build/assert.js';
 
 import { standIns } from '../scripts/builtins.ts';
-import * as assert from '../src/node/assert.js';
 import * as buffer from '../src/node/buffer.js';
 import * as childProcess from '../src/node/child-process.js';
 import * as crypto from '../src/node/crypto.js';
@@ -41,7 +42,6 @@ const named = (ns: Namespace) =>
   Object.keys(ns).filter((key) => key !== 'default').sort();
 
 const implemented: Record<string, Namespace> = {
-  assert,
   buffer,
   crypto,
   fs,
@@ -89,14 +89,6 @@ describe('the named and default exports of a stand-in agree', () => {
     expect(path.posix).toBe(path.default);
   });
 
-  test('`assert` stays callable, with itself as `ok` and `strict`', () => {
-    expect(typeof assert.default).toBe('function');
-    expect(assert.ok).toBe(assert.default);
-    expect(assert.strict).toBe(assert.default);
-    expect(() => assert.default(false, 'no')).toThrow('no');
-    expect(() => assert.equal(1, 2)).toThrow(assert.AssertionError);
-  });
-
   test('`process.exitCode` is the `exitCode` export', () => {
     expect(process.exitCode).toBeUndefined();
     process.default.exitCode = 3;
@@ -106,6 +98,28 @@ describe('the named and default exports of a stand-in agree', () => {
 
   test('`process` has no `versions.node`', () => {
     expect(process.versions).toEqual({});
+  });
+});
+
+describe('assert', () => {
+  // The npm package, not the Node.js built-in: the import names its file.
+  test('is the npm package', () => {
+    expect(standIns['assert']).toEqual({ package: 'assert/build/assert.js' });
+    expect(assert).not.toBe(nodeAssert);
+  });
+
+  test('is callable, with itself as `ok` and a strict variant', () => {
+    expect(typeof assert).toBe('function');
+    expect(assert.ok).toBe(assert);
+    expect(() => assert(false, 'no')).toThrow('no');
+    expect(() => assert.equal(1, 2)).toThrow(assert.AssertionError);
+    expect(() => assert.equal(1, '1')).not.toThrow();
+    expect(() => assert.strict.equal(1, '1')).toThrow(assert.AssertionError);
+    expect(() => assert.deepStrictEqual({ a: [1] }, { a: [1] })).not.toThrow();
+    expect(() => assert.deepStrictEqual({ a: 1 }, { a: '1' })).toThrow(
+      assert.AssertionError,
+    );
+    expect(() => assert.fail('failed')).toThrow('failed');
   });
 });
 
@@ -215,6 +229,27 @@ describe('crypto', () => {
     });
   }
 
+  // Each `update` feeds the hash: chunks that end inside a block, end on a
+  // block boundary and span several blocks, as strings and as bytes.
+  test.each(['sha1', 'sha256'])('%s of updates across blocks', (algorithm) => {
+    const chunks = [
+      'a'.repeat(63),
+      'b',
+      new Uint8Array(64).fill(7),
+      'c'.repeat(129),
+      new Uint16Array([0x4142, 0x4344]),
+      '',
+      'd'.repeat(55),
+    ];
+    const ours = crypto.createHash(algorithm);
+    const node = nodeCreateHash(algorithm);
+    for (const chunk of chunks) {
+      ours.update(chunk);
+      node.update(chunk);
+    }
+    expect(ours.digest('hex')).toBe(node.digest('hex'));
+  });
+
   test('bytes, encodings and `hash`', () => {
     const bytes = new Uint8Array([0, 1, 2, 255]);
     expect(crypto.createHash('SHA256').update(bytes).digest('base64')).toBe(
@@ -223,7 +258,35 @@ describe('crypto', () => {
     expect(crypto.hash('sha1', 'abc')).toBe(
       nodeCreateHash('sha1').update('abc').digest('hex'),
     );
-    expect(() => crypto.createHash('md5')).toThrow('Digest method');
+    // A view of part of a buffer, and string input in other encodings.
+    const view = new Uint8Array(
+      new Uint8Array([9, 9, 1, 2, 3, 9]).buffer,
+      2,
+      3,
+    );
+    expect(crypto.createHash('sha1').update(view).digest('hex')).toBe(
+      nodeCreateHash('sha1').update(view).digest('hex'),
+    );
+    expect(
+      crypto.createHash('sha256').update('00ff10', 'hex').update(
+        'YWJj',
+        'base64',
+      )
+        .digest('hex'),
+    ).toBe(
+      nodeCreateHash('sha256').update('00ff10', 'hex').update('YWJj', 'base64')
+        .digest('hex'),
+    );
+    // Without an encoding, `digest` gives the bytes as a Buffer.
+    const digest = crypto.createHash('sha256').update('abc').digest();
+    expect(buffer.Buffer.isBuffer(digest)).toBe(true);
+    expect([...(digest as Uint8Array)]).toEqual([
+      ...nodeCreateHash('sha256').update('abc').digest(),
+    ]);
+    expect(crypto.getHashes()).toEqual(['sha1', 'sha256']);
+    expect(() => crypto.createHash('md5')).toThrow(
+      'Digest method not supported in @lynx-js/web-bundle-kit: md5',
+    );
   });
 });
 
@@ -236,7 +299,7 @@ describe('module', () => {
 
   test('`require()` of a built-in returns its default export', () => {
     const load = nodeModule.createRequire('/project/index.js');
-    expect(load('assert')).toBe(assert.default);
+    expect(load('assert')).toBe(assert);
     expect(load('node:path')).toBe(path.default);
     expect(load('path/posix')).toBe(path.default);
     expect(load('fs/promises')).toBe(fsPromises.default);
