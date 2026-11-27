@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.json",
+  // Not part of the root build (`packages/web-platform/tsconfig.json`): the
+  // types of `@lynx-js/web-bundle-kit` come from its sources, which need the
+  // declarations of the rslib-built plugins. Checked by `test:type` after
+  // `pnpm turbo build`.
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
+    "types": ["node"],
+  },
+  "include": [
+    "src",
+    "tests",
+    "rsbuild.config.ts",
+    "playwright.config.ts",
+  ],
+}

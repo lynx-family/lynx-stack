@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "@lynx-js/web-bundle-kit#build"],
+      "inputs": [
+        "src/**",
+        "rsbuild.config.ts",
+        "package.json",
+        "$TURBO_ROOT$/packages/web-platform/web-bundle-kit/dist/**"
+      ],
+      "outputs": ["dist/kit/**"]
+    }
+  }
+}

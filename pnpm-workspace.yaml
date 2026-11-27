@@ -118,6 +118,7 @@ peerDependencyRules:
 # Default catalogs
 catalog:
   "@microsoft/api-extractor": "7.59.4"
+  "@playwright/test": "^1.61.1"
   typescript: &typescript-version "6.0.3"
 
 catalogs:
@@ -147,6 +148,7 @@ catalogs:
 
   # Rspack monorepo packages
   rspack:
+    "@rspack/browser": "2.3.4"
     "@rspack/cli": "2.3.4"
     "@rspack/core": "2.3.4"
     "@rspack/dev-server": "2.2.2"
