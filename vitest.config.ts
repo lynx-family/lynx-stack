@@ -68,6 +68,11 @@ export default defineConfig({
         'packages/webpack/template-webpack-plugin/src/LynxTemplatePlugin.ts',
         'packages/rspeedy/plugin-lynx/**',
         'packages/web-platform/web-core-e2e/**',
+        // Covered by Rstest (web-bundle-kit) and by the Playwright tests of
+        // web-preview-kit. V8's untested-file sweep would report every file
+        // of both, tests and build scripts included, as unexecuted.
+        'packages/web-platform/web-bundle-kit/**',
+        'packages/web-platform/web-preview-kit/**',
         'packages/webpack/test-tools/**',
         'packages/testing-library/test-environment/**',
         'packages/react/testing-library/**',
