@@ -28,7 +28,7 @@ import { genCommitTaskId, replaceCommitHook } from './lifecycle/patch/commit.js'
 import type { PatchList, PatchOptions } from './lifecycle/patch/commit.js';
 import { updateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { __pendingListUpdates } from './list/pendingListUpdates.js';
-import { enablePublishEvent, publishEvent } from './lynx/tt.js';
+import { publishEvent } from './lynx/tt.js';
 import { hydrate as hydrateMainThread } from './renderToOpcodes/hydrate.js';
 import { render as renderFirstFrame } from './renderToOpcodes/index.js';
 import {
@@ -537,7 +537,9 @@ function initialize(): void {
     });
     // Native events can arrive before the transfer runtime registers its dispatcher.
     delayedEvents?.splice(0).forEach(event => unclaimedEvents.push(event));
-    enablePublishEvent(publishTransferEvent);
+    const app = lynx.getApp();
+    app.publishEvent = publishTransferEvent;
+    app.publicComponentEvent = (_componentId, handlerName, data) => publishTransferEvent(handlerName, data);
     const core = lynx.getCoreContext();
     removers.push(addReloadScopedEventListener<RunWorkletCtxRetData>(core, WorkletEvents.FunctionCallRet, data => {
       const call = workletReturns.get(data.resolveId);

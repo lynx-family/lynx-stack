@@ -206,7 +206,7 @@ function flushDelayedLifecycleEvents(): void {
   flushingDelayedLifecycleEvents = false;
 }
 
-function publishEvent(handlerName: string, data: EventDataType): void {
+export function publishEvent(handlerName: string, data: EventDataType): void {
   lynx.getApp().callBeforePublishEvent?.(data);
   let snapshotId: number | undefined;
   const getSnapshotId = () => snapshotId ??= Number(handlerName.split(':')[0]);
@@ -258,10 +258,14 @@ function publishEvent(handlerName: string, data: EventDataType): void {
   }
 }
 
+function publicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
+  publishEvent(handlerName, data);
+}
+
 /** Dispatches native events to their background handlers instead of delaying them. */
-function enablePublishEvent(dispatch: typeof publishEvent = publishEvent): void {
-  lynx.getApp().publishEvent = dispatch;
-  lynx.getApp().publicComponentEvent = (_componentId, handlerName, data) => dispatch(handlerName, data);
+function enablePublishEvent(): void {
+  lynx.getApp().publishEvent = publishEvent;
+  lynx.getApp().publicComponentEvent = publicComponentEvent;
 }
 
 function delayedPublicComponentEvent(_componentId: string, handlerName: string, data: EventDataType) {
@@ -279,4 +283,4 @@ function updateGlobalProps(newData: Record<string, any>): void {
   });
 }
 
-export { enablePublishEvent, injectTt, flushDelayedLifecycleEvents, publishEvent };
+export { enablePublishEvent, injectTt, flushDelayedLifecycleEvents };
