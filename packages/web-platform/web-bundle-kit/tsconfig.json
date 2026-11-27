@@ -17,12 +17,7 @@
     "src",
     "test",
     "scripts",
-    "e2e",
     "rslib.config.ts",
     "rstest.config.ts",
-    "playwright.config.ts",
   ],
-  // A ReactLynx project with its own tsconfig.json. The JavaScript of
-  // `e2e/page` is served to the browser as it is (`allowJs` is off).
-  "exclude": ["e2e/fixture"],
 }

@@ -3119,15 +3119,9 @@ importers:
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../../rspeedy/plugin-lynx
-      '@lynx-js/web-core':
-        specifier: workspace:*
-        version: link:../web-core
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
-      '@playwright/test':
-        specifier: 'catalog:'
-        version: 1.61.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.3.3(core-js@3.50.0)

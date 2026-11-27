@@ -66,4 +66,4 @@ pnpm run coverage         # text report
 pnpm run coverage:ci      # packages/web-platform/coverage/lcov.info
 ```
 
-CI runs the tests and `coverage:ci` in the `playwright-web-kits` job of `.github/workflows/test.yml`.
+CI runs the tests and `coverage:ci` in the `playwright-web-preview-kit` job of `.github/workflows/test.yml`.

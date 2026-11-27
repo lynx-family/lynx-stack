@@ -25,16 +25,13 @@
   "scripts": {
     "build": "rslib build",
     "test": "rstest",
-    "test:e2e": "playwright test",
     "test:type": "tsc6 --noEmit"
   },
   "devDependencies": {
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
-    "@lynx-js/web-core": "workspace:*",
     "@noble/hashes": "^2.4.0",
-    "@playwright/test": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rsbuild/plugin-node-polyfill": "^1.4.6",
     "@rslib/core": "catalog:rslib",
