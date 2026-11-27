@@ -92,6 +92,10 @@ export default defineConfig({
         find: /^@lynx-js\/react\/element-template$/,
         replacement: path.resolve(__dirname, './src/element-template/index.ts'),
       },
+      {
+        find: /^@lynx-js\/react\/experimental\/transfer$/,
+        replacement: path.resolve(__dirname, './src/snapshot/experimental/transfer.ts'),
+      },
       { find: '@lynx-js/react/internal', replacement: path.resolve(__dirname, './src/internal.ts') },
       {
         find: /^@lynx-js\/react-signals\/lepus$/,

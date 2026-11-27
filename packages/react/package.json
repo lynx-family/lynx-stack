@@ -28,6 +28,10 @@
       "types": "./runtime/lazy/import.d.ts",
       "default": "./runtime/lazy/import.js"
     },
+    "./experimental/transfer": {
+      "types": "./runtime/lib/snapshot/experimental/transfer.d.ts",
+      "default": "./runtime/lib/snapshot/experimental/transfer.js"
+    },
     "./internal": {
       "types": "./runtime/lib/internal.d.ts",
       "lazy": "./runtime/lazy/internal.js",
@@ -146,6 +150,9 @@
       ],
       "experimental/lazy/import": [
         "./runtime/lazy/import.d.ts"
+      ],
+      "experimental/transfer": [
+        "./runtime/lib/snapshot/experimental/transfer.d.ts"
       ],
       "hooks": [
         "./runtime/lib/core/hooks/react.d.ts"

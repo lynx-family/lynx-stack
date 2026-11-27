@@ -13,7 +13,7 @@ import {
 } from '../../../src/core/background-function/run-on-background';
 import { runOnMainThread, root, useState } from '../../../src/index';
 import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value';
-import { TransferRegistry } from '../../../src/internal';
+import { TransferRegistry } from '@lynx-js/react/experimental/transfer';
 import { __root } from '../../../src/root';
 import {
   BackgroundSnapshotInstance,

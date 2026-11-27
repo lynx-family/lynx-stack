@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { runOnBackground } from '../../../src/core/background-function/run-on-background';
 import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value';
 import { root } from '../../../src/index';
-import { TransferRegistry } from '../../../src/internal';
+import { TransferRegistry } from '@lynx-js/react/experimental/transfer';
 import { __root } from '../../../src/root';
 import { snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshotInstanceManager';
 import { WorkletEvents } from '../../../src/worklet-runtime/bindings/events';

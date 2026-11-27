@@ -4,7 +4,7 @@
 import { useEffect } from 'preact/hooks';
 
 import { runOnBackground, useState } from '@lynx-js/react';
-import { TransferRegistry } from '@lynx-js/react/internal';
+import { TransferRegistry } from '@lynx-js/react/experimental/transfer';
 
 function log(message: string) {
   console.info(`[transfer-run-on-background] ${message}`);
