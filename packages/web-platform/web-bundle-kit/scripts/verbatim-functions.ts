@@ -4,7 +4,8 @@
 
 // Keeps the source text of functions that a plugin injects into cards by
 // stringifying them (`Template.getFunctionContent(fn)`, that is
-// `fn.toString()`). Applied to the files of `STRINGIFIED` in build.mjs.
+// `fn.toString()`). Applied to the files of `STRINGIFIED` in
+// rsbuild.config.ts.
 //
 // Bundling the kit rewrites such a function: Rspack renames identifiers it
 // owns (`__webpack_require__` becomes `__nested_rspack_require_<n>_<m>__`),
@@ -17,17 +18,20 @@
 // changes. `Function.prototype.toString.call(fn)` bypasses the override, so
 // this covers callers that use `fn.toString()`, `String(fn)` or `${fn}`.
 
-const { readFileSync } = require('node:fs');
+import { readFileSync } from 'node:fs';
 
-const { parse } = require('acorn');
+import { parse } from 'acorn';
+import type { FunctionDeclaration } from 'acorn';
 
-/** @this {import('@rspack/core').LoaderContext<unknown>} */
-module.exports = function verbatimFunctionsLoader(source) {
-  const file = this.resourcePath;
-  // The text must be the published one, not what an earlier loader made of it.
+/**
+ * Returns `source`, the published text of `file`, with a `toString` for each
+ * of its top-level functions.
+ */
+export function keepFunctionText(source: string, file: string): string {
+  // The text must be the published one, not what an earlier step made of it.
   if (source !== readFileSync(file, 'utf-8')) {
     throw new Error(
-      `${file}: another loader changed this module before verbatim-functions-loader`,
+      `${file}: another loader changed this module before the verbatim functions rewrite`,
     );
   }
   const ast = parse(source, {
@@ -38,17 +42,14 @@ module.exports = function verbatimFunctionsLoader(source) {
 
   // Top-level functions: `function f() {}`, `export function f() {}` and
   // `export default function () {}`.
-  const functions = [];
+  const functions: FunctionDeclaration[] = [];
   for (const node of ast.body) {
-    let declaration = node;
-    if (
-      node.type === 'ExportNamedDeclaration'
-      || node.type === 'ExportDefaultDeclaration'
-    ) {
-      declaration = node.declaration;
-    }
+    const declaration = node.type === 'ExportNamedDeclaration'
+        || node.type === 'ExportDefaultDeclaration'
+      ? node.declaration
+      : node;
     if (declaration?.type !== 'FunctionDeclaration') continue;
-    functions.push(declaration);
+    functions.push(declaration as FunctionDeclaration);
   }
   if (functions.length === 0) {
     throw new Error(
@@ -57,7 +58,7 @@ module.exports = function verbatimFunctionsLoader(source) {
   }
 
   let result = source;
-  const trailer = [];
+  const trailer: string[] = [];
   for (const declaration of functions.reverse()) {
     const text = source.slice(declaration.start, declaration.end);
     let name = declaration.id?.name;
@@ -79,4 +80,4 @@ module.exports = function verbatimFunctionsLoader(source) {
   return `${result}\n// Added by web-bundle-kit: the published text of the functions above.\n${
     trailer.reverse().join('\n')
   }\n`;
-};
+}

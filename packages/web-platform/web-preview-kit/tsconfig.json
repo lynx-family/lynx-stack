@@ -1,8 +1,9 @@
 {
   "extends": "../tsconfig.json",
   // Not part of the root build (`packages/web-platform/tsconfig.json`): the
-  // types of `@lynx-js/web-bundle-kit` come from its sources, which need its
-  // build. Checked by `test:type` after `pnpm turbo build`.
+  // types of `@lynx-js/web-bundle-kit` come from its sources, which need the
+  // declarations of the rslib-built plugins. Checked by `test:type` after
+  // `pnpm turbo build`.
   "compilerOptions": {
     "composite": false,
     "noEmit": true,

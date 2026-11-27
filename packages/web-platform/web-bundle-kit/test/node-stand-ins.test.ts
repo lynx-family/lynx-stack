@@ -2,12 +2,11 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 import { createHash as nodeCreateHash } from 'node:crypto';
-import { createRequire } from 'node:module';
-import { pathToFileURL } from 'node:url';
 
 import { memfs as createMemfs } from '@napi-rs/wasm-runtime/fs';
 import { afterAll, describe, expect, test } from '@rstest/core';
 
+import { standIns } from '../scripts/builtins.ts';
 import * as assert from '../src/node/assert.js';
 import * as buffer from '../src/node/buffer.js';
 import * as childProcess from '../src/node/child-process.js';
@@ -33,8 +32,6 @@ import * as v8 from '../src/node/v8.js';
 import * as vm from '../src/node/vm.js';
 import * as workerThreads from '../src/node/worker-threads.js';
 import * as zlib from '../src/node/zlib.js';
-
-const require = createRequire(import.meta.url);
 
 /** A module namespace, as `import * as` gives it. */
 type Namespace = Record<string, unknown> & { default: unknown };
@@ -231,11 +228,7 @@ describe('crypto', () => {
 });
 
 describe('module', () => {
-  test('lists the built-ins the build aliases', async () => {
-    const file = require.resolve('../scripts/builtins.mjs');
-    const { standIns } = (await import(pathToFileURL(file).href)) as {
-      standIns: Record<string, unknown>;
-    };
+  test('lists the built-ins the build aliases', () => {
     expect([...nodeModule.builtinModules].sort()).toEqual(
       Object.keys(standIns).sort(),
     );

@@ -2,9 +2,9 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { registered } from '../generated/registered.js';
 import { installGlobals } from './node/globals.js';
 import { host } from './node/host.js';
+import { registered } from './registered.js';
 
 declare const __webpack_public_path__: string;
 

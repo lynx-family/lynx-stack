@@ -1,14 +1,17 @@
 {
   "extends": "../tsconfig.json",
   // Not part of the root build (`packages/web-platform/tsconfig.json`): the
-  // sources need `generated/` and the declarations of rslib-built plugins,
-  // which exist only after `pnpm turbo build`. Checked by `test:type`.
+  // sources need the declarations of rslib-built plugins, which exist only
+  // after `pnpm turbo build`. Checked by `test:type`.
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
     "allowJs": false,
+    // The build scripts import each other with `.ts`, which Node.js runs as
+    // it is when Rsbuild loads rsbuild.config.ts.
+    "allowImportingTsExtensions": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
     "types": ["node"],
   },
-  "include": ["src", "test", "generated/*.d.ts", "rstest.config.ts"],
+  "include": ["src", "test", "scripts", "rsbuild.config.ts", "rstest.config.ts"],
 }

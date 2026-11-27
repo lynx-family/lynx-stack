@@ -9,11 +9,9 @@ import { pathToFileURL } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, test } from '@rstest/core';
 
+import { keepFunctionText } from '../scripts/verbatim-functions.ts';
+
 const require = createRequire(import.meta.url);
-const loader = require('../scripts/verbatim-functions-loader.cjs') as (
-  this: { resourcePath: string },
-  source: string,
-) => string;
 
 let dir: string;
 beforeEach(() => {
@@ -23,14 +21,14 @@ afterEach(() => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-/** Writes `source`, runs the loader on it and imports both versions. */
+/** Writes `source`, rewrites it and imports both versions. */
 async function load(source: string) {
   const file = path.join(dir, `m${Math.random().toString(36).slice(2)}.mjs`);
   fs.writeFileSync(file, source);
-  const transformed = loader.call({ resourcePath: file }, source);
+  const transformed = keepFunctionText(source, file);
   const out = `${file}.out.mjs`;
   // What bundling the kit does to an identifier it owns: rename it in the
-  // code. The text the loader added only mentions it inside strings.
+  // code. The text the rewrite added only mentions it inside strings.
   const marker = transformed.lastIndexOf('// Added by web-bundle-kit');
   fs.writeFileSync(
     out,
@@ -50,7 +48,7 @@ async function load(source: string) {
   return { original, bundled };
 }
 
-describe('verbatim-functions-loader', () => {
+describe('keepFunctionText', () => {
   test('an anonymous default export keeps its published text', async () => {
     const source = [
       'var __webpack_require__ = undefined;',
@@ -85,7 +83,7 @@ describe('verbatim-functions-loader', () => {
     const file = path.join(dir, 'none.mjs');
     const source = 'export const x = () => 1;\n';
     fs.writeFileSync(file, source);
-    expect(() => loader.call({ resourcePath: file }, source)).toThrow(
+    expect(() => keepFunctionText(source, file)).toThrow(
       /declares no top-level function/,
     );
   });
@@ -93,9 +91,8 @@ describe('verbatim-functions-loader', () => {
   test('a module another loader changed is rejected', () => {
     const file = path.join(dir, 'changed.mjs');
     fs.writeFileSync(file, 'export default function () {}\n');
-    expect(() =>
-      loader.call({ resourcePath: file }, 'export default function () {1}\n')
-    ).toThrow(/another loader changed this module/);
+    expect(() => keepFunctionText('export default function () {1}\n', file))
+      .toThrow(/another loader changed this module/);
   });
 
   test('the runtimes of chunk-loading-webpack-plugin', async () => {

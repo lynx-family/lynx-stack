@@ -1,33 +1,11 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
-import { createRequire } from 'node:module';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
-import { beforeAll, describe, expect, test } from '@rstest/core';
+import { describe, expect, test } from '@rstest/core';
 
-type PathModule = typeof path.posix;
-
-// scripts/paths.mjs is plain JavaScript run by the build; these are its types.
-interface Paths {
-  toPosix(relative: string, p?: PathModule): string;
-  relativeSpecifier(fromDir: string, file: string, p?: PathModule): string;
-  virtualPathOf(
-    virtualDir: string,
-    realDir: string,
-    realFile: string,
-    p?: PathModule,
-  ): string;
-  pathKey(file: string, p?: PathModule): string;
-  isInside(file: string, dir: string, p?: PathModule): boolean;
-}
-
-let paths: Paths;
-beforeAll(async () => {
-  const file = createRequire(import.meta.url).resolve('../scripts/paths.mjs');
-  paths = (await import(pathToFileURL(file).href)) as Paths;
-});
+import * as paths from '../scripts/paths.ts';
 
 const { win32, posix } = path;
 
@@ -36,10 +14,10 @@ describe('build script paths on Windows', () => {
   const store = 'D:\\a\\lynx-stack\\node_modules\\.pnpm';
   const rsbuild = `${store}\\@rsbuild+core@2.3.3\\node_modules\\@rsbuild\\core`;
 
-  test('generated/registered.js imports with POSIX specifiers', () => {
+  test('src/registered.ts imports with POSIX specifiers', () => {
     expect(
       paths.relativeSpecifier(
-        `${kit}\\generated`,
+        `${kit}\\src`,
         `${rsbuild}\\dist\\transformLoader.mjs`,
         win32,
       ),
@@ -47,16 +25,16 @@ describe('build script paths on Windows', () => {
       '../../../../node_modules/.pnpm/@rsbuild+core@2.3.3/node_modules/@rsbuild/core/dist/transformLoader.mjs',
     );
     expect(
-      paths.relativeSpecifier(`${kit}\\generated`, `${kit}\\src\\a.js`, win32),
-    ).toBe('../src/a.js');
+      paths.relativeSpecifier(`${kit}\\src`, `${kit}\\scripts\\a.js`, win32),
+    ).toBe('../scripts/a.js');
     expect(
-      paths.relativeSpecifier(`${kit}`, `${kit}\\generated\\a.js`, win32),
-    ).toBe('./generated/a.js');
+      paths.relativeSpecifier(`${kit}`, `${kit}\\src\\a.js`, win32),
+    ).toBe('./src/a.js');
   });
 
   test('a file on another drive is not imported by an absolute path', () => {
     expect(() =>
-      paths.relativeSpecifier(`${kit}\\generated`, 'E:\\cache\\a.js', win32)
+      paths.relativeSpecifier(`${kit}\\src`, 'E:\\cache\\a.js', win32)
     ).toThrow(/cannot be imported relatively/);
   });
 

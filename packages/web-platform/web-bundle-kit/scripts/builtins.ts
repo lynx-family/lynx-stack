@@ -7,7 +7,13 @@
 // that are not listed have no stand-in; the build makes them empty modules.
 // `builtinModules` in src/node/module.ts lists the same names.
 
-export const standIns = {
+import { builtinModules, createRequire } from 'node:module';
+import path from 'node:path';
+
+/** A stand-in: a path relative to the package, or an npm module. */
+export type StandIn = string | { package: string };
+
+export const standIns: Record<string, StandIn> = {
   assert: 'src/node/assert.ts',
   buffer: 'src/node/buffer.ts',
   child_process: 'src/node/child-process.ts',
@@ -37,3 +43,22 @@ export const standIns = {
   worker_threads: 'src/node/worker-threads.ts',
   zlib: 'src/node/zlib.ts',
 };
+
+/**
+ * The `resolve.alias` entries for the built-ins: each goes to its stand-in, or
+ * to an empty module (`false`) when it has none. `root` is the package
+ * directory.
+ */
+export function builtinAliases(root: string): Record<string, string | false> {
+  const require = createRequire(path.join(root, 'package.json'));
+  const alias: Record<string, string | false> = {};
+  for (const name of builtinModules.filter((n) => !n.startsWith('_'))) {
+    const standIn = Object.hasOwn(standIns, name) ? standIns[name] : undefined;
+    alias[`${name}$`] = standIn === undefined
+      ? false
+      : typeof standIn === 'string'
+      ? path.join(root, standIn)
+      : require.resolve(standIn.package);
+  }
+  return alias;
+}

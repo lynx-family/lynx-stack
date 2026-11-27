@@ -15,14 +15,15 @@
 import { globSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-import { toPosix } from './paths.mjs';
+import type { Layout } from './layout.ts';
+import { toPosix } from './paths.ts';
 
 /**
  * Packages, by name in the virtual tree, whose files are compiled into a card
  * or read at build time, with the files to take. `null` takes the files the
  * package publishes (its `files` field).
  */
-const RUNTIME_FILES = {
+const RUNTIME_FILES: Record<string, string[] | null> = {
   '@lynx-js/react': null,
   preact: null,
   '@swc/helpers': null,
@@ -57,9 +58,17 @@ const EXCLUDE = [
 
 const PLACEHOLDER = '// Bundled into @lynx-js/web-bundle-kit.\n';
 
-function listPackageFiles(realDir, patterns) {
-  const out = new Set();
-  const negated = [];
+/** The content of `mirror.json`. */
+export interface Mirror {
+  /** Virtual path -> content. */
+  files: Record<string, string>;
+  /** Virtual directory of a runtime package -> size of its mirrored files. */
+  sizes: Record<string, number>;
+}
+
+function listPackageFiles(realDir: string, patterns: string[]): string[] {
+  const out = new Set<string>();
+  const negated: string[] = [];
   for (const pattern of patterns) {
     if (pattern.startsWith('!')) {
       negated.push(pattern.slice(1));
@@ -89,12 +98,14 @@ function listPackageFiles(realDir, patterns) {
 }
 
 /**
- * @param {{ layout: ReturnType<typeof import('./layout.mjs').createLayout>, bundled: Set<string> }} options
+ * Collects the mirror from the layout and the real paths of the modules
+ * bundled into the kit.
  */
-export function collectMirror({ layout, bundled }) {
-  /** @type {Record<string, string>} */
-  const files = {};
-  const sizes = {};
+export function collectMirror(
+  { layout, bundled }: { layout: Layout; bundled: Set<string> },
+): Mirror {
+  const files: Record<string, string> = {};
+  const sizes: Record<string, number> = {};
   for (const instance of layout.instances()) {
     files[`${instance.virtualDir}/package.json`] = readFileSync(
       path.join(instance.realDir, 'package.json'),
@@ -121,7 +132,7 @@ export function collectMirror({ layout, bundled }) {
     sizes[instance.virtualDir] = size;
   }
   const sorted = Object.fromEntries(
-    Object.keys(files).sort().map((key) => [key, files[key]]),
+    Object.keys(files).sort().map((key) => [key, files[key]!]),
   );
   return { files: sorted, sizes };
 }

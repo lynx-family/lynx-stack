@@ -23,7 +23,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "rsbuild build",
     "test": "rstest",
     "test:e2e": "node e2e/run.mjs",
     "test:type": "tsc6 --noEmit"

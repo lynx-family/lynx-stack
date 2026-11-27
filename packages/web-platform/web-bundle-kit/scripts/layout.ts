@@ -14,23 +14,53 @@
 // find what they look for.
 
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
-import { pathKey, virtualPathOf } from './paths.mjs';
+import { pathKey, virtualPathOf } from './paths.ts';
 
-/**
- * @typedef {{ name: string, version: string, realDir: string, virtualDir: string, json: Record<string, any> }} PackageInstance
- */
+/** The fields of a `package.json` that the build reads. */
+export interface PackageJson {
+  name?: string;
+  version?: string;
+  type?: string;
+  files?: string[];
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+}
 
-function readJson(file) {
-  return JSON.parse(readFileSync(file, 'utf-8'));
+/** A package placed in the virtual tree. */
+export interface PackageInstance {
+  name: string;
+  version: string;
+  realDir: string;
+  virtualDir: string;
+  json: PackageJson;
+}
+
+/** The virtual tree, as `createLayout` returns it. */
+export interface Layout {
+  /** Dependencies that are neither installed nor optional. */
+  missing: string[];
+  instances(): PackageInstance[];
+  /**
+   * The virtual path of a real file, or undefined when its package is not
+   * part of the layout.
+   */
+  toVirtual(realFile: string): string | undefined;
+}
+
+function readJson(file: string): PackageJson {
+  return JSON.parse(readFileSync(file, 'utf-8')) as PackageJson;
 }
 
 /**
  * Finds the directory of a dependency the way Node.js looks up
  * `node_modules`, ignoring `exports`.
  */
-function findDependencyDir(fromDir, name) {
+function findDependencyDir(fromDir: string, name: string): string | undefined {
   for (let dir = fromDir;; dir = path.dirname(dir)) {
     const candidate = path.join(dir, 'node_modules', name);
     if (existsSync(path.join(candidate, 'package.json'))) {
@@ -40,14 +70,14 @@ function findDependencyDir(fromDir, name) {
   }
 }
 
-function parentDirOfPackageDir(virtualDir) {
+function parentDirOfPackageDir(virtualDir: string): string {
   // `/a/node_modules/@s/n` -> `/a`, `/node_modules/n` -> `/`
   const index = virtualDir.lastIndexOf('/node_modules/');
   return index <= 0 ? '/' : virtualDir.slice(0, index);
 }
 
 /** The root of the package a real file belongs to (nearest named package.json). */
-export function findPackageRoot(file) {
+export function findPackageRoot(file: string): string | undefined {
   let dir = statSync(file).isDirectory() ? file : path.dirname(file);
   for (;; dir = path.dirname(dir)) {
     const pkg = path.join(dir, 'package.json');
@@ -62,24 +92,36 @@ export function findPackageRoot(file) {
   }
 }
 
-/**
- * Builds the layout from root packages, given as real directories.
- *
- * @param {string[]} rootDirs
- */
-export function createLayout(rootDirs) {
-  /** @type {Map<string, PackageInstance>} virtual dir -> instance */
-  const byVirtualDir = new Map();
-  /** @type {Map<string, PackageInstance>} pathKey(real dir) -> first instance */
-  const byRealDir = new Map();
-  /** @type {string[]} */
-  const missing = [];
+/** The real directory of package `name`, looked up from the package in `from`. */
+export function packageDir(name: string, from: string): string {
+  const fromRequire = createRequire(path.join(from, 'package.json'));
+  let entry: string;
+  try {
+    entry = fromRequire.resolve(`${name}/package.json`);
+  } catch {
+    entry = fromRequire.resolve(name);
+  }
+  const root = findPackageRoot(entry);
+  if (root === undefined) throw new Error(`${entry} is not in a package`);
+  return realpathSync(root);
+}
 
-  /** @param {string} realDir @param {string} parentVirtualDir */
-  function place(realDir, name, parentVirtualDir) {
+/** Builds the layout from root packages, given as real directories. */
+export function createLayout(rootDirs: string[]): Layout {
+  /** virtual dir -> instance */
+  const byVirtualDir = new Map<string, PackageInstance>();
+  /** pathKey(real dir) -> first instance */
+  const byRealDir = new Map<string, PackageInstance>();
+  const missing: string[] = [];
+
+  function place(
+    realDir: string,
+    name: string,
+    parentVirtualDir: string,
+  ): { instance: PackageInstance; isNew: boolean } {
     // Node.js looks in `<dependent>/node_modules`, then in the
     // `node_modules` of each package folder above it, then `/node_modules`.
-    const candidates = [];
+    const candidates: string[] = [];
     for (let dir = parentVirtualDir;; dir = parentDirOfPackageDir(dir)) {
       candidates.push(
         dir === '/' ? `/node_modules/${name}` : `${dir}/node_modules/${name}`,
@@ -88,7 +130,7 @@ export function createLayout(rootDirs) {
     }
     // candidates go from nearest to farthest; pick the farthest that is free
     // or already the same package, as long as nothing nearer shadows it.
-    let chosen;
+    let chosen: string | undefined;
     for (const candidate of candidates) {
       const existing = byVirtualDir.get(candidate);
       if (existing) {
@@ -99,9 +141,9 @@ export function createLayout(rootDirs) {
       }
       chosen = candidate;
     }
-    if (!chosen) chosen = candidates[0];
+    chosen ??= candidates[0]!;
     const json = readJson(path.join(realDir, 'package.json'));
-    const instance = {
+    const instance: PackageInstance = {
       name,
       version: json.version ?? '0.0.0',
       realDir,
@@ -114,14 +156,13 @@ export function createLayout(rootDirs) {
     return { instance, isNew: true };
   }
 
-  /** @type {Array<[string, string, string]>} */
-  const queue = [];
+  const queue: [realDir: string, name: string, parent: string][] = [];
   for (const realDir of rootDirs) {
     const json = readJson(path.join(realDir, 'package.json'));
-    queue.push([realpathSync(realDir), json.name, '/']);
+    queue.push([realpathSync(realDir), json.name!, '/']);
   }
-  while (queue.length > 0) {
-    const [realDir, name, parent] = queue.shift();
+  for (let next = queue.shift(); next; next = queue.shift()) {
+    const [realDir, name, parent] = next;
     const { instance, isNew } = place(realDir, name, parent);
     if (!isNew) continue;
     const deps = {
@@ -147,12 +188,7 @@ export function createLayout(rootDirs) {
 
   return {
     missing,
-    /** @returns {PackageInstance[]} */
     instances: () => [...byVirtualDir.values()],
-    /**
-     * The virtual path of a real file, or undefined when its package is not
-     * part of the layout.
-     */
     toVirtual(realFile) {
       // The nearest enclosing package that is in the tree: packages may ship
       // prebundled packages inside them (`@rsbuild/core/compiled/*`).
@@ -165,9 +201,14 @@ export function createLayout(rootDirs) {
         if (path.dirname(dir) === dir) return undefined;
       }
     },
-    /** The instance placed for a real package directory. */
-    instanceOf(realDir) {
-      return byRealDir.get(pathKey(realpathSync(realDir)));
-    },
   };
+}
+
+/** Whether Node.js treats `file` as CommonJS (it has `__dirname`). */
+export function isCommonJS(file: string): boolean {
+  if (file.endsWith('.cjs')) return true;
+  if (file.endsWith('.mjs') || file.endsWith('.ts')) return false;
+  const pkgRoot = findPackageRoot(file);
+  if (!pkgRoot) return true;
+  return readJson(path.join(pkgRoot, 'package.json')).type !== 'module';
 }
