@@ -14,14 +14,15 @@ import { prettyFormatSnapshotPatch } from '../../debug/formatPatch.js';
 import { LifecycleConstant } from '../../lifecycle/constant.js';
 import { __pendingListUpdates } from '../../list/pendingListUpdates.js';
 import { __page } from '../../snapshot/definition.js';
-import { applyRefQueue } from '../../snapshot/workletRef.js';
+import { applyRefQueue, getRefQueueLength, truncateRefQueue } from '../../snapshot/workletRef.js';
 import { isMtsEnabled } from '../../worklet/functionality.js';
 
 function updateMainThread(
   { data, patchOptions }: {
-    data: string;
+    data: string | PatchList;
     patchOptions: PatchOptions;
   },
+  partialHydration?: boolean,
 ): void {
   if ((patchOptions.reloadVersion) < getReloadVersion()) {
     return;
@@ -39,7 +40,7 @@ function updateMainThread(
   try {
     markTiming('mtsRenderStart');
     markTiming('parseChangesStart');
-    const parsedData = JSON.parse(data) as PatchList;
+    const parsedData = typeof data === 'string' ? JSON.parse(data) as PatchList : data;
     const { patchList, flushOptions = {}, delayedRunOnMainThreadData } = parsedData;
 
     if (typeof __ALOG__ !== 'undefined' && __ALOG__) {
@@ -63,9 +64,12 @@ function updateMainThread(
 
     markTiming('parseChangesEnd');
     markTiming('patchChangesStart');
+    const refQueueStart = getRefQueueLength();
     if (patchOptions.isHydration) {
       setMainThreadHydrating(true);
     }
+    let patchApplied = false;
+    let hydrationCompleted = false;
     try {
       for (const { snapshotPatch, id } of patchList) {
         __pendingListUpdates.clearAttachedLists();
@@ -76,11 +80,19 @@ function updateMainThread(
         // console.debug('********** Lepus updatePatch:');
         // printSnapshotInstance(snapshotInstanceManager.values.get(-1)!);
       }
+      patchApplied = true;
     } finally {
       markTiming('patchChangesEnd');
       markTiming('mtsRenderEnd');
-      if (patchOptions.isHydration) {
-        setMainThreadHydrating(false);
+      try {
+        if (patchOptions.isHydration) {
+          setMainThreadHydrating(false, partialHydration, !patchApplied);
+        }
+        hydrationCompleted = patchApplied;
+      } finally {
+        if (!hydrationCompleted) {
+          truncateRefQueue(refQueueStart);
+        }
       }
     }
     applyRefQueue();

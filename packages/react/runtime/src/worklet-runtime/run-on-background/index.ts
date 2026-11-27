@@ -19,6 +19,8 @@ interface RunOnBackgroundDelayImpl {
   clearDelayedBackgroundFunctions(): void;
   delayRunOnBackground(fnObj: JsFnHandle, fn: (fnId: number, execId: number) => void): void;
   runDelayedBackgroundFunctions(): void;
+  flushBoundDelayedBackgroundFunctions(): void;
+  discardBoundDelayedBackgroundFunctions(): void;
 }
 
 function isStaleHydratedEpoch(
@@ -36,6 +38,38 @@ function initRunOnBackgroundDelay(): RunOnBackgroundDelayImpl {
       delete handle._delayIndices;
     }
     pendingHandles.clear();
+  }
+  function drainBoundDelayedBackgroundFunctions(runTasks: boolean): void {
+    const queue = instance.delayedBackgroundFunctionArray;
+    let hasPending = false;
+    let firstError: unknown;
+    let hasError = false;
+    // Pending handles keep indices into the queue, so bound calls are cleared in place.
+    for (let index = 0; index < queue.length; index++) {
+      const details = queue[index];
+      if (!details) continue;
+      if (!details.jsFnHandle) {
+        hasPending = true;
+        continue;
+      }
+      queue[index] = undefined;
+      if (!runTasks) continue;
+      try {
+        details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
+      } catch (error) {
+        if (!hasError) {
+          firstError = error;
+          hasError = true;
+        }
+      }
+    }
+    if (!hasPending) {
+      instance.delayedBackgroundFunctionArray = [];
+      clearPendingDelayIndices();
+    }
+    if (hasError) {
+      throw firstError;
+    }
   }
   const instance: RunOnBackgroundDelayImpl = {
     delayedBackgroundFunctionArray: [],
@@ -68,6 +102,12 @@ function initRunOnBackgroundDelay(): RunOnBackgroundDelayImpl {
           details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
         }
       }
+    },
+    flushBoundDelayedBackgroundFunctions(): void {
+      drainBoundDelayedBackgroundFunctions(true);
+    },
+    discardBoundDelayedBackgroundFunctions(): void {
+      drainBoundDelayedBackgroundFunctions(false);
     },
   };
   return instance;

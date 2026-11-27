@@ -29,6 +29,16 @@ export function applyRefQueue(): void {
   }
 }
 
+export function getRefQueueLength(): number {
+  return mtRefQueue.length;
+}
+
+export function truncateRefQueue(length: number): void {
+  if (mtRefQueue.length > length) {
+    mtRefQueue.length = length;
+  }
+}
+
 function addToRefQueue(worklet: Worklet | WorkletRefImpl<Element>, element: Element): void {
   mtRefQueue.push(worklet, element);
 }

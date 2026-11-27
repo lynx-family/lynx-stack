@@ -46,6 +46,14 @@ export function flushDelayedRunOnBackgroundFunctions(): void {
   globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl?.runDelayedBackgroundFunctions?.();
 }
 
+export function flushBoundDelayedRunOnBackgroundFunctions(): void {
+  globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl?.flushBoundDelayedBackgroundFunctions?.();
+}
+
+export function discardBoundDelayedRunOnBackgroundFunctions(): void {
+  globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl?.discardBoundDelayedBackgroundFunctions?.();
+}
+
 export function clearDelayedRunOnBackgroundFunctions(): void {
   const impl = globalThis.lynxWorkletImpl;
   if (!impl) {

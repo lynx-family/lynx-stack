@@ -23,6 +23,7 @@ import {
   RENDER_COMPONENT,
   VALUE,
 } from '../../shared/render-constants.js';
+import { clearFirstScreenMainThreadRefs } from '../../worklet-runtime/bindings/bindings.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
 import { isRendering } from '../lifecycle/isRendering.js';
@@ -38,6 +39,7 @@ import { __page, __pageId, setupPage } from '../snapshot/definition.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 import { snapshotInstanceManager } from '../snapshot/snapshotInstanceManager.js';
 import type { SerializedSnapshotInstance } from '../snapshot/types.js';
+import { getRefQueueLength, truncateRefQueue } from '../snapshot/workletRef.js';
 import { setMainThreadWorkletScheduler } from '../worklet/call/runOnMainThread.js';
 
 type TransferProps = Record<string, unknown>;
@@ -107,7 +109,6 @@ function initialize(): void {
   const workletReturns = new Map<number, { instance: Instance; resolve: (value: unknown) => void }>();
   let nextWorkletReturnId = 0;
   const removers: (() => void)[] = [];
-  const patchedDelays = new WeakSet<object>();
   const pendingCreates: CreateTransferEvent[] = [];
   let pageReady = !mts;
   let active: Instance | undefined;
@@ -160,6 +161,7 @@ function initialize(): void {
   function renderMain(instance: Instance) {
     const previous = instance.main;
     const root = new SnapshotInstance('root');
+    const refQueueStart = getRefQueueLength();
     if (!previous) {
       root.__elements = [instance.element!];
       root.__element_root = instance.element;
@@ -170,6 +172,7 @@ function initialize(): void {
         renderFirstFrame(createElement(instance.Component, instance.props), undefined, root);
       });
     } catch (error) {
+      truncateRefQueue(refQueueStart);
       if (previous) forgetIds(root);
       dispose(instance.init);
       throw error;
@@ -325,26 +328,39 @@ function initialize(): void {
     instance.firstFrameWorklets = [];
     renderBackground(instance);
   }
+  function clearFirstScreenRefsIfIdle() {
+    for (const inst of instances.values()) {
+      if (inst.seq === 0) return;
+    }
+    clearFirstScreenMainThreadRefs();
+  }
   function dispose(scope: Scope, notify = true) {
     if (disposed.has(scope.transferId)) return;
     disposed.add(scope.transferId);
     frames.delete(scope.transferId);
     const instance = instances.get(scope.transferId);
-    if (instance) {
-      instance.phase = 'disposed';
-      release(instance);
-      if (instance.main) {
-        forgetIds(instance.main);
-        instance.main.removeChildren();
-        __RemoveElement(__page, instance.element!);
-        __FlushElementTree(__page, {});
-      } else if (instance.background) {
-        withInstance(instance, () => render(null, instance.background as unknown as ContainerNode));
-        instance.background.tearDown();
+    try {
+      if (instance) {
+        instance.phase = 'disposed';
+        release(instance);
+        instances.delete(scope.transferId);
+        if (instance.main) {
+          forgetIds(instance.main);
+          try {
+            instance.main.removeChildren();
+          } finally {
+            __RemoveElement(__page, instance.element!);
+            __FlushElementTree(__page, {});
+            clearFirstScreenRefsIfIdle();
+          }
+        } else if (instance.background) {
+          withInstance(instance, () => render(null, instance.background as unknown as ContainerNode));
+          instance.background.tearDown();
+        }
       }
-      instances.delete(scope.transferId);
+    } finally {
+      if (notify) send(mts ? '__DestroyTransfer' : '__TransferDisposed', { transferId: scope.transferId });
     }
-    if (notify) send(mts ? '__DestroyTransfer' : '__TransferDisposed', { transferId: scope.transferId });
   }
 
   // Business code may call `root.render` before registering; the page root never renders on transfer pages.
@@ -360,38 +376,6 @@ function initialize(): void {
   removers.push(() => {
     setRootRenderGuard(previousRootRenderGuard);
   });
-
-  /**
-   * The worklet runtime flushes its pre-hydration `runOnBackground` queue once per page, dropping calls whose
-   * first-screen handles are not bound yet. Each transfer instance hydrates separately, so a hydration only runs
-   * the calls already bound to the background and keeps the rest in place for the instances still waiting.
-   */
-  function keepDelayedBackgroundCalls() {
-    const delay = globalThis.lynxWorkletImpl?._runOnBackgroundDelayImpl;
-    if (!delay || patchedDelays.has(delay)) return;
-    patchedDelays.add(delay);
-    /* eslint-disable-next-line @typescript-eslint/unbound-method */
-    const run = delay.runDelayedBackgroundFunctions;
-    delay.runDelayedBackgroundFunctions = () => {
-      const queue = delay.delayedBackgroundFunctionArray;
-      if (queue.every(details => !details || details.jsFnHandle)) {
-        run();
-        // Later instances still queue their first-screen calls.
-        delay.hasHydrated = false;
-        return;
-      }
-      // Pending handles keep indices into the queue, so bound calls are cleared in place.
-      queue.forEach((details, index) => {
-        if (!details?.jsFnHandle) return;
-        queue[index] = undefined;
-        details.task(details.jsFnHandle._jsFnId!, details.jsFnHandle._execId!);
-      });
-    };
-    removers.push(() => {
-      delay.runDelayedBackgroundFunctions = run;
-      patchedDelays.delete(delay);
-    });
-  }
 
   if (mts) {
     listen<[Record<string, unknown>?]>(lynx.getEngine(), '__RenderPage', ([initData]) => {
@@ -421,9 +405,12 @@ function initialize(): void {
       if (instance && instance.phase !== 'disposed') {
         try {
           if (packet.seq !== instance.seq + 1) throw new Error('Transfer commit sequence mismatch');
-          if (packet.patchOptions.isHydration) keepDelayedBackgroundCalls();
-          updateMainThread({ data: JSON.stringify(packet.patchList), patchOptions: packet.patchOptions });
+          updateMainThread(
+            { data: packet.patchList, patchOptions: packet.patchOptions },
+            true,
+          );
           instance.seq = packet.seq;
+          if (packet.patchOptions.isHydration) clearFirstScreenRefsIfIdle();
           status = 'applied';
         } catch (error) {
           status = 'failed';
@@ -526,9 +513,19 @@ function initialize(): void {
   }
 
   listen(lynx.getNative(), '__DestroyLifetime', () => {
-    instances.forEach(instance => dispose(instance.init, false));
-    removers.splice(0).forEach(remove => remove());
-    if (!mts) replaceCommitHook();
+    try {
+      for (const instance of [...instances.values()]) {
+        try {
+          dispose(instance.init, false);
+        } catch (error) {
+          lynx.reportError(error as Error);
+        }
+      }
+    } finally {
+      removers.splice(0).forEach(remove => remove());
+      if (mts) clearFirstScreenMainThreadRefs();
+      else replaceCommitHook();
+    }
   });
 }
 
@@ -544,8 +541,8 @@ export const TransferRegistry = {
   registerComponent(componentName: string, provider: ComponentProvider): void {
     providers.set(componentName, provider);
     if (!initialized) {
-      initialized = true;
       initialize();
+      initialized = true;
     }
   },
 };

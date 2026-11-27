@@ -235,6 +235,17 @@ describe('snapshot containment guardrails', () => {
     expect(offenders).toEqual([]);
   });
 
+  test('prevents non-worklet-runtime source modules from accessing lynxWorkletImpl internals directly', () => {
+    const workletRuntimeDir = path.join(srcRoot, 'worklet-runtime');
+    const privateAccessPattern = /\blynxWorkletImpl\b/;
+    const offenders = walkFiles(srcRoot)
+      .filter((file) => !isWithinDir(file, workletRuntimeDir))
+      .filter((file) => privateAccessPattern.test(fs.readFileSync(file, 'utf8')))
+      .map((file) => path.relative(runtimeRoot, file));
+
+    expect(offenders).toEqual([]);
+  });
+
   test('keeps experimental snapshot features isolated from mainline runtime modules and internal ABI', () => {
     const experimentalDir = path.join(srcRoot, 'snapshot', 'experimental');
     const experimentalLibDir = path.join(runtimeRoot, 'lib', 'snapshot', 'experimental');

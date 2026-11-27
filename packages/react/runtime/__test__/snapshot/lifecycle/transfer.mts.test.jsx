@@ -10,7 +10,9 @@ import { resetFunctionCallReturnListener } from '../../../src/core/thread-functi
 import { root } from '../../../src/index';
 import { TransferRegistry } from '@lynx-js/react/experimental/transfer';
 import { __root } from '../../../src/root';
+import { isMainThreadHydrating } from '../../../src/snapshot/lifecycle/patch/isMainThreadHydrating';
 import { snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshotInstanceManager';
+import { updateWorkletRef } from '../../../src/snapshot/snapshot/workletRef';
 import { WorkletEvents } from '../../../src/worklet-runtime/bindings/events';
 import { hydrateJsFnHandles, initRunOnBackgroundDelay } from '../../../src/worklet-runtime/run-on-background/index';
 import { globalEnvManager } from '../utils/envManager';
@@ -202,11 +204,13 @@ describe('transfer (main thread)', () => {
     const previousImpl = globalThis.lynxWorkletImpl;
     const previousSdkVersion = SystemInfo.lynxSdkVersion;
     SystemInfo.lynxSdkVersion = '4.0';
-    // Only the parts of the worklet runtime that `onHydrationFinished` touches.
+    const clearFirstScreenWorkletRefMap = vi.fn();
+    const clearDelayedWorklets = vi.fn();
+    // Only the parts of the worklet runtime that hydration touches.
     globalThis.lynxWorkletImpl = {
       _runOnBackgroundDelayImpl: initRunOnBackgroundDelay(),
-      _refImpl: { clearFirstScreenWorkletRefMap() {} },
-      _eventDelayImpl: { clearDelayedWorklets() {} },
+      _refImpl: { clearFirstScreenWorkletRefMap },
+      _eventDelayImpl: { clearDelayedWorklets, runDelayedWorklet() {} },
     };
     const firstScreenHandle = () => Object.assign(() => {}, { _isFirstScreen: true });
     // What the hydrate patch of an instance binds onto its first-screen handles.
@@ -228,6 +232,8 @@ describe('transfer (main thread)', () => {
       bind(handleA, 1, 101);
       expect(commit('rb-a', 1, true).status).toBe('applied');
       expect(sent()).toEqual([{ _jsFnId: 1, _execId: 101 }]);
+      expect(clearFirstScreenWorkletRefMap).not.toHaveBeenCalled();
+      expect(clearDelayedWorklets).not.toHaveBeenCalled();
 
       // `rb-b` is still waiting and calls again from its first frame.
       void runOnBackground(lateHandleB)();
@@ -241,9 +247,131 @@ describe('transfer (main thread)', () => {
         { _jsFnId: 2, _execId: 202 },
         { _jsFnId: 3, _execId: 202 },
       ]);
+      // Once no waiting instances remain, first-screen refs are reclaimed.
+      expect(clearFirstScreenWorkletRefMap).toHaveBeenCalledTimes(1);
+      expect(clearDelayedWorklets).not.toHaveBeenCalled();
+
+      // A failing partial hydration patch discards only its own bound delayed calls and
+      // queued refs without wiping pre-existing queued refs or leaking into the next commit.
+      create('rb-patch-fail');
+      create('rb-next');
+      const handlePatchFail = firstScreenHandle();
+      const handleNext = firstScreenHandle();
+      void runOnBackground(handlePatchFail)();
+      void runOnBackground(handleNext)();
+      bind(handlePatchFail, 4, 303);
+      const keptRefCallback = vi.fn();
+      const staleRefCallback = vi.fn();
+      const flushFailRefCallback = vi.fn();
+      const previousRunWorklet = globalThis.runWorklet;
+      globalThis.runWorklet = (worklet, params) => {
+        if (worklet._wkltId === 'kept-ref') keptRefCallback(params);
+        if (worklet._wkltId === 'stale-ref') staleRefCallback(params);
+        if (worklet._wkltId === 'flush-fail-ref') flushFailRefCallback(params);
+      };
+      try {
+        const nextSnapshot = [...snapshotInstanceManager.values.values()].find(
+          si => si.type === 'root' && si.__element_root?.props?.['transfer-id'] === 'rb-next',
+        );
+        nextSnapshot.__values = [{ _wkltId: 'kept-ref' }];
+        updateWorkletRef(nextSnapshot, 0, null, 0, 'main-thread');
+        const failSnapshot = [...snapshotInstanceManager.values.values()].find(
+          si => si.type === 'root' && si.__element_root?.props?.['transfer-id'] === 'rb-patch-fail',
+        );
+        failSnapshot.setAttribute = (index, value) => {
+          (failSnapshot.__values ??= [])[index] = value;
+          updateWorkletRef(failSnapshot, index, null, 0, 'main-thread');
+        };
+        const sentBeforePatchFail = sent().length;
+        link.fire('__TransferCommit', {
+          transferId: 'rb-patch-fail',
+          version: 0,
+          seq: 1,
+          kind: 'hydrate',
+          patchList: {
+            patchList: [{
+              id: 1,
+              snapshotPatch: [
+                3,
+                failSnapshot.__id,
+                0,
+                { _wkltId: 'stale-ref' },
+                0,
+                '__snapshot_missing_for_test',
+                99999,
+              ],
+            }],
+          },
+          patchOptions: { reloadVersion: 0, isHydration: true },
+        });
+        expect(link.of('__TransferCommitResult').at(-1).status).toBe('failed');
+        expect(isMainThreadHydrating).toBe(false);
+        expect(sent()).toHaveLength(sentBeforePatchFail);
+        native.fire('__DestroyTransfer', { transferId: 'rb-patch-fail' });
+
+        // Next instance hydrates cleanly: its pre-existing ref and own call run; A's do not.
+        bind(handleNext, 8, 505);
+        expect(commit('rb-next', 1, true).status).toBe('applied');
+        expect(sent().slice(sentBeforePatchFail)).toEqual([{ _jsFnId: 8, _execId: 505 }]);
+        expect(keptRefCallback).toHaveBeenCalledTimes(1);
+        expect(staleRefCallback).not.toHaveBeenCalled();
+        native.fire('__DestroyTransfer', { transferId: 'rb-next' });
+
+        // Throwing delayed tasks do not drop later tasks, lock `hasHydrated`, or leak queued refs.
+        const delayImpl = globalThis.lynxWorkletImpl._runOnBackgroundDelayImpl;
+        create('rb-task-fail');
+        create('rb-after-task-fail');
+        const taskFailSnapshot = [...snapshotInstanceManager.values.values()].find(
+          si => si.type === 'root' && si.__element_root?.props?.['transfer-id'] === 'rb-task-fail',
+        );
+        const h1 = firstScreenHandle();
+        const h2 = firstScreenHandle();
+        const h3 = firstScreenHandle();
+        const thirdTask = vi.fn();
+        delayImpl.delayRunOnBackground(h1, () => {
+          throw new Error('task-1');
+        });
+        delayImpl.delayRunOnBackground(h2, () => {
+          throw new Error('task-2');
+        });
+        delayImpl.delayRunOnBackground(h3, thirdTask);
+        bind(h1, 5, 404);
+        bind(h2, 6, 404);
+        bind(h3, 7, 404);
+        taskFailSnapshot.setAttribute = (index, value) => {
+          (taskFailSnapshot.__values ??= [])[index] = value;
+          updateWorkletRef(taskFailSnapshot, index, null, 0, 'main-thread');
+        };
+        link.fire('__TransferCommit', {
+          transferId: 'rb-task-fail',
+          version: 0,
+          seq: 1,
+          kind: 'hydrate',
+          patchList: {
+            patchList: [{ id: 1, snapshotPatch: [3, taskFailSnapshot.__id, 0, { _wkltId: 'flush-fail-ref' }] }],
+          },
+          patchOptions: { reloadVersion: 0, isHydration: true },
+        });
+        expect(link.of('__TransferCommitResult').at(-1).status).toBe('failed');
+        expect(reportError).toHaveBeenCalledWith(new Error('task-1'));
+        expect(thirdTask).toHaveBeenCalledWith(7, 404);
+        expect(isMainThreadHydrating).toBe(false);
+        expect(delayImpl.hasHydrated).toBe(false);
+        native.fire('__DestroyTransfer', { transferId: 'rb-task-fail' });
+
+        expect(commit('rb-after-task-fail', 1, true).status).toBe('applied');
+        expect(flushFailRefCallback).not.toHaveBeenCalled();
+        native.fire('__DestroyTransfer', { transferId: 'rb-after-task-fail' });
+      } finally {
+        globalThis.runWorklet = previousRunWorklet;
+      }
     } finally {
       native.fire('__DestroyTransfer', { transferId: 'rb-a' });
       native.fire('__DestroyTransfer', { transferId: 'rb-b' });
+      native.fire('__DestroyTransfer', { transferId: 'rb-patch-fail' });
+      native.fire('__DestroyTransfer', { transferId: 'rb-next' });
+      native.fire('__DestroyTransfer', { transferId: 'rb-task-fail' });
+      native.fire('__DestroyTransfer', { transferId: 'rb-after-task-fail' });
       resetFunctionCallReturnListener();
       globalThis.lynxWorkletImpl = previousImpl;
       SystemInfo.lynxSdkVersion = previousSdkVersion;
@@ -282,5 +410,31 @@ describe('transfer (main thread)', () => {
     native.fire('__ReloadTransfer', { transferId: 'missing', props: {} });
     expect(link.of('__UpdateTransfer')).toHaveLength(1);
     expect(link.of('__ReloadTransfer')).toHaveLength(reloads + 1);
+  });
+
+  it('still notifies peer on single-instance destroy error and restores hooks on lifetime destroy', () => {
+    create('single-destroy-err');
+    const singleRoot = [...snapshotInstanceManager.values.values()].find(
+      si => si.type === 'root' && si.__element_root?.props?.['transfer-id'] === 'single-destroy-err',
+    );
+    singleRoot.removeChildren = () => {
+      throw new Error('single-destroy-cleanup');
+    };
+    native.fire('__DestroyTransfer', { transferId: 'single-destroy-err' });
+    expect(reportError).toHaveBeenCalledWith(new Error('single-destroy-cleanup'));
+    expect(link.of('__DestroyTransfer').at(-1)).toEqual({ transferId: 'single-destroy-err' });
+
+    create('destroy-err');
+    const createdRoot = [...snapshotInstanceManager.values.values()].find(
+      si => si.type === 'root' && si.__element_root?.props?.['transfer-id'] === 'destroy-err',
+    );
+    createdRoot.removeChildren = () => {
+      throw new Error('destroy-cleanup');
+    };
+    native.fire('__DestroyLifetime', {});
+    expect(reportError).toHaveBeenCalledWith(new Error('destroy-cleanup'));
+    root.render(<Page />);
+    expect(__root.__jsx).toBeDefined();
+    __root.__jsx = undefined;
   });
 });
