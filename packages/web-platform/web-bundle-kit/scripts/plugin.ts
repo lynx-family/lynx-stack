@@ -135,15 +135,14 @@ export function pluginWebBundleKit(
         ({ compilation, sources }) => {
           if (compilation.errors.length > 0) return;
           const bundled = new Set<string>();
-          const bundledKeys = new Set<string>();
           for (const module of compilation.modules) {
             const resource = (module as { resource?: string }).resource
               ?.split('?')[0];
-            if (resource) {
-              bundled.add(resource);
-              bundledKeys.add(pathKey(resource));
-            }
+            if (resource) bundled.add(resource);
           }
+          const bundledKeys = new Set(
+            [...bundled].map((file) => pathKey(file)),
+          );
           const unused = stringified.filter((file) =>
             !bundledKeys.has(pathKey(file))
           );

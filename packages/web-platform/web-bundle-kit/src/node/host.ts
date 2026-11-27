@@ -26,8 +26,5 @@ export const host: {
   modules: Object.create(null) as Record<string, unknown>,
 };
 
-/** The memfs of @rspack/browser; throws before setup. */
-export function memfs(): MemFs {
-  if (!host.fs) throw new Error('web-bundle-kit: fs was used before setup');
-  return host.fs;
-}
+/** The memfs of @rspack/browser. Bundled code only runs after setup. */
+export const memfs = (): MemFs => host.fs!;

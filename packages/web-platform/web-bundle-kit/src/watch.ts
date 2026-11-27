@@ -42,26 +42,16 @@ export class ChangeWatchFileSystem {
     _options: unknown,
     callback: WatchCallback,
     callbackUndelayed?: (file: string, time: number) => void,
-  ): {
-    close(): void;
-    pause(): void;
-    getInfo(): {
-      changes: Set<string>;
-      removals: Set<string>;
-      fileTimeInfoEntries: Map<string, unknown>;
-      contextTimeInfoEntries: Map<string, unknown>;
-    };
-  } {
+  ) {
     const watcher = { callback, callbackUndelayed };
     this.current = watcher;
     if (this.pending) queueMicrotask(() => this.flush());
+    const stop = () => {
+      if (this.current === watcher) this.current = undefined;
+    };
     return {
-      close: () => {
-        if (this.current === watcher) this.current = undefined;
-      },
-      pause: () => {
-        if (this.current === watcher) this.current = undefined;
-      },
+      close: stop,
+      pause: stop,
       getInfo: () => ({
         changes: new Set(this.pending?.changed),
         removals: new Set(this.pending?.removed),

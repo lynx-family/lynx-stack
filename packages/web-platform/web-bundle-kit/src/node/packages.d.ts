@@ -112,3 +112,15 @@ declare module 'path-browserify' {
 
   export = posix;
 }
+
+declare module 'process/browser.js' {
+  /**
+   * The npm `process`: `env`, `nextTick`, `cwd` and the like, `versions`
+   * without `node`, `browser: true`, and event methods that do nothing.
+   */
+  const process:
+    & Record<string, unknown>
+    & { browser: true; versions: Record<string, string> };
+
+  export = process;
+}

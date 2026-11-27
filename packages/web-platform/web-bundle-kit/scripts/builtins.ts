@@ -15,7 +15,7 @@
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 
-import type { RsbuildPlugin } from '@rsbuild/core';
+import { getResolveFallback } from '@rsbuild/plugin-node-polyfill';
 import type { PluginNodePolyfillOptions } from '@rsbuild/plugin-node-polyfill';
 
 /** Built-ins that get the plugin's polyfill. */
@@ -50,14 +50,10 @@ export const overridden: Record<string, string> = {
   util: 'src/node/util.ts',
   'util/types': 'src/node/util-types.ts',
   os: 'src/node/os.ts',
-  // Traps: importing them works, using a member throws.
+  // Functions that throw, which bundled code imports by name.
   child_process: 'src/node/child-process.ts',
+  // `isIP` and the like.
   net: 'src/node/net.ts',
-  perf_hooks: 'src/node/perf-hooks.ts',
-  readline: 'src/node/readline.ts',
-  v8: 'src/node/v8.ts',
-  vm: 'src/node/vm.ts',
-  worker_threads: 'src/node/worker-threads.ts',
 };
 
 /**
@@ -94,30 +90,19 @@ export function nodePolyfillOptions(root: string): PluginNodePolyfillOptions {
 }
 
 /**
- * Makes the choices of `pluginNodePolyfill` final. The plugin sets
- * `resolve.fallback`, which only applies when a request does not resolve,
- * and a bundled package may reach an npm package of the same name (pnpm
- * hoists `url`, `util`, `process` and others into
- * `node_modules/.pnpm/node_modules`). The same entries as exact aliases
- * apply to every request. `node:` is stripped before resolution, so the
- * `node:` entries are dropped.
+ * Exact aliases with the targets of the `resolve.fallback` that
+ * `pluginNodePolyfill` sets. A fallback only applies when a request does not
+ * resolve, and a bundled package may reach an npm package of the same name
+ * (pnpm hoists `url`, `util`, `process` and others into
+ * `node_modules/.pnpm/node_modules`); an alias applies to every request.
+ * `node:` is stripped before resolution, so the `node:` entries are left out.
  */
-export function pluginBuiltinAliases(): RsbuildPlugin {
-  return {
-    name: 'web-bundle-kit:builtin-aliases',
-    setup(api) {
-      api.modifyBundlerChain({
-        order: 'post',
-        handler: (chain) => {
-          const fallback = chain.resolve.fallback.entries() ?? {};
-          for (const [name, target] of Object.entries(fallback)) {
-            if (!name.startsWith('node:')) {
-              chain.resolve.alias.set(`${name}$`, target);
-            }
-          }
-          chain.resolve.fallback.clear();
-        },
-      });
-    },
-  };
+export function builtinAliases(
+  options: PluginNodePolyfillOptions,
+): Record<string, string | false> {
+  return Object.fromEntries(
+    Object.entries(getResolveFallback(options))
+      .filter(([name]) => !name.startsWith('node:'))
+      .map(([name, target]) => [`${name}$`, target]),
+  );
 }

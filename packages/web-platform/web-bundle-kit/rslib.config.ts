@@ -22,10 +22,7 @@ import { pluginNodePolyfill } from '@rsbuild/plugin-node-polyfill';
 import { defineConfig } from '@rslib/core';
 import type { RslibConfig } from '@rslib/core';
 
-import {
-  nodePolyfillOptions,
-  pluginBuiltinAliases,
-} from './scripts/builtins.ts';
+import { builtinAliases, nodePolyfillOptions } from './scripts/builtins.ts';
 import { createLayout, packageDir } from './scripts/layout.ts';
 import { pluginWebBundleKit } from './scripts/plugin.ts';
 
@@ -72,12 +69,11 @@ if (layout.missing.length > 0) {
   throw new Error(`Unresolved dependencies:\n  ${layout.missing.join('\n  ')}`);
 }
 
-const builtinPackages: Record<string, string> = {};
-for (const instance of layout.instances()) {
-  if (runtimeRoots.includes(instance.realDir)) {
-    builtinPackages[instance.name] = instance.version;
-  }
-}
+const builtinPackages = Object.fromEntries(
+  layout.instances()
+    .filter((instance) => runtimeRoots.includes(instance.realDir))
+    .map((instance) => [instance.name, instance.version]),
+);
 
 // 2. Modules Rspack or `require()` load by path at build time: the loaders and
 // the ReactLynx transform. They are bundled into the kit and registered under
@@ -126,6 +122,8 @@ const stringified = STRINGIFIED.flatMap(([dir, pattern]) => {
   return files;
 });
 
+const polyfillOptions = nodePolyfillOptions(root);
+
 // Rslib builds a library for other bundlers and Node.js; the kit is a
 // program that runs as it is in a Worker. The options below that differ from
 // Rslib's defaults say why.
@@ -144,6 +142,8 @@ const config: RslibConfig = defineConfig({
   },
   resolve: {
     alias: {
+      // What each Node.js built-in becomes (scripts/builtins.ts).
+      ...builtinAliases(polyfillOptions),
       '@rspack/core$': path.join(rspackBrowserDir, 'dist/index.js'),
       '@napi-rs/wasm-runtime/fs$': path.join(napiRuntimeDir, 'dist/fs.js'),
       // Optional minimizers that css-minimizer-webpack-plugin may require;
@@ -211,9 +211,9 @@ const config: RslibConfig = defineConfig({
     },
   },
   plugins: [
-    // What each Node.js built-in becomes.
-    pluginNodePolyfill(nodePolyfillOptions(root)),
-    pluginBuiltinAliases(),
+    // Strips `node:` from requests. Its `resolve.fallback` is the aliases
+    // above.
+    pluginNodePolyfill(polyfillOptions),
     // 4. The kit's plugin: the registered modules, the rewrite of every bundled
     // module and the mirror, from the layout, the lists above and the defines.
     pluginWebBundleKit({

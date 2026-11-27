@@ -12,7 +12,7 @@
 // - The real content of the files Rspack compiles into a card or plugins read
 //   with `fs`: the packages and folders listed in `RUNTIME_FILES`.
 
-import { globSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { Layout } from './layout.ts';
@@ -66,35 +66,26 @@ export interface Mirror {
   sizes: Record<string, number>;
 }
 
+/**
+ * The files of the package in `realDir` that `patterns` (`files` globs, with
+ * `!` for exclusions) match, a directory standing for the files in it.
+ */
 function listPackageFiles(realDir: string, patterns: string[]): string[] {
-  const out = new Set<string>();
-  const negated: string[] = [];
-  for (const pattern of patterns) {
-    if (pattern.startsWith('!')) {
-      negated.push(pattern.slice(1));
-      continue;
-    }
-    for (const match of globSync(pattern, { cwd: realDir })) {
-      const absolute = path.join(realDir, match);
-      if (statSync(absolute).isDirectory()) {
-        for (const nested of globSync('**/*', { cwd: absolute })) {
-          if (statSync(path.join(absolute, nested)).isFile()) {
-            out.add(
-              path.posix.join(toPosix(match), toPosix(nested)),
-            );
-          }
-        }
-      } else {
-        out.add(toPosix(match));
-      }
-    }
-  }
-  for (const pattern of negated) {
-    for (const match of globSync(pattern, { cwd: realDir })) {
-      out.delete(toPosix(match));
-    }
-  }
-  return [...out].filter((file) => !EXCLUDE.some((re) => re.test(file))).sort();
+  const excluded = new Set(
+    patterns.filter((pattern) => pattern.startsWith('!')).flatMap((pattern) =>
+      globSync(pattern.slice(1), { cwd: realDir }).map((file) => toPosix(file))
+    ),
+  );
+  const included = patterns.filter((pattern) => !pattern.startsWith('!'));
+  const files = globSync(
+    included.flatMap((pattern) => [pattern, `${pattern}/**`]),
+    { cwd: realDir, withFileTypes: true },
+  ).filter((entry) => entry.isFile()).map((entry) =>
+    toPosix(path.relative(realDir, path.join(entry.parentPath, entry.name)))
+  );
+  return [...new Set(files)].filter((file) =>
+    !excluded.has(file) && !EXCLUDE.some((re) => re.test(file))
+  ).sort();
 }
 
 /**
@@ -123,7 +114,7 @@ export function collectMirror(
     let size = 0;
     for (const relative of listPackageFiles(instance.realDir, patterns)) {
       const content = readFileSync(
-        path.join(realpathSync(instance.realDir), relative),
+        path.join(instance.realDir, relative),
         'utf-8',
       );
       files[`${instance.virtualDir}/${relative}`] = content;

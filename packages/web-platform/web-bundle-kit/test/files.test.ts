@@ -10,57 +10,21 @@ import { afterEach, beforeEach, describe, expect, test } from '@rstest/core';
 import {
   applyChanges,
   assertChanges,
-  checkPath,
   listFiles,
   readFile,
   writeFiles,
 } from '../src/files.js';
 import type { ProjectFs } from '../src/files.js';
 
-describe('checkPath', () => {
-  test.each([
-    'a.ts',
-    'src/index.tsx',
-    'node_modules/pkg/index.js',
-    '.env',
-    'a/.b/c',
-    'a..b',
-  ])('accepts %s', (p) => {
-    expect(checkPath(p)).toBeUndefined();
-  });
-
-  test.each([
-    ['', 'empty'],
-    ['/abs', 'start with "/"'],
-    ['a//b', 'empty segments'],
-    ['a/', 'empty segments'],
-    ['./a', '"." or ".."'],
-    ['a/../b', '"." or ".."'],
-    ['..', '"." or ".."'],
-    ['a\\b', 'separator'],
-  ])('rejects %j', (p, reason) => {
-    expect(checkPath(p)).toContain(reason);
-  });
-
-  test('rejects non-strings', () => {
-    expect(checkPath(1)).toBe('a path must be a string');
-  });
-});
-
 describe('assertChanges', () => {
   test('checks every change before any is applied', () => {
     expect(() =>
       assertChanges([
         { type: 'write', path: 'ok.ts', content: '' },
-        { type: 'write', path: '../x', content: '' },
+        { type: 'write', path: 'a/../../x', content: '' },
       ])
     ).toThrow(TypeError);
-    expect(() => assertChanges([{ type: 'move', path: 'a' }])).toThrow(
-      /type must be/,
-    );
-    expect(() => assertChanges([{ type: 'write', path: 'a', content: 1 }]))
-      .toThrow(/content/);
-    expect(() => assertChanges([{ type: 'rename', from: 'a', to: '/b' }]))
+    expect(() => assertChanges([{ type: 'rename', from: 'a', to: '..' }]))
       .toThrow(/Invalid path/);
   });
 });

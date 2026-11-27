@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import type { FileChange, FileContent, FileMap } from './types.js';
+import type { FileChange, FileMap } from './types.js';
 
 /** The part of a Node.js-style `fs` the kit uses for project files. */
 export interface ProjectFs {
@@ -17,66 +17,23 @@ export interface ProjectFs {
 }
 
 /**
- * Checks a project-relative path and returns why it is invalid, or
- * `undefined` when it is valid.
+ * Throws a `TypeError` when a project-relative path leaves the project root:
+ * it would reach the files of the kit and of other projects.
  */
-export function checkPath(path: unknown): string | undefined {
-  if (typeof path !== 'string') return 'a path must be a string';
-  if (path === '') return 'a path must not be empty';
-  if (path.startsWith('/')) return `"${path}" must not start with "/"`;
-  if (path.includes('\\')) return `"${path}" must use "/" as the separator`;
-  if (path.includes('\0')) return `"${path}" must not contain NUL`;
-  for (const segment of path.split('/')) {
-    if (segment === '') return `"${path}" must not have empty segments`;
-    if (segment === '.' || segment === '..') {
-      return `"${path}" must not have "." or ".." segments`;
-    }
-  }
-  return undefined;
-}
-
-/** Throws a `TypeError` when a project-relative path is invalid. */
-export function assertPath(path: unknown): asserts path is string {
-  const problem = checkPath(path);
-  if (problem !== undefined) throw new TypeError(`Invalid path: ${problem}`);
-}
-
-function assertContent(
-  path: string,
-  content: unknown,
-): asserts content is FileContent {
-  if (typeof content !== 'string' && !(content instanceof Uint8Array)) {
-    throw new TypeError(
-      `Invalid content of "${path}": expected a string or a Uint8Array`,
-    );
+function assertPath(path: string): void {
+  if (path.split('/').includes('..')) {
+    throw new TypeError(`Invalid path: "${path}" must not have ".." segments`);
   }
 }
 
 /** Checks every change before any of them is applied. */
-export function assertChanges(
-  changes: unknown,
-): asserts changes is FileChange[] {
-  if (!Array.isArray(changes)) throw new TypeError('changes must be an array');
-  for (const change of changes as unknown[]) {
-    const c = change as Partial<Record<string, unknown>> | null;
-    switch (c?.['type']) {
-      case 'write':
-        assertPath(c['path']);
-        assertContent(c['path'], c['content']);
-        break;
-      case 'delete':
-        assertPath(c['path']);
-        break;
-      case 'rename':
-        assertPath(c['from']);
-        assertPath(c['to']);
-        break;
-      default:
-        throw new TypeError(
-          `Invalid change: ${
-            JSON.stringify(change)
-          }; type must be write, delete or rename`,
-        );
+export function assertChanges(changes: FileChange[]): void {
+  for (const change of changes) {
+    if (change.type === 'rename') {
+      assertPath(change.from);
+      assertPath(change.to);
+    } else {
+      assertPath(change.path);
     }
   }
 }
@@ -193,7 +150,6 @@ export function readFile(
   root: string,
   path: string,
 ): Uint8Array | undefined {
-  assertPath(path);
   const absolute = `${root}/${path}`;
   if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
     return undefined;

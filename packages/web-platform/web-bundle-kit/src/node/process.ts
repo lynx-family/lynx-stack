@@ -4,16 +4,17 @@
 
 /// <reference path="./packages.d.ts" />
 
-// The `process` of the kit. This module creates the object when it loads;
-// `installGlobals` (./globals.ts) makes it the `process` global only after
-// @rspack/browser has started, because the wasm runtime of @rspack/browser
-// takes a `process` global for a sign of Node.js. Code that imports `process`
-// gets this object whether or not the global exists yet. `uptime()` and
-// `hrtime()` count from when this module loads.
+// The `process` of the kit: the `process` package, which pluginNodePolyfill
+// uses, with the members bundled code reads that it lacks. This module
+// creates the object when it loads; `installGlobals` (./globals.ts) makes
+// it the `process` global only after @rspack/browser has started, because
+// the wasm runtime of @rspack/browser takes a `process` global for a sign of
+// Node.js. `hrtime()` counts from when this module loads.
+//
+// The package has no `versions.node`: emnapi (under @rspack/browser) would
+// take the Worker for Node.js and reach for `worker_threads`.
 
-// In the kit, the polyfill of pluginNodePolyfill (scripts/builtins.ts): the
-// npm `events` package, whose `module.exports` is the class.
-import EventEmitter from 'node:events';
+import process from 'process/browser.js';
 
 type Callback = (...args: unknown[]) => void;
 
@@ -41,7 +42,6 @@ const stream = (fd: number) => ({
 
 let currentDir = '/';
 const start = performance.now();
-const emitter = new EventEmitter();
 
 function highResolutionTime(previous?: [number, number]): [number, number] {
   const now = performance.now() - start;
@@ -59,32 +59,19 @@ function highResolutionTime(previous?: [number, number]): [number, number] {
 highResolutionTime.bigint = () =>
   BigInt(Math.floor((performance.now() - start) * 1e6));
 
-/** Read and written through `process.exitCode`. */
-export let exitCode: number | string | undefined;
+// A copy without `browser: true`, which would send packages that test it
+// (debug, the streams of @rspack/browser) to their browser code.
+const { browser: _browser, ...polyfill } = process;
 
-const base = {
-  __webBundleKit: true,
-  title: 'web-bundle-kit',
+export default {
+  ...polyfill,
   version: 'v24.0.0',
-  // No `versions.node`: emnapi (under @rspack/browser) would take the
-  // Worker for Node.js and reach for `worker_threads`.
-  versions: {},
   platform: 'linux',
   arch: 'wasm32',
   pid: 1,
-  ppid: 0,
   execArgv: [] as string[],
   argv: ['node', 'web-bundle-kit'],
-  env: {} as Record<string, string | undefined>,
-  get exitCode() {
-    return exitCode;
-  },
-  set exitCode(code) {
-    exitCode = code;
-  },
-  release: { name: 'node' },
   features: {},
-  config: { variables: {} },
   stdout: stream(1),
   stderr: stream(2),
   stdin: { fd: 0, isTTY: false, on: () => {}, setRawMode: () => {} },
@@ -92,18 +79,14 @@ const base = {
   chdir: (dir: string) => {
     currentDir = dir;
   },
-  umask: () => 0o22,
   getuid: () => -1,
   getgid: () => -1,
-  uptime: () => (performance.now() - start) / 1000,
   hrtime: highResolutionTime,
   memoryUsage: Object.assign(
     () => ({ rss: 0, heapTotal: 0, heapUsed: 0, external: 0 }),
-    {
-      rss: () => 0,
-    },
+    { rss: () => 0 },
   ),
-  cpuUsage: () => ({ user: 0, system: 0 }),
+  // The package runs callbacks from a timer.
   nextTick: (fn: Callback, ...args: unknown[]) =>
     queueMicrotask(() => fn(...args)),
   emitWarning: (warning: unknown) =>
@@ -117,76 +100,4 @@ const base = {
       `process.exit(${code ?? ''}) was called in @lynx-js/web-bundle-kit`,
     );
   },
-  kill: () => false,
-  binding: () => ({}),
 };
-
-type EmitterMethod =
-  | 'on'
-  | 'once'
-  | 'off'
-  | 'removeAllListeners'
-  | 'emit'
-  | 'listeners'
-  | 'listenerCount';
-type EmitterArgs<K extends EmitterMethod> = Parameters<EventEmitter[K]>;
-
-// Added to `base`, so `process.on(...)` can return the object it belongs to.
-const process = Object.assign(base, {
-  on: (...args: EmitterArgs<'on'>) => (emitter.on(...args), base),
-  once: (...args: EmitterArgs<'once'>) => (emitter.once(...args), base),
-  off: (...args: EmitterArgs<'off'>) => (emitter.off(...args), base),
-  addListener: (...args: EmitterArgs<'on'>) => (emitter.on(...args), base),
-  removeListener: (...args: EmitterArgs<'off'>) => (emitter.off(...args), base),
-  removeAllListeners: (...args: EmitterArgs<'removeAllListeners'>) => (
-    emitter.removeAllListeners(...args), base
-  ),
-  emit: (...args: EmitterArgs<'emit'>) => emitter.emit(...args),
-  listeners: (name: EmitterArgs<'listeners'>[0]) => emitter.listeners(name),
-  listenerCount: (name: EmitterArgs<'listenerCount'>[0]) =>
-    emitter.listenerCount(name),
-});
-
-export const {
-  __webBundleKit,
-  title,
-  version,
-  versions,
-  platform,
-  arch,
-  pid,
-  ppid,
-  execArgv,
-  argv,
-  env,
-  release,
-  features,
-  config,
-  stdout,
-  stderr,
-  stdin,
-  cwd,
-  chdir,
-  umask,
-  getuid,
-  getgid,
-  uptime,
-  hrtime,
-  memoryUsage,
-  cpuUsage,
-  nextTick,
-  emitWarning,
-  exit,
-  kill,
-  binding,
-  on,
-  once,
-  off,
-  addListener,
-  removeListener,
-  removeAllListeners,
-  emit,
-  listeners,
-  listenerCount,
-} = process;
-export default process;

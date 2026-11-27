@@ -7,144 +7,31 @@
 // `fs` is the memfs of @rspack/browser: the file system Rspack reads. It
 // exists only after setup (../setup.ts), and it is not the memfs instance
 // that @napi-rs/wasm-runtime/fs creates when it loads, so the members look it
-// up when they are used:
-//
-// - methods call the method of the same name of that memfs;
-// - classes whose memfs instance owns them (`ReadStream` and the like) and
-//   `__vol` forward to it;
-// - what memfs defines once for all instances (`constants`, `Stats`, ...) is
-//   taken from @napi-rs/wasm-runtime/fs when this module loads.
+// up when they are used (see `forwardMembers`).
 //
 // The named exports are every key of a memfs `fs`.
 
-import { fs as shared } from '@napi-rs/wasm-runtime/fs';
+import { memfs as createMemfs, fs as shared } from '@napi-rs/wasm-runtime/fs';
 
 import promises from './fs-promises.js';
 import { memfs } from './host.js';
-import { forward, lazyClass, lazyObject } from './lazy.js';
+import { forwardMembers } from './lazy.js';
 import type { Class } from './lazy.js';
 
-type NodeFs = typeof import('node:fs');
-
-/** Forwards to the method `key` of the memfs; typed as Node.js's. */
-function method<K extends keyof NodeFs>(key: K): NodeFs[K] {
-  // A forwarder has the signature of the method it forwards to.
-  return forward(memfs, key) as unknown as NodeFs[K];
-}
+/** Typed as Node.js's, with the members memfs adds. */
+type MemfsModule =
+  & typeof import('node:fs')
+  & Record<
+    'StatWatcher' | 'FSWatcher' | 'FileReadStream' | 'FileWriteStream',
+    Class
+  >
+  & Record<'F_OK' | 'R_OK' | 'W_OK' | 'X_OK', number>
+  & { _toUnixTimestamp: (time: unknown) => number; __vol: object };
 
 const fs = {
-  F_OK: shared.F_OK,
-  R_OK: shared.R_OK,
-  W_OK: shared.W_OK,
-  X_OK: shared.X_OK,
-  constants: shared.constants,
-  // Typed as Node.js's: the memfs types cannot be named from here.
-  Stats: shared.Stats as unknown as NodeFs['Stats'],
-  Dir: shared.Dir as unknown as NodeFs['Dir'],
-  Dirent: shared.Dirent as unknown as NodeFs['Dirent'],
-  accessSync: method('accessSync'),
-  appendFileSync: method('appendFileSync'),
-  chmodSync: method('chmodSync'),
-  chownSync: method('chownSync'),
-  closeSync: method('closeSync'),
-  copyFileSync: method('copyFileSync'),
-  cpSync: method('cpSync'),
-  existsSync: method('existsSync'),
-  fchmodSync: method('fchmodSync'),
-  fchownSync: method('fchownSync'),
-  fdatasyncSync: method('fdatasyncSync'),
-  fstatSync: method('fstatSync'),
-  fsyncSync: method('fsyncSync'),
-  ftruncateSync: method('ftruncateSync'),
-  futimesSync: method('futimesSync'),
-  globSync: method('globSync'),
-  lchmodSync: method('lchmodSync'),
-  lchownSync: method('lchownSync'),
-  linkSync: method('linkSync'),
-  lstatSync: method('lstatSync'),
-  mkdirSync: method('mkdirSync'),
-  mkdtempSync: method('mkdtempSync'),
-  openSync: method('openSync'),
-  opendirSync: method('opendirSync'),
-  readdirSync: method('readdirSync'),
-  readFileSync: method('readFileSync'),
-  readlinkSync: method('readlinkSync'),
-  readSync: method('readSync'),
-  readvSync: method('readvSync'),
-  realpathSync: method('realpathSync'),
-  renameSync: method('renameSync'),
-  rmdirSync: method('rmdirSync'),
-  rmSync: method('rmSync'),
-  statfsSync: method('statfsSync'),
-  statSync: method('statSync'),
-  symlinkSync: method('symlinkSync'),
-  truncateSync: method('truncateSync'),
-  unlinkSync: method('unlinkSync'),
-  utimesSync: method('utimesSync'),
-  lutimesSync: method('lutimesSync'),
-  writeFileSync: method('writeFileSync'),
-  writeSync: method('writeSync'),
-  writevSync: method('writevSync'),
-  access: method('access'),
-  appendFile: method('appendFile'),
-  chmod: method('chmod'),
-  chown: method('chown'),
-  close: method('close'),
-  copyFile: method('copyFile'),
-  cp: method('cp'),
-  createReadStream: method('createReadStream'),
-  createWriteStream: method('createWriteStream'),
-  exists: method('exists'),
-  fchmod: method('fchmod'),
-  fchown: method('fchown'),
-  fdatasync: method('fdatasync'),
-  fstat: method('fstat'),
-  fsync: method('fsync'),
-  ftruncate: method('ftruncate'),
-  futimes: method('futimes'),
-  glob: method('glob'),
-  lchmod: method('lchmod'),
-  lchown: method('lchown'),
-  link: method('link'),
-  lstat: method('lstat'),
-  mkdir: method('mkdir'),
-  mkdtemp: method('mkdtemp'),
-  open: method('open'),
-  openAsBlob: method('openAsBlob'),
-  opendir: method('opendir'),
-  read: method('read'),
-  readv: method('readv'),
-  readdir: method('readdir'),
-  readFile: method('readFile'),
-  readlink: method('readlink'),
-  realpath: method('realpath'),
-  rename: method('rename'),
-  rm: method('rm'),
-  rmdir: method('rmdir'),
-  stat: method('stat'),
-  statfs: method('statfs'),
-  symlink: method('symlink'),
-  truncate: method('truncate'),
-  unlink: method('unlink'),
-  unwatchFile: method('unwatchFile'),
-  utimes: method('utimes'),
-  lutimes: method('lutimes'),
-  watch: method('watch'),
-  watchFile: method('watchFile'),
-  write: method('write'),
-  writev: method('writev'),
-  writeFile: method('writeFile'),
-  StatWatcher: lazyClass<Class>(() => memfs().StatWatcher),
-  FSWatcher: lazyClass<Class>(() => memfs().FSWatcher),
-  ReadStream: lazyClass<NodeFs['ReadStream']>(() => memfs().ReadStream),
-  WriteStream: lazyClass<NodeFs['WriteStream']>(() => memfs().WriteStream),
-  FileReadStream: lazyClass<Class>(() => memfs().FileReadStream),
-  FileWriteStream: lazyClass<Class>(() => memfs().FileWriteStream),
+  ...forwardMembers(shared, createMemfs().fs, memfs),
   promises,
-  _toUnixTimestamp: shared._toUnixTimestamp,
-  // The memfs Volume, which the memfs type does not declare.
-  __vol: lazyObject(() => Reflect.get(memfs(), '__vol') as object),
-};
+} as unknown as MemfsModule;
 
 export const {
   F_OK,

@@ -2,24 +2,24 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// `node:child_process` has no browser equivalent: every member throws on use.
-// The named exports are the keys of the Node.js 24 module.
+// `node:child_process` has no browser equivalent. Bundled code imports these
+// members, and calls `promisify(execFile)` when a module loads, so they are
+// functions; calling one throws.
 
-import { trap } from './trap.js';
+function unsupported(name: string): () => never {
+  return () => {
+    const error = new Error(
+      `node:child_process.${name}() is not available in @lynx-js/web-bundle-kit (a browser build)`,
+    );
+    throw Object.assign(error, { code: 'ERR_WEB_BUNDLE_KIT_UNSUPPORTED' });
+  };
+}
 
-const childProcess = trap<typeof import('node:child_process')>(
-  'node:child_process',
-);
+const childProcess = {
+  execFile: unsupported('execFile'),
+  execFileSync: unsupported('execFileSync'),
+  spawn: unsupported('spawn'),
+};
 
-export const {
-  _forkChild,
-  ChildProcess,
-  exec,
-  execFile,
-  execFileSync,
-  execSync,
-  fork,
-  spawn,
-  spawnSync,
-} = childProcess;
+export const { execFile, execFileSync, spawn } = childProcess;
 export default childProcess;

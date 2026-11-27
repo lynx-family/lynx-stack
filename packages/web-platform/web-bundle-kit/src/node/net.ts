@@ -2,10 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// Checks of IP addresses work; servers and sockets throw on use.
-import { trap } from './trap.js';
-
-const sockets = trap<typeof import('node:net')>('node:net');
+// Checks of IP addresses. There are no servers or sockets in the kit.
 
 const IPV4 =
   /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/;
@@ -20,11 +17,8 @@ const net = {
   },
   isIPv4,
   isIPv6,
-  createServer: sockets.createServer,
-  createConnection: sockets.createConnection,
-  connect: sockets.connect,
 };
 
-export const { isIP, createServer, createConnection, connect } = net;
+export const { isIP } = net;
 export { isIPv4, isIPv6 };
 export default net;

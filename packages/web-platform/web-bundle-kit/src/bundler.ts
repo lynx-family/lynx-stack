@@ -9,7 +9,6 @@ import type { StatsDiagnostic } from './diagnostics.js';
 import {
   applyChanges,
   assertChanges,
-  assertPath,
   listFiles,
   readFile,
   writeFiles,
@@ -22,6 +21,7 @@ import type {
   BuildEvent,
   BuildResult,
   CardInfo,
+  Diagnostic,
   FileChange,
   OutputAsset,
   WebBundler,
@@ -32,31 +32,18 @@ import { ChangeWatchFileSystem } from './watch.js';
 let bundlerCount = 0;
 
 function validateOptions(options: WebBundlerOptions): void {
-  if (typeof options !== 'object' || options === null) {
-    throw new TypeError('options must be an object');
-  }
-  const names = Object.keys(options.entries ?? {});
-  if (names.length === 0) {
-    throw new TypeError('entries must have at least one entry');
-  }
-  for (const name of names) {
+  // Entry names name output files: `../` would write outside the output
+  // directory.
+  for (const name of Object.keys(options.entries)) {
     if (!/^[\w.-]+$/.test(name)) {
       throw new TypeError(
         `Invalid entry name "${name}": use letters, digits, "_", "-" and "."`,
       );
     }
-    assertPath(options.entries[name]);
   }
-  if (
-    typeof options.publicPath !== 'string' || !options.publicPath.endsWith('/')
-  ) {
+  // Without it, the built code requests its assets from wrong URLs.
+  if (!options.publicPath.endsWith('/')) {
     throw new TypeError('publicPath must be a string that ends with "/"');
-  }
-  if (
-    options.mode !== undefined && options.mode !== 'development'
-    && options.mode !== 'production'
-  ) {
-    throw new TypeError('mode must be "development" or "production"');
   }
 }
 
@@ -142,7 +129,6 @@ export async function createWebBundlerImpl(
 
   let previous = new Map<string, Uint8Array>();
   let watching: Watching | undefined;
-  let running = false;
   let closed = false;
 
   function toResult(stats: Stats): BuildResult {
@@ -156,12 +142,9 @@ export async function createWebBundlerImpl(
         colors: false,
       } as Parameters<Stats['toJson']>[0],
     );
-    const errors = (json.errors ?? []).map((e) =>
-      toDiagnostic(root, e as StatsDiagnostic)
-    );
-    const warnings = (json.warnings ?? []).map((e) =>
-      toDiagnostic(root, e as StatsDiagnostic)
-    );
+    const [errors, warnings] = [json.errors, json.warnings].map((list) =>
+      (list ?? []).map((e) => toDiagnostic(root, e as StatsDiagnostic))
+    ) as [Diagnostic[], Diagnostic[]];
 
     const current = new Map<string, Uint8Array>();
     const assets: AssetInfo[] = [];
@@ -225,18 +208,10 @@ export async function createWebBundlerImpl(
 
     build(): Promise<BuildResult> {
       assertOpen();
-      if (watching) {
-        return Promise.reject(
-          new Error('build() is not allowed while watching'),
-        );
-      }
-      if (running) {
-        return Promise.reject(new Error('A build is already running'));
-      }
-      running = true;
+      // Rspack reports a build while another one runs, or while watching,
+      // as the error of this one.
       return new Promise<BuildResult>((resolve) => {
         compiler.run((error, stats) => {
-          running = false;
           resolve(error || !stats ? failure(error) : toResult(stats));
         });
       });
@@ -247,7 +222,6 @@ export async function createWebBundlerImpl(
       if (watching) {
         return Promise.reject(new Error('This bundler is already watching'));
       }
-      if (running) return Promise.reject(new Error('A build is running'));
       return new Promise<void>((resolve) => {
         let first = true;
         compiler.hooks.watchRun.tap('web-bundle-kit', () => {

@@ -8,11 +8,14 @@
 
 type Callable = (...args: unknown[]) => unknown;
 
+/** A class, as far as the type of a lazy one goes. */
+export type Class = new(...args: unknown[]) => object;
+
 /**
  * A function that calls `owner()[key]` with `owner()` as `this`, as memfs
  * methods expect. It has the name `key`.
  */
-export function forward(owner: () => object, key: string): Callable {
+function forward(owner: () => object, key: string): Callable {
   const named: Record<string, Callable> = {
     [key](...args: unknown[]) {
       const target = owner();
@@ -22,14 +25,11 @@ export function forward(owner: () => object, key: string): Callable {
   return named[key]!;
 }
 
-/** A class, as far as the type of a lazy one goes. */
-export type Class = new(...args: unknown[]) => object;
-
 /**
  * A class that is `getTarget()`: calling it, `new` and its properties
  * (`prototype` among them) go to the target.
  */
-export function lazyClass<T>(getTarget: () => unknown): T {
+function lazyClass(getTarget: () => object): object {
   const real = () => getTarget() as Callable;
   const proxy: object = new Proxy(function() {}, {
     apply: (_target, thisArg, args) => Reflect.apply(real(), thisArg, args),
@@ -41,16 +41,15 @@ export function lazyClass<T>(getTarget: () => unknown): T {
       ) as object,
     get: (_target, key) => Reflect.get(real(), key) as unknown,
   });
-  // The Proxy stands for the class, which TypeScript cannot tell.
-  return proxy as unknown as T;
+  return proxy;
 }
 
 /**
  * An object that is `getTarget()`: reads, writes and key listings go to the
  * target. Functions read from it are bound to the target.
  */
-export function lazyObject<T extends object>(getTarget: () => T): T {
-  const proxy = new Proxy({}, {
+function lazyObject(getTarget: () => object): object {
+  return new Proxy({}, {
     get(_target, key) {
       const target = getTarget();
       const value = Reflect.get(target, key) as unknown;
@@ -68,6 +67,33 @@ export function lazyObject<T extends object>(getTarget: () => T): T {
         : { value, enumerable: true, configurable: true, writable: true };
     },
   });
-  // The Proxy stands for the object, which TypeScript cannot tell.
-  return proxy as unknown as T;
+}
+
+/**
+ * An object with every key of `sample`, in its order, whose members stand for
+ * the members of `target()`. `sample` and `other` are the same object (a
+ * memfs `fs`, or its `promises`) of two memfs instances that exist when this
+ * module loads:
+ *
+ * - a member that is the same in both is what memfs defines once per module
+ *   (`constants`, `Stats`, ...), and is taken as it is;
+ * - a method calls the method of the same name of `target()`;
+ * - a class (`ReadStream`, ...) or an object (`__vol`) is a proxy of the one
+ *   of `target()`.
+ */
+export function forwardMembers(
+  sample: object,
+  other: object,
+  target: () => object,
+): Record<string, unknown> {
+  const member = (key: string) => () => Reflect.get(target(), key) as object;
+  return Object.fromEntries(
+    Object.keys(sample).map((key) => {
+      const value = Reflect.get(sample, key) as unknown;
+      if (value === Reflect.get(other, key)) return [key, value];
+      if (typeof value !== 'function') return [key, lazyObject(member(key))];
+      if (/^[A-Z]/.test(key)) return [key, lazyClass(member(key))];
+      return [key, forward(target, key)];
+    }),
+  );
 }

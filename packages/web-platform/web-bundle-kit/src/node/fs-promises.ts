@@ -6,65 +6,26 @@
 
 // `fs/promises`, and `promises` of `fs`: the promise API of the memfs of
 // @rspack/browser. As in ./fs.ts, the members look the memfs up when they
-// are used, and what memfs defines once for all instances (`FileHandle`,
-// `constants`) is taken from @napi-rs/wasm-runtime/fs.
+// are used.
 //
 // The named exports are every key of a memfs `fs.promises`.
 
-import { fs as napiFs } from '@napi-rs/wasm-runtime/fs';
+import { memfs as createMemfs, fs as shared } from '@napi-rs/wasm-runtime/fs';
 
 import { memfs } from './host.js';
-import { forward, lazyObject } from './lazy.js';
+import { forwardMembers } from './lazy.js';
 import type { Class } from './lazy.js';
 
-type NodeFsPromises = typeof import('node:fs/promises');
+/** Typed as Node.js's, with the members memfs adds. */
+type MemfsPromises =
+  & typeof import('node:fs/promises')
+  & { fs: object; FileHandle: Class };
 
-const shared = napiFs.promises;
-const promisesOf = () => memfs().promises;
-
-/** Forwards to the method `key` of the memfs; typed as Node.js's. */
-function method<K extends keyof NodeFsPromises>(key: K): NodeFsPromises[K] {
-  // A forwarder has the signature of the method it forwards to.
-  return forward(promisesOf, key) as unknown as NodeFsPromises[K];
-}
-
-const fsPromises = {
-  fs: lazyObject(() => Reflect.get(promisesOf(), 'fs') as object),
-  // Typed loosely: the memfs types cannot be named from here.
-  FileHandle: shared.FileHandle as unknown as Class,
-  constants: shared.constants,
-  cp: method('cp'),
-  copyFile: method('copyFile'),
-  opendir: method('opendir'),
-  statfs: method('statfs'),
-  lutimes: method('lutimes'),
-  glob: method('glob'),
-  access: method('access'),
-  chmod: method('chmod'),
-  chown: method('chown'),
-  lchmod: method('lchmod'),
-  lchown: method('lchown'),
-  link: method('link'),
-  lstat: method('lstat'),
-  mkdir: method('mkdir'),
-  mkdtemp: method('mkdtemp'),
-  readdir: method('readdir'),
-  readlink: method('readlink'),
-  realpath: method('realpath'),
-  rename: method('rename'),
-  rmdir: method('rmdir'),
-  rm: method('rm'),
-  stat: method('stat'),
-  symlink: method('symlink'),
-  truncate: method('truncate'),
-  unlink: method('unlink'),
-  utimes: method('utimes'),
-  readFile: method('readFile'),
-  appendFile: method('appendFile'),
-  open: method('open'),
-  writeFile: method('writeFile'),
-  watch: method('watch'),
-};
+const fsPromises = forwardMembers(
+  shared.promises,
+  createMemfs().fs.promises,
+  () => memfs().promises,
+) as unknown as MemfsPromises;
 
 export const {
   fs,

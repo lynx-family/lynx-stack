@@ -3155,6 +3155,9 @@ importers:
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
+      process:
+        specifier: ^0.11.10
+        version: 0.11.10
       url:
         specifier: ^0.11.4
         version: 0.11.4

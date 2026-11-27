@@ -35,73 +35,59 @@ import fs from './fs.js';
 import { host } from './host.js';
 import net from './net.js';
 import os from './os.js';
-import perfHooks from './perf-hooks.js';
 import path from './path.js';
 import process from './process.js';
-import readline from './readline.js';
 import utilTypes from './util-types.js';
 import util from './util.js';
 import url from './url.js';
-import v8 from './v8.js';
-import vm from './vm.js';
-import workerThreads from './worker-threads.js';
 
-/** The built-ins that are not empty modules in the kit (scripts/builtins.ts). */
-const builtinModules = [
-  'assert',
-  'buffer',
-  'child_process',
-  'crypto',
-  'events',
-  'fs',
-  'fs/promises',
-  'module',
-  'net',
-  'os',
-  'path',
-  'path/posix',
-  'perf_hooks',
-  'process',
-  'querystring',
-  'readline',
-  'stream',
-  'string_decoder',
-  'tty',
-  'url',
-  'util',
-  'util/types',
-  'v8',
-  'vm',
-  'worker_threads',
-  'zlib',
-] as const;
-
-type BuiltinName = (typeof builtinModules)[number];
+/**
+ * What `require()` from `createRequire` returns for each built-in that is not
+ * an empty module in the kit (scripts/builtins.ts). `module` is set below.
+ */
+const builtins: Record<string, unknown> = {
+  assert,
+  buffer,
+  child_process: childProcess,
+  crypto,
+  events,
+  fs,
+  'fs/promises': fsPromises,
+  module: undefined,
+  net,
+  os,
+  path,
+  'path/posix': path,
+  process,
+  querystring,
+  stream,
+  string_decoder: stringDecoder,
+  tty,
+  url,
+  util,
+  'util/types': utilTypes,
+  zlib,
+};
+const builtinModules = Object.keys(builtins);
 
 const stripNode = (id: string) => (id.startsWith('node:') ? id.slice(5) : id);
 const isBuiltin = (id: unknown): boolean =>
-  (builtinModules as readonly string[]).includes(stripNode(String(id)));
+  builtinModules.includes(stripNode(String(id)));
 
 type ResolverFactory = NonNullable<typeof host.ResolverFactory>;
 
-const resolvers = new Map<string, InstanceType<ResolverFactory>>();
-function resolver(): InstanceType<ResolverFactory> {
-  let factory = resolvers.get('require');
-  if (!factory) {
-    if (!host.ResolverFactory) {
-      throw new Error('web-bundle-kit: require.resolve was used before setup');
-    }
-    factory = new host.ResolverFactory({
-      // The kit is a browser build: prefer what a browser bundle of the
-      // package would use, as Rspack did when it bundled the kit.
-      conditionNames: ['browser', 'require', 'node', 'default'],
-      mainFields: ['main'],
-      extensions: ['.js', '.cjs', '.json', '.node'],
-      symlinks: false,
-    });
-    resolvers.set('require', factory);
-  }
-  return factory;
+let resolver: InstanceType<ResolverFactory> | undefined;
+
+function resolveSync(dir: string, request: string) {
+  resolver ??= new host.ResolverFactory!({
+    // The kit is a browser build: prefer what a browser bundle of the
+    // package would use, as Rspack did when it bundled the kit.
+    conditionNames: ['browser', 'require', 'node', 'default'],
+    mainFields: ['main'],
+    extensions: ['.js', '.cjs', '.json', '.node'],
+    symlinks: false,
+  });
+  return resolver.sync(dir, request);
 }
 
 function withCode(message: string, code: string): Error {
@@ -110,10 +96,7 @@ function withCode(message: string, code: string): Error {
 
 function resolveFrom(request: string, dirs: readonly string[]): string {
   for (const dir of dirs) {
-    const absolute = request.startsWith('/') ? request : undefined;
-    const result = absolute && !request.includes('?')
-      ? resolver().sync('/', absolute)
-      : resolver().sync(dir, request);
+    const result = resolveSync(dir, request);
     if (result.path) return result.path;
   }
   throw withCode(
@@ -140,7 +123,7 @@ function createRequire(from: string | URL) {
 
   function requireModule(request: string): unknown {
     if (isBuiltin(request)) {
-      return builtins[stripNode(request) as BuiltinName];
+      return builtins[stripNode(request)];
     }
     const resolved = resolve(request);
     const bundled = host.modules[resolved];
@@ -173,35 +156,7 @@ const nodeModule = {
   Module,
 };
 
-/** What `require()` from `createRequire` returns for each built-in. */
-const builtins: Record<BuiltinName, unknown> = {
-  assert,
-  buffer,
-  child_process: childProcess,
-  crypto,
-  events,
-  fs,
-  'fs/promises': fsPromises,
-  module: nodeModule,
-  net,
-  os,
-  path,
-  'path/posix': path,
-  perf_hooks: perfHooks,
-  process,
-  querystring,
-  readline,
-  stream,
-  string_decoder: stringDecoder,
-  tty,
-  url,
-  util,
-  'util/types': utilTypes,
-  v8,
-  vm,
-  worker_threads: workerThreads,
-  zlib,
-};
+builtins['module'] = nodeModule;
 
 export { builtinModules, createRequire, isBuiltin, Module };
 export default nodeModule;

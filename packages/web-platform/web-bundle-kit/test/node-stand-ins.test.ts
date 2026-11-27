@@ -30,15 +30,10 @@ import * as nodeModule from '../src/node/module.js';
 import * as net from '../src/node/net.js';
 import * as os from '../src/node/os.js';
 import * as path from '../src/node/path.js';
-import * as perfHooks from '../src/node/perf-hooks.js';
-import * as process from '../src/node/process.js';
-import * as readline from '../src/node/readline.js';
+import process from '../src/node/process.js';
 import * as url from '../src/node/url.js';
 import * as utilTypes from '../src/node/util-types.js';
 import * as util from '../src/node/util.js';
-import * as v8 from '../src/node/v8.js';
-import * as vm from '../src/node/vm.js';
-import * as workerThreads from '../src/node/worker-threads.js';
 
 /** A module namespace, as `import * as` gives it. */
 type Namespace = Record<string, unknown> & { default: unknown };
@@ -49,6 +44,7 @@ const named = (ns: Namespace) =>
 
 const implemented: Record<string, Namespace> = {
   buffer,
+  child_process: childProcess,
   crypto,
   fs,
   'fs/promises': fsPromises,
@@ -56,19 +52,9 @@ const implemented: Record<string, Namespace> = {
   net,
   os,
   path,
-  perf_hooks: perfHooks,
-  process,
   url,
   util,
   'util/types': utilTypes,
-};
-
-const trapped: Record<string, Namespace> = {
-  child_process: childProcess,
-  readline,
-  v8,
-  vm,
-  worker_threads: workerThreads,
 };
 
 describe('the named and default exports of a stand-in agree', () => {
@@ -80,25 +66,16 @@ describe('the named and default exports of a stand-in agree', () => {
     for (const key of keys) expect(ns[key]).toBe(object[key]);
   });
 
-  test.each(Object.entries(trapped))('%s', (_name, ns) => {
-    const object = ns.default as Record<string, unknown>;
-    for (const key of named(ns)) expect(ns[key]).toBe(object[key]);
-  });
-
   test('`path` and its `default` member', () => {
     expect(path.default.default).toBe(path.default);
     expect(path.posix).toBe(path.default);
   });
+});
 
-  test('`process.exitCode` is the `exitCode` export', () => {
-    expect(process.exitCode).toBeUndefined();
-    process.default.exitCode = 3;
-    expect(process.exitCode).toBe(3);
-    process.default.exitCode = undefined;
-  });
-
-  test('`process` has no `versions.node`', () => {
+describe('process', () => {
+  test('has no `versions.node` and is not a browser', () => {
     expect(process.versions).toEqual({});
+    expect('browser' in process).toBe(false);
   });
 });
 
@@ -125,6 +102,8 @@ describe('what each built-in becomes', () => {
     expect(fallback['http']).toBe(false);
     expect(fallback['timers']).toBe(false);
     expect(fallback['inspector']).toBe(false);
+    // The plugin has a polyfill for `vm`; nothing in the kit runs it.
+    expect(fallback['vm']).toBe(false);
   });
 
   test('`module` lists the built-ins that are not empty', () => {
@@ -161,21 +140,11 @@ describe('assert', () => {
   });
 });
 
-describe('trapped built-ins', () => {
-  test('members throw on use and survive `extends`', () => {
-    expect(() => childProcess.execFileSync('ls')).toThrow(
+describe('child_process', () => {
+  test('members throw on use', () => {
+    expect(() => childProcess.execFileSync()).toThrow(
       'node:child_process.execFileSync() is not available',
     );
-    expect(() => new vm.Script('1')).toThrow(
-      'node:vm.new Script() is not available',
-    );
-    // A trap member is typed as returning `never`; `extends` needs a class.
-    const Script = vm.Script as unknown as new() => object;
-    expect(() => {
-      class Source extends Script {}
-      return Source;
-    }).not.toThrow();
-    expect(vm.default.Script).toBe(vm.Script);
   });
 });
 
@@ -215,12 +184,6 @@ describe('fs', () => {
     const promises = other['promises'] as Record<string, unknown>;
     expect(fsPromises.FileHandle).toBe(promises['FileHandle']);
     expect(fsPromises.constants).toBe(promises['constants']);
-  });
-
-  test('throws before setup', () => {
-    expect(() => fs.existsSync('/')).toThrow(
-      'web-bundle-kit: fs was used before setup',
-    );
   });
 
   test('uses the memfs of the host after setup', async () => {
@@ -370,7 +333,6 @@ describe('module', () => {
     expect(load('fs/promises')).toBe(fsPromises.default);
     expect(load('module')).toBe(nodeModule.default);
     expect(load('url')).toBe(url.default);
-    expect(load('vm')).toBe(vm.default);
     const events = load('events') as { EventEmitter: unknown };
     expect(typeof events).toBe('function');
     expect(events.EventEmitter).toBe(events);
