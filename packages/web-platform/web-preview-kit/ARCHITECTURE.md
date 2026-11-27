@@ -35,7 +35,7 @@ preview kit page (iframe, its own origin, cross-origin isolated)
 
 ## web-preview-kit
 
-**Session.** The page announces itself to its parent, accepts one `connect` message carrying a `MessagePort`, and from then on speaks the protocol in [`src/protocol.ts`](src/protocol.ts) over that port. [`PROTOCOL.md`](PROTOCOL.md) explains it for host authors, and `src/client` is a small typed client a host can use instead of writing messages by hand.
+**Session.** The page announces itself to its parent, accepts one `connect` message carrying a `MessagePort`, and from then on speaks the protocol in [`src/protocol.ts`](src/protocol.ts) over that port. Only the parent can connect; when the page is the top-level page, its parent is itself, so only its own scripts can, which is how the end-to-end tests drive it. [`PROTOCOL.md`](PROTOCOL.md) explains it for host authors, and `src/client` is a small typed client a host can use instead of writing messages by hand.
 
 **Bundler worker.** A module Worker next to the page imports the bundle kit at run time from `bundle-kit/`, a byte-for-byte copy of the bundle kit's `dist/` made by the kit's build. It is not bundled again: the bundle kit loads its own chunks, Rspack's wasm and its package mirror from next to its entry, and its plugins stringify runtime functions whose text must not change. Without that copy the page reports `supported: false`.
 

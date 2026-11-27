@@ -173,10 +173,11 @@ function connect(next: MessagePort): void {
   };
 }
 
+/**
+ * Posts `ready` to the parent window. When the kit is the top-level page,
+ * `window.parent` is the page itself, so the page's own scripts get it.
+ */
 function announce(): void {
-  if (window.parent === window) {
-    return;
-  }
   const ready: ReadyMessage = {
     channel: PROTOCOL_CHANNEL,
     type: 'ready',
@@ -185,12 +186,15 @@ function announce(): void {
   window.parent.postMessage(ready, '*');
 }
 
+// Only the parent window can open a session. When the kit is the top-level
+// page, its parent is the page itself: only the page's own scripts can
+// connect, and other windows, such as an opener, still cannot.
 window.addEventListener('message', (event: MessageEvent<unknown>) => {
   const message = event.data as Partial<HandshakeMessage> | null;
   if (
     typeof message !== 'object' || message === null
     || message.channel !== PROTOCOL_CHANNEL
-    || event.source !== window.parent || window.parent === window
+    || event.source !== window.parent
   ) {
     return;
   }

@@ -34,6 +34,8 @@ iframe.contentWindow.postMessage(
 
 The host should check `event.origin` and `event.source` of the `ready` message, and post `connect` to the kit's origin only. The kit accepts `connect` only from its parent window. A second `connect` replaces the port and keeps the open project.
 
+The kit can also be the top-level page. Its parent is then its own window: it posts `ready` to itself, and only scripts of the page itself can connect, with `window.postMessage`. Other windows, such as the page that opened it, cannot. The end-to-end tests drive the kit this way. The top-level page needs to be cross-origin isolated too; `Document-Isolation-Policy` does that in Chromium.
+
 ## Messages on the port
 
 | Direction  | Shape                                                  | Meaning                                       |

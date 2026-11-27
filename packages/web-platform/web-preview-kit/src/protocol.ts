@@ -4,8 +4,8 @@
 
 /**
  * The message protocol between a host application and the preview kit running
- * in an iframe. `PROTOCOL.md` describes it in prose; this file is the source
- * of truth for the shapes.
+ * in an iframe, or as the top-level page. `PROTOCOL.md` describes it in prose;
+ * this file is the source of truth for the shapes.
  *
  * This module has no runtime dependencies, so a host can import it directly.
  */
@@ -43,6 +43,7 @@ export const PROTOCOL_CHANNEL = 'lynx-web-preview';
 /**
  * Kit to parent, posted with target origin `*` when the kit has loaded, and
  * again in answer to every {@link ProbeMessage}. It carries nothing private.
+ * A top-level kit posts it to its own window.
  */
 export interface ReadyMessage {
   channel: typeof PROTOCOL_CHANNEL;
@@ -64,8 +65,11 @@ export interface ProbeMessage {
  * Parent to kit: opens the session. It must transfer exactly one
  * `MessagePort`; everything after the handshake travels over that port.
  *
- * The kit only accepts it from `window.parent`. A later `connect` replaces
- * the port of an earlier one and keeps the kit's state.
+ * The kit only accepts it from `window.parent`. When the kit is the
+ * top-level page, `window.parent` is the kit's own window, so only scripts
+ * of the page itself can connect; other windows, such as an opener, cannot.
+ * A later `connect` replaces the port of an earlier one and keeps the kit's
+ * state.
  */
 export interface ConnectMessage {
   channel: typeof PROTOCOL_CHANNEL;
