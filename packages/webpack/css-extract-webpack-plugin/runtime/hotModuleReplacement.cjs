@@ -22,7 +22,13 @@ function updateStyle(cssId = 0) {
     throw new Error('cssHotUpdateList is not found');
   }
 
-  for (const [chunkName, cssHotUpdatePath] of cssHotUpdateList) {
+  // A web bundle has no `lynx.__chunk_entries__`, so an update cannot be
+  // applied to the entry of an async chunk. Only the card's own chunk, the
+  // last of the list, is updated there.
+  const entries = lynx.__chunk_entries__;
+  const list = entries ? cssHotUpdateList : cssHotUpdateList.slice(-1);
+
+  for (const [chunkName, cssHotUpdatePath] of list) {
     lynx.requireModuleAsync(
       // lynx.requireModuleAsync has two level hash and we cannot delete
       // the LynxGroup level cache here.
@@ -42,7 +48,7 @@ function updateStyle(cssId = 0) {
               cssId,
               content: ret.content,
               deps: ret.deps,
-              entry: (lynx.__chunk_entries__ || {})[chunkName],
+              entry: entries && entries[chunkName],
             },
           });
         }

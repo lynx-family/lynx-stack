@@ -8,7 +8,7 @@ import update from '../runtime/hotModuleReplacement.cjs';
 
 // A web bundle has no runtime wrapper, so there is no `lynx.__chunk_entries__`.
 describe('HMR Runtime without lynx.__chunk_entries__', () => {
-  test('dispatches the update of each chunk without an entry', () => {
+  test('dispatches only the update of the card\'s chunk, without an entry', () => {
     const dispatchEvent = rstest.fn<(event: unknown) => void>();
     const lynx = createStubLynx(
       rstest,
@@ -30,11 +30,13 @@ describe('HMR Runtime without lynx.__chunk_entries__', () => {
     update('', null, 10)();
     rstest.runAllTimers();
 
-    expect(dispatchEvent.mock.calls.map(([event]) => event)).toEqual(
-      ['/async.bar.css', '/foo.css'].map(content => ({
+    // The update of an async chunk would replace the style sheets of the card.
+    expect(lynx['requireModuleAsync']).toHaveBeenCalledTimes(1);
+    expect(dispatchEvent.mock.calls.map(([event]) => event)).toEqual([
+      {
         type: 'lynx.hmr.css',
-        data: { cssId: 10, content, deps: {}, entry: undefined },
-      })),
-    );
+        data: { cssId: 10, content: '/foo.css', deps: {}, entry: undefined },
+      },
+    ]);
   });
 });
