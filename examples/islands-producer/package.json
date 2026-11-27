@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@lynx-js/islands": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild"
   }
 }

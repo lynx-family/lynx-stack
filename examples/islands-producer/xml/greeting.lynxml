@@ -15,6 +15,7 @@
 </style>
 <script thread="main">
 function create() {
+  let container = null;
   let card = null;
   let title = null;
   let detail = null;
@@ -48,7 +49,7 @@ function create() {
 
   function render(selector, props, { flush = true } = {}) {
     const page = __GetPageElement();
-    const container = page && __QuerySelector(page, selector, {});
+    container = page && __QuerySelector(page, selector, {});
     if (!container) throw new Error('Greeting requires an existing host container');
     if (card) throw new Error('Greeting is already rendered');
     const pageId = __GetElementUniqueID(page);
@@ -78,7 +79,8 @@ function create() {
   function dispose() {
     if (!card) return;
     background.removeEventListener('Greeting:result', onResult);
-    __RemoveElement(card);
+    __RemoveElement(container, card);
+    container = null;
     card = null;
     title = null;
     detail = null;

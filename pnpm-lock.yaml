@@ -625,6 +625,9 @@ importers:
       '@lynx-js/islands':
         specifier: workspace:*
         version: link:../../packages/islands
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-lynx
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.3.3(core-js@3.50.0)
@@ -1955,12 +1958,18 @@ importers:
         specifier: workspace:*
         version: link:../webpack/template-webpack-plugin
     devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../rspeedy/plugin-config
       '@lynx-js/react':
         specifier: workspace:*
         version: link:../react
       '@lynx-js/react-transform':
         specifier: workspace:*
         version: link:../react/transform
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../rspeedy/plugin-lynx
       '@lynx-js/types':
         specifier: 4.1.0
         version: 4.1.0

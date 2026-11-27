@@ -13,7 +13,9 @@ import { runInNewContext } from 'node:vm';
 
 import { createRsbuild } from '@rsbuild/core';
 
+import { pluginLynxConfig } from '@lynx-js/config-rsbuild-plugin';
 import { parseLynxXML } from '@lynx-js/lynx-xml/parser';
+import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 
 import { pluginIslands } from '../lib/build/index.js';
@@ -46,6 +48,9 @@ function inlineCompilation(options) {
   const plugin = pluginIslands(options);
   plugin.setup({
     context: { rootPath },
+    modifyBundlerChain() {
+      // Section-hook unit tests do not register a real template.
+    },
     modifyRspackConfig(callback) {
       callback(config, { environment: { name: 'lynx' } });
     },
@@ -133,6 +138,26 @@ test('inline output respects its host entry and rejects duplicate exposes', asyn
   await assert.rejects(encode(args), /Duplicate island custom section/);
 });
 
+test('remote exposes use the same section hook scoped to their output resource', async () => {
+  const { encode } = inlineCompilation({
+    exposes: { card: source },
+    output: { mode: 'remote', filename: 'cards.lynx.bundle' },
+  });
+  const args = {
+    filenameTemplate: 'main.lynx.bundle',
+    chunkGroups: [{ name: 'main' }],
+    encodeData: { customSections: {} },
+  };
+  await encode(args);
+  assert.deepEqual(args.encodeData.customSections, {});
+  args.filenameTemplate = 'cards.lynx.bundle';
+  args.chunkGroups = [];
+  await encode(args);
+  assert.ok(args.encodeData.customSections['card/main']);
+  assert.ok(args.encodeData.customSections['card/css']);
+  await assert.rejects(encode(args), /Duplicate island custom section/);
+});
+
 test('dev reload prepends a hot invalidation module to the host entry', () => {
   const config = applyRspackConfig(
     { exposes: { card: source } },
@@ -214,38 +239,150 @@ for (
   });
 }
 
-test('resource-only Rsbuild producer encodes without a React plugin or app entry', async context => {
-  const directory = mkdtempSync(join(tmpdir(), 'lynx-islands-remote-'));
+for (const mode of ['production', 'development']) {
+  test(`resource-only producer uses complete pluginLynx pipeline in ${mode}`, async context => {
+    const directory = mkdtempSync(join(tmpdir(), 'lynx-islands-remote-'));
+    context.after(() => rmSync(directory, { recursive: true, force: true }));
+    const encoded = [];
+    const templates = [];
+    const emitted = [];
+    const rsbuild = await createRsbuild({
+      cwd: directory,
+      rsbuildConfig: {
+        mode,
+        environments: { lynx: {} },
+        plugins: [
+          ...(mode === 'production' ? [pluginLynx()] : []),
+          pluginLynxConfig({ enableEventHandleRefactor: true }),
+          pluginIslands({
+            exposes: {
+              first: join(rootPath, source),
+              second: join(rootPath, source),
+            },
+            output: { mode: 'remote', filename: 'assets/cards.lynx.bundle' },
+          }),
+          ...(mode === 'development' ? [pluginLynx()] : []),
+          {
+            name: 'test:island-encoding',
+            setup(api) {
+              api.modifyRspackConfig(config => {
+                config.plugins.push({
+                  apply(compiler) {
+                    compiler.hooks.thisCompilation.tap(
+                      'test:record-assets',
+                      compilation => {
+                        const hooks = LynxTemplatePlugin
+                          .getLynxTemplatePluginHooks(compilation);
+                        hooks.beforeEmit.tap('test:record-template', args => {
+                          templates.push(args.finalEncodeOptions);
+                          return args;
+                        });
+                        hooks.afterEmit.tap('test:record-output', args => {
+                          emitted.push(args.outputName);
+                          return args;
+                        });
+                        compilation.hooks.processAssets.tap({
+                          name: 'test:record-assets',
+                          stage: compiler.webpack.Compilation
+                            .PROCESS_ASSETS_STAGE_REPORT,
+                        }, () => {
+                          encoded.push(...compilation.getAssets());
+                        });
+                      },
+                    );
+                  },
+                });
+              });
+            },
+          },
+        ],
+      },
+    });
+    const [config] = await rsbuild.initConfigs();
+    assert.equal(
+      config.plugins.filter(plugin =>
+        plugin.constructor.name === 'LynxEncodePlugin'
+      ).length,
+      1,
+    );
+    assert.equal(
+      config.plugins.some(plugin =>
+        plugin.constructor.name === 'RuntimeWrapperWebpackPlugin'
+      ),
+      false,
+    );
+    await rsbuild.build();
+    assert.deepEqual(
+      encoded.filter(asset => asset.name.endsWith('.bundle')).map(asset =>
+        asset.name
+      ),
+      [
+        'assets/cards.lynx.bundle',
+      ],
+    );
+    const asset = encoded.find(asset =>
+      asset.name === 'assets/cards.lynx.bundle'
+    );
+    assert.ok(asset.source.size() > 0);
+    assert.deepEqual(emitted, ['assets/cards.lynx.bundle']);
+    assert.equal(templates.length, 1);
+    assert.equal(
+      templates[0].sourceContent.config.enableEventHandleRefactor,
+      true,
+    );
+    assert.equal(templates[0].sourceContent.appType, 'DynamicComponent');
+    assert.equal(templates[0].compilerOptions.targetSdkVersion, '3.7');
+    if (mode === 'development') {
+      assert.ok(encoded.some(asset => asset.name.endsWith('/tasm.json')));
+    }
+    // The native decoder validates the emitted binary, not a stub encoder.
+    const require = createRequire(
+      import.meta.resolve('@lynx-js/template-webpack-plugin'),
+    );
+    const tasm = await import(require.resolve('@lynx-js/tasm'));
+    const decoded = tasm.supportNapi()
+      ? tasm.decode_napi(Buffer.from(asset.source.buffer()))
+      : await tasm.decode_wasm(Buffer.from(asset.source.buffer()));
+    assert.ok(decoded);
+    assert.ok(JSON.stringify(decoded).includes('first/main'));
+    assert.ok(JSON.stringify(decoded).includes('second/background'));
+  });
+}
+
+test('one engine encodes separate remote resources and an inline host without mixing sections', async context => {
+  const directory = mkdtempSync(join(tmpdir(), 'lynx-islands-mixed-'));
   context.after(() => rmSync(directory, { recursive: true, force: true }));
-  const encoded = [];
+  writeFileSync(join(directory, 'host.js'), 'console.log("HOST_ONLY");');
+  const outputs = new Map();
   const rsbuild = await createRsbuild({
     cwd: directory,
     rsbuildConfig: {
+      mode: 'development',
       environments: { lynx: {} },
+      source: { entry: { main: './host.js' } },
       plugins: [
-        pluginIslands({
-          exposes: {
-            first: join(rootPath, source),
-            second: join(rootPath, source),
-          },
-          output: { mode: 'remote', filename: 'assets/cards.lynx.bundle' },
-        }),
+        pluginLynx(),
+        pluginIslands({ exposes: { local: join(rootPath, source) } }),
+        ...['first', 'second'].map(name =>
+          pluginIslands({
+            exposes: { [name]: join(rootPath, source) },
+            output: { mode: 'remote', filename: `${name}.lynx.bundle` },
+          })
+        ),
         {
-          name: 'test:island-encoding',
+          name: 'test:mixed-output',
           setup(api) {
             api.modifyRspackConfig(config => {
               config.plugins.push({
                 apply(compiler) {
                   compiler.hooks.thisCompilation.tap(
-                    'test:record-assets',
+                    'test:mixed-output',
                     compilation => {
-                      compilation.hooks.processAssets.tap({
-                        name: 'test:record-assets',
-                        stage: compiler.webpack.Compilation
-                          .PROCESS_ASSETS_STAGE_REPORT,
-                      }, () => {
-                        encoded.push(...compilation.getAssets());
-                      });
+                      LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation)
+                        .beforeEmit.tap('test:mixed-output', args => {
+                          outputs.set(args.outputName, args.finalEncodeOptions);
+                          return args;
+                        });
                     },
                   );
                 },
@@ -256,25 +393,67 @@ test('resource-only Rsbuild producer encodes without a React plugin or app entry
       ],
     },
   });
-  await rsbuild.build();
-  assert.deepEqual(encoded.map(asset => asset.name), [
-    'assets/cards.lynx.bundle',
-  ]);
-  const asset = encoded[0];
-  assert.ok(asset.source.size() > 0);
-  // The native decoder validates the emitted binary, not a stub encoder.
-  const require = createRequire(
-    import.meta.resolve('@lynx-js/template-webpack-plugin'),
+  const [config] = await rsbuild.initConfigs();
+  assert.equal(
+    config.plugins.filter(plugin =>
+      plugin.constructor.name === 'LynxEncodePlugin'
+    ).length,
+    1,
   );
-  const tasm = await import(require.resolve('@lynx-js/tasm'));
-  const decoded = tasm.supportNapi()
-    ? tasm.decode_napi(Buffer.from(asset.source.buffer()))
-    : await tasm.decode_wasm(Buffer.from(asset.source.buffer()));
-  assert.ok(decoded);
-  assert.ok(JSON.stringify(decoded).includes('first/main'));
-  assert.ok(JSON.stringify(decoded).includes('second/background'));
+  await rsbuild.build();
+  assert.deepEqual([...outputs.keys()].sort(), [
+    'first.lynx.bundle',
+    'main.lynx.bundle',
+    'second.lynx.bundle',
+  ]);
+  for (const [filename, data] of outputs) {
+    const expose = filename.startsWith('main')
+      ? 'local'
+      : filename.split('.')[0];
+    assert.deepEqual(Object.keys(data.customSections), [
+      `${expose}/main`,
+      `${expose}/background`,
+      `${expose}/css`,
+    ]);
+    assert.equal(
+      JSON.stringify(data).includes('HOST_ONLY'),
+      expose === 'local',
+    );
+  }
 });
 
+test('remote resource producers require the shared build engine', async () => {
+  const rsbuild = await createRsbuild({
+    rsbuildConfig: {
+      environments: { lynx: {} },
+      plugins: [
+        pluginIslands({
+          exposes: { card: source },
+          output: { mode: 'remote', filename: 'cards.lynx.bundle' },
+        }),
+      ],
+    },
+  });
+  await assert.rejects(rsbuild.initConfigs(), /requires pluginLynx/);
+});
+
+test('remote resources reject duplicate output filenames', async () => {
+  const rsbuild = await createRsbuild({
+    rsbuildConfig: {
+      environments: { lynx: {} },
+      plugins: [
+        pluginLynx(),
+        ...['first', 'second'].map(name =>
+          pluginIslands({
+            exposes: { [name]: source },
+            output: { mode: 'remote', filename: 'cards.lynx.bundle' },
+          })
+        ),
+      ],
+    },
+  });
+  await assert.rejects(rsbuild.initConfigs(), /Duplicate island output/);
+});
 test('shared parser preserves scripts and handles absent optional sections', async context => {
   const main =
     'module.exports = { create() { return { value: "<literal>" }; } };';

@@ -9,6 +9,9 @@ import {
   LynxTemplatePlugin,
   WebEncodePlugin,
 } from '@lynx-js/template-webpack-plugin'
+import type { LynxTemplatePluginOptions } from '@lynx-js/template-webpack-plugin'
+
+import { isLynx } from '../utils/is-lynx.js'
 
 export function pluginTemplate(): RsbuildPlugin {
   return {
@@ -16,14 +19,37 @@ export function pluginTemplate(): RsbuildPlugin {
     setup(api) {
       api.expose(Symbol.for('LynxTemplatePlugin'), { LynxTemplatePlugin })
 
-      if (api.context.callerName !== 'rslib') {
+      if (api.context.callerName === 'rslib') {
+        api.modifyBundlerChain((chain, { environment }) => {
+          configureTemplate(chain, {
+            target: environment.name === 'web' ? 'web' : 'lynx',
+          })
+        })
         return
       }
 
-      api.modifyBundlerChain((chain, { environment }) => {
-        configureTemplate(chain, {
-          target: environment.name === 'web' ? 'web' : 'lynx',
-        })
+      if (api.context.callerName === 'rstest') return
+      api.modifyBundlerChain({
+        order: 'post',
+        handler(chain, { environment }) {
+          // Resource DSLs register templates without app entry chunks. They use
+          // the same encode/emit hooks as pages, without a background wrapper.
+          const hasResourceTemplate = chain.plugins.values().some(plugin => {
+            const options = (plugin.get('args') as
+              | [LynxTemplatePluginOptions]
+              | undefined)?.[0]
+            return plugin.get('plugin') === LynxTemplatePlugin
+              && Array.isArray(options?.chunks) && options.chunks.length === 0
+          })
+          if (!hasResourceTemplate) return
+          let target: 'lynx' | 'web'
+          if (isLynx(environment.name)) target = 'lynx'
+          else if (
+            environment.name === 'web' || environment.name.startsWith('web-')
+          ) target = 'web'
+          else return
+          configureTemplate(chain, { target, backgroundAssets: [] })
+        },
       })
     },
   }

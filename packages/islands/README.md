@@ -62,16 +62,20 @@ Each component owns an independent instance, generates its own container ID, and
 ## Independent resources
 
 Set `output.mode` to `remote` to package the same exposes into an independent
-bundle. A producer needs only Rsbuild and `@lynx-js/islands/build`; it does not
-need ReactLynx, a React plugin or an application entry.
+bundle. Combine `pluginLynx()` from `@lynx-js/rsbuild-plugin` with
+`@lynx-js/islands/build`; the producer does not need ReactLynx, a React plugin
+or an application entry. Islands supplies the sections, and `pluginLynx`
+handles the complete bundle encoding and emission pipeline.
 
 ```ts
 import { defineConfig } from '@rsbuild/core';
 import { pluginIslands } from '@lynx-js/islands/build';
+import { pluginLynx } from '@lynx-js/rsbuild-plugin';
 
 export default defineConfig({
   environments: { lynx: {} },
   plugins: [
+    pluginLynx(),
     pluginIslands({
       exposes: { card: 'ui/card.lynxml' },
       output: { mode: 'remote', filename: 'cards.lynx.bundle' },

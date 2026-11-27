@@ -39,8 +39,10 @@
     "@lynx-js/template-webpack-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@lynx-js/config-rsbuild-plugin": "workspace:*",
     "@lynx-js/react": "workspace:*",
     "@lynx-js/react-transform": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/types": "4.1.0",
     "@microsoft/api-extractor": "catalog:",
     "@rsbuild/core": "catalog:rsbuild"

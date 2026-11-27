@@ -12,10 +12,7 @@ import type { RsbuildPlugin, Rspack } from '@rsbuild/core';
 
 import { parseLynxXML } from '@lynx-js/lynx-xml/parser';
 import type { LynxXMLParseResult } from '@lynx-js/lynx-xml/parser';
-import {
-  LynxEncodePlugin,
-  LynxTemplatePlugin,
-} from '@lynx-js/template-webpack-plugin';
+import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import type { EncodeOptions } from '@lynx-js/template-webpack-plugin';
 
 import { parseStylesheet } from './stylesheet.js';
@@ -134,6 +131,38 @@ export function pluginIslands(
           ? parseLynxXML
           : input.parse ?? parseLynxXML,
       }));
+      if (output.mode === 'remote') {
+        api.modifyBundlerChain((chain, { environment }) => {
+          if (environment.name !== environmentName) return;
+          // biome-ignore lint/correctness/useHookAtTopLevel: useExposed reads the Rsbuild plugin registry.
+          const template = api.useExposed<{
+            LynxTemplatePlugin: typeof LynxTemplatePlugin;
+          }>(Symbol.for('LynxTemplatePlugin'));
+          if (!template) {
+            throw new Error(
+              'Remote Islands requires pluginLynx() from @lynx-js/rsbuild-plugin',
+            );
+          }
+          const id = createHash('sha256').update(output.filename).digest('hex')
+            .slice(0, 16);
+          const key = `lynx:islands:template:${id}`;
+          if (chain.plugins.has(key)) {
+            throw new Error(`Duplicate island output: ${output.filename}`);
+          }
+          chain.plugin(key).use(template.LynxTemplatePlugin, [{
+            ...template.LynxTemplatePlugin.defaultOptions,
+            filename: output.filename,
+            intermediate: `.lynx/islands/${id}`,
+            chunks: [],
+            appType: 'DynamicComponent',
+            targetSdkVersion: '3.7',
+            defaultDisplayLinear: false,
+            defaultOverflowVisible: false,
+            enableCSSInvalidation: true,
+            enableRemoveCSSScope: true,
+          }]);
+        });
+      }
       api.modifyRspackConfig((config, { environment }) => {
         if (environment.name !== environmentName) return;
         // A resource-only producer has no JavaScript application entry.
@@ -230,60 +259,12 @@ export function pluginIslands(
                 };
               }
 
-              if (output.mode === 'remote') {
-                compilation.hooks.processAssets.tapPromise({
-                  name,
-                  stage:
-                    compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
-                }, async () => {
-                  const { filename } = output;
-                  if (compilation.getAsset(filename)) {
-                    throw new Error(`Duplicate island output: ${filename}`);
-                  }
-                  const result = await LynxEncodePlugin.encodePool.run({
-                    encodeOptions: {
-                      compilerOptions: {
-                        enableFiberArch: true,
-                        useLepusNG: true,
-                        enableReuseContext: true,
-                        bundleModuleMode: 'ReturnByFunction',
-                        debugInfoOutside: true,
-                        defaultDisplayLinear: false,
-                        defaultOverflowVisible: false,
-                        enableCSSInvalidation: true,
-                        enableCSSSelector: true,
-                        enableRemoveCSSScope: true,
-                        targetSdkVersion: '3.7',
-                      },
-                      sourceContent: {
-                        dsl: 'react_nodiff',
-                        appType: 'DynamicComponent',
-                        config: { lepusStrict: true },
-                      },
-                      manifest: {},
-                      lepusCode: undefined,
-                      css: { cssMap: {}, cssSource: {} },
-                      customSections,
-                    } satisfies EncodeOptions,
-                  }) as {
-                    status: number;
-                    buffer: Uint8Array;
-                    error_msg: string;
-                  };
-                  if (result.status !== 0) throw new Error(result.error_msg);
-                  compilation.emitAsset(
-                    filename,
-                    new compiler.webpack.sources.RawSource(
-                      Buffer.from(result.buffer),
-                    ),
-                  );
-                });
-                return;
-              }
-
               LynxTemplatePlugin.getLynxTemplatePluginHooks(compilation)
                 .beforeEncode.tap(name, args => {
-                  if (!args.chunkGroups.some(group => group.name === entry)) {
+                  const matches = output.mode === 'remote'
+                    ? args.filenameTemplate === output.filename
+                    : args.chunkGroups.some(group => group.name === entry);
+                  if (!matches) {
                     return args;
                   }
                   for (const section of Object.keys(customSections)) {

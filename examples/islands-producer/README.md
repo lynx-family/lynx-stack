@@ -1,8 +1,9 @@
 # Independent Island producer
 
 This project builds `xml/greeting.lynxml` into `dist/greeting.lynx.bundle`
-using only Rsbuild and `@lynx-js/islands/build`. It has no ReactLynx dependency,
-React plugin, or application entry. The output contains the named main script,
+using Rsbuild, `pluginLynx()` and `@lynx-js/islands/build`. Islands supplies the
+sections to the standard Lynx bundle encoding pipeline. It has no ReactLynx
+dependency, React plugin, or application entry. The output contains the named main script,
 background script, and CSS sections; it is a resource, not a standalone page.
 
 Follow the repository setup and full-build instructions, then run:
