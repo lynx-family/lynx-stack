@@ -194,6 +194,34 @@ jobs:
         export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
         pnpm --filter @lynx-js/web-core-e2e run test --reporter='github,dot,junit,html' --shard=${{ matrix.shard }}/2
         pnpm --filter @lynx-js/web-core-e2e run coverage:ci
+  playwright-web-kits:
+    needs: build
+    uses: ./.github/workflows/workflow-test.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: Playwright ${{ matrix.package }}
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [web-bundle-kit, web-preview-kit]
+    with:
+      runs-on: lynx-custom-container
+      is-web: true
+      web-report-name: "playwright-${{ matrix.package }}"
+      web-report-path: "packages/web-platform/${{ matrix.package }}/playwright-report"
+      codecov-flags: "e2e"
+      run: |
+        echo "open files limit before: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
+        ulimit -Sn "$(ulimit -Hn)"
+        echo "open files limit after: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
+        export NODE_OPTIONS="--max-old-space-size=32768"
+        export PLAYWRIGHT_JUNIT_OUTPUT_NAME=test-report.junit.xml
+        pnpm --filter @lynx-js/${{ matrix.package }} run test:e2e --reporter='github,dot,junit,html'
+        # Only the preview kit reports coverage: the bundle kit runs in a
+        # Worker, which page.coverage does not measure.
+        if [ "${{ matrix.package }}" = "web-preview-kit" ]; then
+          pnpm --filter @lynx-js/web-preview-kit run coverage:ci
+        fi
   test-api:
     needs: build
     uses: ./.github/workflows/workflow-test.yml
@@ -575,6 +603,7 @@ jobs:
       - eslint
       # - playwright-linux
       - playwright-web-elements
+      - playwright-web-kits
       - sherif
       - test-api
       - test-docs
