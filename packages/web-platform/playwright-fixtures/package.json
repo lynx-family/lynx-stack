@@ -11,9 +11,9 @@
     "v8-to-istanbul": "^9.3.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1"
+    "@playwright/test": "catalog:"
   },
   "peerDependencies": {
-    "@playwright/test": "^1.61.1"
+    "@playwright/test": "catalog:"
   }
 }

@@ -33,7 +33,7 @@
     "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@lynx-js/web-core": "workspace:*",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rspack/browser": "catalog:rspack",
     "@rspack/core": "catalog:rspack",

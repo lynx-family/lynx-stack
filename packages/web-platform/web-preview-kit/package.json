@@ -37,7 +37,7 @@
     "@lynx-js/web-core": "workspace:*",
     "@lynx-js/web-elements": "workspace:*",
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
     "@rstest/core": "catalog:rstest",
     "tslib": "^2.8.1"

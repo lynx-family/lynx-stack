@@ -174,6 +174,9 @@ catalogs:
     '@microsoft/api-extractor':
       specifier: 7.59.4
       version: 7.59.4
+    '@playwright/test':
+      specifier: ^1.61.1
+      version: 1.61.1
     typescript:
       specifier: 6.0.3
       version: 6.0.3
@@ -3102,7 +3105,7 @@ importers:
         version: 9.3.0
     devDependencies:
       '@playwright/test':
-        specifier: ^1.61.1
+        specifier: 'catalog:'
         version: 1.61.1
 
   packages/web-platform/web-bundle-kit:
@@ -3120,7 +3123,7 @@ importers:
         specifier: workspace:*
         version: link:../web-core
       '@playwright/test':
-        specifier: ^1.61.1
+        specifier: 'catalog:'
         version: 1.61.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
@@ -3229,7 +3232,7 @@ importers:
         specifier: workspace:*
         version: link:../web-rsbuild-server-middleware
       '@playwright/test':
-        specifier: ^1.61.1
+        specifier: 'catalog:'
         version: 1.61.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
@@ -3263,7 +3266,7 @@ importers:
         specifier: workspace:*
         version: link:../playwright-fixtures
       '@playwright/test':
-        specifier: ^1.61.1
+        specifier: 'catalog:'
         version: 1.61.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
@@ -3338,7 +3341,7 @@ importers:
         specifier: workspace:*
         version: link:../web-rsbuild-plugin
       '@playwright/test':
-        specifier: ^1.61.1
+        specifier: 'catalog:'
         version: 1.61.1
       '@rsbuild/core':
         specifier: catalog:rsbuild
