@@ -23,8 +23,9 @@
   },
   "scripts": {
     "build": "rsbuild build",
+    "coverage": "nyc report --cwd=$(realpath ../)",
+    "coverage:ci": "nyc report --cwd=$(realpath ../) --reporter=lcov",
     "serve": "node ./scripts/serve.mjs",
-    "test": "rstest",
     "test:e2e": "playwright test",
     "test:type": "tsc6 --noEmit"
   },
@@ -39,7 +40,8 @@
     "@lynx-js/web-platform-rsbuild-plugin": "workspace:*",
     "@playwright/test": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
-    "@rstest/core": "catalog:rstest",
-    "tslib": "^2.8.1"
+    "nyc": "^18.0.0",
+    "tslib": "^2.8.1",
+    "v8-to-istanbul": "^9.3.0"
   }
 }

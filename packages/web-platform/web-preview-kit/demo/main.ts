@@ -5,7 +5,7 @@
 /**
  * A host application that embeds the kit from another origin and drives it
  * through the client of `src/client`. It is the manual test bed and the
- * fixture of the end-to-end tests, which use `window.demo`.
+ * fixture of the end-to-end test of `src/client`, which uses `window.demo`.
  *
  * Query parameters:
  * - `kit`: the URL of the kit page. Defaults to port 4210 of this host.
@@ -174,7 +174,9 @@ declare global {
       events: typeof events;
       sampleFiles: FileMap;
       sampleConfig: typeof sampleConfig;
+      /** `connectPreview` of the client, for other iframes. */
+      connectPreview: typeof connectPreview;
     };
   }
 }
-window.demo = { ready, events, sampleFiles, sampleConfig };
+window.demo = { ready, events, sampleFiles, sampleConfig, connectPreview };

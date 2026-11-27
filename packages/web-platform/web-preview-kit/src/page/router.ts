@@ -75,11 +75,6 @@ export class RequestRouter {
     });
   }
 
-  /** Resolves once every request received so far has been answered. */
-  idle(): Promise<void> {
-    return this.#queue;
-  }
-
   #dispatch<M extends MethodName>(
     method: M,
     params: unknown,

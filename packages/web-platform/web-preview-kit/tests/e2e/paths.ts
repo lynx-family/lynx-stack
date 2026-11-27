@@ -18,3 +18,13 @@ export const staticFixtureDir = path.join(packageDir, 'dist/e2e-fixture');
 
 /** The substitute bundler workers. */
 export const workersDir = path.join(packageDir, 'tests/e2e/workers');
+
+/**
+ * Where the coverage fixture writes istanbul files: the directory that the
+ * fixture of `@lynx-js/playwright-fixtures` writes to, which `nyc report`
+ * reads with `--cwd=packages/web-platform`.
+ */
+export const coverageDir = path.join(packageDir, '..', '.nyc_output');
+
+/** The prefix of this package's files in {@link coverageDir}. */
+export const coverageFilePrefix = 'web-preview-kit_';

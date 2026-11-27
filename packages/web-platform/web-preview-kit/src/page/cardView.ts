@@ -54,11 +54,6 @@ export class CardView implements CardHost {
     this.#callbacks = callbacks;
   }
 
-  /** The `<lynx-view>` currently shown, if any. */
-  get element(): LynxViewElement | undefined {
-    return this.#view;
-  }
-
   load(url: string, data: PreviewData): void {
     const view = document.createElement('lynx-view') as LynxViewElement;
     view.setAttribute('part', 'card');

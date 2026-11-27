@@ -3,12 +3,20 @@
 // LICENSE file in the root directory of this source tree.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 
-import { packageDir, staticFixtureDir } from './paths.js';
+import {
+  coverageDir,
+  coverageFilePrefix,
+  packageDir,
+  staticFixtureDir,
+} from './paths.js';
 
-/** Builds the fixture once for the static tests, and checks the kit is built. */
+/**
+ * Checks the kit is built, builds the fixture once for the static tests, and
+ * removes the coverage files of an earlier run of this package.
+ */
 export default function globalSetup(): void {
   if (!existsSync(path.join(packageDir, 'dist/kit/index.html'))) {
     throw new Error(
@@ -22,5 +30,12 @@ export default function globalSetup(): void {
   );
   if (result.status !== 0) {
     throw new Error('Building the fixture failed.');
+  }
+  if (existsSync(coverageDir)) {
+    for (const name of readdirSync(coverageDir)) {
+      if (name.startsWith(coverageFilePrefix)) {
+        rmSync(path.join(coverageDir, name));
+      }
+    }
   }
 }

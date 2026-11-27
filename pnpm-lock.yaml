@@ -3346,12 +3346,15 @@ importers:
       '@rsbuild/core':
         specifier: catalog:rsbuild
         version: 2.3.3(core-js@3.50.0)
-      '@rstest/core':
-        specifier: catalog:rstest
-        version: 0.12.6(core-js@3.50.0)(happy-dom@20.14.0)(jsdom@31.0.1)
+      nyc:
+        specifier: ^18.0.0
+        version: 18.0.0(supports-color@10.2.2)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
+      v8-to-istanbul:
+        specifier: ^9.3.0
+        version: 9.3.0
 
   packages/web-platform/web-rsbuild-plugin:
     dependencies:

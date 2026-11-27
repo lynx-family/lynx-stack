@@ -71,27 +71,41 @@ The iframe must end up cross-origin isolated: either the host is isolated and th
 
 ## Test
 
-Unit tests (rstest), from the repository root or this directory:
+The kit has end-to-end tests only (Playwright, Chromium). Build first, from the repository root (see [Build](#build)):
 
 ```bash
-pnpm rstest --project web-platform/web-preview-kit
+pnpm turbo build --filter=@lynx-js/web-preview-kit
 ```
 
-Type check (after `pnpm turbo build`; the kit is not part of the root `tsc --build`, because the types of `@lynx-js/web-bundle-kit` need its build; CI runs it in the `test-type` job with `pnpm -r run test:type`):
+Then, in this directory:
 
 ```bash
-pnpm run test:type                             # in this directory
+pnpm run test:e2e                              # all specs
+pnpm run test:e2e tests/e2e/session.spec.ts    # one spec
+PREVIEW_KIT_BUNDLER=real pnpm run test:e2e tests/e2e/hmr.spec.ts
+pnpm run test:type                             # type check
 ```
 
-End-to-end tests (Playwright, Chromium; build the kit first):
+Most specs open the kit as the top-level page. A helper that the test installs in the page (`installKitHelper` in `tests/e2e/harness.ts`) connects with `window.postMessage`, sends requests and records events in `window.kit`; the protocol is the same as in an iframe. The test server (`scripts/serve.mjs`) sends `Document-Isolation-Policy`, which makes the top-level page cross-origin isolated in Chromium. It also swaps files by URL (`kitOverrides`), so the shipped code has no test-only branch.
+
+- `handshake.spec.ts`: `ready`, `probe`, `connect` with a wrong version or port count, a second `connect`, a child frame and an opener that cannot connect, and every reason for `supported: false`.
+- `requests.spec.ts`: messages the kit drops, the order of responses, parameter and path checks, and every error code.
+- `session.spec.ts`: rendering from the Service Worker, revisions and build ids, `preview.select`, `preview.reload`, `preview.setData`, the failed-build and recovery rules, `project.configure`, cancelled builds, `project.close`, which hot-update files and card copies are kept, and a synchronous XHR from a module worker.
+- `embed.spec.ts`: the kit in an iframe of the demo host, through `src/client`: both ways of isolating the iframe, `supported: false`, every client method, and `connectPreview` timing out, aborted or seeing another protocol version.
+- `hmr.spec.ts`: hot-update edge cases (a module that declines updates, reload from the last good build after a failed one), card errors, and the DevTool calls of a card.
+- `bundle-kit.spec.ts`: the kit as shipped, with the real bundle kit and nothing substituted: two cards, CSS and TSX hot updates, a syntax error and its recovery, merged edits, `project.configure`, file requests, and a production project. It is skipped when the kit was built without the bundle kit.
+
+The specs replace the bundler worker with test doubles in `tests/e2e/workers/`, except `bundle-kit.spec.ts`. `static-worker.js` emits the fixture built in Node by `tests/node/build-fixture.mjs`; a file `static-worker.json` in the project makes its builds fail, slow or crash. `dev-worker.js` forwards to real Rsbuild watch compilations in Node (`tests/node/dev-service.mjs`), configured as the bundle kit configures a project (`tests/node/fixture-config.mjs`).
+
+### Coverage
+
+Every page records V8 coverage with Playwright's `page.coverage`, as in `web-core-e2e` (`tests/e2e/coverage.ts`). After each test, the scripts are mapped to the built files they were served from and converted with `v8-to-istanbul` through their source maps; the sources under `src/` are written to `packages/web-platform/.nyc_output/`. After a run:
 
 ```bash
-pnpm exec playwright test                      # in this directory
-PREVIEW_KIT_BUNDLER=real pnpm exec playwright test tests/e2e/hmr.spec.ts
+pnpm run coverage                              # text report
+pnpm run coverage:ci                           # packages/web-platform/coverage/lcov.info
 ```
 
-- `tests/e2e/bundle-kit.spec.ts` runs the kit as shipped, with the real bundle kit and nothing substituted: open two cards, CSS and TSX hot updates, a syntax error and its recovery, switching cards, a third entry added with `project.configure`, and a production project with `build.getAsset`. It is skipped when the kit was built without the bundle kit.
-- `tests/e2e/static.spec.ts` replaces the bundler worker with `tests/e2e/workers/static-worker.js`, which emits the fixture built in Node by `tests/node/build-fixture.mjs`. It covers the handshake in both isolation setups, `supported: false`, rendering from the Service Worker, `preview.select`, `preview.reload`, `preview.setData`, file requests, and a synchronous XHR from a module worker answered by the Service Worker.
-- `tests/e2e/hmr.spec.ts` (hot-update edge cases: a module that declines updates, reload from the last good build after a failed one, and a `test.fail` for the stale main thread after a failed build) replaces the worker with `tests/e2e/workers/dev-worker.js`, which forwards to real Rsbuild watch compilations in Node (`tests/node/dev-service.mjs`), configured as the bundle kit configures a project (`tests/node/fixture-config.mjs`). With `PREVIEW_KIT_BUNDLER=real` it uses the kit's own worker and the bundle kit instead.
+Both report everything in `packages/web-platform/.nyc_output/`, including files other packages wrote there; a run of this package replaces only its own files. Only the main thread of a page is measured: Playwright does not report Workers, so `src/worker/` and `src/sw/` are not in the report. The page is minified, so the line numbers of a script map to its sources imprecisely; branch and function counts are the more exact numbers.
 
-The test server swaps files by URL (`scripts/serve.mjs`, `kitOverrides`), so the shipped code has no test-only branch.
+CI runs the specs and `coverage:ci` in the `playwright-web-kits` job of `.github/workflows/test.yml`.
