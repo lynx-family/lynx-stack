@@ -26,6 +26,8 @@ x-text > * {
 }
 
 x-text::part(inner-box) {
+  /* Native Lynx measures whitespace as text, even when a line has no visible ink. */
+  white-space-collapse: preserve;
   text-overflow: inherit;
   --lynx-text-bg-color: inherit;
 }
@@ -261,7 +263,7 @@ x-text[text-maxline][tail-color-convert="false"]::part(inner-box) {
 raw-text {
   display: none;
   /* raw-text only works in x-text */
-  white-space-collapse: preserve-breaks;
+  white-space-collapse: preserve;
 }
 
 x-text > raw-text,
