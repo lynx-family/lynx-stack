@@ -4,7 +4,7 @@
 
 // One CPU, no network: nothing in a build may start worker pools or bind
 // sockets in the kit.
-module.exports = {
+const os = {
   EOL: '\n',
   availableParallelism: () => 1,
   cpus: () => [{ model: 'browser', speed: 0, times: {} }],
@@ -27,4 +27,24 @@ module.exports = {
     homedir: '/',
   }),
   constants: { signals: {}, errno: {}, priority: {} },
-};
+} satisfies Partial<Record<keyof typeof import('node:os'), unknown>>;
+
+export const {
+  EOL,
+  availableParallelism,
+  cpus,
+  platform,
+  type,
+  arch,
+  release,
+  homedir,
+  tmpdir,
+  hostname,
+  networkInterfaces,
+  totalmem,
+  freemem,
+  endianness,
+  userInfo,
+  constants,
+} = os;
+export default os;

@@ -15,7 +15,7 @@ import {
   writeFiles,
 } from './files.js';
 import type { ProjectFs } from './files.js';
-import host from './node/host.cjs';
+import { host } from './node/host.js';
 import { setup } from './setup.js';
 import type {
   AssetInfo,

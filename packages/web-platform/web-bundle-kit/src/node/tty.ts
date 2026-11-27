@@ -2,7 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// The `process` global the kit installs before loading Node.js code.
-const lazyObject = require('./lazy.cjs');
+const tty = { isatty: (_fd?: number) => false };
 
-module.exports = lazyObject(() => globalThis.process);
+export const { isatty } = tty;
+export default tty;

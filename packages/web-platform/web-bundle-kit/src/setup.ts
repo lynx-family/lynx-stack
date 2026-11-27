@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree.
 
 import { registered } from '../generated/registered.js';
-import { installGlobals } from './node/globals.cjs';
-import host from './node/host.cjs';
+import { installGlobals } from './node/globals.js';
+import { host } from './node/host.js';
 
 declare const __webpack_public_path__: string;
 

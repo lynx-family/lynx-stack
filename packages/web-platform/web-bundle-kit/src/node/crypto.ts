@@ -6,12 +6,14 @@
 // (sha1 and sha256), and random values from Web Crypto. Web Crypto's
 // `subtle.digest` is asynchronous, so it cannot back `createHash`.
 
-const { Buffer } = require('./buffer.cjs');
+import { Buffer } from './buffer.js';
 
-const rotl = (x, n) => (x << n) | (x >>> (32 - n));
-const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+type Encoding = BufferEncoding;
 
-function pad(bytes) {
+const rotl = (x: number, n: number) => (x << n) | (x >>> (32 - n));
+const rotr = (x: number, n: number) => (x >>> n) | (x << (32 - n));
+
+function pad(bytes: Uint8Array): DataView {
   const length = bytes.length;
   const total = (((length + 8) >> 6) + 1) << 6;
   const out = new Uint8Array(total);
@@ -23,7 +25,7 @@ function pad(bytes) {
   return view;
 }
 
-function sha1(bytes) {
+function sha1(bytes: Uint8Array): Uint8Array {
   const view = pad(bytes);
   let [a0, b0, c0, d0, e0] = [
     0x67452301,
@@ -36,7 +38,7 @@ function sha1(bytes) {
   for (let offset = 0; offset < view.byteLength; offset += 64) {
     for (let i = 0; i < 16; i++) w[i] = view.getInt32(offset + i * 4, false);
     for (let i = 16; i < 80; i++) {
-      w[i] = rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+      w[i] = rotl(w[i - 3]! ^ w[i - 8]! ^ w[i - 14]! ^ w[i - 16]!, 1);
     }
     let [a, b, c, d, e] = [a0, b0, c0, d0, e0];
     for (let i = 0; i < 80; i++) {
@@ -51,7 +53,7 @@ function sha1(bytes) {
         f = (b & c) | (b & d) | (c & d);
         k = 0x8f1bbcdc;
       }
-      const t = (rotl(a, 5) + f + e + k + w[i]) | 0;
+      const t = (rotl(a, 5) + f + e + k + w[i]!) | 0;
       e = d;
       d = c;
       c = rotl(b, 30);
@@ -134,9 +136,9 @@ const K256 = [
   0xc67178f2,
 ];
 
-function sha256(bytes) {
+function sha256(bytes: Uint8Array): Uint8Array {
   const view = pad(bytes);
-  const h = [
+  const h: [number, number, number, number, number, number, number, number] = [
     0x6a09e667,
     0xbb67ae85,
     0x3c6ef372,
@@ -150,15 +152,17 @@ function sha256(bytes) {
   for (let offset = 0; offset < view.byteLength; offset += 64) {
     for (let i = 0; i < 16; i++) w[i] = view.getInt32(offset + i * 4, false);
     for (let i = 16; i < 64; i++) {
-      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
-      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
-      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      const w15 = w[i - 15]!;
+      const w2 = w[i - 2]!;
+      const s0 = rotr(w15, 7) ^ rotr(w15, 18) ^ (w15 >>> 3);
+      const s1 = rotr(w2, 17) ^ rotr(w2, 19) ^ (w2 >>> 10);
+      w[i] = (w[i - 16]! + s0 + w[i - 7]! + s1) | 0;
     }
     let [a, b, c, d, e, f, g, hh] = h;
     for (let i = 0; i < 64; i++) {
       const s1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
       const ch = (e & f) ^ (~e & g);
-      const t1 = (hh + s1 + ch + K256[i] + w[i]) | 0;
+      const t1 = (hh + s1 + ch + K256[i]! + w[i]!) | 0;
       const s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
       const maj = (a & b) ^ (a & c) ^ (b & c);
       const t2 = (s0 + maj) | 0;
@@ -172,22 +176,37 @@ function sha256(bytes) {
       a = (t1 + t2) | 0;
     }
     [a, b, c, d, e, f, g, hh].forEach((value, i) => {
-      h[i] = (h[i] + value) | 0;
+      h[i] = (h[i]! + value) | 0;
     });
   }
   return words(h);
 }
 
-function words(list) {
+function words(list: number[]): Uint8Array {
   const out = new Uint8Array(list.length * 4);
   const view = new DataView(out.buffer);
   list.forEach((word, i) => view.setUint32(i * 4, word >>> 0, false));
   return out;
 }
 
-const algorithms = { sha1, sha256 };
+type HashInput = string | ArrayBufferView | ArrayBuffer | ArrayLike<number>;
 
-function toBytes(data, encoding) {
+/** What `createHash` returns: the part of Node.js's `Hash` build tools use. */
+interface Hash {
+  update(data: HashInput, encoding?: Encoding): Hash;
+  /** A Buffer, or a string when `encoding` is given. */
+  digest(encoding?: Encoding): Buffer | string;
+}
+
+const algorithms: Record<string, (bytes: Uint8Array) => Uint8Array> = {
+  sha1,
+  sha256,
+};
+
+function toBytes(
+  data: HashInput,
+  encoding?: Encoding,
+): Uint8Array {
   if (typeof data === 'string') return Buffer.from(data, encoding ?? 'utf8');
   if (ArrayBuffer.isView(data)) {
     return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
@@ -195,7 +214,7 @@ function toBytes(data, encoding) {
   return new Uint8Array(data);
 }
 
-function concat(chunks) {
+function concat(chunks: Uint8Array[]): Uint8Array {
   const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
   let offset = 0;
   for (const chunk of chunks) {
@@ -205,19 +224,19 @@ function concat(chunks) {
   return out;
 }
 
-function encode(bytes, encoding) {
+function encode(bytes: Uint8Array, encoding?: Encoding) {
   const buffer = Buffer.from(bytes);
   return encoding ? buffer.toString(encoding) : buffer;
 }
 
-function createHash(algorithm) {
+function createHash(algorithm: string): Hash {
   const digest = algorithms[String(algorithm).toLowerCase()];
   if (!digest) {
     throw new Error(
       `Digest method not supported in @lynx-js/web-bundle-kit: ${algorithm}`,
     );
   }
-  const chunks = [];
+  const chunks: Uint8Array[] = [];
   return {
     update(data, encoding) {
       chunks.push(toBytes(data, encoding));
@@ -229,14 +248,26 @@ function createHash(algorithm) {
   };
 }
 
-module.exports = {
+const crypto = {
   createHash,
-  hash: (algorithm, data, encoding = 'hex') =>
+  hash: (algorithm: string, data: HashInput, encoding: Encoding = 'hex') =>
     createHash(algorithm).update(data).digest(encoding),
   getHashes: () => Object.keys(algorithms),
-  randomBytes: (size) =>
+  randomBytes: (size: number) =>
     Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(size))),
   randomUUID: () => globalThis.crypto.randomUUID(),
-  getRandomValues: (array) => globalThis.crypto.getRandomValues(array),
+  getRandomValues: <T extends ArrayBufferView<ArrayBuffer>>(array: T) =>
+    globalThis.crypto.getRandomValues(array),
   webcrypto: globalThis.crypto,
-};
+} satisfies Partial<Record<keyof typeof import('node:crypto'), unknown>>;
+
+export const {
+  hash,
+  getHashes,
+  randomBytes,
+  randomUUID,
+  getRandomValues,
+  webcrypto,
+} = crypto;
+export { createHash };
+export default crypto;

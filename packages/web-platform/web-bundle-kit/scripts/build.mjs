@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 
 import { rspack } from '@rspack/core';
 
+import { standIns } from './builtins.mjs';
 import { createLayout, findPackageRoot } from './layout.mjs';
 import { collectMirror } from './mirror.mjs';
 import { isInside, pathKey, relativeSpecifier } from './paths.mjs';
@@ -90,7 +91,7 @@ if (layout.missing.length > 0) {
 
 // Modules Rspack or `require()` load by path at build time: the loaders and
 // the ReactLynx transform. They are bundled into the kit and registered under
-// their virtual path (see src/node/module.cjs and BrowserRequirePlugin).
+// their virtual path (see src/node/module.ts and BrowserRequirePlugin).
 const registered = [
   [dirs.rsbuild, 'dist/transformLoader.mjs'],
   [dirs.rsbuild, 'dist/transformRawLoader.mjs'],
@@ -171,12 +172,17 @@ writeFileSync(
   ].join('\n'),
 );
 
-// Every Node.js built-in goes to src/node; `node:` is stripped first, since
-// Rspack treats it as a URL scheme before aliases apply.
-const builtinStandIn = path.join(root, 'src/node/builtin.cjs');
+// Every Node.js built-in goes to its stand-in (see ./builtins.mjs), or to an
+// empty module when it has none. `node:` is stripped first, since Rspack
+// treats it as a URL scheme before aliases apply.
 const alias = {};
 for (const name of builtinModules.filter((n) => !n.startsWith('_'))) {
-  alias[`${name}$`] = `${builtinStandIn}?${name}`;
+  const standIn = Object.hasOwn(standIns, name) ? standIns[name] : undefined;
+  alias[`${name}$`] = standIn === undefined
+    ? false
+    : typeof standIn === 'string'
+    ? path.join(root, standIn)
+    : require.resolve(standIn.package);
 }
 Object.assign(alias, {
   '@rspack/core$': path.join(dirs.rspackBrowser, 'dist/index.js'),

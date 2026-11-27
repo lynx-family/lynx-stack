@@ -4,19 +4,21 @@
 
 // The part of `node:util` that build tools use for messages and helpers.
 
-const types = require('./util-types.cjs');
+import types from './util-types.js';
 
-function inspect(value, options) {
+type Callable = (this: unknown, ...args: unknown[]) => unknown;
+
+function inspect(value: unknown, options?: { depth?: number }): string {
   const depth = options?.depth ?? 2;
-  const seen = new WeakSet();
-  const walk = (input, level) => {
+  const seen = new WeakSet<object>();
+  const walk = (input: unknown, level: number): string => {
     if (typeof input === 'string') {
       return level === 0
         ? input
         : JSON.stringify(input);
     }
     if (typeof input === 'function') {
-      return `[Function: ${input.name || 'anonymous'}]`;
+      return `[Function: ${(input as Callable).name || 'anonymous'}]`;
     }
     if (typeof input === 'symbol' || typeof input === 'bigint') {
       return String(input);
@@ -31,21 +33,24 @@ function inspect(value, options) {
     if (input instanceof RegExp || input instanceof Date) return String(input);
     if (input instanceof Map) {
       return `Map(${input.size}) {${
-        [...input].map(([k, v]) =>
+        [...(input as Map<unknown, unknown>)].map(([k, v]) =>
           ` ${walk(k, level + 1)} => ${walk(v, level + 1)}`
         ).join(',')
       } }`;
     }
     if (input instanceof Set) {
       return `Set(${input.size}) {${
-        [...input].map(v => ` ${walk(v, level + 1)}`).join(',')
+        [...(input as Set<unknown>)].map(v => ` ${walk(v, level + 1)}`).join(
+          ',',
+        )
       } }`;
     }
     if (Array.isArray(input)) {
       return `[ ${input.map(v => walk(v, level + 1)).join(', ')} ]`;
     }
-    const entries = Object.keys(input).map(key =>
-      `${key}: ${walk(input[key], level + 1)}`
+    const record = input as Record<string, unknown>;
+    const entries = Object.keys(record).map(key =>
+      `${key}: ${walk(record[key], level + 1)}`
     );
     return `{ ${entries.join(', ')} }`;
   };
@@ -53,13 +58,13 @@ function inspect(value, options) {
 }
 inspect.custom = Symbol.for('nodejs.util.inspect.custom');
 
-function format(first, ...args) {
+function format(first?: unknown, ...args: unknown[]): string {
   if (typeof first !== 'string') {
     return [first, ...args].map(v => (typeof v === 'string' ? v : inspect(v)))
       .join(' ');
   }
   let index = 0;
-  const out = first.replace(/%([sdifjoOc%])/g, (match, spec) => {
+  const out = first.replace(/%([sdifjoOc%])/g, (match, spec: string) => {
     if (spec === '%') return '%';
     if (index >= args.length) return match;
     const value = args[index++];
@@ -69,10 +74,10 @@ function format(first, ...args) {
       case 'd':
       case 'i':
         return String(
-          spec === 'i' ? Number.parseInt(value, 10) : Number(value),
+          spec === 'i' ? Number.parseInt(value as string, 10) : Number(value),
         );
       case 'f':
-        return String(Number.parseFloat(value));
+        return String(Number.parseFloat(value as string));
       case 'j':
         try {
           return JSON.stringify(value);
@@ -92,12 +97,12 @@ function format(first, ...args) {
 }
 
 const kCustomPromisify = Symbol.for('nodejs.util.promisify.custom');
-function promisify(fn) {
+function promisify(fn: Callable & { [kCustomPromisify]?: Callable }): Callable {
   if (fn[kCustomPromisify]) return fn[kCustomPromisify];
-  return function promisified(...args) {
+  return function promisified(this: unknown, ...args: unknown[]) {
     return new Promise((resolve, reject) => {
-      fn.call(this, ...args, (error, ...values) => {
-        if (error) reject(error);
+      fn.call(this, ...args, (error: unknown, ...values: unknown[]) => {
+        if (error) reject(error as Error);
         else resolve(values.length > 1 ? values : values[0]);
       });
     });
@@ -105,22 +110,24 @@ function promisify(fn) {
 }
 promisify.custom = kCustomPromisify;
 
-function callbackify(fn) {
-  return function callbackified(...args) {
-    const callback = args.pop();
+function callbackify(
+  fn: (this: unknown, ...args: unknown[]) => Promise<unknown>,
+) {
+  return function callbackified(this: unknown, ...args: unknown[]) {
+    const callback = args.pop() as (error: unknown, value?: unknown) => void;
     fn.apply(this, args).then(
       value => callback(null, value),
-      error => callback(error),
+      (error: unknown) => callback(error),
     );
   };
 }
 
-function deprecate(fn) {
+function deprecate<T>(fn: T): T {
   return fn;
 }
 
-function inherits(ctor, superCtor) {
-  Object.setPrototypeOf(ctor.prototype, superCtor.prototype);
+function inherits(ctor: Callable, superCtor: Callable): void {
+  Object.setPrototypeOf(ctor.prototype, superCtor.prototype as object | null);
   Object.setPrototypeOf(ctor, superCtor);
 }
 
@@ -128,7 +135,7 @@ function inherits(ctor, superCtor) {
 // eslint-disable-next-line no-control-regex
 const ANSI = /\u001B(?:\[[\d;?]*[\x20-\x2F]*[\x40-\x7E]|\][^\u0007]*\u0007)/g;
 
-function isDeepStrictEqual(a, b) {
+function isDeepStrictEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (
     typeof a !== 'object' || typeof b !== 'object' || a === null || b === null
@@ -137,26 +144,52 @@ function isDeepStrictEqual(a, b) {
   const keysA = Reflect.ownKeys(a);
   const keysB = Reflect.ownKeys(b);
   if (keysA.length !== keysB.length) return false;
-  return keysA.every(key => isDeepStrictEqual(a[key], b[key]));
+  return keysA.every(key =>
+    isDeepStrictEqual(Reflect.get(a, key), Reflect.get(b, key))
+  );
 }
 
-module.exports = {
+const util = {
   format,
-  formatWithOptions: (_options, ...args) => format(...args),
+  formatWithOptions: (_options: unknown, ...args: unknown[]) => format(...args),
   inspect,
   promisify,
   callbackify,
   deprecate,
   inherits,
   isDeepStrictEqual,
-  stripVTControlCharacters: (input) => String(input).replace(ANSI, ''),
+  stripVTControlCharacters: (input: unknown) => String(input).replace(ANSI, ''),
   debuglog: () => Object.assign(() => {}, { enabled: false }),
-  styleText: (_format, text) => text,
+  styleText: (_format: unknown, text: string) => text,
   types,
   isArray: Array.isArray,
   isRegExp: types.isRegExp,
   isDate: types.isDate,
-  isError: (value) => value instanceof Error,
+  isError: (value: unknown) => value instanceof Error,
+  TextEncoder: globalThis.TextEncoder,
+  TextDecoder: globalThis.TextDecoder,
+};
+
+export const {
+  formatWithOptions,
+  stripVTControlCharacters,
+  debuglog,
+  styleText,
+  isArray,
+  isRegExp,
+  isDate,
+  isError,
   TextEncoder,
   TextDecoder,
+} = util;
+export {
+  callbackify,
+  deprecate,
+  format,
+  inherits,
+  inspect,
+  isDeepStrictEqual,
+  promisify,
+  types,
 };
+export default util;

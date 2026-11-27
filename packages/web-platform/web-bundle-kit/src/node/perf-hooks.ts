@@ -2,4 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-module.exports = { isatty: () => false };
+const perfHooks = { performance: globalThis.performance };
+
+export const { performance } = perfHooks;
+export default perfHooks;
