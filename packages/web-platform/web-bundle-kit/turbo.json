@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "scripts/**", "rsbuild.config.ts", "tsconfig.json", "package.json"],
+      "inputs": ["src/**", "scripts/**", "rslib.config.ts", "tsconfig.json", "package.json"],
       "outputs": ["dist/**"]
     }
   }

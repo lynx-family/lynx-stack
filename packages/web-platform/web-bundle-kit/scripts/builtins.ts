@@ -2,67 +2,122 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-// What the kit's build aliases each Node.js built-in to: a stand-in in
-// `src/node` (a path relative to the package), or an npm package. Built-ins
-// that are not listed have no stand-in; the build makes them empty modules.
-// `builtinModules` in src/node/module.ts lists the same names.
+// What each Node.js built-in becomes in the kit: the options of
+// `pluginNodePolyfill` (@rsbuild/plugin-node-polyfill). A built-in is one of:
+//
+// - the plugin's own polyfill, an npm package;
+// - an override: a module of `src/node`, the kit's own implementation;
+// - an empty module, when nothing in the kit's build runs it.
+//
+// `builtinModules` in src/node/module.ts lists the built-ins that are not
+// empty.
 
-import { builtinModules, createRequire } from 'node:module';
+import { builtinModules } from 'node:module';
 import path from 'node:path';
 
-/** A stand-in: a path relative to the package, or an npm module. */
-export type StandIn = string | { package: string };
+import type { RsbuildPlugin } from '@rsbuild/core';
+import type { PluginNodePolyfillOptions } from '@rsbuild/plugin-node-polyfill';
 
-export const standIns: Record<string, StandIn> = {
-  // The npm package. CommonJS code that requires it gets the `assert`
-  // function itself. It requires the npm `util` as `util/`, which the alias
-  // of `util` does not match. That `util` reads `process.env` when it loads;
-  // the stand-ins load with Rsbuild, after setup installs `process`.
-  assert: { package: 'assert/build/assert.js' },
+/** Built-ins that get the plugin's polyfill. */
+export const polyfilled = [
+  'assert',
+  'events',
+  'querystring',
+  'stream',
+  'string_decoder',
+  'tty',
+  'zlib',
+] as const;
+
+/** Built-ins that get a module of `src/node`, relative to the package. */
+export const overridden: Record<string, string> = {
+  // The memfs of @rspack/browser and what goes with it.
   buffer: 'src/node/buffer.ts',
-  child_process: 'src/node/child-process.ts',
-  crypto: 'src/node/crypto.ts',
-  // The npm package. Bundled code only imports `EventEmitter` and `once` from
-  // it by name, and CommonJS code that requires it gets the class itself.
-  events: { package: 'events/events.js' },
   fs: 'src/node/fs.ts',
   'fs/promises': 'src/node/fs-promises.ts',
   module: 'src/node/module.ts',
-  net: 'src/node/net.ts',
-  os: 'src/node/os.ts',
+  // Installed as a global only by `setup()`, after @rspack/browser has
+  // loaded; it has no `versions.node`.
+  process: 'src/node/process.ts',
+  // `sha1` and `sha256` with @noble/hashes.
+  crypto: 'src/node/crypto.ts',
+  // The plugin's polyfills lack members that bundled code uses:
+  // `path.win32` and `path.toNamespacedPath`, `util.styleText` and others,
+  // `fileURLToPath`, `os.availableParallelism`.
   path: 'src/node/path.ts',
   'path/posix': 'src/node/path.ts',
-  perf_hooks: 'src/node/perf-hooks.ts',
-  process: 'src/node/process.ts',
-  querystring: 'src/node/querystring.ts',
-  readline: 'src/node/readline.ts',
-  stream: 'src/node/stream.ts',
-  string_decoder: 'src/node/string-decoder.ts',
-  tty: 'src/node/tty.ts',
   url: 'src/node/url.ts',
   util: 'src/node/util.ts',
   'util/types': 'src/node/util-types.ts',
+  os: 'src/node/os.ts',
+  // Traps: importing them works, using a member throws.
+  child_process: 'src/node/child-process.ts',
+  net: 'src/node/net.ts',
+  perf_hooks: 'src/node/perf-hooks.ts',
+  readline: 'src/node/readline.ts',
   v8: 'src/node/v8.ts',
   vm: 'src/node/vm.ts',
   worker_threads: 'src/node/worker-threads.ts',
-  zlib: 'src/node/zlib.ts',
 };
 
 /**
- * The `resolve.alias` entries for the built-ins: each goes to its stand-in, or
- * to an empty module (`false`) when it has none. `root` is the package
- * directory.
+ * The options of `pluginNodePolyfill`. `root` is the package directory.
+ *
+ * `include` names every built-in: the plugin only applies `overrides` to the
+ * built-ins it includes, and makes an included built-in that it has no
+ * polyfill for an empty module. The plugin's polyfills for built-ins that are
+ * neither polyfilled nor overridden here (`http`, `timers`, ...) are replaced
+ * with empty modules, as they would only add code that never runs.
  */
-export function builtinAliases(root: string): Record<string, string | false> {
-  const require = createRequire(path.join(root, 'package.json'));
-  const alias: Record<string, string | false> = {};
-  for (const name of builtinModules.filter((n) => !n.startsWith('_'))) {
-    const standIn = Object.hasOwn(standIns, name) ? standIns[name] : undefined;
-    alias[`${name}$`] = standIn === undefined
-      ? false
-      : typeof standIn === 'string'
-      ? path.join(root, standIn)
-      : require.resolve(standIn.package);
+export function nodePolyfillOptions(root: string): PluginNodePolyfillOptions {
+  const include = builtinModules.filter((name) => !name.startsWith('_'));
+  const overrides: Record<string, string | false> = {};
+  for (const name of include) {
+    if (Object.hasOwn(overridden, name)) {
+      overrides[name] = path.join(root, overridden[name]!);
+    } else if (!(polyfilled as readonly string[]).includes(name)) {
+      overrides[name] = false;
+    }
   }
-  return alias;
+  return {
+    include,
+    overrides,
+    // `setup()` installs the `Buffer` and `process` globals
+    // (src/node/globals.ts) once @rspack/browser has loaded. Provided to
+    // every module, `process` would also reach the wasm runtime of
+    // @rspack/browser, whose `typeof process` checks take it for Node.js.
+    globals: { Buffer: false, process: false },
+    // The plugin strips `node:` before resolution: Rspack reads it as a URL
+    // scheme otherwise.
+    protocolImports: true,
+  };
+}
+
+/**
+ * Makes the choices of `pluginNodePolyfill` final. The plugin sets
+ * `resolve.fallback`, which only applies when a request does not resolve,
+ * and a bundled package may reach an npm package of the same name (pnpm
+ * hoists `url`, `util`, `process` and others into
+ * `node_modules/.pnpm/node_modules`). The same entries as exact aliases
+ * apply to every request. `node:` is stripped before resolution, so the
+ * `node:` entries are dropped.
+ */
+export function pluginBuiltinAliases(): RsbuildPlugin {
+  return {
+    name: 'web-bundle-kit:builtin-aliases',
+    setup(api) {
+      api.modifyBundlerChain({
+        order: 'post',
+        handler: (chain) => {
+          const fallback = chain.resolve.fallback.entries() ?? {};
+          for (const [name, target] of Object.entries(fallback)) {
+            if (!name.startsWith('node:')) {
+              chain.resolve.alias.set(`${name}$`, target);
+            }
+          }
+          chain.resolve.fallback.clear();
+        },
+      });
+    },
+  };
 }

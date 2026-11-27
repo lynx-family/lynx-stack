@@ -3,12 +3,23 @@
 // LICENSE file in the root directory of this source tree.
 import nodeAssert from 'node:assert';
 import { createHash as nodeCreateHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { memfs as createMemfs } from '@napi-rs/wasm-runtime/fs';
+import {
+  builtinMappingResolved,
+  getResolveFallback,
+} from '@rsbuild/plugin-node-polyfill';
 import { afterAll, describe, expect, test } from '@rstest/core';
-import assert from 'assert/build/assert.js';
 
-import { standIns } from '../scripts/builtins.ts';
+import {
+  nodePolyfillOptions,
+  overridden,
+  polyfilled,
+} from '../scripts/builtins.ts';
 import * as buffer from '../src/node/buffer.js';
 import * as childProcess from '../src/node/child-process.js';
 import * as crypto from '../src/node/crypto.js';
@@ -21,18 +32,13 @@ import * as os from '../src/node/os.js';
 import * as path from '../src/node/path.js';
 import * as perfHooks from '../src/node/perf-hooks.js';
 import * as process from '../src/node/process.js';
-import * as querystring from '../src/node/querystring.js';
 import * as readline from '../src/node/readline.js';
-import * as stream from '../src/node/stream.js';
-import * as stringDecoder from '../src/node/string-decoder.js';
-import * as tty from '../src/node/tty.js';
 import * as url from '../src/node/url.js';
 import * as utilTypes from '../src/node/util-types.js';
 import * as util from '../src/node/util.js';
 import * as v8 from '../src/node/v8.js';
 import * as vm from '../src/node/vm.js';
 import * as workerThreads from '../src/node/worker-threads.js';
-import * as zlib from '../src/node/zlib.js';
 
 /** A module namespace, as `import * as` gives it. */
 type Namespace = Record<string, unknown> & { default: unknown };
@@ -52,7 +58,6 @@ const implemented: Record<string, Namespace> = {
   path,
   perf_hooks: perfHooks,
   process,
-  tty,
   url,
   util,
   'util/types': utilTypes,
@@ -60,14 +65,10 @@ const implemented: Record<string, Namespace> = {
 
 const trapped: Record<string, Namespace> = {
   child_process: childProcess,
-  querystring,
   readline,
-  stream,
-  string_decoder: stringDecoder,
   v8,
   vm,
   worker_threads: workerThreads,
-  zlib,
 };
 
 describe('the named and default exports of a stand-in agree', () => {
@@ -101,10 +102,47 @@ describe('the named and default exports of a stand-in agree', () => {
   });
 });
 
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+describe('what each built-in becomes', () => {
+  const fallback = getResolveFallback(nodePolyfillOptions(root));
+
+  test('the polyfilled built-ins have a polyfill in the plugin', () => {
+    for (const name of polyfilled) {
+      expect(builtinMappingResolved[name]).toEqual(expect.any(String));
+      expect(fallback[name]).toBe(builtinMappingResolved[name]);
+    }
+  });
+
+  test('the overrides are modules of the kit', () => {
+    for (const [name, file] of Object.entries(overridden)) {
+      expect(fallback[name]).toBe(join(root, file));
+      expect(existsSync(join(root, file))).toBe(true);
+    }
+  });
+
+  test('the other built-ins are empty', () => {
+    expect(fallback['http']).toBe(false);
+    expect(fallback['timers']).toBe(false);
+    expect(fallback['inspector']).toBe(false);
+  });
+
+  test('`module` lists the built-ins that are not empty', () => {
+    const kept = Object.keys(fallback).filter((name) =>
+      !name.startsWith('node:') && fallback[name] !== false
+    );
+    expect([...nodeModule.builtinModules].sort()).toEqual(kept.sort());
+  });
+});
+
 describe('assert', () => {
-  // The npm package, not the Node.js built-in: the import names its file.
+  // The polyfill of the plugin, not the Node.js built-in.
+  const assert = createRequire(import.meta.url)(
+    builtinMappingResolved.assert!,
+  ) as typeof nodeAssert;
+
   test('is the npm package', () => {
-    expect(standIns['assert']).toEqual({ package: 'assert/build/assert.js' });
+    expect(builtinMappingResolved.assert).toMatch(/[\\/]assert[\\/]/);
     expect(assert).not.toBe(nodeAssert);
   });
 
@@ -128,16 +166,16 @@ describe('trapped built-ins', () => {
     expect(() => childProcess.execFileSync('ls')).toThrow(
       'node:child_process.execFileSync() is not available',
     );
-    expect(() => new stream.PassThrough()).toThrow(
-      'node:stream.new PassThrough() is not available',
+    expect(() => new vm.Script('1')).toThrow(
+      'node:vm.new Script() is not available',
     );
     // A trap member is typed as returning `never`; `extends` needs a class.
-    const Readable = stream.Readable as unknown as new() => object;
+    const Script = vm.Script as unknown as new() => object;
     expect(() => {
-      class Source extends Readable {}
+      class Source extends Script {}
       return Source;
     }).not.toThrow();
-    expect(stream.default.Stream).toBe(stream.Stream);
+    expect(vm.default.Script).toBe(vm.Script);
   });
 });
 
@@ -290,21 +328,49 @@ describe('crypto', () => {
   });
 });
 
-describe('module', () => {
-  test('lists the built-ins the build aliases', () => {
-    expect([...nodeModule.builtinModules].sort()).toEqual(
-      Object.keys(standIns).sort(),
+describe('util', () => {
+  test('has the members that build tools use', () => {
+    expect(util.styleText('red', 'text')).toBe('text');
+    expect(util.stripVTControlCharacters('\u001B[31mred\u001B[39m')).toBe(
+      'red',
     );
+    expect(util.isDeepStrictEqual({ a: [1] }, { a: [1] })).toBe(true);
+    expect(util.isDeepStrictEqual({ a: 1 }, { a: '1' })).toBe(false);
+    expect(util.format('%s=%d', 'a', 1)).toBe('a=1');
+    expect(util.types).toBe(utilTypes.default);
+    expect(utilTypes.isProxy(new Proxy({}, {}))).toBe(false);
+    expect(utilTypes.isRegExp(/a/)).toBe(true);
   });
+});
 
+describe('url', () => {
+  test('converts file URLs and keeps the legacy API', () => {
+    expect(url.fileURLToPath('file:///node_modules/a%20b/index.js')).toBe(
+      '/node_modules/a b/index.js',
+    );
+    expect(url.pathToFileURL('/a b/c.js').href).toBe('file:///a%20b/c.js');
+    expect(() => url.fileURLToPath('https://example.com/')).toThrow(
+      'The URL must be of scheme file',
+    );
+    expect(url.parse('https://example.com:8080/a?b=1').port).toBe('8080');
+    expect(url.format({ protocol: 'https', host: 'example.com' })).toBe(
+      'https://example.com',
+    );
+    expect(url.URL).toBe(globalThis.URL);
+  });
+});
+
+describe('module', () => {
   test('`require()` of a built-in returns its default export', () => {
     const load = nodeModule.createRequire('/project/index.js');
-    expect(load('assert')).toBe(assert);
+    // In Node.js, the built-ins of the plugin are Node.js's own.
+    expect(load('assert')).toBe(nodeAssert);
     expect(load('node:path')).toBe(path.default);
     expect(load('path/posix')).toBe(path.default);
     expect(load('fs/promises')).toBe(fsPromises.default);
     expect(load('module')).toBe(nodeModule.default);
-    expect(load('zlib')).toBe(zlib.default);
+    expect(load('url')).toBe(url.default);
+    expect(load('vm')).toBe(vm.default);
     const events = load('events') as { EventEmitter: unknown };
     expect(typeof events).toBe('function');
     expect(events.EventEmitter).toBe(events);

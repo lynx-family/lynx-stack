@@ -8,7 +8,7 @@
     "noEmit": true,
     "allowJs": false,
     // The build scripts import each other with `.ts`, which Node.js runs as
-    // it is when Rsbuild loads rsbuild.config.ts.
+    // it is when Rslib loads rslib.config.ts.
     "allowImportingTsExtensions": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
     "types": ["node"],
@@ -18,7 +18,7 @@
     "test",
     "scripts",
     "e2e",
-    "rsbuild.config.ts",
+    "rslib.config.ts",
     "rstest.config.ts",
     "playwright.config.ts",
   ],

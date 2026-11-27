@@ -23,7 +23,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rsbuild build",
+    "build": "rslib build",
     "test": "rstest",
     "test:e2e": "playwright test",
     "test:type": "tsc6 --noEmit"
@@ -36,12 +36,15 @@
     "@noble/hashes": "^2.4.0",
     "@playwright/test": "catalog:",
     "@rsbuild/core": "catalog:rsbuild",
+    "@rsbuild/plugin-node-polyfill": "^1.4.6",
+    "@rslib/core": "catalog:rslib",
     "@rspack/browser": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "acorn": "^8.19.0",
     "assert": "^2.1.0",
-    "events": "^3.3.0",
-    "path-browserify": "^1.0.1"
+    "path-browserify": "^1.0.1",
+    "url": "^0.11.4",
+    "util": "^0.12.5"
   }
 }

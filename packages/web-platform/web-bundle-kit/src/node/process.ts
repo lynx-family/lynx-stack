@@ -11,8 +11,9 @@
 // gets this object whether or not the global exists yet. `uptime()` and
 // `hrtime()` count from when this module loads.
 
-// The npm package; its `module.exports` is the class.
-import EventEmitter from 'events/events.js';
+// In the kit, the polyfill of pluginNodePolyfill (scripts/builtins.ts): the
+// npm `events` package, whose `module.exports` is the class.
+import EventEmitter from 'node:events';
 
 type Callback = (...args: unknown[]) => void;
 

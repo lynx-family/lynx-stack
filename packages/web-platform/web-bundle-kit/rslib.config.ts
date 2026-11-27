@@ -5,7 +5,7 @@
 // Builds the kit into `dist/` for a module Worker:
 //
 // - `index.js` and its chunks: Rsbuild, the Lynx plugins and @rspack/browser,
-//   with Node.js built-ins replaced by the stand-ins in `src/node`.
+//   with Node.js built-ins replaced as scripts/builtins.ts says.
 // - `mirror.json`: the files the kit puts under `/node_modules` in memfs.
 // - the Rspack wasm and its thread worker, as assets.
 //
@@ -18,10 +18,14 @@ import { globSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { defineConfig, rspack } from '@rsbuild/core';
-import type { RsbuildConfig } from '@rsbuild/core';
+import { pluginNodePolyfill } from '@rsbuild/plugin-node-polyfill';
+import { defineConfig } from '@rslib/core';
+import type { RslibConfig } from '@rslib/core';
 
-import { builtinAliases } from './scripts/builtins.ts';
+import {
+  nodePolyfillOptions,
+  pluginBuiltinAliases,
+} from './scripts/builtins.ts';
 import { createLayout, packageDir } from './scripts/layout.ts';
 import { pluginWebBundleKit } from './scripts/plugin.ts';
 
@@ -122,9 +126,15 @@ const stringified = STRINGIFIED.flatMap(([dir, pattern]) => {
   return files;
 });
 
-const config: RsbuildConfig = defineConfig({
-  // Not taken from NODE_ENV: the kit is always a production build.
-  mode: 'production',
+// Rslib builds a library for other bundlers and Node.js; the kit is a
+// program that runs as it is in a Worker. The options below that differ from
+// Rslib's defaults say why.
+const config: RslibConfig = defineConfig({
+  lib: [{
+    format: 'esm',
+    // Everything is bundled: nothing is left for a consumer to install.
+    output: { autoExternal: false },
+  }],
   source: {
     entry: { index: './src/index.ts' },
     // Only the kit's own TypeScript goes through SWC. Rsbuild compiles every
@@ -134,9 +144,6 @@ const config: RsbuildConfig = defineConfig({
   },
   resolve: {
     alias: {
-      // Every Node.js built-in goes to its stand-in (scripts/builtins.ts), or
-      // to an empty module. `node:` is stripped first, below.
-      ...builtinAliases(root),
       '@rspack/core$': path.join(rspackBrowserDir, 'dist/index.js'),
       '@napi-rs/wasm-runtime/fs$': path.join(napiRuntimeDir, 'dist/fs.js'),
       // Optional minimizers that css-minimizer-webpack-plugin may require;
@@ -150,50 +157,49 @@ const config: RsbuildConfig = defineConfig({
     },
   },
   output: {
-    target: 'web-worker',
-    module: true,
+    target: 'web',
     // `index.js` is the entry the kit's users import, next to `mirror.json`.
     // The chunks' names are set below.
-    distPath: { root: 'dist', js: '', assets: 'assets', wasm: 'assets' },
-    filename: { js: '[name].js' },
-    // `setup` loads `mirror.json` relative to `__webpack_public_path__`, and
-    // the kit is served from wherever its user puts it.
-    assetPrefix: 'auto',
+    distPath: { assets: 'assets', wasm: 'assets' },
+    // The kit is served as it is: the name of an asset changes with its
+    // content.
+    filename: { assets: '[name].[contenthash:10][ext]' },
     // Plugins stringify functions of the bundled code; a minifier renames
     // what those functions refer to.
     minify: false,
-    sourceMap: false,
   },
-  // Shared code of the async chunks (the ReactLynx transform is used by
-  // several loaders) goes to shared chunks instead of being copied.
-  splitChunks: { chunks: 'async' },
+  // Every build starts from the sources and writes nothing outside `dist/`.
+  performance: { buildCache: false },
   tools: {
-    // The kit's own code is compiled to a fixed ES version, not lowered for
-    // Rsbuild's default browsers (that would rewrite rest parameters, for
-    // one).
-    swc: { jsc: { target: 'es2022' } },
     rspack: {
-      // The exports of `index.js` are the kit's API. Without a library type,
-      // Rspack treats them as unused and drops the chunks they import.
       output: {
+        // Not Rslib's `modern-module`: it gives the chunk of a dynamically
+        // imported module an ES module facade, and writes the export
+        // `"module.exports"` of @rspack/browser as the member path
+        // `.module.exports`, so `import('@rspack/browser')` throws. The chunks
+        // of a `module` library are ES modules too, which Rslib turns off
+        // with `modern-module`.
         library: { type: 'module' },
-        // Hashed, unlike `index.js`. Rsbuild gives chunks the name of the
-        // entry.
+        chunkFormat: 'module',
+        // Hashed, unlike `index.js`, and out of its way.
         chunkFilename: 'chunks/[id].[contenthash:8].js',
-        // Rsbuild makes Rspack declare module bindings with `var`; `const`
-        // keeps the temporal dead zone of the original modules.
-        environment: { const: true },
       },
-      // `global` stays the Worker's own (src/node/globals.ts). With
-      // `output.module`, Rsbuild already leaves `__dirname` and `__filename`
-      // alone; the kit's plugin sets them for bundled packages.
+      // `global` stays the Worker's own (src/node/globals.ts). The kit's
+      // plugin sets `__dirname` and `__filename` for bundled packages.
       node: { global: false },
       module: {
         parser: {
           javascript: {
-            // Rsbuild makes `import()` eager in a Web Worker; the kit loads
-            // its chunks when they are needed.
-            dynamicImportMode: 'lazy',
+            // Rslib leaves these calls for the bundler or the Node.js of a
+            // library's consumer. In the kit, `import(expression)` and
+            // `require(expression)` reject or throw `MODULE_NOT_FOUND`, as
+            // they did when the kit was built with Rsbuild, instead of
+            // fetching a URL or failing on a missing `require`.
+            importDynamic: true,
+            requireDynamic: true,
+            requireAsExpression: true,
+            // `require.resolve('./file')` gives the id of the bundled module.
+            requireResolve: true,
             // `createRequire(import.meta.url)` stays a call to the stand-in.
             createRequire: false,
             // Let `require(variable)` reach the stand-in without a warning.
@@ -202,22 +208,14 @@ const config: RsbuildConfig = defineConfig({
           },
         },
       },
-      optimization: {
-        // Rsbuild sets NODE_ENV for the project at run time; the kit must not
-        // freeze it at build time.
-        nodeEnv: false,
-      },
-      plugins: [
-        // Rspack treats `node:` as a URL scheme before aliases apply.
-        new rspack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
-          resource.request = resource.request.slice('node:'.length);
-        }),
-      ],
     },
   },
-  // 4. The kit's plugin: the registered modules, the rewrite of every bundled
-  // module and the mirror, from the layout, the lists above and the defines.
   plugins: [
+    // What each Node.js built-in becomes.
+    pluginNodePolyfill(nodePolyfillOptions(root)),
+    pluginBuiltinAliases(),
+    // 4. The kit's plugin: the registered modules, the rewrite of every bundled
+    // module and the mirror, from the layout, the lists above and the defines.
     pluginWebBundleKit({
       layout,
       registered: {

@@ -16,9 +16,17 @@
 // This module imports every other stand-in and no stand-in imports it, so
 // there is no import cycle: they are all evaluated before the table below.
 
-import assert from 'assert/build/assert.js';
-import events from 'events/events.js';
+// The built-ins that get the polyfills of pluginNodePolyfill, by their
+// `node:` names (scripts/builtins.ts).
+import assert from 'node:assert';
+import events from 'node:events';
+import querystring from 'node:querystring';
+import stream from 'node:stream';
+import stringDecoder from 'node:string_decoder';
+import tty from 'node:tty';
+import zlib from 'node:zlib';
 
+// The built-ins that are the kit's own.
 import buffer from './buffer.js';
 import childProcess from './child-process.js';
 import crypto from './crypto.js';
@@ -30,20 +38,15 @@ import os from './os.js';
 import perfHooks from './perf-hooks.js';
 import path from './path.js';
 import process from './process.js';
-import querystring from './querystring.js';
 import readline from './readline.js';
-import stream from './stream.js';
-import stringDecoder from './string-decoder.js';
-import tty from './tty.js';
 import utilTypes from './util-types.js';
 import util from './util.js';
 import url from './url.js';
 import v8 from './v8.js';
 import vm from './vm.js';
 import workerThreads from './worker-threads.js';
-import zlib from './zlib.js';
 
-/** The built-ins the kit stands in for; the kit's build aliases each one. */
+/** The built-ins that are not empty modules in the kit (scripts/builtins.ts). */
 const builtinModules = [
   'assert',
   'buffer',
@@ -172,8 +175,6 @@ const nodeModule = {
 
 /** What `require()` from `createRequire` returns for each built-in. */
 const builtins: Record<BuiltinName, unknown> = {
-  // `assert` and `events` are the npm packages, which the kit's build also
-  // aliases them to.
   assert,
   buffer,
   child_process: childProcess,

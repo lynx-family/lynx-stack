@@ -8,7 +8,7 @@
  * imports it. `setup` puts them in the registry of the `module` stand-in.
  *
  * This file is a stub. The build replaces its content with one entry per
- * module of `REGISTERED` in rsbuild.config.ts (see `pluginWebBundleKit`), so
+ * module of `REGISTERED` in rslib.config.ts (see `pluginWebBundleKit`), so
  * the virtual paths come from the same layout as the rest of the build.
  * Type checking and unit tests see the empty map.
  */

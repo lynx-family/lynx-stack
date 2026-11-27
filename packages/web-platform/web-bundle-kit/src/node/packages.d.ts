@@ -26,18 +26,77 @@ declare module '@napi-rs/wasm-runtime/fs' {
   export const memfs: MemFs['memfs'];
 }
 
-declare module 'assert/build/assert.js' {
-  // The npm package follows the `assert` of an older Node.js: it has no
-  // `CallTracker`, `partialDeepStrictEqual` or `Assert`.
-  import assert = require('node:assert');
-
-  export = assert;
+declare module 'assert/build/internal/util/comparisons.js' {
+  /** What `util.isDeepStrictEqual` is in Node.js. */
+  export function isDeepStrictEqual(a: unknown, b: unknown): boolean;
 }
 
-declare module 'events/events.js' {
-  import EventEmitter = require('node:events');
+declare module 'util/util.js' {
+  type NodeUtil = typeof import('node:util');
+  type Check = (value: unknown) => boolean;
 
-  export = EventEmitter;
+  /** The npm `util`: the `util` of an older Node.js. */
+  const util:
+    & Pick<
+      NodeUtil,
+      | 'format'
+      | 'deprecate'
+      | 'debuglog'
+      | 'inspect'
+      | 'isArray'
+      | 'inherits'
+      | 'promisify'
+      | 'callbackify'
+    >
+    & Record<
+      | 'isBoolean'
+      | 'isNull'
+      | 'isNullOrUndefined'
+      | 'isNumber'
+      | 'isString'
+      | 'isSymbol'
+      | 'isUndefined'
+      | 'isRegExp'
+      | 'isObject'
+      | 'isDate'
+      | 'isError'
+      | 'isFunction'
+      | 'isPrimitive'
+      | 'isBuffer',
+      Check
+    >
+    & {
+      log(...args: unknown[]): void;
+      _extend<T extends object>(target: T, source: object): T;
+      /** Every check of `node:util/types` except `isProxy` and the like. */
+      types: Record<
+        | 'isWebAssemblyCompiledModule'
+        | Exclude<
+          keyof typeof import('node:util/types'),
+          | 'isProxy'
+          | 'isExternal'
+          | 'isModuleNamespaceObject'
+          | 'isKeyObject'
+          | 'isCryptoKey'
+          | 'isFloat16Array'
+        >,
+        Check
+      >;
+    };
+
+  export default util;
+}
+
+declare module 'url/url.js' {
+  type NodeUrl = typeof import('node:url');
+
+  /** The npm `url`: the legacy API of `node:url`. */
+  const url: Pick<
+    NodeUrl,
+    'Url' | 'parse' | 'resolve' | 'resolveObject' | 'format'
+  >;
+
+  export default url;
 }
 
 declare module 'path-browserify' {

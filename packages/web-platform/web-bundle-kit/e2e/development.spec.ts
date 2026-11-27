@@ -177,7 +177,7 @@ test('development watch() with hot updates', async ({ kitPage }) => {
     ).toBe(false);
     // Runtime code the plugins inject by stringifying functions must reach the
     // card as published, not as the kit's own bundling rewrote it (see
-    // `STRINGIFIED` in rsbuild.config.ts): the cards must use the same
+    // `STRINGIFIED` in rslib.config.ts): the cards must use the same
     // `__name__` identifiers as the same project built in Node.js.
     const nodeOut = mkdtempSync(path.join(os.tmpdir(), 'web-bundle-kit-e2e-'));
     let reference: Set<string>;

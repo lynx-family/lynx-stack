@@ -5,7 +5,7 @@
 // Keeps the source text of functions that a plugin injects into cards by
 // stringifying them (`Template.getFunctionContent(fn)`, that is
 // `fn.toString()`). Applied to the files of `STRINGIFIED` in
-// rsbuild.config.ts.
+// rslib.config.ts.
 //
 // Bundling the kit rewrites such a function: Rspack renames identifiers it
 // owns (`__webpack_require__` becomes `__nested_rspack_require_<n>_<m>__`),

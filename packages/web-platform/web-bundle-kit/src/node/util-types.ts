@@ -2,43 +2,54 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-const tag = (value: unknown) => Object.prototype.toString.call(value);
+// `node:util/types`: `types` of the npm `util` package. Its `isProxy` throws,
+// because a proxy cannot be told from JavaScript; here it returns false.
 
-const types = {
-  isPromise: (value: unknown) => value instanceof Promise,
-  isRegExp: (value: unknown) => tag(value) === '[object RegExp]',
-  isDate: (value: unknown) => tag(value) === '[object Date]',
-  isMap: (value: unknown) => value instanceof Map,
-  isSet: (value: unknown) => value instanceof Set,
-  isNativeError: (value: unknown) => value instanceof Error,
-  isAsyncFunction: (value: unknown) => tag(value) === '[object AsyncFunction]',
-  isGeneratorFunction: (value: unknown) =>
-    tag(value) === '[object GeneratorFunction]'
-    || tag(value) === '[object AsyncGeneratorFunction]',
-  isTypedArray: (value: unknown) =>
-    ArrayBuffer.isView(value) && !(value instanceof DataView),
-  isUint8Array: (value: unknown) => value instanceof Uint8Array,
-  isArrayBuffer: (value: unknown) => value instanceof ArrayBuffer,
-  isAnyArrayBuffer: (value: unknown) =>
-    value instanceof ArrayBuffer
-    || (typeof SharedArrayBuffer !== 'undefined'
-      && value instanceof SharedArrayBuffer),
-  isProxy: () => false,
-} satisfies Partial<Record<keyof typeof import('node:util/types'), unknown>>;
+/// <reference path="./packages.d.ts" />
+
+import npmUtil from 'util/util.js';
+
+const types = { ...npmUtil.types, isProxy: (_value: unknown) => false };
 
 export const {
-  isPromise,
-  isRegExp,
-  isDate,
-  isMap,
-  isSet,
-  isNativeError,
-  isAsyncFunction,
+  isArgumentsObject,
   isGeneratorFunction,
   isTypedArray,
+  isPromise,
+  isArrayBufferView,
   isUint8Array,
+  isUint8ClampedArray,
+  isUint16Array,
+  isUint32Array,
+  isInt8Array,
+  isInt16Array,
+  isInt32Array,
+  isFloat32Array,
+  isFloat64Array,
+  isBigInt64Array,
+  isBigUint64Array,
+  isMap,
+  isSet,
+  isWeakMap,
+  isWeakSet,
   isArrayBuffer,
+  isDataView,
+  isSharedArrayBuffer,
+  isAsyncFunction,
+  isMapIterator,
+  isSetIterator,
+  isGeneratorObject,
+  isWebAssemblyCompiledModule,
+  isNumberObject,
+  isStringObject,
+  isBooleanObject,
+  isBigIntObject,
+  isSymbolObject,
+  isBoxedPrimitive,
   isAnyArrayBuffer,
+  isRegExp,
+  isDate,
+  isNativeError,
   isProxy,
 } = types;
 export default types;
