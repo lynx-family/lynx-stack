@@ -100,7 +100,7 @@ export interface ExternalsLoadingPluginOptions {
   /**
    * The timeout in milliseconds for loading the externals.
    *
-   * @defaultValue 2000
+   * @defaultValue 5000
    */
   timeout?: number | undefined;
 
@@ -264,7 +264,7 @@ export interface ExternalValue {
   /**
    * The wait time in milliseconds.
    *
-   * @defaultValue `2000`
+   * @defaultValue `5000`
    */
   timeout?: number;
 
@@ -591,7 +591,7 @@ function createLoadExternalSync(handler, sectionPath, timeout) {
             bundlePath,
             async = true,
             timeout: timeoutInMs = externalsLoadingPluginOptions.timeout
-              ?? 2000,
+              ?? 5000,
             retries = externalsLoadingPluginOptions.retries ?? 0,
           } = external;
           const layerOptions = external[layer];
