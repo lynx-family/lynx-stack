@@ -259,7 +259,7 @@ describe('snapshot containment guardrails', () => {
     expect(experimentalImportOffenders).toEqual([]);
 
     const transferCouplingPattern =
-      /\b(?:__CreateTransfer|__UpdateTransfer|__ReloadTransfer|__DestroyTransfer|__TransferFirstFrame|__TransferCommit|__TransferCommitResult|__TransferDisposed)\b/;
+      /\b(?:TransferRegistry|transferMode|enableTransferMode|warnRootRenderOnTransferPage|__CreateTransfer|__UpdateTransfer|__ReloadTransfer|__DestroyTransfer|__TransferFirstFrame|__TransferCommit|__TransferCommitResult|__TransferDisposed)\b/;
     const transferCouplingOffenders = mainlineSources
       .filter((file) => transferCouplingPattern.test(fs.readFileSync(file, 'utf8')))
       .map((file) => path.relative(runtimeRoot, file));

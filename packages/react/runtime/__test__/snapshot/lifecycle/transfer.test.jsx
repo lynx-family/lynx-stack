@@ -407,9 +407,13 @@ describe('transfer (background thread)', () => {
     expect(mounts).toBe(2);
   });
 
-  it('removes its listeners when the lifetime is destroyed', () => {
+  it('removes its listeners and restores runtime hooks when the lifetime is destroyed', () => {
     native.fire('__DestroyLifetime', {});
     expect(link.count()).toBe(0);
     expect(native.count()).toBe(0);
+    root.render(<Page />);
+    expect(__root.__jsx).toBeDefined();
+    render(null, __root);
+    __root.__jsx = undefined;
   });
 });
