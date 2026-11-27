@@ -3,16 +3,13 @@
 // LICENSE file in the root directory of this source tree.
 
 /**
- * The message protocol between a host application and the preview kit running
- * in an iframe, or as the top-level page. `PROTOCOL.md` describes it in prose;
- * this file is the source of truth for the shapes.
- *
- * This module has no runtime dependencies, so a host can import it directly.
+ * The message protocol between an embedding application and the preview kit.
+ * `PROTOCOL.md` describes it in prose; this file is the source of truth for
+ * the shapes. It has no runtime dependencies, so an embedder can import it.
  */
 
 import type {
   AssetInfo,
-  BuiltinPackages,
   CardInfo,
   Diagnostic,
   FileChange,
@@ -22,7 +19,6 @@ import type {
 
 export type {
   AssetInfo,
-  BuiltinPackages,
   CardInfo,
   Diagnostic,
   FileChange,
@@ -30,83 +26,35 @@ export type {
   FileMap,
 };
 
-/** The protocol version this file describes. */
-export const PROTOCOL_VERSION = 1;
-
 /** Marks a window message as belonging to this protocol. */
 export const PROTOCOL_CHANNEL = 'lynx-web-preview';
 
-// ---------------------------------------------------------------------------
-// Handshake: plain `window.postMessage`, three message types.
-// ---------------------------------------------------------------------------
-
 /**
- * Kit to parent, posted with target origin `*` when the kit has loaded, and
- * again in answer to every {@link ProbeMessage}. It carries nothing private.
- * A top-level kit posts it to its own window.
+ * Kit to `window.parent`, posted once with target origin `*` when the kit
+ * has loaded.
  */
 export interface ReadyMessage {
+  /** Always {@link PROTOCOL_CHANNEL}. */
   channel: typeof PROTOCOL_CHANNEL;
+  /** Always `'ready'`. */
   type: 'ready';
-  /** The protocol versions this kit can speak. */
-  versions: number[];
 }
 
 /**
- * Parent to kit: asks for a {@link ReadyMessage}, for a host that started
- * listening after the kit announced itself.
- */
-export interface ProbeMessage {
-  channel: typeof PROTOCOL_CHANNEL;
-  type: 'probe';
-}
-
-/**
- * Parent to kit: opens the session. It must transfer exactly one
- * `MessagePort`; everything after the handshake travels over that port.
- *
- * The kit only accepts it from `window.parent`. When the kit is the
- * top-level page, `window.parent` is the kit's own window, so only scripts
- * of the page itself can connect; other windows, such as an opener, cannot.
- * A later `connect` replaces the port of an earlier one and keeps the kit's
- * state.
+ * `window.parent` to kit: opens the session and transfers exactly one
+ * `MessagePort`, which carries everything after the handshake.
  */
 export interface ConnectMessage {
+  /** Always {@link PROTOCOL_CHANNEL}. */
   channel: typeof PROTOCOL_CHANNEL;
+  /** Always `'connect'`. */
   type: 'connect';
-  /** One of {@link ReadyMessage.versions}. */
-  version: number;
 }
 
-export type HandshakeMessage = ReadyMessage | ProbeMessage | ConnectMessage;
-
-// ---------------------------------------------------------------------------
-// Session: requests, responses and events over the MessagePort.
-// ---------------------------------------------------------------------------
-
-/** What the kit builds and how. */
+/** What the kit builds. */
 export interface ProjectConfig {
-  /**
-   * The cards of the project: card name to entry module, the module being a
-   * project-relative path such as `src/index.tsx`. At least one.
-   */
+  /** The cards of the project: card name to entry module, such as `src/index.tsx`. */
   entries: Record<string, string>;
-
-  /**
-   * The build mode.
-   *
-   * @defaultValue `'development'`
-   */
-  mode?: 'development' | 'production';
-
-  /**
-   * Whether a successful rebuild is applied to the running card as a hot
-   * update. Only in development mode. When it is off, or when a hot update
-   * cannot be applied, the card is reloaded instead.
-   *
-   * @defaultValue `true`
-   */
-  hmr?: boolean;
 }
 
 /** Data handed to the previewed card. */
@@ -117,165 +65,155 @@ export interface PreviewData {
   globalProps?: unknown;
 }
 
-/**
- * The requests a host can make, with their parameters and results.
- *
- * Every request that changes files resolves once the change is in the kit's
- * file system, with the new file system revision. It does not wait for the
- * build: builds are reported through events.
- */
+/** The requests an embedder can make, with their parameters and results. */
 export interface Methods {
-  /**
-   * Opens a project, replacing the one that was open: clears the file
-   * system, writes `files`, and starts building and previewing.
-   * The first revision of a project is 1. A running build is cancelled: its
-   * `build.done` never comes.
-   */
+  /** Replaces the open project with `files` and starts building and previewing; the first revision is 1. */
   'project.open': {
     params: {
+      /** The files of the project. */
       files: FileMap;
+      /** What to build. */
       config: ProjectConfig;
-      /** The card to preview. Defaults to the first entry. */
+      /** The card to preview; defaults to the first entry. */
       card?: string;
-      /** Data for the card. */
+      /** The data of the card. */
       data?: PreviewData;
     };
-    result: { revision: number };
+    result: {
+      /** The file system revision after the request. */
+      revision: number;
+    };
   };
 
-  /**
-   * Replaces the configuration and rebuilds from scratch, keeping the files.
-   * This is how entries are added or removed. If the previewed card is no
-   * longer an entry, the first entry is previewed instead. A running build
-   * is cancelled: its `build.done` never comes.
-   */
+  /** Replaces the configuration and rebuilds from scratch, keeping the files. */
   'project.configure': {
-    params: { config: ProjectConfig };
-    result: { revision: number };
+    params: {
+      /** What to build. */
+      config: ProjectConfig;
+    };
+    result: {
+      /** The file system revision after the request. */
+      revision: number;
+    };
   };
 
-  /**
-   * Closes the project: stops the bundler and removes the preview. A running
-   * build is cancelled: its `build.done` never comes.
-   */
+  /** Stops the bundler and removes the preview. */
   'project.close': { params: undefined; result: undefined };
 
-  /**
-   * Applies file changes in order, as one batch that causes one rebuild.
-   * If any path is invalid, nothing is applied.
-   */
+  /** Applies file changes in order, as one batch that causes one rebuild. */
   'fs.apply': {
-    params: { changes: FileChange[] };
-    result: { revision: number };
+    params: {
+      /** The changes, applied in order. */
+      changes: FileChange[];
+    };
+    result: {
+      /** The file system revision after the request. */
+      revision: number;
+    };
   };
 
-  /** Reads a project file. `encoding` defaults to `'utf8'`. */
+  /** Reads a project file. */
   'fs.read': {
-    params: { path: string; encoding?: 'utf8' | 'binary' };
-    result: { content: FileContent };
+    params: {
+      /** The project-relative path. */
+      path: string;
+      /** `'utf8'` returns a string and `'binary'` a `Uint8Array`; defaults to `'utf8'`. */
+      encoding?: 'utf8' | 'binary';
+    };
+    result: {
+      /** The content of the file. */
+      content: FileContent;
+    };
   };
 
-  /** Lists the project's files as sorted project-relative paths. */
-  'fs.list': { params: undefined; result: { files: string[] } };
+  /** Lists the project's files. */
+  'fs.list': {
+    params: undefined;
+    result: {
+      /** Sorted project-relative paths. */
+      files: string[];
+    };
+  };
 
-  /** Reads an asset of the latest build, for example a card's web bundle. */
+  /** Reads an asset of the latest build, such as a card's web bundle. */
   'build.getAsset': {
-    params: { name: string };
-    result: { content: Uint8Array };
+    params: {
+      /** The asset name, as in {@link BuildSummary.assets}. */
+      name: string;
+    };
+    result: {
+      /** The bytes of the asset. */
+      content: Uint8Array;
+    };
   };
 
-  /** Switches the preview to another card. */
-  'preview.select': { params: { card: string }; result: { card: string } };
+  /** Previews another card. */
+  'preview.select': {
+    params: {
+      /** The card name, a key of {@link ProjectConfig.entries}. */
+      card: string;
+    };
+    result: {
+      /** The previewed card. */
+      card: string;
+    };
+  };
 
-  /** Reloads the previewed card from the latest successful build. */
+  /** Loads the previewed card again from the latest successful build. */
   'preview.reload': { params: undefined; result: undefined };
 
-  /**
-   * Updates the data of the previewed card. Omitted fields keep their value.
-   * The data also applies to cards selected later.
-   */
+  /** Updates the data of the previewed card and of the cards loaded later; omitted fields keep their value. */
   'preview.setData': { params: PreviewData; result: undefined };
 }
 
+/** The name of a request. */
 export type MethodName = keyof Methods;
 
-/**
- * A request, host to kit. `id` is chosen by the host and echoed back. A
- * message without a numeric `id` cannot be answered and is ignored.
- */
+/** A request, embedder to kit. */
 export interface RequestMessage<M extends MethodName = MethodName> {
+  /** A number chosen by the embedder and echoed in the response. */
   id: number;
+  /** The method to call. */
   method: M;
+  /** The parameters of the method. */
   params: Methods[M]['params'];
 }
 
-/** Why a request failed. */
-export type ErrorCode =
-  /**
-   * The message has a numeric `id` but is not a request this protocol
-   * understands.
-   */
-  | 'INVALID_REQUEST'
-  /** The method does not exist. */
-  | 'UNKNOWN_METHOD'
-  /** The parameters have the wrong shape, or the config has no entries. */
-  | 'INVALID_PARAMS'
-  /** A path breaks the path rules. */
-  | 'INVALID_PATH'
-  /** The method needs an open project. */
-  | 'NOT_OPEN'
-  /** The file or asset does not exist. */
-  | 'NOT_FOUND'
-  /** The card is not an entry of the project. */
-  | 'UNKNOWN_CARD'
-  /** The kit cannot build in this environment; see {@link HelloInfo}. */
-  | 'UNSUPPORTED'
-  /** Anything else. */
-  | 'INTERNAL';
-
-export interface ProtocolError {
-  code: ErrorCode;
-  message: string;
-}
-
-/** A response, kit to host: exactly one per request. */
+/** A response, kit to embedder: exactly one per request, in the order of the requests. */
 export type ResponseMessage<M extends MethodName = MethodName> =
-  | { id: number; result: Methods[M]['result'] }
-  | { id: number; error: ProtocolError };
-
-/** The first event of a session. */
-export interface HelloInfo {
-  /** The protocol version of the session. */
-  version: number;
-  /**
-   * Whether the kit can build here. It cannot when the iframe is not
-   * cross-origin isolated, cannot register a Service Worker, or the kit was
-   * deployed without its bundler (`@lynx-js/web-bundle-kit`).
-   */
-  supported: boolean;
-  /** Why not, when `supported` is false. */
-  reason?: string;
-  /** The packages every project gets without supplying them. */
-  builtinPackages: BuiltinPackages;
-}
+  | {
+    /** The `id` of the request. */
+    id: number;
+    /** The result of the method. */
+    result: Methods[M]['result'];
+  }
+  | {
+    /** The `id` of the request. */
+    id: number;
+    /** Why the request failed. */
+    error: {
+      /** The message of what was thrown while the request was handled. */
+      message: string;
+    };
+  };
 
 /** The outcome of one build. */
 export interface BuildSummary {
-  /** Counts the builds of this session, starting at 1. */
+  /** Counts the builds, starting at 1. */
   buildId: number;
-  /**
-   * The file system revision this build saw: it includes every change with
-   * a revision up to and including this one.
-   */
+  /** The file system revision the build saw, which includes every earlier change. */
   revision: number;
   /** Whether the build has no errors. */
   success: boolean;
   /** The compilation hash. */
   hash: string;
+  /** How long the build took. */
   durationMs: number;
+  /** The errors of the build. */
   errors: Diagnostic[];
+  /** The warnings of the build. */
   warnings: Diagnostic[];
-  /** The cards that were built. Empty when the build failed. */
+  /** The cards that were built; empty when the build failed. */
   cards: CardInfo[];
   /** Every asset of the build, readable with `build.getAsset`. */
   assets: AssetInfo[];
@@ -289,53 +227,51 @@ export type LoadReason =
   | 'select'
   /** `preview.reload`. */
   | 'reload'
-  /** A rebuild, with hot updates off. */
-  | 'rebuild'
-  /**
-   * A hot update that the card could not apply, or the first successful
-   * build after a failed one while hot updates are on: a hot update through
-   * a failed build is not applied correctly on web, so the card is loaded
-   * again instead.
-   */
+  /** The card could not apply a hot update, or this is the first successful build after a failed one. */
   | 'hmr-fallback';
 
 /** The events the kit sends, with their data. */
 export interface Events {
-  /** Sent once, right after the session opens. */
-  'hello': HelloInfo;
-
   /** A build started. */
-  'build.start': { buildId: number; revision: number };
+  'build.start': {
+    /** The id of the build. */
+    buildId: number;
+    /** The file system revision the build sees. */
+    revision: number;
+  };
 
   /** A build finished, successfully or not. */
   'build.done': BuildSummary;
 
-  /** A card started loading from scratch, from the build with `hash`. */
-  'preview.load': { card: string; hash: string; reason: LoadReason };
-
-  /** A hot update to the build with `hash` was sent to the running card. */
-  'preview.hmr': { card: string; hash: string };
-
-  /** The running card reported a runtime error. */
-  'preview.error': {
+  /** A card started loading from scratch. */
+  'preview.load': {
+    /** The card. */
     card: string;
-    message: string;
-    stack?: string;
-    /** The script the error came from, when known. */
-    fileName?: string;
+    /** The hash of the build it was loaded from. */
+    hash: string;
+    /** Why it was loaded. */
+    reason: LoadReason;
+  };
+
+  /** A hot update was sent to the running card. */
+  'preview.hmr': {
+    /** The card. */
+    card: string;
+    /** The hash of the build it is updated to. */
+    hash: string;
   };
 }
 
+/** The name of an event. */
 export type EventName = keyof Events;
 
-/** An event, kit to host. */
+/** An event, kit to embedder. */
 export interface EventMessage<E extends EventName = EventName> {
+  /** The name of the event. */
   event: E;
+  /** The data of the event. */
   data: Events[E];
 }
-
-/** Everything the host sends over the port. */
-export type HostMessage = RequestMessage;
 
 /** Everything the kit sends over the port. */
 export type KitMessage = ResponseMessage | EventMessage;

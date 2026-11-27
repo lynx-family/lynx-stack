@@ -12,7 +12,6 @@
   },
   "include": [
     "src",
-    "demo",
     "tests",
     "rsbuild.config.ts",
     "playwright.config.ts",

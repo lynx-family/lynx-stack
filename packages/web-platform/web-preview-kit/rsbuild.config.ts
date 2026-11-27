@@ -2,46 +2,23 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-import { defineConfig, logger } from '@rsbuild/core';
+import { defineConfig } from '@rsbuild/core';
 
 import { pluginWebPlatform } from '@lynx-js/web-platform-rsbuild-plugin';
 
-const root = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
 /**
- * The bundler worker imports `@lynx-js/web-bundle-kit` at run time from
- * `bundle-kit/` next to it (see `src/worker/bundler-worker.ts`), so its
- * `dist/` is copied there as it is. Without a `dist/` the kit still builds;
- * its `hello` then says it cannot build.
+ * The `dist/` of `@lynx-js/web-bundle-kit`, which the bundler worker imports
+ * at run time from `bundle-kit/` next to it.
  */
-function copyBundleKit(): {
-  from: string;
-  to: string;
-  info: { minimized: boolean };
-}[] {
-  const dist = path.join(
-    path.dirname(require.resolve('@lynx-js/web-bundle-kit/package.json')),
-    'dist',
-  );
-  if (existsSync(path.join(dist, 'index.js'))) {
-    // Copied as it is: minifying it would rename the placeholders of the
-    // runtime templates that the plugins stringify, such as
-    // `$installedChunks$` in the chunk loading HMR runtime.
-    return [{ from: dist, to: 'bundle-kit', info: { minimized: true } }];
-  }
-  logger.warn(
-    `@lynx-js/web-bundle-kit has no ${
-      path.relative(root, dist)
-    }/index.js; the kit is built without it and reports that it cannot build.`,
-  );
-  return [];
-}
+const bundleKitDist = path.join(
+  path.dirname(require.resolve('@lynx-js/web-bundle-kit/package.json')),
+  'dist',
+);
 
 export default defineConfig({
   output: {
@@ -54,13 +31,8 @@ export default defineConfig({
       resolve: { extensionAlias: { '.js': ['.ts', '.js'] } },
     },
   },
-  dev: {
-    hmr: false,
-    liveReload: false,
-    writeToDisk: true,
-  },
   environments: {
-    // The page a host embeds. `dist/kit/index.html`.
+    // The page. `dist/kit/index.html`.
     kit: {
       source: { entry: { index: './src/page/index.ts' } },
       html: { template: './src/page/index.html' },
@@ -93,19 +65,16 @@ export default defineConfig({
         filename: { js: '[name].js' },
         cleanDistPath: false,
         assetPrefix: './',
-        copy: copyBundleKit(),
+        // Copied as it is: minifying it would rename the placeholders of the
+        // runtime templates that the plugins stringify, such as
+        // `$installedChunks$` in the chunk loading HMR runtime.
+        copy: [{
+          from: bundleKitDist,
+          to: 'bundle-kit',
+          info: { minimized: true },
+        }],
       },
       performance: { chunkSplit: { strategy: 'all-in-one' } },
-    },
-    // The demo host. `dist/demo/index.html`.
-    demo: {
-      source: { entry: { index: './demo/main.ts' } },
-      html: { template: './demo/index.html' },
-      output: {
-        target: 'web',
-        distPath: { root: 'dist/demo' },
-        assetPrefix: './',
-      },
     },
   },
 });

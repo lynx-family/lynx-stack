@@ -6,13 +6,11 @@
       "dependsOn": ["^build", "@lynx-js/web-bundle-kit#build"],
       "inputs": [
         "src/**",
-        "demo/**",
-        "fixtures/**",
         "rsbuild.config.ts",
         "package.json",
         "$TURBO_ROOT$/packages/web-platform/web-bundle-kit/dist/**"
       ],
-      "outputs": ["dist/kit/**", "dist/demo/**"]
+      "outputs": ["dist/kit/**"]
     }
   }
 }

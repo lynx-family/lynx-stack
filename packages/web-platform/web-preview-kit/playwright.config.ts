@@ -4,6 +4,8 @@
 
 import { defineConfig } from '@playwright/test';
 
+const port = 4211;
+
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: '**/*.spec.ts',
@@ -14,7 +16,13 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env['CI'],
   reporter: [['list']],
+  webServer: {
+    command: `node scripts/serve.mjs ${port}`,
+    url: `http://localhost:${port}/`,
+    reuseExistingServer: !process.env['CI'],
+  },
   use: {
+    baseURL: `http://localhost:${port}/`,
     browserName: 'chromium',
     channel: 'chromium',
     trace: 'retain-on-failure',

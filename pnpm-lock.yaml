@@ -3337,15 +3337,6 @@ importers:
       '@lynx-js/lynx-core':
         specifier: 0.1.4
         version: 0.1.4
-      '@lynx-js/react':
-        specifier: workspace:*
-        version: link:../../react
-      '@lynx-js/react-rsbuild-plugin':
-        specifier: workspace:*
-        version: link:../../rspeedy/plugin-react
-      '@lynx-js/rspeedy':
-        specifier: workspace:*
-        version: link:../../rspeedy/core
       '@lynx-js/web-bundle-kit':
         specifier: workspace:*
         version: link:../web-bundle-kit
