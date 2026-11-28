@@ -1,13 +1,16 @@
 // Copyright 2026 The Lynx Authors. All rights reserved.
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
+import '../../runtime-marker.js';
+import '../../lynx.js';
+
 import { createElement, options, render } from 'preact';
 import type { ComponentType, ContainerNode, VNode } from 'preact';
 
-import { addReloadScopedEventListener } from '../core/reload-scoped-event.js';
-import { getReloadVersion } from '../core/reload-version.js';
-import { prepareMainThreadFunctionCtx } from '../core/thread-function-call/main-thread.js';
-import { __root, enableTransferMode, warnRootRenderOnTransferPage } from '../root.js';
+import { addReloadScopedEventListener } from '../../core/reload-scoped-event.js';
+import { getReloadVersion } from '../../core/reload-version.js';
+import { prepareMainThreadFunctionCtx } from '../../core/thread-function-call/main-thread.js';
+import { __root, enableTransferMode, warnRootRenderOnTransferPage } from '../../root.js';
 import {
   CHILDREN,
   COMMIT,
@@ -18,23 +21,23 @@ import {
   PENDING_EFFECTS,
   RENDER_COMPONENT,
   VALUE,
-} from '../shared/render-constants.js';
-import { isRendering } from './lifecycle/isRendering.js';
-import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
-import type { RunWorkletCtxRetData } from '../worklet-runtime/bindings/events.js';
-import type { Worklet } from '../worklet-runtime/bindings/types.js';
-import { genCommitTaskId, replaceCommitHook } from './lifecycle/patch/commit.js';
-import type { PatchList, PatchOptions } from './lifecycle/patch/commit.js';
-import { updateMainThread } from './lifecycle/patch/updateMainThread.js';
-import { __pendingListUpdates } from './list/pendingListUpdates.js';
-import { enablePublishEvent } from './lynx/tt.js';
-import { hydrate as hydrateMainThread } from './renderToOpcodes/hydrate.js';
-import { render as renderFirstFrame } from './renderToOpcodes/index.js';
-import { BackgroundSnapshotInstance, hydrate } from './snapshot/backgroundSnapshot.js';
-import { __page, __pageId, setupPage } from './snapshot/definition.js';
-import { SnapshotInstance } from './snapshot/snapshot.js';
-import { snapshotInstanceManager } from './snapshot/snapshotInstanceManager.js';
-import type { SerializedSnapshotInstance } from './snapshot/types.js';
+} from '../../shared/render-constants.js';
+import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
+import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
+import type { Worklet } from '../../worklet-runtime/bindings/types.js';
+import { isRendering } from '../lifecycle/isRendering.js';
+import { genCommitTaskId, replaceCommitHook } from '../lifecycle/patch/commit.js';
+import type { PatchList, PatchOptions } from '../lifecycle/patch/commit.js';
+import { updateMainThread } from '../lifecycle/patch/updateMainThread.js';
+import { __pendingListUpdates } from '../list/pendingListUpdates.js';
+import { enablePublishEvent } from '../lynx/tt.js';
+import { hydrate as hydrateMainThread } from '../renderToOpcodes/hydrate.js';
+import { render as renderFirstFrame } from '../renderToOpcodes/index.js';
+import { BackgroundSnapshotInstance, hydrate } from '../snapshot/backgroundSnapshot.js';
+import { __page, __pageId, setupPage } from '../snapshot/definition.js';
+import { SnapshotInstance } from '../snapshot/snapshot.js';
+import { snapshotInstanceManager } from '../snapshot/snapshotInstanceManager.js';
+import type { SerializedSnapshotInstance } from '../snapshot/types.js';
 
 type TransferProps = Record<string, unknown>;
 interface Scope {
@@ -522,6 +525,9 @@ function initialize(): void {
 /**
  * Registers components that native hosts render as independent transfer instances.
  * Registering the first component turns the page into a transfer page, where `root.render` is ignored.
+ *
+ * Scoped to Snapshot main-page entries; standalone lazy bundles, external ReactLynx presets,
+ * and ElementTemplate are outside the experimental contract.
  * @experimental
  */
 export const TransferRegistry = {

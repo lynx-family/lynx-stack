@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from '@lynx-js/react';
-import { TransferRegistry } from '@lynx-js/react/internal';
+import { TransferRegistry } from '@lynx-js/react/experimental/transfer';
 
 interface MotionValue {
   on(): void;

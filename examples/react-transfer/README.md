@@ -10,7 +10,7 @@ native; each bubble is a ReactLynx component. Tap a bubble to increment its own
 ## Runtime entry
 
 ```tsx
-import { TransferRegistry } from '@lynx-js/react/internal';
+import { TransferRegistry } from '@lynx-js/react/experimental/transfer';
 
 TransferRegistry.registerComponent('ChatBubble', () => ChatBubble);
 ```
@@ -107,5 +107,6 @@ main-thread handler before its own instance hydrates. Creating an instance with
 
 ## Limits
 
-These are internal Snapshot examples. ElementTemplate, lazy-component IFR,
-template reload and list virtualization are outside their scope.
+These are internal Snapshot main-page examples. Standalone lazy bundles,
+external ReactLynx presets, ElementTemplate, template reload and list
+virtualization are outside their scope.

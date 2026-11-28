@@ -235,6 +235,38 @@ describe('snapshot containment guardrails', () => {
     expect(offenders).toEqual([]);
   });
 
+  test('keeps experimental snapshot features isolated from mainline runtime modules and internal ABI', () => {
+    const experimentalDir = path.join(srcRoot, 'snapshot', 'experimental');
+    const experimentalLibDir = path.join(runtimeRoot, 'lib', 'snapshot', 'experimental');
+    const mainlineSources = [
+      ...walkFiles(srcRoot).filter((file) => !isWithinDir(file, experimentalDir)),
+      ...walkFiles(path.join(runtimeRoot, 'types')),
+      ...walkFiles(path.join(runtimeRoot, 'lazy')),
+    ];
+    const experimentalImportOffenders = mainlineSources
+      .filter((file) =>
+        getModuleSpecifiers(file).some((specifier) => {
+          if (specifier.startsWith('.')) {
+            const resolved = stripModuleExtension(path.resolve(path.dirname(file), specifier));
+            return isWithinDir(resolved, experimentalDir) || isWithinDir(resolved, experimentalLibDir);
+          }
+          return /^@lynx-js\/react(?:\/runtime\/(?:src|lib)|-runtime\/(?:src|lib))?\/(?:experimental\/transfer|snapshot\/experimental)(?:\/|$)/
+            .test(specifier);
+        })
+      )
+      .map((file) => path.relative(runtimeRoot, file));
+
+    expect(experimentalImportOffenders).toEqual([]);
+
+    const transferCouplingPattern =
+      /\b(?:__CreateTransfer|__UpdateTransfer|__ReloadTransfer|__DestroyTransfer|__TransferFirstFrame|__TransferCommit|__TransferCommitResult|__TransferDisposed)\b/;
+    const transferCouplingOffenders = mainlineSources
+      .filter((file) => transferCouplingPattern.test(fs.readFileSync(file, 'utf8')))
+      .map((file) => path.relative(runtimeRoot, file));
+
+    expect(transferCouplingOffenders).toEqual([]);
+  });
+
   test('prevents transform output from referencing untracked old runtime source paths', () => {
     const oldPackageSourcePattern = new RegExp(
       String.raw`@lynx-js/react/src/(?:${legacySourceDirPattern})(?:/|['"])`,
