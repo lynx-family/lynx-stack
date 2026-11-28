@@ -1,5 +1,27 @@
 # @lynx-js/react
 
+## 0.129.5
+
+### Patch Changes
+
+- Align Element Template runtime aliases and compiler-injected entry specifiers across `@lynx-js/react`, `@lynx-js/react-alias-rsbuild-plugin`, `@lynx-js/react-rsbuild-plugin`, and `@lynx-js/react-webpack-plugin`: ([#4419](https://github.com/lynx-family/lynx-stack/pull/4419))
+
+  - Export `./element-template/experimental/lazy/import` from `@lynx-js/react` (with fallback to `runtime/lazy/element-template-import.js` on older peers).
+  - Alias `@lynx-js/react/lepus$` and `@lynx-js/react/element-template/jsx-(dev-)runtime$` consistently across layers and read `lazy`/`elementTemplate` options lazily during `modifyBundlerChain`.
+  - Route Element Template `compat`, `worklet`, `dynamicImport`, `Defines`, and testing-loader `jsxImportSource` to explicit Element Template runtime entries.
+- Keep Snapshot state-update traces independent of application state. The existing events retain component names, Hook indices, and flow IDs, but no longer include state values, property lists, or shallow diffs. Trace failures no longer interrupt pending Hook updates. ([#4321](https://github.com/lynx-family/lynx-stack/pull/4321))
+
+  Worklet timing slices now follow the React profiling build option in both development and production.
+- Resolve bare `react` imports to the Element Template runtime when Element Template is enabled. Compile `__lynx_timing_flag` as a plain native attribute in Element Template so that string literals compile and dynamic string values reach the engine. ([#4413](https://github.com/lynx-family/lynx-stack/pull/4413))
+
+- Resolve `@lynx-js/react/transform` to its wasm build under the `browser` condition. The default entry also requires the napi build, which is not published, so a bundler targeting the browser (for a build through `@rspack/browser`) could not resolve it. ([#4428](https://github.com/lynx-family/lynx-stack/pull/4428))
+
+- Send delayed main-thread worklet calls with the first-frame hydration patch for their transfer instance. ([#4398](https://github.com/lynx-family/lynx-stack/pull/4398))
+
+- Run first-screen `runOnBackground` calls of a transfer instance when that instance hydrates, instead of dropping them once another instance hydrates first. ([#4398](https://github.com/lynx-family/lynx-stack/pull/4398))
+
+- Replace `__SetTransferProps` with `__UpdateTransfer`, which re-renders a transfer component with new props and keeps its state, and `__ReloadTransfer`, which reloads it and resets its state. ([#4412](https://github.com/lynx-family/lynx-stack/pull/4412))
+
 ## 0.129.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @lynx-js/externals-loading-webpack-plugin
 
+## 0.5.0
+
+### Minor Changes
+
+- Support content-hashed background section names via `encodeOptions.hashSectionNames` and `__sectionMap` resolution in external bundle loading to avoid stale `LynxGroup`-scoped `loadScript` cache hits after in-place bundle updates. ([#4409](https://github.com/lynx-family/lynx-stack/pull/4409))
+
 ## 0.4.0
 
 ### Minor Changes

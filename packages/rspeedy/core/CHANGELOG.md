@@ -1,5 +1,13 @@
 # @lynx-js/rspeedy
 
+## 0.19.1
+
+### Patch Changes
+
+- Upgrade Rspack to 2.3.4, which adds support for custom runtime modules in Rspack runtime mode. ([#4416](https://github.com/lynx-family/lynx-stack/pull/4416))
+- Updated dependencies []:
+  - @lynx-js/rsbuild-plugin@0.2.1
+
 ## 0.19.0
 
 ### Minor Changes

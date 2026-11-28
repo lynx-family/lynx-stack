@@ -1,5 +1,9 @@
 # @lynx-js/web-rsbuild-server-middleware
 
+## 0.27.0
+
+No changes in this release.
+
 ## 0.26.9
 
 No changes in this release.

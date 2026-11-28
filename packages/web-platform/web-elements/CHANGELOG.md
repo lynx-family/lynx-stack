@@ -1,5 +1,11 @@
 # @lynx-js/web-elements
 
+## 0.12.20
+
+### Patch Changes
+
+- Avoid mutating light DOM in `RawTextAttributes` while disconnected so `cloneNode(false)` on `<raw-text>` and `<x-text>` does not append duplicate text nodes. ([#4403](https://github.com/lynx-family/lynx-stack/pull/4403))
+
 ## 0.12.19
 
 ### Patch Changes
