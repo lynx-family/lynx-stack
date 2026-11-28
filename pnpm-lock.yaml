@@ -1788,8 +1788,8 @@ importers:
   packages/genui/server:
     dependencies:
       '@a2ui/agent':
-        specifier: 0.1.0
-        version: 0.1.0
+        specifier: 0.2.1
+        version: 0.2.1
       '@ai-sdk/openai':
         specifier: ^4.0.53
         version: 4.0.53(zod@4.6.7)
@@ -3783,11 +3783,11 @@ packages:
       express:
         optional: true
 
-  '@a2ui/agent@0.1.0':
-    resolution: {integrity: sha512-qpqMN+uQU+vA8JEjtIJsGT6qJJ0FZCnOKSRB6HBhleqnlsasjAiNIMSJfwX/lANv13cnEF10CgMiQGDLSyjnLQ==}
+  '@a2ui/agent@0.2.1':
+    resolution: {integrity: sha512-iOOTPpNuMAfbXrLYR5pNkMSvYz8EV9m0ccyaJZgmUG1/pvr9HpNsSKCZSssRjsOJGyHVayRUO0FyTJ3pyYoOfA==}
 
-  '@a2ui/web_core@0.15.0':
-    resolution: {integrity: sha512-S3k9rAJ9O55z5TlDeWy22ly3yQnDLO+XBWihlL5JQSuyxaCUmd7jgFnxO4eq/Bn6dSgdBF0WG8cve/euMoz8SA==}
+  '@a2ui/web_core@0.16.1':
+    resolution: {integrity: sha512-sdQ8q4RNAaKla18AAXIGdAvfbzpE8+qay2vXMSPmgnBVUMZmi7ZwguzVsoCeRQSzvyAgNMjde/CcclARv7SzQw==}
 
   '@acemir/cssom@0.9.30':
     resolution: {integrity: sha512-9CnlMCI0LmCIq0olalQqdWrJHPzm0/tw3gzOA9zJSgvFX7Xau3D24mAGa4BtwxwY69nsuJW6kQqqCzf/mEcQgg==}
@@ -11758,11 +11758,6 @@ packages:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
 
-  redos-detector@6.1.4:
-    resolution: {integrity: sha512-lPlka1rEH6kK42gtgokvvxMmpAvyc28DcRjQbGxeP5RJsJWgAduBOdGedVCDPdSyCr4ay/JDxq3nGYsJZyt8tA==}
-    engines: {node: '>=16.0.0'}
-    hasBin: true
-
   reduce-configs@1.1.2:
     resolution: {integrity: sha512-AgBP55V8FC7NaqoOP2RCbTpu6LE+YuX3LUZkNAoitcfyS3/PIC8Obg/TJrBzTkJ+lDvZv0TTAeDpLkzjTtYlbw==}
 
@@ -11800,10 +11795,6 @@ packages:
 
   regjsparser@0.12.0:
     resolution: {integrity: sha512-cnE+y8bz4NhMjISKbgeVJtqNbtf5QpjZP+Bslo+UqkIt9QPnX9q095eiRRASJG1/tz6dlNr6Z5NsBiWYokp6EQ==}
-    hasBin: true
-
-  regjsparser@0.13.0:
-    resolution: {integrity: sha512-NZQZdC5wOE/H3UT28fVGL+ikOZcEzfMGk/c3iN9UGxzWHMa1op7274oyiUVrAG4B2EuFhus8SvkaYnhvW92p9Q==}
     hasBin: true
 
   rehype-external-links@3.0.0:
@@ -13421,17 +13412,16 @@ snapshots:
     optionalDependencies:
       express: 5.2.1(supports-color@10.2.2)
 
-  '@a2ui/agent@0.1.0':
+  '@a2ui/agent@0.2.1':
     dependencies:
-      '@a2ui/web_core': 0.15.0
+      '@a2ui/web_core': 0.16.1
       antlr4ng: 3.0.16
 
-  '@a2ui/web_core@0.15.0':
+  '@a2ui/web_core@0.16.1':
     dependencies:
       '@lit/context': 1.1.6
       '@preact/signals-core': 1.14.4
       lit: 3.3.3
-      redos-detector: 6.1.4
       validate-color: 2.2.4
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
@@ -22444,10 +22434,6 @@ snapshots:
       indent-string: 4.0.0
       strip-indent: 3.0.0
 
-  redos-detector@6.1.4:
-    dependencies:
-      regjsparser: 0.13.0
-
   reduce-configs@1.1.2: {}
 
   reduce-configs@2.0.1: {}
@@ -22496,10 +22482,6 @@ snapshots:
   regjsparser@0.12.0:
     dependencies:
       jsesc: 3.0.2
-
-  regjsparser@0.13.0:
-    dependencies:
-      jsesc: 3.1.0
 
   rehype-external-links@3.0.0:
     dependencies:
