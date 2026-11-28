@@ -1,28 +1,33 @@
-# LynXML external bundle on Android
+# LynXML external bundle with a ReactLynx host
 
-`pluginLynx()` compiles the scripts and CSS in `math.lynxml`.
-`defineExternalBundleRslibConfig` packages them as a native external bundle.
-The main-thread module exports `add` and the background module exports `multiply`.
+Rslib builds `math.lynxml` into the resource bundle `math.lynx.bundle`.
+Rsbuild builds the ReactLynx page, `host.lynx.bundle`. Both bundles are emitted
+in `dist/`. The page fetches the resource, calls `multiply` on the
+background thread and `add` on the main thread, and adopts the `math:CSS`
+stylesheet. Both results, 42 and 13, appear in green.
 
-Build the example from the repository root and serve the output locally:
+## Run in Android Lynx Explorer
+
+From the repository root, forward a port to the Android device and start the
+example. Use the same port when opening the page in Explorer.
 
 ```sh
-pnpm turbo build --filter=@lynx-js/example-lynxml-external
-python3 -m http.server 3487 --bind 127.0.0.1 --directory examples/lynxml-external/dist
+export PORT=3487
+adb reverse "tcp:$PORT" "tcp:$PORT"
+pnpm --filter @lynx-js/example-lynxml-external dev
 ```
 
-With an Android emulator running the open-source Lynx Explorer (`com.lynx.explorer`),
-forward the port, then open the host. The host requires a runtime with LynXML support.
+In another terminal:
 
 ```sh
-adb reverse tcp:3487 tcp:3487
+PORT=3487
 adb shell am start -W -n com.lynx.explorer/.LynxViewShellActivity \
-  --es lynx_initial_url 'http://127.0.0.1:3487/host.lynxml'
-adb logcat -d | grep '\[lynxml-resource\]'
+  --es lynx_initial_url "http://localhost:$PORT/host.lynx.bundle"
 ```
 
-Both scripts in `public/host.lynxml` call `lynx.fetchBundle` and pass the
-returned URL to `lynx.loadScript`. The main thread loads `math__main-thread` and
-logs `main: add(6, 7) = 13`. The background thread loads `math` and logs
-`background: multiply(6, 7) = 42`. The host adopts the `math:CSS` stylesheet from the same bundle and uses its
-`.positive` class to display both results in green.
+For a production build, run `pnpm --filter @lynx-js/example-lynxml-external build`
+and serve `examples/lynxml-external/dist` on the selected port.
+The ReactLynx host uses `source.define` to inject the absolute math bundle URL.
+The default uses `localhost` and `PORT` for `adb reverse`. Set
+`LYNXML_MATH_BUNDLE_URL` before building or starting the dev server to load the
+resource from another server or directory.

@@ -1,0 +1,17 @@
+.results {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background-color: white;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #152536;
+}
+
+.result {
+  margin-top: 12px;
+  font-size: 16px;
+}

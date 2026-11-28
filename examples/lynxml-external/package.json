@@ -4,10 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "rslib build"
+    "build": "rsbuild build && rslib build",
+    "dev": "rslib build && rsbuild dev"
+  },
+  "dependencies": {
+    "@lynx-js/react": "workspace:*"
   },
   "devDependencies": {
     "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/react-rsbuild-plugin": "workspace:*",
     "@lynx-js/rsbuild-plugin": "workspace:*",
     "@rsbuild/core": "catalog:rsbuild",
     "@rslib/core": "catalog:rslib"

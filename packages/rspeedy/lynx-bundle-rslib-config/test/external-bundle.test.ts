@@ -1586,13 +1586,20 @@ describe('without a DSL plugin', () => {
     expect(sections['math:CSS']).toEqual(
       expect.arrayContaining([expect.any(Number)]),
     )
-    const math = runInNewContext(sections['math__main-thread']!) as {
+    const host = {}
+    const script = sections['math__main-thread']!
+    const math = runInNewContext(script, host) as {
       add(a: number, b: number): number
     }
     expect(math.add(6, 7)).toBe(13)
-    expect(runInNewContext(sections['minimal__main-thread']!)).toMatchObject({
-      marker: 'minimal',
-    })
+    // A second evaluation in the same host must not redeclare any globals.
+    expect(() => {
+      runInNewContext(script, host)
+    }).not.toThrow()
+    expect(runInNewContext(sections['minimal__main-thread']!, host))
+      .toMatchObject({
+        marker: 'minimal',
+      })
   })
 
   it('builds a web bundle with `pluginLynx` alone', async () => {

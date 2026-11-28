@@ -596,10 +596,17 @@ importers:
         version: 19.2.18
 
   examples/lynxml-external:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
     devDependencies:
       '@lynx-js/lynx-bundle-rslib-config':
         specifier: workspace:*
         version: link:../../packages/rspeedy/lynx-bundle-rslib-config
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
       '@lynx-js/rsbuild-plugin':
         specifier: workspace:*
         version: link:../../packages/rspeedy/plugin-lynx
@@ -608,7 +615,7 @@ importers:
         version: 2.3.3(core-js@3.50.0)
       '@rslib/core':
         specifier: catalog:rslib
-        version: 1.0.7(@microsoft/api-extractor@7.59.4(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+        version: 1.0.7(@microsoft/api-extractor@7.60.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
 
   examples/motion:
     dependencies:
