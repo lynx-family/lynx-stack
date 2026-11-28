@@ -139,7 +139,7 @@ catalogs:
 
   # Rsbuild monorepo packages
   rsbuild:
-    "@rsbuild/core": "2.3.3"
+    "@rsbuild/core": "2.3.4"
 
   # Rslib monorepo packages
   rslib:
