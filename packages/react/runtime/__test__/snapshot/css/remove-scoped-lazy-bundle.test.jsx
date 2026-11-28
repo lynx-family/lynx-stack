@@ -3,7 +3,7 @@
 // LICENSE file in the root directory of this source tree.
 import { expect, it, beforeEach, afterEach } from 'vitest';
 
-import { SnapshotInstance } from '../../../src/snapshot';
+import { SnapshotInstance } from '../../../src/snapshot/snapshot/snapshot.js';
 
 let prevEntryName;
 beforeEach(() => {

@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '../../src/index';
 import { createElement, cloneElement } from '../../lepus';
 import { jsx as mainThreadJsx } from '../../lepus/jsx-runtime';
-import { snapshotCreatorMap } from '../../src/snapshot';
+import { snapshotCreatorMap } from '../../src/snapshot/snapshot/snapshot.js';
 
 describe('ref parity between the main and background threads', () => {
   function FunctionComponent() {

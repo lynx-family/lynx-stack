@@ -14,7 +14,8 @@ import { injectTt } from '../../src/snapshot/lynx/tt';
 import { root } from '../../src/lynx-api';
 import { CHILDREN } from '../../src/shared/render-constants';
 import { __root } from '../../src/root';
-import { setupPage, backgroundSnapshotInstanceManager } from '../../src/snapshot';
+import { backgroundSnapshotInstanceManager } from '../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../src/snapshot/snapshot/definition.js';
 import { globalEnvManager } from './utils/envManager';
 import { elementTree } from './utils/nativeMethod';
 

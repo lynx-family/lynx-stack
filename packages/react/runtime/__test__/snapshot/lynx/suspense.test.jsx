@@ -13,12 +13,11 @@ import { installComponentCompat } from '../../../src/core/component';
 import { __ComponentIsPolyfill } from '../../../src/internal';
 import { __root } from '../../../src/root';
 import {
-  setupPage,
-  SnapshotInstance,
-  snapshotInstanceManager,
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
-} from '../../../src/snapshot';
+} from '../../../src/snapshot/snapshot/backgroundSnapshot.js';
+import { setupPage } from '../../../src/snapshot/snapshot/definition.js';
+import { SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot/snapshot/snapshot.js';
 import { globalEnvManager } from '../utils/envManager';
 import { elementTree } from '../utils/nativeMethod';
 import { prettyFormatSnapshotPatch } from '../../../src/snapshot/debug/formatPatch';
