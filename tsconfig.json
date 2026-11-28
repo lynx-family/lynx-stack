@@ -1,5 +1,5 @@
 {
-  "extends": ["@tsconfig/strictest", "@tsconfig/node24"],
+  "extends": ["@tsconfig/strictest", "@tsconfig/node26"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 

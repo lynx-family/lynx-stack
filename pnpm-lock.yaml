@@ -262,9 +262,9 @@ importers:
       '@svitejs/changesets-changelog-github-compact':
         specifier: ^1.2.0
         version: 1.2.0
-      '@tsconfig/node24':
-        specifier: ^24.0.4
-        version: 24.0.4
+      '@tsconfig/node26':
+        specifier: ^26.0.0
+        version: 26.0.0
       '@tsconfig/strictest':
         specifier: ^2.0.8
         version: 2.0.8
@@ -7129,8 +7129,8 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=10 <11'
 
-  '@tsconfig/node24@24.0.4':
-    resolution: {integrity: sha512-2A933l5P5oCbv6qSxHs7ckKwobs8BDAe9SJ/Xr2Hy+nDlwmLE1GhFh/g/vXGRZWgxBg9nX/5piDtHR9Dkw/XuA==}
+  '@tsconfig/node26@26.0.0':
+    resolution: {integrity: sha512-AlW882moMu/JzvTVjdGqJEsrqD5nSWHiFD7Aeuw6Rb58S4Aig+09mDUFFlXJx/y6/y77NwGYLlqhWxvolcC0sw==}
 
   '@tsconfig/strictest@2.0.8':
     resolution: {integrity: sha512-XnQ7vNz5HRN0r88GYf1J9JJjqtZPiHt2woGJOo2dYqyHGGcd6OLGqSlBB6p1j9mpzja6Oe5BoPqWmeDx6X9rLw==}
@@ -17228,7 +17228,7 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
-  '@tsconfig/node24@24.0.4': {}
+  '@tsconfig/node26@26.0.0': {}
 
   '@tsconfig/strictest@2.0.8': {}
 
