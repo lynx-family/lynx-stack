@@ -17,3 +17,5 @@ For runtime-selected synchronous loading, invoke the loader inside a Promise exe
 Fetch all external bundles on first import and share the fetch across imports and sections. Initialize the fetch handler on first then() or wait(), preserving synchronous values and asynchronous Promises, including runtime-selected loading modes. Validate fetch timing by executing compiled entry and dynamic imports in both layers.
 
 Serialize runtime URL resolvers as standalone functions without build-time closures. Preserve the native fetchBundle handler for string results so synchronous wait() remains available; only Promise URL results need an asynchronous chain. Keep fixed URLs and bundlePath on the existing loading path.
+
+Keep the default synchronous external bundle timeout aligned with ReactLynx lazy bundle loading at 5 seconds. External plugin `timeout` options are expressed in milliseconds and must be converted to seconds for the native handler's `wait()`. Preserve explicit per-external and plugin-level overrides.
