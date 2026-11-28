@@ -12,7 +12,7 @@ import { render as renderToString } from '../renderToOpcodes/index.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 
 function renderMainThread(): void {
-  let opcodes;
+  let opcodes: unknown[];
   try {
     if (typeof __PROFILE__ !== 'undefined' && __PROFILE__) {
       profileStart('ReactLynx::renderMainThread');
