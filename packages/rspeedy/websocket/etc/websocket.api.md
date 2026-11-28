@@ -7,26 +7,25 @@
 import { EventEmitter } from 'eventemitter3';
 
 // @public
-interface Event_2<T extends string> {
+export interface Event<T extends string> {
     // Warning: (ae-forgotten-export) The symbol "WebSocketImpl" needs to be exported by the entry point index.d.ts
     //
     // @internal (undocumented)
     target: WebSocketImpl;
     type: T;
 }
-export { Event_2 as Event }
 
 // @public
 export type EventMap = {
-    message: Event_2<'message'> & {
+    message: Event<'message'> & {
         readonly data: string;
     };
-    open: Event_2<'open'>;
-    close: Event_2<'close'> & {
+    open: Event<'open'>;
+    close: Event<'close'> & {
         readonly code: number;
         readonly reason: string;
     };
-    error: Event_2<'error'> & {
+    error: Event<'error'> & {
         readonly message: string;
     };
 };
@@ -40,7 +39,7 @@ export enum ReadyState {
 }
 
 // @public
-class WebSocket_2 {
+class WebSocket {
     constructor(url: string, protocols?: string | string[], options?: {
         headers?: Record<string, string>;
     });
@@ -65,8 +64,8 @@ class WebSocket_2 {
     send(data: string): void;
     get url(): string;
 }
-export { WebSocket_2 as WebSocket }
-export default WebSocket_2;
+export { WebSocket }
+export default WebSocket;
 
 // (No @packageDocumentation comment for this package)
 

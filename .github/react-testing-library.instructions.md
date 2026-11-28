@@ -10,4 +10,6 @@ When changing React runtime error messages, search test sources and snapshots ac
 
 Testing runtime init aliases must be applied after runtime alias plugins, including the internal `lynx:react` wrapper that embeds the alias plugin. Declare that ordering on the testing plugin with `pre`; keep production plugins independent of testing-library. The exported Rstest config resolves to `dist/rstest-config.js`, so rebuild it before validating source changes through consumer tests.
 
+Import React types explicitly from `@lynx-js/react` in bundled declarations; do not rely on the ambient `React` namespace, which API Extractor's TypeScript 6 compiler cannot follow during declaration rollup.
+
 Background function execution IDs remain increasing across runtime resets. In testing-library worklet transport snapshots, normalize numeric `_execId` values rather than assuming each test starts at 1 or recording IDs that depend on test order; retain the actual invocation and return-value assertions. Validate the complete `react/testing-library` project when changing runtime reset behavior, as it consumes built runtime artifacts.
