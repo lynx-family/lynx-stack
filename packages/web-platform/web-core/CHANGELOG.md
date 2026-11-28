@@ -1,5 +1,26 @@
 # @lynx-js/web-core
 
+## 0.27.0
+
+### Minor Changes
+
+- Add `lynxView.sendNativeModuleEvent(moduleName, data)` and `context.setEventHandler(handler)` on `NativeModuleContext` to push per-view, per-module structured-cloneable events from the main thread to background native modules. ([#4411](https://github.com/lynx-family/lynx-stack/pull/4411))
+
+- Add an optional `nativeModulesInitData` property on `lynx-view` to pass per-module structured-cloneable initial data via the 3rd context argument (`{ initData }`) to background native module factories without changing `nativeModulesMap`. ([#4405](https://github.com/lynx-family/lynx-stack/pull/4405))
+
+### Patch Changes
+
+- Resolve `@lynx-js/web-core/encode` to the unbundled encoder under the `browser` condition. A browser bundle now loads its wasm through the bundler instead of `node:fs`, so `WebEncodePlugin` can encode web bundles in the browser through `@rspack/browser`. Node.js keeps using the prebuilt `dist/encode_prod`. ([#4426](https://github.com/lynx-family/lynx-stack/pull/4426))
+
+- Add an opt-in `sp` unit transform. Set the `transform-sp` attribute or the `transformSP` property on `<lynx-view>` to rewrite `sp` lengths in stylesheets and inline styles to `calc(N * var(--sp-unit))`. `--sp-unit` defaults to `1px`; set it on the `<lynx-view>` to follow the system font scale. ([#4395](https://github.com/lynx-family/lynx-stack/pull/4395))
+
+  ```html
+  <lynx-view url="https://example.com/template.js" transform-sp="true" style="--sp-unit: 1.3px"></lynx-view>
+  ```
+- Updated dependencies [[`113c47d`](https://github.com/lynx-family/lynx-stack/commit/113c47de28f42569fc2ae8491b4b7ad58d9086e7)]:
+  - @lynx-js/web-elements@0.12.20
+  - @lynx-js/web-worker-rpc@0.27.0
+
 ## 0.26.9
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @lynx-js/template-webpack-plugin
 
+## 0.16.10
+
+### Patch Changes
+
+- Create the TASM encode worker pool (`LynxEncodePlugin.encodePool`) on first use instead of when the package is imported. A build with no native Lynx bundle, such as one with only a `web` environment, no longer starts encode worker threads. The package can also be imported where `tinypool` and `worker_threads` are not available, such as in the browser through `@rspack/browser`. ([#4426](https://github.com/lynx-family/lynx-stack/pull/4426))
+- Updated dependencies [[`04df63c`](https://github.com/lynx-family/lynx-stack/commit/04df63cde670db0399e8628fa58438855b36d628), [`8fd5903`](https://github.com/lynx-family/lynx-stack/commit/8fd59031e55378d388bc6220bb87a85e0f7d40b9), [`63bcbfc`](https://github.com/lynx-family/lynx-stack/commit/63bcbfccfa408fa651967f119cbf83152a2d08a2), [`d2100d9`](https://github.com/lynx-family/lynx-stack/commit/d2100d914e73f9562103a0979cf2846462045dc3)]:
+  - @lynx-js/web-core@0.27.0
+
 ## 0.16.9
 
 ### Patch Changes

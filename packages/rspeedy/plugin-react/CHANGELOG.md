@@ -1,5 +1,24 @@
 # @lynx-js/react-rsbuild-plugin
 
+## 0.22.5
+
+### Patch Changes
+
+- Align Element Template runtime aliases and compiler-injected entry specifiers across `@lynx-js/react`, `@lynx-js/react-alias-rsbuild-plugin`, `@lynx-js/react-rsbuild-plugin`, and `@lynx-js/react-webpack-plugin`: ([#4419](https://github.com/lynx-family/lynx-stack/pull/4419))
+
+  - Export `./element-template/experimental/lazy/import` from `@lynx-js/react` (with fallback to `runtime/lazy/element-template-import.js` on older peers).
+  - Alias `@lynx-js/react/lepus$` and `@lynx-js/react/element-template/jsx-(dev-)runtime$` consistently across layers and read `lazy`/`elementTemplate` options lazily during `modifyBundlerChain`.
+  - Route Element Template `compat`, `worklet`, `dynamicImport`, `Defines`, and testing-loader `jsxImportSource` to explicit Element Template runtime entries.
+- Keep `loadScript` exports reuse disabled when opting into entry re-evaluation on reload. This prevents older hosts from using another template's cached exports on the initial load. ([#4424](https://github.com/lynx-family/lynx-stack/pull/4424))
+- Updated dependencies [[`0bc72b7`](https://github.com/lynx-family/lynx-stack/commit/0bc72b732eb417d747010b48193d51736ffbae8f), [`13b405d`](https://github.com/lynx-family/lynx-stack/commit/13b405d9ff13d01171879f55d9a757ae99dcee56), [`04df63c`](https://github.com/lynx-family/lynx-stack/commit/04df63cde670db0399e8628fa58438855b36d628)]:
+  - @lynx-js/react-alias-rsbuild-plugin@0.22.5
+  - @lynx-js/react-webpack-plugin@0.15.3
+  - @lynx-js/template-webpack-plugin@0.16.10
+  - @lynx-js/use-sync-external-store@1.5.0
+  - @lynx-js/react-refresh-webpack-plugin@0.4.7
+  - @lynx-js/css-extract-webpack-plugin@0.11.2
+  - @lynx-js/rsbuild-plugin@0.2.1
+
 ## 0.22.4
 
 ### Patch Changes

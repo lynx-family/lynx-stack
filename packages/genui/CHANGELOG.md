@@ -1,5 +1,37 @@
 # @lynx-js/genui
 
+## 0.9.0
+
+### Minor Changes
+
+- Apply every `MessageStore` mutation in the order it was made, and stop repeating work that changes nothing. ([#4414](https://github.com/lynx-family/lynx-stack/pull/4414))
+
+  - `push` no longer copies the buffer; `getSnapshot()` builds its frozen array on demand. `<A2UI>` applies messages when the store reports them instead of re-rendering its shell for every push.
+  - A rejected `replace` is reported once. Its appended tail is still ignored until a corrected `replace` or a `clear`, but later pushes no longer re-evaluate the rejected snapshot or resend its errors.
+  - Swapping `messageStore` for another non-null store reconciles to the new store's contents, as `replace` does, instead of skipping its first messages.
+  - A component definition or data value identical to the current one is a no-op. Template instances are rebuilt only when their items or their template change, and instances whose item is gone are released.
+  - Components may arrive in any order across messages: a parent renders a child once both exist. Nested templates expand against each item.
+  - A `@call` returning a new non-JSON object on every call no longer causes a render loop, and a failing expression is reported once per agent update instead of on every evaluation.
+  - A surface that names no catalog uses the catalog passed to `<A2UI>`; a surface that names an unregistered catalog reports `VALIDATION_FAILED` once.
+  - A malformed message is reported and skipped without discarding the messages after it.
+
+  `MessageProcessor.registerCatalog` accepts `{ default: true }`, and `NodeRendererProps` is exported.
+- Add `messageStore.replace(fullMessages)` for streams that end with a complete response. Reconcile final state while retaining unchanged components and local input on unchanged server fields, remove missing state, and continue consuming subsequent `push` calls. Replacement snapshots do not replay RPC calls or responses. ([#4404](https://github.com/lynx-family/lynx-stack/pull/4404))
+
+  Rejected replacements report errors and leave the live state and consumption cursor unchanged; appended messages wait for a corrected replacement or a buffer clear. `MessageProcessor.replaceMessages` returns whether it accepted the snapshot. Fix messages being skipped when `clear()` and `push()` occur in the same batch.
+
+  Match array entries by unique `id` or `key` to preserve local edits through server insertions, deletions, and reordering. Arrays without usable identities merge by index when all three lengths agree; otherwise they use the server array. Recognize child references from catalog schemas or built-in child fields instead of treating every matching string as a component ID.
+
+  Use `replace([])` to clear rendered surfaces; `clear()` retains its buffer-only behavior. Preserve existing `push` lifecycle behavior: deleting the active surface leaves a blank renderer, and switching surfaces does not force a subtree remount.
+
+### Patch Changes
+
+- Updated dependencies [[`0bc72b7`](https://github.com/lynx-family/lynx-stack/commit/0bc72b732eb417d747010b48193d51736ffbae8f), [`39d0f11`](https://github.com/lynx-family/lynx-stack/commit/39d0f11480245f9beb3583f1f4781d3cf7912eb4)]:
+  - @lynx-js/react-rsbuild-plugin@0.22.5
+  - @lynx-js/react-signals@0.0.7
+  - @lynx-js/config-rsbuild-plugin@0.3.0
+  - @lynx-js/rsbuild-plugin@0.2.1
+
 ## 0.8.1
 
 ### Patch Changes
