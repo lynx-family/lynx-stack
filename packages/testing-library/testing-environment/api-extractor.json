@@ -4,4 +4,12 @@
 {
   "extends": "../../../api-extractor.json",
   "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
+  "compiler": {
+    "overrideTsconfig": {
+      "extends": "./tsconfig.json",
+      "compilerOptions": {
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+      },
+    },
+  },
 }

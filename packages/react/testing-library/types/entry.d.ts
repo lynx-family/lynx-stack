@@ -7,6 +7,7 @@
  * Inspired by {@link https://testing-library.com/docs/react-testing-library/intro | React Testing Library} and {@link https://github.com/jsdom/jsdom | jsdom}.
  */
 
+import type * as React from '@lynx-js/react';
 import { queries, Queries, BoundFunction } from '@testing-library/dom';
 import { LynxElement, type ElementTree, type LynxTestingEnv } from '@lynx-js/testing-environment';
 import { act } from 'preact/test-utils';
