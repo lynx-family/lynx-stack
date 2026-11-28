@@ -5,12 +5,12 @@
 
 ## Asset Files
 - Bundle: rspack-bundle.js
-- Manifest: main.567bf7563370307f.hot-update.json, size: 28
-- Update: main.567bf7563370307f.hot-update.js, size: 3708
+- Manifest: main.4495d53b72ee7346.hot-update.json, size: 28
+- Update: main.4495d53b72ee7346.hot-update.js, size: 3842
 
 ## Manifest
 
-### main.567bf7563370307f.hot-update.json
+### main.4495d53b72ee7346.hot-update.json
 
 ```json
 {"c":["main"],"r":[],"m":[]}
@@ -20,7 +20,7 @@
 ## Update
 
 
-### main.567bf7563370307f.hot-update.js
+### main.4495d53b72ee7346.hot-update.js
 
 #### Changed Modules
 - ./app.jsx
@@ -80,13 +80,14 @@ const moduleHot = module.hot;
 
 if (moduleHot) {
   const currentExports = _runtime_refresh_mjs__rspack_import_2.getExports(module);
-  const previousHotModuleExports = moduleHot.data
-    && moduleHot.data.moduleExports;
 
   _runtime_refresh_mjs__rspack_import_2.registerExports(currentExports, module.id);
 
   if (isPrefreshComponent) {
-    if (previousHotModuleExports) {
+    // `moduleHot.data` is set whenever this evaluation replaces an earlier
+    // instance, including one that never ran this footer (the error module of
+    // a failed build), so a fix right after a failed build is flushed too.
+    if (moduleHot.data) {
       try {
         _runtime_refresh_mjs__rspack_import_2.flush();
         if (
