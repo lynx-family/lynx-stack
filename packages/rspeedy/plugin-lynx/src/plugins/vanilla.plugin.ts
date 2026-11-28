@@ -12,7 +12,6 @@ import type {
   RspackChain,
 } from '@rsbuild/core'
 
-import { parseLynxXML } from '@lynx-js/lynx-xml/parser'
 import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
 
 import { configureTemplate } from './template.plugin.js'
@@ -70,7 +69,7 @@ export function pluginVanilla(): RsbuildPlugin {
           const require = createRequire(import.meta.url)
           const loader = path.join(
             path.dirname(require.resolve('@lynx-js/rsbuild-plugin')),
-            'plugins/vanilla.plugin.js',
+            'loaders/lynxml-loader.js',
           )
           xmlRule.oneOf('main').issuerLayer(layers.MAIN_THREAD)
             .use('lynxml').loader(loader).options({ section: 'main' })
@@ -356,29 +355,4 @@ function createLynxWebpackPlugin(
       )
     },
   }
-}
-
-// Rspack loads the default export of the compiled vanilla.plugin module.
-export default function lynxmlLoader(
-  this: Rspack.LoaderContext<{
-    section: 'main' | 'background' | 'style'
-    includeStyle?: boolean
-  }>,
-  source: string,
-): string {
-  const parsed = parseLynxXML(source)
-  if (!parsed.success) throw new Error(parsed.error.formattedMessage)
-
-  const { section, includeStyle } = this.getOptions()
-  if (section === 'style') return parsed.style ?? ''
-  const script = section === 'main'
-    ? parsed.mainThreadScript
-    : parsed.backgroundThreadScript ?? ''
-  if (!includeStyle || parsed.style === undefined) return script
-
-  // Match the normal CSS pipeline while resolving URLs beside the original XML.
-  const loader = this.loaders[this.loaderIndex]!.path
-  const style =
-    `${this.resourcePath}.css!=!${loader}?{"section":"style"}!${this.resource}`
-  return `${script}\n;require(${JSON.stringify(style)});\n`
 }

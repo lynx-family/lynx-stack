@@ -2536,7 +2536,7 @@ importers:
         specifier: workspace:^
         version: link:../plugin-debug-metadata
       '@lynx-js/lynx-xml':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../lynx-xml
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:^

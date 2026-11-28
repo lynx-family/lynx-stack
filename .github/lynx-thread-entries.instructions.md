@@ -22,4 +22,4 @@ Validate the compiled entrypoint graph before template encoding: each Vanilla th
 
 Keep Vanilla layer constants inside the plugin package. Use the standard Rsbuild source.entry shape and compiler macros in application examples.
 
-Register LynXML section extraction in pluginLynx. For an external bundle the logical background chunk owns the <entry>:CSS section. Keep CSS asset resolution relative to the XML source and keep the external bundle producer independent of the input format.
+Register the LynXML loader in pluginVanilla. List each package-owned loader under `source.entry` in the package's Rslib config so Rspack can load it from `dist/loaders/`. For an external bundle the logical background chunk owns the <entry>:CSS section. Keep CSS asset resolution relative to the XML source and keep the external bundle producer independent of the input format.
