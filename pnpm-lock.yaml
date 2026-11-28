@@ -1791,8 +1791,8 @@ importers:
         specifier: 0.1.0
         version: 0.1.0
       '@ai-sdk/openai':
-        specifier: ^4.0.53
-        version: 4.0.53(zod@4.6.7)
+        specifier: ^4.0.123
+        version: 4.0.123(zod@4.6.7)
       '@ai-sdk/typesafe-ai':
         specifier: 3.0.6
         version: 3.0.6(zod@4.6.7)
@@ -3795,8 +3795,8 @@ packages:
   '@adobe/css-tools@4.4.2':
     resolution: {integrity: sha512-baYZExFpsdkBNuvGKTKWCwKH57HRZLVtycZS05WTQNVOiXVSeAki3nU35zlRbToeMW8aHlJfyS+1C4BOv27q0A==}
 
-  '@ai-sdk/openai@4.0.53':
-    resolution: {integrity: sha512-2hoR6/HVmNZenRGgRcEJqJcT4kq69uqjzMqZMjWj4yT79kbzlcgoGiaX0KaK3mgiEeSOaG7gQ2cVJ/Gtl8KCUA==}
+  '@ai-sdk/openai@4.0.123':
+    resolution: {integrity: sha512-6BazIkzKXr48DtdYKIBfYnyg5ecW77fkIZGJNC/wvVBx7LsELMXgvvWW2C0/kAjh+441g6osdDANpKQ4LKZxaw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3813,14 +3813,14 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.34':
-    resolution: {integrity: sha512-tRBdgRcys/4d8wyQdOdyYScq1AxfMdMd0hIlwolxJKVIbBwXUgClZuQT0VIsz4e7pylY8FE6utYCCZ494UAMJQ==}
+  '@ai-sdk/provider-utils@5.0.47':
+    resolution: {integrity: sha512-NZQ1hMxY6Hd4ZiinjpU5HUOsyCHiTFkHw7AiM1EVN+Cd3kNTi47flZWNvFwGqnBojntB1+2eBRTeHRuVLtPhEg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.47':
-    resolution: {integrity: sha512-NZQ1hMxY6Hd4ZiinjpU5HUOsyCHiTFkHw7AiM1EVN+Cd3kNTi47flZWNvFwGqnBojntB1+2eBRTeHRuVLtPhEg==}
+  '@ai-sdk/provider-utils@5.0.83':
+    resolution: {integrity: sha512-5lInsmNnh64eKi2L3fQjPy5VnV2y69lwyGnZ3vfz82Tlkgy8pWsvYueUrSJGxi8gXOM67jB9tN7LtDjjEFsNLQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3841,12 +3841,12 @@ packages:
     resolution: {integrity: sha512-+GZJIgz1jk86pwEbb3f1BD2bdoSKyWE4Jg4YUc7NMnMozbWemSKYZcw2F4nMaO5qwsL5A8RmioAKW81YktRpIQ==}
     engines: {node: '>=22'}
 
-  '@ai-sdk/provider@4.0.4':
-    resolution: {integrity: sha512-tbHKNLirllUNF3ZlkCsXnwab2ZV1Sl4b1H/Cp9ruCce15IBmskE8Gwkk0yo9xDWY+jho2of7lVXtwSsyrq7cwQ==}
+  '@ai-sdk/provider@4.0.39':
+    resolution: {integrity: sha512-jRvAhvW23+TeMGVCME2WGejP/TjzyDg7TplUep3t8HcEYnC2/8zqhCy9RRrjjVs1ljcygABZ8pQ21MbCRdF01w==}
     engines: {node: '>=22'}
 
-  '@ai-sdk/provider@4.0.9':
-    resolution: {integrity: sha512-XnGXPWiBIfqjsVEud5pOaVneRByJQOu2sYNwlSVJTPCvakdCDkVuYKKfNuStkIpMUYl7JIkBZGBx+B5YfNeVjA==}
+  '@ai-sdk/provider@4.0.4':
+    resolution: {integrity: sha512-tbHKNLirllUNF3ZlkCsXnwab2ZV1Sl4b1H/Cp9ruCce15IBmskE8Gwkk0yo9xDWY+jho2of7lVXtwSsyrq7cwQ==}
     engines: {node: '>=22'}
 
   '@ai-sdk/typesafe-ai@3.0.6':
@@ -13440,10 +13440,10 @@ snapshots:
 
   '@adobe/css-tools@4.4.2': {}
 
-  '@ai-sdk/openai@4.0.53(zod@4.6.7)':
+  '@ai-sdk/openai@4.0.123(zod@4.6.7)':
     dependencies:
-      '@ai-sdk/provider': 4.0.9
-      '@ai-sdk/provider-utils': 5.0.34(zod@4.6.7)
+      '@ai-sdk/provider': 4.0.39
+      '@ai-sdk/provider-utils': 5.0.83(zod@4.6.7)
       zod: 4.6.7
 
   '@ai-sdk/provider-utils@4.0.40(zod@4.6.7)':
@@ -13461,15 +13461,6 @@ snapshots:
       eventsource-parser: 3.1.0
       zod: 4.6.7
 
-  '@ai-sdk/provider-utils@5.0.34(zod@4.6.7)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.9
-      '@standard-schema/spec': 1.1.0
-      '@workflow/serde': 4.1.0
-      eventsource-parser: 3.1.0
-      undici: 7.29.0
-      zod: 4.6.7
-
   '@ai-sdk/provider-utils@5.0.47(zod@4.6.7)':
     dependencies:
       '@ai-sdk/provider': 4.0.18
@@ -13477,6 +13468,14 @@ snapshots:
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.1.0
       undici: 7.29.0
+      zod: 4.6.7
+
+  '@ai-sdk/provider-utils@5.0.83(zod@4.6.7)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.39
+      '@standard-schema/spec': 1.1.0
+      '@workflow/serde': 4.1.0
+      eventsource-parser: 3.1.0
       zod: 4.6.7
 
   '@ai-sdk/provider@2.0.3':
@@ -13495,11 +13494,11 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/provider@4.0.4':
+  '@ai-sdk/provider@4.0.39':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/provider@4.0.9':
+  '@ai-sdk/provider@4.0.4':
     dependencies:
       json-schema: 0.4.0
 
