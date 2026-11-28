@@ -2,7 +2,8 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { Component, createContext, h, options } from 'preact';
+import { Component, createContext, h, isValidElement, options } from 'preact';
+import { jsx as etJsx } from '../../../../src/element-template/jsx-runtime/index.js';
 import { useContext, useId, useState } from 'preact/hooks';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -318,6 +319,14 @@ describe('direct first-screen materialization', () => {
     seen.length = 0;
     renderToElementTemplate(makeTree());
     expect(seen.map(item => item.id)).toEqual(['P0-0', 'P0-1']);
+  });
+
+  it('marks element-template JSX vnodes as valid Preact elements', () => {
+    function Child() {
+      return null;
+    }
+    expect(isValidElement(etJsx(Child, {}))).toBe(true);
+    expect(isValidElement(etJsx('view', {}))).toBe(true);
   });
 
   it('keeps a reused vnode attribute array raw while preparing handle-specific event markers', () => {

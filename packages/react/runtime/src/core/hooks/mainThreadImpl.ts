@@ -188,17 +188,19 @@ function useErrorBoundary(cb: (error: any, errorInfo: ErrorInfo) => Promise<void
 function useId(): string {
   const state = getHookState(currentIndex++, 11)!;
   if (!state[VALUE]) {
-    // Grab either the root node or the nearest async boundary node.
-    let root = currentComponent![VNODE];
-    while (root !== null && !root![MASK] && root![PARENT] !== null) {
-      root = root![PARENT];
+    // Grab either the root node or the nearest async boundary node. Both keep
+    // their mask on the component: their vnodes get replaced, it doesn't.
+    let root = currentComponent![VNODE]!;
+    while (!(root[COMPONENT] ?? root)[MASK] && root[PARENT]) {
+      root = root[PARENT];
     }
+    const maskHolder = root[COMPONENT] ?? root;
     /**
      * init mask to [0, 0]
      * mask[0] will not change
      * mask[1] will auto increase
      */
-    const mask = root![MASK] ?? (root![MASK] = [0, 0]);
+    const mask = maskHolder[MASK] ?? (maskHolder[MASK] = [0, 0]);
     state[VALUE] = 'P' + mask[0] + '-' + mask[1]++;
   }
   return state[VALUE] as string;

@@ -10,12 +10,14 @@ import type { NodesRef } from '@lynx-js/types';
 
 import { serializeNodesRef } from './nodesRef.js';
 import { pendingInsertBefore } from './portalsPending.js';
-import { CHILDREN, MASK, PARENT, VNODE } from '../../shared/render-constants.js';
+import { MASK, VNODE } from '../../shared/render-constants.js';
 import { globalBackgroundSnapshotInstancesToRemove } from '../lifecycle/patch/globalState.js';
 import { SnapshotOperation, __globalSnapshotPatch } from '../lifecycle/patch/snapshotPatch.js';
 import type { BackgroundSnapshotInstance } from '../snapshot/backgroundSnapshot.js';
 
 export { clearPendingPortalInsertBefore } from './portalsPending.js';
+
+let portalMaskId = 0;
 
 interface PortalProps {
   [VNODE]: ComponentChildren;
@@ -25,13 +27,15 @@ interface PortalProps {
 interface PortalThis extends Component<PortalProps> {
   _container?: NodesRef;
   _temp?: ContainerNode;
+  _mask?: VNode[typeof MASK];
 }
 
 function ContextProvider(
-  this: { getChildContext: () => unknown },
-  props: RenderableProps<{ context: unknown }>,
+  this: { getChildContext: () => unknown; [MASK]?: VNode[typeof MASK] },
+  props: RenderableProps<{ context: unknown; mask: VNode[typeof MASK] }>,
 ): ComponentChildren {
   this.getChildContext = () => props.context;
+  this[MASK] = props.mask;
   return props.children;
 }
 
@@ -48,6 +52,7 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
     render(null, _this._temp!);
     delete _this._temp;
     delete _this._container;
+    delete _this._mask;
   };
 
   // When we change container we should clear our old container and
@@ -57,11 +62,11 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
   }
 
   if (!_this._temp) {
-    // Ensure the element has a mask for useId invocations
-    let root: VNode<any> | null | undefined = _this[VNODE];
-    while (root !== null && !root![MASK] && root![PARENT] !== null) {
-      root = root![PARENT];
-    }
+    // Give each portal subtree its own isolated mask prefix so `useId()` inside
+    // a portal never collides with outer components AND never consumes the
+    // outer counter (the main thread skips portals on first screen, so sharing
+    // the outer counter would shift `useId()` on siblings rendered after a portal).
+    _this._mask = ['p' + portalMaskId++, 0];
 
     _this._container = container;
 
@@ -70,7 +75,6 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
       nodeType: number;
       parentNode: NodesRef;
       childNodes: BackgroundSnapshotInstance[];
-      [CHILDREN]: { [MASK]: VNode[typeof MASK] };
       insertBefore(this: FakeRoot, child: BackgroundSnapshotInstance, before: BackgroundSnapshotInstance | null): void;
       removeChild(this: FakeRoot, child: BackgroundSnapshotInstance): void;
     }
@@ -78,7 +82,6 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
       nodeType: 1,
       parentNode: container,
       childNodes: [],
-      [CHILDREN]: { [MASK]: root![MASK] },
       insertBefore(child, before) {
         // Track the child in our local children list AND wire up the BSI's
         // `__parent` pointer to the fakeRoot, regardless of pre-/post-hydrate
@@ -148,7 +151,7 @@ function Portal(this: PortalThis, props: PortalProps): ComponentChildren {
   render(
     createElement(
       ContextProvider,
-      { context: _this.context },
+      { context: _this.context, mask: _this._mask },
       props[VNODE],
     ),
     _this._temp,

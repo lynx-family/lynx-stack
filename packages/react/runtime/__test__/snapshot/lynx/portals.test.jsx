@@ -5,7 +5,7 @@
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createContext, createPortal, useContext, useState } from '../../../src/index';
+import { createContext, createPortal, Suspense, useContext, useId, useState } from '../../../src/index';
 import { __root } from '../../../src/root';
 import { setupPage, SnapshotInstance, snapshotInstanceManager } from '../../../src/snapshot';
 
@@ -685,6 +685,78 @@ describe('snapshotPatchApply for nodesRef ops', () => {
     expect(listElement.componentAtIndex()).toBe(-1);
     expect(listElement.enqueueComponent()).toBeUndefined();
     expect(snapshotInstanceManager.values.has(childId)).toBe(false);
+  });
+
+  it('keeps useId unique inside createPortal and consistent across threads for following siblings', () => {
+    const host = { _nodeSelectToken: { type: 0, identifier: '[data-testid="host"]' } };
+    const mainIds = {};
+    const bgIds = {};
+
+    function record(label, id) {
+      if (__MAIN_THREAD__) {
+        mainIds[label] = id;
+      } else {
+        bgIds[label] = id;
+      }
+      return id;
+    }
+
+    function PortalChild({ label }) {
+      const id = record(label, useId());
+      return <text>{id}</text>;
+    }
+
+    function SiblingAfterPortal() {
+      const id = record('siblingAfter', useId());
+      return <text>{id}</text>;
+    }
+
+    function SuspensePortal() {
+      record('suspenseOuter', useId());
+      return (
+        <>
+          {createPortal(<PortalChild label='suspensePortal' />, host)}
+          <PortalChild label='suspenseSiblingAfter' />
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <view>
+          <text data-testid='host' />
+          {createPortal(<PortalChild label='portalFirst' />, host)}
+          <SiblingAfterPortal />
+          <Suspense fallback={<text>loading</text>}>
+            <SuspensePortal />
+          </Suspense>
+        </view>
+      );
+    }
+
+    mountAndHydrate(<App />);
+
+    // Siblings rendered after a portal must receive identical IDs on both threads.
+    expect(mainIds.siblingAfter).toBe('P0-0');
+    expect(bgIds.siblingAfter).toBe('P0-0');
+    expect(mainIds.suspenseOuter).toBe('PP0-1-0');
+    expect(bgIds.suspenseOuter).toBe('PP0-1-0');
+    expect(mainIds.suspenseSiblingAfter).toBe('PP0-1-1');
+    expect(bgIds.suspenseSiblingAfter).toBe('PP0-1-1');
+
+    // Portal subtrees render only on background and must have unique IDs that
+    // never collide with outer or sibling IDs.
+    expect(mainIds.portalFirst).toBeUndefined();
+    expect(mainIds.suspensePortal).toBeUndefined();
+    const allBgIds = [
+      bgIds.portalFirst,
+      bgIds.siblingAfter,
+      bgIds.suspenseOuter,
+      bgIds.suspensePortal,
+      bgIds.suspenseSiblingAfter,
+    ];
+    expect(allBgIds.every(id => typeof id === 'string' && id.length > 0)).toBe(true);
+    expect(new Set(allBgIds).size).toBe(allBgIds.length);
   });
 });
 
