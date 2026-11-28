@@ -8,7 +8,10 @@ import { createRsbuild } from '@rsbuild/core'
 import type { RsbuildPluginAPI } from '@rsbuild/core'
 import { describe, expect, test } from '@rstest/core'
 
-import type { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin'
+import {
+  LynxEncodePlugin,
+  LynxTemplatePlugin,
+} from '@lynx-js/template-webpack-plugin'
 
 import { pluginLynx } from '../src/index.js'
 
@@ -20,6 +23,60 @@ interface LynxTemplatePluginExposure {
 }
 
 describe('pluginTemplate', () => {
+  test.each([false, true])(
+    'configures one encoder for a resource with existing encoder=%s',
+    async existing => {
+      const rsbuild = await createRsbuild({
+        rsbuildConfig: {
+          environments: { lynx: {} },
+          plugins: [
+            pluginLynx(),
+            {
+              name: 'test:resource-template',
+              setup(api: RsbuildPluginAPI) {
+                api.modifyBundlerChain(chain => {
+                  chain.plugin('test:resource-template').use(
+                    LynxTemplatePlugin,
+                    [{
+                      ...LynxTemplatePlugin.defaultOptions,
+                      filename: 'resource.lynx.bundle',
+                      chunks: [],
+                      targetSdkVersion: '3.7',
+                    }],
+                  )
+                  if (existing) {
+                    chain.plugin('LynxEncodePlugin').use(LynxEncodePlugin, [{
+                      inlineScripts: false,
+                    }])
+                  }
+                })
+                api.modifyRspackConfig(config => {
+                  config.entry ??= {}
+                })
+              },
+            },
+          ],
+        },
+      })
+      const [config] = await rsbuild.initConfigs()
+      const encoders = config?.plugins?.filter(plugin =>
+        plugin?.constructor.name === 'LynxEncodePlugin'
+      )
+      expect(encoders).toHaveLength(1)
+      expect(
+        config?.plugins?.filter(plugin =>
+          plugin?.constructor.name === 'RuntimeWrapperWebpackPlugin'
+        ),
+      ).toHaveLength(0)
+      if (existing) {
+        // The resource fallback must not replace an encoder registered by a DSL.
+        expect(encoders?.[0]).toHaveProperty('options', {
+          inlineScripts: false,
+        })
+      }
+    },
+  )
+
   test('keeps the native Rslib fallback for web-prefixed environments', async () => {
     const rsbuild = await createRsbuild({
       callerName: 'rslib',

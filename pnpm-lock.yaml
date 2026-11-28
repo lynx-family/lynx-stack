@@ -467,6 +467,9 @@ importers:
       '@lynx-js/i18next-translation-dedupe':
         specifier: workspace:*
         version: link:../packages/i18n/i18next-translation-dedupe
+      '@lynx-js/islands':
+        specifier: workspace:*
+        version: link:../packages/islands
       '@lynx-js/kitten-lynx-test-infra':
         specifier: workspace:*
         version: link:../packages/testing-library/kitten-lynx
@@ -594,6 +597,40 @@ importers:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
+
+  examples/islands-consumer:
+    dependencies:
+      '@lynx-js/islands':
+        specifier: workspace:*
+        version: link:../../packages/islands
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
+
+  examples/islands-producer:
+    devDependencies:
+      '@lynx-js/islands':
+        specifier: workspace:*
+        version: link:../../packages/islands
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-lynx
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
 
   examples/motion:
     dependencies:
@@ -1075,6 +1112,31 @@ importers:
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
+
+  examples/islands-inline:
+    dependencies:
+      '@lynx-js/islands':
+        specifier: workspace:*
+        version: link:../../packages/islands
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/qrcode-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-qrcode
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
 
   examples/react-main-thread-function:
     dependencies:
@@ -1886,6 +1948,37 @@ importers:
       rsbuild-plugin-i18next-extractor:
         specifier: 0.2.1
         version: 0.2.1(@rsbuild/core@2.3.3(core-js@3.50.0))(i18next-cli@1.67.7(@swc/helpers@0.5.24)(@types/node@24.13.3)(react-dom@19.3.0(react@19.3.0))(typescript@6.0.3))(rollup@4.62.2)
+
+  packages/islands:
+    dependencies:
+      '@lynx-js/lynx-xml':
+        specifier: workspace:*
+        version: link:../lynx-xml
+      '@lynx-js/template-webpack-plugin':
+        specifier: workspace:*
+        version: link:../webpack/template-webpack-plugin
+    devDependencies:
+      '@lynx-js/config-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../rspeedy/plugin-config
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../react
+      '@lynx-js/react-transform':
+        specifier: workspace:*
+        version: link:../react/transform
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../rspeedy/plugin-lynx
+      '@lynx-js/types':
+        specifier: 4.1.0
+        version: 4.1.0
+      '@microsoft/api-extractor':
+        specifier: 'catalog:'
+        version: 7.59.4(@types/node@24.13.3)
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
 
   packages/lynx-xml:
     devDependencies:
@@ -2752,6 +2845,9 @@ importers:
       '@lynx-js/i18next-translation-dedupe':
         specifier: workspace:*
         version: link:../../i18n/i18next-translation-dedupe
+      '@lynx-js/islands':
+        specifier: workspace:*
+        version: link:../../islands
       '@lynx-js/kitten-lynx-test-infra':
         specifier: workspace:*
         version: link:../../testing-library/kitten-lynx

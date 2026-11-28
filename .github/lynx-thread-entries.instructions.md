@@ -21,3 +21,5 @@ Compile each Vanilla page entry once per thread. Keep the page entry name and ch
 Validate the compiled entrypoint graph before template encoding: each Vanilla thread entry must have exactly one JavaScript asset and no async chunks. Reject independent runtimes, extracted shared chunks, and cross-entry dependencies instead of packaging main-thread dependencies as background assets. Cover both threads and both native/Web targets, plus mixed DSL/Vanilla environments and preservation of DSL HMR.
 
 Keep Vanilla layer constants inside the plugin package. Use the standard Rsbuild source.entry shape and compiler macros in application examples.
+
+Resource DSLs may register LynxTemplatePlugin with chunks: [] and provide sections through beforeEncode without application entries. In pluginTemplate's post hook, configure the standard encoder for these templates with no background wrapper. Preserve existing DSL encoder options, configure at most one encoder per environment, and retain the Rslib fallback's target selection. Do not bypass beforeEncode, beforeEmit or afterEmit for resources.
