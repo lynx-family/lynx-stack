@@ -46,7 +46,10 @@ export class MainThreadRuntimeWrapperWebpackPlugin {
       compilation.hooks.processAssets.tap(
         {
           name: PLUGIN_NAME,
-          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_NONE,
+          // SWC can inline this IIFE and leak declarations into the host's
+          // global scope. Wrap the optimized section before source maps run.
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE
+            + 1,
         },
         () => {
           for (const asset of compilation.getAssets()) {

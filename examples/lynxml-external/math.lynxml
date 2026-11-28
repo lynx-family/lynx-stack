@@ -1,0 +1,10 @@
+<!doctype lynx>
+<lynx engine-version="3.9">
+  <style>.positive { color: green; }</style>
+  <script thread="main">
+    export function add(a, b) { return a + b; }
+  </script>
+  <script thread="background">
+    export function multiply(a, b) { return a * b; }
+  </script>
+</lynx>

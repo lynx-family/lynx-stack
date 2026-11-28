@@ -12,6 +12,10 @@ export default defineConfig({
     },
   ],
   source: {
+    entry: {
+      'loaders/lynxml-loader': './src/loaders/lynxml-loader.ts',
+      index: './src/index.ts',
+    },
     tsconfigPath: './tsconfig.build.json',
   },
 })

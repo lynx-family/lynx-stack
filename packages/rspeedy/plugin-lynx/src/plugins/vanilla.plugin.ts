@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import type {
@@ -49,11 +50,39 @@ export function pluginVanilla(): RsbuildPlugin {
     name: PLUGIN_NAME,
     enforce: 'post',
     setup(api) {
-      // Library/test callers assemble their own outputs.
-      if (
-        api.context.callerName === 'rslib'
-        || api.context.callerName === 'rstest'
-      ) return
+      if (api.context.callerName === 'rslib') {
+        // External bundles supply their own thread entries and template.
+        api.modifyBundlerChain((chain, { CHAIN_ID }) => {
+          const layers =
+            api.useExposed<{ MAIN_THREAD: string, BACKGROUND: string }>(
+              Symbol.for('LAYERS'),
+            )
+              ?? {
+                MAIN_THREAD: 'lynx:main-thread',
+                BACKGROUND: 'lynx:background',
+              }
+          const jsRule = chain.module.rule(CHAIN_ID.RULE.JS)
+          const xml = /\.lynxml$/
+          jsRule.test([jsRule.get('test')!, xml])
+          const xmlRule = jsRule.oneOf(CHAIN_ID.ONE_OF.JS_MAIN).rule('lynxml')
+            .test(xml)
+          const require = createRequire(import.meta.url)
+          const loader = path.join(
+            path.dirname(require.resolve('@lynx-js/rsbuild-plugin')),
+            'loaders/lynxml-loader.js',
+          )
+          xmlRule.oneOf('main').issuerLayer(layers.MAIN_THREAD)
+            .use('lynxml').loader(loader).options({ section: 'main' })
+          // The logical background chunk owns the external bundle's <entry>:CSS section.
+          xmlRule.oneOf('background').issuerLayer(layers.BACKGROUND)
+            .use('lynxml').loader(loader).options({
+              section: 'background',
+              includeStyle: true,
+            })
+        })
+        return
+      }
+      if (api.context.callerName === 'rstest') return
 
       // biome-ignore lint/correctness/useHookAtTopLevel: useExposed reads the Rsbuild plugin registry.
       const existingLayers: unknown = api.useExposed(Symbol.for('LAYERS'))

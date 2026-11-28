@@ -595,6 +595,28 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
 
+  examples/lynxml-external:
+    dependencies:
+      '@lynx-js/react':
+        specifier: workspace:*
+        version: link:../../packages/react
+    devDependencies:
+      '@lynx-js/lynx-bundle-rslib-config':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/lynx-bundle-rslib-config
+      '@lynx-js/react-rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-react
+      '@lynx-js/rsbuild-plugin':
+        specifier: workspace:*
+        version: link:../../packages/rspeedy/plugin-lynx
+      '@rsbuild/core':
+        specifier: catalog:rsbuild
+        version: 2.3.3(core-js@3.50.0)
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.7(@microsoft/api-extractor@7.60.1(@types/node@24.13.3))(core-js@3.50.0)(typescript@6.0.3)
+
   examples/motion:
     dependencies:
       '@lynx-js/motion':
@@ -2513,6 +2535,9 @@ importers:
       '@lynx-js/debug-metadata-rsbuild-plugin':
         specifier: workspace:^
         version: link:../plugin-debug-metadata
+      '@lynx-js/lynx-xml':
+        specifier: workspace:*
+        version: link:../../lynx-xml
       '@lynx-js/runtime-wrapper-webpack-plugin':
         specifier: workspace:^
         version: link:../../webpack/runtime-wrapper-webpack-plugin

@@ -80,3 +80,14 @@ export default defineExternalBundleRslibConfig({
 ```
 
 Explicit `output.externals` still override preset-provided mappings.
+
+### LynXML resources
+
+Use a `.lynxml` file as a logical entry with `pluginLynx()`. For an entry named
+`math`, the main and background scripts become the `math__main-thread` and
+`math` modules. A missing background script yields an empty module. A
+`<style>` block is compiled into the `math:CSS` section. Scripts can export
+values and functions for callers of `lynx.loadScript`.
+
+See the [LynXML external bundle example](../../../examples/lynxml-external/README.md)
+for a native build and an Android check that calls both modules.

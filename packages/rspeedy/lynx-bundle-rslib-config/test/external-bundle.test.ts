@@ -1546,6 +1546,62 @@ describe('without a DSL plugin', () => {
       .toMatch(/^\(function\s*\(\)\s*\{/)
   })
 
+  it('compiles LynXML entries with optional background scripts and styles', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'lynxml-external-'))
+    onTestFinished(() => rm(root, { recursive: true, force: true }))
+    const minimal = path.join(root, 'minimal.lynxml')
+    await fs.promises.writeFile(
+      minimal,
+      `<lynx engine-version="3.9">
+      <script thread="main">export const marker = "minimal";</script>
+    </lynx>`,
+    )
+
+    await build(defineExternalBundleRslibConfig({
+      source: {
+        entry: {
+          math: path.resolve(
+            __dirname,
+            '../../../../examples/lynxml-external/math.lynxml',
+          ),
+          minimal,
+        },
+      },
+      id: 'resources',
+      plugins: [pluginLynx()],
+      output: { distPath: { root: path.join(root, 'dist') } },
+    }, { engineVersion: '3.9', enableJsBytecode: false }))
+
+    const decoded = await decodeTemplate(
+      path.join(root, 'dist/resources.lynx.bundle'),
+    )
+    const sections = decoded['custom-sections']
+    expect(Object.keys(sections).sort()).toEqual([
+      'math',
+      'math:CSS',
+      'math__main-thread',
+      'minimal',
+      'minimal__main-thread',
+    ])
+    expect(sections['math:CSS']).toEqual(
+      expect.arrayContaining([expect.any(Number)]),
+    )
+    const host = {}
+    const script = sections['math__main-thread']!
+    const math = runInNewContext(script, host) as {
+      add(a: number, b: number): number
+    }
+    expect(math.add(6, 7)).toBe(13)
+    // A second evaluation in the same host must not redeclare any globals.
+    expect(() => {
+      runInNewContext(script, host)
+    }).not.toThrow()
+    expect(runInNewContext(sections['minimal__main-thread']!, host))
+      .toMatchObject({
+        marker: 'minimal',
+      })
+  })
+
   it('builds a web bundle with `pluginLynx` alone', async () => {
     const distRoot = path.join(fixtureDir, 'dist', 'plain-engine-web')
 
