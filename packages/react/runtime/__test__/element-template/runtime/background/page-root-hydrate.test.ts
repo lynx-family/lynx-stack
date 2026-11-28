@@ -9,7 +9,7 @@ vi.mock('../../../../src/element-template/background/hydrate.js', () => ({
 }));
 
 import { hydrateRootChildrenIntoContext } from '../../../../src/element-template/background/hydrate.js';
-import type { BackgroundPageRootInstance } from '../../../../src/element-template/background/instance.js';
+import type { BackgroundPageRootInstance } from '../../../../src/element-template/background/typed-instance.js';
 import { hydratePageRootIntoContext } from '../../../../src/element-template/background/page-root-hydrate.js';
 import type { SerializedCompiledNode, SerializedPageRoot } from '../../../../src/element-template/protocol/types.js';
 

@@ -13,10 +13,8 @@ import {
   markElementTemplateHydrated,
   resetElementTemplateCommitState,
 } from '../../../../src/element-template/background/commit-hook.js';
-import {
-  BackgroundElementTemplateInstance,
-  BackgroundListElementTemplateInstance,
-} from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
+import { BackgroundListElementTemplateInstance } from '../../../../src/element-template/background/typed-instance.js';
 import { backgroundElementTemplateInstanceManager } from '../../../../src/element-template/background/manager.js';
 import { applyElementTemplateUpdateCommands } from '../../../../src/element-template/runtime/patch.js';
 import { ElementTemplateUpdateOps } from '../../../../src/element-template/protocol/opcodes.js';

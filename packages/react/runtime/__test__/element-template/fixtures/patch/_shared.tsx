@@ -5,7 +5,7 @@
 import { createElement } from 'preact';
 import { vi } from 'vitest';
 
-import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/instance.js';
+import { BackgroundElementTemplateInstance } from '../../../../src/element-template/background/shadow-instance.js';
 import { hydrateBackground } from '../../test-utils/debug/hydrate.js';
 import { installMockNativePapi } from '../../test-utils/mock/mockNativePapi.js';
 import {
