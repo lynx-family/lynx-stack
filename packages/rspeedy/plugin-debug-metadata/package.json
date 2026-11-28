@@ -39,7 +39,7 @@
   "devDependencies": {
     "@lynx-js/template-webpack-plugin": "workspace:*",
     "@microsoft/api-extractor": "catalog:",
-    "@rollup/plugin-typescript": "^12.3.0",
+    "@rollup/plugin-typescript": "^12.3.1",
     "@rsbuild/core": "catalog:rsbuild"
   },
   "peerDependencies": {
