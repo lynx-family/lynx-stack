@@ -1,5 +1,13 @@
 # @lynx-js/external-bundle-rsbuild-plugin
 
+## 0.6.2
+
+### Patch Changes
+
+- Increase the default synchronous external bundle loading timeout from 2 seconds to 5 seconds to match ReactLynx lazy bundle loading. Explicit `timeout` options continue to override the default. ([#4440](https://github.com/lynx-family/lynx-stack/pull/4440))
+- Updated dependencies [[`8cd5e72`](https://github.com/lynx-family/lynx-stack/commit/8cd5e72900faae92a961b099bb839c1e81b780a3)]:
+  - @lynx-js/externals-loading-webpack-plugin@0.5.1
+
 ## 0.6.1
 
 ### Patch Changes
