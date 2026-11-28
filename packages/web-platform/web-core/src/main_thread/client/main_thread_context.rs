@@ -70,6 +70,35 @@ impl MainThreadWasmContext {
     self.style_manager.push_style_sheet(style_info, entry_name)
   }
 
+  /// Replaces the style sheets of an entry (`None` for the card) with
+  /// `style_info`, for CSS hot module replacement. Without CSS selectors
+  /// (`enableCSSSelector: false`), the declarations of the entry's elements
+  /// are recomputed from the new sheet.
+  pub fn replace_style_sheet(
+    &mut self,
+    style_info: &StyleSheetResource,
+    entry_name: Option<String>,
+  ) -> Result<(), JsError> {
+    self
+      .style_manager
+      .replace_style_sheet(style_info, entry_name.clone())?;
+    if !self.config_enable_css_selector {
+      let unique_ids: Vec<usize> = self
+        .unique_id_to_dom_map
+        .iter()
+        .filter_map(|(unique_id, weak_ref)| {
+          let element = weak_ref.deref()?.unchecked_into::<web_sys::Element>();
+          (element.get_attribute(constants::LYNX_ENTRY_NAME_ATTRIBUTE) == entry_name)
+            .then_some(*unique_id)
+        })
+        .collect();
+      for unique_id in unique_ids {
+        self.update_css_og_style(unique_id, entry_name.clone())?;
+      }
+    }
+    Ok(())
+  }
+
   pub fn set_page_element_unique_id(&mut self, unique_id: usize) {
     self.page_element_unique_id = Some(unique_id);
   }

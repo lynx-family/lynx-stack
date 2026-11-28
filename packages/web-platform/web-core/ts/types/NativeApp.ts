@@ -43,6 +43,12 @@ export type NativeLynx = {
   getDevtool(): LynxContextEventTarget;
   getCustomSectionSync(key: string): CloneableObject;
   getCustomSection(key: string): Promise<CloneableObject>;
+  /**
+   * The entry of each chunk, by chunk id. The runtime wrapper of a native
+   * bundle fills it in development; a web bundle has no such wrapper, so
+   * web-core provides it, empty.
+   */
+  __chunk_entries__?: Record<string, string | undefined>;
 };
 
 export type LynxPerformance = {

@@ -2555,6 +2555,100 @@ describe('Element APIs', () => {
     expect(styleElement!.textContent).toContain('color:red');
   });
 
+  describe('replace_style_sheet', () => {
+    const lazyEntry = 'https://example.com/lazy.web.bundle';
+    const createStyleSheet = (
+      backgroundColor: string,
+      enableCSSSelector: boolean,
+      entryName?: string,
+    ) =>
+      new wasmInstance.StyleSheetResource(
+        wasmInstance.decode_style_info(
+          encodeCSS({
+            '0': [
+              {
+                type: 'StyleRule',
+                selectorText: { value: '.test' },
+                style: [{ name: 'background-color', value: backgroundColor }],
+                variables: {},
+              },
+            ],
+          }),
+          entryName,
+          enableCSSSelector,
+        ),
+        document,
+      );
+    const testStyles = (root: ShadowRoot) =>
+      Array.from(root.querySelectorAll('style'), style => ({
+        name: style.getAttribute('name'),
+        text: style.textContent ?? '',
+      })).filter(style => style.text.includes('.test'));
+
+    test('replaces the card style sheet', () => {
+      mtsBinding.wasmContext!.push_style_sheet(createStyleSheet('red', true));
+      mtsBinding.wasmContext!.replace_style_sheet(
+        createStyleSheet('blue', true),
+      );
+
+      const styles = testStyles(rootDom);
+      expect(styles).toHaveLength(1);
+      expect(styles[0]!.text).toContain('background-color:blue');
+      expect(styles[0]!.text).not.toContain('red');
+    });
+
+    test('only replaces the style sheet of the given entry', () => {
+      mtsBinding.wasmContext!.push_style_sheet(createStyleSheet('red', true));
+      mtsBinding.wasmContext!.push_style_sheet(
+        createStyleSheet('green', true, lazyEntry),
+        lazyEntry,
+      );
+      mtsBinding.wasmContext!.replace_style_sheet(
+        createStyleSheet('blue', true, lazyEntry),
+        lazyEntry,
+      );
+
+      const styles = testStyles(rootDom);
+      expect(styles).toHaveLength(2);
+      expect(styles.find(style => style.name === null)!.text).toContain(
+        'background-color:red',
+      );
+      const lazyStyle = styles.find(style => style.name === lazyEntry)!;
+      expect(lazyStyle.text).toContain('background-color:blue');
+      expect(lazyStyle.text).toContain(`[l-e-name="${lazyEntry}"]`);
+      expect(lazyStyle.text).not.toContain('green');
+    });
+
+    test('recomputes the entry\'s elements without CSS selectors', () => {
+      // jsdom has no `sheet` for a `<style>` in a shadow root, so the
+      // per-element rules cannot be read here. `update_css_og_style` reads
+      // the classes of each element it recomputes, which shows the elements
+      // it visited.
+      const binding = new WASMJSBinding(createTestLynxViewInstance(rootDom));
+      const api = createElementAPI(rootDom, binding, false, true, true);
+      binding.wasmContext!.push_style_sheet(createStyleSheet('red', false));
+      const page = api.__CreatePage('page', 0);
+      const view = api.__CreateView(0);
+      api.__AddClass(view, 'test');
+      api.__AppendElement(page, view);
+      api.__FlushElementTree();
+      const getClassList = rstest.spyOn(binding, 'getClassList');
+      const visited = () =>
+        getClassList.mock.calls.map(([element]) =>
+          (element as WeakRef<HTMLElement>).deref()
+        );
+
+      binding.wasmContext!.replace_style_sheet(
+        createStyleSheet('blue', false, lazyEntry),
+        lazyEntry,
+      );
+      expect(visited()).not.toContain(view);
+
+      binding.wasmContext!.replace_style_sheet(createStyleSheet('blue', false));
+      expect(visited()).toContain(view);
+    });
+  });
+
   test('__LoadLepusChunk with dynamicComponentEntry', () => {
     const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
     globalThis.cancelAnimationFrame = rstest.fn();

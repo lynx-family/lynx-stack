@@ -20,6 +20,7 @@ import {
   loadUnknownElementEventName,
   systemInfoBase,
 } from '../../constants.js';
+import { createStyleSheetResourceFromBundle } from './hotUpdateStyleSheet.js';
 import { BackgroundThread } from './Background.js';
 import { BoundingClientRectService } from './BoundingClientRectService.js';
 import { I18nManager } from './I18n.js';
@@ -197,6 +198,53 @@ export class LynxViewInstance implements AsyncDisposable {
         );
       }
     }
+  }
+
+  /** The last bundle passed to `replaceStyleSheetWithBase64`, per entry url. */
+  readonly #replacedStyleSheets = new Map<string, string>();
+
+  /**
+   * Replaces the style sheets of the card, or of the lazy bundle `entry`, with
+   * the StyleInfo of `base64Bundle`: a web bundle that the CSS hot update of
+   * `@lynx-js/css-extract-webpack-plugin` encodes from all the CSS of that
+   * template.
+   */
+  replaceStyleSheetWithBase64(base64Bundle: string, entry?: string): void {
+    const entryName =
+      !entry || entry === '__Card__' || entry === this.templateUrl
+        ? undefined
+        : entry;
+    const entryUrl = entryName ?? this.templateUrl;
+    // The CSS hot update runtime calls this for each changed CSS id and for
+    // each of its dependencies, all with the same bundle.
+    if (this.#replacedStyleSheets.get(entryUrl) === base64Bundle) {
+      return;
+    }
+    const wasmContext = this.mtsWasmBinding.wasmContext;
+    if (!wasmContext) {
+      return;
+    }
+    const config = templateManager.getBundle(entryUrl)?.config;
+    const resource = createStyleSheetResourceFromBundle(
+      base64Bundle,
+      entryName,
+      config?.isLazy === 'true',
+      config?.enableCSSSelector === 'true',
+      this.transformVW,
+      this.transformVH,
+      this.transformREM,
+      this.transformSP,
+    );
+    if (!resource) {
+      return;
+    }
+    try {
+      wasmContext.replace_style_sheet(resource, entryName);
+    } finally {
+      // The style manager keeps its own copy.
+      resource.free();
+    }
+    this.#replacedStyleSheets.set(entryUrl, base64Bundle);
   }
 
   async onMTSScriptsLoaded(currentUrl: string, isLazy: boolean) {

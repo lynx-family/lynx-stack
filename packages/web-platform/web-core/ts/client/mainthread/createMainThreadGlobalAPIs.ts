@@ -37,6 +37,16 @@ function createMainThreadLynx(
     getEngine() {
       return lynxViewInstance.engineContext;
     },
+    getDevtool() {
+      return {
+        // A web bundle keeps one style sheet per entry, and the CSS hot
+        // update bundle holds all the CSS of its template, so the whole
+        // entry is replaced whatever `cssId` is.
+        replaceStyleSheetByIdWithBase64(_cssId, base64Bundle, entry) {
+          lynxViewInstance.replaceStyleSheetWithBase64(base64Bundle, entry);
+        },
+      };
+    },
     requestAnimationFrame(cb: FrameRequestCallback) {
       return requestAnimationFrameBrowserImpl(cb);
     },

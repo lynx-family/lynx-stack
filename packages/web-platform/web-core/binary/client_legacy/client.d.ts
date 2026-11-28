@@ -47,6 +47,13 @@ export class MainThreadWasmContext {
     constructor(root_node: Node, mts_binding: any, config_enable_css_selector: boolean);
     push_style_sheet(style_info: StyleSheetResource, entry_name?: string | null): void;
     /**
+     * Replaces the style sheets of an entry (`None` for the card) with
+     * `style_info`, for CSS hot module replacement. Without CSS selectors
+     * (`enableCSSSelector: false`), the declarations of the entry's elements
+     * are recomputed from the new sheet.
+     */
+    replace_style_sheet(style_info: StyleSheetResource, entry_name?: string | null): void;
+    /**
      *
      *   * key: String
      *   * value: stringifyed js value
@@ -249,6 +256,7 @@ export interface InitOutput {
     readonly mainthreadwasmcontext_get_unique_id_by_component_id: (a: number, b: number, c: number) => number;
     readonly mainthreadwasmcontext_new: (a: number, b: number, c: number) => number;
     readonly mainthreadwasmcontext_push_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly mainthreadwasmcontext_replace_style_sheet: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly mainthreadwasmcontext_set_config: (a: number, b: number, c: number, d: number) => void;
     readonly mainthreadwasmcontext_set_css_id: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly mainthreadwasmcontext_set_dataset: (a: number, b: number, c: number, d: number, e: number) => void;
