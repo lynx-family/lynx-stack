@@ -206,7 +206,7 @@ function flushDelayedLifecycleEvents(): void {
   flushingDelayedLifecycleEvents = false;
 }
 
-function publishEvent(handlerName: string, data: EventDataType) {
+export function publishEvent(handlerName: string, data: EventDataType): void {
   lynx.getApp().callBeforePublishEvent?.(data);
   let snapshotId: number | undefined;
   const getSnapshotId = () => snapshotId ??= Number(handlerName.split(':')[0]);

@@ -19,6 +19,7 @@ import {
   RENDER_COMPONENT,
   VALUE,
 } from '../shared/render-constants.js';
+import { delayedEvents } from './lifecycle/event/delayEvents.js';
 import { isRendering } from './lifecycle/isRendering.js';
 import { WorkletEvents } from '../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../worklet-runtime/bindings/events.js';
@@ -27,10 +28,14 @@ import { genCommitTaskId, replaceCommitHook } from './lifecycle/patch/commit.js'
 import type { PatchList, PatchOptions } from './lifecycle/patch/commit.js';
 import { updateMainThread } from './lifecycle/patch/updateMainThread.js';
 import { __pendingListUpdates } from './list/pendingListUpdates.js';
-import { enablePublishEvent } from './lynx/tt.js';
+import { publishEvent } from './lynx/tt.js';
 import { hydrate as hydrateMainThread } from './renderToOpcodes/hydrate.js';
 import { render as renderFirstFrame } from './renderToOpcodes/index.js';
-import { BackgroundSnapshotInstance, hydrate } from './snapshot/backgroundSnapshot.js';
+import {
+  BackgroundSnapshotInstance,
+  backgroundSnapshotInstanceManager,
+  hydrate,
+} from './snapshot/backgroundSnapshot.js';
 import { __page, __pageId, setupPage } from './snapshot/definition.js';
 import { SnapshotInstance } from './snapshot/snapshot.js';
 import { snapshotInstanceManager } from './snapshot/snapshotInstanceManager.js';
@@ -52,10 +57,11 @@ type TransferCommit = Scope & {
 };
 type TransferCommitResult = Scope & { version: number; seq: number; status: 'applied' | 'disposed' | 'failed' };
 type ComponentProvider = (scope: Scope) => ComponentType<TransferProps>;
+type NativeEvent = [handlerName: string, data: EventDataType];
 
 interface Pending {
   packet: TransferCommit;
-  finish: () => void;
+  finish: (() => void) | undefined;
 }
 export interface PendingMainThreadCall {
   worklet: Worklet;
@@ -73,6 +79,7 @@ interface Instance {
   main?: SnapshotInstance;
   element?: FiberElement;
   background?: BackgroundSnapshotInstance;
+  firstFrameEvents?: NativeEvent[] | undefined;
   firstFrameWorklets?: PendingMainThreadCall[] | undefined;
   queue: Pending[];
   inFlight?: Pending | undefined;
@@ -87,6 +94,10 @@ function forgetIds(node: SnapshotInstance): void {
   node.childNodes.forEach(child => forgetIds(child));
 }
 
+function eventSnapshotId(handlerName: string): number {
+  return Number(handlerName.split(':', 1)[0]);
+}
+
 const providers = new Map<string, ComponentProvider>();
 let initialized = false;
 
@@ -96,6 +107,9 @@ function initialize(): void {
   const frames = new Map<string, TransferFirstFrame>();
   const disposed = new Set<string>();
   const owners = new WeakMap<object, Instance>();
+  const backgroundOwners = new WeakMap<BackgroundSnapshotInstance, Instance>();
+  const awaitingFirstFrame = new Set<Instance>();
+  let unclaimedEvents: NativeEvent[] = [];
   const workletReturns = new Map<number, { instance: Instance; resolve: (value: unknown) => void }>();
   let nextWorkletReturnId = 0;
   const removers: (() => void)[] = [];
@@ -141,6 +155,29 @@ function initialize(): void {
     return undefined;
   }
 
+  function findEventOwner(node: BackgroundSnapshotInstance | undefined): Instance | undefined {
+    if (!node) return undefined;
+    while (node.parentNode) node = node.parentNode;
+    return backgroundOwners.get(node);
+  }
+  function endWaitingForFirstFrame(instance: Instance) {
+    awaitingFirstFrame.delete(instance);
+    if (!awaitingFirstFrame.size) unclaimedEvents.length = 0;
+  }
+  function publishTransferEvent(handlerName: string, data: EventDataType) {
+    const id = eventSnapshotId(handlerName);
+    const node = backgroundSnapshotInstanceManager.values.get(id);
+    const instance = findEventOwner(node);
+    if (instance?.phase === 'live') {
+      publishEvent(handlerName, data);
+    } else if (instance?.phase === 'hydrating') {
+      (instance.firstFrameEvents ??= []).push([handlerName, data]);
+    } else if (!node && id < 0 && awaitingFirstFrame.size) {
+      // Native first-frame handlers use main-thread IDs, which are bound by hydration.
+      unclaimedEvents.push([handlerName, data]);
+    }
+  }
+
   function renderBackground(instance: Instance) {
     const container = instance.background as unknown as ContainerNode;
     withInstance(instance, () => render(createElement(instance.Component, instance.props), container));
@@ -177,13 +214,14 @@ function initialize(): void {
   }
   /** Releases the commits of an instance that will never be applied. */
   function release(instance: Instance) {
+    instance.firstFrameEvents = undefined;
     instance.firstFrameWorklets = undefined;
     for (const [id, call] of workletReturns) {
       if (call.instance === instance) workletReturns.delete(id);
     }
-    instance.inFlight?.finish();
+    instance.inFlight?.finish?.();
     instance.inFlight = undefined;
-    instance.queue.forEach(item => item.finish());
+    instance.queue.forEach(item => item.finish?.());
     instance.queue.length = 0;
   }
   function pump(instance: Instance) {
@@ -196,7 +234,7 @@ function initialize(): void {
     kind: TransferCommit['kind'],
     patchList: PatchList,
     patchOptions: PatchOptions,
-    finish: () => void,
+    finish?: () => void,
   ) {
     const packet = {
       transferId: instance.init.transferId,
@@ -220,6 +258,15 @@ function initialize(): void {
     instance.phase = 'hydrating';
     const serialized = JSON.parse(frame.snapshot) as SerializedSnapshotInstance;
     const snapshotPatch = withInstance(instance, () => hydrate(serialized, instance.background!));
+    if (unclaimedEvents.length) {
+      unclaimedEvents = unclaimedEvents.filter((event) => {
+        const node = backgroundSnapshotInstanceManager.values.get(eventSnapshotId(event[0]));
+        if (findEventOwner(node) !== instance) return true;
+        (instance.firstFrameEvents ??= []).push(event);
+        return false;
+      });
+    }
+    endWaitingForFirstFrame(instance);
     const patchList: PatchList = { patchList: [{ id: genCommitTaskId(), snapshotPatch }] };
     if (instance.firstFrameWorklets?.length) {
       patchList.delayedRunOnMainThreadData = instance.firstFrameWorklets.map(({ worklet, params, resolve }) => {
@@ -236,9 +283,6 @@ function initialize(): void {
       'hydrate',
       patchList,
       { reloadVersion: getReloadVersion(), isHydration: true },
-      () => {
-        if (instance.phase === 'hydrating') instance.phase = 'live';
-      },
     );
   }
 
@@ -268,6 +312,8 @@ function initialize(): void {
       renderMain(instance);
     } else {
       instance.background = new BackgroundSnapshotInstance('root');
+      backgroundOwners.set(instance.background, instance);
+      awaitingFirstFrame.add(instance);
       instance.firstFrameWorklets = [];
       renderBackground(instance);
       const frame = frames.get(init.transferId);
@@ -312,6 +358,7 @@ function initialize(): void {
     }
     // Remount like a template reload: state resets and commits wait for the new first frame.
     instance.phase = 'waiting';
+    awaitingFirstFrame.add(instance);
     release(instance);
     withInstance(instance, () => render(null, instance.background as unknown as ContainerNode));
     instance.firstFrameWorklets = [];
@@ -324,6 +371,7 @@ function initialize(): void {
     const instance = instances.get(scope.transferId);
     if (instance) {
       instance.phase = 'disposed';
+      if (!mts) endWaitingForFirstFrame(instance);
       release(instance);
       if (instance.main) {
         forgetIds(instance.main);
@@ -487,8 +535,11 @@ function initialize(): void {
         scheduleMainThreadWorklet: scheduleWorklet,
       });
     });
-    // Events of hydrated instances dispatch directly; earlier events have no handler and are dropped.
-    enablePublishEvent();
+    // Native events can arrive before the transfer runtime registers its dispatcher.
+    delayedEvents?.splice(0).forEach(event => unclaimedEvents.push(event));
+    const app = lynx.getApp();
+    app.publishEvent = publishTransferEvent;
+    app.publicComponentEvent = (_componentId, handlerName, data) => publishTransferEvent(handlerName, data);
     const core = lynx.getCoreContext();
     removers.push(addReloadScopedEventListener<RunWorkletCtxRetData>(core, WorkletEvents.FunctionCallRet, data => {
       const call = workletReturns.get(data.resolveId);
@@ -506,14 +557,33 @@ function initialize(): void {
       const item = instance?.inFlight;
       if (!instance || !item || item.packet.version !== result.version || item.packet.seq !== result.seq) return;
       instance.inFlight = undefined;
-      item.finish();
-      if (result.status === 'applied') pump(instance);
-      else dispose(instance.init);
+      item.finish?.();
+      if (result.status !== 'applied') {
+        dispose(instance.init);
+        return;
+      }
+      if (item.packet.kind === 'hydrate') {
+        instance.phase = 'live';
+        const events = instance.firstFrameEvents;
+        instance.firstFrameEvents = undefined;
+        events?.forEach(([handlerName, data]) => {
+          if (instance.version !== result.version || instance.phase !== 'live') return;
+          const node = backgroundSnapshotInstanceManager.values.get(eventSnapshotId(handlerName));
+          if (findEventOwner(node) !== instance) return;
+          try {
+            publishEvent(handlerName, data);
+          } catch (error) {
+            lynx.reportError(error as Error);
+          }
+        });
+      }
+      pump(instance);
     });
   }
 
   listen(lynx.getNative(), '__DestroyLifetime', () => {
     instances.forEach(instance => dispose(instance.init, false));
+    unclaimedEvents.length = 0;
     removers.splice(0).forEach(remove => remove());
     if (!mts) replaceCommitHook();
   });

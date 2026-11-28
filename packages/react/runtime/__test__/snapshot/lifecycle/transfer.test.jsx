@@ -15,6 +15,7 @@ import { runOnMainThread, root, useState } from '../../../src/index';
 import { resetFunctionCallReturnListener } from '../../../src/core/thread-function-call/return-value';
 import { TransferRegistry } from '../../../src/internal';
 import { __root } from '../../../src/root';
+import { injectTt } from '../../../src/snapshot/lynx/tt';
 import {
   BackgroundSnapshotInstance,
   backgroundSnapshotInstanceManager,
@@ -65,10 +66,10 @@ function Page() {
 }
 
 /** Serializes the newest transfer root the way the main thread first frame would. */
-function firstFrame(rootId) {
+function firstFrame(rootId, nextId) {
   const roots = [...backgroundSnapshotInstanceManager.values.values()].filter(si => si.type === 'root');
   const toJSON = si => ({
-    id: si.__id,
+    id: nextId === undefined ? si.__id : nextId--,
     type: si.type,
     values: si.__values,
     children: si.childNodes.length ? si.childNodes.map(toJSON) : undefined,
@@ -108,6 +109,10 @@ describe('transfer (background thread)', () => {
     root.render(<Page />);
     expect(__root.childNodes).toHaveLength(1);
 
+    const received = vi.fn();
+    injectTt();
+    lynx.getApp().publishEvent('-9001:0:', { type: 'load' });
+    TransferRegistry.registerComponent('StartupEvent', () => () => <view bindload={received} />);
     TransferRegistry.registerComponent('Bubble', () => Bubble);
     expect(__root.__jsx).toBeUndefined();
     expect(__root.childNodes).toHaveLength(0);
@@ -119,6 +124,121 @@ describe('transfer (background thread)', () => {
     expect(warn).toHaveBeenCalledTimes(2);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('`root.render` is ignored on transfer pages'));
     warn.mockRestore();
+
+    const transferId = 'startup-event';
+    link.fire('__CreateTransfer', { transferId, componentName: 'StartupEvent', initialProps: {} });
+    link.fire('__TransferFirstFrame', { transferId, snapshot: firstFrame(undefined, -9000) });
+    expect(received).not.toHaveBeenCalled();
+    ack(transferId, 1);
+    expect(received).toHaveBeenCalledExactlyOnceWith({ type: 'load' });
+    link.fire('__DestroyTransfer', { transferId });
+  });
+
+  it('replays early native events in order after the matching first frame is applied', () => {
+    const received = vi.fn();
+    function Card({ name }) {
+      return <view bindload={event => received(name, event.label)} />;
+    }
+    TransferRegistry.registerComponent('EventCard', () => Card);
+
+    function createCard(name, viewId) {
+      link.fire('__CreateTransfer', { transferId: name, componentName: 'EventCard', initialProps: { name } });
+      return firstFrame(undefined, viewId + 1);
+    }
+    const first = createCard('event-a', -10001);
+    const second = createCard('event-b', -20001);
+    const app = lynx.getApp();
+    app.publishEvent('-10001:0:', { type: 'load', label: 'before hydration' });
+    app.publishEvent('-20001:0:', { type: 'load', label: 'before hydration' });
+    app.publicComponentEvent('', '-10001:0:', { type: 'load', label: 'component event' });
+
+    link.fire('__TransferFirstFrame', { transferId: 'event-a', snapshot: first });
+    link.fire('__TransferFirstFrame', { transferId: 'event-b', snapshot: second });
+    app.publishEvent('-10001:0:', { type: 'load', label: 'failed dispatch' });
+    app.publishEvent('-10001:0:', { type: 'load', label: 'before acknowledgement' });
+    expect(received).not.toHaveBeenCalled();
+
+    ack('event-b', 1);
+    ack('event-b', 1);
+    expect(received.mock.calls).toEqual([['event-b', 'before hydration']]);
+    const error = new Error('Event dispatch failed');
+    app.callBeforePublishEvent = ({ label }) => {
+      if (label === 'failed dispatch') throw error;
+    };
+    ack('event-a', 1);
+    delete app.callBeforePublishEvent;
+    expect(reportError).toHaveBeenCalledWith(error);
+    expect(received.mock.calls).toEqual([
+      ['event-b', 'before hydration'],
+      ['event-a', 'before hydration'],
+      ['event-a', 'component event'],
+      ['event-a', 'before acknowledgement'],
+    ]);
+    app.publishEvent('-10001:0:', { type: 'load', label: 'live' });
+    expect(received).toHaveBeenLastCalledWith('event-a', 'live');
+
+    link.fire('__DestroyTransfer', { transferId: 'event-a' });
+    link.fire('__DestroyTransfer', { transferId: 'event-b' });
+  });
+
+  it('discards native events from a first frame replaced by reload or disposal', () => {
+    const received = vi.fn();
+    TransferRegistry.registerComponent('DiscardedEvents', () => () => <view bindload={received} />);
+    const transferId = 'discard-events';
+    const app = lynx.getApp();
+    function firstFrameFor(viewId, rootId) {
+      link.fire('__TransferFirstFrame', { transferId, snapshot: firstFrame(rootId, viewId + 1) });
+    }
+
+    link.fire('__CreateTransfer', { transferId, componentName: 'DiscardedEvents', initialProps: {} });
+    firstFrameFor(-30001);
+    app.publishEvent('-30001:0:', { type: 'load' });
+    link.fire('__ReloadTransfer', { transferId, props: {} });
+    ack(transferId, 1);
+    app.publishEvent('-30001:0:', { type: 'load' });
+    app.publishEvent('-40001:0:', { type: 'load' });
+    firstFrameFor(-40001, -30000);
+    ack(transferId, 1);
+    expect(received).not.toHaveBeenCalled();
+    ack(transferId, 1, 'applied', 1);
+    expect(received).toHaveBeenCalledTimes(1);
+
+    link.fire('__ReloadTransfer', { transferId, props: {} });
+    firstFrameFor(-50001, -40000);
+    app.publishEvent('-50001:0:', { type: 'load' });
+    link.fire('__DestroyTransfer', { transferId });
+    ack(transferId, 1, 'applied', 2);
+    expect(received).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips queued events when their node is removed or their transfer is disposed during replay', () => {
+    const transferId = 'removed-event-target';
+    const received = vi.fn(() => link.fire('__DestroyTransfer', { transferId }));
+    TransferRegistry.registerComponent(
+      'RemovableEvent',
+      () => ({ visible }) => visible ? <view bindload={received} /> : null,
+    );
+    function firstFrameFor(rootId, viewId) {
+      link.fire('__TransferFirstFrame', { transferId, snapshot: firstFrame(rootId, viewId + 1) });
+    }
+    link.fire('__CreateTransfer', {
+      transferId,
+      componentName: 'RemovableEvent',
+      initialProps: { visible: true },
+    });
+    const app = lynx.getApp();
+    firstFrameFor(undefined, -60001);
+    app.publishEvent('-60001:0:', { type: 'load' });
+    link.fire('__UpdateTransfer', { transferId, props: { visible: false } });
+    ack(transferId, 1);
+    expect(received).not.toHaveBeenCalled();
+
+    link.fire('__ReloadTransfer', { transferId, props: { visible: true } });
+    firstFrameFor(-60000, -70001);
+    app.publishEvent('-70001:0:', { type: 'load', label: 'first' });
+    app.publishEvent('-70001:0:', { type: 'load', label: 'second' });
+    ack(transferId, 1, 'applied', 1);
+    expect(received).toHaveBeenCalledExactlyOnceWith({ type: 'load', label: 'first' });
   });
 
   it('hydrates a created component and sends one commit at a time', async () => {
@@ -147,10 +267,8 @@ describe('transfer (background thread)', () => {
     ack('1', 1, 'applied', 1);
 
     // Events dispatch directly to the hydrated handlers.
-    const view = [...backgroundSnapshotInstanceManager.values.values()].find(si =>
-      typeof si.__values?.[0] === 'function'
-    );
-    lynx.getApp().publishEvent(`${view.__id}:0:`, { type: 'tap' });
+    const viewId = JSON.parse(frame).children[0].id;
+    lynx.getApp().publishEvent(`${viewId}:0:`, { type: 'tap' });
     expect(taps).toBe(1);
   });
 
