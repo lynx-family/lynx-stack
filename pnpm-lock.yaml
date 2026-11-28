@@ -1113,7 +1113,7 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
 
-  examples/react-lynx-xml:
+  examples/islands-inline:
     dependencies:
       '@lynx-js/islands':
         specifier: workspace:*

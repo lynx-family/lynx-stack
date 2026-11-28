@@ -1,5 +1,5 @@
 ---
-applyTo: "examples/react-lynx-xml/**"
+applyTo: "examples/islands-inline/**"
 ---
 
 Business integration uses only pluginIslands from @lynx-js/islands/build and Island from @lynx-js/islands/react. Register the XML path as an exposes string and render the component by name with props and className. Do not require application code to import the parser, runtime types or internal hooks, provide a container ID, or observe background readiness.

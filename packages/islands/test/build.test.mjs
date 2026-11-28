@@ -21,7 +21,7 @@ import { LynxTemplatePlugin } from '@lynx-js/template-webpack-plugin';
 import { pluginIslands } from '../lib/build/index.js';
 
 const rootPath = fileURLToPath(new URL('../../../', import.meta.url));
-const source = 'examples/react-lynx-xml/xml/card.lynxml';
+const source = 'examples/islands-inline/xml/card.lynxml';
 
 function sourceCompilation(context, content) {
   const directory = mkdtempSync(join(tmpdir(), 'lynx-islands-parser-'));

@@ -127,4 +127,4 @@ When an inline component and its initial props are present in the host's first r
 
 This package requires Lynx SDK 3.7 or newer. The public entry points are `@lynx-js/islands/build` and `@lynx-js/islands/react`.
 
-See [the ReactLynx XML example](../../examples/react-lynx-xml) for a complete application.
+See [the ReactLynx XML example](../../examples/islands-inline) for a complete application.

@@ -33,7 +33,7 @@ if (renderer !== 'island' && renderer !== 'frame') {
 
 export default defineConfig({
   source: {
-    entry: { main: './src/index.tsx' },
+    entry: { 'islands-inline': './src/index.tsx' },
   },
   environments: {
     lynx: {

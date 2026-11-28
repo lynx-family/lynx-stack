@@ -7,8 +7,8 @@ No Lynx SDK change or native module is required.
 An alternative `XML_RENDERER=frame` build loads the same raw `card.lynxml` through `<frame src>`, using the Explorer build that supports XML frame sources. This path creates an independent Lynx page; it requires native XML support and does not use the Islands build plugin. The default remains `XML_RENDERER=island` with inline delivery.
 
 ```sh
-XML_RENDERER=frame pnpm turbo build --filter @lynx-js/example-react-lynx-xml
-XML_RENDERER=frame pnpm --filter @lynx-js/example-react-lynx-xml dev
+XML_RENDERER=frame pnpm turbo build --filter @lynx-js/example-islands-inline
+XML_RENDERER=frame pnpm --filter @lynx-js/example-islands-inline dev
 ```
 
 Frame defaults to synchronous loading with `card.lynxml?sync=true` as its `src`, using the specified Explorer build that supports this query. The query belongs to the child resource URL, not the parent bundle. Set `XML_FRAME_SYNC=false` to omit it for the standard frame path.
@@ -28,7 +28,7 @@ Memory is captured separately across three page lifecycles per mode. The report 
 To inspect the full original traces inside the report, start its local site:
 
 ```sh
-pnpm --filter @lynx-js/example-react-lynx-xml report
+pnpm --filter @lynx-js/example-islands-inline report
 ```
 
 Open `http://127.0.0.1:4175/performance.html`. `REPORT_PORT` can override the port. No application build is required for this static report.
@@ -74,7 +74,7 @@ The source is included in the host bundle. The example writes the Island build t
 Install and build the workspace following the root `AGENTS.md`, then start the example:
 
 ```sh
-pnpm --filter @lynx-js/example-react-lynx-xml dev
+pnpm --filter @lynx-js/example-islands-inline dev
 ```
 
 Open the QR code in LynxExplorer with Lynx SDK 3.7 or newer. Set `LYNX_HOST` to a device-reachable address if automatic LAN detection is unsuitable; `PORT` defaults to `3000`.
@@ -82,7 +82,7 @@ Open the QR code in LynxExplorer with Lynx SDK 3.7 or newer. Set `LYNX_HOST` to 
 For a local Android emulator:
 
 ```sh
-LYNX_HOST=127.0.0.1 pnpm --filter @lynx-js/example-react-lynx-xml dev
+LYNX_HOST=127.0.0.1 pnpm --filter @lynx-js/example-islands-inline dev
 adb -s emulator-5554 reverse tcp:3000 tcp:3000
 ```
 
@@ -93,7 +93,7 @@ In the default Island mode, saving `xml/card.lynxml` recompiles the host bundle 
 Build the example from the repository root:
 
 ```sh
-pnpm turbo build --filter @lynx-js/example-react-lynx-xml
+pnpm turbo build --filter @lynx-js/example-islands-inline
 ```
 
 ## First-frame behavior
@@ -107,7 +107,7 @@ ReactLynx owns the Page and the component's empty container; the XML renderer ow
 After the full workspace build:
 
 ```sh
-node --test examples/react-lynx-xml/test/*.test.mjs
+node --test examples/islands-inline/test/*.test.mjs
 pnpm --filter @lynx-js/islands test
 ```
 
