@@ -6,15 +6,28 @@ import {
   createRunOnMainThread,
   takeDelayedRunOnMainThreadData,
 } from '../../../core/thread-function-call/main-thread.js';
+import type { PendingMainThreadCall, RunOnMainThreadOptions } from '../../../core/thread-function-call/main-thread.js';
 import { resetFunctionCallReturnListener } from '../../../core/thread-function-call/return-value.js';
 import { isRendering } from '../../lifecycle/isRendering.js';
 import { __globalSnapshotPatch } from '../../lifecycle/patch/snapshotPatch.js';
 
-const runOnMainThreadImpl = createRunOnMainThread({
+type MainThreadWorkletScheduler = (call: PendingMainThreadCall) => boolean;
+
+const runOnMainThreadOptions: RunOnMainThreadOptions = {
   shouldDispatchRunOnMainThreadDirectly() {
     return __globalSnapshotPatch !== undefined && !isRendering.value;
   },
-});
+};
+
+export function setMainThreadWorkletScheduler(
+  scheduler?: MainThreadWorkletScheduler,
+): MainThreadWorkletScheduler | undefined {
+  const previous = runOnMainThreadOptions.scheduleMainThreadWorklet;
+  runOnMainThreadOptions.scheduleMainThreadWorklet = scheduler;
+  return previous;
+}
+
+const runOnMainThreadImpl = createRunOnMainThread(runOnMainThreadOptions);
 
 /**
  * `runOnMainThread` allows triggering main thread functions on the main thread asynchronously.

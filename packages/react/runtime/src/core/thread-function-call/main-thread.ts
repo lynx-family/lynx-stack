@@ -2,8 +2,6 @@
 // Licensed under the Apache License Version 2.0 that can be found in the
 // LICENSE file in the root directory of this source tree.
 
-import { options as preactOptions } from 'preact';
-
 import { onFunctionCall } from './return-value.js';
 import { isSdkVersionGt } from '../../shared/version.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
@@ -15,8 +13,15 @@ import { isMtsEnabled } from '../mts-capability.js';
 import { dispatchReloadScopedEvent } from '../reload-scoped-event.js';
 import { isRuntimeDestroyed } from '../runtime-destroy.js';
 
-interface RunOnMainThreadOptions {
+export interface PendingMainThreadCall {
+  worklet: Worklet;
+  params: unknown[];
+  resolve: (value: any) => void;
+}
+
+export interface RunOnMainThreadOptions {
   shouldDispatchRunOnMainThreadDirectly: () => boolean;
+  scheduleMainThreadWorklet?: ((call: PendingMainThreadCall) => boolean) | undefined;
 }
 
 export type RunOnMainThread = <R, Fn extends (...args: any[]) => R>(fn: Fn) => (...args: Parameters<Fn>) => Promise<R>;
@@ -50,7 +55,7 @@ export function createRunOnMainThread(
       return new Promise((resolve) => {
         if (isRuntimeDestroyed()) return;
         const worklet = fn as unknown as Worklet;
-        if (preactOptions.scheduleMainThreadWorklet?.({ worklet, params, resolve })) return;
+        if (options.scheduleMainThreadWorklet?.({ worklet, params, resolve })) return;
 
         prepareMainThreadFunctionCtx(worklet);
         const data = {

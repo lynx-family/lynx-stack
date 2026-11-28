@@ -35,20 +35,17 @@ if (typeof __MAIN_THREAD__ !== 'undefined' && __MAIN_THREAD__) {
   setRoot(new BackgroundSnapshotInstance('root'));
 }
 
-/** Set once a page renders transfer components; `root.render` is then ignored. */
-let transferMode = false;
+type RootRenderGuard = () => boolean;
+let rootRenderGuard: RootRenderGuard | undefined;
 
-function enableTransferMode(): void {
-  transferMode = true;
+function setRootRenderGuard(guard?: RootRenderGuard): RootRenderGuard | undefined {
+  const previous = rootRenderGuard;
+  rootRenderGuard = guard;
+  return previous;
 }
 
-function warnRootRenderOnTransferPage(): void {
-  if (__DEV__) {
-    console.warn(
-      '[ReactLynx] `root.render` is ignored on transfer pages. '
-        + 'Render components through `TransferRegistry.registerComponent` instead of mixing both.',
-    );
-  }
+function shouldIgnoreRootRender(): boolean {
+  return rootRenderGuard?.() ?? false;
 }
 
-export { __root, enableTransferMode, setRoot, transferMode, warnRootRenderOnTransferPage };
+export { __root, setRoot, setRootRenderGuard, shouldIgnoreRootRender };

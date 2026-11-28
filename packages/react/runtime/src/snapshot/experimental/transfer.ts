@@ -10,7 +10,8 @@ import type { ComponentType, ContainerNode, VNode } from 'preact';
 import { addReloadScopedEventListener } from '../../core/reload-scoped-event.js';
 import { getReloadVersion } from '../../core/reload-version.js';
 import { prepareMainThreadFunctionCtx } from '../../core/thread-function-call/main-thread.js';
-import { __root, enableTransferMode, warnRootRenderOnTransferPage } from '../../root.js';
+import type { PendingMainThreadCall } from '../../core/thread-function-call/main-thread.js';
+import { __root, setRootRenderGuard } from '../../root.js';
 import {
   CHILDREN,
   COMMIT,
@@ -24,7 +25,6 @@ import {
 } from '../../shared/render-constants.js';
 import { WorkletEvents } from '../../worklet-runtime/bindings/events.js';
 import type { RunWorkletCtxRetData } from '../../worklet-runtime/bindings/events.js';
-import type { Worklet } from '../../worklet-runtime/bindings/types.js';
 import { isRendering } from '../lifecycle/isRendering.js';
 import { genCommitTaskId, replaceCommitHook } from '../lifecycle/patch/commit.js';
 import type { PatchList, PatchOptions } from '../lifecycle/patch/commit.js';
@@ -38,6 +38,7 @@ import { __page, __pageId, setupPage } from '../snapshot/definition.js';
 import { SnapshotInstance } from '../snapshot/snapshot.js';
 import { snapshotInstanceManager } from '../snapshot/snapshotInstanceManager.js';
 import type { SerializedSnapshotInstance } from '../snapshot/types.js';
+import { setMainThreadWorkletScheduler } from '../worklet/call/runOnMainThread.js';
 
 type TransferProps = Record<string, unknown>;
 interface Scope {
@@ -59,11 +60,6 @@ type ComponentProvider = (scope: Scope) => ComponentType<TransferProps>;
 interface Pending {
   packet: TransferCommit;
   finish: () => void;
-}
-export interface PendingMainThreadCall {
-  worklet: Worklet;
-  params: unknown[];
-  resolve: (value: any) => void;
 }
 interface Instance {
   init: CreateTransferEvent;
@@ -88,6 +84,15 @@ interface EventTarget {
 function forgetIds(node: SnapshotInstance): void {
   snapshotInstanceManager.values.delete(node.__id);
   node.childNodes.forEach(child => forgetIds(child));
+}
+
+function warnRootRenderOnTransferPage(): void {
+  if (__DEV__) {
+    console.warn(
+      '[ReactLynx] `root.render` is ignored on transfer pages. '
+        + 'Render components through `TransferRegistry.registerComponent` instead of mixing both.',
+    );
+  }
 }
 
 const providers = new Map<string, ComponentProvider>();
@@ -348,7 +353,13 @@ function initialize(): void {
     __root.__jsx = undefined;
     if (!mts) render(null, __root as unknown as ContainerNode);
   }
-  enableTransferMode();
+  const previousRootRenderGuard = setRootRenderGuard(() => {
+    warnRootRenderOnTransferPage();
+    return true;
+  });
+  removers.push(() => {
+    setRootRenderGuard(previousRootRenderGuard);
+  });
 
   /**
    * The worklet runtime flushes its pre-hydration `runOnBackground` queue once per page, dropping calls whose
@@ -471,7 +482,6 @@ function initialize(): void {
       rendering = undefined;
       withInstance(findOwner(vnode), () => commit?.(vnode, queue));
     };
-    const scheduleWorklet = options.scheduleMainThreadWorklet;
     function scheduleTransferWorklet(call: PendingMainThreadCall): boolean {
       if (active && active.version !== activeVersion) return true;
       const instance = active ?? (isRendering.value ? rendering : undefined);
@@ -481,13 +491,13 @@ function initialize(): void {
       instance.firstFrameWorklets?.push(call);
       return true;
     }
-    options.scheduleMainThreadWorklet = scheduleTransferWorklet;
+    const previousWorkletScheduler = setMainThreadWorkletScheduler(scheduleTransferWorklet);
     removers.push(() => {
+      setMainThreadWorkletScheduler(previousWorkletScheduler);
       Object.assign(options, {
         [RENDER_COMPONENT]: renderComponent,
         [COMMIT]: commit,
         [DIFFED]: diffed,
-        scheduleMainThreadWorklet: scheduleWorklet,
       });
     });
     // Events of hydrated instances dispatch directly; earlier events have no handler and are dropped.
