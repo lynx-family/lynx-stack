@@ -1,0 +1,92 @@
+<!doctype lynx>
+<lynx engine-version="4.2">
+  <style>
+    .results {
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      background-color: #ffffff;
+    }
+    .title {
+      font-size: 22px;
+      font-weight: bold;
+      color: #152536;
+    }
+    .result {
+      margin-top: 12px;
+      font-size: 16px;
+    }
+  </style>
+  <script thread="main">
+    globalThis.processData = data => data;
+    const engine = lynx.getEngine();
+    const background = lynx.getJSContext();
+    const page = __CreatePage('0', 0);
+    const pageId = __GetElementUniqueID(page);
+    const mainResult = createText('result', 'Main thread: loading…');
+    const backgroundResult = createText('result', 'Background thread: loading…');
+    let mounted = false;
+
+    function createText(className, value) {
+      const node = __CreateText(pageId);
+      __SetClasses(node, className);
+      __AppendElement(node, __CreateRawText(value));
+      return node;
+    }
+
+    function showResult(node, value) {
+      __SetClasses(node, 'result positive');
+      __ReplaceElements(node, [__CreateRawText(value)], __GetChildren(node));
+      if (mounted) __FlushElementTree();
+    }
+
+    function renderPage() {
+      if (mounted) return;
+      const content = __CreateView(pageId);
+      __SetClasses(content, 'results');
+      __AppendElement(content, createText('title', 'External bundle results'));
+      __AppendElement(content, mainResult);
+      __AppendElement(content, backgroundResult);
+      __AppendElement(page, content);
+      mounted = true;
+    }
+
+    function onBackgroundResult(event) {
+      showResult(backgroundResult, event.data);
+    }
+
+    function destroy() {
+      mounted = false;
+      background.removeEventListener('MathResult', onBackgroundResult);
+      engine.removeEventListener('__RenderPage', renderPage);
+      engine.removeEventListener('__DestroyLifetime', destroy);
+    }
+
+    background.addEventListener('MathResult', onBackgroundResult);
+    engine.addEventListener('__RenderPage', renderPage);
+    engine.addEventListener('__DestroyLifetime', destroy);
+
+    lynx.fetchBundle('http://127.0.0.1:3487/math.lynx.bundle', {}).then(response => {
+      if (response.code !== 0) throw new Error(response.errorMsg);
+      const stylesheet = __LoadStyleSheet('math:CSS', response.url);
+      if (stylesheet === null) throw new Error('Missing math:CSS section');
+      __AdoptStyleSheet(stylesheet);
+      const math = lynx.loadScript('math__main-thread', { bundleName: response.url });
+      const sum = math.add(6, 7);
+      console.log('[lynxml-resource] main: add(6, 7) = ' + sum);
+      showResult(mainResult, 'Main thread: add(6, 7) = ' + sum);
+    });
+  </script>
+  <script thread="background">
+    lynx.fetchBundle('http://127.0.0.1:3487/math.lynx.bundle', {}).then(response => {
+      if (response.code !== 0) throw new Error(response.errorMsg);
+      const math = lynx.loadScript('math', { bundleName: response.url });
+      const product = math.multiply(6, 7);
+      console.log('[lynxml-resource] background: multiply(6, 7) = ' + product);
+      lynx.getCoreContext().dispatchEvent({
+        type: 'MathResult',
+        data: 'Background thread: multiply(6, 7) = ' + product,
+      });
+    });
+  </script>
+</lynx>

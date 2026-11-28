@@ -1,0 +1,15 @@
+{
+  "name": "@lynx-js/example-lynxml-external",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rslib build"
+  },
+  "devDependencies": {
+    "@lynx-js/lynx-bundle-rslib-config": "workspace:*",
+    "@lynx-js/rsbuild-plugin": "workspace:*",
+    "@rsbuild/core": "catalog:rsbuild",
+    "@rslib/core": "catalog:rslib"
+  }
+}
